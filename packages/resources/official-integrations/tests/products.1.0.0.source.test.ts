@@ -136,7 +136,7 @@ describe("products 1.0.0 source", () => {
         expect(dashboardJson).not.toContain("CMS file id");
         expect(dashboardJson).not.toContain("External URL");
         expect(dashboardJson).not.toContain("\"create\":{\"mode\":\"modal\"");
-        expect(dashboardJson).not.toContain("\"endpoint\":\"upsertBrand\"");
+        expect(dashboardJson).toContain("\"endpoint\":\"upsertBrand\"");
         expect(dashboardJson).not.toContain("\"id\":\"categoryCreate\"");
         expect(dashboardJson).not.toContain("\"id\":\"categoriesTable\"");
         expect(dashboardJson).not.toContain("\"id\":\"categoryDetail\"");

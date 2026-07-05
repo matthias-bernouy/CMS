@@ -15,19 +15,24 @@ export async function executeDashboardAction(
     detail: DetailSelection,
     actionId: string,
     draft: Record<string, unknown>,
+    currentResource?: unknown,
 ): Promise<unknown> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) throw new Error(`Dashboard action target "${detail.collection}" was not found`);
     const action = widget.actions?.find(item => item.id === actionId);
     if (!action) throw new Error(`Dashboard action "${actionId}" was not found`);
-    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
-    const resource = itemFrom(data, widget.source);
+    const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
     return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {
         selection: { id: detail.row },
         resource,
         fields,
     });
+}
+
+async function fetchActionResource(sourceId: string, widget: DetailWidget, row: string): Promise<unknown> {
+    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
+    return itemFrom(data, widget.source);
 }
 
 export async function executeDashboardMediaAction(

@@ -2009,6 +2009,17 @@
                                                                 "params": {
                                                                     "id": "$value"
                                                                 }
+                                                            },
+                                                            "create": {
+                                                                "mode": "inline",
+                                                                "endpoint": "upsertBrand",
+                                                                "body": {
+                                                                    "slug": "$value",
+                                                                    "name": "$value",
+                                                                    "status": "active"
+                                                                },
+                                                                "valuePath": "id",
+                                                                "labelPath": "name"
                                                             }
                                                         }
                                                     },
@@ -2408,6 +2419,17 @@
                                                                 "params": {
                                                                     "id": "$value"
                                                                 }
+                                                            },
+                                                            "create": {
+                                                                "mode": "inline",
+                                                                "endpoint": "upsertBrand",
+                                                                "body": {
+                                                                    "slug": "$value",
+                                                                    "name": "$value",
+                                                                    "status": "active"
+                                                                },
+                                                                "valuePath": "id",
+                                                                "labelPath": "name"
                                                             }
                                                         }
                                                     },

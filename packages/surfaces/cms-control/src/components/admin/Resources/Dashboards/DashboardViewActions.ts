@@ -3,7 +3,7 @@ import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { detailKey, type DetailSelection } from "./domain";
 import { executeDashboardAction, executeDashboardMediaAction } from "./runtime/actions";
 import type { DashboardSourceGroup } from "./types";
-import type { WidgetMediaActionDetail } from "./widgets/shared";
+import type { WidgetActionDetail, WidgetMediaActionDetail } from "./widgets/shared";
 
 export type DashboardViewActionContext = {
     group: DashboardSourceGroup | null;
@@ -14,14 +14,17 @@ export type DashboardViewActionContext = {
     reload: (collection: string, row: string) => void;
 };
 
-export async function runDashboardWidgetAction(context: DashboardViewActionContext, action: string): Promise<void> {
+export async function runDashboardWidgetAction(context: DashboardViewActionContext, action: WidgetActionDetail): Promise<void> {
     const { group, dashboard, detail } = context;
     if (!group || !dashboard || !detail) return;
     const key = detailKey(detail.collection, detail.row);
     try {
-        await executeDashboardAction(group, dashboard, detail, action, context.drafts.get(key) ?? {});
+        await executeDashboardAction(group, dashboard, detail, action.action, {
+            ...(context.drafts.get(key) ?? {}),
+            ...(action.fields ?? {}),
+        }, action.resource);
         context.drafts.delete(key);
-        showToast(`${action} completed`, { type: "success" });
+        showToast(`${action.action} completed`, { type: "success" });
         context.reload(detail.collection, detail.row);
     } catch (error) {
         showToast(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });

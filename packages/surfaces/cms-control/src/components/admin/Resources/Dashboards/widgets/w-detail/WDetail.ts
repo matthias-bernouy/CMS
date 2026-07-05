@@ -100,7 +100,11 @@ export class DashboardWDetail extends Component {
         const target = event.target as Element | null;
         if (target?.closest("[data-back]")) emitWidgetEvent(this, WIDGET_BACK_EVENT, {});
         const action = findActionTarget(event);
-        if (action?.dataset.action) emitWidgetEvent(this, WIDGET_ACTION_EVENT, { action: action.dataset.action });
+        if (action?.dataset.action) emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+            action: action.dataset.action,
+            resource: this.currentResource(),
+            fields: this.currentFields(),
+        });
         const chip = target?.closest<HTMLButtonElement>(".chip");
         if (chip) this.toggleChip(chip);
     };
@@ -174,6 +178,23 @@ export class DashboardWDetail extends Component {
 
     private findField(id: string): WDetailField | undefined {
         return [...this.value.main, ...this.value.aside].flatMap(section => section.fields).find(field => field.id === id);
+    }
+
+    private currentResource(): unknown | undefined {
+        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
+        if (!widget || widget.widget !== "w-detail") return undefined;
+        const sourceData = parseJson<unknown>(this.dataset.sourceJson ?? "");
+        if (sourceData === null) return undefined;
+        return widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+    }
+
+    private currentFields(): Record<string, unknown> {
+        const fields: Record<string, unknown> = {};
+        for (const control of Array.from(this.shadowRoot!.querySelectorAll<HTMLElement>("[data-field-control]"))) {
+            const field = this.findField(control.dataset.fieldControl ?? "");
+            if (field) fields[field.id] = readFieldControlValue(field, control);
+        }
+        return fields;
     }
 
     private template(kind: "section" | "field"): HTMLElement {

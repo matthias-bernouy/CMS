@@ -13558,21 +13558,24 @@ p {
   }
 
   // src/components/admin/Resources/Dashboards/runtime/actions.ts
-  async function executeDashboardAction(group, dashboard, detail, actionId, draft) {
+  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget)
       throw new Error(`Dashboard action target "${detail.collection}" was not found`);
     const action = widget.actions?.find((item) => item.id === actionId);
     if (!action)
       throw new Error(`Dashboard action "${actionId}" was not found`);
-    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
-    const resource = itemFrom(data, widget.source);
+    const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
     return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {
       selection: { id: detail.row },
       resource,
       fields
     });
+  }
+  async function fetchActionResource(sourceId, widget, row) {
+    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
+    return itemFrom(data, widget.source);
   }
   async function executeDashboardMediaAction(group, dashboard, detail, media, draft) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
@@ -13644,9 +13647,12 @@ p {
       return;
     const key = detailKey(detail.collection, detail.row);
     try {
-      await executeDashboardAction(group, dashboard, detail, action, context.drafts.get(key) ?? {});
+      await executeDashboardAction(group, dashboard, detail, action.action, {
+        ...context.drafts.get(key) ?? {},
+        ...action.fields ?? {}
+      }, action.resource);
       context.drafts.delete(key);
-      au(`${action} completed`, { type: "success" });
+      au(`${action.action} completed`, { type: "success" });
       context.reload(detail.collection, detail.row);
     } catch (error) {
       au(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
@@ -15330,7 +15336,11 @@ p9r-textarea {
         emitWidgetEvent(this, WIDGET_BACK_EVENT, {});
       const action = findActionTarget(event);
       if (action?.dataset.action)
-        emitWidgetEvent(this, WIDGET_ACTION_EVENT, { action: action.dataset.action });
+        emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+          action: action.dataset.action,
+          resource: this.currentResource(),
+          fields: this.currentFields()
+        });
       const chip = target?.closest(".chip");
       if (chip)
         this.toggleChip(chip);
@@ -15408,6 +15418,24 @@ p9r-textarea {
     }
     findField(id2) {
       return [...this.value.main, ...this.value.aside].flatMap((section) => section.fields).find((field) => field.id === id2);
+    }
+    currentResource() {
+      const widget = parseJson2(this.dataset.configJson ?? "");
+      if (!widget || widget.widget !== "w-detail")
+        return;
+      const sourceData = parseJson2(this.dataset.sourceJson ?? "");
+      if (sourceData === null)
+        return;
+      return widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+    }
+    currentFields() {
+      const fields = {};
+      for (const control of Array.from(this.shadowRoot.querySelectorAll("[data-field-control]"))) {
+        const field = this.findField(control.dataset.fieldControl ?? "");
+        if (field)
+          fields[field.id] = readFieldControlValue(field, control);
+      }
+      return fields;
     }
     template(kind) {
       const selector = kind === "section" ? "[data-section-template]" : "[data-field-template]";
@@ -15832,7 +15860,7 @@ p9r-textarea {
         au(`${event.detail.action} clicked`, { type: "success" });
         return;
       }
-      runDashboardWidgetAction(this.actionContext(), event.detail.action);
+      runDashboardWidgetAction(this.actionContext(), event.detail);
     };
     onWidgetMediaAction = (event) => {
       if (this.isExampleMode()) {

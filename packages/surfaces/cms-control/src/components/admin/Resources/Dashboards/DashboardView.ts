@@ -125,7 +125,7 @@ export class DashboardView extends Component {
             showToast(`${event.detail.action} clicked`, { type: "success" });
             return;
         }
-        void runDashboardWidgetAction(this.actionContext(), event.detail.action);
+        void runDashboardWidgetAction(this.actionContext(), event.detail);
     };
 
     private onWidgetMediaAction = (event: CustomEvent<WidgetMediaActionDetail>): void => {
