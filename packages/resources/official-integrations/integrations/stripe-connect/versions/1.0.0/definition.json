@@ -1343,472 +1343,605 @@
             "type": "dashboard",
             "dashboard": {
                 "id": "{{answers.id}}-dashboard",
-                "source": "{{answers.id}}",
                 "meta": {
                     "name": "Stripe Connect",
                     "icon": "credit-card"
                 },
-                "collections": [
-                    {
-                        "id": "accounts",
-                        "rowKey": "userId",
-                        "list": {
-                            "endpoint": "listConnectAccounts",
-                            "params": {
-                                "q": "$param.q",
-                                "status": "$param.status",
-                                "limit": "100"
-                            },
-                            "itemsPath": "accounts",
-                            "totalPath": "total"
-                        },
-                        "item": {
-                            "get": {
-                                "endpoint": "getConnectAccount",
-                                "params": {
-                                    "userId": "$selection"
-                                }
-                            },
-                            "create": {
-                                "endpoint": "createConnectOnboardingSessionForUser",
-                                "params": {
-                                    "userId": "$param.userId"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "id": "payments",
-                        "rowKey": "paymentId",
-                        "list": {
-                            "endpoint": "listPayments",
-                            "params": {
-                                "q": "$param.q",
-                                "status": "$param.status",
-                                "limit": "100"
-                            },
-                            "itemsPath": "payments",
-                            "totalPath": "total"
-                        },
-                        "item": {
-                            "get": {
-                                "endpoint": "getPaymentById",
-                                "params": {
-                                    "paymentId": "$selection"
-                                }
-                            },
-                            "create": {
-                                "endpoint": "createPaymentForUsers"
-                            }
-                        }
-                    }
-                ],
+                "source": "{{answers.id}}",
                 "views": [
                     {
                         "widget": "w-tabs",
+                        "id": "stripeConnectTabs",
                         "tabs": [
                             {
+                                "id": "accounts",
                                 "label": "Accounts",
                                 "children": [
                                     {
-                                        "widget": "w-create",
-                                        "collection": "accounts",
-                                        "label": "Create onboarding session",
-                                        "submitLabel": "Create session",
-                                        "successMessage": "Onboarding session created",
-                                        "fields": [
-                                            {
-                                                "field": "userId",
-                                                "label": "User",
-                                                "input": "cms-user",
-                                                "required": true
-                                            },
-                                            {
-                                                "field": "email",
-                                                "label": "Email"
-                                            },
-                                            {
-                                                "field": "country",
-                                                "label": "Country"
-                                            },
-                                            {
-                                                "field": "businessType",
-                                                "label": "Business type",
-                                                "input": "select",
-                                                "options": [
-                                                    "individual",
-                                                    "company",
-                                                    "government_entity",
-                                                    "non_profit"
-                                                ]
-                                            }
-                                        ],
-                                        "resultFields": [
-                                            {
-                                                "field": "clientSecret",
-                                                "label": "Client secret"
-                                            },
-                                            {
-                                                "field": "expiresAt",
-                                                "label": "Expires at"
-                                            },
-                                            {
-                                                "field": "stripeAccountId",
-                                                "label": "Stripe account"
-                                            },
-                                            {
-                                                "field": "onboardingStatus",
-                                                "label": "Status",
-                                                "format": "badge"
-                                            }
-                                        ]
-                                    },
-                                    {
                                         "widget": "w-table",
-                                        "collection": "accounts",
+                                        "id": "connectAccountsTable",
+                                        "title": "Connected accounts",
+                                        "source": {
+                                            "endpoint": "listConnectAccounts",
+                                            "params": {
+                                                "q": "$filter.q",
+                                                "status": "$filter.status",
+                                                "limit": "100"
+                                            },
+                                            "itemsPath": "accounts",
+                                            "totalPath": "total"
+                                        },
+                                        "rowKey": "userId",
                                         "filters": [
                                             {
-                                                "field": "q",
+                                                "id": "q",
                                                 "param": "q",
-                                                "input": "text",
+                                                "type": "text",
                                                 "label": "Search",
-                                                "placeholder": "Search users or Stripe accounts"
+                                                "placeholder": "Search accounts"
                                             },
                                             {
-                                                "field": "status",
+                                                "id": "status",
                                                 "param": "status",
-                                                "input": "select",
+                                                "type": "select",
                                                 "label": "Status",
                                                 "options": [
-                                                    "not_started",
-                                                    "link_created",
-                                                    "onboarding_started",
-                                                    "requirements_due",
-                                                    "pending_verification",
-                                                    "enabled",
-                                                    "restricted",
-                                                    "rejected"
+                                                    {
+                                                        "value": "new",
+                                                        "label": "New"
+                                                    },
+                                                    {
+                                                        "value": "onboarding_started",
+                                                        "label": "Onboarding started"
+                                                    },
+                                                    {
+                                                        "value": "link_created",
+                                                        "label": "Link created"
+                                                    },
+                                                    {
+                                                        "value": "requirements_due",
+                                                        "label": "Requirements due"
+                                                    },
+                                                    {
+                                                        "value": "enabled",
+                                                        "label": "Enabled"
+                                                    },
+                                                    {
+                                                        "value": "disabled",
+                                                        "label": "Disabled"
+                                                    }
                                                 ]
                                             }
                                         ],
                                         "columns": [
                                             {
-                                                "field": "userId",
-                                                "label": "User"
+                                                "id": "userId",
+                                                "label": "User",
+                                                "path": "userId",
+                                                "primary": true
                                             },
                                             {
-                                                "field": "stripeAccountId",
-                                                "label": "Stripe account"
+                                                "id": "stripeAccountId",
+                                                "label": "Stripe account",
+                                                "path": "stripeAccountId"
                                             },
                                             {
-                                                "field": "onboardingStatus",
+                                                "id": "onboardingStatus",
                                                 "label": "Status",
+                                                "path": "onboardingStatus",
                                                 "format": "badge"
                                             },
                                             {
-                                                "field": "chargesEnabled",
+                                                "id": "chargesEnabled",
                                                 "label": "Charges",
+                                                "path": "chargesEnabled",
                                                 "format": "badge"
                                             },
                                             {
-                                                "field": "payoutsEnabled",
+                                                "id": "payoutsEnabled",
                                                 "label": "Payouts",
+                                                "path": "payoutsEnabled",
                                                 "format": "badge"
                                             },
                                             {
-                                                "field": "updatedAt",
+                                                "id": "updatedAt",
                                                 "label": "Updated",
+                                                "path": "updatedAt",
                                                 "format": "date"
                                             }
-                                        ]
+                                        ],
+                                        "selection": {
+                                            "opens": "connectAccountDetail"
+                                        }
                                     },
                                     {
                                         "widget": "w-detail",
-                                        "collection": "accounts",
-                                        "fields": [
+                                        "id": "connectAccountDetail",
+                                        "source": {
+                                            "endpoint": "getConnectAccount",
+                                            "params": {
+                                                "userId": "$selection.userId"
+                                            }
+                                        },
+                                        "title": {
+                                            "path": "userId",
+                                            "fallback": "Connected account"
+                                        },
+                                        "status": {
+                                            "path": "onboardingStatus"
+                                        },
+                                        "actions": [
                                             {
-                                                "field": "userId",
-                                                "label": "User"
+                                                "id": "createOnboardingLink",
+                                                "label": "Create onboarding link",
+                                                "tone": "primary",
+                                                "placement": "primary",
+                                                "endpoint": {
+                                                    "endpoint": "createConnectOnboardingLinkForUser",
+                                                    "params": {
+                                                        "userId": "$resource.userId"
+                                                    },
+                                                    "body": {
+                                                        "returnUrl": "$field.returnUrl",
+                                                        "refreshUrl": "$field.refreshUrl",
+                                                        "email": "$field.email",
+                                                        "country": "$field.country",
+                                                        "businessType": "$field.businessType"
+                                                    }
+                                                }
                                             },
                                             {
-                                                "field": "stripeAccountId",
-                                                "label": "Stripe account"
+                                                "id": "createOnboardingSession",
+                                                "label": "Create onboarding session",
+                                                "placement": "more",
+                                                "endpoint": {
+                                                    "endpoint": "createConnectOnboardingSessionForUser",
+                                                    "params": {
+                                                        "userId": "$resource.userId"
+                                                    },
+                                                    "body": {
+                                                        "email": "$field.email",
+                                                        "country": "$field.country",
+                                                        "businessType": "$field.businessType"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "main": [
+                                            {
+                                                "id": "accountStatus",
+                                                "title": "Status",
+                                                "fields": [
+                                                    {
+                                                        "id": "userId",
+                                                        "label": "User id",
+                                                        "path": "userId",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "stripeAccountId",
+                                                        "label": "Stripe account",
+                                                        "path": "stripeAccountId",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "onboardingStatus",
+                                                        "label": "Onboarding status",
+                                                        "path": "onboardingStatus",
+                                                        "type": "readonly",
+                                                        "format": "badge"
+                                                    },
+                                                    {
+                                                        "id": "chargesEnabled",
+                                                        "label": "Charges enabled",
+                                                        "path": "chargesEnabled",
+                                                        "type": "readonly",
+                                                        "format": "badge"
+                                                    },
+                                                    {
+                                                        "id": "payoutsEnabled",
+                                                        "label": "Payouts enabled",
+                                                        "path": "payoutsEnabled",
+                                                        "type": "readonly",
+                                                        "format": "badge"
+                                                    },
+                                                    {
+                                                        "id": "detailsSubmitted",
+                                                        "label": "Details submitted",
+                                                        "path": "detailsSubmitted",
+                                                        "type": "readonly",
+                                                        "format": "badge"
+                                                    },
+                                                    {
+                                                        "id": "disabledReason",
+                                                        "label": "Disabled reason",
+                                                        "path": "disabledReason",
+                                                        "type": "readonly"
+                                                    }
+                                                ]
                                             },
                                             {
-                                                "field": "country",
-                                                "label": "Country"
-                                            },
+                                                "id": "onboardingFields",
+                                                "title": "Onboarding",
+                                                "fields": [
+                                                    {
+                                                        "id": "email",
+                                                        "label": "Email",
+                                                        "path": "email",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "country",
+                                                        "label": "Country",
+                                                        "path": "country",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "businessType",
+                                                        "label": "Business type",
+                                                        "path": "businessType",
+                                                        "type": "select",
+                                                        "options": [
+                                                            {
+                                                                "value": "individual",
+                                                                "label": "Individual"
+                                                            },
+                                                            {
+                                                                "value": "company",
+                                                                "label": "Company"
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "id": "returnUrl",
+                                                        "label": "Return URL",
+                                                        "path": "returnUrl",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "refreshUrl",
+                                                        "label": "Refresh URL",
+                                                        "path": "refreshUrl",
+                                                        "type": "text"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "aside": [
                                             {
-                                                "field": "businessType",
-                                                "label": "Business type"
-                                            },
-                                            {
-                                                "field": "onboardingStatus",
-                                                "label": "Status",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "field": "chargesEnabled",
-                                                "label": "Charges enabled",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "field": "payoutsEnabled",
-                                                "label": "Payouts enabled",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "field": "detailsSubmitted",
-                                                "label": "Details submitted",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "field": "disabledReason",
-                                                "label": "Disabled reason"
-                                            },
-                                            {
-                                                "field": "lastOnboardingStartedAt",
-                                                "label": "Last onboarding start",
-                                                "format": "date"
-                                            },
-                                            {
-                                                "field": "createdAt",
-                                                "label": "Created",
-                                                "format": "date"
-                                            },
-                                            {
-                                                "field": "updatedAt",
-                                                "label": "Updated",
-                                                "format": "date"
+                                                "id": "requirements",
+                                                "title": "Requirements",
+                                                "fields": [
+                                                    {
+                                                        "id": "currentlyDue",
+                                                        "label": "Currently due",
+                                                        "path": "currentlyDue",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "eventuallyDue",
+                                                        "label": "Eventually due",
+                                                        "path": "eventuallyDue",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "pastDue",
+                                                        "label": "Past due",
+                                                        "path": "pastDue",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "pendingVerification",
+                                                        "label": "Pending verification",
+                                                        "path": "pendingVerification",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "updatedAt",
+                                                        "label": "Updated",
+                                                        "path": "updatedAt",
+                                                        "type": "readonly",
+                                                        "format": "date"
+                                                    }
+                                                ]
                                             }
                                         ]
                                     }
                                 ]
                             },
                             {
+                                "id": "payments",
                                 "label": "Payments",
                                 "children": [
                                     {
-                                        "widget": "w-create",
-                                        "collection": "payments",
-                                        "label": "Create payment",
-                                        "submitLabel": "Create payment",
-                                        "successMessage": "Payment created",
-                                        "fields": [
+                                        "widget": "w-detail",
+                                        "id": "createPaymentForm",
+                                        "source": {
+                                            "endpoint": "health"
+                                        },
+                                        "title": {
+                                            "path": "clientReferenceId",
+                                            "fallback": "Create payment"
+                                        },
+                                        "actions": [
                                             {
-                                                "field": "buyerUserId",
-                                                "label": "Buyer",
-                                                "input": "cms-user",
-                                                "required": true
-                                            },
-                                            {
-                                                "field": "sellerUserId",
-                                                "label": "Seller",
-                                                "input": "lookup",
-                                                "required": true,
-                                                "lookup": {
-                                                    "endpoint": "listConnectAccounts",
-                                                    "params": {
-                                                        "q": "$lookup.search",
-                                                        "status": "enabled",
-                                                        "limit": "20"
-                                                    },
-                                                    "itemsPath": "accounts",
-                                                    "totalPath": "total",
-                                                    "valuePath": "userId",
-                                                    "labelPath": "userId",
-                                                    "descriptionPaths": [
-                                                        "stripeAccountId",
-                                                        "onboardingStatus"
-                                                    ]
+                                                "id": "createPayment",
+                                                "label": "Create payment",
+                                                "tone": "primary",
+                                                "placement": "primary",
+                                                "endpoint": {
+                                                    "endpoint": "createPaymentForUsers",
+                                                    "body": {
+                                                        "buyerUserId": "$field.buyerUserId",
+                                                        "sellerUserId": "$field.sellerUserId",
+                                                        "amountTotal": "$field.amountTotal",
+                                                        "applicationFeeAmount": "$field.applicationFeeAmount",
+                                                        "currency": "$field.currency",
+                                                        "clientReferenceId": "$field.clientReferenceId",
+                                                        "description": "$field.description"
+                                                    }
                                                 }
-                                            },
-                                            {
-                                                "field": "amountTotal",
-                                                "label": "Amount",
-                                                "input": "number",
-                                                "required": true
-                                            },
-                                            {
-                                                "field": "applicationFeeAmount",
-                                                "label": "Application fee",
-                                                "input": "number",
-                                                "required": true
-                                            },
-                                            {
-                                                "field": "currency",
-                                                "label": "Currency"
-                                            },
-                                            {
-                                                "field": "clientReferenceId",
-                                                "label": "Client reference"
-                                            },
-                                            {
-                                                "field": "description",
-                                                "label": "Description"
                                             }
                                         ],
-                                        "resultFields": [
+                                        "main": [
                                             {
-                                                "field": "paymentId",
-                                                "label": "Payment"
-                                            },
-                                            {
-                                                "field": "stripePaymentIntentId",
-                                                "label": "PaymentIntent"
-                                            },
-                                            {
-                                                "field": "clientSecret",
-                                                "label": "Client secret"
-                                            },
-                                            {
-                                                "field": "status",
-                                                "label": "Status",
-                                                "format": "badge"
+                                                "id": "paymentFields",
+                                                "title": "Payment",
+                                                "fields": [
+                                                    {
+                                                        "id": "buyerUserId",
+                                                        "label": "Buyer user id",
+                                                        "path": "buyerUserId",
+                                                        "required": true,
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "sellerUserId",
+                                                        "label": "Seller user id",
+                                                        "path": "sellerUserId",
+                                                        "required": true,
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "amountTotal",
+                                                        "label": "Amount total",
+                                                        "path": "amountTotal",
+                                                        "required": true,
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "applicationFeeAmount",
+                                                        "label": "Application fee",
+                                                        "path": "applicationFeeAmount",
+                                                        "required": true,
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "currency",
+                                                        "label": "Currency",
+                                                        "path": "currency",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "clientReferenceId",
+                                                        "label": "Client reference",
+                                                        "path": "clientReferenceId",
+                                                        "type": "text"
+                                                    },
+                                                    {
+                                                        "id": "description",
+                                                        "label": "Description",
+                                                        "path": "description",
+                                                        "type": "textarea",
+                                                        "rows": 3
+                                                    }
+                                                ]
                                             }
                                         ]
                                     },
                                     {
                                         "widget": "w-table",
-                                        "collection": "payments",
+                                        "id": "paymentsTable",
+                                        "title": "Payments",
+                                        "source": {
+                                            "endpoint": "listPayments",
+                                            "params": {
+                                                "q": "$filter.q",
+                                                "status": "$filter.status",
+                                                "limit": "100"
+                                            },
+                                            "itemsPath": "payments",
+                                            "totalPath": "total"
+                                        },
+                                        "rowKey": "id",
                                         "filters": [
                                             {
-                                                "field": "q",
+                                                "id": "q",
                                                 "param": "q",
-                                                "input": "text",
+                                                "type": "text",
                                                 "label": "Search",
-                                                "placeholder": "Search references, users, or Stripe ids"
+                                                "placeholder": "Search payments"
                                             },
                                             {
-                                                "field": "status",
+                                                "id": "status",
                                                 "param": "status",
-                                                "input": "select",
+                                                "type": "select",
                                                 "label": "Status",
                                                 "options": [
-                                                    "payment_pending",
-                                                    "requires_action",
-                                                    "paid",
-                                                    "payment_failed",
-                                                    "cancelled",
-                                                    "partially_refunded",
-                                                    "refunded",
-                                                    "disputed"
+                                                    {
+                                                        "value": "requires_payment_method",
+                                                        "label": "Requires payment method"
+                                                    },
+                                                    {
+                                                        "value": "requires_confirmation",
+                                                        "label": "Requires confirmation"
+                                                    },
+                                                    {
+                                                        "value": "requires_action",
+                                                        "label": "Requires action"
+                                                    },
+                                                    {
+                                                        "value": "processing",
+                                                        "label": "Processing"
+                                                    },
+                                                    {
+                                                        "value": "succeeded",
+                                                        "label": "Succeeded"
+                                                    },
+                                                    {
+                                                        "value": "canceled",
+                                                        "label": "Canceled"
+                                                    }
                                                 ]
                                             }
                                         ],
                                         "columns": [
                                             {
-                                                "field": "paymentId",
-                                                "label": "Payment"
+                                                "id": "clientReferenceId",
+                                                "label": "Reference",
+                                                "path": "clientReferenceId",
+                                                "primary": true
                                             },
                                             {
-                                                "field": "status",
+                                                "id": "buyerUserId",
+                                                "label": "Buyer",
+                                                "path": "buyerUserId"
+                                            },
+                                            {
+                                                "id": "sellerUserId",
+                                                "label": "Seller",
+                                                "path": "sellerUserId"
+                                            },
+                                            {
+                                                "id": "amountTotal",
+                                                "label": "Amount",
+                                                "path": "amountTotal",
+                                                "format": "money"
+                                            },
+                                            {
+                                                "id": "status",
                                                 "label": "Status",
+                                                "path": "status",
                                                 "format": "badge"
                                             },
                                             {
-                                                "field": "buyerUserId",
-                                                "label": "Buyer"
-                                            },
-                                            {
-                                                "field": "sellerUserId",
-                                                "label": "Seller"
-                                            },
-                                            {
-                                                "field": "amountTotal",
-                                                "label": "Amount"
-                                            },
-                                            {
-                                                "field": "currency",
-                                                "label": "Currency"
-                                            },
-                                            {
-                                                "field": "applicationFeeAmount",
-                                                "label": "Fee"
-                                            },
-                                            {
-                                                "field": "updatedAt",
-                                                "label": "Updated",
+                                                "id": "createdAt",
+                                                "label": "Created",
+                                                "path": "createdAt",
                                                 "format": "date"
                                             }
-                                        ]
+                                        ],
+                                        "selection": {
+                                            "opens": "paymentDetail"
+                                        }
                                     },
                                     {
                                         "widget": "w-detail",
-                                        "collection": "payments",
-                                        "fields": [
+                                        "id": "paymentDetail",
+                                        "source": {
+                                            "endpoint": "getPaymentById",
+                                            "params": {
+                                                "paymentId": "$selection.id"
+                                            }
+                                        },
+                                        "title": {
+                                            "path": "clientReferenceId",
+                                            "fallback": "Payment"
+                                        },
+                                        "status": {
+                                            "path": "status"
+                                        },
+                                        "main": [
                                             {
-                                                "field": "paymentId",
-                                                "label": "Payment"
-                                            },
+                                                "id": "paymentGeneral",
+                                                "title": "Payment",
+                                                "fields": [
+                                                    {
+                                                        "id": "id",
+                                                        "label": "Payment id",
+                                                        "path": "id",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "stripePaymentIntentId",
+                                                        "label": "Payment intent",
+                                                        "path": "stripePaymentIntentId",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "buyerUserId",
+                                                        "label": "Buyer",
+                                                        "path": "buyerUserId",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "sellerUserId",
+                                                        "label": "Seller",
+                                                        "path": "sellerUserId",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "amountTotal",
+                                                        "label": "Amount",
+                                                        "path": "amountTotal",
+                                                        "type": "readonly",
+                                                        "format": "money"
+                                                    },
+                                                    {
+                                                        "id": "applicationFeeAmount",
+                                                        "label": "Application fee",
+                                                        "path": "applicationFeeAmount",
+                                                        "type": "readonly",
+                                                        "format": "money"
+                                                    },
+                                                    {
+                                                        "id": "currency",
+                                                        "label": "Currency",
+                                                        "path": "currency",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "status",
+                                                        "label": "Status",
+                                                        "path": "status",
+                                                        "type": "readonly",
+                                                        "format": "badge"
+                                                    },
+                                                    {
+                                                        "id": "description",
+                                                        "label": "Description",
+                                                        "path": "description",
+                                                        "type": "readonly"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "aside": [
                                             {
-                                                "field": "status",
-                                                "label": "Status",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "field": "clientReferenceId",
-                                                "label": "Client reference"
-                                            },
-                                            {
-                                                "field": "buyerUserId",
-                                                "label": "Buyer"
-                                            },
-                                            {
-                                                "field": "sellerUserId",
-                                                "label": "Seller"
-                                            },
-                                            {
-                                                "field": "stripePaymentIntentId",
-                                                "label": "PaymentIntent"
-                                            },
-                                            {
-                                                "field": "stripeChargeId",
-                                                "label": "Charge"
-                                            },
-                                            {
-                                                "field": "transferGroup",
-                                                "label": "Transfer group"
-                                            },
-                                            {
-                                                "field": "currency",
-                                                "label": "Currency"
-                                            },
-                                            {
-                                                "field": "amountTotal",
-                                                "label": "Amount"
-                                            },
-                                            {
-                                                "field": "applicationFeeAmount",
-                                                "label": "Application fee"
-                                            },
-                                            {
-                                                "field": "sellerAmount",
-                                                "label": "Seller amount"
-                                            },
-                                            {
-                                                "field": "description",
-                                                "label": "Description"
-                                            },
-                                            {
-                                                "field": "paidAt",
-                                                "label": "Paid",
-                                                "format": "date"
-                                            },
-                                            {
-                                                "field": "cancelledAt",
-                                                "label": "Cancelled",
-                                                "format": "date"
-                                            },
-                                            {
-                                                "field": "createdAt",
-                                                "label": "Created",
-                                                "format": "date"
-                                            },
-                                            {
-                                                "field": "updatedAt",
-                                                "label": "Updated",
-                                                "format": "date"
+                                                "id": "paymentMetadata",
+                                                "title": "Metadata",
+                                                "fields": [
+                                                    {
+                                                        "id": "clientReferenceId",
+                                                        "label": "Client reference",
+                                                        "path": "clientReferenceId",
+                                                        "type": "readonly"
+                                                    },
+                                                    {
+                                                        "id": "createdAt",
+                                                        "label": "Created",
+                                                        "path": "createdAt",
+                                                        "type": "readonly",
+                                                        "format": "date"
+                                                    },
+                                                    {
+                                                        "id": "updatedAt",
+                                                        "label": "Updated",
+                                                        "path": "updatedAt",
+                                                        "type": "readonly",
+                                                        "format": "date"
+                                                    }
+                                                ]
                                             }
                                         ]
                                     }

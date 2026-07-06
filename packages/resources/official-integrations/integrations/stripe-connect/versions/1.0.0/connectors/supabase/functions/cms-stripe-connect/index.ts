@@ -938,6 +938,10 @@ function validBusinessType(value: unknown): value is StripeBusinessType {
 
 function requiredInteger(body: JsonRecord, name: string): number {
     const value = body[name];
+    if (typeof value === "string" && value.trim()) {
+        const number = Number(value);
+        if (Number.isInteger(number)) return number;
+    }
     if (typeof value !== "number" || !Number.isInteger(value)) throw new HttpError(400, `${name} must be an integer`);
     return value;
 }

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { afterAll, describe, expect, test } from "bun:test";
 import {
     importIntegration,
+    type IntegrationBlocArtifact,
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
     type IntegrationDefinition,
@@ -56,7 +57,9 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(list.map(entry => entry.kind)).toContain("mondial-relay");
         expect(definition?.kind).toBe("mondial-relay");
         expect(definition?.version).toBe("1.0.0");
-        expect(JSON.stringify(definition)).toContain("\"input\":\"lookup\"");
+        const serialized = JSON.stringify(definition);
+        expect(serialized).toContain("mondial-relay-picker");
+        expect(serialized).toContain("\"type\":\"combobox\"");
     });
 
     test("installs the Connect source and dashboard with widget-backed relay lookup", async () => {
@@ -80,7 +83,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(dashboardJson).toContain("Edit settings");
         expect(dashboardJson).toContain("Sender address");
         expect(dashboardJson).toContain("Default weight grams");
-        expect(dashboardJson).toContain("\"input\":\"lookup\"");
+        expect(dashboardJson).toContain("\"type\":\"combobox\"");
         expect(harness.deployment?.dataApiSchemas).toEqual(["delivery"]);
         const functionSecrets = harness.deployment?.functions[0]?.secrets ?? {};
         expect(functionSecrets).toMatchObject({
@@ -273,6 +276,7 @@ async function createHarness(options: {
     const secrets = new InMemorySecretStore();
     const dashboards = new InMemoryDashboardRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
+    const importedBlocs: IntegrationBlocArtifact[] = [];
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
         async deploy(next) {
@@ -288,10 +292,23 @@ async function createHarness(options: {
         },
     };
 
+    const hydratedDefinition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mondial-relay");
+    if (!hydratedDefinition) throw new Error("mondial-relay definition not found");
     const result = await importIntegration(
-        { sources, secrets, dashboards, connectorDeployers: [deployer] },
+        {
+            sources,
+            secrets,
+            dashboards,
+            connectorDeployers: [deployer],
+            blocs: {
+                async importBloc(artifact) {
+                    importedBlocs.push(artifact);
+                    return { id: artifact.tag, action: "created" };
+                },
+            },
+        },
         { kind: "mondial-relay", answers: integrationAnswers(), options: {} },
-        [definition()],
+        [hydratedDefinition],
     );
     const functionSecrets = deployment?.functions[0]?.secrets ?? {};
     activeEnv = {
@@ -360,6 +377,7 @@ async function createHarness(options: {
         sources,
         secrets,
         dashboards,
+        importedBlocs,
         deployment,
         insertedShipments,
         connectRequestXml: () => connectRequestXml,

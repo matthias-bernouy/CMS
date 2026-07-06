@@ -1,0 +1,9 @@
+{
+    "default-tag": "user-account-form",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "User account form",
+        "description": "Public account form backed by the User Account source."
+    }
+}

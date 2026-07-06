@@ -111,6 +111,16 @@
     ],
     "artifacts": [
         {
+            "type": "bloc",
+            "bloc": {
+                "tag": "newsletter-subscription",
+                "name": "Newsletter subscription",
+                "group": "Newsletter",
+                "description": "Public newsletter subscription form backed by the Newsletter source.",
+                "path": "blocs/newsletter-subscription"
+            }
+        },
+        {
             "type": "source",
             "source": {
                 "id": "{{answers.id}}",
@@ -455,172 +465,187 @@
                     "icon": "mail"
                 },
                 "source": "{{answers.id}}",
-                "collections": [
+                "views": [
                     {
-                        "id": "subscriptions",
-                        "rowKey": "email",
-                        "list": {
+                        "widget": "w-table",
+                        "id": "subscriptionsTable",
+                        "title": "Subscriptions",
+                        "source": {
                             "endpoint": "listSubscriptions",
                             "params": {
-                                "q": "$param.q",
-                                "subscribed": "$param.subscribed",
+                                "q": "$filter.q",
+                                "subscribed": "$filter.subscribed",
                                 "limit": "100"
                             },
                             "itemsPath": "subscriptions",
                             "totalPath": "total"
                         },
-                        "item": {
-                            "get": {
-                                "endpoint": "getSubscription",
-                                "params": {
-                                    "email": "$selection"
-                                }
-                            },
-                            "create": {
-                                "endpoint": "setSubscription"
-                            },
-                            "update": {
-                                "endpoint": "setSubscription",
-                                "params": {
-                                    "email": "$selection"
-                                }
-                            },
-                            "delete": {
-                                "endpoint": "deleteSubscription",
-                                "params": {
-                                    "email": "$selection"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "views": [
-                    {
-                        "widget": "w-create",
-                        "collection": "subscriptions",
-                        "label": "Add subscription",
-                        "submitLabel": "Add subscription",
-                        "fields": [
-                            {
-                                "field": "email",
-                                "label": "Email",
-                                "required": true
-                            },
-                            {
-                                "field": "subscribed",
-                                "label": "Subscribed",
-                                "input": "boolean",
-                                "required": true
-                            }
-                        ]
-                    },
-                    {
-                        "widget": "w-action",
-                        "endpoint": "exportSubscriptions",
-                        "label": "Export CSV",
-                        "params": {
-                            "q": "$param.q",
-                            "subscribed": "$param.subscribed"
-                        },
-                        "downloadName": "newsletter-subscriptions.csv",
-                        "successMessage": "Export downloaded",
-                        "refresh": false
-                    },
-                    {
-                        "widget": "w-table",
-                        "collection": "subscriptions",
-                        "rowActions": [
-                            {
-                                "widget": "w-table-row-action",
-                                "label": "Delete",
-                                "action": "delete",
-                                "confirm": true
-                            }
-                        ],
+                        "rowKey": "email",
                         "filters": [
                             {
-                                "field": "q",
+                                "id": "q",
                                 "param": "q",
-                                "input": "text",
+                                "type": "text",
                                 "label": "Search",
                                 "placeholder": "Search emails"
                             },
                             {
-                                "field": "subscribed",
+                                "id": "subscribed",
                                 "param": "subscribed",
-                                "input": "select",
+                                "type": "select",
                                 "label": "Status",
                                 "options": [
-                                    "true",
-                                    "false"
+                                    {
+                                        "value": "true",
+                                        "label": "Subscribed"
+                                    },
+                                    {
+                                        "value": "false",
+                                        "label": "Unsubscribed"
+                                    }
                                 ]
                             }
                         ],
                         "columns": [
                             {
-                                "field": "email",
-                                "label": "Email"
+                                "id": "email",
+                                "label": "Email",
+                                "path": "email",
+                                "primary": true
                             },
                             {
-                                "field": "subscribed",
+                                "id": "subscribed",
                                 "label": "Subscribed",
+                                "path": "subscribed",
                                 "format": "badge"
                             },
                             {
-                                "field": "createdAt",
+                                "id": "createdAt",
                                 "label": "Created",
+                                "path": "createdAt",
                                 "format": "date"
                             },
                             {
-                                "field": "updatedAt",
+                                "id": "updatedAt",
                                 "label": "Updated",
+                                "path": "updatedAt",
                                 "format": "date"
                             }
-                        ]
-                    },
-                    {
-                        "widget": "w-update",
-                        "collection": "subscriptions",
-                        "label": "Edit subscription",
-                        "submitLabel": "Save subscription",
-                        "fields": [
+                        ],
+                        "selection": {
+                            "opens": "subscriptionDetail"
+                        },
+                        "actions": [
                             {
-                                "field": "subscribed",
-                                "label": "Subscribed",
-                                "input": "boolean",
-                                "required": true
+                                "id": "createSubscription",
+                                "label": "Add subscription",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "selection": {
+                                    "opens": "subscriptionDetail"
+                                }
                             }
                         ]
-                    },
-                    {
-                        "widget": "w-delete",
-                        "collection": "subscriptions",
-                        "label": "Delete subscription",
-                        "confirmLabel": "Delete this newsletter subscription?",
-                        "successMessage": "Newsletter subscription deleted"
                     },
                     {
                         "widget": "w-detail",
-                        "collection": "subscriptions",
-                        "fields": [
+                        "id": "subscriptionDetail",
+                        "source": {
+                            "endpoint": "getSubscription",
+                            "params": {
+                                "email": "$selection.email"
+                            }
+                        },
+                        "title": {
+                            "path": "email",
+                            "fallback": "Subscription"
+                        },
+                        "status": {
+                            "path": "subscribed"
+                        },
+                        "actions": [
                             {
-                                "field": "email",
-                                "label": "Email"
+                                "id": "saveSubscription",
+                                "label": "Save subscription",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "setSubscription",
+                                    "params": {
+                                        "email": "$field.email"
+                                    },
+                                    "body": {
+                                        "email": "$field.email",
+                                        "subscribed": "$field.subscribed"
+                                    }
+                                }
                             },
                             {
-                                "field": "subscribed",
-                                "label": "Subscribed",
-                                "input": "boolean"
-                            },
+                                "id": "deleteSubscription",
+                                "label": "Delete subscription",
+                                "tone": "danger",
+                                "placement": "more",
+                                "confirm": "Delete this newsletter subscription?",
+                                "endpoint": {
+                                    "endpoint": "deleteSubscription",
+                                    "params": {
+                                        "email": "$resource.email"
+                                    }
+                                }
+                            }
+                        ],
+                        "main": [
                             {
-                                "field": "createdAt",
-                                "label": "Created",
-                                "format": "date"
-                            },
+                                "id": "subscriptionFields",
+                                "title": "Subscription",
+                                "fields": [
+                                    {
+                                        "id": "email",
+                                        "label": "Email",
+                                        "path": "email",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "subscribed",
+                                        "label": "Status",
+                                        "path": "subscribed",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "true",
+                                                "label": "Subscribed"
+                                            },
+                                            {
+                                                "value": "false",
+                                                "label": "Unsubscribed"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
                             {
-                                "field": "updatedAt",
-                                "label": "Updated",
-                                "format": "date"
+                                "id": "subscriptionMetadata",
+                                "title": "Metadata",
+                                "fields": [
+                                    {
+                                        "id": "createdAt",
+                                        "label": "Created",
+                                        "path": "createdAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "updatedAt",
+                                        "label": "Updated",
+                                        "path": "updatedAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    }
+                                ]
                             }
                         ]
                     }

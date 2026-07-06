@@ -1,0 +1,9 @@
+{
+    "default-tag": "mondial-relay-picker",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Mondial Relay picker",
+        "description": "Public relay point picker backed by the Mondial Relay delivery source."
+    }
+}

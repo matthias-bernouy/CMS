@@ -115,6 +115,16 @@
     ],
     "artifacts": [
         {
+            "type": "bloc",
+            "bloc": {
+                "tag": "user-account-form",
+                "name": "User account form",
+                "group": "User account",
+                "description": "Public personal information form backed by the User Account source.",
+                "path": "blocs/user-account-form"
+            }
+        },
+        {
             "type": "source",
             "source": {
                 "id": "{{answers.id}}",
@@ -899,240 +909,196 @@
                     "icon": "database"
                 },
                 "source": "{{answers.id}}",
-                "collections": [
+                "views": [
                     {
-                        "id": "users",
-                        "rowKey": "userId",
-                        "list": {
+                        "widget": "w-table",
+                        "id": "accountsTable",
+                        "title": "Users",
+                        "source": {
                             "endpoint": "listAccounts",
                             "params": {
-                                "q": "$param.q",
+                                "q": "$filter.q",
                                 "limit": "100"
                             },
                             "itemsPath": "accounts",
                             "totalPath": "total"
                         },
-                        "item": {
-                            "get": {
-                                "endpoint": "getAccountByUserId",
-                                "params": {
-                                    "userId": "$selection"
-                                }
-                            },
-                            "create": {
-                                "endpoint": "createUserPersonalInformation",
-                                "params": {
-                                    "userId": "$param.userId"
-                                }
-                            },
-                            "update": {
-                                "endpoint": "createUserPersonalInformation",
-                                "params": {
-                                    "userId": "$selection"
-                                }
-                            },
-                            "delete": {
-                                "endpoint": "deleteUserPersonalInformation",
-                                "params": {
-                                    "userId": "$selection"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "views": [
-                    {
-                        "widget": "w-create",
-                        "collection": "users",
-                        "label": "Create user",
-                        "submitLabel": "Create user",
-                        "fields": [
-                            {
-                                "field": "userId",
-                                "label": "User",
-                                "input": "cms-user",
-                                "required": true
-                            },
-                            {
-                                "field": "displayName",
-                                "label": "Name"
-                            },
-                            {
-                                "field": "email",
-                                "label": "Email"
-                            },
-                            {
-                                "field": "phone",
-                                "label": "Phone"
-                            },
-                            {
-                                "field": "avatarFileId",
-                                "label": "Avatar",
-                                "input": "file",
-                                "accept": "image/*",
-                                "upload": {
-                                    "endpoint": "uploadUserPersonalInformationAvatar",
-                                    "params": {
-                                        "userId": "$param.userId"
-                                    },
-                                    "resultPath": "fileId"
-                                }
-                            },
-                            {
-                                "field": "locale",
-                                "label": "Locale"
-                            },
-                            {
-                                "field": "timezone",
-                                "label": "Timezone"
-                            }
-                        ]
-                    },
-                    {
-                        "widget": "w-table",
-                        "collection": "users",
-                        "rowActions": [
-                            {
-                                "widget": "w-table-row-action",
-                                "label": "Delete",
-                                "action": "delete",
-                                "confirm": true
-                            }
-                        ],
+                        "rowKey": "userId",
                         "filters": [
                             {
-                                "field": "q",
+                                "id": "q",
                                 "param": "q",
-                                "input": "text",
+                                "type": "text",
                                 "label": "Search",
                                 "placeholder": "Search users"
                             }
                         ],
                         "columns": [
                             {
-                                "field": "displayName",
-                                "label": "Name"
+                                "id": "displayName",
+                                "label": "Name",
+                                "path": "displayName",
+                                "primary": true
                             },
                             {
-                                "field": "email",
-                                "label": "Email"
+                                "id": "email",
+                                "label": "Email",
+                                "path": "email"
                             },
                             {
-                                "field": "phone",
-                                "label": "Phone"
+                                "id": "phone",
+                                "label": "Phone",
+                                "path": "phone"
                             },
                             {
-                                "field": "locale",
-                                "label": "Locale"
+                                "id": "locale",
+                                "label": "Locale",
+                                "path": "locale"
                             },
                             {
-                                "field": "timezone",
-                                "label": "Timezone"
+                                "id": "timezone",
+                                "label": "Timezone",
+                                "path": "timezone"
                             },
                             {
-                                "field": "updatedAt",
+                                "id": "updatedAt",
                                 "label": "Updated",
+                                "path": "updatedAt",
                                 "format": "date"
                             }
-                        ]
-                    },
-                    {
-                        "widget": "w-update",
-                        "collection": "users",
-                        "label": "Edit user",
-                        "submitLabel": "Save user",
-                        "fields": [
-                            {
-                                "field": "displayName",
-                                "label": "Name"
-                            },
-                            {
-                                "field": "email",
-                                "label": "Email"
-                            },
-                            {
-                                "field": "phone",
-                                "label": "Phone"
-                            },
-                            {
-                                "field": "avatarFileId",
-                                "label": "Avatar",
-                                "input": "file",
-                                "accept": "image/*",
-                                "upload": {
-                                    "endpoint": "uploadUserPersonalInformationAvatar",
-                                    "params": {
-                                        "userId": "$selection"
-                                    },
-                                    "resultPath": "fileId"
-                                }
-                            },
-                            {
-                                "field": "locale",
-                                "label": "Locale"
-                            },
-                            {
-                                "field": "timezone",
-                                "label": "Timezone"
-                            }
-                        ]
-                    },
-                    {
-                        "widget": "w-delete",
-                        "collection": "users",
-                        "label": "Delete user",
-                        "confirmLabel": "Delete this user's personal information?",
-                        "successMessage": "User personal information deleted"
+                        ],
+                        "selection": {
+                            "opens": "accountDetail"
+                        }
                     },
                     {
                         "widget": "w-detail",
-                        "collection": "users",
-                        "fields": [
+                        "id": "accountDetail",
+                        "source": {
+                            "endpoint": "getAccountByUserId",
+                            "params": {
+                                "userId": "$selection.userId"
+                            }
+                        },
+                        "title": {
+                            "path": "displayName",
+                            "fallback": "User"
+                        },
+                        "status": {
+                            "path": "email"
+                        },
+                        "actions": [
                             {
-                                "field": "userId",
-                                "label": "User id"
-                            },
-                            {
-                                "field": "displayName",
-                                "label": "Name"
-                            },
-                            {
-                                "field": "email",
-                                "label": "Email"
-                            },
-                            {
-                                "field": "phone",
-                                "label": "Phone"
-                            },
-                            {
-                                "field": "avatarFileId",
-                                "label": "Avatar",
-                                "format": "image",
-                                "media": {
-                                    "endpoint": "getUserPersonalInformationAvatar",
+                                "id": "saveAccount",
+                                "label": "Save user",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "createUserPersonalInformation",
                                     "params": {
-                                        "userId": "$selection",
-                                        "fileId": "$field.avatarFileId"
+                                        "userId": "$resource.userId"
+                                    },
+                                    "body": {
+                                        "displayName": "$field.displayName",
+                                        "email": "$field.email",
+                                        "phone": "$field.phone",
+                                        "avatarUrl": "$field.avatarUrl",
+                                        "avatarFileId": "$field.avatarFileId",
+                                        "locale": "$field.locale",
+                                        "timezone": "$field.timezone"
                                     }
                                 }
                             },
                             {
-                                "field": "locale",
-                                "label": "Locale"
-                            },
+                                "id": "deleteAccount",
+                                "label": "Delete user",
+                                "tone": "danger",
+                                "placement": "more",
+                                "confirm": "Delete this user's personal information?",
+                                "endpoint": {
+                                    "endpoint": "deleteUserPersonalInformation",
+                                    "params": {
+                                        "userId": "$resource.userId"
+                                    }
+                                }
+                            }
+                        ],
+                        "main": [
                             {
-                                "field": "timezone",
-                                "label": "Timezone"
-                            },
+                                "id": "accountFields",
+                                "title": "Personal information",
+                                "fields": [
+                                    {
+                                        "id": "userId",
+                                        "label": "User id",
+                                        "path": "userId",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "displayName",
+                                        "label": "Name",
+                                        "path": "displayName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "email",
+                                        "label": "Email",
+                                        "path": "email",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "phone",
+                                        "label": "Phone",
+                                        "path": "phone",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "avatarUrl",
+                                        "label": "Avatar URL",
+                                        "path": "avatarUrl",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "avatarFileId",
+                                        "label": "Avatar file id",
+                                        "path": "avatarFileId",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "locale",
+                                        "label": "Locale",
+                                        "path": "locale",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "timezone",
+                                        "label": "Timezone",
+                                        "path": "timezone",
+                                        "type": "text"
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
                             {
-                                "field": "createdAt",
-                                "label": "Created",
-                                "format": "date"
-                            },
-                            {
-                                "field": "updatedAt",
-                                "label": "Updated",
-                                "format": "date"
+                                "id": "accountMetadata",
+                                "title": "Metadata",
+                                "fields": [
+                                    {
+                                        "id": "createdAt",
+                                        "label": "Created",
+                                        "path": "createdAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "updatedAt",
+                                        "label": "Updated",
+                                        "path": "updatedAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    }
+                                ]
                             }
                         ]
                     }

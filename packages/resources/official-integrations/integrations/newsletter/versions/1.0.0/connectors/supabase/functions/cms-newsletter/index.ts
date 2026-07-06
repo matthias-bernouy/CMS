@@ -325,6 +325,8 @@ function stringField(body: JsonRecord, name: string, required = true): string | 
 
 function booleanField(body: JsonRecord, name: string): boolean {
     const value = body[name];
+    if (value === "true") return true;
+    if (value === "false") return false;
     if (typeof value !== "boolean") throw new HttpError(400, `${name} must be a boolean`);
     return value;
 }
