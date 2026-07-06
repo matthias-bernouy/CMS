@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import postIntegrationImport from "cms-control/api/integrations/import.post";
-import { makeCms, manualSourceDefinition, postImport } from "./helpers";
+import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./helpers";
 
 describe("POST /api/integrations/import", () => {
     test("creates a tracked Test secret source instance without exposing the secret value", async () => {
@@ -41,6 +41,33 @@ describe("POST /api/integrations/import", () => {
         expect((await sources.getSource("urn:manual"))?.endpoints[0]?.targetUrl)
             .toBe("https://api.example.com/items");
         expect(await integrationInstances.get("manual-source:manual")).not.toBeNull();
+    });
+
+    test("imports function artifacts through the configured function repository", async () => {
+        const { cms, functions } = makeCms();
+
+        const res = await postIntegrationImport(postImport({
+            definition: sourceWithFunctionDefinition(),
+            answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
+        }), cms);
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(body.artifacts).toEqual([
+            { type: "source", id: "urn:owned-items", action: "created" },
+            { type: "function", id: "readOwnedItem", action: "created" },
+        ]);
+        expect(await functions.getFunction("readOwnedItem")).toMatchObject({
+            id: "readOwnedItem",
+            steps: [{
+                id: "item",
+                call: {
+                    source: "owned-items",
+                    endpoint: "read",
+                    params: { itemId: "$input.params.itemId" },
+                },
+            }],
+        });
     });
 
     test("requires a tracked identity for integrations without an id answer", async () => {

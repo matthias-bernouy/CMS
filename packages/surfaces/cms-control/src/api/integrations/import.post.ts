@@ -15,6 +15,7 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
     const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
+        ...(cms.functions ? { functions: cms.functions } : {}),
         secrets: cms.secrets,
         dashboards: cms.dashboards,
         blocs: {

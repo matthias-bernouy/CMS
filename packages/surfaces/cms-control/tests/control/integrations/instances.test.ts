@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import getIntegrationInstances from "cms-control/api/integrations/instances.get";
 import postIntegrationImport from "cms-control/api/integrations/import.post";
-import { getInstances, makeCms, manualSourceDefinition, postImport } from "./helpers";
+import { getInstances, makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./helpers";
 
 describe("GET /api/integrations/instances", () => {
     test("lists tracked instances and reconciles missing source artifacts", async () => {
@@ -59,6 +59,25 @@ describe("GET /api/integrations/instances", () => {
 
         expect(body.definition.kind).toBe("manual-source");
         expect(body.definition.artifacts[0].source.id).toBe("{{answers.id}}");
+    });
+
+    test("reconciles function artifacts against the function repository", async () => {
+        const { cms, functions } = makeCms();
+
+        await postIntegrationImport(postImport({
+            definition: sourceWithFunctionDefinition(),
+            answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
+        }), cms);
+
+        let res = await getIntegrationInstances(getInstances("function-source:owned-items"), cms);
+        let body = await res.json();
+        expect(body.artifacts.find((artifact: { type: string }) => artifact.type === "function").exists).toBe(true);
+
+        await functions.deleteFunction("readOwnedItem");
+        res = await getIntegrationInstances(getInstances("function-source:owned-items"), cms);
+        body = await res.json();
+        expect(body.artifacts.find((artifact: { type: string }) => artifact.type === "function").exists).toBe(false);
+        expect(body.missingArtifactCount).toBe(1);
     });
 
     test("returns 404 for missing instance details", async () => {

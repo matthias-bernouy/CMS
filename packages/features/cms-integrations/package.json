@@ -14,6 +14,7 @@
     },
     "dependencies": {
         "@bernouy/cms-dashboards": "workspace:*",
+        "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*"
     },

@@ -5,14 +5,11 @@
         "rootDir": "./src",
         "baseUrl": "./src",
         "paths": {
-            "cms-integrations/*": ["./*"]
+            "cms-functions/*": ["./*"]
         }
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../cms-dashboards" },
-        { "path": "../cms-functions" },
-        { "path": "../cms-sources" },
-        { "path": "../cms-secrets" }
+        { "path": "../cms-sources" }
     ]
 }

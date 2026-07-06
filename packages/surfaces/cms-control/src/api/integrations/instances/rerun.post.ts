@@ -16,6 +16,7 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
     const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
+        ...(cms.functions ? { functions: cms.functions } : {}),
         secrets: cms.secrets,
         dashboards: cms.dashboards,
         blocs: {

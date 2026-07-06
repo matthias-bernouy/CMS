@@ -1,4 +1,5 @@
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
+import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type {
@@ -10,7 +11,7 @@ import type {
     IntegrationConnectorDeployResult,
 } from "./IntegrationConnectorDeployer";
 
-export type IntegrationArtifactType = "source" | "dashboard" | "bloc";
+export type IntegrationArtifactType = "source" | "function" | "dashboard" | "bloc";
 
 export type IntegrationArtifactAction = "created" | "updated" | "skipped";
 
@@ -55,6 +56,7 @@ export type IntegrationImportRequest = {
 
 export type IntegrationImportDeps = {
     sources: SourceRepository;
+    functions?: FunctionRepository;
     secrets: SecretStore;
     dashboards?: DashboardRepository;
     blocs?: IntegrationBlocImporter;

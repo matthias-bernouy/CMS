@@ -1,5 +1,6 @@
 import { InMemoryIntegrationInstanceRepository } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import type {
@@ -48,16 +49,22 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
     const dashboards = new InMemoryDashboardRepository();
+    const functions = new InMemoryFunctionRepository();
     const integrationInstances = new InMemoryIntegrationInstanceRepository();
     const integrationCatalog = integrationDefinitionRepository(siteIntegrations);
+    const repository = {
+        getBlocsList: async () => [],
+    };
     const cms = {
+        repository,
         sources,
         secrets,
         dashboards,
+        functions,
         integrationCatalog,
         integrationInstances,
     };
-    return { cms: cms as any, sources, secrets, dashboards, integrationInstances, integrationCatalog };
+    return { cms: cms as any, repository, sources, secrets, dashboards, functions, integrationInstances, integrationCatalog };
 }
 
 export function integrationDefinitionRepository(
@@ -124,5 +131,62 @@ export function manualSourceDefinition(): IntegrationDefinition {
                 }],
             },
         }],
+    };
+}
+
+export function sourceWithFunctionDefinition(): IntegrationDefinition {
+    return {
+        kind: "function-source",
+        label: "Function source",
+        inputs: [
+            { name: "id", label: "Source id", type: "text", required: true },
+            { name: "targetUrl", label: "Target URL", type: "url", required: true },
+        ],
+        artifacts: [
+            {
+                type: "source",
+                source: {
+                    id: "{{answers.id}}",
+                    meta: { name: "Function source" },
+                    endpoints: [{
+                        endpointId: "read",
+                        method: "GET",
+                        targetUrl: "{{answers.targetUrl}}",
+                        params: [{ name: "itemId", in: "query", required: true, type: "string" }],
+                        output: [{
+                            status: "200",
+                            body: {
+                                type: "object",
+                                properties: {
+                                    id: { type: "string" },
+                                    ownerUserId: { type: "string" },
+                                },
+                            },
+                        }],
+                    }],
+                },
+            },
+            {
+                type: "function",
+                function: {
+                    id: "readOwnedItem",
+                    method: "GET",
+                    input: {
+                        params: {
+                            itemId: { type: "string" },
+                        },
+                    },
+                    steps: [{
+                        id: "item",
+                        call: {
+                            source: "{{answers.id}}",
+                            endpoint: "read",
+                            params: { itemId: "$input.params.itemId" },
+                        },
+                    }],
+                    return: { status: 200, body: "$steps.item" },
+                },
+            },
+        ],
     };
 }

@@ -15,6 +15,7 @@ import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createDevSources, GENERATED_BLOCS_DIR } from "./dev-server/integrations";
 import { LocalFsDashboardRepository } from "./dev-server/dashboards";
+import { LocalFsFunctionRepository } from "./dev-server/functions";
 import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
@@ -120,6 +121,7 @@ export default async function CLI_dev(args: string[]) {
     const integrationConnectorDeployers = createIntegrationConnectorDeployers();
     const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
     const dashboards = new LocalFsDashboardRepository(config.siteDir);
+    const functions = new LocalFsFunctionRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
     const roles = new ValidatingRolesRepository(new InMemoryRolesRepository());
@@ -164,6 +166,7 @@ export default async function CLI_dev(args: string[]) {
         integrationInstances,
         integrationConnectorDeployers,
         dashboards,
+        functions,
         integrationBlocRepository,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
@@ -197,6 +200,7 @@ export default async function CLI_dev(args: string[]) {
         filesBlob: files,
         variantStore,
         sources,
+        functions,
         integrationInstances,
         sourceResolveSecret: resolveSecret,
         roles,

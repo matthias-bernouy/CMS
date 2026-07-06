@@ -5,6 +5,7 @@ import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms
 import { P9R_CACHE } from "@bernouy/cms-content";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import type { SourceSecretResolver } from "@bernouy/cms-sources";
+import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
@@ -38,6 +39,9 @@ export type DeliveryCmsConfig = {
      * resolves against it and proxies upstream; when absent, that route returns 501.
      */
     sources?: SourceRepository;
+    /** Optional trusted function store projected as the `system-functions`
+     * source when a source repository is also configured. */
+    functions?: FunctionRepository;
     /**
      * Optional secret resolver for source headers.
      *
@@ -124,6 +128,7 @@ export default class DeliveryCms {
     private _headInjectors:      readonly HeadInjector[];
     private _sources?:           SourceRepository;
     private _sourceResolveSecret?: SourceSecretResolver;
+    private _functions?:         FunctionRepository;
     private _auth?:              PublicAuthRoutesConfig<string>;
     private _roles?:             RolesRepository;
     private _integrationInstances?: IntegrationInstanceRepository;
@@ -140,6 +145,7 @@ export default class DeliveryCms {
         this._cache              = config.cache || new TtlCache({ bypass: process.env.MODE === "DEV" });
         this._headInjectors      = config.headInjectors ?? [];
         this._sources            = config.sources;
+        this._functions          = config.functions;
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
         this._auth               = config.auth;
@@ -177,6 +183,10 @@ export default class DeliveryCms {
     /** Secret resolver for Delivery source headers, when explicitly wired. */
     get sourceResolveSecret(){
         return this._sourceResolveSecret;
+    }
+
+    get functions(){
+        return this._functions;
     }
 
     /** Public auth API config, or `undefined` when not mounted. */

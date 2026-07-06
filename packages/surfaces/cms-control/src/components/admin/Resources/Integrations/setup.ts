@@ -75,6 +75,11 @@ function sourceRows(definition: IntegrationDefinition): SummaryRow[] {
             rows.push(["Bloc", bloc.name, `Tag: ${bloc.tag}`]);
             continue;
         }
+        if (artifact.type === "function") {
+            const fn = artifact.function;
+            rows.push(["Function", fn.meta?.name ?? fn.id, `${fn.method} ${fn.id}`]);
+            continue;
+        }
         const source = artifact.source;
         rows.push(["Source", source.meta?.name ?? source.id, `Source id: ${source.id}`]);
         for (const endpoint of source.endpoints) {

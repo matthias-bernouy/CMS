@@ -1,4 +1,5 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
+import type { FunctionDto } from "@bernouy/cms-functions";
 import type { SourceDto } from "@bernouy/cms-sources";
 
 export type IntegrationAnswerValue =
@@ -86,6 +87,11 @@ export type DeclarativeDashboardArtifactTemplate = {
     dashboard: DashboardDto;
 };
 
+export type DeclarativeFunctionArtifactTemplate = {
+    type: "function";
+    function: FunctionDto;
+};
+
 export type DeclarativeBlocArtifactTemplate = {
     type: "bloc";
     bloc: {
@@ -104,6 +110,7 @@ export type DeclarativeBlocArtifactTemplate = {
 
 export type DeclarativeArtifactTemplate =
     | DeclarativeSourceArtifactTemplate
+    | DeclarativeFunctionArtifactTemplate
     | DeclarativeDashboardArtifactTemplate
     | DeclarativeBlocArtifactTemplate;
 

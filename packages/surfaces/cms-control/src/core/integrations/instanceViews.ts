@@ -3,6 +3,7 @@ import type { IntegrationArtifactResult, IntegrationInstance } from "@bernouy/cm
 
 export type IntegrationArtifactContext = {
     sourceUrns: Set<string> | null;
+    functionIds: Set<string> | null;
     dashboardIds: Set<string> | null;
     blocIds: Set<string> | null;
 };
@@ -14,10 +15,13 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
     const dashboardIds = await cms.dashboards.getAllDashboards()
         .then(dashboards => new Set(dashboards.map(dashboard => dashboard.id)))
         .catch(() => null);
+    const functionIds = await (cms.functions
+        ? cms.functions.getAllFunctions().then(functions => new Set(functions.map(fn => fn.id))).catch(() => null)
+        : Promise.resolve(null));
     const blocIds = await cms.repository.getBlocsList()
         .then(blocs => new Set(blocs.map(bloc => bloc.id)))
         .catch(() => null);
-    return { sourceUrns, dashboardIds, blocIds };
+    return { sourceUrns, functionIds, dashboardIds, blocIds };
 }
 
 export function buildIntegrationInstanceView(
@@ -57,6 +61,7 @@ function artifactView(context: IntegrationArtifactContext, artifact: Integration
 }
 
 function artifactExists(context: IntegrationArtifactContext, artifact: IntegrationArtifactResult): boolean | "unknown" {
+    if (artifact.type === "function") return context.functionIds?.has(artifact.id) ?? "unknown";
     if (artifact.type === "dashboard") return context.dashboardIds?.has(artifact.id) ?? "unknown";
     if (artifact.type === "bloc") return context.blocIds?.has(artifact.id) ?? "unknown";
     return context.sourceUrns?.has(artifact.id) ?? "unknown";

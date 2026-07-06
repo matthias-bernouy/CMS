@@ -25,8 +25,10 @@ import {
 } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { ADMIN_ROLE, can, effectiveGrantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
-import type { SourceRepository } from "@bernouy/cms-sources";
+import type { SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
 import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest } from "@bernouy/cms-sources";
+import type { FunctionRepository } from "@bernouy/cms-functions";
+import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN, withFunctionsSource } from "@bernouy/cms-functions";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import {
@@ -82,6 +84,9 @@ export type ControlCmsOptions = Configuration & {
      *  default memory store keeps the admin surface bootable before persistence
      *  is wired. */
     dashboards?: DashboardRepository;
+    /** Optional trusted function store. When set, functions are exposed as the
+     *  readonly `system-functions` source and execute through the source proxy. */
+    functions?: FunctionRepository;
     /** Optional bloc repository used only for integration-generated bloc
      *  artifacts. Defaults to the main content repository. */
     integrationBlocRepository?: CmsRepository;
@@ -138,6 +143,7 @@ export class ControlCms {
     private _integrationCatalog: IntegrationDefinitionRepository;
     private _integrationInstances: IntegrationInstanceRepository | null;
     private _dashboards: DashboardRepository;
+    private _functions: FunctionRepository | null;
     private _integrationBlocRepository: CmsRepository | null;
 
     constructor(
@@ -176,6 +182,7 @@ export class ControlCms {
         this._integrationCatalog = configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG;
         this._integrationInstances = configuration.integrationInstances ?? null;
         this._dashboards = configuration.dashboards ?? new InMemoryDashboardRepository();
+        this._functions = configuration.functions ?? null;
         this._integrationBlocRepository = configuration.integrationBlocRepository ?? null;
         this.ready = Promise.resolve();
 
@@ -243,15 +250,27 @@ export class ControlCms {
             const definitions = await this._roles.list();
             return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
         };
-        const executeSystemEndpoint = controlPublicAuth
-            ? (endpoint: { urn: string; targetUrl: string }, req: Request) =>
-                executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, req)
-            : undefined;
+        const sourceDeps = { resolveSecret, resolveContext };
+        const proxiedSources = this._sources && this._functions ? withFunctionsSource(this._sources, this._functions) : this._sources;
+        const executeSystemEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
+            if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
+                if (!this._functions || !this._sources) return new Response("function executor not configured", { status: 501 });
+                const subject = await this._auth.getSubject(req).catch(() => null);
+                return executeFunctionSystemSourceEndpoint(endpoint, req, {
+                    functions: this._functions,
+                    sources: this._sources,
+                    deps: sourceDeps,
+                    resolveUser: async () => subject ? { id: subject.identifier, role: subject.role } : {},
+                });
+            }
+            if (controlPublicAuth) return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, req);
+            return new Response("system source executor not configured", { status: 501 });
+        };
         runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
             const prefix = sourcesPrefix(runner.basePath);
             for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (req) =>
-                    handleSourceRequest(this._sources, req, {
+                    handleSourceRequest(proxiedSources, req, {
                         prefix,
                         deps: { resolveSecret, resolveContext, executeSystemEndpoint, authorizeEndpoint },
                     }));
@@ -385,6 +404,10 @@ export class ControlCms {
         return this._dashboards;
     }
 
+    get functions(): FunctionRepository | null {
+        return this._functions;
+    }
+
     get integrationBlocRepository(): CmsRepository | null {
         return this._integrationBlocRepository;
     }
@@ -393,7 +416,7 @@ export class ControlCms {
      *  must be the same instance Delivery reads. Throws until wired. */
     get sources(): SourceRepository {
         if (!this._sources) throw new Error("sources repository not configured");
-        return this._sources;
+        return this._functions ? withFunctionsSource(this._sources, this._functions) : this._sources;
     }
 
     /** Analytics store (reader). Backs the admin analytics dashboards;

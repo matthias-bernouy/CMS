@@ -14,6 +14,7 @@
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-sources" },
+        { "path": "../../features/cms-functions" },
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-analytics" },
         { "path": "../../features/cms-permissions" },

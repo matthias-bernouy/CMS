@@ -15577,7 +15577,10 @@ p9r-token-input {
 .detail-table {
     display: grid;
     gap: 6px;
+    max-width: 100%;
     min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
 }
 
 .detail-table-row {
@@ -15585,7 +15588,8 @@ p9r-token-input {
     grid-template-columns: var(--detail-table-columns);
     gap: 8px;
     align-items: center;
-    min-width: 0;
+    width: max-content;
+    min-width: 100%;
     min-height: 34px;
 }
 
@@ -15597,6 +15601,10 @@ p9r-token-input {
 }
 
 .detail-table-row > span {
+    min-width: 0;
+}
+
+.detail-table-row > p9r-input {
     min-width: 0;
 }
 
@@ -17007,6 +17015,11 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
       if (artifact.type === "bloc") {
         const bloc = artifact.bloc;
         rows.push(["Bloc", bloc.name, `Tag: ${bloc.tag}`]);
+        continue;
+      }
+      if (artifact.type === "function") {
+        const fn2 = artifact.function;
+        rows.push(["Function", fn2.meta?.name ?? fn2.id, `${fn2.method} ${fn2.id}`]);
         continue;
       }
       const source = artifact.source;

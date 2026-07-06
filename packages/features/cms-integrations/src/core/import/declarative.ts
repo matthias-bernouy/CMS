@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { DuplicateDashboardError, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
+import { DuplicateFunctionError, validateFunction, type CmsFunction } from "@bernouy/cms-functions";
 import { DuplicateSourceError, sourceDtoToSource, validateSource, type Source } from "@bernouy/cms-sources";
 import { parseUrn } from "@bernouy/cms-sources";
 import { secretKeyError, secretKeyToRef } from "@bernouy/cms-secrets";
@@ -12,6 +13,7 @@ import { resolveTemplate, resolveTemplates, type TemplateContext } from "../temp
 import { writeSecretsWithRollback } from "./secretWrites";
 import { buildConnectorDeployments, deployConnectorDeployments } from "./connectorDeployments";
 import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "./dashboardWrites";
+import { writeFunctionsWithRollback, type IntegrationFunctionWrite } from "./functionWrites";
 import { writeSourcesWithRollback, type IntegrationSourceWrite } from "./sourceWrites";
 import type {
     DeclarativeBlocArtifactTemplate,
@@ -101,15 +103,17 @@ async function executeDeclarativeIntegration<T>(
             };
             const sourceArtifacts = buildSourceArtifacts(definition, context);
             const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
+            const functionArtifacts = buildFunctionArtifacts(definition, context);
             const dashboardArtifacts = buildDashboardArtifacts(definition, context);
             const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
             const blocArtifacts = buildBlocArtifacts(definition, context);
 
             return writeSourcesWithRollback(deps.sources, sourceWrites, async artifacts => {
-                const buildResult = async (dashboardArtifacts: typeof artifacts) => {
+                const functionWrites = await buildFunctionWrites(deps, functionArtifacts, options);
+                const buildResult = async (functionArtifacts: typeof artifacts, dashboardArtifacts: typeof artifacts) => {
                     const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
                     const importResult = {
-                        artifacts: [...artifacts, ...dashboardArtifacts, ...blocImportResults],
+                        artifacts: [...artifacts, ...functionArtifacts, ...dashboardArtifacts, ...blocImportResults],
                         ...(secretResults.length ? { secrets: secretResults } : {}),
                         ...(connectorDeployResult.results.length ? { connectors: connectorDeployResult.results } : {}),
                     };
@@ -117,8 +121,13 @@ async function executeDeclarativeIntegration<T>(
                         ? { importResult, committed: await commit(importResult) }
                         : { importResult };
                 };
-                if (!dashboardWrites.length) return buildResult([]);
-                return writeDashboardsWithRollback(deps.dashboards ?? missingDashboardRepository(), dashboardWrites, buildResult);
+                const writeDashboards = (functionArtifacts: typeof artifacts) => {
+                    if (!dashboardWrites.length) return buildResult(functionArtifacts, []);
+                    return writeDashboardsWithRollback(deps.dashboards ?? missingDashboardRepository(), dashboardWrites, dashboardArtifacts =>
+                        buildResult(functionArtifacts, dashboardArtifacts));
+                };
+                if (!functionWrites.length) return writeDashboards([]);
+                return writeFunctionsWithRollback(deps.functions ?? missingFunctionRepository(), functionWrites, writeDashboards);
             });
         },
     );
@@ -132,6 +141,17 @@ function buildSourceArtifacts(definition: IntegrationDefinition, context: Templa
     } catch (error) {
         if (error instanceof IntegrationInputError) throw error;
         throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid source artifact");
+    }
+}
+
+function buildFunctionArtifacts(definition: IntegrationDefinition, context: TemplateContext): CmsFunction[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter(artifact => artifact.type === "function")
+            .map(artifact => resolveTemplates(artifact.function, context));
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid function artifact");
     }
 }
 
@@ -308,6 +328,35 @@ function sourceId(source: Source): string {
 
 function missingDashboardRepository(): never {
     throw new IntegrationRuntimeError("dashboard repository not configured");
+}
+
+function missingFunctionRepository(): never {
+    throw new IntegrationRuntimeError("function repository not configured");
+}
+
+async function buildFunctionWrites(
+    deps: IntegrationImportDeps,
+    functionArtifacts: CmsFunction[],
+    options: IntegrationImportOptions,
+): Promise<IntegrationFunctionWrite[]> {
+    if (!functionArtifacts.length) return [];
+    if (!deps.functions) throw new IntegrationRuntimeError("function repository not configured");
+
+    const functionWrites: IntegrationFunctionWrite[] = [];
+    const seen = new Set<string>();
+
+    for (const fn of functionArtifacts) {
+        if (seen.has(fn.id)) throw new DuplicateFunctionError(fn.id);
+        seen.add(fn.id);
+
+        const errors = await validateFunction(fn, { sources: deps.sources });
+        if (errors.length) throw new IntegrationInputError("artifacts", errors.join("; "));
+        const previous = await deps.functions.getFunction(fn.id);
+        if (!options.force && previous) throw new DuplicateFunctionError(fn.id);
+        functionWrites.push({ fn, previous });
+    }
+
+    return functionWrites;
 }
 
 async function buildSourceWrites(

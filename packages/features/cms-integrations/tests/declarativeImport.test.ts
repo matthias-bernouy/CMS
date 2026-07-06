@@ -9,6 +9,7 @@ import {
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository, type Dashboard } from "@bernouy/cms-dashboards";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { writeSecretsWithRollback } from "cms-integrations/core/import/secretWrites";
@@ -118,6 +119,85 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                 "Bloc.ts": Buffer.from(`customElements.define("demo-card", class extends HTMLElement {});`).toString("base64"),
             },
         }]);
+    });
+
+    test("imports function artifacts after their source dependencies", async () => {
+        const sources = new InMemorySourceRepository();
+        const functions = new InMemoryFunctionRepository();
+        const secrets = new InMemorySecretStore();
+        const definition: IntegrationDefinition = {
+            kind: "products",
+            label: "Products",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "products",
+                        meta: { name: "Products" },
+                        endpoints: [
+                            {
+                                endpointId: "getProduct",
+                                method: "GET",
+                                targetUrl: "https://example.com/products",
+                                params: [{ name: "productId", in: "query", type: "string", required: true }],
+                                output: [{
+                                    status: "200",
+                                    body: {
+                                        type: "object",
+                                        properties: {
+                                            id: { type: "string" },
+                                            ownerUserId: { type: "string" },
+                                        },
+                                    },
+                                }],
+                            },
+                        ],
+                    },
+                },
+                {
+                    type: "function",
+                    function: {
+                        id: "readMyProduct",
+                        method: "GET",
+                        input: {
+                            params: {
+                                productId: { type: "string" },
+                            },
+                        },
+                        steps: [
+                            {
+                                id: "product",
+                                call: {
+                                    source: "products",
+                                    endpoint: "getProduct",
+                                    params: { productId: "$input.params.productId" },
+                                },
+                            },
+                            {
+                                assert: {
+                                    condition: { equals: ["$steps.product.ownerUserId", "$ctx.user.id"] },
+                                    failure: { status: 403, error: "Not your product" },
+                                },
+                            },
+                        ],
+                        return: { body: "$steps.product" },
+                    },
+                },
+            ],
+        };
+
+        const result = await importIntegration(
+            { sources, functions, secrets },
+            { kind: "products", answers: {}, options: {} },
+            [definition],
+        );
+
+        expect(result.artifacts).toEqual([
+            { type: "source", id: "urn:products", action: "created" },
+            { type: "function", id: "readMyProduct", action: "created" },
+        ]);
+        expect(await functions.getFunction("readMyProduct")).toMatchObject({ id: "readMyProduct" });
     });
 
     test("validates resolved declarative secret keys before writing", async () => {
