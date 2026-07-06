@@ -11,6 +11,8 @@ const BunFetch = globalThis.fetch;
 const BunFormData = globalThis.FormData;
 const BunFile = globalThis.File;
 const BunBlob = globalThis.Blob;
+const BunAbortController = globalThis.AbortController;
+const BunAbortSignal = globalThis.AbortSignal;
 
 GlobalRegistrator.register({
     url: "http://localhost:4999/cms/admin/editor",
@@ -38,5 +40,7 @@ if (!(HTMLElement.prototype as any).attachInternals) {
 (globalThis as any).FormData = BunFormData;
 (globalThis as any).File = BunFile;
 (globalThis as any).Blob = BunBlob;
+(globalThis as any).AbortController = BunAbortController;
+(globalThis as any).AbortSignal = BunAbortSignal;
 
 (globalThis as any).p9r = {};

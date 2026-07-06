@@ -1,13 +1,17 @@
-import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardAction, DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../types";
 import type { DetailSelection } from "../domain";
 import type { WidgetMediaActionDetail } from "../widgets/shared";
 import type { DashboardMediaItem } from "../widgets/w-media-field/types";
-import { fetchSourceJson, itemFrom, sendSourceForm, sendSourceJson } from "./source";
+import { fetchSourceJson, itemFrom, sendSourceDownload, sendSourceForm, sendSourceJson } from "./source";
 import { fieldValues } from "./mapping";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type MediaField = DetailWidget["main"][number]["fields"][number] & { type: "media" };
+
+export type DashboardActionResult =
+    | { kind: "value"; value: unknown }
+    | { kind: "download"; blob: Blob; filename: string };
 
 export async function executeDashboardAction(
     group: DashboardSourceGroup,
@@ -16,7 +20,7 @@ export async function executeDashboardAction(
     actionId: string,
     draft: Record<string, unknown>,
     currentResource?: unknown,
-): Promise<unknown> {
+): Promise<DashboardActionResult> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) throw new Error(`Dashboard action target "${detail.collection}" was not found`);
     const action = widget.actions?.find(item => item.id === actionId);
@@ -24,11 +28,37 @@ export async function executeDashboardAction(
     if (!action.endpoint) throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
-    return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {
+    return executeEndpointAction(group, action, {
         selection: { id: detail.row },
         resource,
         fields,
     });
+}
+
+export async function executeDashboardTableAction(
+    group: DashboardSourceGroup,
+    dashboard: DashboardDto,
+    actionId: string,
+    widgetId?: string,
+): Promise<DashboardActionResult> {
+    const action = findTableAction(dashboard.views, actionId, widgetId);
+    if (!action) throw new Error(`Dashboard table action "${actionId}" was not found`);
+    if (!action.endpoint) throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
+    return executeEndpointAction(group, action, { filters: {} });
+}
+
+async function executeEndpointAction(
+    group: DashboardSourceGroup,
+    action: DashboardAction,
+    vars: { selection?: Record<string, unknown>; resource?: unknown; fields?: Record<string, unknown>; filters?: Record<string, unknown> },
+): Promise<DashboardActionResult> {
+    if (!action.endpoint) throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
+    const method = endpointMethod(group, action.endpoint.endpoint);
+    if (action.download) {
+        const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
+        return { kind: "download", blob: download.blob, filename: action.download.filename ?? download.filename ?? `${action.id}.download` };
+    }
+    return { kind: "value", value: await sendSourceJson(group.source.id, action.endpoint, method, vars) };
 }
 
 async function fetchActionResource(sourceId: string, widget: DetailWidget, row: string): Promise<unknown> {
@@ -71,6 +101,26 @@ function findDetailWidget(widgets: DashboardWidget[], id: string): DetailWidget 
         if (widget.widget === "w-tabs") {
             for (const tab of widget.tabs) {
                 const found = findDetailWidget(tab.children, id);
+                if (found) return found;
+            }
+        }
+    }
+    return null;
+}
+
+function findTableAction(widgets: DashboardWidget[], actionId: string, widgetId: string | undefined): DashboardAction | null {
+    for (const widget of widgets) {
+        if (widget.widget === "w-table" && (!widgetId || widget.id === widgetId)) {
+            const action = widget.actions?.find(item => item.id === actionId);
+            if (action) return action;
+        }
+        if (widget.widget === "w-section") {
+            const found = findTableAction(widget.children, actionId, widgetId);
+            if (found) return found;
+        }
+        if (widget.widget === "w-tabs") {
+            for (const tab of widget.tabs) {
+                const found = findTableAction(tab.children, actionId, widgetId);
                 if (found) return found;
             }
         }

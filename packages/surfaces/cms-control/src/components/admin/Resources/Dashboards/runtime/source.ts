@@ -8,12 +8,7 @@ export async function fetchSourceJson(sourceId: string, ref: DashboardDataRef, v
 }
 
 export async function sendSourceJson(sourceId: string, ref: DashboardEndpointRef, method: string, vars: RuntimeVars): Promise<unknown> {
-    const body = resolveBody(ref.body, vars);
-    const response = await fetch(sourceUrl(sourceId, ref, vars), {
-        method,
-        headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    });
+    const response = await sendSourceResponse(sourceId, ref, method, vars, "application/json");
     return responseJson(response);
 }
 
@@ -24,6 +19,25 @@ export async function sendSourceForm(sourceId: string, ref: DashboardEndpointRef
         body,
     });
     return responseJson(response);
+}
+
+export async function sendSourceDownload(sourceId: string, ref: DashboardEndpointRef, method: string, vars: RuntimeVars): Promise<{ blob: Blob; filename?: string }> {
+    const response = await sendSourceResponse(sourceId, ref, method, vars, "*/*");
+    if (!response.ok) throw new Error(await response.text() || `Source request failed (${response.status})`);
+    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
+    return {
+        blob: await response.blob(),
+        ...(filename ? { filename } : {}),
+    };
+}
+
+async function sendSourceResponse(sourceId: string, ref: DashboardEndpointRef, method: string, vars: RuntimeVars, accept: string): Promise<Response> {
+    const body = resolveBody(ref.body, vars);
+    return fetch(sourceUrl(sourceId, ref, vars), {
+        method,
+        headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
 }
 
 function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVars): URL {
@@ -37,6 +51,11 @@ async function responseJson(response: Response): Promise<unknown> {
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.includes("json")) return response.text();
     return response.json();
+}
+
+function filenameFromDisposition(value: string | null): string | undefined {
+    const match = value?.match(/filename="?([^";]+)"?/i);
+    return match?.[1]?.trim() || undefined;
 }
 
 export function itemsFrom(data: unknown, ref: DashboardDataRef): unknown[] {

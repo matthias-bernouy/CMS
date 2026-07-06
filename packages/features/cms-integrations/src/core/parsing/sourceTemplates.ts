@@ -538,8 +538,17 @@ function parseAction(value: unknown, name: string): DashboardAction {
         ...(parseActionPlacement(value.placement, `${name}.placement`) ? { placement: parseActionPlacement(value.placement, `${name}.placement`)! } : {}),
         ...(text(value.section) ? { section: text(value.section)! } : {}),
         ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
+        ...(value.download !== undefined ? { download: parseActionDownload(value.download, `${name}.download`) } : {}),
         ...(isRecord(value.selection) ? { selection: parseSelection(value.selection, `${name}.selection`) } : {}),
         ...(text(value.confirm) ? { confirm: text(value.confirm)! } : {}),
+    };
+}
+
+function parseActionDownload(value: unknown, name: string): NonNullable<DashboardAction["download"]> {
+    if (value === true) return {};
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be true or an object");
+    return {
+        ...(text(value.filename) ? { filename: text(value.filename)! } : {}),
     };
 }
 

@@ -24,6 +24,7 @@ export type WidgetRowSelectDetail = {
 
 export type WidgetActionDetail = {
     action: string;
+    widget?: string;
     target?: string;
     resource?: unknown;
     fields?: Record<string, unknown>;

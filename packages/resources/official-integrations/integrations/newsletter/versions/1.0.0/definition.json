@@ -532,120 +532,23 @@
                                 "format": "date"
                             }
                         ],
-                        "selection": {
-                            "opens": "subscriptionDetail"
-                        },
                         "actions": [
                             {
-                                "id": "createSubscription",
-                                "label": "Add subscription",
-                                "tone": "primary",
-                                "placement": "primary",
-                                "selection": {
-                                    "opens": "subscriptionDetail"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        "widget": "w-detail",
-                        "id": "subscriptionDetail",
-                        "source": {
-                            "endpoint": "getSubscription",
-                            "params": {
-                                "email": "$selection.email"
-                            }
-                        },
-                        "title": {
-                            "path": "email",
-                            "fallback": "Subscription"
-                        },
-                        "status": {
-                            "path": "subscribed"
-                        },
-                        "actions": [
-                            {
-                                "id": "saveSubscription",
-                                "label": "Save subscription",
-                                "tone": "primary",
+                                "id": "exportSubscriptions",
+                                "label": "Export CSV",
+                                "icon": "download",
+                                "tone": "secondary",
                                 "placement": "primary",
                                 "endpoint": {
-                                    "endpoint": "setSubscription",
+                                    "endpoint": "exportSubscriptions",
                                     "params": {
-                                        "email": "$field.email"
-                                    },
-                                    "body": {
-                                        "email": "$field.email",
-                                        "subscribed": "$field.subscribed"
+                                        "q": "$filter.q",
+                                        "subscribed": "$filter.subscribed"
                                     }
+                                },
+                                "download": {
+                                    "filename": "newsletter-subscriptions.csv"
                                 }
-                            },
-                            {
-                                "id": "deleteSubscription",
-                                "label": "Delete subscription",
-                                "tone": "danger",
-                                "placement": "more",
-                                "confirm": "Delete this newsletter subscription?",
-                                "endpoint": {
-                                    "endpoint": "deleteSubscription",
-                                    "params": {
-                                        "email": "$resource.email"
-                                    }
-                                }
-                            }
-                        ],
-                        "main": [
-                            {
-                                "id": "subscriptionFields",
-                                "title": "Subscription",
-                                "fields": [
-                                    {
-                                        "id": "email",
-                                        "label": "Email",
-                                        "path": "email",
-                                        "required": true,
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "subscribed",
-                                        "label": "Status",
-                                        "path": "subscribed",
-                                        "required": true,
-                                        "type": "select",
-                                        "options": [
-                                            {
-                                                "value": "true",
-                                                "label": "Subscribed"
-                                            },
-                                            {
-                                                "value": "false",
-                                                "label": "Unsubscribed"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ],
-                        "aside": [
-                            {
-                                "id": "subscriptionMetadata",
-                                "title": "Metadata",
-                                "fields": [
-                                    {
-                                        "id": "createdAt",
-                                        "label": "Created",
-                                        "path": "createdAt",
-                                        "type": "readonly",
-                                        "format": "date"
-                                    },
-                                    {
-                                        "id": "updatedAt",
-                                        "label": "Updated",
-                                        "path": "updatedAt",
-                                        "type": "readonly",
-                                        "format": "date"
-                                    }
-                                ]
                             }
                         ]
                     }

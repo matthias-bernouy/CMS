@@ -23,6 +23,7 @@ export type WTableData = {
     actions?: Array<{
         label: string;
         action: string;
+        widget?: string;
         target?: string;
         tone?: "primary" | "secondary" | "danger";
     }>;

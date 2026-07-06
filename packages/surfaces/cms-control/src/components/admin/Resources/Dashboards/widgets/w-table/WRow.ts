@@ -13,11 +13,15 @@ template.innerHTML = `
             align-items: center;
             min-height: 54px;
             border-top: 1px solid #e8ecea;
-            cursor: pointer;
+            cursor: default;
             min-width: 0;
         }
 
-        .row:hover,
+        :host([collection]) .row {
+            cursor: pointer;
+        }
+
+        :host([collection]) .row:hover,
         :host([selected]) .row {
             background: #f3f7f5;
         }

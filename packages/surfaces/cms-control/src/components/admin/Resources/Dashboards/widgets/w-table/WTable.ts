@@ -67,6 +67,7 @@ export class DashboardWTable extends Component {
         root.replaceChildren(...(this.value.actions ?? []).map(action => {
             const button = document.createElement("p9r-button");
             button.dataset.action = action.action;
+            if (action.widget) button.dataset.widget = action.widget;
             if (action.target) button.dataset.target = action.target;
             button.setAttribute("tone", action.tone ?? "primary");
             button.textContent = action.label;
@@ -96,6 +97,7 @@ export class DashboardWTable extends Component {
             actions: (widget.actions ?? []).map(action => ({
                 label: action.label,
                 action: action.id,
+                widget: widget.id,
                 ...(action.selection?.opens ? { target: action.selection.opens } : {}),
                 tone: action.tone,
             })),
@@ -122,7 +124,7 @@ export class DashboardWTable extends Component {
     private createRow(row: WTableRow): DashboardWRow {
         const element = document.createElement("cms-dashboard-w-row") as DashboardWRow;
         element.setAttribute("row-key", row.id);
-        element.setAttribute("collection", row.collection);
+        if (row.collection) element.setAttribute("collection", row.collection);
         for (const column of this.value.columns) {
             const cell = document.createElement("cms-dashboard-w-cell");
             const value = row.cells[column.key];
@@ -145,6 +147,7 @@ export class DashboardWTable extends Component {
         const action = (event.target as Element | null)?.closest<HTMLElement>("[data-action]");
         if (action?.dataset.action) emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
             action: action.dataset.action,
+            widget: action.dataset.widget,
             target: action.dataset.target,
         });
     };

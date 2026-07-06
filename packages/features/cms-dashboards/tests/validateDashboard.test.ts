@@ -263,6 +263,21 @@ describe("validateDashboard", () => {
         ]));
     });
 
+    test("validates download action filenames", () => {
+        const dashboard = validDashboard();
+        const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
+        table.actions = [
+            {
+                id: "export",
+                label: "Export",
+                endpoint: { endpoint: "listProducts" },
+                download: { filename: "../products.csv" },
+            },
+        ];
+
+        expect(validateDashboard(dashboard, { source })).toContain("views.0.actions.0.download.filename must be a safe file name");
+    });
+
     test("rejects invalid binding expressions", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;

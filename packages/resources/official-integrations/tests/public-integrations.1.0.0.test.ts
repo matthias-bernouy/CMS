@@ -22,7 +22,7 @@ describe("public integrations 1.0.0", () => {
             answers: { id: "newsletter" },
             functionName: "cms-newsletter",
             schemas: ["newsletter"],
-            expectedEndpoints: ["setSubscription", "listSubscriptions", "getSubscription", "deleteSubscription"],
+            expectedEndpoints: ["setSubscription", "listSubscriptions", "exportSubscriptions", "getSubscription", "deleteSubscription"],
         },
         {
             kind: "stripe-connect",
@@ -72,6 +72,17 @@ describe("public integrations 1.0.0", () => {
         expect(dashboardJson).not.toContain("\"widget\":\"w-update\"");
         expect(dashboardJson).not.toContain("\"widget\":\"w-delete\"");
         expect(dashboardJson).not.toContain("\"collection\"");
+
+        if (scenario.kind === "newsletter") {
+            const table = dashboard?.views[0] as Record<string, unknown> | undefined;
+            expect(dashboard?.views).toHaveLength(1);
+            expect(table?.widget).toBe("w-table");
+            expect(table?.selection).toBeUndefined();
+            expect(dashboardJson).not.toContain("subscriptionDetail");
+            expect(dashboardJson).not.toContain("createSubscription");
+            expect(dashboardJson).toContain("exportSubscriptions");
+            expect(dashboardJson).toContain("newsletter-subscriptions.csv");
+        }
     });
 });
 

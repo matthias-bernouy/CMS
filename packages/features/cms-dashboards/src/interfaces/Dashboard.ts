@@ -147,6 +147,9 @@ export type DashboardAction = {
     placement?: "primary" | "secondary" | "more";
     section?: string;
     endpoint?: DashboardEndpointRef;
+    download?: {
+        filename?: string;
+    };
     selection?: { opens?: string };
     confirm?: string;
 };

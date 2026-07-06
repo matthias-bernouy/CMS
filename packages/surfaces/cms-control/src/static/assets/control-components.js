@@ -2385,11 +2385,6 @@ input:disabled {
     padding: 0;
 }
 
-.clear[hidden],
-.chevron[hidden] {
-    display: none;
-}
-
 .clear:hover {
     background: var(--bg-hover, #f1f4f3);
     color: var(--text-main, #1e293b);
@@ -3036,12 +3031,12 @@ input:disabled {
   var fi = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), D(t, e, i, o), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    r.setFormValue(e.value), D(t, e, i, o);
   };
-  var xi = (t, e, r) => {
-    if (!e)
+  var xi = (t, e) => {
+    if (!t)
       return;
-    r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    e.setFormValue(t.value);
   };
   var ld = mi + bi + gi;
 
@@ -3124,7 +3119,7 @@ input:disabled {
       this._input?.focus();
     }
     _onInput = () => fi(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => xi(this, this._input, this._internals);
+    _onChange = () => xi(this._input, this._internals);
   }
   var wi = `:host {
     display: block;
@@ -4989,9 +4984,9 @@ input:hover:not(:disabled) {
     width: 100vw;
     overflow: hidden;
 
-    --_sidebar-width: 224px;
+    --_sidebar-width: 252px;
     --_sidebar-collapsed-width: 0px;
-    --_secondary-sidebar-width: var(--secondary-sidebar-width, 248px);
+    --_secondary-sidebar-width: var(--secondary-sidebar-width, 280px);
     --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
     --_content-bg: var(--bg-base);
@@ -5063,7 +5058,6 @@ input:hover:not(:disabled) {
 }
 
 ::slotted([slot="sidebar"]) {
-    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -5072,7 +5066,6 @@ input:hover:not(:disabled) {
 }
 
 ::slotted([slot="secondary-sidebar"]) {
-    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -13400,12 +13393,7 @@ p {
     return responseJson(response);
   }
   async function sendSourceJson(sourceId, ref, method, vars) {
-    const body = resolveBody(ref.body, vars);
-    const response = await fetch(sourceUrl(sourceId, ref, vars), {
-      method,
-      headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-      ...body === undefined ? {} : { body: JSON.stringify(body) }
-    });
+    const response = await sendSourceResponse(sourceId, ref, method, vars, "application/json");
     return responseJson(response);
   }
   async function sendSourceForm(sourceId, ref, method, vars, body) {
@@ -13415,6 +13403,24 @@ p {
       body
     });
     return responseJson(response);
+  }
+  async function sendSourceDownload(sourceId, ref, method, vars) {
+    const response = await sendSourceResponse(sourceId, ref, method, vars, "*/*");
+    if (!response.ok)
+      throw new Error(await response.text() || `Source request failed (${response.status})`);
+    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
+    return {
+      blob: await response.blob(),
+      ...filename ? { filename } : {}
+    };
+  }
+  async function sendSourceResponse(sourceId, ref, method, vars, accept) {
+    const body = resolveBody(ref.body, vars);
+    return fetch(sourceUrl(sourceId, ref, vars), {
+      method,
+      headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
+      ...body === undefined ? {} : { body: JSON.stringify(body) }
+    });
   }
   function sourceUrl(sourceId, ref, vars) {
     const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
@@ -13429,6 +13435,10 @@ p {
     if (!contentType.includes("json"))
       return response.text();
     return response.json();
+  }
+  function filenameFromDisposition(value) {
+    const match = value?.match(/filename="?([^";]+)"?/i);
+    return match?.[1]?.trim() || undefined;
   }
   function itemsFrom(data, ref) {
     if (!ref.itemsPath)
@@ -13588,11 +13598,29 @@ p {
       throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
-    return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {
+    return executeEndpointAction(group, action, {
       selection: { id: detail.row },
       resource,
       fields
     });
+  }
+  async function executeDashboardTableAction(group, dashboard, actionId, widgetId) {
+    const action = findTableAction(dashboard.views, actionId, widgetId);
+    if (!action)
+      throw new Error(`Dashboard table action "${actionId}" was not found`);
+    if (!action.endpoint)
+      throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
+    return executeEndpointAction(group, action, { filters: {} });
+  }
+  async function executeEndpointAction(group, action, vars) {
+    if (!action.endpoint)
+      throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
+    const method = endpointMethod(group, action.endpoint.endpoint);
+    if (action.download) {
+      const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
+      return { kind: "download", blob: download.blob, filename: action.download.filename ?? download.filename ?? `${action.id}.download` };
+    }
+    return { kind: "value", value: await sendSourceJson(group.source.id, action.endpoint, method, vars) };
   }
   async function fetchActionResource(sourceId, widget, row) {
     const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
@@ -13638,6 +13666,28 @@ p {
     }
     return null;
   }
+  function findTableAction(widgets, actionId, widgetId) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-table" && (!widgetId || widget.id === widgetId)) {
+        const action = widget.actions?.find((item) => item.id === actionId);
+        if (action)
+          return action;
+      }
+      if (widget.widget === "w-section") {
+        const found = findTableAction(widget.children, actionId, widgetId);
+        if (found)
+          return found;
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findTableAction(tab.children, actionId, widgetId);
+          if (found)
+            return found;
+        }
+      }
+    }
+    return null;
+  }
   function endpointMethod(group, endpointId) {
     return group.endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.method ?? "GET";
   }
@@ -13664,25 +13714,47 @@ p {
   // src/components/admin/Resources/Dashboards/DashboardViewActions.ts
   async function runDashboardWidgetAction(context, action) {
     const { group, dashboard, detail } = context;
-    if (!group || !dashboard || !detail)
+    if (!group || !dashboard)
       return;
-    const key = detailKey(detail.collection, detail.row);
+    const key = detail ? detailKey(detail.collection, detail.row) : "";
     try {
-      const result = await executeDashboardAction(group, dashboard, detail, action.action, {
+      const result = detail ? await executeDashboardAction(group, dashboard, detail, action.action, {
         ...context.drafts.get(key) ?? {},
         ...action.fields ?? {}
-      }, action.resource);
-      context.drafts.delete(key);
+      }, action.resource) : await executeDashboardTableAction(group, dashboard, action.action, action.widget);
+      if (detail)
+        context.drafts.delete(key);
+      if (result.kind === "download") {
+        downloadBlob(result.blob, result.filename);
+        au(`${action.action} downloaded`, { type: "success" });
+        return;
+      }
       au(`${action.action} completed`, { type: "success" });
-      if (action.action.startsWith("delete"))
+      if (!detail)
+        context.render();
+      else if (action.action.startsWith("delete"))
         context.clearDetail();
-      else if (detail.row === "__new__" && createdId(result))
-        context.openDetail(detail.collection, createdId(result));
+      else if (detail.row === "__new__" && createdId(result.value))
+        context.openDetail(detail.collection, createdId(result.value));
       else
         context.reload(detail.collection, detail.row);
     } catch (error) {
       au(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
+  }
+  function downloadBlob(blob, filename) {
+    if (typeof URL.createObjectURL !== "function")
+      throw new Error("Downloads are not supported in this browser");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    if (typeof URL.revokeObjectURL === "function")
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
   }
   function createdId(value) {
     if (!value || typeof value !== "object" || Array.isArray(value))
@@ -13934,11 +14006,15 @@ p {
             align-items: center;
             min-height: 54px;
             border-top: 1px solid #e8ecea;
-            cursor: pointer;
+            cursor: default;
             min-width: 0;
         }
 
-        .row:hover,
+        :host([collection]) .row {
+            cursor: pointer;
+        }
+
+        :host([collection]) .row:hover,
         :host([selected]) .row {
             background: #f3f7f5;
         }
@@ -14191,6 +14267,8 @@ slot {
       root.replaceChildren(...(this.value.actions ?? []).map((action) => {
         const button = document.createElement("p9r-button");
         button.dataset.action = action.action;
+        if (action.widget)
+          button.dataset.widget = action.widget;
         if (action.target)
           button.dataset.target = action.target;
         button.setAttribute("tone", action.tone ?? "primary");
@@ -14220,6 +14298,7 @@ slot {
         actions: (widget.actions ?? []).map((action) => ({
           label: action.label,
           action: action.id,
+          widget: widget.id,
           ...action.selection?.opens ? { target: action.selection.opens } : {},
           tone: action.tone
         })),
@@ -14244,7 +14323,8 @@ slot {
     createRow(row) {
       const element = document.createElement("cms-dashboard-w-row");
       element.setAttribute("row-key", row.id);
-      element.setAttribute("collection", row.collection);
+      if (row.collection)
+        element.setAttribute("collection", row.collection);
       for (const column of this.value.columns) {
         const cell = document.createElement("cms-dashboard-w-cell");
         const value = row.cells[column.key];
@@ -14269,6 +14349,7 @@ slot {
       if (action?.dataset.action)
         emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
           action: action.dataset.action,
+          widget: action.dataset.widget,
           target: action.dataset.target
         });
     };
@@ -16056,7 +16137,8 @@ p9r-token-input {
     const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    row.setAttribute("collection", widget.selection?.opens ?? widget.id);
+    if (widget.selection?.opens)
+      row.setAttribute("collection", widget.selection.opens);
     for (const column of widget.columns) {
       const cell = document.createElement("cms-dashboard-w-cell");
       cell.setAttribute("column", column.id);

@@ -109,7 +109,7 @@ function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" 
     const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    row.setAttribute("collection", widget.selection?.opens ?? widget.id);
+    if (widget.selection?.opens) row.setAttribute("collection", widget.selection.opens);
     for (const column of widget.columns) {
         const cell = document.createElement("cms-dashboard-w-cell");
         cell.setAttribute("column", column.id);

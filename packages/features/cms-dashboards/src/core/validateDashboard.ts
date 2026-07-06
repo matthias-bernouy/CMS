@@ -339,9 +339,19 @@ function validateAction(
     if (action.section !== undefined && !action.section.trim()) errors.push(`${path}.section must be non-empty when provided`);
     if (!action.endpoint && !action.selection) errors.push(`${path} must declare endpoint or selection`);
     if (action.endpoint) validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);
+    if (action.download !== undefined) {
+        if (!action.endpoint) errors.push(`${path}.download requires endpoint`);
+        if (action.download.filename !== undefined && !isSafeDownloadFilename(action.download.filename)) {
+            errors.push(`${path}.download.filename must be a safe file name`);
+        }
+    }
     if (action.selection?.opens && !findWidget(dashboard.views, action.selection.opens)) {
         errors.push(`${path}.selection.opens references unknown widget "${action.selection.opens}"`);
     }
+}
+
+function isSafeDownloadFilename(value: string): boolean {
+    return Boolean(value.trim()) && !value.includes("/") && !value.includes("\\") && !value.includes("\0");
 }
 
 function findWidget(widgets: DashboardWidget[], id: string): DashboardWidget | null {
