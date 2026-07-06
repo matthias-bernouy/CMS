@@ -205,7 +205,6 @@ async function ensureConnectedAccountForUser(userId: string, body: JsonRecord): 
 }> {
     const email = optionalEmail(body, "email");
     const country = optionalCountry(body, "country") ?? defaultCountry();
-    const businessType = optionalBusinessType(body, "businessType");
 
     let account = await getAccountRow(userId);
     let stripeAccountId = account?.stripe_account_id ?? null;
@@ -214,7 +213,6 @@ async function ensureConnectedAccountForUser(userId: string, body: JsonRecord): 
             userId,
             country,
             email,
-            businessType,
         });
         stripeAccountId = stripeAccount.id;
         account = await upsertAccountRow({
@@ -551,18 +549,17 @@ async function createConnectedAccount(options: {
     userId: string;
     country: string;
     email?: string | null;
-    businessType?: StripeBusinessType | null;
 }): Promise<StripeAccount> {
     const params = new URLSearchParams();
     params.set("country", options.country);
     params.set("controller[fees][payer]", "application");
     params.set("controller[losses][payments]", "application");
     params.set("controller[stripe_dashboard][type]", "express");
-    params.set("capabilities[card_payments][requested]", "true");
     params.set("capabilities[transfers][requested]", "true");
+    params.set("tos_acceptance[service_agreement]", "recipient");
+    params.set("business_type", "individual");
     params.set("metadata[cms_user_id]", options.userId);
     if (options.email) params.set("email", options.email);
-    if (options.businessType) params.set("business_type", options.businessType);
 
     return await stripe<StripeAccount>("/accounts", {
         method: "POST",
@@ -679,7 +676,7 @@ function accountStatus(account: StripeAccount): string {
     const requirements = objectAt(account, "requirements");
     const disabledReason = stringAt(requirements, "disabled_reason");
     if (disabledReason?.includes("rejected")) return "rejected";
-    if (account.charges_enabled && account.payouts_enabled) return "enabled";
+    if (account.payouts_enabled) return "enabled";
     if (stringArrayAt(requirements, "past_due").length || stringArrayAt(requirements, "currently_due").length) {
         return "requirements_due";
     }
@@ -689,7 +686,7 @@ function accountStatus(account: StripeAccount): string {
 }
 
 function sellerCanReceivePayments(account: ConnectAccountRow): boolean {
-    return Boolean(account.stripe_account_id && account.charges_enabled);
+    return Boolean(account.stripe_account_id && account.payouts_enabled);
 }
 
 function paymentStatusFromStripe(paymentIntent: StripePaymentIntent): string {
@@ -920,13 +917,6 @@ function optionalCurrency(body: JsonRecord, name: string): string | null {
     const currency = value.toLowerCase();
     if (!/^[a-z]{3}$/.test(currency)) throw new HttpError(400, `${name} must be a three-letter currency code`);
     return currency;
-}
-
-function optionalBusinessType(body: JsonRecord, name: string): StripeBusinessType | null {
-    const value = optionalText(body, name, 32);
-    if (!value) return null;
-    if (!validBusinessType(value)) throw new HttpError(400, `${name} is invalid`);
-    return value;
 }
 
 function validBusinessType(value: unknown): value is StripeBusinessType {

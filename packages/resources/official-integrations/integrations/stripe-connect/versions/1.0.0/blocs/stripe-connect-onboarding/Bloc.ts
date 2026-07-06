@@ -23,9 +23,9 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     render() {
-        const title = this.getAttribute("title") || "Set up payouts";
-        const copy = this.getAttribute("copy") || "Complete Stripe verification to receive payments.";
-        const buttonLabel = this.getAttribute("button-label") || "Start onboarding";
+        const title = this.getAttribute("title") || "Set up seller payouts";
+        const copy = this.getAttribute("copy") || "Complete Stripe verification to receive marketplace payouts.";
+        const buttonLabel = this.getAttribute("button-label") || "Activate payouts";
 
         this.root.innerHTML = `
             <style>
@@ -118,9 +118,9 @@ class StripeConnectOnboarding extends HTMLElement {
             detail: status,
         }));
 
-        if (status.connected === true) {
+        if (status.payoutsEnabled === true || status.onboardingStatus === "enabled") {
             this.button.hidden = true;
-            this.setStatus(this.getAttribute("connected-label") || "Your Stripe account is ready.", "success");
+            this.setStatus(this.getAttribute("connected-label") || "Your payouts are ready.", "success");
             return;
         }
 
@@ -187,7 +187,6 @@ class StripeConnectOnboarding extends HTMLElement {
         for (const [attribute, field] of [
             ["email", "email"],
             ["country", "country"],
-            ["business-type", "businessType"],
         ]) {
             const value = this.getAttribute(attribute);
             if (value) payload[field] = value;
@@ -196,10 +195,10 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     statusLabel(status) {
-        if (status === "enabled") return "Your Stripe account is ready.";
-        if (status === "onboarding_started" || status === "link_created") return "Stripe onboarding is in progress.";
+        if (status === "enabled") return "Your payouts are ready.";
+        if (status === "onboarding_started" || status === "link_created") return "Payout onboarding is in progress.";
         if (status === "requirements_due") return "Stripe needs more information.";
-        return "Ready to start Stripe onboarding.";
+        return "Ready to activate payouts.";
     }
 
     async requestSource(endpoint, init = {}) {

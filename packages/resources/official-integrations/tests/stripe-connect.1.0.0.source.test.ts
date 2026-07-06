@@ -53,7 +53,6 @@ describe("stripe-connect 1.0.0 source", () => {
         const sellerSession = await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
             email: "seller@example.com",
             country: "FR",
-            businessType: "individual",
         }, { userId: "seller-1" }));
         const payment = await okJson(await sourceJson(harness, "createPayment", {
             sellerUserId: "seller-1",
@@ -85,7 +84,8 @@ describe("stripe-connect 1.0.0 source", () => {
             userId: "seller-1",
             connected: true,
             onboardingStatus: "onboarding_started",
-            chargesEnabled: true,
+            chargesEnabled: false,
+            payoutsEnabled: true,
             clientSecret: "as_seller-1_secret",
         });
         expect(payment).toMatchObject({
@@ -106,6 +106,9 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(harness.rest.rows("payments")).toHaveLength(1);
         expect(connectAccountsTable?.selection).toEqual({ opens: "connectAccountDetail" });
         expect(connectAccountDetail?.source).toEqual({ endpoint: "getConnectAccount", params: { userId: "$selection.id" } });
+        expect(JSON.stringify(dashboard)).toContain("Stripe Connect C2C");
+        expect(JSON.stringify(dashboard)).not.toContain("Business type");
+        expect(JSON.stringify(dashboard)).not.toContain("\"chargesEnabled\"");
     });
 
     test("rejects ineligible sellers and hidden payments", async () => {
@@ -269,6 +272,10 @@ class StripeConnectMock {
         if (url.pathname === "/v1/accounts" && method === "POST") {
             const params = new URLSearchParams(await request.text());
             const userId = params.get("metadata[cms_user_id]") || "unknown";
+            expect(params.get("business_type")).toBe("individual");
+            expect(params.get("capabilities[transfers][requested]")).toBe("true");
+            expect(params.has("capabilities[card_payments][requested]")).toBe(false);
+            expect(params.get("tos_acceptance[service_agreement]")).toBe("recipient");
             return jsonResponse(stripeAccount(userId, `acct_${userId.replace(/[^a-z0-9]+/gi, "_")}`));
         }
         if (url.pathname.startsWith("/v1/accounts/") && method === "GET") {
@@ -372,10 +379,10 @@ function stripeAccount(userId: string, accountId: string): JsonRecord {
         id: accountId,
         country: "FR",
         business_type: "individual",
-        charges_enabled: true,
+        charges_enabled: false,
         payouts_enabled: true,
         details_submitted: true,
-        capabilities: { card_payments: "active", transfers: "active" },
+        capabilities: { transfers: "active" },
         requirements: {
             currently_due: [],
             eventually_due: [],

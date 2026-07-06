@@ -3,7 +3,7 @@
     "bloc": "./Bloc.ts",
     "defaultContent": "./default.html",
     "meta": {
-        "title": "Stripe Connect onboarding",
-        "description": "Embeds Stripe Connect Account Onboarding for the current CMS user."
+        "title": "Stripe Connect C2C onboarding",
+        "description": "Embeds Stripe Connect Account Onboarding for the current C2C seller."
     }
 }

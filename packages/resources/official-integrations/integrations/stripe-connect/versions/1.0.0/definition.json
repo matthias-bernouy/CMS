@@ -1,10 +1,10 @@
 {
     "schema": "cms.integration.definition.v1",
     "kind": "stripe-connect",
-    "label": "Stripe Connect",
+    "label": "Stripe Connect C2C",
     "version": "1.0.0",
     "category": "Payments",
-    "description": "Connect CMS users to Stripe connected accounts and destination-charge payments.",
+    "description": "Connect C2C sellers to Stripe transfer accounts and destination-charge marketplace payments.",
     "inputs": [
         {
             "name": "id",
@@ -47,7 +47,7 @@
         "emit": "source:updated",
         "instructions": [
             [
-                "Configure Stripe Connect",
+                "Configure Stripe Connect C2C",
                 "Create or reuse a Stripe platform account and copy its restricted or secret key."
             ],
             [
@@ -56,17 +56,18 @@
             ],
             [
                 "Connect the CMS",
-                "Install the Stripe Connect source and backoffice dashboard with the deployed function URL."
+                "Install the Stripe Connect C2C source and backoffice dashboard with the deployed function URL."
             ]
         ],
         "scopes": [
             "CMS x-user-id forwarding",
-            "Stripe connected account creation",
+            "Stripe C2C seller account creation",
             "Stripe Connect embedded onboarding sessions",
             "Stripe Connect hosted onboarding links",
+            "Transfers-only seller payout onboarding",
             "Destination-charge PaymentIntent creation",
             "Payment status reads",
-            "Backoffice connected account and payment dashboards"
+            "Backoffice seller account and payment dashboards"
         ],
         "checks": [
             "The browser never receives the Stripe secret key.",
@@ -78,11 +79,11 @@
         "resources": [
             [
                 "Sources",
-                "Stripe Connect source contract"
+                "Stripe Connect C2C source contract"
             ],
             [
                 "Dashboards",
-                "Stripe Connect accounts and payments dashboard"
+                "Stripe Connect C2C sellers and payments dashboard"
             ],
             [
                 "Blocs",
@@ -101,14 +102,14 @@
             "Use a restricted Stripe key when possible.",
             "Do not expose Stripe secret keys to the CMS browser bundle.",
             "Add Stripe webhooks before relying on payment state as a settlement source of truth.",
-            "Review Stripe Connect fraud and platform-loss responsibilities before going live."
+            "Review Stripe Connect C2C fraud, recipient agreement, and platform-loss responsibilities before going live."
         ],
         "sync": [
             "Validate answers",
             "Store Stripe secret key",
             "Generate private CMS API key",
             "Deploy Supabase connector",
-            "Install Stripe Connect source",
+            "Install Stripe Connect C2C source",
             "Install dashboards",
             "Install blocs",
             "Refresh Sources"
@@ -178,8 +179,8 @@
             "source": {
                 "id": "{{answers.id}}",
                 "meta": {
-                    "name": "Stripe Connect",
-                    "description": "Supabase-backed Stripe Connect account and payment endpoints.",
+                    "name": "Stripe Connect C2C",
+                    "description": "Supabase-backed Stripe Connect C2C seller payout and marketplace payment endpoints.",
                     "icon": "credit-card"
                 },
                 "endpoints": [
@@ -399,9 +400,6 @@
                                 },
                                 "country": {
                                     "type": "string"
-                                },
-                                "businessType": {
-                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -466,9 +464,6 @@
                                     "type": "string"
                                 },
                                 "country": {
-                                    "type": "string"
-                                },
-                                "businessType": {
                                     "type": "string"
                                 }
                             },
@@ -889,9 +884,6 @@
                                 },
                                 "country": {
                                     "type": "string"
-                                },
-                                "businessType": {
-                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -972,9 +964,6 @@
                                     "type": "string"
                                 },
                                 "country": {
-                                    "type": "string"
-                                },
-                                "businessType": {
                                     "type": "string"
                                 }
                             },
@@ -1333,9 +1322,9 @@
             "type": "bloc",
             "bloc": {
                 "tag": "stripe-connect-onboarding",
-                "name": "Stripe Connect onboarding",
+                "name": "Stripe Connect C2C onboarding",
                 "group": "Payments",
-                "description": "Embeds Stripe Connect Account Onboarding for the current CMS user.",
+                "description": "Embeds Stripe Connect Account Onboarding for the current C2C seller.",
                 "path": "blocs/stripe-connect-onboarding"
             }
         },
@@ -1344,7 +1333,7 @@
             "dashboard": {
                 "id": "{{answers.id}}-dashboard",
                 "meta": {
-                    "name": "Stripe Connect",
+                    "name": "Stripe Connect C2C",
                     "icon": "credit-card"
                 },
                 "source": "{{answers.id}}",
@@ -1355,12 +1344,12 @@
                         "tabs": [
                             {
                                 "id": "accounts",
-                                "label": "Accounts",
+                                "label": "Sellers",
                                 "children": [
                                     {
                                         "widget": "w-table",
                                         "id": "connectAccountsTable",
-                                        "title": "Connected accounts",
+                                        "title": "Sellers",
                                         "source": {
                                             "endpoint": "listConnectAccounts",
                                             "params": {
@@ -1378,7 +1367,7 @@
                                                 "param": "q",
                                                 "type": "text",
                                                 "label": "Search",
-                                                "placeholder": "Search accounts"
+                                                "placeholder": "Search sellers"
                                             },
                                             {
                                                 "id": "status",
@@ -1416,7 +1405,7 @@
                                         "columns": [
                                             {
                                                 "id": "userId",
-                                                "label": "User",
+                                                "label": "Seller",
                                                 "path": "userId",
                                                 "primary": true
                                             },
@@ -1429,12 +1418,6 @@
                                                 "id": "onboardingStatus",
                                                 "label": "Status",
                                                 "path": "onboardingStatus",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "id": "chargesEnabled",
-                                                "label": "Charges",
-                                                "path": "chargesEnabled",
                                                 "format": "badge"
                                             },
                                             {
@@ -1465,7 +1448,7 @@
                                         },
                                         "title": {
                                             "path": "userId",
-                                            "fallback": "Connected account"
+                                            "fallback": "Seller"
                                         },
                                         "status": {
                                             "path": "onboardingStatus"
@@ -1473,7 +1456,7 @@
                                         "actions": [
                                             {
                                                 "id": "createOnboardingLink",
-                                                "label": "Create onboarding link",
+                                                "label": "Create payout onboarding link",
                                                 "tone": "primary",
                                                 "placement": "primary",
                                                 "endpoint": {
@@ -1485,14 +1468,13 @@
                                                         "returnUrl": "$field.returnUrl",
                                                         "refreshUrl": "$field.refreshUrl",
                                                         "email": "$field.email",
-                                                        "country": "$field.country",
-                                                        "businessType": "$field.businessType"
+                                                        "country": "$field.country"
                                                     }
                                                 }
                                             },
                                             {
                                                 "id": "createOnboardingSession",
-                                                "label": "Create onboarding session",
+                                                "label": "Create payout onboarding session",
                                                 "placement": "more",
                                                 "endpoint": {
                                                     "endpoint": "createConnectOnboardingSessionForUser",
@@ -1501,8 +1483,7 @@
                                                     },
                                                     "body": {
                                                         "email": "$field.email",
-                                                        "country": "$field.country",
-                                                        "businessType": "$field.businessType"
+                                                        "country": "$field.country"
                                                     }
                                                 }
                                             }
@@ -1514,7 +1495,7 @@
                                                 "fields": [
                                                     {
                                                         "id": "userId",
-                                                        "label": "User id",
+                                                        "label": "Seller id",
                                                         "path": "userId",
                                                         "type": "readonly"
                                                     },
@@ -1528,13 +1509,6 @@
                                                         "id": "onboardingStatus",
                                                         "label": "Onboarding status",
                                                         "path": "onboardingStatus",
-                                                        "type": "readonly",
-                                                        "format": "badge"
-                                                    },
-                                                    {
-                                                        "id": "chargesEnabled",
-                                                        "label": "Charges enabled",
-                                                        "path": "chargesEnabled",
                                                         "type": "readonly",
                                                         "format": "badge"
                                                     },
@@ -1562,7 +1536,7 @@
                                             },
                                             {
                                                 "id": "onboardingFields",
-                                                "title": "Onboarding",
+                                                "title": "Payout onboarding",
                                                 "fields": [
                                                     {
                                                         "id": "email",
@@ -1575,22 +1549,6 @@
                                                         "label": "Country",
                                                         "path": "country",
                                                         "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "businessType",
-                                                        "label": "Business type",
-                                                        "path": "businessType",
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "individual",
-                                                                "label": "Individual"
-                                                            },
-                                                            {
-                                                                "value": "company",
-                                                                "label": "Company"
-                                                            }
-                                                        ]
                                                     },
                                                     {
                                                         "id": "returnUrl",

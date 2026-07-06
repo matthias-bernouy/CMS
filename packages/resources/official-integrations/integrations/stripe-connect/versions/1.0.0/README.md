@@ -1,6 +1,6 @@
-# Stripe Connect Integration
+# Stripe Connect C2C Integration
 
-This blueprint connects CMS users to Stripe connected accounts and creates
+This blueprint connects C2C sellers to Stripe transfer accounts and creates
 destination-charge PaymentIntents through the configured connector. Version
 `1.0.0` ships one Supabase connector that owns the database schema and the
 `cms-stripe-connect` Edge Function.
@@ -30,7 +30,7 @@ Import kind `stripe-connect`. Integration answers are:
   Edge Function.
 - `stripePublishableKey`: Stripe publishable key returned by the user-facing
   client config endpoint for ConnectJS initialization.
-- `defaultCountry`: default country for newly created connected accounts.
+- `defaultCountry`: default country for newly created seller accounts.
 - `defaultCurrency`: default currency for newly created PaymentIntents.
 
 The installer must provide a Supabase connector deployer. That deployer applies
@@ -62,7 +62,7 @@ CMS page or bloc
 The browser must never send a trusted `x-user-id` directly to Supabase. The CMS
 computes this value and injects it into the source request.
 
-## Onboarding Bloc POC
+## Onboarding Bloc
 
 The integration installs one bloc:
 
@@ -72,13 +72,13 @@ The integration installs one bloc:
 
 It loads Stripe Connect.js, calls `getConnectClientConfig` to get the
 publishable key, then calls `createOnboardingSession` to mount Stripe Embedded
-Account Onboarding for the current CMS user.
+Account Onboarding for the current C2C seller.
 
 Optional attributes:
 
 - `source-id`: installed source id. Defaults to `stripe-connect`.
 - `source-prefix`: source proxy prefix. Defaults to `/.cms/sources`.
-- `email`, `country`, `business-type`: optional Stripe account prefill values.
+- `email`, `country`: optional Stripe account prefill values.
 - `title`, `copy`, `button-label`, `connected-label`: display labels.
 - `preview-label`: display label used when the bloc runs inside an editor
   iframe and cannot open the Stripe authentication popup.
@@ -158,30 +158,30 @@ for embedded onboarding.
 
 ### POST /connect/onboarding/session
 
-Creates a Stripe connected account if needed, then creates an Account Session
-for Stripe Connect embedded onboarding. The response `clientSecret` is a
-single-use front-end token for ConnectJS.
+Creates a Stripe connected seller account if needed, then creates an Account
+Session for Stripe Connect embedded onboarding. Seller accounts are created as
+individual, recipient-agreement, transfers-only accounts. The response
+`clientSecret` is a single-use front-end token for ConnectJS.
 
 Request:
 
 ```json
 {
   "email": "seller@example.com",
-  "country": "FR",
-  "businessType": "individual"
+  "country": "FR"
 }
 ```
 
 All fields are optional. They are used as Stripe account prefill values when a
-connected account is created.
+connected seller account is created.
 
 ### POST /connect/onboarding
 
 Fallback hosted onboarding route. Prefer `/connect/onboarding/session` for the
 main product UX.
 
-Creates a Stripe connected account if needed, then creates an account onboarding
-link.
+Creates a Stripe connected seller account if needed, then creates an account
+onboarding link.
 
 Request:
 
@@ -190,8 +190,7 @@ Request:
   "returnUrl": "https://example.com/stripe/return",
   "refreshUrl": "https://example.com/stripe/refresh",
   "email": "seller@example.com",
-  "country": "FR",
-  "businessType": "individual"
+  "country": "FR"
 }
 ```
 
