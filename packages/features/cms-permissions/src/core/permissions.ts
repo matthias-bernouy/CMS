@@ -120,3 +120,10 @@ export function effectiveGrantsFor(roleId: string, roles: RolesConfig): Grant[] 
 export function can(grants: Grant[], permission: string): boolean {
     return grants.some((g) => g.condition === undefined && g.permission === permission);
 }
+
+/** Whether a role effectively holds a permission, including built-in role
+ *  inheritance and the virtual admin super-role. */
+export function canRole(roleId: string, roles: RolesConfig, permission: string): boolean {
+    if (roleId === ADMIN_ROLE) return true;
+    return can(effectiveGrantsFor(roleId, roles), permission);
+}

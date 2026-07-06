@@ -29,6 +29,7 @@ export { ContentValidationError, ContentConflictError, DuplicateBlocTagError } f
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/dependencies/pagesReferencing";
 export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
+export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-content/core/editor/sourceBindings";
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";

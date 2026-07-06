@@ -6,13 +6,16 @@ import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
-import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest, sourceUrnOf, SYSTEM_AUTH_SOURCE_URN } from "@bernouy/cms-sources";
+import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest, type SourceEndpoint } from "@bernouy/cms-sources";
 import { PUBLIC_AUTH_ROUTES, executeAuthSystemSourceEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
-import { ADMIN_ROLE, PUBLIC_ROLE, can, effectiveGrantsFor } from "@bernouy/cms-permissions";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
+import {
+    authorizeDeliverySourceEndpoint,
+    resolveDeliverySourceContext,
+} from "cms-delivery/core/sources/authorization";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -74,33 +77,15 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
         const prefix = sourcesPrefix(runner.basePath);
-        const resolveContext = async (req: Request) => {
-            const subject = delivery.auth ? await delivery.auth.local.getSubject(req).catch(() => null) : null;
-            return subject ? { userID: subject.identifier } : {};
-        };
-        const authorizeEndpoint = async (endpoint: { urn: string }, req: Request) => {
-            if (delivery.auth && sourceUrnOf(endpoint.urn) === SYSTEM_AUTH_SOURCE_URN) return true;
-            const roles = delivery.roles;
-            if (!roles) return false;
-            const subject = delivery.auth ? await delivery.auth.local.getSubject(req).catch(() => null) : null;
-            if (subject?.role === ADMIN_ROLE) return true;
-            const role = subject?.role ?? PUBLIC_ROLE;
-            const definitions = await roles.list();
-            if (can(effectiveGrantsFor(role, { definitions }), endpoint.urn)) return true;
-            const status: 401 | 403 = subject ? 403 : 401;
-            return {
-                authorized: false,
-                status,
-            };
-        };
         const deps = {
             ...(delivery.sourceResolveSecret ? { resolveSecret: delivery.sourceResolveSecret } : {}),
             ...(delivery.auth ? {
                 executeSystemEndpoint: (endpoint: { urn: string; targetUrl: string }, req: Request) =>
                     executeAuthSystemSourceEndpoint(delivery.auth!, endpoint, req),
             } : {}),
-            resolveContext,
-            authorizeEndpoint,
+            resolveContext: (req: Request) => resolveDeliverySourceContext(delivery, req),
+            authorizeEndpoint: (endpoint: SourceEndpoint, req: Request) =>
+                authorizeDeliverySourceEndpoint(delivery, endpoint, req),
         };
         for (const method of SOURCE_PROXY_METHODS) {
             proxyRunner.setDefaultEndpoint(method, (req) =>

@@ -55,9 +55,9 @@ export async function handleSourceRequest(
 
     if (opts.deps?.authorizeEndpoint) {
         const authorization = await opts.deps.authorizeEndpoint(resolved.endpoint, request);
-        if (!isAuthorized(authorization)) {
-            const status = authorizationStatus(authorization);
-            return new Response(authorizationBody(authorization, status), { status });
+        if (!isSourceAuthorized(authorization)) {
+            const status = sourceAuthorizationStatus(authorization);
+            return new Response(sourceAuthorizationBody(authorization, status), { status });
         }
     }
 
@@ -71,16 +71,16 @@ export async function handleSourceRequest(
     return executeEndpoint(resolved.endpoint, request, opts.deps);
 }
 
-function isAuthorized(result: SourceAuthorizationResult): boolean {
+export function isSourceAuthorized(result: SourceAuthorizationResult): boolean {
     return result === true || (typeof result === "object" && result !== null && result.authorized === true);
 }
 
-function authorizationStatus(result: SourceAuthorizationResult): 401 | 403 {
+export function sourceAuthorizationStatus(result: SourceAuthorizationResult): 401 | 403 {
     if (typeof result === "object" && result !== null && (result.status === 401 || result.status === 403)) return result.status;
     return 403;
 }
 
-function authorizationBody(result: SourceAuthorizationResult, status: 401 | 403): string {
+export function sourceAuthorizationBody(result: SourceAuthorizationResult, status: 401 | 403): string {
     if (typeof result === "object" && result !== null && typeof result.body === "string") return result.body;
     return status === 401 ? "Unauthorized" : "Forbidden";
 }

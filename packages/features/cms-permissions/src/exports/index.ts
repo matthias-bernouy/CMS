@@ -13,7 +13,7 @@
 export {
     CMS_PERMISSION_CATALOGUE, CMS_PERMISSIONS, cmsPermission,
     ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE, defaultRoleDefinitions,
-    grantsFor, effectiveGrantsFor, can,
+    grantsFor, effectiveGrantsFor, can, canRole,
 } from "cms-permissions/core/permissions";
 export type {
     CmsFeature, Grant, RoleDefinition, RolesConfig,

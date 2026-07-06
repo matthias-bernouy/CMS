@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { can, grantsFor, effectiveGrantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-permissions";
+import { can, canRole, grantsFor, effectiveGrantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-permissions";
 
 const roles = (definitions: RolesConfig["definitions"]): RolesConfig => ({ definitions });
 
@@ -81,6 +81,26 @@ describe("effectiveGrantsFor", () => {
 
     test("admin remains virtual and owns no stored effective grants", () => {
         expect(effectiveGrantsFor(ADMIN_ROLE, cfg)).toEqual([]);
+    });
+});
+
+describe("canRole", () => {
+    const cfg = roles([
+        { id: PUBLIC_ROLE, label: "Public", builtin: true, grants: [{ permission: "urn:catalog:listProducts" }] },
+        { id: USER_ROLE, label: "User", builtin: true, grants: [{ permission: "urn:account:getMe" }] },
+        { id: "editor", label: "Editor", grants: [{ permission: cmsPermission("pages", "edit") }] },
+    ]);
+
+    test("checks effective grants for public, user, and custom roles", () => {
+        expect(canRole(PUBLIC_ROLE, cfg, "urn:catalog:listProducts")).toBe(true);
+        expect(canRole(USER_ROLE, cfg, "urn:catalog:listProducts")).toBe(true);
+        expect(canRole("editor", cfg, "urn:account:getMe")).toBe(true);
+        expect(canRole("editor", cfg, cmsPermission("pages", "edit"))).toBe(true);
+        expect(canRole(PUBLIC_ROLE, cfg, "urn:account:getMe")).toBe(false);
+    });
+
+    test("allows the virtual admin role", () => {
+        expect(canRole(ADMIN_ROLE, cfg, "urn:anything")).toBe(true);
     });
 });
 
