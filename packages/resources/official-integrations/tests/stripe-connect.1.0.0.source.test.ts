@@ -74,6 +74,9 @@ describe("stripe-connect 1.0.0 source", () => {
         const listedAccounts = await okJson(await sourceRequest(harness, "listConnectAccounts", { q: "seller", limit: "20" }));
         const listedPayments = await okJson(await sourceRequest(harness, "listPayments", { q: "order", limit: "20" }));
         const fetched = await okJson(await sourceRequest(harness, "getPayment", { paymentId: String(payment.paymentId) }));
+        const dashboard = await harness.dashboards.getDashboard("stripe-connect-dashboard");
+        const connectAccountsTable = widgetById(dashboard?.views as JsonRecord[] | undefined, "connectAccountsTable");
+        const connectAccountDetail = widgetById(dashboard?.views as JsonRecord[] | undefined, "connectAccountDetail");
 
         expect(config).toEqual({ publishableKey: "pk_test_123" });
         expect(initial).toMatchObject({ exists: false, userId: "user-123", connected: false, onboardingStatus: "not_started" });
@@ -101,6 +104,8 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(listedPayments.payments).toEqual([expect.objectContaining({ clientReferenceId: "order-1", stripePaymentIntentId: "pi_1" })]);
         expect(fetched).toMatchObject({ paymentId: payment.paymentId, clientReferenceId: "order-1" });
         expect(harness.rest.rows("payments")).toHaveLength(1);
+        expect(connectAccountsTable?.selection).toEqual({ opens: "connectAccountDetail" });
+        expect(connectAccountDetail?.source).toEqual({ endpoint: "getConnectAccount", params: { userId: "$selection.id" } });
     });
 
     test("rejects ineligible sellers and hidden payments", async () => {
@@ -465,6 +470,21 @@ function filterValue(value: string | null): { operator: string; value: string } 
 
 function same(a: unknown, b: unknown): boolean {
     return String(a) === String(b);
+}
+
+function widgetById(widgets: JsonRecord[] | undefined, id: string): JsonRecord | undefined {
+    const stack = [...(widgets ?? [])];
+    while (stack.length) {
+        const next = stack.shift()!;
+        if (next.id === id) return next;
+        if (Array.isArray(next.children)) stack.push(...next.children as JsonRecord[]);
+        if (Array.isArray(next.tabs)) {
+            for (const tab of next.tabs as Array<{ children?: JsonRecord[] }>) {
+                if (Array.isArray(tab.children)) stack.push(...tab.children);
+            }
+        }
+    }
+    return undefined;
 }
 
 async function jsonBody(response: Response): Promise<JsonRecord> {

@@ -13562,7 +13562,7 @@ p {
     if (field.type === "media")
       return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
     if (field.type === "readonly")
-      return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: textValue(value) };
+      return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     return { ...base, input: "text", value: textValue(value) };
   }
   function fieldValues(widget, resource) {
@@ -13603,6 +13603,11 @@ p {
   }
   function textValue(value) {
     return value === null || value === undefined ? "" : String(value);
+  }
+  function readonlyValue(value) {
+    if (!Array.isArray(value))
+      return textValue(value);
+    return value.map((item) => item === null || item === undefined ? "" : String(item).trim()).filter(Boolean);
   }
   function tokenValue(value) {
     return Array.isArray(value) ? value.map(textValue).filter(Boolean) : textValue(value).split(",").map((item) => item.trim()).filter(Boolean);
@@ -15316,10 +15321,31 @@ button {
     return element;
   }
   function readonly(value) {
+    if (Array.isArray(value))
+      return readonlyList(value);
     const element = document.createElement("span");
     element.className = "readonly";
-    element.textContent = Array.isArray(value) ? value.map((item) => typeof item === "string" ? item : String(item.id ?? "")).join(", ") : value;
+    element.textContent = value;
     return element;
+  }
+  function readonlyList(value) {
+    if (!value.length) {
+      const element = document.createElement("span");
+      element.className = "readonly readonly-empty";
+      element.textContent = "None";
+      return element;
+    }
+    const list = document.createElement("ul");
+    list.className = "readonly readonly-list";
+    for (const item of value) {
+      const text = typeof item === "string" ? item : String(item.id ?? "");
+      if (!text)
+        continue;
+      const entry = document.createElement("li");
+      entry.textContent = text;
+      list.append(entry);
+    }
+    return list;
   }
   function tableRows(value) {
     if (!Array.isArray(value))
@@ -15494,6 +15520,7 @@ dl {
 .w-detail-field {
     display: grid;
     gap: 7px;
+    min-width: 0;
 }
 
 .w-detail-field[data-internal-label] {
@@ -15513,6 +15540,30 @@ dt {
 
 dd {
     margin: 0;
+    min-width: 0;
+}
+
+.readonly,
+.detail-table-row > span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.readonly-list {
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.readonly-list li {
+    min-width: 0;
+}
+
+.readonly-empty {
+    color: #8a9692;
+    font-style: italic;
 }
 
 p9r-input,

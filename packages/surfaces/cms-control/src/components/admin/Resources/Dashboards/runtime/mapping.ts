@@ -89,7 +89,7 @@ function detailField(field: DashboardField, resource: unknown, dynamicOptions: D
         ...(field.editable === true ? { editable: true } : {}),
     };
     if (field.type === "media") return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
-    if (field.type === "readonly") return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: textValue(value) };
+    if (field.type === "readonly") return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     return { ...base, input: "text", value: textValue(value) };
 }
 
@@ -134,6 +134,13 @@ function optionList(staticOptions: DashboardOption[] | undefined, dynamicOptions
 
 function textValue(value: unknown): string {
     return value === null || value === undefined ? "" : String(value);
+}
+
+function readonlyValue(value: unknown): string | string[] {
+    if (!Array.isArray(value)) return textValue(value);
+    return value
+        .map(item => item === null || item === undefined ? "" : String(item).trim())
+        .filter(Boolean);
 }
 
 function tokenValue(value: unknown): string[] {

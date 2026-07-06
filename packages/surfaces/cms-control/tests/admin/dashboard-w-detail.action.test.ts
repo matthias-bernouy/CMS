@@ -101,6 +101,43 @@ describe("dashboard detail widget actions", () => {
         expect(combobox.querySelector("option[value='42']")?.textContent).toBe("Wilson");
     });
 
+    test("renders readonly arrays as compact lists", async () => {
+        const detail = document.createElement("cms-dashboard-w-detail");
+        detail.setAttribute("data-config-json", JSON.stringify({
+            widget: "w-detail",
+            id: "connectAccountDetail",
+            source: { endpoint: "getConnectAccount" },
+            title: { path: "userId", fallback: "Connected account" },
+            main: [
+                {
+                    id: "requirements",
+                    title: "Requirements",
+                    fields: [
+                        { id: "currentlyDue", label: "Currently due", path: "currentlyDue", type: "readonly" },
+                        { id: "pendingVerification", label: "Pending verification", path: "pendingVerification", type: "readonly" },
+                    ],
+                },
+            ],
+        }));
+        detail.setAttribute("data-source-json", JSON.stringify({
+            userId: "seller-1",
+            currentlyDue: ["business_profile.mcc", "individual.address.line1"],
+            pendingVerification: [],
+        }));
+        detail.setAttribute("data-row-key", "seller-1");
+
+        document.body.append(detail);
+        await Promise.resolve();
+
+        const lists = detail.shadowRoot!.querySelectorAll(".readonly-list");
+        expect(lists).toHaveLength(1);
+        expect(Array.from(lists[0]!.querySelectorAll("li")).map(item => item.textContent)).toEqual([
+            "business_profile.mcc",
+            "individual.address.line1",
+        ]);
+        expect(detail.shadowRoot!.querySelector(".readonly-empty")?.textContent).toBe("None");
+    });
+
     test("reloads lookup options from current field values", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {

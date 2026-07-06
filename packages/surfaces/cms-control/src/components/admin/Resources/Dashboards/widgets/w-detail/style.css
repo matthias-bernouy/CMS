@@ -131,6 +131,7 @@ dl {
 .w-detail-field {
     display: grid;
     gap: 7px;
+    min-width: 0;
 }
 
 .w-detail-field[data-internal-label] {
@@ -150,6 +151,30 @@ dt {
 
 dd {
     margin: 0;
+    min-width: 0;
+}
+
+.readonly,
+.detail-table-row > span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.readonly-list {
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.readonly-list li {
+    min-width: 0;
+}
+
+.readonly-empty {
+    color: #8a9692;
+    font-style: italic;
 }
 
 p9r-input,

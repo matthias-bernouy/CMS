@@ -195,10 +195,30 @@ function badge(value: string): HTMLElement {
 }
 
 function readonly(value: WDetailFieldValue): HTMLElement {
+    if (Array.isArray(value)) return readonlyList(value);
     const element = document.createElement("span");
     element.className = "readonly";
-    element.textContent = Array.isArray(value) ? value.map(item => typeof item === "string" ? item : String(item.id ?? "")).join(", ") : value;
+    element.textContent = value;
     return element;
+}
+
+function readonlyList(value: Exclude<WDetailFieldValue, string>): HTMLElement {
+    if (!value.length) {
+        const element = document.createElement("span");
+        element.className = "readonly readonly-empty";
+        element.textContent = "None";
+        return element;
+    }
+    const list = document.createElement("ul");
+    list.className = "readonly readonly-list";
+    for (const item of value) {
+        const text = typeof item === "string" ? item : String(item.id ?? "");
+        if (!text) continue;
+        const entry = document.createElement("li");
+        entry.textContent = text;
+        list.append(entry);
+    }
+    return list;
 }
 
 function tableRows(value: WDetailFieldValue): Record<string, unknown>[] {
