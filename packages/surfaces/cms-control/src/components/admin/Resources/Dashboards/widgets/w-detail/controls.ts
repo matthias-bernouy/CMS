@@ -207,6 +207,7 @@ function tableRows(value: WDetailFieldValue): Record<string, unknown>[] {
 }
 
 function readTableValue(field: WDetailField, control: HTMLElement): Record<string, unknown>[] {
+    if (!field.editable) return tableRows(field.value);
     return Array.from(control.querySelectorAll<HTMLElement>("[data-table-row]")).map(row => {
         const value: Record<string, unknown> = {};
         for (const column of field.columns ?? []) {

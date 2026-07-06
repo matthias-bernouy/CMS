@@ -6,11 +6,36 @@ import { arrayAt, textAt } from "./expressions";
 type MediaField = Extract<DashboardField, { type: "media" }>;
 
 export function mediaValue(value: unknown, field: MediaField, sourceId: string): DashboardMediaItem[] {
-    return (Array.isArray(value) ? value : arrayAt({ value }, "value")).map(item => ({
+    return (Array.isArray(value) ? value : arrayAt({ value }, "value"))
+        .map(item => {
+            const source = sourceMediaItem(item, field, sourceId);
+            return source.id && source.url ? source : normalizedMediaItem(item) ?? source;
+        })
+        .filter(item => item.id && item.url);
+}
+
+function normalizedMediaItem(item: unknown): DashboardMediaItem | null {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const record = item as Record<string, unknown>;
+    const id = textAt(record, "id");
+    const url = textAt(record, "url");
+    if (!id || !url) return null;
+    return {
+        id,
+        url,
+        ...(typeof record.thumbnailUrl === "string" && record.thumbnailUrl ? { thumbnailUrl: record.thumbnailUrl } : {}),
+        ...(typeof record.alt === "string" ? { alt: record.alt } : {}),
+        ...(typeof record.name === "string" ? { name: record.name } : {}),
+        ...(record.pending === true ? { pending: true } : {}),
+    };
+}
+
+function sourceMediaItem(item: unknown, field: MediaField, sourceId: string): DashboardMediaItem {
+    return {
         id: textAt(item, field.item.idPath, textAt(item, field.item.urlPath)),
         url: mediaUrl(item, field, sourceId),
         alt: field.item.altPath ? textAt(item, field.item.altPath) : undefined,
-    })).filter(item => item.id && item.url);
+    };
 }
 
 function mediaUrl(item: unknown, field: MediaField, sourceId: string): string {

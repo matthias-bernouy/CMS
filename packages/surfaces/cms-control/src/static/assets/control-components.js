@@ -13462,11 +13462,34 @@ p {
 
   // src/components/admin/Resources/Dashboards/runtime/media.ts
   function mediaValue(value, field, sourceId) {
-    return (Array.isArray(value) ? value : arrayAt({ value }, "value")).map((item) => ({
+    return (Array.isArray(value) ? value : arrayAt({ value }, "value")).map((item) => {
+      const source = sourceMediaItem(item, field, sourceId);
+      return source.id && source.url ? source : normalizedMediaItem(item) ?? source;
+    }).filter((item) => item.id && item.url);
+  }
+  function normalizedMediaItem(item) {
+    if (!item || typeof item !== "object" || Array.isArray(item))
+      return null;
+    const record = item;
+    const id2 = textAt(record, "id");
+    const url = textAt(record, "url");
+    if (!id2 || !url)
+      return null;
+    return {
+      id: id2,
+      url,
+      ...typeof record.thumbnailUrl === "string" && record.thumbnailUrl ? { thumbnailUrl: record.thumbnailUrl } : {},
+      ...typeof record.alt === "string" ? { alt: record.alt } : {},
+      ...typeof record.name === "string" ? { name: record.name } : {},
+      ...record.pending === true ? { pending: true } : {}
+    };
+  }
+  function sourceMediaItem(item, field, sourceId) {
+    return {
       id: textAt(item, field.item.idPath, textAt(item, field.item.urlPath)),
       url: mediaUrl(item, field, sourceId),
       alt: field.item.altPath ? textAt(item, field.item.altPath) : undefined
-    })).filter((item) => item.id && item.url);
+    };
   }
   function mediaUrl(item, field, sourceId) {
     const raw = textAt(item, field.item.urlPath);
@@ -15304,6 +15327,8 @@ button {
     return value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item));
   }
   function readTableValue(field, control) {
+    if (!field.editable)
+      return tableRows(field.value);
     return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => {
       const value = {};
       for (const column of field.columns ?? []) {
