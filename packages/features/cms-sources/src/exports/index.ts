@@ -76,5 +76,6 @@ export {
     handleSourceRequest,
     type SourceHandlerDeps,
     type SourceSystemExecutor,
+    type SourceAuthorizationResult,
     type SourceEndpointAuthorizer,
 } from "../http/handleSourceRequest";

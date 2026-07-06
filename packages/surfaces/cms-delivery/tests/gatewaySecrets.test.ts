@@ -73,13 +73,13 @@ function joinPath(base: string, path: string): string {
     return joined.length > 1 && joined.endsWith("/") ? joined.slice(0, -1) : joined;
 }
 
-async function publicGatewayRoles(): Promise<RolesRepository> {
+async function publicGatewayRoles(permission = "urn:secured:get"): Promise<RolesRepository> {
     const roles = new InMemoryRolesRepository();
     await roles.upsert({
         id: PUBLIC_ROLE,
         label: "Public",
         builtin: true,
-        grants: [{ permission: "urn:secured:get" }],
+        grants: [{ permission }],
     });
     return roles;
 }
@@ -124,6 +124,20 @@ describe("Delivery gateway secrets", () => {
         }
     });
 
+    test("returns 401 when an anonymous visitor lacks a source endpoint grant", async () => {
+        const handler = await mountDeliveryGateway({ roles: new InMemoryRolesRepository() });
+        const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("upstream"));
+        try {
+            const res = await handler(new Request("http://site/.cms/sources/secured/get"));
+
+            expect(res.status).toBe(401);
+            expect(await res.text()).toBe("Unauthorized");
+            expect(fetchSpy).not.toHaveBeenCalled();
+        } finally {
+            fetchSpy.mockRestore();
+        }
+    });
+
     test("keeps secret headers blocked by default", async () => {
         const handler = await mountDeliveryGateway({ roles: await publicGatewayRoles() });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("upstream"));
@@ -150,6 +164,27 @@ describe("Delivery gateway secrets", () => {
             expect(res.status).toBe(200);
             const init = fetchSpy.mock.calls[0]![1] as RequestInit;
             expect((init.headers as Headers).get("authorization")).toBe("Bearer dev-key");
+        } finally {
+            fetchSpy.mockRestore();
+        }
+    });
+
+    test("authenticated users inherit public source endpoint grants", async () => {
+        const handler = await mountDeliveryGateway({
+            providers: [COMPUTED],
+            roles: await publicGatewayRoles("urn:computed:me"),
+            auth: {
+                local: {
+                    getSubject: async () => ({ identifier: "user-123", role: USER_ROLE, displayName: "Ada" }),
+                },
+            },
+        });
+        const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
+        try {
+            const res = await handler(new Request("http://site/.cms/sources/computed/me"));
+
+            expect(res.status).toBe(200);
+            expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123");
         } finally {
             fetchSpy.mockRestore();
         }

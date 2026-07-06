@@ -89,6 +89,32 @@ export function grantsFor(roleId: string, roles: RolesConfig): Grant[] {
     return roles.definitions.find((d) => d.id === roleId)?.grants ?? [];
 }
 
+/**
+ * Grants effectively held by a subject role, including the built-in inheritance
+ * chain used by CMS surfaces:
+ *   public          -> public grants
+ *   authenticated   -> public + user grants
+ *   custom role     -> public + user + custom-role grants
+ *
+ * `admin` remains virtual and should still be short-circuited by callers.
+ */
+export function effectiveGrantsFor(roleId: string, roles: RolesConfig): Grant[] {
+    if (roleId === ADMIN_ROLE) return [];
+    const inheritedRoleIds = roleId === PUBLIC_ROLE
+        ? [PUBLIC_ROLE]
+        : roleId === USER_ROLE
+            ? [PUBLIC_ROLE, USER_ROLE]
+            : [PUBLIC_ROLE, USER_ROLE, roleId];
+    const grants = inheritedRoleIds.flatMap(id => grantsFor(id, roles));
+    const seen = new Set<string>();
+    return grants.filter(grant => {
+        const key = `${grant.permission}:${JSON.stringify(grant.condition)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 /** Whether `grants` hold `permission`. V1 = exact id match with no condition.
  *  Conditional grants are denied until an evaluator exists. Deny-by-default. */
 export function can(grants: Grant[], permission: string): boolean {

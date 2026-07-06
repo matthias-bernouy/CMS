@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { can, grantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-permissions";
+import { can, grantsFor, effectiveGrantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-permissions";
 
 const roles = (definitions: RolesConfig["definitions"]): RolesConfig => ({ definitions });
 
@@ -50,6 +50,37 @@ describe("grantsFor", () => {
     test("returns [] for the virtual admin super-role (never stored)", () => {
         // admin owns no stored grants; callers short-circuit it before can().
         expect(grantsFor(ADMIN_ROLE, cfg)).toEqual([]);
+    });
+});
+
+describe("effectiveGrantsFor", () => {
+    const publicGrant = { permission: "urn:catalog:listProducts" };
+    const userGrant = { permission: "urn:account:getMe" };
+    const editorGrant = { permission: cmsPermission("pages", "edit") };
+    const cfg = roles([
+        { id: PUBLIC_ROLE, label: "Public", builtin: true, grants: [publicGrant] },
+        { id: USER_ROLE, label: "User", builtin: true, grants: [userGrant] },
+        { id: "editor", label: "Editor", grants: [editorGrant] },
+    ]);
+
+    test("keeps anonymous users limited to public grants", () => {
+        expect(effectiveGrantsFor(PUBLIC_ROLE, cfg)).toEqual([publicGrant]);
+    });
+
+    test("authenticated users inherit public grants", () => {
+        expect(effectiveGrantsFor(USER_ROLE, cfg)).toEqual([publicGrant, userGrant]);
+    });
+
+    test("custom roles inherit public and authenticated grants", () => {
+        expect(effectiveGrantsFor("editor", cfg)).toEqual([publicGrant, userGrant, editorGrant]);
+    });
+
+    test("unknown authenticated roles still get the authenticated baseline", () => {
+        expect(effectiveGrantsFor("ghost", cfg)).toEqual([publicGrant, userGrant]);
+    });
+
+    test("admin remains virtual and owns no stored effective grants", () => {
+        expect(effectiveGrantsFor(ADMIN_ROLE, cfg)).toEqual([]);
     });
 });
 

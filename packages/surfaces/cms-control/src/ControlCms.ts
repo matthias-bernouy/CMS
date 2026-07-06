@@ -24,7 +24,7 @@ import {
     registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import { ADMIN_ROLE, can, grantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
+import { ADMIN_ROLE, can, effectiveGrantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest } from "@bernouy/cms-sources";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
@@ -236,7 +236,7 @@ export class ControlCms {
             if (!subject) return false;
             if (subject.role === ADMIN_ROLE) return true;
             const definitions = await this._roles.list();
-            return can(grantsFor(subject.role, { definitions }), endpoint.urn);
+            return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
         };
         const executeSystemEndpoint = controlPublicAuth
             ? (endpoint: { urn: string; targetUrl: string }, req: Request) =>

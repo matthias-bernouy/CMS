@@ -72,6 +72,22 @@ describe("handleSourceRequest", () => {
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
+    test("an authorizer can deny with 401 without proxying upstream", async () => {
+        const fetchImpl = okFetch();
+        const authorizeEndpoint = mock(async () => ({ authorized: false, status: 401 as const }));
+
+        const res = await handleSourceRequest(
+            await seededRepo(),
+            new Request("http://local" + PREFIX + "shop/getCart"),
+            { prefix: PREFIX, deps: { fetchImpl, authorizeEndpoint } },
+        );
+
+        expect(res.status).toBe(401);
+        expect(await res.text()).toBe("Unauthorized");
+        expect(authorizeEndpoint).toHaveBeenCalledTimes(1);
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
     test("an allowed endpoint grant proxies upstream", async () => {
         const fetchImpl = okFetch();
         const authorizeEndpoint = mock(async (endpoint: { urn: string }) => endpoint.urn === "urn:shop:getCart");

@@ -7,7 +7,12 @@ import { systemSourceUrnOf } from "../core/systemSources";
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 export type SourceSystemExecutor = (endpoint: SourceEndpoint, request: Request) => Response | Promise<Response>;
-export type SourceEndpointAuthorizer = (endpoint: SourceEndpoint, request: Request) => boolean | Promise<boolean>;
+export type SourceAuthorizationResult = boolean | {
+    authorized: boolean;
+    status?: 401 | 403;
+    body?: string;
+};
+export type SourceEndpointAuthorizer = (endpoint: SourceEndpoint, request: Request) => SourceAuthorizationResult | Promise<SourceAuthorizationResult>;
 export type SourceHandlerDeps = ExecutorDeps & {
     executeSystemEndpoint?: SourceSystemExecutor;
     authorizeEndpoint?: SourceEndpointAuthorizer;
@@ -48,8 +53,12 @@ export async function handleSourceRequest(
         return new Response(resolved.reason, { status: resolved.reason === "method_not_allowed" ? 405 : 404 });
     }
 
-    if (opts.deps?.authorizeEndpoint && !(await opts.deps.authorizeEndpoint(resolved.endpoint, request))) {
-        return new Response("Forbidden", { status: 403 });
+    if (opts.deps?.authorizeEndpoint) {
+        const authorization = await opts.deps.authorizeEndpoint(resolved.endpoint, request);
+        if (!isAuthorized(authorization)) {
+            const status = authorizationStatus(authorization);
+            return new Response(authorizationBody(authorization, status), { status });
+        }
     }
 
     if (systemSourceUrnOf(resolved.endpoint.urn)) {
@@ -60,4 +69,18 @@ export async function handleSourceRequest(
     }
 
     return executeEndpoint(resolved.endpoint, request, opts.deps);
+}
+
+function isAuthorized(result: SourceAuthorizationResult): boolean {
+    return result === true || (typeof result === "object" && result !== null && result.authorized === true);
+}
+
+function authorizationStatus(result: SourceAuthorizationResult): 401 | 403 {
+    if (typeof result === "object" && result !== null && (result.status === 401 || result.status === 403)) return result.status;
+    return 403;
+}
+
+function authorizationBody(result: SourceAuthorizationResult, status: 401 | 403): string {
+    if (typeof result === "object" && result !== null && typeof result.body === "string") return result.body;
+    return status === 401 ? "Unauthorized" : "Forbidden";
 }
