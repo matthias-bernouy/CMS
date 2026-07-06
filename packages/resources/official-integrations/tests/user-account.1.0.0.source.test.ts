@@ -63,6 +63,9 @@ describe("user-account 1.0.0 source", () => {
         const listed = await okJson(await sourceRequest(harness, "listAccounts", { q: "target", limit: "20" }));
         const fetched = await okJson(await sourceRequest(harness, "getAccountByUserId", { userId: "target-user" }));
         const deleted = await okJson(await sourceDelete(harness, "deleteUserPersonalInformation", { userId: "target-user" }));
+        const dashboard = await harness.dashboards.getDashboard("user-account-users");
+        const accountsTable = dashboard?.views.find(view => view.id === "accountsTable") as JsonRecord | undefined;
+        const accountDetail = dashboard?.views.find(view => view.id === "accountDetail") as JsonRecord | undefined;
 
         expect(missing).toMatchObject({ exists: false, userId: "user-123" });
         expect(updated).toMatchObject({
@@ -79,6 +82,8 @@ describe("user-account 1.0.0 source", () => {
         expect(fetched).toMatchObject({ exists: true, userId: "target-user", displayName: "Admin Target" });
         expect(deleted).toEqual({ deleted: true, userId: "target-user" });
         expect(harness.rest.rows("accounts").map(row => row.cms_user_id)).toEqual(["user-123"]);
+        expect(accountsTable?.selection).toEqual({ opens: "accountDetail" });
+        expect(accountDetail?.source).toEqual({ endpoint: "getAccountByUserId", params: { userId: "$selection.id" } });
     });
 
     test("stores and serves only the avatar referenced by the account row", async () => {

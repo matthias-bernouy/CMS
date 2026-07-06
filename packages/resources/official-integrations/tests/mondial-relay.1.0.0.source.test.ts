@@ -9,7 +9,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import {
     handleSourceRequest,
@@ -77,9 +77,35 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(createBody?.properties).not.toHaveProperty("sizeCode");
         expect(createBody?.properties).not.toHaveProperty("insuranceLevel");
         expect(dashboard).toBeTruthy();
+        expect(validateDashboard(dashboard!, { source: source! })).toEqual([]);
+        const views = dashboard?.views as JsonRecord[] | undefined;
+        expect(views?.map(view => `${view.widget}:${view.id}`)).toEqual([
+            "w-table:shipmentsTable",
+            "w-detail:createShipmentForm",
+            "w-detail:shipmentDetail",
+            "w-detail:settingsDetail",
+        ]);
+        const shipmentsTable = views?.[0];
+        const tableActions = shipmentsTable?.actions as JsonRecord[] | undefined;
+        expect(tableActions?.map(action => action.id)).toEqual(["openCreateShipment", "openSettings"]);
+        expect(tableActions?.[0]).toMatchObject({ selection: { opens: "createShipmentForm" } });
+        expect(tableActions?.[1]).toMatchObject({ selection: { opens: "settingsDetail" } });
+        const createForm = views?.find(view => view.id === "createShipmentForm");
+        const createActions = createForm?.actions as JsonRecord[] | undefined;
+        expect(createActions?.[0]).toMatchObject({ after: { opens: "shipmentDetail", row: "$result.id" } });
+        expect(createShipmentField(createForm, "recipientCountry")).toMatchObject({ id: "recipientCountry", path: "senderCountry" });
+        expect(createShipmentField(createForm, "weightGrams")).toMatchObject({ id: "weightGrams", path: "defaultWeightGrams" });
+        expect(createShipmentField(createForm, "packageCount")).toMatchObject({ id: "packageCount", path: "defaultPackageCount" });
+        expect(createShipmentField(createForm, "lengthCm")).toMatchObject({ id: "lengthCm", path: "defaultLengthCm" });
+        expect(createShipmentField(createForm, "widthCm")).toMatchObject({ id: "widthCm", path: "defaultWidthCm" });
+        expect(createShipmentField(createForm, "heightCm")).toMatchObject({ id: "heightCm", path: "defaultHeightCm" });
+        expect(createShipmentField(createForm, "content")).toMatchObject({ id: "content", path: "defaultContent" });
         const dashboardJson = JSON.stringify(dashboard);
         expect(dashboardJson).toContain("deliveryRelayLocation");
         expect(dashboardJson).toContain("relayPoints");
+        expect(dashboardJson).not.toContain("\"widget\":\"w-tabs\"");
+        expect(dashboardJson).not.toContain("\"id\":\"pickupPoints\"");
+        expect(dashboardJson).not.toContain("\"id\":\"relayPointsTable\"");
         expect(dashboardJson).toContain("Edit settings");
         expect(dashboardJson).toContain("Sender address");
         expect(dashboardJson).toContain("Default weight grams");
@@ -486,6 +512,16 @@ async function loadEdgeHandler(): Promise<EdgeHandler> {
 
 function definition(): IntegrationDefinition {
     return JSON.parse(readFileSync(definitionUrl, "utf8")) as IntegrationDefinition;
+}
+
+function createShipmentField(createForm: JsonRecord | undefined, fieldId: string): JsonRecord | undefined {
+    const sections = [...arrayValue(createForm?.main), ...arrayValue(createForm?.aside)];
+    return sections.flatMap(section => arrayValue((section as JsonRecord).fields))
+        .find((field): field is JsonRecord => (field as JsonRecord).id === fieldId);
+}
+
+function arrayValue(value: unknown): unknown[] {
+    return Array.isArray(value) ? value : [];
 }
 
 function integrationAnswers(): Record<string, string> {

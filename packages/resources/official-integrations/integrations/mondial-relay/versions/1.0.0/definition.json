@@ -1024,872 +1024,789 @@
                 "source": "{{answers.id}}",
                 "views": [
                     {
-                        "widget": "w-tabs",
-                        "id": "deliveryTabs",
-                        "tabs": [
+                        "widget": "w-table",
+                        "id": "shipmentsTable",
+                        "title": "Shipments",
+                        "source": {
+                            "endpoint": "shipments",
+                            "params": {
+                                "status": "$filter.status",
+                                "q": "$filter.q",
+                                "limit": "50"
+                            },
+                            "itemsPath": "items"
+                        },
+                        "rowKey": "id",
+                        "actions": [
+                            {
+                                "id": "openCreateShipment",
+                                "label": "Create shipment",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "selection": {
+                                    "opens": "createShipmentForm"
+                                }
+                            },
+                            {
+                                "id": "openSettings",
+                                "label": "Edit settings",
+                                "tone": "secondary",
+                                "placement": "secondary",
+                                "selection": {
+                                    "opens": "settingsDetail"
+                                }
+                            }
+                        ],
+                        "filters": [
+                            {
+                                "id": "q",
+                                "param": "q",
+                                "type": "text",
+                                "label": "Search",
+                                "placeholder": "Search shipments"
+                            },
+                            {
+                                "id": "status",
+                                "param": "status",
+                                "type": "select",
+                                "label": "Status",
+                                "options": [
+                                    {
+                                        "value": "created",
+                                        "label": "Created"
+                                    },
+                                    {
+                                        "value": "label_ready",
+                                        "label": "Label ready"
+                                    },
+                                    {
+                                        "value": "in_transit",
+                                        "label": "In transit"
+                                    },
+                                    {
+                                        "value": "delivered",
+                                        "label": "Delivered"
+                                    },
+                                    {
+                                        "value": "incident",
+                                        "label": "Incident"
+                                    },
+                                    {
+                                        "value": "cancelled",
+                                        "label": "Cancelled"
+                                    },
+                                    {
+                                        "value": "unknown",
+                                        "label": "Unknown"
+                                    }
+                                ]
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "id": "externalOrderId",
+                                "label": "Order",
+                                "path": "externalOrderId",
+                                "primary": true
+                            },
+                            {
+                                "id": "expeditionNumber",
+                                "label": "Expedition",
+                                "path": "expeditionNumber"
+                            },
+                            {
+                                "id": "recipientName",
+                                "label": "Recipient",
+                                "path": "recipientName"
+                            },
+                            {
+                                "id": "recipientPostalCode",
+                                "label": "Postcode",
+                                "path": "recipientPostalCode"
+                            },
+                            {
+                                "id": "recipientCity",
+                                "label": "City",
+                                "path": "recipientCity"
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "path": "status",
+                                "format": "badge"
+                            },
+                            {
+                                "id": "createdAt",
+                                "label": "Created",
+                                "path": "createdAt",
+                                "format": "date"
+                            }
+                        ],
+                        "selection": {
+                            "opens": "shipmentDetail"
+                        }
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "createShipmentForm",
+                        "source": {
+                            "endpoint": "setting",
+                            "params": {
+                                "id": "default"
+                            }
+                        },
+                        "title": {
+                            "path": "externalOrderId",
+                            "fallback": "Create shipment"
+                        },
+                        "actions": [
                             {
                                 "id": "createShipment",
                                 "label": "Create shipment",
-                                "children": [
-                                    {
-                                        "widget": "w-detail",
-                                        "id": "createShipmentForm",
-                                        "source": {
-                                            "endpoint": "setting",
-                                            "params": {
-                                                "id": "default"
-                                            }
-                                        },
-                                        "title": {
-                                            "path": "externalOrderId",
-                                            "fallback": "Create shipment"
-                                        },
-                                        "actions": [
-                                            {
-                                                "id": "createShipment",
-                                                "label": "Create shipment",
-                                                "tone": "primary",
-                                                "placement": "primary",
-                                                "endpoint": {
-                                                    "endpoint": "createShipment",
-                                                    "body": {
-                                                        "externalOrderId": "$field.externalOrderId",
-                                                        "modeCollection": "$field.modeCollection",
-                                                        "modeDelivery": "$field.modeDelivery",
-                                                        "recipientName": "$field.recipientName",
-                                                        "recipientEmail": "$field.recipientEmail",
-                                                        "recipientPhone": "$field.recipientPhone",
-                                                        "recipientAddressLine1": "$field.recipientAddressLine1",
-                                                        "recipientAddressLine2": "$field.recipientAddressLine2",
-                                                        "recipientPostalCode": "$field.recipientPostalCode",
-                                                        "recipientCity": "$field.recipientCity",
-                                                        "recipientCountry": "$field.recipientCountry",
-                                                        "deliveryRelayLocation": "$field.deliveryRelayLocation",
-                                                        "weightGrams": "$field.weightGrams",
-                                                        "packageCount": "$field.packageCount",
-                                                        "lengthCm": "$field.lengthCm",
-                                                        "widthCm": "$field.widthCm",
-                                                        "heightCm": "$field.heightCm",
-                                                        "content": "$field.content",
-                                                        "declaredValue": "$field.declaredValue",
-                                                        "declaredCurrency": "$field.declaredCurrency",
-                                                        "instructions": "$field.instructions"
-                                                    }
-                                                }
-                                            }
-                                        ],
-                                        "main": [
-                                            {
-                                                "id": "recipient",
-                                                "title": "Recipient",
-                                                "fields": [
-                                                    {
-                                                        "id": "externalOrderId",
-                                                        "label": "External order id",
-                                                        "path": "externalOrderId",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientName",
-                                                        "label": "Recipient",
-                                                        "path": "recipientName",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientEmail",
-                                                        "label": "Recipient email",
-                                                        "path": "recipientEmail",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientPhone",
-                                                        "label": "Recipient phone",
-                                                        "path": "recipientPhone",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientAddressLine1",
-                                                        "label": "Address",
-                                                        "path": "recipientAddressLine1",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientAddressLine2",
-                                                        "label": "Address line 2",
-                                                        "path": "recipientAddressLine2",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientPostalCode",
-                                                        "label": "Postal code",
-                                                        "path": "recipientPostalCode",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientCity",
-                                                        "label": "City",
-                                                        "path": "recipientCity",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "recipientCountry",
-                                                        "label": "Country",
-                                                        "path": "recipientCountry",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "FR",
-                                                                "label": "France"
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "id": "deliveryRelay",
-                                                "title": "Pickup point",
-                                                "fields": [
-                                                    {
-                                                        "id": "deliveryRelayLocation",
-                                                        "label": "Pickup point",
-                                                        "path": "deliveryRelayLocation",
-                                                        "required": true,
-                                                        "type": "combobox",
-                                                        "lookup": {
-                                                            "endpoint": "relayPoints",
-                                                            "params": {
-                                                                "country": "$field.recipientCountry",
-                                                                "postalCode": "$field.recipientPostalCode",
-                                                                "city": "$field.recipientCity",
-                                                                "weightGrams": "$field.weightGrams",
-                                                                "modeDelivery": "$field.modeDelivery",
-                                                                "limit": "10"
-                                                            },
-                                                            "itemsPath": "items",
-                                                            "valuePath": "location",
-                                                            "labelPath": "label",
-                                                            "subtitlePath": "addressLine1",
-                                                            "descriptionPaths": [
-                                                                "postalCode",
-                                                                "city"
-                                                            ]
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "aside": [
-                                            {
-                                                "id": "parcel",
-                                                "title": "Parcel",
-                                                "fields": [
-                                                    {
-                                                        "id": "modeCollection",
-                                                        "label": "Collection mode",
-                                                        "path": "modeCollection",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "CCC",
-                                                                "label": "CCC"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "modeDelivery",
-                                                        "label": "Delivery mode",
-                                                        "path": "modeDelivery",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "24R",
-                                                                "label": "24R"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "weightGrams",
-                                                        "label": "Weight grams",
-                                                        "path": "weightGrams",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "packageCount",
-                                                        "label": "Packages",
-                                                        "path": "packageCount",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "lengthCm",
-                                                        "label": "Length cm",
-                                                        "path": "lengthCm",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "widthCm",
-                                                        "label": "Width cm",
-                                                        "path": "widthCm",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "heightCm",
-                                                        "label": "Height cm",
-                                                        "path": "heightCm",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "content",
-                                                        "label": "Content",
-                                                        "path": "content",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "declaredValue",
-                                                        "label": "Declared value",
-                                                        "path": "declaredValue",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "declaredCurrency",
-                                                        "label": "Declared currency",
-                                                        "path": "declaredCurrency",
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "EUR",
-                                                                "label": "EUR"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "instructions",
-                                                        "label": "Instructions",
-                                                        "path": "instructions",
-                                                        "type": "textarea",
-                                                        "rows": 3
-                                                    }
-                                                ]
-                                            }
-                                        ]
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "createShipment",
+                                    "body": {
+                                        "externalOrderId": "$field.externalOrderId",
+                                        "modeCollection": "$field.modeCollection",
+                                        "modeDelivery": "$field.modeDelivery",
+                                        "recipientName": "$field.recipientName",
+                                        "recipientEmail": "$field.recipientEmail",
+                                        "recipientPhone": "$field.recipientPhone",
+                                        "recipientAddressLine1": "$field.recipientAddressLine1",
+                                        "recipientAddressLine2": "$field.recipientAddressLine2",
+                                        "recipientPostalCode": "$field.recipientPostalCode",
+                                        "recipientCity": "$field.recipientCity",
+                                        "recipientCountry": "$field.recipientCountry",
+                                        "deliveryRelayLocation": "$field.deliveryRelayLocation",
+                                        "weightGrams": "$field.weightGrams",
+                                        "packageCount": "$field.packageCount",
+                                        "lengthCm": "$field.lengthCm",
+                                        "widthCm": "$field.widthCm",
+                                        "heightCm": "$field.heightCm",
+                                        "content": "$field.content",
+                                        "declaredValue": "$field.declaredValue",
+                                        "declaredCurrency": "$field.declaredCurrency",
+                                        "instructions": "$field.instructions"
                                     }
-                                ]
-                            },
+                                },
+                                "after": {
+                                    "opens": "shipmentDetail",
+                                    "row": "$result.id"
+                                }
+                            }
+                        ],
+                        "main": [
                             {
-                                "id": "shipments",
-                                "label": "Shipments",
-                                "children": [
+                                "id": "recipient",
+                                "title": "Recipient",
+                                "fields": [
                                     {
-                                        "widget": "w-table",
-                                        "id": "shipmentsTable",
-                                        "title": "Shipments",
-                                        "source": {
-                                            "endpoint": "shipments",
-                                            "params": {
-                                                "status": "$filter.status",
-                                                "q": "$filter.q",
-                                                "limit": "50"
-                                            },
-                                            "itemsPath": "items"
-                                        },
-                                        "rowKey": "id",
-                                        "filters": [
-                                            {
-                                                "id": "q",
-                                                "param": "q",
-                                                "type": "text",
-                                                "label": "Search",
-                                                "placeholder": "Search shipments"
-                                            },
-                                            {
-                                                "id": "status",
-                                                "param": "status",
-                                                "type": "select",
-                                                "label": "Status",
-                                                "options": [
-                                                    {
-                                                        "value": "created",
-                                                        "label": "Created"
-                                                    },
-                                                    {
-                                                        "value": "label_ready",
-                                                        "label": "Label ready"
-                                                    },
-                                                    {
-                                                        "value": "in_transit",
-                                                        "label": "In transit"
-                                                    },
-                                                    {
-                                                        "value": "delivered",
-                                                        "label": "Delivered"
-                                                    },
-                                                    {
-                                                        "value": "incident",
-                                                        "label": "Incident"
-                                                    },
-                                                    {
-                                                        "value": "cancelled",
-                                                        "label": "Cancelled"
-                                                    },
-                                                    {
-                                                        "value": "unknown",
-                                                        "label": "Unknown"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "columns": [
-                                            {
-                                                "id": "externalOrderId",
-                                                "label": "Order",
-                                                "path": "externalOrderId",
-                                                "primary": true
-                                            },
-                                            {
-                                                "id": "expeditionNumber",
-                                                "label": "Expedition",
-                                                "path": "expeditionNumber"
-                                            },
-                                            {
-                                                "id": "recipientName",
-                                                "label": "Recipient",
-                                                "path": "recipientName"
-                                            },
-                                            {
-                                                "id": "recipientPostalCode",
-                                                "label": "Postcode",
-                                                "path": "recipientPostalCode"
-                                            },
-                                            {
-                                                "id": "recipientCity",
-                                                "label": "City",
-                                                "path": "recipientCity"
-                                            },
-                                            {
-                                                "id": "status",
-                                                "label": "Status",
-                                                "path": "status",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "id": "createdAt",
-                                                "label": "Created",
-                                                "path": "createdAt",
-                                                "format": "date"
-                                            }
-                                        ],
-                                        "selection": {
-                                            "opens": "shipmentDetail"
-                                        }
+                                        "id": "externalOrderId",
+                                        "label": "External order id",
+                                        "path": "externalOrderId",
+                                        "type": "text"
                                     },
                                     {
-                                        "widget": "w-detail",
-                                        "id": "shipmentDetail",
-                                        "source": {
-                                            "endpoint": "shipment",
-                                            "params": {
-                                                "id": "$selection.id"
-                                            }
-                                        },
-                                        "title": {
-                                            "path": "expeditionNumber",
-                                            "fallback": "Shipment"
-                                        },
-                                        "status": {
-                                            "path": "status"
-                                        },
-                                        "main": [
+                                        "id": "recipientName",
+                                        "label": "Recipient",
+                                        "path": "recipientName",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientEmail",
+                                        "label": "Recipient email",
+                                        "path": "recipientEmail",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientPhone",
+                                        "label": "Recipient phone",
+                                        "path": "recipientPhone",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientAddressLine1",
+                                        "label": "Address",
+                                        "path": "recipientAddressLine1",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientAddressLine2",
+                                        "label": "Address line 2",
+                                        "path": "recipientAddressLine2",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientPostalCode",
+                                        "label": "Postal code",
+                                        "path": "recipientPostalCode",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientCity",
+                                        "label": "City",
+                                        "path": "recipientCity",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "recipientCountry",
+                                        "label": "Country",
+                                        "path": "senderCountry",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
                                             {
-                                                "id": "shipmentGeneral",
-                                                "title": "Shipment",
-                                                "fields": [
-                                                    {
-                                                        "id": "externalOrderId",
-                                                        "label": "External order id",
-                                                        "path": "externalOrderId",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "expeditionNumber",
-                                                        "label": "Expedition",
-                                                        "path": "expeditionNumber",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "status",
-                                                        "label": "Status",
-                                                        "path": "status",
-                                                        "type": "readonly",
-                                                        "format": "badge"
-                                                    },
-                                                    {
-                                                        "id": "recipientName",
-                                                        "label": "Recipient",
-                                                        "path": "recipientName",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "recipientEmail",
-                                                        "label": "Email",
-                                                        "path": "recipientEmail",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "recipientPhone",
-                                                        "label": "Phone",
-                                                        "path": "recipientPhone",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "recipientAddressLine1",
-                                                        "label": "Address",
-                                                        "path": "recipientAddressLine1",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "recipientPostalCode",
-                                                        "label": "Postal code",
-                                                        "path": "recipientPostalCode",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "recipientCity",
-                                                        "label": "City",
-                                                        "path": "recipientCity",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "deliveryRelayLocation",
-                                                        "label": "Relay location",
-                                                        "path": "deliveryRelayLocation",
-                                                        "type": "readonly"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "aside": [
-                                            {
-                                                "id": "shipmentLinks",
-                                                "title": "Links",
-                                                "fields": [
-                                                    {
-                                                        "id": "trackingUrl",
-                                                        "label": "Tracking URL",
-                                                        "path": "trackingUrl",
-                                                        "type": "readonly",
-                                                        "format": "url"
-                                                    },
-                                                    {
-                                                        "id": "labelUrl",
-                                                        "label": "Label URL",
-                                                        "path": "labelUrl",
-                                                        "type": "readonly",
-                                                        "format": "url"
-                                                    },
-                                                    {
-                                                        "id": "latestEventLabel",
-                                                        "label": "Latest event",
-                                                        "path": "latestEventLabel",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "latestEventAt",
-                                                        "label": "Latest event date",
-                                                        "path": "latestEventAt",
-                                                        "type": "readonly",
-                                                        "format": "date"
-                                                    },
-                                                    {
-                                                        "id": "createdAt",
-                                                        "label": "Created",
-                                                        "path": "createdAt",
-                                                        "type": "readonly",
-                                                        "format": "date"
-                                                    }
-                                                ]
+                                                "value": "FR",
+                                                "label": "France"
                                             }
                                         ]
                                     }
                                 ]
                             },
                             {
-                                "id": "pickupPoints",
-                                "label": "Pickup points",
-                                "children": [
+                                "id": "deliveryRelay",
+                                "title": "Pickup point",
+                                "fields": [
                                     {
-                                        "widget": "w-table",
-                                        "id": "relayPointsTable",
-                                        "title": "Pickup points",
-                                        "source": {
+                                        "id": "deliveryRelayLocation",
+                                        "label": "Pickup point",
+                                        "path": "deliveryRelayLocation",
+                                        "required": true,
+                                        "type": "combobox",
+                                        "lookup": {
                                             "endpoint": "relayPoints",
                                             "params": {
-                                                "country": "$filter.country",
-                                                "postalCode": "$filter.postalCode",
-                                                "city": "$filter.city",
-                                                "weightGrams": "$filter.weightGrams",
-                                                "limit": "20"
+                                                "country": "$field.recipientCountry",
+                                                "postalCode": "$field.recipientPostalCode",
+                                                "city": "$field.recipientCity",
+                                                "weightGrams": "$field.weightGrams",
+                                                "modeDelivery": "$field.modeDelivery",
+                                                "limit": "10"
                                             },
-                                            "itemsPath": "items"
-                                        },
-                                        "rowKey": "location",
-                                        "filters": [
-                                            {
-                                                "id": "country",
-                                                "param": "country",
-                                                "type": "select",
-                                                "label": "Country",
-                                                "options": [
-                                                    {
-                                                        "value": "FR",
-                                                        "label": "France"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "id": "postalCode",
-                                                "param": "postalCode",
-                                                "type": "text",
-                                                "label": "Postal code"
-                                            },
-                                            {
-                                                "id": "city",
-                                                "param": "city",
-                                                "type": "text",
-                                                "label": "City"
-                                            },
-                                            {
-                                                "id": "weightGrams",
-                                                "param": "weightGrams",
-                                                "type": "text",
-                                                "label": "Weight grams"
-                                            }
-                                        ],
-                                        "columns": [
-                                            {
-                                                "id": "label",
-                                                "label": "Pickup point",
-                                                "path": "label",
-                                                "primary": true
-                                            },
-                                            {
-                                                "id": "addressLine1",
-                                                "label": "Address",
-                                                "path": "addressLine1"
-                                            },
-                                            {
-                                                "id": "postalCode",
-                                                "label": "Postcode",
-                                                "path": "postalCode"
-                                            },
-                                            {
-                                                "id": "city",
-                                                "label": "City",
-                                                "path": "city"
-                                            },
-                                            {
-                                                "id": "nature",
-                                                "label": "Type",
-                                                "path": "nature"
-                                            }
-                                        ]
+                                            "itemsPath": "items",
+                                            "valuePath": "location",
+                                            "labelPath": "label",
+                                            "subtitlePath": "addressLine1",
+                                            "descriptionPaths": [
+                                                "postalCode",
+                                                "city"
+                                            ]
+                                        }
                                     }
                                 ]
-                            },
+                            }
+                        ],
+                        "aside": [
                             {
-                                "id": "settings",
-                                "label": "Settings",
-                                "children": [
+                                "id": "parcel",
+                                "title": "Parcel",
+                                "fields": [
                                     {
-                                        "widget": "w-detail",
-                                        "id": "settingsDetail",
-                                        "source": {
-                                            "endpoint": "setting",
-                                            "params": {
-                                                "id": "default"
-                                            }
-                                        },
-                                        "title": {
-                                            "path": "senderName",
-                                            "fallback": "Delivery settings"
-                                        },
-                                        "actions": [
+                                        "id": "modeCollection",
+                                        "label": "Collection mode",
+                                        "path": "modeCollection",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
                                             {
-                                                "id": "saveSettings",
-                                                "label": "Edit settings",
-                                                "tone": "primary",
-                                                "placement": "primary",
-                                                "endpoint": {
-                                                    "endpoint": "setSettings",
-                                                    "params": {
-                                                        "id": "default"
-                                                    },
-                                                    "body": {
-                                                        "modeCollection": "$field.modeCollection",
-                                                        "modeDelivery": "$field.modeDelivery",
-                                                        "senderName": "$field.senderName",
-                                                        "senderFirstName": "$field.senderFirstName",
-                                                        "senderLastName": "$field.senderLastName",
-                                                        "senderAddressLine1": "$field.senderAddressLine1",
-                                                        "senderAddressLine2": "$field.senderAddressLine2",
-                                                        "senderAddressLine3": "$field.senderAddressLine3",
-                                                        "senderPostalCode": "$field.senderPostalCode",
-                                                        "senderCity": "$field.senderCity",
-                                                        "senderCountry": "$field.senderCountry",
-                                                        "senderPhone": "$field.senderPhone",
-                                                        "senderMobile": "$field.senderMobile",
-                                                        "senderEmail": "$field.senderEmail",
-                                                        "defaultWeightGrams": "$field.defaultWeightGrams",
-                                                        "defaultPackageCount": "$field.defaultPackageCount",
-                                                        "defaultLengthCm": "$field.defaultLengthCm",
-                                                        "defaultWidthCm": "$field.defaultWidthCm",
-                                                        "defaultHeightCm": "$field.defaultHeightCm",
-                                                        "defaultContent": "$field.defaultContent",
-                                                        "declaredCurrency": "$field.declaredCurrency",
-                                                        "connectCulture": "$field.connectCulture",
-                                                        "connectVersionApi": "$field.connectVersionApi",
-                                                        "connectOutputFormat": "$field.connectOutputFormat",
-                                                        "connectOutputType": "$field.connectOutputType"
-                                                    }
-                                                }
-                                            }
-                                        ],
-                                        "main": [
-                                            {
-                                                "id": "sender",
-                                                "title": "Sender address",
-                                                "fields": [
-                                                    {
-                                                        "id": "senderName",
-                                                        "label": "Sender",
-                                                        "path": "senderName",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderFirstName",
-                                                        "label": "Sender first name",
-                                                        "path": "senderFirstName",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderLastName",
-                                                        "label": "Sender last name",
-                                                        "path": "senderLastName",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderAddressLine1",
-                                                        "label": "Sender address",
-                                                        "path": "senderAddressLine1",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderAddressLine2",
-                                                        "label": "Sender address line 2",
-                                                        "path": "senderAddressLine2",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderAddressLine3",
-                                                        "label": "Sender address line 3",
-                                                        "path": "senderAddressLine3",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderPostalCode",
-                                                        "label": "Sender postal code",
-                                                        "path": "senderPostalCode",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderCity",
-                                                        "label": "Sender city",
-                                                        "path": "senderCity",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderCountry",
-                                                        "label": "Sender country",
-                                                        "path": "senderCountry",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "FR",
-                                                                "label": "France"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "senderPhone",
-                                                        "label": "Sender phone",
-                                                        "path": "senderPhone",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderMobile",
-                                                        "label": "Sender mobile",
-                                                        "path": "senderMobile",
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "senderEmail",
-                                                        "label": "Sender email",
-                                                        "path": "senderEmail",
-                                                        "type": "text"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "aside": [
-                                            {
-                                                "id": "defaults",
-                                                "title": "Defaults",
-                                                "fields": [
-                                                    {
-                                                        "id": "modeCollection",
-                                                        "label": "Collection mode",
-                                                        "path": "modeCollection",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "CCC",
-                                                                "label": "CCC"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "modeDelivery",
-                                                        "label": "Delivery mode",
-                                                        "path": "modeDelivery",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "24R",
-                                                                "label": "24R"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "defaultWeightGrams",
-                                                        "label": "Default weight grams",
-                                                        "path": "defaultWeightGrams",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "defaultPackageCount",
-                                                        "label": "Default packages",
-                                                        "path": "defaultPackageCount",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "defaultLengthCm",
-                                                        "label": "Default length cm",
-                                                        "path": "defaultLengthCm",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "defaultWidthCm",
-                                                        "label": "Default width cm",
-                                                        "path": "defaultWidthCm",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "defaultHeightCm",
-                                                        "label": "Default height cm",
-                                                        "path": "defaultHeightCm",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "defaultContent",
-                                                        "label": "Default content",
-                                                        "path": "defaultContent",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "declaredCurrency",
-                                                        "label": "Declared currency",
-                                                        "path": "declaredCurrency",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "EUR",
-                                                                "label": "EUR"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "connectCulture",
-                                                        "label": "Connect culture",
-                                                        "path": "connectCulture",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "connectVersionApi",
-                                                        "label": "Connect API version",
-                                                        "path": "connectVersionApi",
-                                                        "required": true,
-                                                        "type": "text"
-                                                    },
-                                                    {
-                                                        "id": "connectOutputFormat",
-                                                        "label": "Label format",
-                                                        "path": "connectOutputFormat",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "10x15",
-                                                                "label": "10x15"
-                                                            },
-                                                            {
-                                                                "value": "A4",
-                                                                "label": "A4"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "connectOutputType",
-                                                        "label": "Label output type",
-                                                        "path": "connectOutputType",
-                                                        "required": true,
-                                                        "type": "select",
-                                                        "options": [
-                                                            {
-                                                                "value": "PdfUrl",
-                                                                "label": "PdfUrl"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "updatedAt",
-                                                        "label": "Updated",
-                                                        "path": "updatedAt",
-                                                        "type": "readonly",
-                                                        "format": "date"
-                                                    }
-                                                ]
+                                                "value": "CCC",
+                                                "label": "CCC"
                                             }
                                         ]
+                                    },
+                                    {
+                                        "id": "modeDelivery",
+                                        "label": "Delivery mode",
+                                        "path": "modeDelivery",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "24R",
+                                                "label": "24R"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "weightGrams",
+                                        "label": "Weight grams",
+                                        "path": "defaultWeightGrams",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "packageCount",
+                                        "label": "Packages",
+                                        "path": "defaultPackageCount",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "lengthCm",
+                                        "label": "Length cm",
+                                        "path": "defaultLengthCm",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "widthCm",
+                                        "label": "Width cm",
+                                        "path": "defaultWidthCm",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "heightCm",
+                                        "label": "Height cm",
+                                        "path": "defaultHeightCm",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "content",
+                                        "label": "Content",
+                                        "path": "defaultContent",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "declaredValue",
+                                        "label": "Declared value",
+                                        "path": "declaredValue",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "declaredCurrency",
+                                        "label": "Declared currency",
+                                        "path": "declaredCurrency",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "EUR",
+                                                "label": "EUR"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "instructions",
+                                        "label": "Instructions",
+                                        "path": "instructions",
+                                        "type": "textarea",
+                                        "rows": 3
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "shipmentDetail",
+                        "source": {
+                            "endpoint": "shipment",
+                            "params": {
+                                "id": "$selection.id"
+                            }
+                        },
+                        "title": {
+                            "path": "expeditionNumber",
+                            "fallback": "Shipment"
+                        },
+                        "status": {
+                            "path": "status"
+                        },
+                        "main": [
+                            {
+                                "id": "shipmentGeneral",
+                                "title": "Shipment",
+                                "fields": [
+                                    {
+                                        "id": "externalOrderId",
+                                        "label": "External order id",
+                                        "path": "externalOrderId",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "expeditionNumber",
+                                        "label": "Expedition",
+                                        "path": "expeditionNumber",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "status",
+                                        "label": "Status",
+                                        "path": "status",
+                                        "type": "readonly",
+                                        "format": "badge"
+                                    },
+                                    {
+                                        "id": "recipientName",
+                                        "label": "Recipient",
+                                        "path": "recipientName",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "recipientEmail",
+                                        "label": "Email",
+                                        "path": "recipientEmail",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "recipientPhone",
+                                        "label": "Phone",
+                                        "path": "recipientPhone",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "recipientAddressLine1",
+                                        "label": "Address",
+                                        "path": "recipientAddressLine1",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "recipientPostalCode",
+                                        "label": "Postal code",
+                                        "path": "recipientPostalCode",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "recipientCity",
+                                        "label": "City",
+                                        "path": "recipientCity",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "deliveryRelayLocation",
+                                        "label": "Relay location",
+                                        "path": "deliveryRelayLocation",
+                                        "type": "readonly"
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "shipmentLinks",
+                                "title": "Links",
+                                "fields": [
+                                    {
+                                        "id": "trackingUrl",
+                                        "label": "Tracking URL",
+                                        "path": "trackingUrl",
+                                        "type": "readonly",
+                                        "format": "url"
+                                    },
+                                    {
+                                        "id": "labelUrl",
+                                        "label": "Label URL",
+                                        "path": "labelUrl",
+                                        "type": "readonly",
+                                        "format": "url"
+                                    },
+                                    {
+                                        "id": "latestEventLabel",
+                                        "label": "Latest event",
+                                        "path": "latestEventLabel",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "latestEventAt",
+                                        "label": "Latest event date",
+                                        "path": "latestEventAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "createdAt",
+                                        "label": "Created",
+                                        "path": "createdAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "settingsDetail",
+                        "source": {
+                            "endpoint": "setting",
+                            "params": {
+                                "id": "default"
+                            }
+                        },
+                        "title": {
+                            "path": "senderName",
+                            "fallback": "Delivery settings"
+                        },
+                        "actions": [
+                            {
+                                "id": "saveSettings",
+                                "label": "Edit settings",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "setSettings",
+                                    "params": {
+                                        "id": "default"
+                                    },
+                                    "body": {
+                                        "modeCollection": "$field.modeCollection",
+                                        "modeDelivery": "$field.modeDelivery",
+                                        "senderName": "$field.senderName",
+                                        "senderFirstName": "$field.senderFirstName",
+                                        "senderLastName": "$field.senderLastName",
+                                        "senderAddressLine1": "$field.senderAddressLine1",
+                                        "senderAddressLine2": "$field.senderAddressLine2",
+                                        "senderAddressLine3": "$field.senderAddressLine3",
+                                        "senderPostalCode": "$field.senderPostalCode",
+                                        "senderCity": "$field.senderCity",
+                                        "senderCountry": "$field.senderCountry",
+                                        "senderPhone": "$field.senderPhone",
+                                        "senderMobile": "$field.senderMobile",
+                                        "senderEmail": "$field.senderEmail",
+                                        "defaultWeightGrams": "$field.defaultWeightGrams",
+                                        "defaultPackageCount": "$field.defaultPackageCount",
+                                        "defaultLengthCm": "$field.defaultLengthCm",
+                                        "defaultWidthCm": "$field.defaultWidthCm",
+                                        "defaultHeightCm": "$field.defaultHeightCm",
+                                        "defaultContent": "$field.defaultContent",
+                                        "declaredCurrency": "$field.declaredCurrency",
+                                        "connectCulture": "$field.connectCulture",
+                                        "connectVersionApi": "$field.connectVersionApi",
+                                        "connectOutputFormat": "$field.connectOutputFormat",
+                                        "connectOutputType": "$field.connectOutputType"
+                                    }
+                                }
+                            }
+                        ],
+                        "main": [
+                            {
+                                "id": "sender",
+                                "title": "Sender address",
+                                "fields": [
+                                    {
+                                        "id": "senderName",
+                                        "label": "Sender",
+                                        "path": "senderName",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderFirstName",
+                                        "label": "Sender first name",
+                                        "path": "senderFirstName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderLastName",
+                                        "label": "Sender last name",
+                                        "path": "senderLastName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderAddressLine1",
+                                        "label": "Sender address",
+                                        "path": "senderAddressLine1",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderAddressLine2",
+                                        "label": "Sender address line 2",
+                                        "path": "senderAddressLine2",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderAddressLine3",
+                                        "label": "Sender address line 3",
+                                        "path": "senderAddressLine3",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderPostalCode",
+                                        "label": "Sender postal code",
+                                        "path": "senderPostalCode",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderCity",
+                                        "label": "Sender city",
+                                        "path": "senderCity",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderCountry",
+                                        "label": "Sender country",
+                                        "path": "senderCountry",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "FR",
+                                                "label": "France"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "senderPhone",
+                                        "label": "Sender phone",
+                                        "path": "senderPhone",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderMobile",
+                                        "label": "Sender mobile",
+                                        "path": "senderMobile",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "senderEmail",
+                                        "label": "Sender email",
+                                        "path": "senderEmail",
+                                        "type": "text"
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "defaults",
+                                "title": "Defaults",
+                                "fields": [
+                                    {
+                                        "id": "modeCollection",
+                                        "label": "Collection mode",
+                                        "path": "modeCollection",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "CCC",
+                                                "label": "CCC"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "modeDelivery",
+                                        "label": "Delivery mode",
+                                        "path": "modeDelivery",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "24R",
+                                                "label": "24R"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "defaultWeightGrams",
+                                        "label": "Default weight grams",
+                                        "path": "defaultWeightGrams",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "defaultPackageCount",
+                                        "label": "Default packages",
+                                        "path": "defaultPackageCount",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "defaultLengthCm",
+                                        "label": "Default length cm",
+                                        "path": "defaultLengthCm",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "defaultWidthCm",
+                                        "label": "Default width cm",
+                                        "path": "defaultWidthCm",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "defaultHeightCm",
+                                        "label": "Default height cm",
+                                        "path": "defaultHeightCm",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "defaultContent",
+                                        "label": "Default content",
+                                        "path": "defaultContent",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "declaredCurrency",
+                                        "label": "Declared currency",
+                                        "path": "declaredCurrency",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "EUR",
+                                                "label": "EUR"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "connectCulture",
+                                        "label": "Connect culture",
+                                        "path": "connectCulture",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "connectVersionApi",
+                                        "label": "Connect API version",
+                                        "path": "connectVersionApi",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "connectOutputFormat",
+                                        "label": "Label format",
+                                        "path": "connectOutputFormat",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "10x15",
+                                                "label": "10x15"
+                                            },
+                                            {
+                                                "value": "A4",
+                                                "label": "A4"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "connectOutputType",
+                                        "label": "Label output type",
+                                        "path": "connectOutputType",
+                                        "required": true,
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "PdfUrl",
+                                                "label": "PdfUrl"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "updatedAt",
+                                        "label": "Updated",
+                                        "path": "updatedAt",
+                                        "type": "readonly",
+                                        "format": "date"
                                     }
                                 ]
                             }

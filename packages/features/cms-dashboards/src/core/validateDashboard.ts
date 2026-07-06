@@ -19,6 +19,7 @@ import type {
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const SAFE_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 const PARAM_EXPR = /^\$(row|resource|field|filter|param|selection|search|value|input|user|media)(\.[A-Za-z_$][\w$]*)*$/;
+const ACTION_AFTER_EXPR = /^\$(result|selection)(\.[A-Za-z_$][\w$]*)*$/;
 
 export type ValidateDashboardOptions = {
     source?: Source | null;
@@ -348,10 +349,32 @@ function validateAction(
     if (action.selection?.opens && !findWidget(dashboard.views, action.selection.opens)) {
         errors.push(`${path}.selection.opens references unknown widget "${action.selection.opens}"`);
     }
+    if (action.after) {
+        if (!action.endpoint) errors.push(`${path}.after requires endpoint`);
+        validateActionAfter(action.after, `${path}.after`, dashboard, errors);
+    }
 }
 
 function isSafeDownloadFilename(value: string): boolean {
     return Boolean(value.trim()) && !value.includes("/") && !value.includes("\\") && !value.includes("\0");
+}
+
+function validateActionAfter(
+    after: NonNullable<DashboardAction["after"]>,
+    path: string,
+    dashboard: DashboardDto,
+    errors: string[],
+): void {
+    validateRequiredId(`${path}.opens`, after.opens, errors);
+    if (after.opens && !findWidget(dashboard.views, after.opens)) {
+        errors.push(`${path}.opens references unknown widget "${after.opens}"`);
+    }
+    if (after.row !== undefined) validateActionAfterExpression(`${path}.row`, after.row, errors);
+}
+
+function validateActionAfterExpression(path: string, value: string, errors: string[]): void {
+    if (!value.startsWith("$")) return;
+    if (!ACTION_AFTER_EXPR.test(value)) errors.push(`${path} has an invalid binding expression`);
 }
 
 function findWidget(widgets: DashboardWidget[], id: string): DashboardWidget | null {

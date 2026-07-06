@@ -530,6 +530,7 @@ function parseActions(value: unknown, name: string): DashboardAction[] {
 function parseAction(value: unknown, name: string): DashboardAction {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
     if (value.endpoint !== undefined && !isRecord(value.endpoint)) throw new IntegrationInputError(`${name}.endpoint`, "must be an object");
+    if (value.after !== undefined && !isRecord(value.after)) throw new IntegrationInputError(`${name}.after`, "must be an object");
     return {
         id: requiredText(value.id, `${name}.id`),
         label: requiredText(value.label, `${name}.label`),
@@ -540,7 +541,15 @@ function parseAction(value: unknown, name: string): DashboardAction {
         ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
         ...(value.download !== undefined ? { download: parseActionDownload(value.download, `${name}.download`) } : {}),
         ...(isRecord(value.selection) ? { selection: parseSelection(value.selection, `${name}.selection`) } : {}),
+        ...(isRecord(value.after) ? { after: parseActionAfter(value.after, `${name}.after`) } : {}),
         ...(text(value.confirm) ? { confirm: text(value.confirm)! } : {}),
+    };
+}
+
+function parseActionAfter(value: Record<string, unknown>, name: string): NonNullable<DashboardAction["after"]> {
+    return {
+        opens: requiredText(value.opens, `${name}.opens`),
+        ...(text(value.row) ? { row: text(value.row)! } : {}),
     };
 }
 

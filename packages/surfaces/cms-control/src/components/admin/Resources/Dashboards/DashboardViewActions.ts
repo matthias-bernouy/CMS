@@ -2,6 +2,7 @@ import { showToast } from "@bernouy/components";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { detailKey, type DetailSelection } from "./domain";
 import { executeDashboardAction, executeDashboardMediaAction, executeDashboardTableAction } from "./runtime/actions";
+import { resolveExpression } from "./runtime/expressions";
 import type { DashboardSourceGroup } from "./types";
 import type { WidgetActionDetail, WidgetMediaActionDetail } from "./widgets/shared";
 
@@ -34,7 +35,9 @@ export async function runDashboardWidgetAction(context: DashboardViewActionConte
             return;
         }
         showToast(`${action.action} completed`, { type: "success" });
-        if (!detail) context.render();
+        const after = result.kind === "value" ? afterTarget(result.after, result.value, detail) : null;
+        if (after) context.openDetail(after.collection, after.row);
+        else if (!detail) context.render();
         else if (action.action.startsWith("delete")) context.clearDetail();
         else if (detail.row === "__new__" && createdId(result.value)) context.openDetail(detail.collection, createdId(result.value)!);
         else context.reload(detail.collection, detail.row);
@@ -62,6 +65,29 @@ function createdId(value: unknown): string | null {
     if (typeof id === "string" && id.trim()) return id;
     if (typeof id === "number" && Number.isFinite(id)) return String(id);
     return null;
+}
+
+function afterTarget(
+    after: { opens: string; row?: string } | undefined,
+    result: unknown,
+    detail: DetailSelection | null,
+): DetailSelection | null {
+    if (!after?.opens) return null;
+    const rowValue = after.row === undefined
+        ? createdId(result)
+        : resolveExpression(after.row, {
+            result,
+            ...(detail ? { selection: { id: detail.row } } : {}),
+        });
+    const row = stringValue(rowValue);
+    return row ? { collection: after.opens, row } : null;
+}
+
+function stringValue(value: unknown): string {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    return "";
 }
 
 export async function runDashboardMediaAction(context: DashboardViewActionContext, media: WidgetMediaActionDetail): Promise<void> {

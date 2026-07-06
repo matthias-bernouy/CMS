@@ -278,6 +278,20 @@ describe("validateDashboard", () => {
         expect(validateDashboard(dashboard, { source })).toContain("views.0.actions.0.download.filename must be a safe file name");
     });
 
+    test("validates post-action detail targets", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+        detail.actions![0]!.after = { opens: "productDetail", row: "$result.id" };
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+
+        detail.actions![0]!.after = { opens: "missingDetail", row: "$result.id" };
+        expect(validateDashboard(dashboard, { source })).toContain('views.1.actions.0.after.opens references unknown widget "missingDetail"');
+
+        detail.actions![0]!.after = { opens: "productDetail", row: "$unknown.id" };
+        expect(validateDashboard(dashboard, { source })).toContain("views.1.actions.0.after.row has an invalid binding expression");
+    });
+
     test("rejects invalid binding expressions", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;

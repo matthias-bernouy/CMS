@@ -2385,6 +2385,11 @@ input:disabled {
     padding: 0;
 }
 
+.clear[hidden],
+.chevron[hidden] {
+    display: none;
+}
+
 .clear:hover {
     background: var(--bg-hover, #f1f4f3);
     color: var(--text-main, #1e293b);
@@ -3031,12 +3036,12 @@ input:disabled {
   var fi = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), D(t, e, i, o);
+    r.setFormValue(e.value), D(t, e, i, o), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var xi = (t, e) => {
-    if (!t)
+  var xi = (t, e, r) => {
+    if (!e)
       return;
-    e.setFormValue(t.value);
+    r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
   var ld = mi + bi + gi;
 
@@ -3119,7 +3124,7 @@ input:disabled {
       this._input?.focus();
     }
     _onInput = () => fi(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => xi(this._input, this._internals);
+    _onChange = () => xi(this, this._input, this._internals);
   }
   var wi = `:host {
     display: block;
@@ -4984,9 +4989,9 @@ input:hover:not(:disabled) {
     width: 100vw;
     overflow: hidden;
 
-    --_sidebar-width: 252px;
+    --_sidebar-width: 224px;
     --_sidebar-collapsed-width: 0px;
-    --_secondary-sidebar-width: var(--secondary-sidebar-width, 280px);
+    --_secondary-sidebar-width: var(--secondary-sidebar-width, 248px);
     --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
     --_content-bg: var(--bg-base);
@@ -5058,6 +5063,7 @@ input:hover:not(:disabled) {
 }
 
 ::slotted([slot="sidebar"]) {
+    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -5066,6 +5072,7 @@ input:hover:not(:disabled) {
 }
 
 ::slotted([slot="secondary-sidebar"]) {
+    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -13358,6 +13365,10 @@ p {
       return valueAt(vars.filters, expression.slice("$filter.".length));
     if (expression.startsWith("$media."))
       return valueAt(vars.media, expression.slice("$media.".length));
+    if (expression === "$result")
+      return vars.result;
+    if (expression.startsWith("$result."))
+      return valueAt(vars.result, expression.slice("$result.".length));
     if (expression === "$value")
       return vars.value;
     if (expression.startsWith("$value."))
@@ -13618,9 +13629,21 @@ p {
     const method = endpointMethod(group, action.endpoint.endpoint);
     if (action.download) {
       const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
-      return { kind: "download", blob: download.blob, filename: action.download.filename ?? download.filename ?? `${action.id}.download` };
+      return {
+        kind: "download",
+        blob: download.blob,
+        filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
+        ...actionMeta(action)
+      };
     }
-    return { kind: "value", value: await sendSourceJson(group.source.id, action.endpoint, method, vars) };
+    return {
+      kind: "value",
+      value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
+      ...actionMeta(action)
+    };
+  }
+  function actionMeta(action) {
+    return action.after ? { after: action.after } : {};
   }
   async function fetchActionResource(sourceId, widget, row) {
     const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
@@ -13730,7 +13753,10 @@ p {
         return;
       }
       au(`${action.action} completed`, { type: "success" });
-      if (!detail)
+      const after = result.kind === "value" ? afterTarget(result.after, result.value, detail) : null;
+      if (after)
+        context.openDetail(after.collection, after.row);
+      else if (!detail)
         context.render();
       else if (action.action.startsWith("delete"))
         context.clearDetail();
@@ -13765,6 +13791,25 @@ p {
     if (typeof id2 === "number" && Number.isFinite(id2))
       return String(id2);
     return null;
+  }
+  function afterTarget(after, result, detail) {
+    if (!after?.opens)
+      return null;
+    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
+      result,
+      ...detail ? { selection: { id: detail.row } } : {}
+    });
+    const row = stringValue(rowValue);
+    return row ? { collection: after.opens, row } : null;
+  }
+  function stringValue(value) {
+    if (value === null || value === undefined)
+      return "";
+    if (typeof value === "string")
+      return value;
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+    return "";
   }
   async function runDashboardMediaAction(context, media) {
     const { group, dashboard, detail } = context;
@@ -15598,6 +15643,7 @@ p9r-token-input {
     dynamicOptions = {};
     optionsRequestKey = "";
     optionsScopeKey = "";
+    lookupReloadTimer = null;
     constructor() {
       super({ css: style_default7, template: template_default8 });
     }
@@ -15640,6 +15686,7 @@ p9r-token-input {
       this.shadowRoot?.removeEventListener("input", this.onInput);
       this.shadowRoot?.removeEventListener("change", this.onChange);
       this.shadowRoot?.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
+      this.clearLookupReloadTimer();
       this.bound = false;
     }
     render() {
@@ -15699,12 +15746,15 @@ p9r-token-input {
       const field = control ? this.findField(control.dataset.fieldControl ?? "") : undefined;
       if (control && field?.input === "table")
         this.updateDerivedTables(field.id);
+      if (field)
+        this.scheduleLookupOptionsReload(field.id);
     };
     onChange = (event) => {
       const control = event.target?.closest("[data-field-control]");
       if (control) {
         this.emitFieldChange(control, Boolean(event.detail?.created));
         this.updateDerivedTables(control.dataset.fieldControl ?? "");
+        this.scheduleLookupOptionsReload(control.dataset.fieldControl ?? "");
       }
     };
     onMediaAction = (event) => {
@@ -15790,23 +15840,45 @@ p9r-token-input {
         this.render();
       if (!sourceJson || !sourceId)
         return;
-      this.loadLookupOptions(widget, resource, rowKey, sourceId);
+      this.loadLookupOptions(widget, resource, rowKey, sourceId, fieldValues(widget, resource), { useLatestFields: true });
     }
-    async loadLookupOptions(widget, resource, rowKey, sourceId) {
-      const requestKey = `${sourceId}:${widget.id}:${rowKey}:${this.dataset.sourceJson ?? ""}`;
+    async loadLookupOptions(widget, resource, rowKey, sourceId, fields, loadOptions = {}) {
+      const requestKey = `${sourceId}:${widget.id}:${rowKey}:${this.dataset.sourceJson ?? ""}:${lookupFieldsKey(fields)}`;
       this.optionsRequestKey = requestKey;
       try {
-        const options = await detailLookupOptions(sourceId, widget, resource, fieldValues(widget, resource));
+        const options = await detailLookupOptions(sourceId, widget, resource, fields);
         if (this.optionsRequestKey !== requestKey)
           return;
+        const renderFields = loadOptions.useLatestFields ? this.currentFields() : fields;
         this.dynamicOptions = options;
-        this.value = detailData(widget, resource, rowKey, {}, options, sourceId);
+        this.value = detailData(widget, resource, rowKey, renderFields, options, sourceId);
         if (this.isConnected)
           this.render();
       } catch {
         if (this.optionsRequestKey === requestKey)
           this.dynamicOptions = {};
       }
+    }
+    scheduleLookupOptionsReload(changedFieldId) {
+      const widget = parseJson2(this.dataset.configJson ?? "");
+      if (!widget || widget.widget !== "w-detail" || !lookupDependsOnField(widget, changedFieldId))
+        return;
+      const fields = this.currentFields();
+      this.clearLookupReloadTimer();
+      this.lookupReloadTimer = setTimeout(() => {
+        this.lookupReloadTimer = null;
+        const resource = this.currentResource();
+        const sourceId = this.dataset.sourceId ?? "";
+        if (!sourceId || resource === undefined)
+          return;
+        this.loadLookupOptions(widget, resource, this.dataset.rowKey ?? "", sourceId, fields);
+      }, 250);
+    }
+    clearLookupReloadTimer() {
+      if (!this.lookupReloadTimer)
+        return;
+      clearTimeout(this.lookupReloadTimer);
+      this.lookupReloadTimer = null;
     }
     findField(id2) {
       return this.fields().find((field) => field.id === id2);
@@ -15853,6 +15925,25 @@ p9r-token-input {
     } catch {
       return null;
     }
+  }
+  function lookupFieldsKey(fields) {
+    try {
+      return JSON.stringify(fields);
+    } catch {
+      return String(Object.keys(fields).sort().length);
+    }
+  }
+  function lookupDependsOnField(widget, fieldId) {
+    if (!fieldId)
+      return false;
+    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields).some((field) => {
+      if (field.type !== "combobox" && field.type !== "tokens" || !field.lookup)
+        return false;
+      return [
+        ...Object.values(field.lookup.params ?? {}),
+        ...Object.values(field.lookup.selected?.params ?? {})
+      ].some((expression) => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`));
+    });
   }
   function replaceTableRows(control, field, rows) {
     control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());

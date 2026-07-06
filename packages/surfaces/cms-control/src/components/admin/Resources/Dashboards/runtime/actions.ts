@@ -10,8 +10,12 @@ type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type MediaField = DetailWidget["main"][number]["fields"][number] & { type: "media" };
 
 export type DashboardActionResult =
-    | { kind: "value"; value: unknown }
-    | { kind: "download"; blob: Blob; filename: string };
+    | ({ kind: "value"; value: unknown } & ActionResultMeta)
+    | ({ kind: "download"; blob: Blob; filename: string } & ActionResultMeta);
+
+type ActionResultMeta = {
+    after?: DashboardAction["after"];
+};
 
 export async function executeDashboardAction(
     group: DashboardSourceGroup,
@@ -56,9 +60,22 @@ async function executeEndpointAction(
     const method = endpointMethod(group, action.endpoint.endpoint);
     if (action.download) {
         const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
-        return { kind: "download", blob: download.blob, filename: action.download.filename ?? download.filename ?? `${action.id}.download` };
+        return {
+            kind: "download",
+            blob: download.blob,
+            filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
+            ...actionMeta(action),
+        };
     }
-    return { kind: "value", value: await sendSourceJson(group.source.id, action.endpoint, method, vars) };
+    return {
+        kind: "value",
+        value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
+        ...actionMeta(action),
+    };
+}
+
+function actionMeta(action: DashboardAction): ActionResultMeta {
+    return action.after ? { after: action.after } : {};
 }
 
 async function fetchActionResource(sourceId: string, widget: DetailWidget, row: string): Promise<unknown> {

@@ -113,6 +113,16 @@ describe("parseSettingsUpdateDto — email section", () => {
         expect(dto.email?.templates.emailVerification.subject).toBe("");
     });
 
+    test("parses checkbox fallback arrays from duplicated form fields", () => {
+        const dto = parseSettingsUpdateDto({
+            "email.enabled":     ["false", "true"],
+            "email.smtp.secure": ["false", "true"],
+        });
+
+        expect(dto.email?.enabled).toBe(true);
+        expect(dto.email?.smtp.secure).toBe(true);
+    });
+
     test("rejects invalid boolean and port values", () => {
         expect(() => parseSettingsUpdateDto({ "email.enabled": "maybe" })).toThrow(InvalidParam);
         expect(() => parseSettingsUpdateDto({ "email.smtp.port": "abc" })).toThrow(InvalidParam);

@@ -977,7 +977,7 @@
                         "source": {
                             "endpoint": "getAccountByUserId",
                             "params": {
-                                "userId": "$selection.userId"
+                                "userId": "$selection.id"
                             }
                         },
                         "title": {

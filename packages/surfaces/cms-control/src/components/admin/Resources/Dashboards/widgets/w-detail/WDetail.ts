@@ -25,6 +25,7 @@ export class DashboardWDetail extends Component {
     private dynamicOptions: DetailOptions = {};
     private optionsRequestKey = "";
     private optionsScopeKey = "";
+    private lookupReloadTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -72,6 +73,7 @@ export class DashboardWDetail extends Component {
         this.shadowRoot?.removeEventListener("input", this.onInput);
         this.shadowRoot?.removeEventListener("change", this.onChange);
         this.shadowRoot?.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
+        this.clearLookupReloadTimer();
         this.bound = false;
     }
 
@@ -131,6 +133,7 @@ export class DashboardWDetail extends Component {
         const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
         const field = control ? this.findField(control.dataset.fieldControl ?? "") : undefined;
         if (control && field?.input === "table") this.updateDerivedTables(field.id);
+        if (field) this.scheduleLookupOptionsReload(field.id);
     };
 
     private onChange = (event: Event): void => {
@@ -138,6 +141,7 @@ export class DashboardWDetail extends Component {
         if (control) {
             this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
             this.updateDerivedTables(control.dataset.fieldControl ?? "");
+            this.scheduleLookupOptionsReload(control.dataset.fieldControl ?? "");
         }
     };
 
@@ -219,21 +223,49 @@ export class DashboardWDetail extends Component {
         this.value = detailData(widget, resource, rowKey, {}, this.dynamicOptions, sourceId);
         if (this.isConnected) this.render();
         if (!sourceJson || !sourceId) return;
-        void this.loadLookupOptions(widget, resource, rowKey, sourceId);
+        void this.loadLookupOptions(widget, resource, rowKey, sourceId, fieldValues(widget, resource), { useLatestFields: true });
     }
 
-    private async loadLookupOptions(widget: DetailWidget, resource: unknown, rowKey: string, sourceId: string): Promise<void> {
-        const requestKey = `${sourceId}:${widget.id}:${rowKey}:${this.dataset.sourceJson ?? ""}`;
+    private async loadLookupOptions(
+        widget: DetailWidget,
+        resource: unknown,
+        rowKey: string,
+        sourceId: string,
+        fields: Record<string, unknown>,
+        loadOptions: { useLatestFields?: boolean } = {},
+    ): Promise<void> {
+        const requestKey = `${sourceId}:${widget.id}:${rowKey}:${this.dataset.sourceJson ?? ""}:${lookupFieldsKey(fields)}`;
         this.optionsRequestKey = requestKey;
         try {
-            const options = await detailLookupOptions(sourceId, widget, resource, fieldValues(widget, resource));
+            const options = await detailLookupOptions(sourceId, widget, resource, fields);
             if (this.optionsRequestKey !== requestKey) return;
+            const renderFields = loadOptions.useLatestFields ? this.currentFields() : fields;
             this.dynamicOptions = options;
-            this.value = detailData(widget, resource, rowKey, {}, options, sourceId);
+            this.value = detailData(widget, resource, rowKey, renderFields, options, sourceId);
             if (this.isConnected) this.render();
         } catch {
             if (this.optionsRequestKey === requestKey) this.dynamicOptions = {};
         }
+    }
+
+    private scheduleLookupOptionsReload(changedFieldId: string): void {
+        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
+        if (!widget || widget.widget !== "w-detail" || !lookupDependsOnField(widget, changedFieldId)) return;
+        const fields = this.currentFields();
+        this.clearLookupReloadTimer();
+        this.lookupReloadTimer = setTimeout(() => {
+            this.lookupReloadTimer = null;
+            const resource = this.currentResource();
+            const sourceId = this.dataset.sourceId ?? "";
+            if (!sourceId || resource === undefined) return;
+            void this.loadLookupOptions(widget, resource, this.dataset.rowKey ?? "", sourceId, fields);
+        }, 250);
+    }
+
+    private clearLookupReloadTimer(): void {
+        if (!this.lookupReloadTimer) return;
+        clearTimeout(this.lookupReloadTimer);
+        this.lookupReloadTimer = null;
     }
 
     private findField(id: string): WDetailField | undefined {
@@ -289,6 +321,27 @@ function parseJson<T>(value: string): T | null {
     } catch {
         return null;
     }
+}
+
+function lookupFieldsKey(fields: Record<string, unknown>): string {
+    try {
+        return JSON.stringify(fields);
+    } catch {
+        return String(Object.keys(fields).sort().length);
+    }
+}
+
+function lookupDependsOnField(widget: DetailWidget, fieldId: string): boolean {
+    if (!fieldId) return false;
+    return [...widget.main, ...(widget.aside ?? [])]
+        .flatMap(section => section.fields)
+        .some(field => {
+            if ((field.type !== "combobox" && field.type !== "tokens") || !field.lookup) return false;
+            return [
+                ...Object.values(field.lookup.params ?? {}),
+                ...Object.values(field.lookup.selected?.params ?? {}),
+            ].some(expression => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`));
+        });
 }
 
 function replaceTableRows(control: HTMLElement, field: WDetailField, rows: Record<string, unknown>[]): void {

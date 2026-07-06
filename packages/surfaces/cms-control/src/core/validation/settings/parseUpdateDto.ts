@@ -78,6 +78,7 @@ function asString(raw: unknown, paramName: string): string {
 }
 
 function asBoolean(raw: unknown, paramName: string): boolean {
+    if (Array.isArray(raw)) return raw.length ? asBoolean(raw[raw.length - 1], paramName) : false;
     if (typeof raw === "boolean") return raw;
     if (raw === undefined || raw === null || raw === "") return false;
     if (typeof raw !== "string") throw new InvalidParam(paramName, "expected a boolean.");

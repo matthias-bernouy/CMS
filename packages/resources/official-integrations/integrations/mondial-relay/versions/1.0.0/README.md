@@ -112,10 +112,14 @@ lookup uses Mondial Relay's official parcel shop picker service with the same
 brand/customer id used for Connect shipment creation; it does not require API 1
 SOAP private-key credentials.
 
-Open the dashboard Settings tab after installation and fill the `default`
-profile before creating labels. The Edge Function normalizes French phone
-numbers to E.164 for Connect, for example `0608138404` and `+330608138404`
-become `+33608138404`.
+The same form pre-fills shipment country, delivery modes, parcel dimensions,
+content, and currency from the editable `default` settings profile. Operators
+can override those values before creating each shipment.
+
+Use the dashboard `Edit settings` action after installation and fill the
+`default` profile before creating labels. The Edge Function normalizes French
+phone numbers to E.164 for Connect, for example `0608138404` and
+`+330608138404` become `+33608138404`.
 
 ## Live Label Test
 

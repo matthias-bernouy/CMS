@@ -5,6 +5,7 @@ export type RuntimeVars = {
     filters?: Record<string, unknown>;
     media?: unknown;
     value?: unknown;
+    result?: unknown;
 };
 
 export function valueAt(value: unknown, path: string | undefined): unknown {
@@ -37,6 +38,8 @@ export function resolveExpression(expression: string, vars: RuntimeVars): unknow
     if (expression.startsWith("$field.")) return valueAt(vars.fields, expression.slice("$field.".length));
     if (expression.startsWith("$filter.")) return valueAt(vars.filters, expression.slice("$filter.".length));
     if (expression.startsWith("$media.")) return valueAt(vars.media, expression.slice("$media.".length));
+    if (expression === "$result") return vars.result;
+    if (expression.startsWith("$result.")) return valueAt(vars.result, expression.slice("$result.".length));
     if (expression === "$value") return vars.value;
     if (expression.startsWith("$value.")) return valueAt(vars.value, expression.slice("$value.".length));
     return expression;

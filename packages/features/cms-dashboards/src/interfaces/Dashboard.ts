@@ -151,6 +151,10 @@ export type DashboardAction = {
         filename?: string;
     };
     selection?: { opens?: string };
+    after?: {
+        opens: string;
+        row?: DashboardExpr;
+    };
     confirm?: string;
 };
 
