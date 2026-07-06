@@ -12,12 +12,13 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
     const body = await readJsonBody(req);
     const definitions = await definitionsForImport(cms.integrationCatalog, body);
     const request = parseIntegrationImportRequest(body, definitions);
+    const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
         blocs: {
-            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }),
+            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
     };

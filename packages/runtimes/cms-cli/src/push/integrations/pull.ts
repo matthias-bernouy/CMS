@@ -1,6 +1,13 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { safeJoin } from "cms-cli/push/shared/safeJoin";
-import { GENERATED_INTEGRATION_INSTANCES_FILE, GENERATED_SOURCES_DIR, SITE_INTEGRATIONS_DIR } from "cms-cli/dev-server/integrations";
+import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
+import {
+    GENERATED_BLOCS_DIR,
+    GENERATED_INTEGRATION_INSTANCES_FILE,
+    GENERATED_SOURCES_DIR,
+    SITE_INTEGRATIONS_DIR,
+} from "cms-cli/dev-server/integrations";
+import { fetchBlocSource, fetchRemoteBlocList, writeBlocSource } from "cms-cli/push/blocs/pull";
 import { parseUrn, sourceDtoToSource, type Source, type SourceDto } from "@bernouy/cms-sources";
 import type { IntegrationInstance } from "@bernouy/cms-integrations";
 import type { RemoteIntegrationDetail, RemoteIntegrationListItem } from "./pullTypes";
@@ -24,13 +31,19 @@ type EnrichedSource = {
 export async function pullIntegrations(adminBase: URL, token: string, siteDir: string): Promise<PullIntegrationsResult> {
     const out: PullIntegrationsResult = { pulled: [], failed: [] };
     const instances: IntegrationInstance[] = [];
+    let blocGroups: Map<string, string> | null = null;
     for (const { id } of await fetchList(adminBase, token)) {
         try {
             const detail = await fetchIntegration(adminBase, token, id);
             await writeIntegrationImport(siteDir, detail);
             for (const artifact of detail.artifacts) {
-                if (artifact.type !== "source") continue;
-                await writeGeneratedSource(siteDir, await fetchSource(adminBase, token, artifact.id));
+                if (artifact.type === "source") {
+                    await writeGeneratedSource(siteDir, await fetchSource(adminBase, token, artifact.id));
+                }
+                if (artifact.type === "bloc") {
+                    blocGroups ??= new Map((await fetchRemoteBlocList(adminBase, token)).map(bloc => [bloc.tag, bloc.group]));
+                    await writeGeneratedBloc(siteDir, artifact.id, blocGroups.get(artifact.id) ?? "", await fetchRequiredBlocSource(adminBase, token, artifact.id));
+                }
             }
             instances.push(instanceFromDetail(detail));
             out.pulled.push(id);
@@ -98,6 +111,16 @@ async function writeGeneratedSource(siteDir: string, source: Source): Promise<vo
     const file = safeJoin(dir, `${id}.json`);
     await mkdir(dir, { recursive: true });
     await writeFile(file, JSON.stringify(source, null, 2) + "\n", "utf-8");
+}
+
+async function fetchRequiredBlocSource(adminBase: URL, token: string, tag: string): Promise<Record<string, string>> {
+    const source = await fetchBlocSource(adminBase, token, tag);
+    if (!source) throw new Error(`bloc "${tag}" has no source bundle on the server`);
+    return source;
+}
+
+async function writeGeneratedBloc(siteDir: string, tag: string, group: string, source: Record<string, string>): Promise<void> {
+    await writeBlocSource(safeJoin(siteDir, GENERATED_BLOCS_DIR, categoryToFolder(group), tag), source);
 }
 
 async function writeIntegrationImport(siteDir: string, detail: RemoteIntegrationDetail): Promise<void> {

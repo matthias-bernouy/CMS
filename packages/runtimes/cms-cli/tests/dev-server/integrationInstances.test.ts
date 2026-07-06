@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { LocalFsIntegrationInstanceRepository } from "cms-cli/dev-server/integrationInstances";
@@ -30,6 +30,14 @@ describe("LocalFsIntegrationInstanceRepository", () => {
         expect(loaded?.createdAt).toBeInstanceOf(Date);
         expect(loaded?.runs[0]?.startedAt).toBeInstanceOf(Date);
         expect((await second.list()).map(instance => instance.id)).toEqual(["test:main"]);
+
+        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test-main.json"), "utf-8"));
+        expect(authoringImport).toMatchObject({
+            kind: "test",
+            answers: { id: "main" },
+            instance: { id: "test:main", label: "Test" },
+        });
+        expect(JSON.stringify(authoringImport)).not.toContain("apiKey");
     });
 
     test("keeps only the last twenty runs on replace", async () => {
@@ -54,6 +62,9 @@ describe("LocalFsIntegrationInstanceRepository", () => {
 
         expect(replaced.runs).toHaveLength(20);
         expect(replaced.runs[0]?.runNumber).toBe(6);
+
+        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test-main.json"), "utf-8"));
+        expect(authoringImport.answers).toEqual({});
     });
 });
 

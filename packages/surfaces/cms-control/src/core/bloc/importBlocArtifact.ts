@@ -2,7 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { Buffer } from "node:buffer";
 import { posix } from "node:path";
 import { isNativeBlocTag, prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
-import { DuplicateBlocTagError } from "@bernouy/cms-content";
+import { DuplicateBlocTagError, type CmsRepository } from "@bernouy/cms-content";
 import { invalidateBlocAssets, invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
 
 export class BlocImportError extends Error {
@@ -28,10 +28,15 @@ export type BlocImportResult = {
     action: "created" | "updated";
 };
 
-export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput): Promise<BlocImportResult> {
+export type BlocImportRuntime = {
+    repository?: CmsRepository;
+};
+
+export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput, runtime: BlocImportRuntime = {}): Promise<BlocImportResult> {
     if (!input.name || !input.viewJS || !input.tag) {
         throw new BlocImportError("Missing argument (name, tag, viewJS required)", 400);
     }
+    const repository = runtime.repository ?? cms.repository;
 
     const viewFile = asFile(input.viewJS, "Bloc.js");
     const editorFile = input.editorJS ? asFile(input.editorJS, "BlocEditor.ts") : null;
@@ -53,7 +58,7 @@ export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput
         throw new BlocImportError(validation.errors.join("\n"), 400);
     }
 
-    const existing = await cms.repository.getBlocViewJS(input.tag);
+    const existing = await repository.getBlocViewJS(input.tag);
     const force = input.force === true;
     if (existing !== null && !force) {
         throw new BlocImportError(`Bloc with tag "${input.tag}" already exists`, 409);
@@ -77,8 +82,8 @@ export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput
     );
 
     try {
-        if (force) await cms.repository.replaceBloc(bloc);
-        else       await cms.repository.createBloc(bloc);
+        if (force) await repository.replaceBloc(bloc);
+        else       await repository.createBloc(bloc);
     } catch (e) {
         if (!force && e instanceof DuplicateBlocTagError) {
             throw new BlocImportError(`Bloc with tag "${bloc.id}" already exists`, 409);

@@ -98,6 +98,39 @@ describe("LocalFsCmsRepository blocs", () => {
         const source = await repository.getBlocSource("site-demo");
         expect(source?.["old.css"]).toBeUndefined();
     });
+
+    test("can write blocs under a generated root", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-dev-repo-"));
+        const repository = new LocalFsCmsRepository(siteDir, new Map(), {
+            blocRootDir: ".p9r/generated/blocs",
+        });
+
+        await repository.createBloc({
+            id: "generated-demo",
+            name: "Generated Demo",
+            group: "Integrations",
+            description: "Generated bloc",
+            viewJS: "",
+            editorJS: "",
+            source: {
+                "manifest.json": encode(JSON.stringify({
+                    "default-tag": "generated-demo",
+                    bloc: "./Bloc.ts",
+                    editor: "./BlocEditor.ts",
+                    meta: { title: "Generated Demo", description: "Generated bloc" },
+                }, null, 4) + "\n"),
+                "Bloc.ts": encode("export class GeneratedDemoBloc extends HTMLElement {}\n"),
+                "BlocEditor.ts": encode(`
+                    import { Editor } from "@bernouy/cms-control/editor";
+                    export class GeneratedDemoEditor extends Editor {}
+                `),
+            },
+        });
+
+        const manifest = await readFile(join(siteDir, ".p9r", "generated", "blocs", "Integrations", "generated-demo", "manifest.json"), "utf-8");
+        expect(manifest).toContain(`"default-tag": "generated-demo"`);
+        expect(await repository.getBlocViewJS("generated-demo")).toContain(`customElements.define("generated-demo"`);
+    });
 });
 
 describe("LocalFsCmsRepository system settings", () => {

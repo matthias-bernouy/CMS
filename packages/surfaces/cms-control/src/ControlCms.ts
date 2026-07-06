@@ -82,6 +82,9 @@ export type ControlCmsOptions = Configuration & {
      *  default memory store keeps the admin surface bootable before persistence
      *  is wired. */
     dashboards?: DashboardRepository;
+    /** Optional bloc repository used only for integration-generated bloc
+     *  artifacts. Defaults to the main content repository. */
+    integrationBlocRepository?: CmsRepository;
 }
 
 type ControlAuthBackends = {
@@ -135,6 +138,7 @@ export class ControlCms {
     private _integrationCatalog: IntegrationDefinitionRepository;
     private _integrationInstances: IntegrationInstanceRepository | null;
     private _dashboards: DashboardRepository;
+    private _integrationBlocRepository: CmsRepository | null;
 
     constructor(
         runner: Runner,
@@ -172,6 +176,7 @@ export class ControlCms {
         this._integrationCatalog = configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG;
         this._integrationInstances = configuration.integrationInstances ?? null;
         this._dashboards = configuration.dashboards ?? new InMemoryDashboardRepository();
+        this._integrationBlocRepository = configuration.integrationBlocRepository ?? null;
         this.ready = Promise.resolve();
 
         const authGuard = createAuthGuard<CMS_ROLES>({
@@ -378,6 +383,10 @@ export class ControlCms {
 
     get dashboards(): DashboardRepository {
         return this._dashboards;
+    }
+
+    get integrationBlocRepository(): CmsRepository | null {
+        return this._integrationBlocRepository;
     }
 
     /** Source store. Backs source reads and integration-created writes;

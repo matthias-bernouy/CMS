@@ -7,6 +7,10 @@ import { TemplatesStore } from "./templates";
 import { SystemStore } from "./system";
 import { BlocsStore } from "./blocs";
 
+export type LocalFsCmsRepositoryOptions = {
+    blocRootDir?: string;
+};
+
 /**
  * Filesystem-backed `CmsRepository` for `p9r dev`. Each call hits the local
  * `site/` directory directly; no remote, no DB, no auth. Bloc builds are
@@ -22,11 +26,11 @@ export class LocalFsCmsRepository implements CmsRepository {
     private readonly _system:        SystemStore;
     private readonly _blocs:         BlocsStore;
 
-    constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>) {
+    constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>, options: LocalFsCmsRepositoryOptions = {}) {
         this._pages         = new PagesStore(siteDir);
         this._templates     = new TemplatesStore(siteDir);
         this._system        = new SystemStore(siteDir);
-        this._blocs         = new BlocsStore(siteDir, builtBlocs);
+        this._blocs         = new BlocsStore(siteDir, builtBlocs, { rootDir: options.blocRootDir });
     }
 
     // ── Bloc ──

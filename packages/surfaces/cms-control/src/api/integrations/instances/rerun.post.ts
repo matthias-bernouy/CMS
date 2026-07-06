@@ -13,12 +13,13 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
     if (!id) throw new MissingParam("id");
     const body = await readOptionalJsonBody(req);
     const definitions = await definitionsForRerun(cms.integrationCatalog, cms.integrationInstances, id, body);
+    const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
         blocs: {
-            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }),
+            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
     };

@@ -10,6 +10,10 @@ import { safeJoin } from "cms-cli/push/shared/safeJoin";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
+export type BlocsStoreOptions = {
+    rootDir?: string;
+};
+
 /**
  * Filesystem-backed bloc store. Reads from a shared `built` map populated
  * up-front by `CLI_dev` and mutated in place by the file watcher: when a
@@ -22,10 +26,15 @@ import { dirname } from "node:path";
  * the new bloc before the watcher polling loop catches up.
  */
 export class BlocsStore {
+    private readonly rootDir: string;
+
     constructor(
         private readonly siteDir: string,
         private readonly built: Map<string, BuiltBloc>,
-    ) {}
+        options: BlocsStoreOptions = {},
+    ) {
+        this.rootDir = options.rootDir ?? "blocs";
+    }
 
     async getAllJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
         return [...this.built.values()].map(b => ({
@@ -64,7 +73,7 @@ export class BlocsStore {
             throw new ContentValidationError("source", "`p9r dev` bloc writes require an editable source bundle");
         }
 
-        const target = safeJoin(this.siteDir, "blocs", categoryToFolder(bloc.group), bloc.id);
+        const target = safeJoin(this.siteDir, this.rootDir, categoryToFolder(bloc.group), bloc.id);
         await rm(target, { recursive: true, force: true });
         await writeBlocSource(target, source);
 

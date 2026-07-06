@@ -13,7 +13,7 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
-import { createDevSources } from "./dev-server/integrations";
+import { createDevSources, GENERATED_BLOCS_DIR } from "./dev-server/integrations";
 import { LocalFsDashboardRepository } from "./dev-server/dashboards";
 import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
@@ -89,7 +89,9 @@ export default async function CLI_dev(args: string[]) {
     // passed to both the repo (BlocsStore reads from it) and the watcher
     // (mutates it on rebuild) — so live-reload propagates without any extra
     // wiring on our side.
-    const blocs = await scanDevBlocs(`${config.siteDir}/blocs`, { quiet: true });
+    const authoredBlocs = await scanDevBlocs(`${config.siteDir}/blocs`, { quiet: true });
+    const generatedBlocs = await scanDevBlocs(`${config.siteDir}/${GENERATED_BLOCS_DIR}`, { quiet: true });
+    const blocs = [...authoredBlocs, ...generatedBlocs];
     if (blocs.length > 0) {
         console.log(`→ Found ${blocs.length} bloc(s):`);
         for (const b of blocs) {
@@ -102,6 +104,9 @@ export default async function CLI_dev(args: string[]) {
 
     const reload = createReloadEmitter();
     const repo   = new ValidatingCmsRepository(new LocalFsCmsRepository(config.siteDir, built));
+    const integrationBlocRepository = new ValidatingCmsRepository(
+        new LocalFsCmsRepository(config.siteDir, built, { blocRootDir: GENERATED_BLOCS_DIR }),
+    );
     const files = new LocalFsCmsFiles(`${config.siteDir}/files`);
     const recon = await files.reconcile();
     if (recon.healed.length)  console.log(`→ Reconciled ${recon.healed.length} moved file(s).`);
@@ -159,6 +164,7 @@ export default async function CLI_dev(args: string[]) {
         integrationInstances,
         integrationConnectorDeployers,
         dashboards,
+        integrationBlocRepository,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
 
@@ -172,7 +178,7 @@ export default async function CLI_dev(args: string[]) {
         cms.cache.deleteMatching(key => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
         console.log(`[watch] Rebuilt ${tag} — caches invalidated, browser reload signaled.`);
     });
-    const registry = createBlocRegistry(`${config.siteDir}/blocs`, blocs, built, reload);
+    const registry = createBlocRegistry(`${config.siteDir}/blocs`, authoredBlocs, built, reload);
 
     runner.start(port);
 
@@ -205,7 +211,7 @@ export default async function CLI_dev(args: string[]) {
     console.log(`  Public   : http://${host}:${deliveryPort}/  (rendered site + image optimization)`);
     console.log(`  Repo     : ${config.siteDir} (writes go straight to disk)`);
     console.log(`  Profile  : ${devAdmin.sub} / current password "${DEV_PASSWORD}" (Profile → Password)`);
-    console.log(`  Watching : ${blocs.length} bloc folder(s) — edit + auto-reload`);
+    console.log(`  Watching : ${authoredBlocs.length} authored bloc folder(s) — edit + auto-reload`);
     console.log("");
     console.log("Press Ctrl+C to stop.");
 
