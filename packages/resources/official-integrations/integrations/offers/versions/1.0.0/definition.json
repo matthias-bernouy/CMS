@@ -1,0 +1,1101 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "offers",
+    "label": "Offers",
+    "version": "1.0.0",
+    "category": "Commerce",
+    "description": "Manage sellable offers for marketplace and classic ecommerce use cases without discounts, orders, payments, delivery, or advanced inventory.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "offers"
+        }
+    ],
+    "ui": {
+        "mark": "O",
+        "markClass": "offers",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Generate CMS API key",
+                "Create a dedicated bearer token and install it in both the CMS secret store and the Supabase function secrets."
+            ],
+            [
+                "Connect the CMS",
+                "Install the offers source and offers dashboard with the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "Offer listing reads",
+            "Offer listing writes",
+            "Marketplace seller offer management",
+            "Classic ecommerce merchant offers",
+            "Opaque external item ids",
+            "Backoffice offers dashboard"
+        ],
+        "checks": [
+            "The CMS only stores the source configuration and private API key reference.",
+            "Marketplace self-service writes force seller identity from x-cms-user-id.",
+            "The connector schema stays private to anon and authenticated Supabase roles.",
+            "This module does not own discounts, coupons, carts, orders, reservations, delivery, payments or advanced inventory."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Offers source contract"
+            ],
+            [
+                "Dashboards",
+                "Offers dashboard"
+            ],
+            [
+                "Secrets",
+                "Generated private CMS offers API key"
+            ],
+            [
+                "Supabase",
+                "Private offers schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Keep the offers schema private to anon and authenticated roles.",
+            "Use offer ids as the integration point for future carts, orders, reservations and payments.",
+            "Keep promotions and discounts in a separate module so base offer pricing stays deterministic.",
+            "Do not trust browser-provided seller ids for marketplace self-service writes."
+        ],
+        "sync": [
+            "Validate answers",
+            "Generate private API key",
+            "Deploy Supabase connector",
+            "Install offers source",
+            "Install offers dashboard",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a stateless CMS source. Supabase owns offer rows and the cms-offers Edge Function owns access."
+    },
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "OFFERS_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_of_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "offers"
+            ],
+            "schemas": [
+                {
+                    "path": "schema.sql"
+                }
+            ],
+            "functions": [
+                {
+                    "name": "cms-offers",
+                    "directory": "functions/cms-offers",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_OFFERS_API_KEY": "{{generated.cmsApiKey}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Offers",
+                    "description": "Supabase-backed marketplace and ecommerce offer endpoints.",
+                    "icon": "tag"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "offers",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offers",
+                        "meta": {
+                            "name": "List offers",
+                            "description": "List sellable offers."
+                        },
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "visibility",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sellerKind",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sellerId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "productId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "currency",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "sellerKind": {
+                                                        "type": "string"
+                                                    },
+                                                    "sellerId": {
+                                                        "type": "string"
+                                                    },
+                                                    "priceAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "visibility": {
+                                                        "type": "string"
+                                                    },
+                                                    "availability": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "myOffers",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/my-offers",
+                        "meta": {
+                            "name": "List my offers",
+                            "description": "List offers owned by the current CMS user."
+                        },
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "visibility",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array"
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "offer",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offer",
+                        "meta": {
+                            "name": "Get offer",
+                            "description": "Fetch one offer by id or slug."
+                        },
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "slug",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "productId": {
+                                            "type": "string"
+                                        },
+                                        "sellerKind": {
+                                            "type": "string"
+                                        },
+                                        "sellerId": {
+                                            "type": "string"
+                                        },
+                                        "priceAmount": {
+                                            "type": "number"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "compareAtAmount": {
+                                            "type": "number"
+                                        },
+                                        "taxBehavior": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "availability": {
+                                            "type": "string"
+                                        },
+                                        "quantityAvailable": {
+                                            "type": "number"
+                                        },
+                                        "startsAt": {
+                                            "type": "string"
+                                        },
+                                        "endsAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "slug",
+                                        "title",
+                                        "sellerKind",
+                                        "sellerId",
+                                        "priceAmount",
+                                        "currency",
+                                        "status",
+                                        "visibility",
+                                        "availability"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "offerDefaults",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offer/defaults",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertOffer",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offer",
+                        "meta": {
+                            "name": "Save offer",
+                            "description": "Create or update one offer."
+                        },
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "productId": {
+                                    "type": "string"
+                                },
+                                "sellerKind": {
+                                    "type": "string"
+                                },
+                                "sellerId": {
+                                    "type": "string"
+                                },
+                                "priceAmount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "compareAtAmount": {
+                                    "type": "number"
+                                },
+                                "taxBehavior": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "visibility": {
+                                    "type": "string"
+                                },
+                                "availability": {
+                                    "type": "string"
+                                },
+                                "quantityAvailable": {
+                                    "type": "number"
+                                },
+                                "startsAt": {
+                                    "type": "string"
+                                },
+                                "endsAt": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "slug",
+                                        "title"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertMyOffer",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/my-offer",
+                        "meta": {
+                            "name": "Save my offer",
+                            "description": "Create or update one offer owned by the current CMS user."
+                        },
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "productId": {
+                                    "type": "string"
+                                },
+                                "priceAmount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "endpointId": "archiveOffer",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offer/archive",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "deleteOffer",
+                        "method": "DELETE",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offer",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-offers",
+                "source": "{{answers.id}}",
+                "meta": {
+                    "name": "Offers",
+                    "icon": "tag"
+                },
+                "views": [
+                    {
+                        "widget": "w-table",
+                        "id": "offersTable",
+                        "title": "Offers",
+                        "source": {
+                            "endpoint": "offers",
+                            "params": {
+                                "q": "$filter.q",
+                                "status": "$filter.status",
+                                "visibility": "$filter.visibility",
+                                "sellerKind": "$filter.sellerKind",
+                                "limit": "100"
+                            },
+                            "itemsPath": "items",
+                            "totalPath": "total"
+                        },
+                        "rowKey": "id",
+                        "actions": [
+                            {
+                                "id": "createOffer",
+                                "label": "Create offer",
+                                "placement": "primary",
+                                "tone": "primary",
+                                "selection": {
+                                    "opens": "offerDetail"
+                                }
+                            }
+                        ],
+                        "filters": [
+                            {
+                                "id": "q",
+                                "label": "Search",
+                                "param": "q",
+                                "type": "text",
+                                "placeholder": "Search offers"
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "param": "status",
+                                "type": "select",
+                                "options": [
+                                    {
+                                        "value": "draft",
+                                        "label": "Draft"
+                                    },
+                                    {
+                                        "value": "active",
+                                        "label": "Active"
+                                    },
+                                    {
+                                        "value": "paused",
+                                        "label": "Paused"
+                                    },
+                                    {
+                                        "value": "archived",
+                                        "label": "Archived"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "visibility",
+                                "label": "Visibility",
+                                "param": "visibility",
+                                "type": "select",
+                                "options": [
+                                    {
+                                        "value": "public",
+                                        "label": "Public"
+                                    },
+                                    {
+                                        "value": "hidden",
+                                        "label": "Hidden"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sellerKind",
+                                "label": "Seller",
+                                "param": "sellerKind",
+                                "type": "select",
+                                "options": [
+                                    {
+                                        "value": "merchant",
+                                        "label": "Merchant"
+                                    },
+                                    {
+                                        "value": "user",
+                                        "label": "User"
+                                    },
+                                    {
+                                        "value": "external",
+                                        "label": "External"
+                                    }
+                                ]
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "id": "title",
+                                "label": "Offer",
+                                "path": "title",
+                                "primary": true
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "path": "status",
+                                "format": "badge"
+                            },
+                            {
+                                "id": "sellerKind",
+                                "label": "Seller",
+                                "path": "sellerKind",
+                                "format": "badge"
+                            },
+                            {
+                                "id": "priceAmount",
+                                "label": "Price",
+                                "path": "priceAmount",
+                                "format": "money"
+                            },
+                            {
+                                "id": "currency",
+                                "label": "Currency",
+                                "path": "currency"
+                            },
+                            {
+                                "id": "updatedAt",
+                                "label": "Updated",
+                                "path": "updatedAt",
+                                "format": "date"
+                            }
+                        ],
+                        "selection": {
+                            "opens": "offerDetail"
+                        }
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "offerDetail",
+                        "source": {
+                            "endpoint": "offer",
+                            "params": {
+                                "id": "$selection.id"
+                            }
+                        },
+                        "title": {
+                            "path": "title",
+                            "fallback": "Offer"
+                        },
+                        "status": {
+                            "path": "status"
+                        },
+                        "actions": [
+                            {
+                                "id": "saveOffer",
+                                "label": "Save offer",
+                                "placement": "primary",
+                                "tone": "primary",
+                                "endpoint": {
+                                    "endpoint": "upsertOffer",
+                                    "params": {
+                                        "id": "$resource.id"
+                                    },
+                                    "body": {
+                                        "slug": "$field.slug",
+                                        "title": "$field.title",
+                                        "description": "$field.description",
+                                        "productId": "$field.productId",
+                                        "sellerKind": "$field.sellerKind",
+                                        "sellerId": "$field.sellerId",
+                                        "priceAmount": "$field.priceAmount",
+                                        "currency": "$field.currency",
+                                        "compareAtAmount": "$field.compareAtAmount",
+                                        "taxBehavior": "$field.taxBehavior",
+                                        "status": "$field.status",
+                                        "visibility": "$field.visibility",
+                                        "availability": "$field.availability",
+                                        "quantityAvailable": "$field.quantityAvailable",
+                                        "startsAt": "$field.startsAt",
+                                        "endsAt": "$field.endsAt"
+                                    }
+                                }
+                            },
+                            {
+                                "id": "archiveOffer",
+                                "label": "Archive offer",
+                                "placement": "more",
+                                "tone": "danger",
+                                "confirm": "Archive this offer?",
+                                "endpoint": {
+                                    "endpoint": "archiveOffer",
+                                    "params": {
+                                        "id": "$resource.id"
+                                    }
+                                }
+                            },
+                            {
+                                "id": "deleteOffer",
+                                "label": "Delete offer",
+                                "placement": "more",
+                                "tone": "danger",
+                                "confirm": "Delete this offer?",
+                                "endpoint": {
+                                    "endpoint": "deleteOffer",
+                                    "params": {
+                                        "id": "$resource.id"
+                                    }
+                                }
+                            }
+                        ],
+                        "main": [
+                            {
+                                "id": "offerDetails",
+                                "title": "Details",
+                                "fields": [
+                                    {
+                                        "id": "slug",
+                                        "label": "Slug",
+                                        "path": "slug",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "title",
+                                        "label": "Title",
+                                        "path": "title",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "description",
+                                        "label": "Description",
+                                        "path": "description",
+                                        "type": "textarea",
+                                        "rows": 5
+                                    },
+                                    {
+                                        "id": "productId",
+                                        "label": "External item id",
+                                        "path": "productId",
+                                        "type": "text"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "offerPricing",
+                                "title": "Pricing",
+                                "fields": [
+                                    {
+                                        "id": "priceAmount",
+                                        "label": "Price amount",
+                                        "path": "priceAmount",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "currency",
+                                        "label": "Currency",
+                                        "path": "currency",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "compareAtAmount",
+                                        "label": "Compare at amount",
+                                        "path": "compareAtAmount",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "taxBehavior",
+                                        "label": "Tax behavior",
+                                        "path": "taxBehavior",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "unspecified",
+                                                "label": "Unspecified"
+                                            },
+                                            {
+                                                "value": "included",
+                                                "label": "Included"
+                                            },
+                                            {
+                                                "value": "excluded",
+                                                "label": "Excluded"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "offerState",
+                                "title": "State",
+                                "fields": [
+                                    {
+                                        "id": "status",
+                                        "label": "Status",
+                                        "path": "status",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "draft",
+                                                "label": "Draft"
+                                            },
+                                            {
+                                                "value": "active",
+                                                "label": "Active"
+                                            },
+                                            {
+                                                "value": "paused",
+                                                "label": "Paused"
+                                            },
+                                            {
+                                                "value": "archived",
+                                                "label": "Archived"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "visibility",
+                                        "label": "Visibility",
+                                        "path": "visibility",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "public",
+                                                "label": "Public"
+                                            },
+                                            {
+                                                "value": "hidden",
+                                                "label": "Hidden"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "availability",
+                                        "label": "Availability",
+                                        "path": "availability",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "available",
+                                                "label": "Available"
+                                            },
+                                            {
+                                                "value": "unavailable",
+                                                "label": "Unavailable"
+                                            },
+                                            {
+                                                "value": "sold_out",
+                                                "label": "Sold out"
+                                            },
+                                            {
+                                                "value": "preorder",
+                                                "label": "Preorder"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "quantityAvailable",
+                                        "label": "Quantity available",
+                                        "path": "quantityAvailable",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "startsAt",
+                                        "label": "Starts at",
+                                        "path": "startsAt",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "endsAt",
+                                        "label": "Ends at",
+                                        "path": "endsAt",
+                                        "type": "text"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "offerSeller",
+                                "title": "Seller",
+                                "fields": [
+                                    {
+                                        "id": "sellerKind",
+                                        "label": "Seller kind",
+                                        "path": "sellerKind",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "merchant",
+                                                "label": "Merchant"
+                                            },
+                                            {
+                                                "value": "user",
+                                                "label": "User"
+                                            },
+                                            {
+                                                "value": "external",
+                                                "label": "External"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "sellerId",
+                                        "label": "Seller id",
+                                        "path": "sellerId",
+                                        "type": "text"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

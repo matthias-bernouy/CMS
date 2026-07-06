@@ -1,0 +1,2 @@
+[functions.cms-orders]
+verify_jwt = false

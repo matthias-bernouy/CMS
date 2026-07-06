@@ -1,0 +1,1280 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "orders",
+    "label": "Orders",
+    "version": "1.0.0",
+    "category": "Commerce",
+    "description": "Store single-seller commerce orders with immutable line snapshots and external references to payment, delivery, stock, reservation, and fulfilment systems.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "orders"
+        }
+    ],
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "ORDERS_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_or_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "orders"
+            ],
+            "schemas": [
+                {
+                    "path": "schema.sql"
+                }
+            ],
+            "functions": [
+                {
+                    "name": "cms-orders",
+                    "directory": "functions/cms-orders",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_ORDERS_API_KEY": "{{generated.cmsApiKey}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Orders",
+                    "description": "Supabase-backed single-seller order ledger endpoints.",
+                    "icon": "receipt"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "orderDefaults",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/order/defaults",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "orders",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/orders",
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sellerUserId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "buyerUserId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "order",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/order",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "orderNumber",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "myOrders",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/my-orders",
+                        "params": [
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "myOrder",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/my-order",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "orderNumber",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createOrder",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/orders",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "orderNumber": {
+                                    "type": "string"
+                                },
+                                "sellerUserId": {
+                                    "type": "string"
+                                },
+                                "buyerUserId": {
+                                    "type": "string"
+                                },
+                                "buyerEmail": {
+                                    "type": "string"
+                                },
+                                "buyerName": {
+                                    "type": "string"
+                                },
+                                "buyerPhone": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "externalCheckoutRef": {
+                                    "type": "string"
+                                },
+                                "lines": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
+                                "references": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
+                                "billingAddress": {
+                                    "type": "object"
+                                },
+                                "shippingAddress": {
+                                    "type": "object"
+                                },
+                                "metadata": {
+                                    "type": "object"
+                                }
+                            },
+                            "required": [
+                                "sellerUserId",
+                                "lines"
+                            ]
+                        }
+                    },
+                    {
+                        "endpointId": "updateOrderStatus",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/order/status",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "orderId": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "orderId",
+                                "status"
+                            ]
+                        }
+                    },
+                    {
+                        "endpointId": "attachExternalReference",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/order/reference",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "orderId": {
+                                    "type": "string"
+                                },
+                                "kind": {
+                                    "type": "string"
+                                },
+                                "provider": {
+                                    "type": "string"
+                                },
+                                "externalId": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "amount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "url": {
+                                    "type": "string"
+                                },
+                                "metadata": {
+                                    "type": "object"
+                                }
+                            },
+                            "required": [
+                                "orderId",
+                                "kind",
+                                "provider",
+                                "externalId"
+                            ]
+                        }
+                    },
+                    {
+                        "endpointId": "orderEvents",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-orders/order/events",
+                        "params": [
+                            {
+                                "name": "orderId",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-dashboard",
+                "meta": {
+                    "name": "Orders",
+                    "icon": "receipt"
+                },
+                "source": "{{answers.id}}",
+                "views": [
+                    {
+                        "widget": "w-table",
+                        "id": "ordersTable",
+                        "title": "Orders",
+                        "source": {
+                            "endpoint": "orders",
+                            "params": {
+                                "q": "$filter.q",
+                                "status": "$filter.status",
+                                "limit": "100"
+                            },
+                            "itemsPath": "items",
+                            "totalPath": "total"
+                        },
+                        "rowKey": "id",
+                        "actions": [
+                            {
+                                "id": "openCreateOrder",
+                                "label": "Create order",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "selection": {
+                                    "opens": "createOrderForm"
+                                }
+                            }
+                        ],
+                        "filters": [
+                            {
+                                "id": "q",
+                                "label": "Search",
+                                "param": "q",
+                                "type": "text",
+                                "placeholder": "Search orders"
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "param": "status",
+                                "type": "select",
+                                "options": [
+                                    {
+                                        "value": "draft",
+                                        "label": "Draft"
+                                    },
+                                    {
+                                        "value": "placed",
+                                        "label": "Placed"
+                                    },
+                                    {
+                                        "value": "cancelled",
+                                        "label": "Cancelled"
+                                    },
+                                    {
+                                        "value": "completed",
+                                        "label": "Completed"
+                                    },
+                                    {
+                                        "value": "archived",
+                                        "label": "Archived"
+                                    }
+                                ]
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "id": "orderNumber",
+                                "label": "Order",
+                                "path": "orderNumber",
+                                "primary": true
+                            },
+                            {
+                                "id": "buyerName",
+                                "label": "Buyer",
+                                "path": "buyerName"
+                            },
+                            {
+                                "id": "sellerUserId",
+                                "label": "Seller",
+                                "path": "sellerUserId"
+                            },
+                            {
+                                "id": "totalAmount",
+                                "label": "Total",
+                                "path": "totalAmount",
+                                "format": "money"
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "path": "status",
+                                "format": "badge"
+                            },
+                            {
+                                "id": "createdAt",
+                                "label": "Created",
+                                "path": "createdAt",
+                                "format": "date"
+                            }
+                        ],
+                        "selection": {
+                            "opens": "orderDetail"
+                        }
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "createOrderForm",
+                        "source": {
+                            "endpoint": "orderDefaults"
+                        },
+                        "title": {
+                            "path": "orderNumber",
+                            "fallback": "Create order"
+                        },
+                        "status": {
+                            "path": "status"
+                        },
+                        "actions": [
+                            {
+                                "id": "createOrder",
+                                "label": "Create order",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "createOrder",
+                                    "body": {
+                                        "id": "$field.id",
+                                        "orderNumber": "$field.orderNumber",
+                                        "sellerUserId": "$field.sellerUserId",
+                                        "buyerUserId": "$field.buyerUserId",
+                                        "buyerEmail": "$field.buyerEmail",
+                                        "buyerName": "$field.buyerName",
+                                        "buyerPhone": "$field.buyerPhone",
+                                        "status": "$field.status",
+                                        "currency": "$field.currency",
+                                        "externalCheckoutRef": "$field.externalCheckoutRef",
+                                        "lines": "$field.lines",
+                                        "references": "$field.references"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "orderDetail",
+                                    "row": "$result.id"
+                                }
+                            }
+                        ],
+                        "main": [
+                            {
+                                "id": "createOrderDetails",
+                                "title": "Order",
+                                "fields": [
+                                    {
+                                        "id": "id",
+                                        "label": "Order id",
+                                        "path": "id",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "orderNumber",
+                                        "label": "Order number",
+                                        "path": "orderNumber",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "sellerUserId",
+                                        "label": "Seller user id",
+                                        "path": "sellerUserId",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "buyerUserId",
+                                        "label": "Buyer user id",
+                                        "path": "buyerUserId",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "buyerEmail",
+                                        "label": "Buyer email",
+                                        "path": "buyerEmail",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "buyerName",
+                                        "label": "Buyer name",
+                                        "path": "buyerName",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "buyerPhone",
+                                        "label": "Buyer phone",
+                                        "path": "buyerPhone",
+                                        "type": "text"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "createOrderLines",
+                                "title": "Lines",
+                                "fields": [
+                                    {
+                                        "id": "lines",
+                                        "label": "Lines",
+                                        "path": "lines",
+                                        "type": "table",
+                                        "editable": true,
+                                        "columns": [
+                                            {
+                                                "id": "title",
+                                                "label": "Title",
+                                                "path": "title",
+                                                "editable": true,
+                                                "width": "minmax(12rem, 1fr)"
+                                            },
+                                            {
+                                                "id": "productId",
+                                                "label": "Product ref",
+                                                "path": "productId",
+                                                "editable": true
+                                            },
+                                            {
+                                                "id": "variantId",
+                                                "label": "Variant ref",
+                                                "path": "variantId",
+                                                "editable": true
+                                            },
+                                            {
+                                                "id": "quantity",
+                                                "label": "Qty",
+                                                "path": "quantity",
+                                                "editable": true
+                                            },
+                                            {
+                                                "id": "unitAmount",
+                                                "label": "Unit amount",
+                                                "path": "unitAmount",
+                                                "editable": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "createOrderReferences",
+                                "title": "References",
+                                "fields": [
+                                    {
+                                        "id": "references",
+                                        "label": "References",
+                                        "path": "references",
+                                        "type": "table",
+                                        "editable": true,
+                                        "columns": [
+                                            {
+                                                "id": "kind",
+                                                "label": "Kind",
+                                                "path": "kind",
+                                                "editable": true
+                                            },
+                                            {
+                                                "id": "provider",
+                                                "label": "Provider",
+                                                "path": "provider",
+                                                "editable": true
+                                            },
+                                            {
+                                                "id": "externalId",
+                                                "label": "External id",
+                                                "path": "externalId",
+                                                "editable": true
+                                            },
+                                            {
+                                                "id": "status",
+                                                "label": "Status",
+                                                "path": "status",
+                                                "editable": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "createOrderStatus",
+                                "title": "Status",
+                                "fields": [
+                                    {
+                                        "id": "status",
+                                        "label": "Status",
+                                        "path": "status",
+                                        "type": "select",
+                                        "required": true,
+                                        "options": [
+                                            {
+                                                "value": "draft",
+                                                "label": "Draft"
+                                            },
+                                            {
+                                                "value": "placed",
+                                                "label": "Placed"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "currency",
+                                        "label": "Currency",
+                                        "path": "currency",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "externalCheckoutRef",
+                                        "label": "Checkout ref",
+                                        "path": "externalCheckoutRef",
+                                        "type": "text"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "orderDetail",
+                        "source": {
+                            "endpoint": "order",
+                            "params": {
+                                "id": "$selection.id"
+                            }
+                        },
+                        "title": {
+                            "path": "orderNumber",
+                            "fallback": "Order"
+                        },
+                        "status": {
+                            "path": "status"
+                        },
+                        "actions": [
+                            {
+                                "id": "markPlaced",
+                                "label": "Mark placed",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "updateOrderStatus",
+                                    "body": {
+                                        "orderId": "$resource.id",
+                                        "status": "placed",
+                                        "message": "$field.statusMessage"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "orderDetail",
+                                    "row": "$selection.id"
+                                }
+                            },
+                            {
+                                "id": "attachReference",
+                                "label": "Attach reference",
+                                "placement": "secondary",
+                                "endpoint": {
+                                    "endpoint": "attachExternalReference",
+                                    "body": {
+                                        "orderId": "$resource.id",
+                                        "kind": "$field.referenceKind",
+                                        "provider": "$field.referenceProvider",
+                                        "externalId": "$field.referenceExternalId",
+                                        "label": "$field.referenceLabel",
+                                        "status": "$field.referenceStatus",
+                                        "url": "$field.referenceUrl"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "orderDetail",
+                                    "row": "$selection.id"
+                                }
+                            },
+                            {
+                                "id": "cancelOrder",
+                                "label": "Cancel order",
+                                "tone": "danger",
+                                "placement": "more",
+                                "confirm": "Cancel this order?",
+                                "endpoint": {
+                                    "endpoint": "updateOrderStatus",
+                                    "body": {
+                                        "orderId": "$resource.id",
+                                        "status": "cancelled",
+                                        "message": "$field.statusMessage"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "orderDetail",
+                                    "row": "$selection.id"
+                                }
+                            },
+                            {
+                                "id": "completeOrder",
+                                "label": "Complete order",
+                                "placement": "more",
+                                "endpoint": {
+                                    "endpoint": "updateOrderStatus",
+                                    "body": {
+                                        "orderId": "$resource.id",
+                                        "status": "completed",
+                                        "message": "$field.statusMessage"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "orderDetail",
+                                    "row": "$selection.id"
+                                }
+                            }
+                        ],
+                        "main": [
+                            {
+                                "id": "orderGeneral",
+                                "title": "Order",
+                                "fields": [
+                                    {
+                                        "id": "id",
+                                        "label": "Order id",
+                                        "path": "id",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "orderNumber",
+                                        "label": "Order number",
+                                        "path": "orderNumber",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "sellerUserId",
+                                        "label": "Seller",
+                                        "path": "sellerUserId",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "buyerUserId",
+                                        "label": "Buyer user id",
+                                        "path": "buyerUserId",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "buyerEmail",
+                                        "label": "Buyer email",
+                                        "path": "buyerEmail",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "buyerName",
+                                        "label": "Buyer name",
+                                        "path": "buyerName",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "totalAmount",
+                                        "label": "Total",
+                                        "path": "totalAmount",
+                                        "type": "readonly",
+                                        "format": "money"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "orderLines",
+                                "title": "Lines",
+                                "fields": [
+                                    {
+                                        "id": "lines",
+                                        "label": "Lines",
+                                        "path": "lines",
+                                        "type": "table",
+                                        "columns": [
+                                            {
+                                                "id": "title",
+                                                "label": "Title",
+                                                "path": "title",
+                                                "width": "minmax(12rem, 1fr)"
+                                            },
+                                            {
+                                                "id": "productId",
+                                                "label": "Product ref",
+                                                "path": "productId"
+                                            },
+                                            {
+                                                "id": "variantId",
+                                                "label": "Variant ref",
+                                                "path": "variantId"
+                                            },
+                                            {
+                                                "id": "quantity",
+                                                "label": "Qty",
+                                                "path": "quantity"
+                                            },
+                                            {
+                                                "id": "unitAmount",
+                                                "label": "Unit",
+                                                "path": "unitAmount"
+                                            },
+                                            {
+                                                "id": "lineTotal",
+                                                "label": "Line total",
+                                                "path": "lineTotal"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "orderReferences",
+                                "title": "External references",
+                                "fields": [
+                                    {
+                                        "id": "references",
+                                        "label": "References",
+                                        "path": "references",
+                                        "type": "table",
+                                        "columns": [
+                                            {
+                                                "id": "kind",
+                                                "label": "Kind",
+                                                "path": "kind"
+                                            },
+                                            {
+                                                "id": "provider",
+                                                "label": "Provider",
+                                                "path": "provider"
+                                            },
+                                            {
+                                                "id": "externalId",
+                                                "label": "External id",
+                                                "path": "externalId"
+                                            },
+                                            {
+                                                "id": "status",
+                                                "label": "Status",
+                                                "path": "status"
+                                            },
+                                            {
+                                                "id": "createdAt",
+                                                "label": "Created",
+                                                "path": "createdAt"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "orderEvents",
+                                "title": "Events",
+                                "fields": [
+                                    {
+                                        "id": "events",
+                                        "label": "Events",
+                                        "path": "events",
+                                        "type": "table",
+                                        "columns": [
+                                            {
+                                                "id": "eventType",
+                                                "label": "Event",
+                                                "path": "eventType"
+                                            },
+                                            {
+                                                "id": "actorUserId",
+                                                "label": "Actor",
+                                                "path": "actorUserId"
+                                            },
+                                            {
+                                                "id": "message",
+                                                "label": "Message",
+                                                "path": "message"
+                                            },
+                                            {
+                                                "id": "createdAt",
+                                                "label": "Created",
+                                                "path": "createdAt"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "orderStatus",
+                                "title": "Status",
+                                "fields": [
+                                    {
+                                        "id": "status",
+                                        "label": "Status",
+                                        "path": "status",
+                                        "type": "readonly",
+                                        "format": "badge"
+                                    },
+                                    {
+                                        "id": "currency",
+                                        "label": "Currency",
+                                        "path": "currency",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "externalCheckoutRef",
+                                        "label": "Checkout ref",
+                                        "path": "externalCheckoutRef",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "statusMessage",
+                                        "label": "Status message",
+                                        "path": "statusMessage",
+                                        "type": "text"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "newReference",
+                                "title": "Attach reference",
+                                "fields": [
+                                    {
+                                        "id": "referenceKind",
+                                        "label": "Kind",
+                                        "path": "referenceKind",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "value": "payment",
+                                                "label": "Payment"
+                                            },
+                                            {
+                                                "value": "shipment",
+                                                "label": "Shipment"
+                                            },
+                                            {
+                                                "value": "stock_reservation",
+                                                "label": "Stock reservation"
+                                            },
+                                            {
+                                                "value": "fulfillment",
+                                                "label": "Fulfillment"
+                                            },
+                                            {
+                                                "value": "invoice",
+                                                "label": "Invoice"
+                                            },
+                                            {
+                                                "value": "other",
+                                                "label": "Other"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "referenceProvider",
+                                        "label": "Provider",
+                                        "path": "referenceProvider",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "referenceExternalId",
+                                        "label": "External id",
+                                        "path": "referenceExternalId",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "referenceLabel",
+                                        "label": "Label",
+                                        "path": "referenceLabel",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "referenceStatus",
+                                        "label": "Status",
+                                        "path": "referenceStatus",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "referenceUrl",
+                                        "label": "URL",
+                                        "path": "referenceUrl",
+                                        "type": "text"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "orderDates",
+                                "title": "Dates",
+                                "fields": [
+                                    {
+                                        "id": "placedAt",
+                                        "label": "Placed",
+                                        "path": "placedAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "cancelledAt",
+                                        "label": "Cancelled",
+                                        "path": "cancelledAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "completedAt",
+                                        "label": "Completed",
+                                        "path": "completedAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "createdAt",
+                                        "label": "Created",
+                                        "path": "createdAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    },
+                                    {
+                                        "id": "updatedAt",
+                                        "label": "Updated",
+                                        "path": "updatedAt",
+                                        "type": "readonly",
+                                        "format": "date"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "ui": {
+        "mark": "O",
+        "markClass": "orders",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Generate CMS API key",
+                "Create a dedicated bearer token and install it in both the CMS secret store and the Supabase function secrets."
+            ],
+            [
+                "Connect the CMS",
+                "Install the orders source and dashboard backed by the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "Single-seller order creation",
+            "Immutable order line snapshots",
+            "Order status transitions",
+            "External payment reference links",
+            "External delivery reference links",
+            "External stock and reservation reference links",
+            "Backoffice order dashboard"
+        ],
+        "checks": [
+            "One order belongs to exactly one seller; multi-seller checkout must create multiple orders.",
+            "Orders stores external references only for payment, delivery, stock, reservation, fulfilment and invoice systems.",
+            "Orders does not own payment, delivery, stock, reservation, tax, discount or pricing engines.",
+            "Line amounts are frozen snapshots in the smallest currency unit.",
+            "The connector schema stays private to anon and authenticated Supabase roles."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Orders source contract"
+            ],
+            [
+                "Dashboards",
+                "Orders dashboard"
+            ],
+            [
+                "Secrets",
+                "Generated private CMS orders API key"
+            ],
+            [
+                "Supabase",
+                "Private orders schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Keep order references as integration links, not embedded payment, delivery, stock or reservation state machines.",
+            "Use immutable line snapshots so historical orders survive catalogue changes.",
+            "Do not expose Supabase service-role keys or generated CMS API keys to browser code.",
+            "Create one order per seller when checkout contains items from multiple sellers."
+        ],
+        "sync": [
+            "Validate answers",
+            "Generate private API key",
+            "Deploy Supabase connector",
+            "Install orders source",
+            "Install orders dashboard",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a stateless CMS source. Supabase owns order rows; external integrations own payment, delivery, stock, reservation, tax and discount behavior."
+    }
+}

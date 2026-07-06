@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "orders",
+    "label": "Orders",
+    "category": "Commerce",
+    "description": "Store single-seller commerce orders with immutable line snapshots and external references to payment, delivery, stock, reservation, and fulfilment systems.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}
