@@ -12859,7 +12859,6 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 
   // src/components/admin/Resources/Dashboards/api.ts
   var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
-  var SOURCE_SETTINGS_DASHBOARD = "__source-settings";
   function basePath() {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
@@ -12909,25 +12908,6 @@ slot[name="actions"]::slotted(p9r-action-menu) {
   }
   function dispatchDashboardSelection(selection) {
     window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
-  }
-  async function fetchDashboards() {
-    return getJson(route("/api/dashboards"));
-  }
-  async function saveSourceOverlay(overlay) {
-    const response = await fetch(route("/api/source-overlays/overlays"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(overlay)
-    });
-    if (!response.ok)
-      throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  }
-  async function getJson(url) {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok)
-      throw new Error(`HTTP ${response.status}`);
-    return response.json();
   }
 
   // src/components/admin/Resources/Dashboards/icons.ts
@@ -13178,10 +13158,8 @@ w13c-lateral-menu-item {
         this.selectedDashboard = "";
         return;
       }
-      if (this.selectedDashboard === SOURCE_SETTINGS_DASHBOARD && hasSourceSettings(group))
-        return;
       if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
-        this.selectedDashboard = group.dashboards[0]?.id ?? (hasSourceSettings(group) ? SOURCE_SETTINGS_DASHBOARD : "");
+        this.selectedDashboard = group.dashboards[0]?.id ?? "";
       }
     }
     render() {
@@ -13201,7 +13179,7 @@ w13c-lateral-menu-item {
         sourceItem.dataset.source = group.source.id;
         sourceItem.toggleAttribute("active", group.source.id === this.selectedSource);
         menu.append(sourceItem);
-        if (group.source.id === this.selectedSource && (group.dashboards.length > 1 || hasSourceSettings(group))) {
+        if (group.source.id === this.selectedSource && group.dashboards.length > 1) {
           for (const dashboard of group.dashboards) {
             const dashboardItem = this.createItem(dashboard.meta?.name ?? dashboard.id, dashboard.meta?.svg, dashboard.meta?.icon, "layout");
             dashboardItem.classList.add("dashboard-item");
@@ -13210,15 +13188,6 @@ w13c-lateral-menu-item {
             dashboardItem.dataset.dashboard = dashboard.id;
             dashboardItem.toggleAttribute("active", dashboard.id === this.selectedDashboard);
             menu.append(dashboardItem);
-          }
-          if (hasSourceSettings(group)) {
-            const settingsItem = this.createItem("Settings", undefined, "layout", "layout");
-            settingsItem.classList.add("dashboard-item");
-            settingsItem.dataset.generated = "true";
-            settingsItem.dataset.source = group.source.id;
-            settingsItem.dataset.dashboard = SOURCE_SETTINGS_DASHBOARD;
-            settingsItem.toggleAttribute("active", this.selectedDashboard === SOURCE_SETTINGS_DASHBOARD);
-            menu.append(settingsItem);
           }
         }
       }
@@ -13294,9 +13263,6 @@ w13c-lateral-menu-item {
     } catch {
       return [];
     }
-  }
-  function hasSourceSettings(group) {
-    return Boolean(group.settings?.length);
   }
 
   // src/components/admin/Resources/Dashboards/style.css
@@ -13394,96 +13360,6 @@ p {
     padding: 16px;
 }
 
-.source-settings,
-.source-settings-tables,
-.source-settings-table {
-    display: grid;
-    gap: 16px;
-}
-
-.source-settings-table header {
-    display: flex;
-    align-items: center;
-    min-height: 28px;
-}
-
-.source-settings-table strong {
-    color: var(--text-default, #0f1f1a);
-    font-size: 13px;
-}
-
-.settings-grid {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-}
-
-.settings-grid th,
-.settings-grid td {
-    border-bottom: 1px solid var(--border-subtle, #edf1ef);
-    color: var(--text-default, #0f1f1a);
-    font-size: 13px;
-    padding: 10px 8px;
-    text-align: left;
-    vertical-align: middle;
-    word-break: break-word;
-}
-
-.settings-grid th,
-.settings-empty {
-    color: var(--text-muted, #66736f);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.source-settings-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) auto;
-    gap: 8px;
-    align-items: end;
-}
-
-.source-settings-form label {
-    display: grid;
-    gap: 4px;
-    min-width: 0;
-    color: var(--text-muted, #66736f);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.source-settings-form input,
-.source-settings-form select {
-    min-width: 0;
-    height: 32px;
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 7px;
-    background: var(--bg-surface, #fff);
-    color: var(--text-default, #0f1f1a);
-    font: inherit;
-    font-size: 13px;
-    padding: 0 9px;
-}
-
-.source-settings-form button {
-    height: 32px;
-    border: 0;
-    border-radius: 7px;
-    background: var(--primary-base, #165f4b);
-    color: #fff;
-    cursor: pointer;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 750;
-    padding: 0 12px;
-}
-
-@media (max-width: 760px) {
-    .source-settings-form {
-        grid-template-columns: 1fr;
-    }
-}
-
 .empty {
     display: grid;
     gap: 4px;
@@ -13555,10 +13431,6 @@ p {
     <section class="dashboard-head" data-dashboard-head hidden>
         <span class="title-icon compact" data-dashboard-icon></span>
         <h3 data-dashboard-name></h3>
-    </section>
-
-    <section class="source-settings" data-source-settings hidden>
-        <div class="source-settings-tables" data-source-settings-tables></div>
     </section>
 
     <section class="detail-toolbar" data-detail-toolbar hidden>
@@ -16560,7 +16432,6 @@ p9r-token-input {
     query(root, "[data-dashboard-head]").hidden = !dashboard;
     query(root, "[data-detail-toolbar]").hidden = true;
     query(root, "[data-widgets]").hidden = !dashboard;
-    query(root, "[data-source-settings]").hidden = true;
     if (!group || !dashboard)
       return;
     query(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
@@ -16577,110 +16448,9 @@ p9r-token-input {
     query(root, "[data-detail-toolbar]").hidden = true;
     query(root, "[data-dashboard-head]").hidden = false;
     query(root, "[data-widgets]").hidden = false;
-    query(root, "[data-source-settings]").hidden = true;
     query(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
     renderIcon(query(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
     mountDashboardWidgetExample(query(root, "[data-widgets]"), selectedRow);
-  }
-  function renderSourceSettingsShell(root, group) {
-    query(root, "[data-empty]").hidden = Boolean(group);
-    query(root, "[data-source-empty]").hidden = true;
-    query(root, "[data-dashboard-head]").hidden = !group;
-    query(root, "[data-detail-toolbar]").hidden = true;
-    query(root, "[data-widgets]").hidden = true;
-    const settingsRoot = query(root, "[data-source-settings]");
-    const tablesRoot = query(root, "[data-source-settings-tables]");
-    settingsRoot.hidden = !group;
-    tablesRoot.replaceChildren();
-    if (!group)
-      return;
-    query(root, "[data-dashboard-name]").textContent = "Settings";
-    renderIcon(query(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    for (const table2 of group.settings ?? []) {
-      tablesRoot.append(renderSettingsTable(table2));
-    }
-  }
-  function renderSettingsTable(table2) {
-    const section = document.createElement("section");
-    section.className = "source-settings-table panel";
-    const header = document.createElement("header");
-    const title = document.createElement("strong");
-    title.textContent = table2.label;
-    header.append(title);
-    const grid = document.createElement("table");
-    grid.className = "settings-grid";
-    const thead = document.createElement("thead");
-    const headRow = document.createElement("tr");
-    for (const column of table2.columns) {
-      const cell = document.createElement("th");
-      cell.textContent = column.label;
-      headRow.append(cell);
-    }
-    thead.append(headRow);
-    const tbody = document.createElement("tbody");
-    for (const row of table2.rows) {
-      const bodyRow = document.createElement("tr");
-      for (const column of table2.columns) {
-        const cell = document.createElement("td");
-        cell.textContent = settingCellText(row, column.id);
-        bodyRow.append(cell);
-      }
-      tbody.append(bodyRow);
-    }
-    if (!table2.rows.length) {
-      const emptyRow = document.createElement("tr");
-      const emptyCell = document.createElement("td");
-      emptyCell.colSpan = table2.columns.length;
-      emptyCell.className = "settings-empty";
-      emptyCell.textContent = "No rows";
-      emptyRow.append(emptyCell);
-      tbody.append(emptyRow);
-    }
-    grid.append(thead, tbody);
-    const form = document.createElement("form");
-    form.className = "source-settings-form";
-    form.dataset.sourceSettingsForm = "true";
-    form.dataset.settingsId = table2.id;
-    for (const column of table2.columns) {
-      form.append(settingInput(column));
-    }
-    const button = document.createElement("button");
-    button.type = "submit";
-    button.textContent = "Add";
-    form.append(button);
-    section.append(header, grid, form);
-    return section;
-  }
-  function settingInput(column) {
-    const label = document.createElement("label");
-    const text = document.createElement("span");
-    text.textContent = column.label;
-    label.append(text);
-    if (column.type === "select") {
-      const select2 = document.createElement("select");
-      select2.name = column.id;
-      for (const option of column.options ?? []) {
-        const element = document.createElement("option");
-        element.value = option.value;
-        element.textContent = option.label;
-        select2.append(element);
-      }
-      label.append(select2);
-      return label;
-    }
-    const input = document.createElement("input");
-    input.name = column.id;
-    input.type = column.type === "number" ? "number" : column.type === "boolean" ? "checkbox" : "text";
-    input.autocomplete = "off";
-    input.required = column.required === true;
-    label.append(input);
-    return label;
-  }
-  function settingCellText(row, columnId) {
-    const value = row && typeof row === "object" ? row[columnId] : undefined;
-    if (value === undefined || value === null)
-      return "";
-    return String(value);
   }
   function query(root, selector) {
     return root.querySelector(selector);
@@ -16703,7 +16473,6 @@ p9r-token-input {
       super.connectedCallback();
       this.syncFromSelection(currentSelection());
       this.shadowRoot.addEventListener("click", this.onClick);
-      this.shadowRoot.addEventListener("submit", this.onSubmit);
       this.shadowRoot.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
       this.shadowRoot.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
       this.shadowRoot.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
@@ -16715,7 +16484,6 @@ p9r-token-input {
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("submit", this.onSubmit);
       this.shadowRoot?.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
       this.shadowRoot?.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
       this.shadowRoot?.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
@@ -16753,20 +16521,14 @@ p9r-token-input {
         this.detailSelection = null;
         return;
       }
-      if (this.selectedDashboard === SOURCE_SETTINGS_DASHBOARD && group.settings?.length)
-        return;
       if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
-        this.selectedDashboard = group.dashboards[0]?.id ?? (group.settings?.length ? SOURCE_SETTINGS_DASHBOARD : "");
+        this.selectedDashboard = group.dashboards[0]?.id ?? "";
         this.detailSelection = null;
       }
     }
     render() {
       if (this.isExampleMode()) {
         renderExampleShell(this.shadowRoot, this.detailSelection?.row ?? null);
-        return;
-      }
-      if (this.selectedDashboard === SOURCE_SETTINGS_DASHBOARD) {
-        renderSourceSettingsShell(this.shadowRoot, this.activeGroup());
         return;
       }
       renderDashboardShell(this.shadowRoot, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState, this.drafts);
@@ -16794,13 +16556,6 @@ p9r-token-input {
         return;
       this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
       this.render();
-    };
-    onSubmit = (event) => {
-      const form = event.target?.closest("[data-source-settings-form]");
-      if (!form)
-        return;
-      event.preventDefault();
-      this.addSettingsRow(form);
     };
     onSelection = (event) => this.syncSelectionAndRender(event.detail);
     onPopState = () => this.syncSelectionAndRender(currentSelection());
@@ -16886,49 +16641,6 @@ p9r-token-input {
         return;
       document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
-    async addSettingsRow(form) {
-      const group = this.activeGroup();
-      const setting = group?.settings?.find((candidate) => candidate.id === form.dataset.settingsId);
-      if (!group || !setting || setting.storage.type !== "sourceOverlayFields")
-        return;
-      const overlay = (group.sourceOverlays ?? []).find((candidate) => candidate.id === setting.storage.overlayId);
-      if (!overlay) {
-        au("Settings storage is not configured", { type: "error" });
-        return;
-      }
-      const data = new FormData(form);
-      const label = text(data.get("label"));
-      if (!label)
-        return;
-      const id2 = text(data.get("id")) || fieldIdFromLabel(label);
-      const type = fieldType(data.get("type"));
-      if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id2)) {
-        au("Field id must use letters, numbers, _ or -", { type: "error" });
-        return;
-      }
-      if (!id2 || overlay.fields.some((field2) => field2.id === id2)) {
-        au("Field id already exists", { type: "error" });
-        return;
-      }
-      const field = {
-        id: id2,
-        label,
-        type
-      };
-      try {
-        await saveSourceOverlay({
-          ...overlay,
-          fields: [...overlay.fields, field]
-        });
-        this.groups = await fetchDashboards();
-        this.ensureDashboardSelection();
-        form.reset();
-        au("Field added", { type: "success" });
-        this.render();
-      } catch (error) {
-        au(error instanceof Error ? error.message : "Failed to add field", { type: "error" });
-      }
-    }
   }
   if (!customElements.get("cms-dashboards-admin"))
     customElements.define("cms-dashboards-admin", DashboardView);
@@ -16942,15 +16654,6 @@ p9r-token-input {
       return [];
     }
   }
-  function text(value) {
-    return typeof value === "string" ? value.trim() : "";
-  }
-  function fieldType(value) {
-    return value === "number" || value === "boolean" ? value : "string";
-  }
-  function fieldIdFromLabel(label) {
-    return label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-  }
 
   // src/components/admin/Resources/Integrations/template.html
   var template_default10 = `<div class="integrations-root">
@@ -16960,9 +16663,9 @@ p9r-token-input {
                 <span cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
             </template>
         </div>
-        <div data-instances-source cms-reload-on="integration:updated">
+        <div data-installations-source cms-reload-on="integration:updated">
             <template>
-                <span cms-condition="$source.loaded || $source.empty" data-instances-json="{{ instances | json }}"></span>
+                <span cms-condition="$source.loaded || $source.empty" data-installations-json="{{ installations | json }}"></span>
             </template>
         </div>
     </div>
@@ -16978,8 +16681,8 @@ p9r-token-input {
         </nav>
 
         <section class="installed-view" data-installed-view>
-            <div class="installed-table" data-instances></div>
-            <p class="empty" data-instances-empty hidden>No installed integrations yet.</p>
+            <div class="installed-table" data-installations></div>
+            <p class="empty" data-installations-empty hidden>No installed integrations yet.</p>
         </section>
 
         <section class="catalogue-view" data-catalogue-view hidden>
@@ -17012,13 +16715,40 @@ p9r-token-input {
   function route2(path) {
     return `${basePath2()}${path}`;
   }
+  function currentIntegrationRoute() {
+    const params = new URL(window.location.href).searchParams;
+    const installation = params.get("integration")?.trim();
+    if (installation)
+      return { view: "installation", id: installation };
+    const setup = params.get("setup")?.trim();
+    if (setup)
+      return { view: "setup", kind: setup };
+    return { view: "list", tab: params.get("tab") === "catalogue" ? "catalogue" : "installed" };
+  }
+  function integrationRouteUrl(next) {
+    const params = new URLSearchParams;
+    if (next.view === "installation")
+      params.set("integration", next.id);
+    else if (next.view === "setup")
+      params.set("setup", next.kind);
+    else if (next.tab === "catalogue")
+      params.set("tab", "catalogue");
+    const suffix = params.toString() ? `?${params.toString()}` : "";
+    return route2(`/admin/integrations${suffix}`);
+  }
+  function pushIntegrationRoute(next) {
+    history.pushState(null, "", integrationRouteUrl(next));
+  }
+  function replaceIntegrationRoute(next) {
+    history.replaceState(null, "", integrationRouteUrl(next));
+  }
   async function importIntegration(payload) {
     const result = await postJson(route2("/api/integrations/import"), payload);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     return result;
   }
-  async function rerunIntegrationInstance(id2) {
-    await postJson(`${route2("/api/integrations/instances/rerun")}?id=${encodeURIComponent(id2)}`, {});
+  async function rerunIntegrationInstallation(id2) {
+    await postJson(`${route2("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, {});
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
@@ -17110,22 +16840,19 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Integrations/domain.ts
-  function installedCounts(instances) {
+  function installedCounts(installations) {
     const counts = new Map;
-    for (const instance of instances)
-      counts.set(instance.kind, (counts.get(instance.kind) ?? 0) + 1);
+    for (const installation of installations)
+      counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
     return counts;
   }
   function categories(definitions) {
     return Array.from(new Set(definitions.map((definition) => definition.category ?? "Other"))).sort();
   }
   function matches(definition, query2, category) {
-    const text2 = [definition.kind, definition.label, definition.category, definition.description].join(" ").toLowerCase();
+    const text = [definition.kind, definition.label, definition.category, definition.description].join(" ").toLowerCase();
     const categoryMatch = !category || category === (definition.category ?? "Other");
-    return categoryMatch && (!query2 || text2.includes(query2.toLowerCase()));
-  }
-  function defaultInstance(definition, answers) {
-    return typeof answers.id === "string" && answers.id.trim() ? undefined : { id: `${definition.kind}:${definition.kind}`, label: definition.label };
+    return categoryMatch && (!query2 || text.includes(query2.toLowerCase()));
   }
 
   // src/components/admin/Resources/Integrations/ui/templates/browser.html
@@ -17135,12 +16862,11 @@ p9r-token-input {
         <span>Status</span>
         <span>Artifacts</span>
         <span>Last sync</span>
-        <span></span>
     </div>
 </template>
 
 <template data-template="installed-row">
-    <button type="button" class="installed-row">
+    <a class="installed-row">
         <span class="integration-title-cell">
             <span data-icon-host></span>
             <span class="integration-title-copy">
@@ -17151,12 +16877,11 @@ p9r-token-input {
         <span><span class="status-pill" data-status></span></span>
         <span class="badge-row" data-badges></span>
         <span class="muted" data-updated></span>
-        <span class="chevron" data-chevron></span>
-    </button>
+    </a>
 </template>
 
 <template data-template="catalogue-card">
-    <button type="button" class="catalogue-card">
+    <a class="catalogue-card">
         <span class="card-head">
             <span data-icon-host></span>
             <span>
@@ -17165,7 +16890,7 @@ p9r-token-input {
             </span>
         </span>
         <span class="badge-row" data-badges></span>
-    </button>
+    </a>
 </template>
 `;
 
@@ -17222,8 +16947,7 @@ p9r-token-input {
                     <header class="panel-title"><h4>Installation</h4></header>
                     <dl class="summary-grid">
                         <div><dt>Description</dt><dd data-description></dd></div>
-                        <div><dt>Instance</dt><dd>{{ integration.id }}</dd></div>
-                        <div><dt>Kind</dt><dd>{{ integration.kind }}</dd></div>
+                        <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
                         <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
                         <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
                         <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
@@ -17386,7 +17110,7 @@ p9r-token-input {
       throw new Error(`Missing integration icon: ${name}`);
     return icon;
   }
-  function text2(root, selector, value) {
+  function text(root, selector, value) {
     const element = root.querySelector(selector);
     if (element)
       element.textContent = String(value ?? "");
@@ -17424,13 +17148,6 @@ p9r-token-input {
     if (status === "failed")
       return "Failed";
     return "Pending";
-  }
-  function previewInstanceId(definition, answers) {
-    const explicit = typeof answers.id === "string" && answers.id.trim() ? answers.id.trim() : "";
-    if (explicit)
-      return `${definition.kind}:${explicit}`;
-    const fallback = definition.inputs.find((input) => input.name === "id" && typeof input.defaultValue === "string")?.defaultValue;
-    return `${definition.kind}:${fallback || definition.kind}`;
   }
   function typeLabel(type) {
     if (type === "sourceOverlay")
@@ -17501,9 +17218,9 @@ p9r-token-input {
     for (const row of rows) {
       const element = cloneElement("resource-row");
       fillIcon(element, "[data-icon-host]", iconForResourceType(row.type));
-      text2(element, "[data-label]", row.label);
-      text2(element, "[data-detail]", row.detail);
-      text2(element, "[data-type]", row.type);
+      text(element, "[data-label]", row.label);
+      text(element, "[data-detail]", row.detail);
+      text(element, "[data-type]", row.type);
       root.append(element);
     }
   }
@@ -17511,16 +17228,16 @@ p9r-token-input {
     const grid = cloneElement("summary-grid");
     for (const row of rows) {
       const element = cloneElement("summary-row");
-      text2(element, "[data-label]", row.label);
-      text2(element, "[data-value]", row.value);
+      text(element, "[data-label]", row.label);
+      text(element, "[data-value]", row.value);
       grid.append(element);
     }
     root.replaceChildren(grid);
   }
   function renderPlaceholder(root, title, copy) {
     const element = cloneElement("placeholder");
-    text2(element, "[data-title]", title);
-    text2(element, "[data-copy]", copy);
+    text(element, "[data-title]", title);
+    text(element, "[data-copy]", copy);
     root.replaceChildren(element);
   }
   function empty(message) {
@@ -17575,13 +17292,13 @@ p9r-token-input {
   // src/components/admin/Resources/Integrations/ui/browser.ts
   function renderBrowser(host) {
     renderCategories(host);
-    renderInstances(host);
+    renderInstallations(host);
     renderCatalogue(host);
     renderCounts(host);
   }
   function renderCounts(host) {
-    text2(host, "[data-installed-count]", host.instances.length);
-    text2(host, "[data-catalogue-count]", availableDefinitions(host).length);
+    text(host, "[data-installed-count]", host.installations.length);
+    text(host, "[data-catalogue-count]", availableDefinitions(host).length);
   }
   function renderCategories(host) {
     const select3 = host.query("[data-category]");
@@ -17589,13 +17306,13 @@ p9r-token-input {
     for (const category of categories(availableDefinitions(host)))
       select3.append(new Option(category, category));
   }
-  function renderInstances(host) {
-    const root = host.query("[data-instances]");
-    const rows = [...host.instances].sort((left, right) => left.label.localeCompare(right.label));
+  function renderInstallations(host) {
+    const root = host.query("[data-installations]");
+    const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
     root.replaceChildren();
     if (rows.length)
-      root.append(cloneElement("installed-head"), ...rows.map((row) => instanceRow(host, row)));
-    host.query("[data-instances-empty]").hidden = rows.length > 0;
+      root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
+    host.query("[data-installations-empty]").hidden = rows.length > 0;
   }
   function renderCatalogue(host) {
     const query2 = host.query("[data-search]").value.trim();
@@ -17606,35 +17323,36 @@ p9r-token-input {
     renderCounts(host);
   }
   function availableDefinitions(host) {
-    const counts = installedCounts(host.instances);
+    const counts = installedCounts(host.installations);
     return host.definitions.filter((definition) => !counts.has(definition.kind));
   }
-  function definitionFor(host, instance) {
-    return host.definitions.find((definition) => definition.kind === instance.kind);
+  function definitionFor(host, installation) {
+    return host.definitions.find((definition) => definition.kind === installation.id);
   }
-  function instanceRow(host, instance) {
-    const definition = definitionFor(host, instance);
+  function installationRow(host, installation) {
+    const definition = definitionFor(host, installation);
     const row = cloneElement("installed-row");
-    row.dataset.instanceId = instance.id;
+    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
+    row.dataset.integrationId = installation.id;
     row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text2(row, "[data-label]", instance.label);
-    text2(row, "[data-kind]", instance.kind);
+    text(row, "[data-label]", installation.label);
+    text(row, "[data-kind]", installation.id);
     const status = row.querySelector("[data-status]");
     if (status) {
-      status.textContent = statusLabel(instance.status);
-      status.classList.add(`status-${instance.status}`);
+      status.textContent = statusLabel(installation.status);
+      status.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text2(row, "[data-updated]", formatRelativeDate(instance.updatedAt));
-    fillIcon(row, "[data-chevron]", "chevron");
+    text(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
   }
   function definitionCard(definition) {
     const card = cloneElement("catalogue-card");
+    card.href = integrationRouteUrl({ view: "setup", kind: definition.kind });
     card.dataset.definitionKind = definition.kind;
     card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text2(card, "[data-label]", definition.label);
-    text2(card, "[data-description]", definition.description ?? "");
+    text(card, "[data-label]", definition.label);
+    text(card, "[data-description]", definition.description ?? "");
     appendBadges(card.querySelector("[data-badges]"), [definition.category ?? "Other", ...artifactLabels(definition)]);
     return card;
   }
@@ -17642,18 +17360,16 @@ p9r-token-input {
   // src/components/admin/Resources/Integrations/ui/detail.ts
   function renderDetail(host) {
     const root = host.query("[data-detail-view]");
-    const instance = host.instances.find((item) => item.id === host.selectedInstanceId);
-    if (!instance) {
-      host.closeDetail();
+    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
+    if (!installation)
       return;
-    }
-    const definition = definitionFor(host, instance);
+    const definition = definitionFor(host, installation);
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template").content;
-    shell.setAttribute("cms-source", `${route2("/api/integrations/instances")}?id=${encodeURIComponent(instance.id)} as integration`);
-    text2(content, "[data-title]", instance.label);
-    text2(content, "[data-description]", definition?.description ?? "No description.");
-    content.querySelector("[data-run-sync]").dataset.instanceId = instance.id;
+    shell.setAttribute("cms-source", `${route2("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
+    text(content, "[data-title]", installation.label);
+    text(content, "[data-description]", definition?.description ?? "No description.");
+    content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
     fillIcon(content, "[data-back-icon]", "table");
     fillIcon(content, "[data-grid-icon]", "grid");
     renderLinkedPlaceholder(content.querySelector("[data-linked]"));
@@ -17666,7 +17382,7 @@ p9r-token-input {
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
     const shell = cloneElement("setup-shell");
-    text2(shell, "[data-title]", `Install ${definition.label}`);
+    text(shell, "[data-title]", `Install ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
     const status = shell.querySelector("[data-setup-status]");
     status.textContent = options2.error ?? "";
@@ -17681,21 +17397,16 @@ p9r-token-input {
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
-    const instance = previewInstanceId(definition, answers);
-    text2(shell, "[data-title]", `Installing ${definition.label}`);
+    text(shell, "[data-title]", `Installing ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
-    renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition, instance));
+    renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
   }
-  function collectImportInstance(definition, answers) {
-    return defaultInstance(definition, answers);
-  }
-  function summaryRows(definition, instanceId = "") {
+  function summaryRows(definition) {
     const rows = resourceRows(definition);
     return [
       { label: "Integration", value: definition.label },
-      { label: "Kind", value: definition.kind },
-      ...instanceId ? [{ label: "Instance", value: instanceId }] : [],
+      { label: "Identifier", value: definition.kind },
       { label: "Resources", value: rows.filter((row) => !["Secret", "Connector"].includes(row.type)).length },
       { label: "Secrets", value: rows.filter((row) => row.type === "Secret").length },
       { label: "Connectors", value: rows.filter((row) => row.type === "Connector").length }
@@ -17725,7 +17436,7 @@ p9r-token-input {
     if (tab)
       return closeAndSetTab(host, tab.dataset.tab ?? "installed");
     if (target.closest("[data-detail-back]"))
-      return host.closeDetail();
+      return closeAndSetTab(host, "installed");
     if (target.closest("[data-setup-cancel]"))
       return closeAndSetTab(host, "catalogue");
     if (target.closest("[data-import-setup]"))
@@ -17733,31 +17444,24 @@ p9r-token-input {
     const runSync = target.closest("[data-run-sync]");
     if (runSync)
       return runIntegrationSync(host, runSync);
-    const instance = target.closest("[data-instance-id]");
-    if (instance?.dataset.instanceId)
-      return host.openDetail(instance.dataset.instanceId);
+    const installation = target.closest("[data-installation-id]");
+    if (installation?.dataset.integrationId) {
+      if (!shouldInterceptNavigation(event))
+        return;
+      event.preventDefault();
+      return host.openDetail(installation.dataset.integrationId);
+    }
     const definition = target.closest("[data-definition-kind]");
-    if (definition?.dataset.definitionKind)
+    if (definition?.dataset.definitionKind) {
+      if (!shouldInterceptNavigation(event))
+        return;
+      event.preventDefault();
       openDefinition(host, definition.dataset.definitionKind);
-  }
-  function openDetail(host, instanceId) {
-    host.activeDefinition = null;
-    host.selectedInstanceId = instanceId;
-    host.query("[data-browser]").hidden = true;
-    host.query("[data-detail-view]").hidden = false;
-    renderDetail(host);
-  }
-  function closeDetail(host) {
-    host.selectedInstanceId = "";
-    host.activeDefinition = null;
-    host.query("[data-detail-view]").replaceChildren();
-    host.query("[data-detail-view]").hidden = true;
-    host.query("[data-browser]").hidden = false;
-    host.setTab(host.tab);
+    }
   }
   function openSetup(host, definition, options2 = {}) {
     host.activeDefinition = definition;
-    host.selectedInstanceId = "";
+    host.selectedIntegrationId = "";
     host.query("[data-browser]").hidden = true;
     host.query("[data-detail-view]").hidden = false;
     renderSetup(host, definition, options2);
@@ -17769,17 +17473,17 @@ p9r-token-input {
     const answers = collectAnswers(host.query("[data-fields]"), definition);
     renderImporting(host, definition, answers);
     try {
-      const result = await importIntegration({ kind: definition.kind, answers, instance: collectImportInstance(definition, answers) });
+      const result = await importIntegration({ kind: definition.kind, answers });
       host.tab = "installed";
-      const id2 = result.instance?.id ?? "";
-      await host.waitForBoundData(() => id2 ? host.instances.some((instance) => instance.id === id2) : host.instances.some((instance) => instance.kind === definition.kind));
-      host.openDetail(id2 || host.instances.find((instance) => instance.kind === definition.kind)?.id || "");
+      const id2 = result.installation?.id ?? "";
+      await host.waitForBoundData(() => id2 ? host.installations.some((installation) => installation.id === id2) : host.installations.some((installation) => installation.id === definition.kind));
+      host.openDetail(id2 || host.installations.find((installation) => installation.id === definition.kind)?.id || "");
     } catch (error) {
       openSetup(host, definition, { answers, error: error instanceof Error ? error.message : "Import failed" });
     }
   }
   async function runIntegrationSync(host, button) {
-    const id2 = button.dataset.instanceId;
+    const id2 = button.dataset.integrationId;
     if (!id2)
       return;
     const status = host.querySelector("[data-action-status]");
@@ -17788,7 +17492,7 @@ p9r-token-input {
     if (status)
       status.textContent = "";
     try {
-      await rerunIntegrationInstance(id2);
+      await rerunIntegrationInstallation(id2);
       await host.waitForBoundData(() => true);
       button.removeAttribute("aria-busy");
       button.textContent = "Run sync";
@@ -17807,19 +17511,24 @@ p9r-token-input {
       host.openSetup(definition);
   }
   function closeAndSetTab(host, tab) {
-    host.closeDetail();
-    host.setTab(tab);
+    pushIntegrationRoute({ view: "list", tab });
+    host.renderAll();
+  }
+  function shouldInterceptNavigation(event) {
+    if (!(event instanceof MouseEvent))
+      return true;
+    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
   // src/components/admin/Resources/Integrations/ui/data.ts
   function startBoundSources(host) {
     const definitions = host.query("[data-definitions-source]");
-    const instances = host.query("[data-instances-source]");
+    const installations = host.query("[data-installations-source]");
     definitions.setAttribute("cms-source", `${route2("/api/integrations/list")} as definitions`);
-    instances.setAttribute("cms-source", `${route2("/api/integrations/instances")} as instances`);
+    installations.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
-    host.observer.observe(instances, { attributes: true, childList: true, subtree: true });
+    host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
     readBoundData(host);
   }
   function disconnectBoundSources(host) {
@@ -17839,13 +17548,13 @@ p9r-token-input {
       host.definitionsLoaded = true;
       changed = true;
     }
-    const instances = parseArray(host.querySelector("[data-instances-json]")?.dataset.instancesJson ?? "");
-    if (instances) {
-      host.instances = instances;
-      host.instancesLoaded = true;
+    const installations = parseArray(host.querySelector("[data-installations-json]")?.dataset.installationsJson ?? "");
+    if (installations) {
+      host.installations = installations;
+      host.installationsLoaded = true;
       changed = true;
     }
-    if (!changed || !host.definitionsLoaded || !host.instancesLoaded)
+    if (!changed || !host.definitionsLoaded || !host.installationsLoaded)
       return;
     host.renderAll();
     resolveWaiters(host);
@@ -18072,7 +17781,7 @@ button[slot="back"] svg {
 .installed-head,
 .installed-row {
     display: grid;
-    grid-template-columns: minmax(270px, 1.4fr) minmax(110px, 0.45fr) minmax(220px, 0.9fr) minmax(120px, 0.45fr) 28px;
+    grid-template-columns: minmax(270px, 1.4fr) minmax(110px, 0.45fr) minmax(220px, 0.9fr) minmax(120px, 0.45fr);
     gap: 16px;
     align-items: center;
 }
@@ -18094,24 +17803,28 @@ button[slot="back"] svg {
     color: inherit;
     cursor: pointer;
     font: inherit;
+    text-decoration: none;
     text-align: left;
 }
 
 .installed-row {
     width: 100%;
-    min-height: 64px;
+    min-height: 58px;
     border: 0;
     border-bottom: 1px solid #dfe5e2;
-    padding: 10px 16px;
+    padding: 8px 16px;
 }
 
 .installed-row:last-child {
     border-bottom: 0;
 }
 
-.installed-row:hover,
 .catalogue-card:hover {
     background: #f7faf8;
+}
+
+.installed-row:hover .integration-title-copy strong {
+    color: #0f6d56;
 }
 
 .integration-title-cell,
@@ -18471,20 +18184,21 @@ button[slot="back"]:disabled {
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
   class IntegrationBrowser extends HTMLElement {
     definitions = [];
-    instances = [];
+    installations = [];
     activeDefinition = null;
     definitionsLoaded = false;
-    instancesLoaded = false;
+    installationsLoaded = false;
     observer = null;
     waiters = [];
     tab = "installed";
-    selectedInstanceId = "";
+    selectedIntegrationId = "";
     initialized = false;
     connectedCallback() {
       if (!this.initialized) {
         this.mountTemplate();
         this.bind();
         startBoundSources(this);
+        window.addEventListener("popstate", this.onPopState);
         this.initialized = true;
       } else if (!this.observer) {
         startBoundSources(this);
@@ -18492,11 +18206,11 @@ button[slot="back"]:disabled {
     }
     disconnectedCallback() {
       disconnectBoundSources(this);
+      window.removeEventListener("popstate", this.onPopState);
     }
     renderAll() {
       renderBrowser(this);
-      if (this.selectedInstanceId)
-        openDetail(this, this.selectedInstanceId);
+      this.renderRoute();
     }
     setTab(tab) {
       this.tab = tab;
@@ -18506,14 +18220,21 @@ button[slot="back"]:disabled {
         item.classList.toggle("is-active", item.dataset.tab === tab);
       }
     }
-    openDetail(instanceId) {
-      openDetail(this, instanceId);
+    openDetail(integrationId) {
+      pushIntegrationRoute({ view: "installation", id: integrationId });
+      this.renderRoute();
     }
     openSetup(definition, options2 = {}) {
-      openSetup(this, definition, options2);
+      if (options2.answers || options2.error) {
+        openSetup(this, definition, options2);
+        return;
+      }
+      pushIntegrationRoute({ view: "setup", kind: definition.kind });
+      this.renderRoute();
     }
     closeDetail() {
-      closeDetail(this);
+      pushIntegrationRoute({ view: "list", tab: this.tab });
+      this.renderRoute();
     }
     waitForBoundData(predicate, timeoutMs) {
       return waitForBoundData(this, predicate, timeoutMs);
@@ -18529,6 +18250,50 @@ button[slot="back"]:disabled {
       this.query("[data-category]").addEventListener("change", () => renderCatalogue(this));
       this.addEventListener("click", (event) => void handleClick(this, event));
     }
+    renderRoute() {
+      const route3 = currentIntegrationRoute();
+      if (route3.view === "installation")
+        return this.showInstallation(route3.id);
+      if (route3.view === "setup")
+        return this.showSetup(route3.kind);
+      this.showList(route3.tab);
+    }
+    showList(tab) {
+      this.selectedIntegrationId = "";
+      this.activeDefinition = null;
+      this.query("[data-detail-view]").replaceChildren();
+      this.query("[data-detail-view]").hidden = true;
+      this.query("[data-browser]").hidden = false;
+      this.setTab(tab);
+    }
+    showInstallation(integrationId) {
+      if (!this.installations.some((installation) => installation.id === integrationId)) {
+        replaceIntegrationRoute({ view: "list", tab: "installed" });
+        this.showList("installed");
+        return;
+      }
+      this.activeDefinition = null;
+      this.selectedIntegrationId = integrationId;
+      this.query("[data-browser]").hidden = true;
+      this.query("[data-detail-view]").hidden = false;
+      this.tab = "installed";
+      renderDetail(this);
+    }
+    showSetup(kind) {
+      const definition = this.definitions.find((item) => item.kind === kind);
+      if (!definition) {
+        replaceIntegrationRoute({ view: "list", tab: "catalogue" });
+        this.showList("catalogue");
+        return;
+      }
+      this.activeDefinition = definition;
+      this.selectedIntegrationId = "";
+      this.query("[data-browser]").hidden = true;
+      this.query("[data-detail-view]").hidden = false;
+      this.tab = "catalogue";
+      renderSetup(this, definition);
+    }
+    onPopState = () => this.renderAll();
     mountTemplate() {
       const style = document.createElement("style");
       style.textContent = styles_default;
@@ -19443,10 +19208,10 @@ button:hover {
     row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
   }
-  function renderHeading(text3) {
+  function renderHeading(text2) {
     const heading4 = document.createElement("div");
     heading4.className = "config-heading";
-    heading4.textContent = text3;
+    heading4.textContent = text2;
     return heading4;
   }
   function renderParamHeader(param) {
@@ -20659,9 +20424,9 @@ input {
         input.checked ? this._selected.add(key) : this._selected.delete(key);
         this.applyButton.disabled = this._selected.size === 0;
       });
-      const text3 = document.createElement("span");
-      text3.textContent = state;
-      label.append(input, text3);
+      const text2 = document.createElement("span");
+      text2.textContent = state;
+      label.append(input, text2);
       return label;
     }
     _apply = () => {
@@ -21405,12 +21170,12 @@ dd {
           return;
         onClick();
       });
-      const text3 = document.createElement("span");
-      text3.textContent = label;
+      const text2 = document.createElement("span");
+      text2.textContent = label;
       const badge3 = document.createElement("span");
       badge3.className = "count";
       badge3.textContent = String(count);
-      button.append(text3, badge3);
+      button.append(text2, badge3);
       return button;
     }
     _renderDetails() {
@@ -23930,7 +23695,7 @@ input:disabled {
       }, {
         saveSelection: this.saveSelection,
         restoreSelection: this.restoreSelection,
-        insertText: (text3) => this.insertText(text3),
+        insertText: (text2) => this.insertText(text2),
         focusControl: () => this._refs.control().focus(),
         finish: this.emitInput
       });
@@ -23977,12 +23742,12 @@ input:disabled {
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
-    insertText(text3) {
+    insertText(text2) {
       const control2 = this._refs.control();
       const start = control2.selectionStart ?? this._selectionStart;
       const end = control2.selectionEnd ?? this._selectionEnd;
-      control2.value = `${control2.value.slice(0, start)}${text3}${control2.value.slice(end)}`;
-      const next = start + text3.length;
+      control2.value = `${control2.value.slice(0, start)}${text2}${control2.value.slice(end)}`;
+      const next = start + text2.length;
       control2.setSelectionRange?.(next, next);
       this.saveSelection();
     }
@@ -24315,10 +24080,10 @@ textarea:disabled {
       this.setSavedRange(unwrapElement(this._editor(), wrapper));
       return true;
     }
-    insertText(text3) {
+    insertText(text2) {
       const range = this.getUsableRange();
       if (!range) {
-        this._editor().append(text3);
+        this._editor().append(text2);
         const nextRange2 = document.createRange();
         nextRange2.selectNodeContents(this._editor());
         nextRange2.collapse(false);
@@ -24326,7 +24091,7 @@ textarea:disabled {
         return;
       }
       range.deleteContents();
-      const node = document.createTextNode(text3);
+      const node = document.createTextNode(text2);
       range.insertNode(node);
       const nextRange = document.createRange();
       nextRange.setStartAfter(node);
@@ -24707,7 +24472,7 @@ textarea:disabled {
     }, {
       saveSelection: this._range.saveSelection,
       restoreSelection: () => this._range.restoreSelection(),
-      insertText: (text3) => this._range.insertText(text3),
+      insertText: (text2) => this._range.insertText(text2),
       focusControl: () => this.editor.focus(),
       finish: () => this.finishAction()
     });
@@ -27133,9 +26898,9 @@ cms-editor-v2-segmented-control button svg:only-child {
         nodes.push(icon);
       }
       if (display !== "icon" || !icon) {
-        const text3 = document.createElement("span");
-        text3.textContent = label;
-        nodes.push(text3);
+        const text2 = document.createElement("span");
+        text2.textContent = label;
+        nodes.push(text2);
       }
       return nodes;
     }
@@ -28827,9 +28592,9 @@ label {
   function collectBindingDependencies(root, inheritedScope, usages) {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) {
-        const text3 = child;
-        if (bindingTextDependsOn(text3.data, inheritedScope))
-          usages.push({ target: text3 });
+        const text2 = child;
+        if (bindingTextDependsOn(text2.data, inheritedScope))
+          usages.push({ target: text2 });
         continue;
       }
       if (child.nodeType !== Node.ELEMENT_NODE)

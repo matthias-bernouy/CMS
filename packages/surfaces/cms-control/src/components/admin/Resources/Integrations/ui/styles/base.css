@@ -63,39 +63,27 @@ cms-integrations-admin {
 }
 
 .integration-icon svg,
+.integration-icon img,
 .resource-icon svg,
 .chevron svg,
 button[slot="back"] svg {
     width: 18px;
     height: 18px;
+}
+
+.integration-icon img {
+    object-fit: contain;
+}
+
+.integration-icon svg,
+.resource-icon svg,
+.chevron svg,
+button[slot="back"] svg {
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2;
-}
-
-.integration-icon[data-tone="commerce"] {
-    background: #e2f0fb;
-    color: #2d719f;
-}
-
-.integration-icon[data-tone="payments"],
-.integration-icon[data-tone="blocks"] {
-    background: #f6ecd2;
-    color: #9a6715;
-}
-
-.integration-icon[data-tone="delivery"] {
-    background: #e1f0fa;
-    color: #26709e;
-}
-
-.integration-icon[data-tone="users"],
-.integration-icon[data-tone="marketing"],
-.integration-icon[data-tone="data"] {
-    background: #dff1eb;
-    color: #287762;
 }
 
 .status-pill,

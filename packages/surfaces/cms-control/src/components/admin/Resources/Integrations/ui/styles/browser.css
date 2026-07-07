@@ -53,7 +53,7 @@
 .installed-head,
 .installed-row {
     display: grid;
-    grid-template-columns: minmax(270px, 1.4fr) minmax(110px, 0.45fr) minmax(220px, 0.9fr) minmax(120px, 0.45fr) 28px;
+    grid-template-columns: minmax(270px, 1.4fr) minmax(110px, 0.45fr) minmax(220px, 0.9fr) minmax(120px, 0.45fr);
     gap: 16px;
     align-items: center;
 }
@@ -75,24 +75,28 @@
     color: inherit;
     cursor: pointer;
     font: inherit;
+    text-decoration: none;
     text-align: left;
 }
 
 .installed-row {
     width: 100%;
-    min-height: 64px;
+    min-height: 58px;
     border: 0;
     border-bottom: 1px solid #dfe5e2;
-    padding: 10px 16px;
+    padding: 8px 16px;
 }
 
 .installed-row:last-child {
     border-bottom: 0;
 }
 
-.installed-row:hover,
 .catalogue-card:hover {
     background: #f7faf8;
+}
+
+.installed-row:hover .integration-title-copy strong {
+    color: #0f6d56;
 }
 
 .integration-title-cell,
