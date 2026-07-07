@@ -1,9 +1,12 @@
 import { Buffer } from "node:buffer";
 import { readdir, readFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { parseIntegrationIcon } from "../core/parsing/icon";
 import { parseIntegrationDefinition } from "../core/parsing/definition";
+import { readIntegrationAsset } from "./fsDefinitionAssets";
 import type { DeclarativeArtifactTemplate, IntegrationDefinition } from "../interfaces/Integration";
 import type {
+    IntegrationAsset,
     IntegrationDefinitionIndex,
     IntegrationDefinitionRepository,
     IntegrationDefinitionSummary,
@@ -31,6 +34,7 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
                 kind: index.kind,
                 label: index.label,
                 ...(index.schema ? { schema: index.schema } : {}),
+                ...(index.icon ? { icon: index.icon } : {}),
                 ...(index.category ? { category: index.category } : {}),
                 ...(index.description ? { description: index.description } : {}),
                 ...(index.stable ? { stable: index.stable } : {}),
@@ -64,6 +68,13 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
             throw new Error(`${definitionPath}: definition version "${definition.version ?? ""}" does not match index version "${entry.version}"`);
         }
         return await hydrateVersionAssets(definition, safeJoin(this.root, index.kind, entry.path));
+    }
+
+    async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
+        const index = await this.readIndexOrNull(kind);
+        if (!index) return null;
+        const entry = resolveVersion(index, version, this.defaultChannel);
+        return entry ? readIntegrationAsset(safeJoin(this.root, index.kind, entry.path), path) : null;
     }
 
     private async readIndexes(): Promise<IntegrationDefinitionIndex[]> {
@@ -191,10 +202,12 @@ function parseIntegrationDefinitionIndex(value: unknown, source: string): Integr
     if (!Array.isArray(value.versions) || value.versions.length === 0) {
         throw new Error(`${source}: versions must be a non-empty array`);
     }
+    const icon = parseIntegrationIcon(value.icon, `${source}.icon`);
     return {
         ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
         kind,
         label,
+        ...(icon ? { icon } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         ...(text(value.stable) ? { stable: text(value.stable)! } : {}),

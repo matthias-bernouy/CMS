@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Delivery",
     "description": "Create Mondial Relay Connect shipments, print delivery labels, and track stored parcels through a Supabase connector.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

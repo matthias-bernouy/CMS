@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Blocks",
     "description": "Install neutral official UI blocs used by other integrations.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [],
     "ui": {
         "mark": "B",

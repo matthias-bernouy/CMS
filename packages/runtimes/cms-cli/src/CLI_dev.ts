@@ -9,6 +9,7 @@ import { relative } from "node:path";
 import { BunRunner } from "@bernouy/http-runner";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
+import { RepositoryCms } from "@bernouy/cms-repository";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
@@ -117,7 +118,8 @@ export default async function CLI_dev(args: string[]) {
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const sources = await createDevSources(config.siteDir);
-    const integrationCatalog = createIntegrationCatalog();
+    const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    const integrationCatalog = createIntegrationCatalog(`http://${publicHost}:${port}/.cms/repository`);
     const integrationConnectorDeployers = createIntegrationConnectorDeployers();
     const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
     const dashboards = new LocalFsDashboardRepository(config.siteDir);
@@ -158,6 +160,9 @@ export default async function CLI_dev(args: string[]) {
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
+    runner.group("/.cms/repository", repositoryRunner => {
+        new RepositoryCms({ runner: repositoryRunner, integrationCatalog: integrationRepositoryCatalog });
+    });
 
     const cms = new ControlCms(runner, repo, auth, {
         deliveryUrl: `http://${publicHost}:${deliveryPort}`,
@@ -228,10 +233,9 @@ export default async function CLI_dev(args: string[]) {
     process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
-function createIntegrationCatalog(): IntegrationDefinitionRepository {
+function createIntegrationCatalog(localRepositoryUrl: string): IntegrationDefinitionRepository {
     const repositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    if (repositoryUrl) return new HttpIntegrationDefinitionRepository(repositoryUrl);
-    return new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    return new HttpIntegrationDefinitionRepository(repositoryUrl || localRepositoryUrl);
 }
 
 function createIntegrationConnectorDeployers(): IntegrationConnectorDeployer[] | undefined {

@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Commerce",
     "description": "Store single-seller commerce orders with immutable line snapshots and external references to payment, delivery, stock, reservation, and fulfilment systems.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Commerce",
     "description": "Manage sellable offers for marketplace and classic ecommerce use cases without discounts, orders, payments, delivery, or advanced inventory.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

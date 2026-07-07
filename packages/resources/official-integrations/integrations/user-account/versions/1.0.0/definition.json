@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Users",
     "description": "Store personal information for CMS users with the configured connector.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

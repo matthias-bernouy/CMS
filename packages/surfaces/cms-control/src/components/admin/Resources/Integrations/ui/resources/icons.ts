@@ -1,11 +1,21 @@
 import type { IntegrationDefinition } from "../../model";
-import { fillIcon } from "../templates";
+import { route } from "../../api";
+import { cloneIcon } from "../templates";
 
-export function integrationIcon(definition: IntegrationDefinition | undefined, fallback: string): HTMLElement {
+export function integrationIcon(definition: IntegrationDefinition | undefined): HTMLElement {
     const icon = document.createElement("span");
     icon.className = "integration-icon";
-    icon.dataset.tone = toneFor(definition);
-    icon.append(svgFor(definition?.kind ?? fallback));
+    const path = definition?.icon?.path;
+    if (definition && path) {
+        const image = document.createElement("img");
+        image.src = integrationAssetUrl(definition, path);
+        image.alt = "";
+        image.decoding = "async";
+        image.addEventListener("error", () => icon.replaceChildren(fallbackIcon()));
+        icon.append(image);
+    } else {
+        icon.append(fallbackIcon());
+    }
     return icon;
 }
 
@@ -20,24 +30,12 @@ export function iconForResourceType(type: string): string {
     return "grid";
 }
 
-function svgFor(kind: string): Node {
-    const icons: Record<string, string> = {
-        orders: "receipt",
-        products: "cube",
-        offers: "tag",
-        newsletter: "mail",
-        "user-account": "user",
-        "stripe-connect": "card",
-        "mondial-relay": "truck",
-        ban: "pin",
-    };
-    const host = document.createElement("span");
-    fillIcon(host, ":scope", icons[kind] ?? "grid");
-    return host.firstChild ?? document.createTextNode("");
+function fallbackIcon(): Node {
+    return cloneIcon("grid");
 }
 
-function toneFor(definition: IntegrationDefinition | undefined): string {
-    const category = (definition?.category ?? "").toLowerCase();
-    if (["commerce", "payments", "delivery", "users", "marketing", "data", "blocks"].includes(category)) return category;
-    return "default";
+function integrationAssetUrl(definition: IntegrationDefinition, path: string): string {
+    const params = new URLSearchParams({ kind: definition.kind, path });
+    if (definition.version) params.set("version", definition.version);
+    return route(`/api/integrations/asset?${params.toString()}`);
 }

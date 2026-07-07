@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Commerce",
     "description": "Manage a Supabase-backed product catalogue with products, variants, categories, brands, attributes and private product/variant image uploads.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

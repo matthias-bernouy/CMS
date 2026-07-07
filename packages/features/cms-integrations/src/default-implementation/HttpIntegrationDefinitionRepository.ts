@@ -1,6 +1,9 @@
 import { parseIntegrationDefinition } from "../core/parsing/definition";
 import type { IntegrationDefinition } from "../interfaces/Integration";
+import { responseAsset } from "./httpDefinitionAssets";
+import { parseIndex, parseSummaries, parseVersions } from "./httpDefinitionParsing";
 import type {
+    IntegrationAsset,
     IntegrationDefinitionIndex,
     IntegrationDefinitionRepository,
     IntegrationDefinitionSummary,
@@ -45,21 +48,32 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
         return value ? parseIntegrationDefinition(value) : null;
     }
 
+    async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
+        const params = new URLSearchParams({ kind, path });
+        if (version) params.set("version", version);
+        const response = await this.fetchPath(`/api/integrations/asset?${params.toString()}`);
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        return responseAsset(response);
+    }
+
     private async getJson(path: string): Promise<unknown> {
-        const response = await this.fetchImpl(repositoryUrl(this.baseUrl, path), {
-            headers: requestHeaders(this.headers),
-        });
+        const response = await this.fetchPath(path);
         if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
         return response.json();
     }
 
     private async getJsonOrNull(path: string): Promise<unknown | null> {
-        const response = await this.fetchImpl(repositoryUrl(this.baseUrl, path), {
-            headers: requestHeaders(this.headers),
-        });
+        const response = await this.fetchPath(path);
         if (response.status === 404) return null;
         if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
         return response.json();
+    }
+
+    private fetchPath(path: string): Promise<Response> {
+        return this.fetchImpl(repositoryUrl(this.baseUrl, path), {
+            headers: requestHeaders(this.headers),
+        });
     }
 }
 
@@ -75,81 +89,4 @@ function requestHeaders(headers: HeadersInit | undefined): Headers {
     const result = new Headers(headers);
     if (!result.has("accept")) result.set("accept", "application/json");
     return result;
-}
-
-function parseSummaries(value: unknown): IntegrationDefinitionSummary[] {
-    if (!Array.isArray(value)) throw new Error("integration summaries response must be an array");
-    return value.map(parseSummary);
-}
-
-function parseSummary(value: unknown): IntegrationDefinitionSummary {
-    if (!isRecord(value)) throw new Error("integration summary must be an object");
-    const kind = requiredText(value.kind, "kind");
-    const label = requiredText(value.label, "label");
-    const versions = stringArray(value.versions, "versions");
-    return {
-        kind,
-        label,
-        ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
-        ...(text(value.category) ? { category: text(value.category)! } : {}),
-        ...(text(value.description) ? { description: text(value.description)! } : {}),
-        ...(text(value.stable) ? { stable: text(value.stable)! } : {}),
-        ...(text(value.latest) ? { latest: text(value.latest)! } : {}),
-        versions,
-    };
-}
-
-function parseIndex(value: unknown): IntegrationDefinitionIndex {
-    if (!isRecord(value)) throw new Error("integration index must be an object");
-    return {
-        ...definitionMetadata(value),
-        versions: parseVersions(value.versions),
-    };
-}
-
-function definitionMetadata(value: Record<string, unknown>) {
-    const kind = requiredText(value.kind, "kind");
-    const label = requiredText(value.label, "label");
-    return {
-        kind,
-        label,
-        ...(text(value.schema) ? { schema: text(value.schema)! } : {}),
-        ...(text(value.category) ? { category: text(value.category)! } : {}),
-        ...(text(value.description) ? { description: text(value.description)! } : {}),
-        ...(text(value.stable) ? { stable: text(value.stable)! } : {}),
-        ...(text(value.latest) ? { latest: text(value.latest)! } : {}),
-    };
-}
-
-function parseVersions(value: unknown): IntegrationDefinitionVersion[] {
-    if (!Array.isArray(value)) throw new Error("integration versions response must be an array");
-    return value.map(entry => {
-        if (!isRecord(entry)) throw new Error("integration version must be an object");
-        return {
-            version: requiredText(entry.version, "version"),
-            path: requiredText(entry.path, "path"),
-            definition: requiredText(entry.definition, "definition"),
-        };
-    });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
-function text(value: unknown): string | undefined {
-    return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function requiredText(value: unknown, name: string): string {
-    const result = text(value);
-    if (!result) throw new Error(`integration repository response missing ${name}`);
-    return result;
-}
-
-function stringArray(value: unknown, name: string): string[] {
-    if (!Array.isArray(value) || value.some(item => typeof item !== "string")) {
-        throw new Error(`integration repository response ${name} must be a string array`);
-    }
-    return value;
 }

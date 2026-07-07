@@ -14,6 +14,7 @@ import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
+import { RepositoryCms } from "@bernouy/cms-repository";
 import { CompositeSourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository } from "@bernouy/cms-sources";
 import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
@@ -116,7 +117,8 @@ const dashboards        = new MongoDashboardRepository(db);                     
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
 const integrationsStore = new MongoIntegrationInstanceRepository(db);              await integrationsStore.init();
-const integrationCatalog = createIntegrationCatalog(process.env);
+const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+const integrationCatalog = createIntegrationCatalog(process.env, `http://127.0.0.1:${CONTROL_PORT}/.cms/repository`);
 const integrationConnectorDeployers = createIntegrationConnectorDeployers(process.env);
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
@@ -171,6 +173,9 @@ const authEmailComposer = new TemplatedAuthEmailComposer({
 // Control admin on its own runner/port — root-mounted (no `/cms` prefix;
 // the port already isolates the admin surface from Delivery).
 const controlRunner = new BunRunner();
+controlRunner.group("/.cms/repository", repositoryRunner => {
+    new RepositoryCms({ runner: repositoryRunner, integrationCatalog: integrationRepositoryCatalog });
+});
 const auth = new LocalAuthentication<CMS_ROLES>({
     providerId:    "local",
     loginPagePath: "/login",
@@ -235,10 +240,12 @@ console.log(`   sign in:      ${CONTROL_PUBLIC_URL}/login`);
 console.log(`   public site:  ${DELIVERY_PUBLIC_URL}/`);
 console.log(`   storage:      mongo=${db.databaseName}, files=${CMS_FILES_DIR}`);
 
-function createIntegrationCatalog(source: Record<string, string | undefined>): IntegrationDefinitionRepository {
+function createIntegrationCatalog(
+    source: Record<string, string | undefined>,
+    localRepositoryUrl: string,
+): IntegrationDefinitionRepository {
     const repositoryUrl = source.P9R_INTEGRATION_REPOSITORY_URL?.trim();
-    if (repositoryUrl) return new HttpIntegrationDefinitionRepository(repositoryUrl);
-    return new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+    return new HttpIntegrationDefinitionRepository(repositoryUrl || localRepositoryUrl);
 }
 
 function createIntegrationConnectorDeployers(source: Record<string, string | undefined>): IntegrationConnectorDeployer[] | undefined {

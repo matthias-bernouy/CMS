@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Payments",
     "description": "Connect C2C sellers to Stripe transfer accounts and destination-charge marketplace payments.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

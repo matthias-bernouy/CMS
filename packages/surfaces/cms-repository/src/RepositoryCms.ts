@@ -44,6 +44,21 @@ export class RepositoryCms {
             const definition = await this.integrationCatalog.get(kind, optionalText(url.searchParams.get("version")));
             return definition ? json(definition) : notFound("integration definition not found");
         });
+
+        this.runner.get("/api/integrations/asset", async (req) => {
+            const url = new URL(req.url);
+            const kind = requiredSearchParam(req, "kind");
+            const path = requiredSearchParam(req, "path");
+            const version = optionalText(url.searchParams.get("version"));
+            const asset = await this.integrationCatalog.getAsset?.(kind, version, path);
+            if (!asset) return notFound("integration asset not found");
+            return new Response(arrayBuffer(asset.bytes), {
+                headers: {
+                    "cache-control": "public, max-age=3600",
+                    "content-type": asset.contentType,
+                },
+            });
+        });
     }
 }
 
@@ -53,6 +68,12 @@ function json(body: unknown, status = 200): Response {
 
 function notFound(message: string): Response {
     return json({ error: message }, 404);
+}
+
+function arrayBuffer(bytes: Uint8Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(buffer).set(bytes);
+    return buffer;
 }
 
 function requiredSearchParam(req: Request, name: string): string {

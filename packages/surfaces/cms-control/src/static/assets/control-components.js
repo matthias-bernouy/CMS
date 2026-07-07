@@ -17438,11 +17438,20 @@ p9r-token-input {
     return type[0].toUpperCase() + type.slice(1);
   }
   // src/components/admin/Resources/Integrations/ui/resources/icons.ts
-  function integrationIcon(definition, fallback) {
+  function integrationIcon(definition) {
     const icon = document.createElement("span");
     icon.className = "integration-icon";
-    icon.dataset.tone = toneFor(definition);
-    icon.append(svgFor(definition?.kind ?? fallback));
+    const path = definition?.icon?.path;
+    if (definition && path) {
+      const image = document.createElement("img");
+      image.src = integrationAssetUrl(definition, path);
+      image.alt = "";
+      image.decoding = "async";
+      image.addEventListener("error", () => icon.replaceChildren(fallbackIcon()));
+      icon.append(image);
+    } else {
+      icon.append(fallbackIcon());
+    }
     return icon;
   }
   function iconForResourceType(type) {
@@ -17461,26 +17470,14 @@ p9r-token-input {
       return "truck";
     return "grid";
   }
-  function svgFor(kind) {
-    const icons = {
-      orders: "receipt",
-      products: "cube",
-      offers: "tag",
-      newsletter: "mail",
-      "user-account": "user",
-      "stripe-connect": "card",
-      "mondial-relay": "truck",
-      ban: "pin"
-    };
-    const host = document.createElement("span");
-    fillIcon(host, ":scope", icons[kind] ?? "grid");
-    return host.firstChild ?? document.createTextNode("");
+  function fallbackIcon() {
+    return cloneIcon("grid");
   }
-  function toneFor(definition) {
-    const category = (definition?.category ?? "").toLowerCase();
-    if (["commerce", "payments", "delivery", "users", "marketing", "data", "blocks"].includes(category))
-      return category;
-    return "default";
+  function integrationAssetUrl(definition, path) {
+    const params = new URLSearchParams({ kind: definition.kind, path });
+    if (definition.version)
+      params.set("version", definition.version);
+    return route2(`/api/integrations/asset?${params.toString()}`);
   }
   // src/components/admin/Resources/Integrations/ui/resources/render.ts
   function appendBadges(root, labels) {
@@ -17619,7 +17616,7 @@ p9r-token-input {
     const definition = definitionFor(host, instance);
     const row = cloneElement("installed-row");
     row.dataset.instanceId = instance.id;
-    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition, instance.kind));
+    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
     text2(row, "[data-label]", instance.label);
     text2(row, "[data-kind]", instance.kind);
     const status = row.querySelector("[data-status]");
@@ -17635,7 +17632,7 @@ p9r-token-input {
   function definitionCard(definition) {
     const card = cloneElement("catalogue-card");
     card.dataset.definitionKind = definition.kind;
-    card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition, definition.kind));
+    card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
     text2(card, "[data-label]", definition.label);
     text2(card, "[data-description]", definition.description ?? "");
     appendBadges(card.querySelector("[data-badges]"), [definition.category ?? "Other", ...artifactLabels(definition)]);
@@ -17955,39 +17952,27 @@ p9r-token-input {
 }
 
 .integration-icon svg,
+.integration-icon img,
 .resource-icon svg,
 .chevron svg,
 button[slot="back"] svg {
     width: 18px;
     height: 18px;
+}
+
+.integration-icon img {
+    object-fit: contain;
+}
+
+.integration-icon svg,
+.resource-icon svg,
+.chevron svg,
+button[slot="back"] svg {
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2;
-}
-
-.integration-icon[data-tone="commerce"] {
-    background: #e2f0fb;
-    color: #2d719f;
-}
-
-.integration-icon[data-tone="payments"],
-.integration-icon[data-tone="blocks"] {
-    background: #f6ecd2;
-    color: #9a6715;
-}
-
-.integration-icon[data-tone="delivery"] {
-    background: #e1f0fa;
-    color: #26709e;
-}
-
-.integration-icon[data-tone="users"],
-.integration-icon[data-tone="marketing"],
-.integration-icon[data-tone="data"] {
-    background: #dff1eb;
-    color: #287762;
 }
 
 .status-pill,

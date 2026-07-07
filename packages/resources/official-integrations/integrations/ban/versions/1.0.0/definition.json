@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Data",
     "description": "Install French national address geocoding source contracts.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [],
     "ui": {
         "mark": "B",

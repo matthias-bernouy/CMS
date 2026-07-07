@@ -14,6 +14,7 @@ export type {
     DeclarativeSecretTemplate,
     IntegrationCspPolicy,
     IntegrationDefinition,
+    IntegrationIcon,
     IntegrationInput,
     IntegrationSecurityDefinition,
     IntegrationUiDefinition,
@@ -52,6 +53,7 @@ export type {
     IntegrationInstanceRepository,
 } from "../interfaces/IntegrationInstanceRepository";
 export type {
+    IntegrationAsset,
     IntegrationDefinitionIndex,
     IntegrationDefinitionRepository,
     IntegrationDefinitionSummary,

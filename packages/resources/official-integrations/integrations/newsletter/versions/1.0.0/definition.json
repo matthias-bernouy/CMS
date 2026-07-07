@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "category": "Marketing",
     "description": "Store newsletter subscription state with the configured connector.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
     "inputs": [
         {
             "name": "id",

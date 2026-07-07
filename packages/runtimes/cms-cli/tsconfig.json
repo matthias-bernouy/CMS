@@ -23,6 +23,7 @@
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-functions" },
         { "path": "../../resources/official-integrations" },
+        { "path": "../../surfaces/cms-repository" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }
     ]

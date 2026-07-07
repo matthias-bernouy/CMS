@@ -37,6 +37,20 @@ describe("@bernouy/cms-repository integration routes", () => {
         expect(response.status).toBe(404);
         expect(await json(response)).toEqual({ error: "integration definition not found" });
     });
+
+    test("publishes integration assets", async () => {
+        const runner = new TestRunner();
+        new RepositoryCms({
+            runner,
+            integrationCatalog: testCatalog(),
+        });
+
+        const response = await runner.handle("/api/integrations/asset?kind=demo&version=1.0.0&path=assets/icon.svg");
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toBe("image/svg+xml; charset=utf-8");
+        expect(await response.text()).toBe("<svg></svg>");
+    });
 });
 
 class TestRunner implements Partial<Runner> {
@@ -76,8 +90,12 @@ function testCatalog(): IntegrationDefinitionRepository {
             kind: "demo",
             label: "Demo",
             version: "1.0.0",
+            icon: { path: "assets/icon.svg" },
             inputs: [],
         } : null,
+        getAsset: async (kind, version, path) => kind === "demo" && version === "1.0.0" && path === "assets/icon.svg"
+            ? { bytes: new TextEncoder().encode("<svg></svg>"), contentType: "image/svg+xml; charset=utf-8" }
+            : null,
     };
 }
 

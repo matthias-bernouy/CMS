@@ -12,6 +12,7 @@ import type {
     IntegrationSecurityDefinition,
 } from "../../interfaces/Integration";
 import { parseArtifactTemplates } from "./sourceTemplates";
+import { parseIntegrationIcon } from "./icon";
 import { parseUiDefinition } from "./uiDefinition";
 import {
     isInputType,
@@ -63,6 +64,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     assertUniqueSecretBindingNames(secrets, generatedSecrets);
     const connectors = parseConnectorTemplates(value.connectors);
     const artifacts = parseArtifactTemplates(value.artifacts);
+    const icon = parseIntegrationIcon(value.icon);
     const ui = parseUiDefinition(value.ui);
     const security = parseSecurityDefinition(value.security);
     return {
@@ -71,6 +73,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(text(value.version) ? { version: text(value.version)! } : {}),
         ...(text(value.category) ? { category: text(value.category)! } : {}),
         ...(text(value.description) ? { description: text(value.description)! } : {}),
+        ...(icon ? { icon } : {}),
         inputs,
         ...(secrets.length ? { secrets } : {}),
         ...(generatedSecrets.length ? { generatedSecrets } : {}),

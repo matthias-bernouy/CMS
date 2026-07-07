@@ -1,4 +1,9 @@
-import type { IntegrationDefinition } from "./Integration";
+import type { IntegrationDefinition, IntegrationIcon } from "./Integration";
+
+export type IntegrationAsset = {
+    bytes: Uint8Array;
+    contentType: string;
+};
 
 export type IntegrationDefinitionVersion = {
     version: string;
@@ -10,6 +15,7 @@ export type IntegrationDefinitionIndex = {
     schema?: string;
     kind: string;
     label: string;
+    icon?: IntegrationIcon;
     category?: string;
     description?: string;
     stable?: string;
@@ -26,4 +32,5 @@ export type IntegrationDefinitionRepository = {
     getIndex(kind: string): Promise<IntegrationDefinitionIndex | null>;
     listVersions(kind: string): Promise<IntegrationDefinitionVersion[]>;
     get(kind: string, version?: string): Promise<IntegrationDefinition | null>;
+    getAsset?(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null>;
 };

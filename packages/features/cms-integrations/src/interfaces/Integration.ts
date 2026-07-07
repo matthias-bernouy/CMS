@@ -2,6 +2,8 @@ import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { FunctionDto } from "@bernouy/cms-functions";
 import type { SourceDto } from "@bernouy/cms-sources";
 
+export type IntegrationIcon = { path: string };
+
 export type IntegrationAnswerValue =
     | string
     | number
@@ -120,6 +122,7 @@ export type IntegrationDefinition = {
     version?: string;
     category?: string;
     description?: string;
+    icon?: IntegrationIcon;
     inputs: IntegrationInput[];
     ui?: IntegrationUiDefinition;
     security?: IntegrationSecurityDefinition;
