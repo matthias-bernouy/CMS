@@ -1,12 +1,12 @@
 :host {
     display: block;
-    --w-section-padding: 16px;
-    --w-section-body-start: 14px;
+    --detail-section-padding: 16px;
+    --detail-section-body-start: 14px;
 }
 
 :host([density="compact"]) {
-    --w-section-padding: 15px;
-    --w-section-body-start: 12px;
+    --detail-section-padding: 15px;
+    --detail-section-body-start: 12px;
 }
 
 .section {
@@ -22,7 +22,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: var(--w-section-padding) var(--w-section-padding) 0;
+    padding: var(--detail-section-padding) var(--detail-section-padding) 0;
 }
 
 :host(:not([has-heading])) h4,
@@ -58,9 +58,9 @@ p {
 }
 
 .body {
-    padding: var(--w-section-body-start) var(--w-section-padding) var(--w-section-padding);
+    padding: var(--detail-section-body-start) var(--detail-section-padding) var(--detail-section-padding);
 }
 
 :host(:not([has-heading]):not([has-description]):not([has-actions])) .body {
-    padding-block-start: var(--w-section-padding);
+    padding-block-start: var(--detail-section-padding);
 }

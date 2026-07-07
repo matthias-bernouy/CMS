@@ -70,35 +70,6 @@
     color: #9b2a1a;
 }
 
-.detail-panel {
-    display: grid;
-    gap: 14px;
-    min-width: 0;
-    padding: 16px;
-    border: 1px solid #dfe5e2;
-    border-radius: 8px;
-    background: #fff;
-}
-
-.panel-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.panel-title-stack {
-    display: grid;
-    justify-content: start;
-    gap: 3px;
-}
-
-.panel-title-stack p {
-    color: #66736f;
-    font-size: 12px;
-    line-height: 1.35;
-}
-
 .resource-list,
 .activity-list,
 .summary-grid,

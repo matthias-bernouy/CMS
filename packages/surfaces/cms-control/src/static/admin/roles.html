@@ -1,5 +1,8 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Roles</span>
+    <a href="{{BASE_PATH}}/admin/users" slot="action" style="text-decoration:none">
+        <p9r-button variant="ghost">Back to users</p9r-button>
+    </a>
     <p9r-open-modal modal-target="create-role-modal" slot="action">
         <p9r-button color="primary">+ Add role</p9r-button>
     </p9r-open-modal>
@@ -10,26 +13,20 @@
             <p9r-cell><strong>Identifier</strong></p9r-cell>
             <p9r-cell><strong>Type</strong></p9r-cell>
             <p9r-cell><strong>Permissions</strong></p9r-cell>
-            <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <p9r-row cms-repeat=".">
+        <p9r-row cms-repeat="." cms-condition="canEdit" href="{{BASE_PATH}}/admin/roles/edit?id={{ id }}">
             <p9r-cell><strong>{{ label }}</strong></p9r-cell>
             <p9r-cell><code>{{ id }}</code></p9r-cell>
             <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
-            <p9r-cell>{{ permissions }}</p9r-cell>
-            <p9r-cell>
-                <span style="{{ hideEdit }}">
-                    <a href="{{BASE_PATH}}/admin/roles/edit?id={{ id }}" style="text-decoration:none">
-                        <p9r-button variant="ghost">Edit</p9r-button>
-                    </a>
-                </span>
-                <span style="{{ hideDelete }}">
-                    <cms-confirm-form target="{{BASE_PATH}}/api/roles?id={{ id }}" method="DELETE" emit="role:updated" message="Delete this role? This cannot be undone.">
-                        <p9r-button color="danger" variant="ghost">Delete</p9r-button>
-                    </cms-confirm-form>
-                </span>
-            </p9r-cell>
+            <p9r-cell>{{ permissionsLabel }}</p9r-cell>
+        </p9r-row>
+
+        <p9r-row cms-repeat="." cms-condition="!canEdit">
+            <p9r-cell><strong>{{ label }}</strong></p9r-cell>
+            <p9r-cell><code>{{ id }}</code></p9r-cell>
+            <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
+            <p9r-cell>{{ permissionsLabel }}</p9r-cell>
         </p9r-row>
     </p9r-table>
 </w13c-fixed-admin-layout>

@@ -8,36 +8,20 @@
             <span class="action-status" data-setup-status></span>
         </div>
 
-        <section slot="main" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Configuration</h4>
-                <p>Only values needed to create this integration are shown here.</p>
-            </header>
+        <cms-detail-section slot="main" heading="Configuration" description="Only values needed to create this integration are shown here.">
             <div class="fields setup-fields" data-fields></div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="main" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Resources to create</h4>
-                <p>The import will create or update these integration resources.</p>
-            </header>
+        <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
             <div class="resource-list" data-resources></div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="aside" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Linked integrations</h4>
-                <p>Related integrations stay available from this setup flow.</p>
-            </header>
+        <cms-detail-section slot="aside" heading="Linked integrations" description="Related integrations stay available from this setup flow.">
             <div data-linked></div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="aside" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Import summary</h4>
-                <p>The server creates the resources and deploys connectors when needed.</p>
-            </header>
+        <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
             <div data-summary></div>
-        </section>
+        </cms-detail-section>
     </cms-shell-detail>
 </template>

@@ -1,0 +1,63 @@
+<cms-event-toast event="user:updated" message="User updated" type="success"></cms-event-toast>
+
+<w13c-fixed-admin-layout>
+    <span slot="title">Users</span>
+
+    <p9r-container size="lg">
+        <div cms-source="{{BASE_PATH}}/api/users?sub=#{sub}" cms-reload-on="user:updated">
+            <template>
+                <cms-shell-detail cms-condition="$source.loaded">
+                    <a slot="back" href="{{BASE_PATH}}/admin/users" aria-label="Back to users">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                            <path d="M8 9h8"></path>
+                            <path d="M8 13h5"></path>
+                        </svg>
+                    </a>
+                    <span slot="title">{{ displayName }}</span>
+                    <cms-user-actions
+                        slot="actions"
+                        base-path="{{BASE_PATH}}"
+                        sub="{{ sub }}"
+                        sub-param="{{ subParam }}"
+                        password-reset="{{ passwordResetAction }}"
+                        email-verification="{{ emailVerificationAction }}"
+                        mark-verified="{{ markVerifiedAction }}"
+                        emit="user:updated">
+                    </cms-user-actions>
+
+                    <cms-detail-section slot="main" heading="Access">
+                        <p9r-stack gap="md">
+                            <span>Role</span>
+                            <cms-role-select
+                                sub="{{ sub }}"
+                                value="{{ role }}"
+                                url="{{BASE_PATH}}/api/users/role"
+                                list-url="{{BASE_PATH}}/api/roles/list"
+                                emit="user:updated">
+                            </cms-role-select>
+                        </p9r-stack>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Profile">
+                        <p9r-stack gap="sm">
+                            <strong>{{ displayName }}</strong>
+                            <span>{{ email }}</span>
+                            <span>{{ providerLabel }}</span>
+                            <span>{{ roleLabel }}</span>
+                            <p9r-tag>{{ emailStatusLabel }}</p9r-tag>
+                        </p9r-stack>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Activity">
+                        <p9r-stack gap="sm">
+                            <span>Created {{ createdAtLabel }}</span>
+                            <span>Last seen {{ lastSeenAtLabel }}</span>
+                            <code>{{ sub }}</code>
+                        </p9r-stack>
+                    </cms-detail-section>
+                </cms-shell-detail>
+            </template>
+        </div>
+    </p9r-container>
+</w13c-fixed-admin-layout>

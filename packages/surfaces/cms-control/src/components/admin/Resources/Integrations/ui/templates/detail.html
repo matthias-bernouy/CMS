@@ -19,8 +19,7 @@
                     <span class="action-status" data-action-status></span>
                 </div>
 
-                <section slot="main" class="detail-panel">
-                    <header class="panel-title"><h4>Created resources</h4></header>
+                <cms-detail-section slot="main" heading="Created resources">
                     <div class="resource-list">
                         <article class="resource-row" cms-repeat="integration.artifacts as artifact">
                             <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
@@ -31,10 +30,9 @@
                             <span class="resource-state">{{ artifact.existsLabel }}</span>
                         </article>
                     </div>
-                </section>
+                </cms-detail-section>
 
-                <section slot="main" class="detail-panel">
-                    <header class="panel-title"><h4>Recent activity</h4></header>
+                <cms-detail-section slot="main" heading="Recent activity">
                     <div class="activity-list">
                         <article class="activity-row" cms-repeat="integration.runs as run">
                             <span class="activity-dot"></span>
@@ -44,10 +42,9 @@
                             </span>
                         </article>
                     </div>
-                </section>
+                </cms-detail-section>
 
-                <section slot="aside" class="detail-panel">
-                    <header class="panel-title"><h4>Installation</h4></header>
+                <cms-detail-section slot="aside" heading="Installation">
                     <dl class="summary-grid">
                         <div><dt>Description</dt><dd data-description></dd></div>
                         <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
@@ -55,12 +52,11 @@
                         <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
                         <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
                     </dl>
-                </section>
+                </cms-detail-section>
 
-                <section slot="aside" class="detail-panel">
-                    <header class="panel-title"><h4>Linked integrations</h4></header>
+                <cms-detail-section slot="aside" heading="Linked integrations">
                     <div data-linked></div>
-                </section>
+                </cms-detail-section>
             </cms-shell-detail>
         </template>
     </div>

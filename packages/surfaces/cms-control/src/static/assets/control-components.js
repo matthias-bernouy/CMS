@@ -12175,12 +12175,10 @@ cms-endpoints-input .ep-add:hover {
       const current = this._value;
       const opts = this.roles.length ? this.roles : [{ id: current, label: current }];
       root.innerHTML = `
-        <style>
-          select { font: inherit; padding: .35rem .5rem; border-radius: var(--radius-sm, 6px);
-                   border: 1px solid var(--border-default, #ddd); background: var(--bg-surface, #fff); color: var(--text-body, #333); }
-        </style>
-        <select>${opts.map((r) => `<option value="${escapeHtml(r.id)}"${r.id === current ? " selected" : ""}>${escapeHtml(r.label)}</option>`).join("")}</select>`;
-      const sel = root.querySelector("select");
+        <p9r-select value="${escapeHtml(current)}">
+          ${opts.map((r) => `<option value="${escapeHtml(r.id)}"${r.id === current ? " selected" : ""}>${escapeHtml(r.label)}</option>`).join("")}
+        </p9r-select>`;
+      const sel = root.querySelector("p9r-select");
       this.internals.setFormValue(sel.value);
       sel.addEventListener("change", () => this._onChange(sel.value));
     }
@@ -12327,6 +12325,122 @@ cms-endpoints-input .ep-add:hover {
   }
   customElements.define("cms-role-editor", CmsRoleEditor);
 
+  // src/components/admin/UserActions/style.css
+  var style_default2 = `:host {
+    display: inline-flex;
+}
+
+p9r-action-menu {
+    --action-menu-panel-min-width: 220px;
+}
+`;
+
+  // src/components/admin/UserActions/template.html
+  var template_default3 = `<p9r-action-menu label="Actions">
+    <p9r-action-menu-section label="Account">
+        <p9r-action-menu-item data-action="password-reset">Send password reset</p9r-action-menu-item>
+        <p9r-action-menu-item data-action="email-verification">Send verification email</p9r-action-menu-item>
+        <p9r-action-menu-item data-action="mark-verified">Mark email verified</p9r-action-menu-item>
+    </p9r-action-menu-section>
+    <p9r-action-menu-section label="Danger zone">
+        <p9r-action-menu-item color="danger" data-action="delete">Delete user</p9r-action-menu-item>
+    </p9r-action-menu-section>
+</p9r-action-menu>
+`;
+
+  // src/components/admin/UserActions/UserActions.ts
+  var ACTIONS = {
+    "password-reset": { endpoint: "/api/users/password-reset", label: "Password reset sent" },
+    "email-verification": { endpoint: "/api/users/email-verification", label: "Verification email sent" },
+    "mark-verified": { endpoint: "/api/users/email-verified", label: "Email marked verified" },
+    delete: { endpoint: "/api/users", label: "User deleted" }
+  };
+
+  class CmsUserActions extends A {
+    static get observedAttributes() {
+      return ["password-reset", "email-verification", "mark-verified"];
+    }
+    constructor() {
+      super({ css: style_default2, template: template_default3 });
+    }
+    connectedCallback() {
+      this.addEventListener("click", this.onClick);
+      this.sync();
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this.onClick);
+    }
+    attributeChangedCallback() {
+      this.sync();
+    }
+    onClick = (event) => {
+      const item = event.composedPath().find(isActionItem);
+      const action = item?.dataset.action;
+      if (!action || !ACTIONS[action])
+        return;
+      event.preventDefault();
+      this.run(action);
+    };
+    async run(action) {
+      const sub = this.getAttribute("sub") ?? "";
+      if (!sub)
+        return;
+      if (action === "delete" && !confirm("Delete this user? Their account, local password and access tokens are removed. This cannot be undone."))
+        return;
+      const res = await fetch(this.url(action), this.request(action, sub)).catch(() => null);
+      if (!res?.ok) {
+        au(await errorMessage(res), { type: "error" });
+        return;
+      }
+      au(ACTIONS[action].label, { type: "success" });
+      if (action === "delete")
+        window.location.href = `${this.basePath}/admin/users`;
+      else
+        document.dispatchEvent(new BubblesEvent(this.getAttribute("emit") ?? "user:updated"));
+    }
+    request(action, sub) {
+      if (action === "delete")
+        return { method: "DELETE" };
+      return {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sub })
+      };
+    }
+    url(action) {
+      const endpoint = `${this.basePath}${ACTIONS[action].endpoint}`;
+      if (action !== "delete")
+        return endpoint;
+      return `${endpoint}?sub=${this.getAttribute("sub-param") ?? encodeURIComponent(this.getAttribute("sub") ?? "")}`;
+    }
+    get basePath() {
+      return this.getAttribute("base-path") ?? "";
+    }
+    sync() {
+      for (const action of ["password-reset", "email-verification", "mark-verified"]) {
+        this.item(action)?.toggleAttribute("disabled", this.getAttribute(action) !== "true");
+      }
+    }
+    item(action) {
+      return this.shadowRoot?.querySelector(`[data-action="${action}"]`) ?? null;
+    }
+  }
+  async function errorMessage(res) {
+    if (!res)
+      return "Network error";
+    const text = await res.text().catch(() => "");
+    try {
+      return JSON.parse(text)?.error ?? (text || `HTTP ${res.status}`);
+    } catch {
+      return text || `HTTP ${res.status}`;
+    }
+  }
+  function isActionItem(target) {
+    return target instanceof HTMLElement && target.tagName.toLowerCase() === "p9r-action-menu-item";
+  }
+  if (!customElements.get("cms-user-actions"))
+    customElements.define("cms-user-actions", CmsUserActions);
+
   // src/components/admin/Tokens/TokenCreate.ts
   class CmsTokenCreate extends HTMLElement {
     _token = "";
@@ -12417,7 +12531,7 @@ cms-endpoints-input .ep-add:hover {
   customElements.define("cms-token-create", CmsTokenCreate);
 
   // src/components/admin/Secrets/template.html
-  var template_default3 = `<div class="add">
+  var template_default4 = `<div class="add">
     <p9r-input data-role="add-key"
         placeholder="MY_API_KEY"></p9r-input>
     <p9r-input data-role="add-value" type="password"
@@ -12441,7 +12555,7 @@ cms-endpoints-input .ep-add:hover {
 `;
 
   // src/components/admin/Secrets/style.css
-  var style_default2 = `:host {
+  var style_default3 = `:host {
     display: block;
 }
 
@@ -12638,7 +12752,7 @@ cms-endpoints-input .ep-add:hover {
     _knownKeys = new Set;
     _onReload = () => this._reload();
     constructor() {
-      super({ css: style_default2, template: template_default3 });
+      super({ css: style_default3, template: template_default4 });
     }
     connectedCallback() {
       const sr = this.shadowRoot;
@@ -12702,7 +12816,7 @@ cms-endpoints-input .ep-add:hover {
     customElements.define("cms-secrets", CmsSecrets);
 
   // src/components/admin/ShellDetail/style.css
-  var style_default3 = `:host {
+  var style_default4 = `:host {
     display: block;
 }
 
@@ -12739,7 +12853,8 @@ h3 {
     font-size: 18px;
 }
 
-slot[name="back"]::slotted(button) {
+slot[name="back"]::slotted(button),
+slot[name="back"]::slotted(a) {
     display: inline-grid;
     width: 32px;
     min-width: 32px;
@@ -12754,10 +12869,18 @@ slot[name="back"]::slotted(button) {
     font: inherit;
     font-weight: 700;
     padding: 0;
+    text-decoration: none;
 }
 
-slot[name="back"]::slotted(button:hover) {
+slot[name="back"]::slotted(button:hover),
+slot[name="back"]::slotted(a:hover) {
     background: #d7eee3;
+}
+
+slot[name="actions"]::slotted(form),
+slot[name="actions"]::slotted(cms-confirm-form) {
+    display: inline-flex;
+    margin: 0;
 }
 
 slot[name="actions"]::slotted(p9r-button) {
@@ -12824,7 +12947,7 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 `;
 
   // src/components/admin/ShellDetail/template.html
-  var template_default4 = `<article class="shell-detail">
+  var template_default5 = `<article class="shell-detail">
     <header class="shell-detail-header">
         <div class="shell-detail-identity">
             <slot name="back"></slot>
@@ -12848,10 +12971,142 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 </article>
 `;
 
+  // src/components/admin/ShellDetail/section.css
+  var section_default = `:host {
+    display: block;
+    --detail-section-padding: 16px;
+    --detail-section-body-start: 14px;
+}
+
+:host([density="compact"]) {
+    --detail-section-padding: 15px;
+    --detail-section-body-start: 12px;
+}
+
+.section {
+    overflow: visible;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 0 rgb(15 31 26 / 4%), 0 1px 2px rgb(15 31 26 / 5%);
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: var(--detail-section-padding) var(--detail-section-padding) 0;
+}
+
+:host(:not([has-heading])) h4,
+:host(:not([has-description])) p,
+:host(:not([has-actions])) .actions,
+:host(:not([has-heading]):not([has-description]):not([has-actions])) .header {
+    display: none;
+}
+
+.heading {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+h4,
+p {
+    margin: 0;
+}
+
+h4 {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.25;
+}
+
+p {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 450;
+    line-height: 1.4;
+}
+
+.body {
+    padding: var(--detail-section-body-start) var(--detail-section-padding) var(--detail-section-padding);
+}
+
+:host(:not([has-heading]):not([has-description]):not([has-actions])) .body {
+    padding-block-start: var(--detail-section-padding);
+}
+`;
+
+  // src/components/admin/ShellDetail/section.html
+  var section_default2 = `<section class="section">
+    <header class="header">
+        <div class="heading">
+            <h4 data-heading></h4>
+            <p data-description></p>
+        </div>
+        <div class="actions">
+            <slot name="actions"></slot>
+        </div>
+    </header>
+    <div class="body">
+        <slot></slot>
+    </div>
+</section>
+`;
+
+  // src/components/admin/ShellDetail/DetailSection.ts
+  class CmsDetailSection extends A {
+    heading;
+    description;
+    actionsSlot;
+    constructor() {
+      super({ css: section_default, template: section_default2 });
+      this.heading = this.shadowRoot?.querySelector("[data-heading]") ?? null;
+      this.description = this.shadowRoot?.querySelector("[data-description]") ?? null;
+      this.actionsSlot = this.shadowRoot?.querySelector('slot[name="actions"]') ?? null;
+    }
+    static get observedAttributes() {
+      return ["heading", "description"];
+    }
+    connectedCallback() {
+      this.actionsSlot?.addEventListener("slotchange", this.sync);
+      this.sync();
+    }
+    disconnectedCallback() {
+      this.actionsSlot?.removeEventListener("slotchange", this.sync);
+    }
+    attributeChangedCallback() {
+      this.sync();
+    }
+    sync = () => {
+      const heading4 = this.getAttribute("heading") ?? "";
+      const description = this.getAttribute("description") ?? "";
+      if (this.heading)
+        this.heading.textContent = heading4;
+      if (this.description)
+        this.description.textContent = description;
+      this.toggleAttribute("has-heading", heading4.trim() !== "");
+      this.toggleAttribute("has-description", description.trim() !== "");
+      this.toggleAttribute("has-actions", hasAssignedContent(this.actionsSlot));
+    };
+  }
+  if (!customElements.get("cms-detail-section"))
+    customElements.define("cms-detail-section", CmsDetailSection);
+  function hasAssignedContent(slot) {
+    return Boolean(slot?.assignedNodes({ flatten: true }).some((node) => {
+      if (node.nodeType !== Node.TEXT_NODE)
+        return true;
+      return node.textContent?.trim() !== "";
+    }));
+  }
+
   // src/components/admin/ShellDetail/ShellDetail.ts
   class CmsShellDetail extends A {
     constructor() {
-      super({ css: style_default3, template: template_default4 });
+      super({ css: style_default4, template: template_default5 });
     }
   }
   if (!customElements.get("cms-shell-detail"))
@@ -13266,7 +13521,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Resources/Dashboards/style.css
-  var style_default4 = `:host {
+  var style_default5 = `:host {
     display: block;
 }
 
@@ -13411,7 +13666,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/template.html
-  var template_default5 = `<main class="content">
+  var template_default6 = `<main class="content">
     <cms-binding-core class="binding-source">
         <span data-dashboard-list-source hidden>
             <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
@@ -14339,7 +14594,7 @@ p {
     customElements.define("cms-dashboard-w-row", DashboardWRow);
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default5 = `:host {
+  var style_default6 = `:host {
     display: block;
     --dashboard-table-columns: 46px 1fr;
 }
@@ -14435,7 +14690,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default6 = `<section class="w-table-shell">
+  var template_default7 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -14465,7 +14720,7 @@ slot {
     value = { title: "", actions: [], columns: [], rows: [] };
     selectedRow = "";
     constructor() {
-      super({ css: style_default5, template: template_default6 });
+      super({ css: style_default6, template: template_default7 });
     }
     set data(value) {
       this.value = value;
@@ -14622,137 +14877,11 @@ slot {
     }
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-section/template.html
-  var template_default7 = `<section class="section">
-    <header class="header">
-        <div class="heading">
-            <h4 data-heading></h4>
-            <p data-description></p>
-        </div>
-        <div class="actions">
-            <slot name="actions"></slot>
-        </div>
-    </header>
-    <div class="body">
-        <slot></slot>
-    </div>
-</section>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-section/style.css
-  var style_default6 = `:host {
-    display: block;
-    --w-section-padding: 16px;
-    --w-section-body-start: 14px;
-}
-
-:host([density="compact"]) {
-    --w-section-padding: 15px;
-    --w-section-body-start: 12px;
-}
-
-.section {
-    overflow: visible;
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    background: var(--bg-surface);
-    box-shadow: 0 1px 0 rgb(15 31 26 / 4%), 0 1px 2px rgb(15 31 26 / 5%);
-}
-
-.header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    padding: var(--w-section-padding) var(--w-section-padding) 0;
-}
-
-:host(:not([has-heading])) h4,
-:host(:not([has-description])) p,
-:host(:not([has-actions])) .actions,
-:host(:not([has-heading]):not([has-description]):not([has-actions])) .header {
-    display: none;
-}
-
-.heading {
-    display: grid;
-    gap: 4px;
-    min-width: 0;
-}
-
-h4,
-p {
-    margin: 0;
-}
-
-h4 {
-    color: var(--text-main);
-    font-size: 14px;
-    font-weight: 760;
-    line-height: 1.25;
-}
-
-p {
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 450;
-    line-height: 1.4;
-}
-
-.body {
-    padding: var(--w-section-body-start) var(--w-section-padding) var(--w-section-padding);
-}
-
-:host(:not([has-heading]):not([has-description]):not([has-actions])) .body {
-    padding-block-start: var(--w-section-padding);
-}
-`;
-
   // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
-  class DashboardWSection extends A {
-    heading;
-    description;
-    actionsSlot;
-    constructor() {
-      super({ css: style_default6, template: template_default7 });
-      this.heading = this.shadowRoot?.querySelector("[data-heading]") ?? null;
-      this.description = this.shadowRoot?.querySelector("[data-description]") ?? null;
-      this.actionsSlot = this.shadowRoot?.querySelector('slot[name="actions"]') ?? null;
-    }
-    static get observedAttributes() {
-      return ["heading", "description"];
-    }
-    connectedCallback() {
-      this.actionsSlot?.addEventListener("slotchange", this.sync);
-      this.sync();
-    }
-    disconnectedCallback() {
-      this.actionsSlot?.removeEventListener("slotchange", this.sync);
-    }
-    attributeChangedCallback() {
-      this.sync();
-    }
-    sync = () => {
-      const heading4 = this.getAttribute("heading") ?? "";
-      const description = this.getAttribute("description") ?? "";
-      if (this.heading)
-        this.heading.textContent = heading4;
-      if (this.description)
-        this.description.textContent = description;
-      this.toggleAttribute("has-heading", heading4.trim() !== "");
-      this.toggleAttribute("has-description", description.trim() !== "");
-      this.toggleAttribute("has-actions", hasAssignedContent(this.actionsSlot));
-    };
+  class DashboardWSection extends CmsDetailSection {
   }
   if (!customElements.get("cms-dashboard-w-section"))
     customElements.define("cms-dashboard-w-section", DashboardWSection);
-  function hasAssignedContent(slot) {
-    return Boolean(slot?.assignedNodes({ flatten: true }).some((node) => {
-      if (node.nodeType !== Node.TEXT_NODE)
-        return true;
-      return node.textContent?.trim() !== "";
-    }));
-  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts
   var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
@@ -15797,9 +15926,9 @@ p9r-token-input {
 </cms-shell-detail>
 
 <template data-section-template>
-    <cms-dashboard-w-section>
+    <cms-detail-section>
         <dl data-fields></dl>
-    </cms-dashboard-w-section>
+    </cms-detail-section>
 </template>
 
 <template data-field-template>
@@ -16466,7 +16595,7 @@ p9r-token-input {
     drafts = new Map;
     observer = null;
     constructor() {
-      super({ css: style_default4, template: template_default5 });
+      super({ css: style_default5, template: template_default6 });
       configureDashboardBindingFilters();
     }
     connectedCallback() {
@@ -16916,8 +17045,7 @@ p9r-token-input {
                     <span class="action-status" data-action-status></span>
                 </div>
 
-                <section slot="main" class="detail-panel">
-                    <header class="panel-title"><h4>Created resources</h4></header>
+                <cms-detail-section slot="main" heading="Created resources">
                     <div class="resource-list">
                         <article class="resource-row" cms-repeat="integration.artifacts as artifact">
                             <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
@@ -16928,10 +17056,9 @@ p9r-token-input {
                             <span class="resource-state">{{ artifact.existsLabel }}</span>
                         </article>
                     </div>
-                </section>
+                </cms-detail-section>
 
-                <section slot="main" class="detail-panel">
-                    <header class="panel-title"><h4>Recent activity</h4></header>
+                <cms-detail-section slot="main" heading="Recent activity">
                     <div class="activity-list">
                         <article class="activity-row" cms-repeat="integration.runs as run">
                             <span class="activity-dot"></span>
@@ -16941,10 +17068,9 @@ p9r-token-input {
                             </span>
                         </article>
                     </div>
-                </section>
+                </cms-detail-section>
 
-                <section slot="aside" class="detail-panel">
-                    <header class="panel-title"><h4>Installation</h4></header>
+                <cms-detail-section slot="aside" heading="Installation">
                     <dl class="summary-grid">
                         <div><dt>Description</dt><dd data-description></dd></div>
                         <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
@@ -16952,12 +17078,11 @@ p9r-token-input {
                         <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
                         <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
                     </dl>
-                </section>
+                </cms-detail-section>
 
-                <section slot="aside" class="detail-panel">
-                    <header class="panel-title"><h4>Linked integrations</h4></header>
+                <cms-detail-section slot="aside" heading="Linked integrations">
                     <div data-linked></div>
-                </section>
+                </cms-detail-section>
             </cms-shell-detail>
         </template>
     </div>
@@ -16992,25 +17117,17 @@ p9r-token-input {
             </p9r-button>
         </div>
 
-        <section slot="main" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Installing integration</h4>
-                <p>This can take a moment when connector deployment is required.</p>
-            </header>
+        <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
             <div class="installing-state">
                 <span class="spinner"></span>
                 <strong>Installation in progress</strong>
                 <small>The installed detail opens automatically when the import completes.</small>
             </div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="aside" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Import summary</h4>
-                <p>The server is creating these resources now.</p>
-            </header>
+        <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
             <div data-summary></div>
-        </section>
+        </cms-detail-section>
     </cms-shell-detail>
 </template>
 `;
@@ -17058,37 +17175,21 @@ p9r-token-input {
             <span class="action-status" data-setup-status></span>
         </div>
 
-        <section slot="main" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Configuration</h4>
-                <p>Only values needed to create this integration are shown here.</p>
-            </header>
+        <cms-detail-section slot="main" heading="Configuration" description="Only values needed to create this integration are shown here.">
             <div class="fields setup-fields" data-fields></div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="main" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Resources to create</h4>
-                <p>The import will create or update these integration resources.</p>
-            </header>
+        <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
             <div class="resource-list" data-resources></div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="aside" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Linked integrations</h4>
-                <p>Related integrations stay available from this setup flow.</p>
-            </header>
+        <cms-detail-section slot="aside" heading="Linked integrations" description="Related integrations stay available from this setup flow.">
             <div data-linked></div>
-        </section>
+        </cms-detail-section>
 
-        <section slot="aside" class="detail-panel setup-panel">
-            <header class="panel-title panel-title-stack">
-                <h4>Import summary</h4>
-                <p>The server creates the resources and deploys connectors when needed.</p>
-            </header>
+        <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
             <div data-summary></div>
-        </section>
+        </cms-detail-section>
     </cms-shell-detail>
 </template>
 `;
@@ -17937,35 +18038,6 @@ button[slot="back"] svg {
     color: #9b2a1a;
 }
 
-.detail-panel {
-    display: grid;
-    gap: 14px;
-    min-width: 0;
-    padding: 16px;
-    border: 1px solid #dfe5e2;
-    border-radius: 8px;
-    background: #fff;
-}
-
-.panel-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.panel-title-stack {
-    display: grid;
-    justify-content: start;
-    gap: 3px;
-}
-
-.panel-title-stack p {
-    color: #66736f;
-    font-size: 12px;
-    line-height: 1.35;
-}
-
 .resource-list,
 .activity-list,
 .summary-grid,
@@ -18053,10 +18125,6 @@ button[slot="back"] svg {
 .summary-grid dd {
     margin: 0;
     font-weight: 750;
-}
-
-.setup-panel {
-    gap: 12px;
 }
 
 .setup-fields {

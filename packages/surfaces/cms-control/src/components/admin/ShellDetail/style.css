@@ -35,7 +35,8 @@ h3 {
     font-size: 18px;
 }
 
-slot[name="back"]::slotted(button) {
+slot[name="back"]::slotted(button),
+slot[name="back"]::slotted(a) {
     display: inline-grid;
     width: 32px;
     min-width: 32px;
@@ -50,10 +51,18 @@ slot[name="back"]::slotted(button) {
     font: inherit;
     font-weight: 700;
     padding: 0;
+    text-decoration: none;
 }
 
-slot[name="back"]::slotted(button:hover) {
+slot[name="back"]::slotted(button:hover),
+slot[name="back"]::slotted(a:hover) {
     background: #d7eee3;
+}
+
+slot[name="actions"]::slotted(form),
+slot[name="actions"]::slotted(cms-confirm-form) {
+    display: inline-flex;
+    margin: 0;
 }
 
 slot[name="actions"]::slotted(p9r-button) {

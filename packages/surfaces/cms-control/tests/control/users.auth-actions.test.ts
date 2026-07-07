@@ -87,6 +87,33 @@ describe("admin user auth actions", () => {
         expect(rows.find((row) => row.sub === user.sub)?.emailVerifiedAt).toBeTruthy();
     });
 
+    test("returns one enriched user for the detail view", async () => {
+        const { cms, credentials } = setup();
+        const user = await createLocalUser({ credentials, users: cms.users }, {
+            email: "detail@example.com",
+            password: "password-1",
+            displayName: "Detail User",
+            role: "user",
+        });
+
+        const res = await listUsers(new Request(`http://control/api/users?sub=${encodeURIComponent(user.sub)}`), cms);
+        const row = await res.json() as {
+            sub: string;
+            displayName: string;
+            roleLabel: string;
+            providerLabel: string;
+            emailStatusLabel: string;
+            subParam: string;
+        };
+
+        expect(row.sub).toBe(user.sub);
+        expect(row.displayName).toBe("Detail User");
+        expect(row.roleLabel).toBe("User");
+        expect(row.providerLabel).toBe("Local");
+        expect(row.emailStatusLabel).toBe("Verified");
+        expect(row.subParam).toBe(encodeURIComponent(user.sub));
+    });
+
     test("rejects non-local users", async () => {
         const { cms, users } = setup();
         await users.upsert({ sub: "oidc:1", provider: "oidc", email: "sso@example.com" }, "user");

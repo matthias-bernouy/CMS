@@ -28,11 +28,12 @@ export type RoleRow = {
     /** Display for the permissions column: "Full access" for the admin super-role
      *  (it bypasses every check), else the grant count as text. */
     permissions: string;
-    /** Inline style hiding the per-row edit control (admin is not editable; the
-     *  data-binding has no conditional rendering). */
+    permissionsLabel: string;
+    canEdit: boolean;
+    canDelete: boolean;
+    /** Inline style kept for detail actions that still bind style attributes. */
     hideEdit: string;
-    /** Inline style hiding the per-row delete control for non-deletable rows
-     *  (built-ins / admin). */
+    /** Inline style hiding delete actions for non-deletable rows. */
     hideDelete: string;
 };
 
@@ -47,14 +48,22 @@ export async function manageableRoles(cms: ControlCms): Promise<RoleRow[]> {
     const rows: RoleRow[] = [
         // The virtual super-role: shown read-only as full-access (not editable,
         // not deletable), never as a misleading "0 permissions".
-        { id: ADMIN_ROLE, label: "Admin", kind: "System", permissions: "Full access", hideEdit: "display:none", hideDelete: "display:none" },
+        {
+            id: ADMIN_ROLE, label: "Admin", kind: "System", permissions: "Full access",
+            permissionsLabel: "Full access", canEdit: false, canDelete: false,
+            hideEdit: "display:none", hideDelete: "display:none",
+        },
     ];
     for (const d of definitions) {
+        const permissionCount = String(d.grants.length);
         rows.push({
             id:          d.id,
             label:       d.label,
             kind:        d.builtin ? "System" : "Custom",
-            permissions: String(d.grants.length),
+            permissions: permissionCount,
+            permissionsLabel: d.grants.length === 1 ? "1 permission" : `${permissionCount} permissions`,
+            canEdit:     true,
+            canDelete:   !d.builtin,
             hideEdit:    "",                                  // user / public / custom are all editable
             hideDelete:  d.builtin ? "display:none" : "",
         });

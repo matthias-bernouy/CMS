@@ -1,7 +1,36 @@
 <w13c-fixed-admin-layout>
-    <span slot="title">Edit role</span>
-    <a href="{{BASE_PATH}}/admin/roles" slot="action" style="text-decoration:none">
-        <p9r-button variant="ghost">Back to roles</p9r-button>
-    </a>
-    <cms-role-editor api="{{BASE_PATH}}/api/roles" back="{{BASE_PATH}}/admin/roles"></cms-role-editor>
+    <span slot="title">Roles</span>
+
+    <p9r-container size="lg">
+        <div cms-source="{{BASE_PATH}}/api/roles?id=#{id}">
+            <template>
+                <cms-shell-detail cms-condition="$source.loaded">
+                    <a slot="back" href="{{BASE_PATH}}/admin/roles" aria-label="Back to roles">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                            <path d="M8 9h8"></path>
+                            <path d="M8 13h5"></path>
+                        </svg>
+                    </a>
+                    <span slot="title">{{ label }}</span>
+                    <cms-confirm-form slot="actions" style="{{ hideDelete }}" target="{{BASE_PATH}}/api/roles?id={{ id }}" method="DELETE" redirect="{{BASE_PATH}}/admin/roles" message="Delete this role? This cannot be undone.">
+                        <p9r-button color="danger" variant="ghost">Delete role</p9r-button>
+                    </cms-confirm-form>
+
+                    <cms-detail-section slot="main" heading="Permissions">
+                        <cms-role-editor api="{{BASE_PATH}}/api/roles" back="{{BASE_PATH}}/admin/roles"></cms-role-editor>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Role">
+                        <p9r-stack gap="sm">
+                            <strong>{{ label }}</strong>
+                            <code>{{ id }}</code>
+                            <span>{{ kind }}</span>
+                            <span>{{ permissionsLabel }}</span>
+                        </p9r-stack>
+                    </cms-detail-section>
+                </cms-shell-detail>
+            </template>
+        </div>
+    </p9r-container>
 </w13c-fixed-admin-layout>

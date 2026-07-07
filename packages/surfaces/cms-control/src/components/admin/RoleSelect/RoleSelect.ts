@@ -55,12 +55,10 @@ class CmsRoleSelect extends HTMLElement {
         // shows something if the list failed or hasn't arrived.
         const opts = this.roles.length ? this.roles : [{ id: current, label: current }];
         root.innerHTML = `
-        <style>
-          select { font: inherit; padding: .35rem .5rem; border-radius: var(--radius-sm, 6px);
-                   border: 1px solid var(--border-default, #ddd); background: var(--bg-surface, #fff); color: var(--text-body, #333); }
-        </style>
-        <select>${opts.map((r) => `<option value="${esc(r.id)}"${r.id === current ? " selected" : ""}>${esc(r.label)}</option>`).join("")}</select>`;
-        const sel = root.querySelector("select")!;
+        <p9r-select value="${esc(current)}">
+          ${opts.map((r) => `<option value="${esc(r.id)}"${r.id === current ? " selected" : ""}>${esc(r.label)}</option>`).join("")}
+        </p9r-select>`;
+        const sel = root.querySelector("p9r-select") as HTMLElement & { value: string };
         this.internals.setFormValue(sel.value);
         sel.addEventListener("change", () => this._onChange(sel.value));
     }
