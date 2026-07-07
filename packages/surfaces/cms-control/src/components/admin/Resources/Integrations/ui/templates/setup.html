@@ -1,0 +1,43 @@
+<template data-template="setup-shell">
+    <cms-shell-detail class="integration-setup-shell">
+        <button type="button" slot="back" data-setup-cancel aria-label="Back to catalogue" data-back-icon></button>
+        <span slot="title" data-title></span>
+        <div slot="actions" class="integration-detail-actions">
+            <p9r-button type="button" variant="outlined" data-setup-cancel>Cancel</p9r-button>
+            <p9r-button type="button" color="primary" data-import-setup>Import</p9r-button>
+            <span class="action-status" data-setup-status></span>
+        </div>
+
+        <section slot="main" class="detail-panel setup-panel">
+            <header class="panel-title panel-title-stack">
+                <h4>Configuration</h4>
+                <p>Only values needed to create this integration are shown here.</p>
+            </header>
+            <div class="fields setup-fields" data-fields></div>
+        </section>
+
+        <section slot="main" class="detail-panel setup-panel">
+            <header class="panel-title panel-title-stack">
+                <h4>Resources to create</h4>
+                <p>The import will create or update these integration resources.</p>
+            </header>
+            <div class="resource-list" data-resources></div>
+        </section>
+
+        <section slot="aside" class="detail-panel setup-panel">
+            <header class="panel-title panel-title-stack">
+                <h4>Linked integrations</h4>
+                <p>Related integrations stay available from this setup flow.</p>
+            </header>
+            <div data-linked></div>
+        </section>
+
+        <section slot="aside" class="detail-panel setup-panel">
+            <header class="panel-title panel-title-stack">
+                <h4>Import summary</h4>
+                <p>The server creates the resources and deploys connectors when needed.</p>
+            </header>
+            <div data-summary></div>
+        </section>
+    </cms-shell-detail>
+</template>

@@ -1,0 +1,68 @@
+<template data-template="detail-shell">
+    <div class="detail-source" cms-reload-on="integration:updated">
+        <template>
+            <p class="detail-loading" cms-condition="$source.loading">Loading integration...</p>
+            <p class="detail-loading" cms-condition="$source.error">Unable to load this integration.</p>
+            <cms-shell-detail cms-condition="$source.loaded">
+                <button type="button" slot="back" data-detail-back aria-label="Back to installed integrations" data-back-icon></button>
+                <span slot="title" data-title></span>
+                <div slot="actions" class="integration-detail-actions">
+                    <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
+                    <p9r-action-menu label="More actions">
+                        <p9r-action-menu-section label="Configuration">
+                            <p9r-action-menu-item disabled title="No reconfigure endpoint is available yet.">Reconfigure</p9r-action-menu-item>
+                        </p9r-action-menu-section>
+                        <p9r-action-menu-section label="Danger zone">
+                            <p9r-action-menu-item color="danger" disabled title="No uninstall endpoint is available yet.">Uninstall</p9r-action-menu-item>
+                        </p9r-action-menu-section>
+                    </p9r-action-menu>
+                    <span class="action-status" data-action-status></span>
+                </div>
+
+                <section slot="main" class="detail-panel">
+                    <header class="panel-title"><h4>Created resources</h4></header>
+                    <div class="resource-list">
+                        <article class="resource-row" cms-repeat="integration.artifacts as artifact">
+                            <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
+                            <span>
+                                <strong>{{ artifact.id }}</strong>
+                                <small>{{ artifact.typeLabel }} - {{ artifact.actionLabel }}</small>
+                            </span>
+                            <span class="resource-state">{{ artifact.existsLabel }}</span>
+                        </article>
+                    </div>
+                </section>
+
+                <section slot="main" class="detail-panel">
+                    <header class="panel-title"><h4>Recent activity</h4></header>
+                    <div class="activity-list">
+                        <article class="activity-row" cms-repeat="integration.runs as run">
+                            <span class="activity-dot"></span>
+                            <span>
+                                <strong>Run #{{ run.runNumber }} - {{ run.statusLabel }}</strong>
+                                <small>{{ run.startedAtLabel }}</small>
+                            </span>
+                        </article>
+                    </div>
+                </section>
+
+                <section slot="aside" class="detail-panel">
+                    <header class="panel-title"><h4>Installation</h4></header>
+                    <dl class="summary-grid">
+                        <div><dt>Description</dt><dd data-description></dd></div>
+                        <div><dt>Instance</dt><dd>{{ integration.id }}</dd></div>
+                        <div><dt>Kind</dt><dd>{{ integration.kind }}</dd></div>
+                        <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
+                        <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
+                        <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
+                    </dl>
+                </section>
+
+                <section slot="aside" class="detail-panel">
+                    <header class="panel-title"><h4>Linked integrations</h4></header>
+                    <div data-linked></div>
+                </section>
+            </cms-shell-detail>
+        </template>
+    </div>
+</template>

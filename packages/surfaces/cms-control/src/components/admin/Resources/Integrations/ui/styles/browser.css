@@ -1,0 +1,132 @@
+.integration-tabs {
+    display: flex;
+    gap: 18px;
+    border-bottom: 1px solid #dfe5e2;
+}
+
+.integrations-browser,
+.installed-view,
+.catalogue-view,
+.integration-detail {
+    display: grid;
+    gap: 14px;
+}
+
+.integration-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #66736f;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    padding: 0 0 9px;
+}
+
+.integration-tab.is-active {
+    border-bottom-color: #0f6d56;
+    color: #0f6d56;
+}
+
+.integration-tab span {
+    display: inline-grid;
+    min-width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 999px;
+    background: #edf3f0;
+    color: #52615c;
+    font-size: 12px;
+}
+
+.installed-table {
+    overflow: hidden;
+    border: 1px solid #dfe5e2;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.installed-head,
+.installed-row {
+    display: grid;
+    grid-template-columns: minmax(270px, 1.4fr) minmax(110px, 0.45fr) minmax(220px, 0.9fr) minmax(120px, 0.45fr) 28px;
+    gap: 16px;
+    align-items: center;
+}
+
+.installed-head {
+    min-height: 42px;
+    padding: 0 16px;
+    border-bottom: 1px solid #dfe5e2;
+    color: #66736f;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.installed-row,
+.catalogue-card {
+    background: #fff;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.installed-row {
+    width: 100%;
+    min-height: 64px;
+    border: 0;
+    border-bottom: 1px solid #dfe5e2;
+    padding: 10px 16px;
+}
+
+.installed-row:last-child {
+    border-bottom: 0;
+}
+
+.installed-row:hover,
+.catalogue-card:hover {
+    background: #f7faf8;
+}
+
+.integration-title-cell,
+.card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.integration-title-copy,
+.card-head > span:last-child {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.integration-title-copy strong,
+.card-head strong {
+    overflow: hidden;
+    color: #101c18;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.integration-title-copy small,
+.card-head small {
+    overflow: hidden;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+}
+
+.catalogue-card .card-head small {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}

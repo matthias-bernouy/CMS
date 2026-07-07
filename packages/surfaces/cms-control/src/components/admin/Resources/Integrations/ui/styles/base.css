@@ -1,0 +1,139 @@
+cms-integrations-admin {
+    display: block;
+}
+
+.integrations-root {
+    display: grid;
+    gap: 16px;
+    width: min(100%, 1140px);
+}
+
+.binding-feeds {
+    display: none;
+}
+
+.integrations-root h3,
+.integrations-root h4,
+.integrations-root h5,
+.integrations-root p {
+    margin: 0;
+}
+
+.integrations-root h4 {
+    font-size: 14px;
+}
+
+.integrations-root h5 {
+    color: #66736f;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.muted,
+.empty,
+.integrations-root small,
+.summary-grid dt,
+.resource-row small,
+.activity-row small,
+.installing-state small {
+    color: #66736f;
+}
+
+.integration-icon,
+.resource-icon {
+    display: inline-grid;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 7px;
+    background: #e4f2eb;
+    color: #0f6d56;
+}
+
+.resource-icon {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    background: #eef3f7;
+    color: #326c93;
+}
+
+.integration-icon svg,
+.resource-icon svg,
+.chevron svg,
+button[slot="back"] svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.integration-icon[data-tone="commerce"] {
+    background: #e2f0fb;
+    color: #2d719f;
+}
+
+.integration-icon[data-tone="payments"],
+.integration-icon[data-tone="blocks"] {
+    background: #f6ecd2;
+    color: #9a6715;
+}
+
+.integration-icon[data-tone="delivery"] {
+    background: #e1f0fa;
+    color: #26709e;
+}
+
+.integration-icon[data-tone="users"],
+.integration-icon[data-tone="marketing"],
+.integration-icon[data-tone="data"] {
+    background: #dff1eb;
+    color: #287762;
+}
+
+.status-pill,
+.badge,
+.resource-state {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 22px;
+    border-radius: 999px;
+    background: #edf3f0;
+    color: #3f504a;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 8px;
+}
+
+.status-success {
+    background: #d9f0e7;
+    color: #0f6d56;
+}
+
+.status-failed {
+    background: #f9e3de;
+    color: #9b2a1a;
+}
+
+.status-pending {
+    background: #f6ecd2;
+    color: #7b5718;
+}
+
+.badge {
+    background: #f1f5f3;
+    color: #40504b;
+}
+
+.badge-muted {
+    background: #eef3f7;
+    color: #326c93;
+}

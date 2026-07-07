@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { IntegrationArtifactResult, IntegrationInstance } from "@bernouy/cms-integrations";
+import type { IntegrationArtifactResult, IntegrationInstance, IntegrationRun } from "@bernouy/cms-integrations";
 
 export type IntegrationArtifactContext = {
     sourceUrns: Set<string> | null;
@@ -36,10 +36,12 @@ export function buildIntegrationInstanceView(
         label: instance.label,
         definitionVersion: instance.definitionVersion,
         status: instance.status,
+        statusLabel: statusLabel(instance.status),
         createdAt: instance.createdAt,
         updatedAt: instance.updatedAt,
+        updatedAtLabel: dateTimeLabel(instance.updatedAt),
         runCount: instance.runCount,
-        lastRun: instance.runs.at(-1) ?? null,
+        lastRun: instance.runs.at(-1) ? runView(instance.runs.at(-1)!) : null,
         artifactCount: artifacts.length,
         missingArtifactCount: artifacts.filter(artifact => artifact.exists === false).length,
         artifacts,
@@ -47,7 +49,7 @@ export function buildIntegrationInstanceView(
             answers: instance.answersSnapshot,
             definition: instance.definitionSnapshot,
             secretInputs: instance.secretInputs,
-            runs: instance.runs,
+            runs: instance.runs.map(runView),
         } : {}),
     };
 }
@@ -57,6 +59,9 @@ function artifactView(context: IntegrationArtifactContext, artifact: Integration
     return {
         ...artifact,
         exists,
+        actionLabel: actionLabel(artifact.action),
+        existsLabel: existsLabel(exists),
+        typeLabel: artifactTypeLabel(artifact.type),
     };
 }
 
@@ -65,4 +70,51 @@ function artifactExists(context: IntegrationArtifactContext, artifact: Integrati
     if (artifact.type === "dashboard") return context.dashboardIds?.has(artifact.id) ?? "unknown";
     if (artifact.type === "bloc") return context.blocIds?.has(artifact.id) ?? "unknown";
     return context.sourceUrns?.has(artifact.id) ?? "unknown";
+}
+
+function runView(run: IntegrationRun) {
+    return {
+        ...run,
+        statusLabel: statusLabel(run.status),
+        startedAtLabel: dateTimeLabel(run.startedAt),
+        finishedAtLabel: dateTimeLabel(run.finishedAt),
+    };
+}
+
+function statusLabel(status: string): string {
+    if (status === "success") return "Active";
+    if (status === "failed") return "Failed";
+    return "Pending";
+}
+
+function actionLabel(action: string): string {
+    return action[0]!.toUpperCase() + action.slice(1);
+}
+
+function artifactTypeLabel(type: string): string {
+    if (type === "sourceOverlay") return "Source overlay";
+    return type[0]!.toUpperCase() + type.slice(1);
+}
+
+function existsLabel(exists: boolean | "unknown"): string {
+    if (exists === true) return "Available";
+    if (exists === false) return "Missing";
+    return "Unknown";
+}
+
+function dateTimeLabel(value: Date): string {
+    const date = new Date(value);
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const time = new Intl.DateTimeFormat("en", {
+        hour: "numeric",
+        minute: "2-digit",
+    }).format(date);
+    if (date.toDateString() === now.toDateString()) return `Today ${time}`;
+    if (date.toDateString() === yesterday.toDateString()) return `Yesterday ${time}`;
+    return new Intl.DateTimeFormat("en", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(value);
 }

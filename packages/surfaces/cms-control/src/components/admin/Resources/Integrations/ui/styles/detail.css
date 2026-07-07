@@ -1,0 +1,130 @@
+.badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+}
+
+.chevron {
+    display: inline-grid;
+    place-items: center;
+    color: #7b8984;
+}
+
+.filters {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(170px, 220px);
+    gap: 10px;
+}
+
+.catalogue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
+    gap: 10px;
+}
+
+.catalogue-card {
+    display: grid;
+    gap: 14px;
+    min-height: 116px;
+    border: 1px solid #dfe5e2;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.detail-source,
+.detail-source > cms-shell-detail {
+    display: block;
+}
+
+.integration-detail cms-shell-detail {
+    --w-detail-main-width: 660px;
+    --w-detail-aside-width: 360px;
+    --w-detail-gap: 16px;
+}
+
+.integration-detail-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.integration-detail-actions p9r-button {
+    --_btn-padding-y: 0.48rem;
+    --_btn-padding-x: 0.82rem;
+    --_btn-font-size: 12px;
+    --_btn-radius: 6px;
+}
+
+.integration-detail-actions p9r-action-menu {
+    --action-menu-panel-min-width: 220px;
+}
+
+.action-status {
+    color: #66736f;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.action-status.is-error {
+    color: #9b2a1a;
+}
+
+.detail-panel {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #dfe5e2;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.panel-title-stack {
+    display: grid;
+    justify-content: start;
+    gap: 3px;
+}
+
+.panel-title-stack p {
+    color: #66736f;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.resource-list,
+.activity-list,
+.summary-grid,
+.fields {
+    display: grid;
+    gap: 8px;
+}
+
+.resource-row,
+.activity-row {
+    min-width: 0;
+    border: 1px solid #dfe5e2;
+    border-radius: 7px;
+    background: #fff;
+}
+
+.placeholder-note {
+    display: grid;
+    gap: 3px;
+    border: 1px dashed #d1dad6;
+    border-radius: 7px;
+    background: #f8fbfa;
+    padding: 12px;
+}
+
+.detail-loading {
+    color: #66736f;
+    font-weight: 700;
+}

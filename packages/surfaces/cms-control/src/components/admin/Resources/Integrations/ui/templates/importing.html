@@ -1,0 +1,32 @@
+<template data-template="importing-shell">
+    <cms-shell-detail class="integration-setup-shell">
+        <button type="button" slot="back" aria-label="Back to catalogue" disabled data-back-icon></button>
+        <span slot="title" data-title></span>
+        <div slot="actions" class="integration-detail-actions">
+            <p9r-button type="button" variant="outlined" disabled>Cancel</p9r-button>
+            <p9r-button type="button" color="primary" disabled>
+                <span class="spinner"></span> Importing
+            </p9r-button>
+        </div>
+
+        <section slot="main" class="detail-panel setup-panel">
+            <header class="panel-title panel-title-stack">
+                <h4>Installing integration</h4>
+                <p>This can take a moment when connector deployment is required.</p>
+            </header>
+            <div class="installing-state">
+                <span class="spinner"></span>
+                <strong>Installation in progress</strong>
+                <small>The installed detail opens automatically when the import completes.</small>
+            </div>
+        </section>
+
+        <section slot="aside" class="detail-panel setup-panel">
+            <header class="panel-title panel-title-stack">
+                <h4>Import summary</h4>
+                <p>The server is creating these resources now.</p>
+            </header>
+            <div data-summary></div>
+        </section>
+    </cms-shell-detail>
+</template>

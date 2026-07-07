@@ -1,130 +1,49 @@
-<p9r-tabs active="installed">
-    <p9r-tab-panel id="installed" label="Installed">
-        <section class="panel">
-            <div class="grid" data-instances></div>
+<div class="integrations-root">
+    <div class="binding-feeds" aria-hidden="true">
+        <div data-definitions-source cms-reload-on="integration:updated">
+            <template>
+                <span cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
+            </template>
+        </div>
+        <div data-instances-source cms-reload-on="integration:updated">
+            <template>
+                <span cms-condition="$source.loaded || $source.empty" data-instances-json="{{ instances | json }}"></span>
+            </template>
+        </div>
+    </div>
+
+    <section class="integrations-browser" data-browser>
+        <nav class="integration-tabs" aria-label="Integration views">
+            <button type="button" class="integration-tab is-active" data-tab="installed">
+                Installed <span data-installed-count></span>
+            </button>
+            <button type="button" class="integration-tab" data-tab="catalogue">
+                Catalogue <span data-catalogue-count></span>
+            </button>
+        </nav>
+
+        <section class="installed-view" data-installed-view>
+            <div class="installed-table" data-instances></div>
             <p class="empty" data-instances-empty hidden>No installed integrations yet.</p>
         </section>
-    </p9r-tab-panel>
 
-    <p9r-tab-panel id="catalogue" label="Catalogue">
-        <section class="panel catalogue">
+        <section class="catalogue-view" data-catalogue-view hidden>
             <div class="filters">
                 <p9r-input type="search" label="Search" placeholder="Search integrations" data-search></p9r-input>
                 <p9r-select label="Category" data-category><option value="">All categories</option></p9r-select>
             </div>
-            <div class="grid" data-catalogue></div>
+            <div class="catalogue-grid" data-catalogue></div>
             <p class="empty" data-catalogue-empty hidden>No matching integrations.</p>
         </section>
-    </p9r-tab-panel>
-</p9r-tabs>
+    </section>
 
-<dialog data-setup>
-    <form method="dialog" class="dialog">
-        <header>
-            <span class="mark" data-setup-mark></span>
-            <div>
-                <h3 data-setup-title></h3>
-                <p data-setup-description></p>
-            </div>
-        </header>
-        <ol class="setup-stepper" aria-label="Integration setup steps">
-            <li class="setup-step" data-step-indicator="0"><span>1</span><strong>Information</strong></li>
-            <li class="setup-step" data-step-indicator="1"><span>2</span><strong>Inputs</strong></li>
-            <li class="setup-step" data-step-indicator="2"><span>3</span><strong>Review</strong></li>
-        </ol>
-        <div class="setup-pages">
-            <section class="step-panel" data-step-panel="0">
-                <h4>Information</h4>
-                <div class="info-grid">
-                    <div><span>Kind</span><strong data-info-kind></strong></div>
-                    <div><span>Category</span><strong data-info-category></strong></div>
-                    <div><span>Version</span><strong data-info-version></strong></div>
-                    <div><span>Artifacts</span><strong data-info-artifacts></strong></div>
-                </div>
-            </section>
-            <section class="step-panel" data-step-panel="1" hidden>
-                <h4>Inputs</h4>
-                <div class="fields" data-fields></div>
-            </section>
-            <section class="step-panel" data-step-panel="2" hidden>
-                <h4>Review installation</h4>
-                <div class="summary-list" data-summary></div>
-            </section>
-        </div>
-        <footer>
-            <p9r-button type="button" variant="outlined" data-close>Close</p9r-button>
-            <span data-status></span>
-            <div class="footer-actions">
-                <p9r-button type="button" variant="outlined" data-back hidden>Back</p9r-button>
-                <p9r-button type="button" color="primary" data-next>Continue</p9r-button>
-                <p9r-button type="button" color="primary" data-import hidden>Import</p9r-button>
-            </div>
-        </footer>
-    </form>
-</dialog>
+    <section class="integration-detail" data-detail-view hidden></section>
 
-<dialog data-manual>
-    <form method="dialog" class="dialog">
-        <header>
-            <span class="mark">M</span>
-            <div>
-                <h3>Manual import</h3>
-                <p>Paste a declarative integration payload.</p>
-            </div>
-        </header>
-        <textarea data-manual-json rows="12" spellcheck="false"></textarea>
-        <footer>
-            <p9r-button type="button" variant="outlined" data-manual-close>Close</p9r-button>
-            <span data-manual-status></span>
-            <p9r-button type="button" color="primary" data-manual-submit>Import JSON</p9r-button>
-        </footer>
-    </form>
-</dialog>
-
-<template data-instance-template>
-    <article class="card">
-        <h3 data-label></h3>
-        <code data-id></code>
-        <dl>
-            <dt>Status</dt><dd data-status></dd>
-            <dt>Artifacts</dt><dd data-artifacts></dd>
-            <dt>Runs</dt><dd data-runs></dd>
-        </dl>
-    </article>
-</template>
-
-<template data-card-template>
-    <article class="card">
-        <div class="card-head">
-            <span class="mark" data-mark></span>
-            <div>
-                <h3 data-label></h3>
-                <p data-description></p>
-            </div>
-        </div>
-        <div class="card-meta">
-            <code data-kind></code>
-            <span data-artifacts></span>
-            <span><span data-installed></span> installed</span>
-        </div>
-        <p9r-button type="button" data-open>Configure</p9r-button>
-    </article>
-</template>
-
-<template data-summary-template>
-    <div class="summary-row">
-        <span data-kind></span>
-        <div>
-            <strong data-label></strong>
-            <small data-detail></small>
-        </div>
-    </div>
-</template>
-
-<template data-field-template>
-    <label class="field">
-        <span data-label></span>
-        <span data-control></span>
-        <small data-hint></small>
-    </label>
-</template>
+    <template data-field-template>
+        <label class="field">
+            <span data-label></span>
+            <span data-control></span>
+            <small data-hint></small>
+        </label>
+    </template>
+</div>

@@ -1,0 +1,38 @@
+<template data-template="installed-head">
+    <div class="installed-head" aria-hidden="true">
+        <span>Integration</span>
+        <span>Status</span>
+        <span>Artifacts</span>
+        <span>Last sync</span>
+        <span></span>
+    </div>
+</template>
+
+<template data-template="installed-row">
+    <button type="button" class="installed-row">
+        <span class="integration-title-cell">
+            <span data-icon-host></span>
+            <span class="integration-title-copy">
+                <strong data-label></strong>
+                <small data-kind></small>
+            </span>
+        </span>
+        <span><span class="status-pill" data-status></span></span>
+        <span class="badge-row" data-badges></span>
+        <span class="muted" data-updated></span>
+        <span class="chevron" data-chevron></span>
+    </button>
+</template>
+
+<template data-template="catalogue-card">
+    <button type="button" class="catalogue-card">
+        <span class="card-head">
+            <span data-icon-host></span>
+            <span>
+                <strong data-label></strong>
+                <small data-description></small>
+            </span>
+        </span>
+        <span class="badge-row" data-badges></span>
+    </button>
+</template>
