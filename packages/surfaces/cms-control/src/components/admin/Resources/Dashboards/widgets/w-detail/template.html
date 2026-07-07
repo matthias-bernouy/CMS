@@ -1,35 +1,26 @@
-<article class="w-detail-shell">
-    <header class="w-detail-header">
-        <div class="w-detail-identity">
-            <button type="button" class="resource-icon" data-back aria-label="Back to table">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="4" y="5" width="16" height="14" rx="2"></rect>
-                    <path d="M8 9h8"></path>
-                    <path d="M8 13h5"></path>
-                </svg>
-            </button>
-            <div>
-                <h3 data-title></h3>
-            </div>
-        </div>
-        <div class="w-detail-actions" data-actions></div>
-    </header>
+<cms-shell-detail>
+    <button type="button" slot="back" data-back aria-label="Back to table">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+            <path d="M8 9h8"></path>
+            <path d="M8 13h5"></path>
+        </svg>
+    </button>
+    <span slot="title" data-title></span>
+    <div slot="actions" class="w-detail-actions" data-actions></div>
+    <div slot="main" class="w-detail-main" data-main></div>
+    <div slot="aside" class="w-detail-aside" data-aside></div>
+</cms-shell-detail>
 
-    <div class="w-detail-layout">
-        <main class="w-detail-main" data-main></main>
-        <aside class="w-detail-aside" data-aside></aside>
+<template data-section-template>
+    <cms-dashboard-w-section>
+        <dl data-fields></dl>
+    </cms-dashboard-w-section>
+</template>
+
+<template data-field-template>
+    <div class="w-detail-field">
+        <dt data-field-label></dt>
+        <dd data-field-value></dd>
     </div>
-
-    <template data-section-template>
-        <cms-dashboard-w-section>
-            <dl data-fields></dl>
-        </cms-dashboard-w-section>
-    </template>
-
-    <template data-field-template>
-        <div class="w-detail-field">
-            <dt data-field-label></dt>
-            <dd data-field-value></dd>
-        </div>
-    </template>
-</article>
+</template>

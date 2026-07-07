@@ -15,6 +15,7 @@ import { valueAt } from "../../runtime/expressions";
 import { detailLookupOptions } from "../../runtime/lookups";
 import { renderDetailActions } from "./actions";
 import { createFieldControl, fieldUsesInternalLabel, readFieldControlValue, tableRow } from "./controls";
+import "cms-control/components/admin/ShellDetail/ShellDetail";
 import type { WDetailData, WDetailField, WDetailSection } from "./types";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
