@@ -2,20 +2,20 @@ import { randomUUID } from "node:crypto";
 import { trimIntegrationRuns } from "./runRetention";
 import type { IntegrationImportResult } from "../../interfaces/IntegrationImport";
 import type {
-    IntegrationInstance,
+    IntegrationInstallation,
     IntegrationRun,
-} from "../../interfaces/IntegrationInstance";
+} from "../../interfaces/IntegrationInstallation";
 
 export function appendRun(
-    instance: IntegrationInstance,
+    installation: IntegrationInstallation,
     run: IntegrationRun,
-    patch: Partial<Pick<IntegrationInstance, "status" | "artifacts" | "answersSnapshot" | "secretRefs" | "secretInputs" | "label" | "definitionVersion" | "definitionSnapshot">>,
-): IntegrationInstance {
+    patch: Partial<Pick<IntegrationInstallation, "status" | "artifacts" | "answersSnapshot" | "secretRefs" | "secretInputs" | "label" | "definitionVersion" | "definitionSnapshot">>,
+): IntegrationInstallation {
     return {
-        ...instance,
+        ...installation,
         ...patch,
         runCount: run.runNumber,
-        runs: trimIntegrationRuns([...instance.runs, run]),
+        runs: trimIntegrationRuns([...installation.runs, run]),
         updatedAt: run.finishedAt,
     };
 }

@@ -46,9 +46,8 @@ export function sanitizeDefinitionSnapshot(definition: IntegrationDefinition): I
     };
 }
 
-export function instanceLabel(definition: IntegrationDefinition, dto: IntegrationImportDto): string {
-    return cleanText(dto.instance?.label)
-        ?? cleanText(dto.answers.name)
+export function installationLabel(definition: IntegrationDefinition, dto: IntegrationImportDto): string {
+    return cleanText(dto.answers.name)
         ?? cleanText(dto.answers.id)
         ?? definition.label;
 }

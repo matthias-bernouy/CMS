@@ -5,11 +5,10 @@ import type {
     IntegrationInput,
 } from "../../interfaces/Integration";
 import type {
-    IntegrationImportDto,
     IntegrationImportOptions,
 } from "../../interfaces/IntegrationImport";
 
-export const RESERVED_INPUT_NAMES = new Set(["kind", "answers", "options", "definition", "instance"]);
+export const RESERVED_INPUT_NAMES = new Set(["kind", "answers", "options", "definition"]);
 
 export function parseAnswersBody(value: unknown): Record<string, unknown> | undefined {
     if (value === undefined || value === null || value === "") return undefined;
@@ -30,18 +29,6 @@ export function parseOptions(value: unknown): IntegrationImportOptions {
     if (force === undefined) return {};
     if (typeof force !== "boolean") throw new IntegrationInputError("options.force", "must be boolean");
     return { force };
-}
-
-export function parseInstance(value: unknown): IntegrationImportDto["instance"] | undefined {
-    if (value === undefined || value === null || value === "") return undefined;
-    const parsed = parseJsonAnswer(value, "instance");
-    if (!isRecord(parsed)) throw new IntegrationInputError("instance", "must be an object");
-    const id = text(parsed.id);
-    const label = text(parsed.label);
-    return {
-        ...(id ? { id } : {}),
-        ...(label ? { label } : {}),
-    };
 }
 
 export function parseJsonAnswer(value: unknown, name: string): unknown {

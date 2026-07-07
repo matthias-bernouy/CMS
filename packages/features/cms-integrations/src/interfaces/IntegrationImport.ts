@@ -37,16 +37,10 @@ export type IntegrationImportOptions = {
     force?: boolean;
 };
 
-export type IntegrationImportInstanceInput = {
-    id?: string;
-    label?: string;
-};
-
 export type IntegrationImportDto = {
     kind: string;
     answers: Record<string, IntegrationAnswerValue>;
     options: IntegrationImportOptions;
-    instance?: IntegrationImportInstanceInput;
 };
 
 export type IntegrationImportRequest = {

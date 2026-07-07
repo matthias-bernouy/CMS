@@ -9,7 +9,7 @@ import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import type { IntegrationInstanceRepository } from "@bernouy/cms-integrations";
+import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "@bernouy/cms-files";
 import { optimizePageImages } from "@bernouy/cms-files";
@@ -67,7 +67,7 @@ export type DeliveryCmsConfig = {
      * Optional installed integration registry. When set, page CSP includes
      * the external origins declared by successful integration snapshots.
      */
-    integrationInstances?: IntegrationInstanceRepository;
+    integrationInstallations?: IntegrationInstallationRepository;
     /**
      * Optional analytics store (writer). When set, the page handler records a
      * page-view per request (fire-and-forget); when absent, collection is a no-op.
@@ -131,7 +131,7 @@ export default class DeliveryCms {
     private _functions?:         FunctionRepository;
     private _auth?:              PublicAuthRoutesConfig<string>;
     private _roles?:             RolesRepository;
-    private _integrationInstances?: IntegrationInstanceRepository;
+    private _integrationInstallations?: IntegrationInstallationRepository;
     private _analytics?:         AnalyticsStore;
     private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
@@ -150,7 +150,7 @@ export default class DeliveryCms {
         this._analyticsSalt      = config.analyticsSalt;
         this._auth               = config.auth;
         this._roles              = config.roles;
-        this._integrationInstances = config.integrationInstances;
+        this._integrationInstallations = config.integrationInstallations;
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
         this._variantStore       = config.variantStore ?? null;
@@ -199,9 +199,9 @@ export default class DeliveryCms {
         return this._roles;
     }
 
-    /** Installed integration instances, when the runtime wires them. */
-    get integrationInstances(){
-        return this._integrationInstances;
+    /** Installed integration installations, when the runtime wires them. */
+    get integrationInstallations(){
+        return this._integrationInstallations;
     }
 
     /** Analytics store (writer), or `undefined` when analytics is not configured. */

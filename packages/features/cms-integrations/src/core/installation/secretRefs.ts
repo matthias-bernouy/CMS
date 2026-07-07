@@ -1,20 +1,20 @@
 import { IntegrationInputError } from "../errors";
 import type { IntegrationImportDeps } from "../../interfaces/IntegrationImport";
-import type { IntegrationInstanceRepository } from "../../interfaces/IntegrationInstanceRepository";
+import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
 
 export async function assertSecretKeysAvailable(
-    instances: IntegrationInstanceRepository,
-    ownerInstanceId: string,
+    installations: IntegrationInstallationRepository,
+    ownerIntegrationId: string,
     secretRefs: Record<string, string>,
 ): Promise<void> {
     const keys = new Set(Object.values(secretRefs));
     if (!keys.size) return;
 
-    for (const instance of await instances.list()) {
-        if (instance.id === ownerInstanceId) continue;
-        for (const key of Object.values(instance.secretRefs)) {
+    for (const installation of await installations.list()) {
+        if (installation.id === ownerIntegrationId) continue;
+        for (const key of Object.values(installation.secretRefs)) {
             if (keys.has(key)) {
-                throw new IntegrationInputError("secrets", `secret key "${key}" is already used by integration instance "${instance.id}"`);
+                throw new IntegrationInputError("secrets", `secret key "${key}" is already used by integration installation "${installation.id}"`);
             }
         }
     }

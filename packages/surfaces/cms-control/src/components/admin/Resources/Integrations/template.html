@@ -5,9 +5,9 @@
                 <span cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
             </template>
         </div>
-        <div data-instances-source cms-reload-on="integration:updated">
+        <div data-installations-source cms-reload-on="integration:updated">
             <template>
-                <span cms-condition="$source.loaded || $source.empty" data-instances-json="{{ instances | json }}"></span>
+                <span cms-condition="$source.loaded || $source.empty" data-installations-json="{{ installations | json }}"></span>
             </template>
         </div>
     </div>
@@ -23,8 +23,8 @@
         </nav>
 
         <section class="installed-view" data-installed-view>
-            <div class="installed-table" data-instances></div>
-            <p class="empty" data-instances-empty hidden>No installed integrations yet.</p>
+            <div class="installed-table" data-installations></div>
+            <p class="empty" data-installations-empty hidden>No installed integrations yet.</p>
         </section>
 
         <section class="catalogue-view" data-catalogue-view hidden>

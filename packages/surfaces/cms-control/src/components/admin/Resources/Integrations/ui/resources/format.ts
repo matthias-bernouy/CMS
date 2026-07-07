@@ -24,13 +24,6 @@ export function statusLabel(status: string): string {
     return "Pending";
 }
 
-export function previewInstanceId(definition: IntegrationDefinition, answers: Record<string, unknown>): string {
-    const explicit = typeof answers.id === "string" && answers.id.trim() ? answers.id.trim() : "";
-    if (explicit) return `${definition.kind}:${explicit}`;
-    const fallback = definition.inputs.find(input => input.name === "id" && typeof input.defaultValue === "string")?.defaultValue;
-    return `${definition.kind}:${fallback || definition.kind}`;
-}
-
 function typeLabel(type: string): string {
     if (type === "sourceOverlay") return "Source overlay";
     return type[0]!.toUpperCase() + type.slice(1);

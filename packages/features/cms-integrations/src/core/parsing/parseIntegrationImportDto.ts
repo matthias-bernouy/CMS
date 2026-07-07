@@ -17,7 +17,6 @@ import {
     isJsonValue,
     parseAnswersBody,
     parseFlatAnswersBody,
-    parseInstance,
     parseJsonAnswer,
     parseOptions,
     text,
@@ -50,8 +49,7 @@ export function parseIntegrationImportDto(
 
     const rawAnswers = parseAnswersBody(body.answers) ?? parseFlatAnswersBody(body);
     const answers = parseAnswers(definition, rawAnswers);
-    const instance = parseInstance(body.instance);
-    return { kind, answers, options: parseOptions(body.options), ...(instance ? { instance } : {}) };
+    return { kind, answers, options: parseOptions(body.options) };
 }
 
 function parseAnswers(

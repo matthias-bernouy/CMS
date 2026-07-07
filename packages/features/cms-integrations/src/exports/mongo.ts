@@ -3,6 +3,6 @@
  */
 
 export {
-    MongoIntegrationInstanceRepository,
-    type MongoIntegrationInstanceRepositoryConfig,
-} from "../default-implementation/MongoIntegrationInstanceRepository";
+    MongoIntegrationInstallationRepository,
+    type MongoIntegrationInstallationRepositoryConfig,
+} from "../default-implementation/MongoIntegrationInstallationRepository";

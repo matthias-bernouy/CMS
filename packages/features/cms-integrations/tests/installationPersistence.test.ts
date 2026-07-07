@@ -1,22 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import {
-    InMemoryIntegrationInstanceRepository,
-    runIntegrationInstance,
+    InMemoryIntegrationInstallationRepository,
+    runIntegrationInstallation,
     type IntegrationDefinition,
     type IntegrationRun,
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import {
-    CreateFailingIntegrationInstanceRepository,
+    CreateFailingIntegrationInstallationRepository,
     sourceArtifact,
     TEST_SECRET_SOURCE_DEFINITION,
-    SuccessReplaceFailingIntegrationInstanceRepository,
+    SuccessReplaceFailingIntegrationInstallationRepository,
 } from "./helpers";
 
-describe("@bernouy/cms-integrations instance persistence", () => {
+describe("@bernouy/cms-integrations installation persistence", () => {
     test("retains only the last twenty compact runs", async () => {
-        const instances = new InMemoryIntegrationInstanceRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
         const now = new Date();
         const runs: IntegrationRun[] = Array.from({ length: 25 }, (_, index) => ({
             id: `run-${index + 1}`,
@@ -27,9 +27,8 @@ describe("@bernouy/cms-integrations instance persistence", () => {
             artifacts: [],
         }));
 
-        const created = await instances.create({
-            id: "test:retention",
-            kind: "test",
+        const created = await installations.create({
+            id: "test",
             label: "Retention",
             definitionVersion: "1",
             answersSnapshot: {},
@@ -42,61 +41,61 @@ describe("@bernouy/cms-integrations instance persistence", () => {
         expect(created.runs[0]?.runNumber).toBe(6);
     });
 
-    test("rolls back sources and secrets when instance creation fails after import", async () => {
+    test("rolls back sources and secrets when installation creation fails after import", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const instances = new CreateFailingIntegrationInstanceRepository();
-        const definition = unstableInstanceDefinition();
+        const installations = new CreateFailingIntegrationInstallationRepository();
+        const definition = unstableInstallationDefinition();
 
-        await expect(runIntegrationInstance({
+        await expect(runIntegrationInstallation({
             mode: "create",
             deps: { sources, secrets },
-            instances,
+            installations,
             siteIntegrations: [definition],
             dto: {
-                kind: "unstable-instance",
+                kind: "unstable-installation",
                 answers: { id: "main", apiKey: "secret" },
                 options: {},
             },
-        })).rejects.toThrow(/instance create failed/);
+        })).rejects.toThrow(/installation create failed/);
 
         expect(await sources.getSource("urn:main")).toBeNull();
         expect(await secrets.listKeys()).toEqual([]);
     });
 
-    test("rolls back rerun writes when final instance persistence fails", async () => {
+    test("rolls back rerun writes when final installation persistence fails", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const instances = new SuccessReplaceFailingIntegrationInstanceRepository();
+        const installations = new SuccessReplaceFailingIntegrationInstallationRepository();
 
-        await runIntegrationInstance({
+        await runIntegrationInstallation({
             mode: "create",
             deps: { sources, secrets },
-            instances,
+            installations,
             siteIntegrations: [TEST_SECRET_SOURCE_DEFINITION],
             dto: { kind: "test-secret-source", answers: { id: "secret-source-main", apiKey: "sk_old" }, options: {} },
         });
-        const before = await instances.get("test-secret-source:secret-source-main");
+        const before = await installations.get("test-secret-source");
         const key = before!.secretRefs.apiKey;
 
-        await expect(runIntegrationInstance({
+        await expect(runIntegrationInstallation({
             mode: "rerun",
             deps: { sources, secrets },
-            instances,
-            instanceId: "test-secret-source:secret-source-main",
+            installations,
+            integrationId: "test-secret-source",
             body: { answers: { apiKey: "sk_new" } },
-        })).rejects.toThrow(/instance replace failed/);
+        })).rejects.toThrow(/installation replace failed/);
 
         expect(await secrets.get(key)).toBe("sk_old");
-        const after = await instances.get("test-secret-source:secret-source-main");
+        const after = await installations.get("test-secret-source");
         expect(after?.status).toBe("failed");
     });
 });
 
-function unstableInstanceDefinition(): IntegrationDefinition {
+function unstableInstallationDefinition(): IntegrationDefinition {
     return {
-        kind: "unstable-instance",
-        label: "Unstable Instance",
+        kind: "unstable-installation",
+        label: "Unstable Installation",
         inputs: [
             { name: "id", label: "ID", type: "text", required: true },
             { name: "apiKey", label: "API Key", type: "password", required: true, secret: true },

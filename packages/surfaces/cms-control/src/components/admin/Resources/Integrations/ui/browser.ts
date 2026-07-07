@@ -1,17 +1,18 @@
 import { categories, installedCounts, matches } from "../domain";
-import type { IntegrationBrowserHost, IntegrationDefinition, IntegrationInstanceRow } from "../model";
-import { cloneElement, fillIcon, text } from "./templates";
+import type { IntegrationBrowserHost, IntegrationDefinition, IntegrationInstallationRow } from "../model";
+import { integrationRouteUrl } from "../api";
+import { cloneElement, text } from "./templates";
 import { appendBadges, artifactLabels, formatRelativeDate, integrationIcon, statusLabel } from "./resources";
 
 export function renderBrowser(host: IntegrationBrowserHost): void {
     renderCategories(host);
-    renderInstances(host);
+    renderInstallations(host);
     renderCatalogue(host);
     renderCounts(host);
 }
 
 export function renderCounts(host: IntegrationBrowserHost): void {
-    text(host, "[data-installed-count]", host.instances.length);
+    text(host, "[data-installed-count]", host.installations.length);
     text(host, "[data-catalogue-count]", availableDefinitions(host).length);
 }
 
@@ -21,12 +22,12 @@ export function renderCategories(host: IntegrationBrowserHost): void {
     for (const category of categories(availableDefinitions(host))) select.append(new Option(category, category));
 }
 
-export function renderInstances(host: IntegrationBrowserHost): void {
-    const root = host.query<HTMLElement>("[data-instances]");
-    const rows = [...host.instances].sort((left, right) => left.label.localeCompare(right.label));
+export function renderInstallations(host: IntegrationBrowserHost): void {
+    const root = host.query<HTMLElement>("[data-installations]");
+    const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
     root.replaceChildren();
-    if (rows.length) root.append(cloneElement("installed-head"), ...rows.map(row => instanceRow(host, row)));
-    host.query<HTMLElement>("[data-instances-empty]").hidden = rows.length > 0;
+    if (rows.length) root.append(cloneElement("installed-head"), ...rows.map(row => installationRow(host, row)));
+    host.query<HTMLElement>("[data-installations-empty]").hidden = rows.length > 0;
 }
 
 export function renderCatalogue(host: IntegrationBrowserHost): void {
@@ -41,36 +42,37 @@ export function renderCatalogue(host: IntegrationBrowserHost): void {
 }
 
 export function availableDefinitions(host: IntegrationBrowserHost): IntegrationDefinition[] {
-    const counts = installedCounts(host.instances);
+    const counts = installedCounts(host.installations);
     return host.definitions.filter(definition => !counts.has(definition.kind));
 }
 
-export function definitionFor(host: IntegrationBrowserHost, instance: IntegrationInstanceRow): IntegrationDefinition | undefined {
-    return host.definitions.find(definition => definition.kind === instance.kind);
+export function definitionFor(host: IntegrationBrowserHost, installation: IntegrationInstallationRow): IntegrationDefinition | undefined {
+    return host.definitions.find(definition => definition.kind === installation.id);
 }
 
-function instanceRow(host: IntegrationBrowserHost, instance: IntegrationInstanceRow): HTMLElement {
-    const definition = definitionFor(host, instance);
-    const row = cloneElement<HTMLButtonElement>("installed-row");
-    row.dataset.instanceId = instance.id;
-    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition, instance.kind));
-    text(row, "[data-label]", instance.label);
-    text(row, "[data-kind]", instance.kind);
+function installationRow(host: IntegrationBrowserHost, installation: IntegrationInstallationRow): HTMLElement {
+    const definition = definitionFor(host, installation);
+    const row = cloneElement<HTMLAnchorElement>("installed-row");
+    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
+    row.dataset.integrationId = installation.id;
+    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
+    text(row, "[data-label]", installation.label);
+    text(row, "[data-kind]", installation.id);
     const status = row.querySelector<HTMLElement>("[data-status]");
     if (status) {
-        status.textContent = statusLabel(instance.status);
-        status.classList.add(`status-${instance.status}`);
+        status.textContent = statusLabel(installation.status);
+        status.classList.add(`status-${installation.status}`);
     }
     appendBadges(row.querySelector<HTMLElement>("[data-badges]")!, definition ? artifactLabels(definition) : ["Unknown"]);
-    text(row, "[data-updated]", formatRelativeDate(instance.updatedAt));
-    fillIcon(row, "[data-chevron]", "chevron");
+    text(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
 }
 
 function definitionCard(definition: IntegrationDefinition): HTMLElement {
-    const card = cloneElement<HTMLButtonElement>("catalogue-card");
+    const card = cloneElement<HTMLAnchorElement>("catalogue-card");
+    card.href = integrationRouteUrl({ view: "setup", kind: definition.kind });
     card.dataset.definitionKind = definition.kind;
-    card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition, definition.kind));
+    card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
     text(card, "[data-label]", definition.label);
     text(card, "[data-description]", definition.description ?? "");
     appendBadges(card.querySelector<HTMLElement>("[data-badges]")!, [definition.category ?? "Other", ...artifactLabels(definition)]);

@@ -2,7 +2,7 @@ import {
     integrationRegistry,
     type IntegrationDefinition,
     type IntegrationDefinitionRepository,
-    type IntegrationInstanceRepository,
+    type IntegrationInstallationRepository,
 } from "@bernouy/cms-integrations";
 
 export async function listIntegrationDefinitions(
@@ -31,13 +31,13 @@ export async function definitionsForImport(
 
 export async function definitionsForRerun(
     repository: IntegrationDefinitionRepository,
-    instances: IntegrationInstanceRepository,
-    instanceId: string,
+    installations: IntegrationInstallationRepository,
+    integrationId: string,
     body: Record<string, unknown>,
 ): Promise<IntegrationDefinition[]> {
-    const instance = await instances.get(instanceId);
-    if (!instance) return [];
-    const definition = await repository.get(instance.kind, text(body.version));
+    const installation = await installations.get(integrationId);
+    if (!installation) return [];
+    const definition = await repository.get(installation.id, text(body.version));
     return definition ? [definition] : [];
 }
 

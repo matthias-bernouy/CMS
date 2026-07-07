@@ -4,15 +4,15 @@ import { definitionsForRerun } from "cms-control/core/integrations/definitions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import {
-    runIntegrationInstance,
+    runIntegrationInstallation,
     type IntegrationImportDeps,
 } from "@bernouy/cms-integrations";
 
-export default async function postIntegrationInstanceRerun(req: Request, cms: ControlCms) {
+export default async function postIntegrationInstallationRerun(req: Request, cms: ControlCms) {
     const id = new URL(req.url).searchParams.get("id");
     if (!id) throw new MissingParam("id");
     const body = await readOptionalJsonBody(req);
-    const definitions = await definitionsForRerun(cms.integrationCatalog, cms.integrationInstances, id, body);
+    const definitions = await definitionsForRerun(cms.integrationCatalog, cms.integrationInstallations, id, body);
     const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
@@ -24,11 +24,11 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
         },
         connectorDeployers: cms.integrationConnectorDeployers,
     };
-    const result = await runIntegrationInstance({
+    const result = await runIntegrationInstallation({
         mode: "rerun",
         deps,
-        instances: cms.integrationInstances,
-        instanceId: id,
+        installations: cms.integrationInstallations,
+        integrationId: id,
         body,
         siteIntegrations: definitions,
     });

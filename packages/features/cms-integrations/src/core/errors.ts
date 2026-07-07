@@ -21,18 +21,18 @@ export class IntegrationRuntimeError extends Error {
     }
 }
 
-export class DuplicateIntegrationInstanceError extends Error {
+export class DuplicateIntegrationInstallationError extends Error {
     status = 409;
     constructor(id: string) {
-        super(`Integration instance already exists: ${id}`);
-        this.name = "DuplicateIntegrationInstanceError";
+        super(`Integration installation already exists: ${id}`);
+        this.name = "DuplicateIntegrationInstallationError";
     }
 }
 
-export class MissingIntegrationInstanceError extends Error {
+export class MissingIntegrationInstallationError extends Error {
     status = 404;
     constructor(id: string) {
-        super(`Integration instance not found: ${id}`);
-        this.name = "MissingIntegrationInstanceError";
+        super(`Integration installation not found: ${id}`);
+        this.name = "MissingIntegrationInstallationError";
     }
 }

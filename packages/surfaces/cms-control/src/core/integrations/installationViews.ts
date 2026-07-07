@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { IntegrationArtifactResult, IntegrationInstance, IntegrationRun } from "@bernouy/cms-integrations";
+import type { IntegrationArtifactResult, IntegrationInstallation, IntegrationRun } from "@bernouy/cms-integrations";
 
 export type IntegrationArtifactContext = {
     sourceUrns: Set<string> | null;
@@ -24,32 +24,31 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
     return { sourceUrns, functionIds, dashboardIds, blocIds };
 }
 
-export function buildIntegrationInstanceView(
+export function buildIntegrationInstallationView(
     context: IntegrationArtifactContext,
-    instance: IntegrationInstance,
+    installation: IntegrationInstallation,
     detail: boolean,
 ) {
-    const artifacts = instance.artifacts.map(artifact => artifactView(context, artifact));
+    const artifacts = installation.artifacts.map(artifact => artifactView(context, artifact));
     return {
-        id: instance.id,
-        kind: instance.kind,
-        label: instance.label,
-        definitionVersion: instance.definitionVersion,
-        status: instance.status,
-        statusLabel: statusLabel(instance.status),
-        createdAt: instance.createdAt,
-        updatedAt: instance.updatedAt,
-        updatedAtLabel: dateTimeLabel(instance.updatedAt),
-        runCount: instance.runCount,
-        lastRun: instance.runs.at(-1) ? runView(instance.runs.at(-1)!) : null,
+        id: installation.id,
+        label: installation.label,
+        definitionVersion: installation.definitionVersion,
+        status: installation.status,
+        statusLabel: statusLabel(installation.status),
+        createdAt: installation.createdAt,
+        updatedAt: installation.updatedAt,
+        updatedAtLabel: dateTimeLabel(installation.updatedAt),
+        runCount: installation.runCount,
+        lastRun: installation.runs.at(-1) ? runView(installation.runs.at(-1)!) : null,
         artifactCount: artifacts.length,
         missingArtifactCount: artifacts.filter(artifact => artifact.exists === false).length,
         artifacts,
         ...(detail ? {
-            answers: instance.answersSnapshot,
-            definition: instance.definitionSnapshot,
-            secretInputs: instance.secretInputs,
-            runs: instance.runs.map(runView),
+            answers: installation.answersSnapshot,
+            definition: installation.definitionSnapshot,
+            secretInputs: installation.secretInputs,
+            runs: installation.runs.map(runView),
         } : {}),
     };
 }

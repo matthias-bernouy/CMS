@@ -53,10 +53,11 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).not.toContain("HDR_X");
     });
 
-    test("includes CSP origins declared by successful integration instances", async () => {
+    test("includes CSP origins declared by successful integration installations", async () => {
         const ctx = makeCtx();
-        ctx.integrationInstances = {
+        ctx.integrationInstallations = {
             list: async () => [{
+                id: "secure-embed",
                 status: "success",
                 definitionSnapshot: {
                     kind: "secure-embed",
@@ -70,7 +71,7 @@ describe("renderPage — binding core wrapper", () => {
                     },
                 },
             }],
-        } as RenderContext["integrationInstances"];
+        } as RenderContext["integrationInstallations"];
 
         const entry = await renderPage(page, ctx);
         const html = new TextDecoder().decode(entry.raw);

@@ -1,4 +1,4 @@
-import { InMemoryIntegrationInstanceRepository } from "@bernouy/cms-integrations";
+import { InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
@@ -50,7 +50,7 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
     const secrets = new InMemorySecretStore();
     const dashboards = new InMemoryDashboardRepository();
     const functions = new InMemoryFunctionRepository();
-    const integrationInstances = new InMemoryIntegrationInstanceRepository();
+    const integrationInstallations = new InMemoryIntegrationInstallationRepository();
     const integrationCatalog = integrationDefinitionRepository(siteIntegrations);
     const repository = {
         getBlocsList: async () => [],
@@ -62,9 +62,9 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         dashboards,
         functions,
         integrationCatalog,
-        integrationInstances,
+        integrationInstallations,
     };
-    return { cms: cms as any, repository, sources, secrets, dashboards, functions, integrationInstances, integrationCatalog };
+    return { cms: cms as any, repository, sources, secrets, dashboards, functions, integrationInstallations, integrationCatalog };
 }
 
 export function integrationDefinitionRepository(
@@ -94,16 +94,16 @@ export function postImport(body: Record<string, unknown>) {
     });
 }
 
-export function getInstances(id?: string) {
+export function getInstallations(id?: string) {
     const url = id
-        ? `http://localhost/cms/api/integrations/instances?id=${encodeURIComponent(id)}`
-        : "http://localhost/cms/api/integrations/instances";
+        ? `http://localhost/cms/api/integrations/installations?id=${encodeURIComponent(id)}`
+        : "http://localhost/cms/api/integrations/installations";
     return new Request(url);
 }
 
 export function postRerun(id?: string, body?: Record<string, unknown>) {
     const query = id ? `?id=${encodeURIComponent(id)}` : "";
-    return new Request(`http://localhost/cms/api/integrations/instances/rerun${query}`, {
+    return new Request(`http://localhost/cms/api/integrations/installations/rerun${query}`, {
         method: "POST",
         body: body === undefined ? undefined : JSON.stringify(body),
         headers: body === undefined ? undefined : { "content-type": "application/json" },

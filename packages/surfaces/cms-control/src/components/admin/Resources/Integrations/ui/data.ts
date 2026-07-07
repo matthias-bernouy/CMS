@@ -1,14 +1,14 @@
 import { route } from "../api";
-import type { IntegrationBrowserHost, IntegrationDefinition, IntegrationInstanceRow } from "../model";
+import type { IntegrationBrowserHost, IntegrationDefinition, IntegrationInstallationRow } from "../model";
 
 export function startBoundSources(host: IntegrationBrowserHost): void {
     const definitions = host.query<HTMLElement>("[data-definitions-source]");
-    const instances = host.query<HTMLElement>("[data-instances-source]");
+    const installations = host.query<HTMLElement>("[data-installations-source]");
     definitions.setAttribute("cms-source", `${route("/api/integrations/list")} as definitions`);
-    instances.setAttribute("cms-source", `${route("/api/integrations/instances")} as instances`);
+    installations.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
-    host.observer.observe(instances, { attributes: true, childList: true, subtree: true });
+    host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
     readBoundData(host);
 }
 
@@ -32,15 +32,15 @@ export function readBoundData(host: IntegrationBrowserHost): void {
         host.definitionsLoaded = true;
         changed = true;
     }
-    const instances = parseArray<IntegrationInstanceRow>(
-        host.querySelector<HTMLElement>("[data-instances-json]")?.dataset.instancesJson ?? "",
+    const installations = parseArray<IntegrationInstallationRow>(
+        host.querySelector<HTMLElement>("[data-installations-json]")?.dataset.installationsJson ?? "",
     );
-    if (instances) {
-        host.instances = instances;
-        host.instancesLoaded = true;
+    if (installations) {
+        host.installations = installations;
+        host.installationsLoaded = true;
         changed = true;
     }
-    if (!changed || !host.definitionsLoaded || !host.instancesLoaded) return;
+    if (!changed || !host.definitionsLoaded || !host.installationsLoaded) return;
     host.renderAll();
     resolveWaiters(host);
 }

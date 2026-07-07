@@ -48,9 +48,9 @@ import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/auth
 import type {
     IntegrationConnectorDeployer,
     IntegrationDefinitionRepository,
-    IntegrationInstanceRepository,
+    IntegrationInstallationRepository,
 } from "@bernouy/cms-integrations";
-import { collectIntegrationInstanceCspExtras } from "@bernouy/cms-integrations";
+import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 
 type Configuration = {
     /**
@@ -74,9 +74,9 @@ export type ControlCmsOptions = Configuration & {
      *  Control surface. Runtimes can provide a local FS repository today and
      *  an HTTP-backed official repository later. */
     integrationCatalog?: IntegrationDefinitionRepository;
-    /** Integration instance/run store. Runtimes must pass a durable repository
+    /** Integration installation/run store. Runtimes must pass a durable repository
      *  before enabling the integration API. */
-    integrationInstances?: IntegrationInstanceRepository;
+    integrationInstallations?: IntegrationInstallationRepository;
     /** Optional connector deployers used by declarative integrations that ship
      *  deployable provider assets. */
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
@@ -141,7 +141,7 @@ export class ControlCms {
     private _analytics:           AnalyticsStore | null;
     private _roles:               RolesRepository;
     private _integrationCatalog: IntegrationDefinitionRepository;
-    private _integrationInstances: IntegrationInstanceRepository | null;
+    private _integrationInstallations: IntegrationInstallationRepository | null;
     private _dashboards: DashboardRepository;
     private _functions: FunctionRepository | null;
     private _integrationBlocRepository: CmsRepository | null;
@@ -180,7 +180,7 @@ export class ControlCms {
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
         this._integrationCatalog = configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG;
-        this._integrationInstances = configuration.integrationInstances ?? null;
+        this._integrationInstallations = configuration.integrationInstallations ?? null;
         this._dashboards = configuration.dashboards ?? new InMemoryDashboardRepository();
         this._functions = configuration.functions ?? null;
         this._integrationBlocRepository = configuration.integrationBlocRepository ?? null;
@@ -391,9 +391,13 @@ export class ControlCms {
         return this._integrationCatalog;
     }
 
-    get integrationInstances(): IntegrationInstanceRepository {
-        if (!this._integrationInstances) throw new Error("integration instances repository not configured");
-        return this._integrationInstances;
+    get integrationInstallations(): IntegrationInstallationRepository {
+        if (!this._integrationInstallations) throw new Error("integration installations repository not configured");
+        return this._integrationInstallations;
+    }
+
+    get configuredIntegrationInstallations(): IntegrationInstallationRepository | null {
+        return this._integrationInstallations;
     }
 
     get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined {
@@ -447,8 +451,8 @@ export class ControlCms {
      */
     async getCspExtras(): Promise<CspExtras> {
         const settings = await this._repository.getSystem();
-        const integrationCsp = this._integrationInstances
-            ? collectIntegrationInstanceCspExtras(await this._integrationInstances.list())
+        const integrationCsp = this._integrationInstallations
+            ? collectIntegrationInstallationCspExtras(await this._integrationInstallations.list())
             : null;
         return {
             connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),

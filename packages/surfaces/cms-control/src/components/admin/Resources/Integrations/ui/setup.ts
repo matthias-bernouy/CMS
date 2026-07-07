@@ -1,9 +1,8 @@
-import { defaultInstance } from "../domain";
 import { renderFields } from "../fields";
-import type { IntegrationAnswerValue, IntegrationBrowserHost, IntegrationDefinition } from "../model";
+import type { IntegrationBrowserHost, IntegrationDefinition } from "../model";
 import { renderLinkedPlaceholder } from "./detail";
 import { cloneElement, fillIcon, text } from "./templates";
-import { previewInstanceId, renderResourceRows, renderSummary, resourceRows } from "./resources";
+import { renderResourceRows, renderSummary, resourceRows } from "./resources";
 
 export function renderSetup(
     host: IntegrationBrowserHost,
@@ -30,23 +29,17 @@ export function renderImporting(
     answers: Record<string, unknown>,
 ): void {
     const shell = cloneElement("importing-shell");
-    const instance = previewInstanceId(definition, answers);
     text(shell, "[data-title]", `Installing ${definition.label}`);
     fillIcon(shell, "[data-back-icon]", "table");
-    renderSummary(shell.querySelector<HTMLElement>("[data-summary]")!, summaryRows(definition, instance));
+    renderSummary(shell.querySelector<HTMLElement>("[data-summary]")!, summaryRows(definition));
     host.query<HTMLElement>("[data-detail-view]").replaceChildren(shell);
 }
 
-export function collectImportInstance(definition: IntegrationDefinition, answers: Record<string, IntegrationAnswerValue>) {
-    return defaultInstance(definition, answers);
-}
-
-function summaryRows(definition: IntegrationDefinition, instanceId = ""): Array<{ label: string; value: unknown }> {
+function summaryRows(definition: IntegrationDefinition): Array<{ label: string; value: unknown }> {
     const rows = resourceRows(definition);
     return [
         { label: "Integration", value: definition.label },
-        { label: "Kind", value: definition.kind },
-        ...(instanceId ? [{ label: "Instance", value: instanceId }] : []),
+        { label: "Identifier", value: definition.kind },
         { label: "Resources", value: rows.filter(row => !["Secret", "Connector"].includes(row.type)).length },
         { label: "Secrets", value: rows.filter(row => row.type === "Secret").length },
         { label: "Connectors", value: rows.filter(row => row.type === "Connector").length },

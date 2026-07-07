@@ -1,8 +1,8 @@
-import type { IntegrationAnswerValue, IntegrationDefinition, IntegrationInstanceRow } from "./model";
+import type { IntegrationDefinition, IntegrationInstallationRow } from "./model";
 
-export function installedCounts(instances: IntegrationInstanceRow[]): Map<string, number> {
+export function installedCounts(installations: IntegrationInstallationRow[]): Map<string, number> {
     const counts = new Map<string, number>();
-    for (const instance of instances) counts.set(instance.kind, (counts.get(instance.kind) ?? 0) + 1);
+    for (const installation of installations) counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
     return counts;
 }
 
@@ -26,13 +26,4 @@ export function artifactSummary(definition: IntegrationDefinition): string {
 
 export function mark(definition: IntegrationDefinition): string {
     return (definition.label.trim()[0] || definition.kind.trim()[0] || "I").toUpperCase();
-}
-
-export function defaultInstance(
-    definition: IntegrationDefinition,
-    answers: Record<string, IntegrationAnswerValue>,
-): { id: string; label: string } | undefined {
-    return typeof answers.id === "string" && answers.id.trim()
-        ? undefined
-        : { id: `${definition.kind}:${definition.kind}`, label: definition.label };
 }

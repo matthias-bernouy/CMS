@@ -12,7 +12,7 @@ const HEADERS_JSON = (token: string) => ({
 });
 
 export async function fetchRemoteIntegrationList(adminBase: URL, token: string): Promise<RemoteIntegrationItem[]> {
-    const url = new URL("api/integrations/instances", adminBase).href;
+    const url = new URL("api/integrations/installations", adminBase).href;
     const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
     if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
     const data = await res.json();
@@ -20,7 +20,7 @@ export async function fetchRemoteIntegrationList(adminBase: URL, token: string):
     return data as RemoteIntegrationItem[];
 }
 
-/** Create every new integration and rerun every changed integration instance. */
+/** Create every new integration and rerun every changed integration installation. */
 export async function applyPushIntegrations(
     adminBase: URL,
     token:     string,
@@ -51,7 +51,7 @@ async function createIntegration(adminBase: URL, token: string, request: LocalIn
 }
 
 async function rerunIntegration(adminBase: URL, token: string, id: string, request: LocalIntegrationImport): Promise<void> {
-    const url = new URL(`api/integrations/instances/rerun?id=${encodeURIComponent(id)}`, adminBase).href;
+    const url = new URL(`api/integrations/installations/rerun?id=${encodeURIComponent(id)}`, adminBase).href;
     const res = await fetch(url, {
         method:  "POST",
         headers: HEADERS_JSON(token),

@@ -8,7 +8,7 @@ import type {
 } from "./IntegrationImport";
 import type { IntegrationConnectorDeployResult } from "./IntegrationConnectorDeployer";
 
-export type IntegrationInstanceStatus = "success" | "failed" | "pending";
+export type IntegrationInstallationStatus = "success" | "failed" | "pending";
 
 export type IntegrationRunError = {
     message: string;
@@ -18,7 +18,7 @@ export type IntegrationRunError = {
 export type IntegrationRun = {
     id: string;
     runNumber: number;
-    status: IntegrationInstanceStatus;
+    status: IntegrationInstallationStatus;
     startedAt: Date;
     finishedAt: Date;
     artifacts: IntegrationArtifactResult[];
@@ -27,13 +27,12 @@ export type IntegrationRun = {
     error?: IntegrationRunError;
 };
 
-export type IntegrationInstance = {
+export type IntegrationInstallation = {
     id: string;
-    kind: string;
     label: string;
     definitionVersion: string;
     definitionSnapshot?: IntegrationDefinition;
-    status: IntegrationInstanceStatus;
+    status: IntegrationInstallationStatus;
     createdAt: Date;
     updatedAt: Date;
     runCount: number;

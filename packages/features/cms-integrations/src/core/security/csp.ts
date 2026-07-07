@@ -1,5 +1,5 @@
 import type { IntegrationDefinition } from "../../interfaces/Integration";
-import type { IntegrationInstance } from "../../interfaces/IntegrationInstance";
+import type { IntegrationInstallation } from "../../interfaces/IntegrationInstallation";
 
 export type IntegrationCspExtras = {
     connectExtras: string[];
@@ -17,13 +17,13 @@ export function collectIntegrationDefinitionCspExtras(
     return out;
 }
 
-export function collectIntegrationInstanceCspExtras(
-    instances: Iterable<IntegrationInstance>,
+export function collectIntegrationInstallationCspExtras(
+    installations: Iterable<IntegrationInstallation>,
 ): IntegrationCspExtras {
     const definitions = [];
-    for (const instance of instances) {
-        if (instance.status !== "success" || !instance.definitionSnapshot) continue;
-        definitions.push(instance.definitionSnapshot);
+    for (const installation of installations) {
+        if (installation.status !== "success" || !installation.definitionSnapshot) continue;
+        definitions.push(installation.definitionSnapshot);
     }
     return collectIntegrationDefinitionCspExtras(definitions);
 }

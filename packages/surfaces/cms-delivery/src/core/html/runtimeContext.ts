@@ -14,7 +14,7 @@ export function makeRuntimeRenderContext(delivery: DeliveryCms): RenderContext {
         resolveAssets: (usedTags) => resolveRuntimeAssets(delivery, usedTags),
         defaultFaviconUrl: `${delivery.cmsPathPrefix}/assets/favicon`,
         headInjectors: delivery.headInjectors,
-        integrationInstances: delivery.integrationInstances,
+        integrationInstallations: delivery.integrationInstallations,
         filesMetadata: delivery.filesMetadataOrNull ?? undefined,
         variantStore: delivery.variantStoreOrNull ?? undefined,
         optimizePage: (path, imageIds) => delivery.optimizePage(path, imageIds),

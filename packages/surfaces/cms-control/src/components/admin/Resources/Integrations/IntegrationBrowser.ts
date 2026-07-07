@@ -1,26 +1,29 @@
 import template from "./template.html" with { type: "text" };
-import { handleClick, closeDetail, openDetail, openSetup } from "./ui/actions";
+import { handleClick, openSetup as renderSetupError } from "./ui/actions";
 import { renderBrowser, renderCatalogue } from "./ui/browser";
 import { disconnectBoundSources, startBoundSources, waitForBoundData } from "./ui/data";
 import styles from "./ui/styles";
+import { currentIntegrationRoute, pushIntegrationRoute, replaceIntegrationRoute } from "./api";
 import type {
     BoundDataWaiter,
     BrowserTab,
     IntegrationBrowserHost,
     IntegrationDefinition,
-    IntegrationInstanceRow,
+    IntegrationInstallationRow,
 } from "./model";
+import { renderDetail } from "./ui/detail";
+import { renderSetup } from "./ui/setup";
 
 export class IntegrationBrowser extends HTMLElement implements IntegrationBrowserHost {
     definitions: IntegrationDefinition[] = [];
-    instances: IntegrationInstanceRow[] = [];
+    installations: IntegrationInstallationRow[] = [];
     activeDefinition: IntegrationDefinition | null = null;
     definitionsLoaded = false;
-    instancesLoaded = false;
+    installationsLoaded = false;
     observer: MutationObserver | null = null;
     waiters: BoundDataWaiter[] = [];
     tab: BrowserTab = "installed";
-    selectedInstanceId = "";
+    selectedIntegrationId = "";
     private initialized = false;
 
     connectedCallback(): void {
@@ -28,6 +31,7 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
             this.mountTemplate();
             this.bind();
             startBoundSources(this);
+            window.addEventListener("popstate", this.onPopState);
             this.initialized = true;
         } else if (!this.observer) {
             startBoundSources(this);
@@ -36,11 +40,12 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
 
     disconnectedCallback(): void {
         disconnectBoundSources(this);
+        window.removeEventListener("popstate", this.onPopState);
     }
 
     renderAll(): void {
         renderBrowser(this);
-        if (this.selectedInstanceId) openDetail(this, this.selectedInstanceId);
+        this.renderRoute();
     }
 
     setTab(tab: BrowserTab): void {
@@ -52,24 +57,26 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
         }
     }
 
-    openDetail(instanceId: string): void {
-        openDetail(this, instanceId);
+    openDetail(integrationId: string): void {
+        pushIntegrationRoute({ view: "installation", id: integrationId });
+        this.renderRoute();
     }
 
-    openSetup(
-        definition: IntegrationDefinition,
-        options: { answers?: Record<string, unknown>; error?: string } = {},
-    ): void {
-        openSetup(this, definition, options);
+    openSetup(definition: IntegrationDefinition, options: { answers?: Record<string, unknown>; error?: string } = {}): void {
+        if (options.answers || options.error) {
+            renderSetupError(this, definition, options);
+            return;
+        }
+        pushIntegrationRoute({ view: "setup", kind: definition.kind });
+        this.renderRoute();
     }
 
     closeDetail(): void {
-        closeDetail(this);
+        pushIntegrationRoute({ view: "list", tab: this.tab });
+        this.renderRoute();
     }
 
-    waitForBoundData(predicate: () => boolean, timeoutMs?: number): Promise<void> {
-        return waitForBoundData(this, predicate, timeoutMs);
-    }
+    waitForBoundData(predicate: () => boolean, timeoutMs?: number): Promise<void> { return waitForBoundData(this, predicate, timeoutMs); }
 
     query<T extends Element>(selector: string): T {
         const element = this.querySelector(selector);
@@ -82,6 +89,53 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
         this.query<HTMLSelectElement>("[data-category]").addEventListener("change", () => renderCatalogue(this));
         this.addEventListener("click", (event) => void handleClick(this, event));
     }
+
+    private renderRoute(): void {
+        const route = currentIntegrationRoute();
+        if (route.view === "installation") return this.showInstallation(route.id);
+        if (route.view === "setup") return this.showSetup(route.kind);
+        this.showList(route.tab);
+    }
+
+    private showList(tab: BrowserTab): void {
+        this.selectedIntegrationId = "";
+        this.activeDefinition = null;
+        this.query<HTMLElement>("[data-detail-view]").replaceChildren();
+        this.query<HTMLElement>("[data-detail-view]").hidden = true;
+        this.query<HTMLElement>("[data-browser]").hidden = false;
+        this.setTab(tab);
+    }
+
+    private showInstallation(integrationId: string): void {
+        if (!this.installations.some(installation => installation.id === integrationId)) {
+            replaceIntegrationRoute({ view: "list", tab: "installed" });
+            this.showList("installed");
+            return;
+        }
+        this.activeDefinition = null;
+        this.selectedIntegrationId = integrationId;
+        this.query<HTMLElement>("[data-browser]").hidden = true;
+        this.query<HTMLElement>("[data-detail-view]").hidden = false;
+        this.tab = "installed";
+        renderDetail(this);
+    }
+
+    private showSetup(kind: string): void {
+        const definition = this.definitions.find(item => item.kind === kind);
+        if (!definition) {
+            replaceIntegrationRoute({ view: "list", tab: "catalogue" });
+            this.showList("catalogue");
+            return;
+        }
+        this.activeDefinition = definition;
+        this.selectedIntegrationId = "";
+        this.query<HTMLElement>("[data-browser]").hidden = true;
+        this.query<HTMLElement>("[data-detail-view]").hidden = false;
+        this.tab = "catalogue";
+        renderSetup(this, definition);
+    }
+
+    private onPopState = (): void => this.renderAll();
 
     private mountTemplate(): void {
         const style = document.createElement("style");

@@ -21,7 +21,7 @@ import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
 import { MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
-import { MongoIntegrationInstanceRepository } from "@bernouy/cms-integrations/mongo";
+import { MongoIntegrationInstallationRepository } from "@bernouy/cms-integrations/mongo";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { SupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
@@ -116,7 +116,7 @@ const functions         = new MongoFunctionRepository(db);                      
 const dashboards        = new MongoDashboardRepository(db);                       await dashboards.init();
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
-const integrationsStore = new MongoIntegrationInstanceRepository(db);              await integrationsStore.init();
+const integrationsStore = new MongoIntegrationInstallationRepository(db);              await integrationsStore.init();
 const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
 const integrationCatalog = createIntegrationCatalog(process.env, `http://127.0.0.1:${CONTROL_PORT}/.cms/repository`);
 const integrationConnectorDeployers = createIntegrationConnectorDeployers(process.env);
@@ -200,7 +200,7 @@ const publicAuthBase = {
 const controlCms = new ControlCms(controlRunner, repo, auth, {
     deliveryUrl: DELIVERY_PUBLIC_URL,
     integrationCatalog,
-    integrationInstances: integrationsStore,
+    integrationInstallations: integrationsStore,
     integrationConnectorDeployers,
     dashboards,
     functions,
@@ -220,7 +220,7 @@ const deliveryRunner = new BunRunner();
 new DeliveryCms({
     runner: deliveryRunner, repository: repo, cache, sources, analytics,
     functions,
-    integrationInstances: integrationsStore,
+    integrationInstallations: integrationsStore,
     analyticsSalt: ANALYTICS_SALT_SECRET,
     sourceResolveSecret: resolveSecret,
     roles, filesMetadata, filesBlob, variantStore,

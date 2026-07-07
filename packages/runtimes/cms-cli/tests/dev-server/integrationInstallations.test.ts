@@ -2,18 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { LocalFsIntegrationInstanceRepository } from "cms-cli/dev-server/integrationInstances";
+import { LocalFsIntegrationInstallationRepository } from "cms-cli/dev-server/integrationInstallations";
 import type { IntegrationRun } from "@bernouy/cms-integrations";
 
-describe("LocalFsIntegrationInstanceRepository", () => {
-    test("persists integration instances across repository instances", async () => {
+describe("LocalFsIntegrationInstallationRepository", () => {
+    test("persists integration installations across repository objects", async () => {
         const siteDir = await mkdtemp(join(tmpdir(), "p9r-integrations-"));
-        const first = new LocalFsIntegrationInstanceRepository(siteDir);
+        const first = new LocalFsIntegrationInstallationRepository(siteDir);
         const run = runRecord(1);
 
         await first.create({
-            id: "test:main",
-            kind: "test",
+            id: "test",
             label: "Test",
             definitionVersion: "1",
             answersSnapshot: { id: "main" },
@@ -23,29 +22,27 @@ describe("LocalFsIntegrationInstanceRepository", () => {
             runs: [run],
         });
 
-        const second = new LocalFsIntegrationInstanceRepository(siteDir);
-        const loaded = await second.get("test:main");
+        const second = new LocalFsIntegrationInstallationRepository(siteDir);
+        const loaded = await second.get("test");
 
-        expect(loaded?.id).toBe("test:main");
+        expect(loaded?.id).toBe("test");
         expect(loaded?.createdAt).toBeInstanceOf(Date);
         expect(loaded?.runs[0]?.startedAt).toBeInstanceOf(Date);
-        expect((await second.list()).map(instance => instance.id)).toEqual(["test:main"]);
+        expect((await second.list()).map(installation => installation.id)).toEqual(["test"]);
 
-        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test-main.json"), "utf-8"));
+        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test.json"), "utf-8"));
         expect(authoringImport).toMatchObject({
             kind: "test",
             answers: { id: "main" },
-            instance: { id: "test:main", label: "Test" },
         });
         expect(JSON.stringify(authoringImport)).not.toContain("apiKey");
     });
 
     test("keeps only the last twenty runs on replace", async () => {
         const siteDir = await mkdtemp(join(tmpdir(), "p9r-integrations-"));
-        const repo = new LocalFsIntegrationInstanceRepository(siteDir);
+        const repo = new LocalFsIntegrationInstallationRepository(siteDir);
         const created = await repo.create({
-            id: "test:main",
-            kind: "test",
+            id: "test",
             label: "Test",
             definitionVersion: "1",
             answersSnapshot: {},
@@ -63,7 +60,7 @@ describe("LocalFsIntegrationInstanceRepository", () => {
         expect(replaced.runs).toHaveLength(20);
         expect(replaced.runs[0]?.runNumber).toBe(6);
 
-        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test-main.json"), "utf-8"));
+        const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test.json"), "utf-8"));
         expect(authoringImport.answers).toEqual({});
     });
 });

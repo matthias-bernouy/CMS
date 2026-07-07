@@ -6,7 +6,7 @@ import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
 import { findUsedBlocTags } from "@bernouy/cms-content";
-import { collectIntegrationInstanceCspExtras } from "@bernouy/cms-integrations";
+import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
 import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "cms-delivery/core/head/buildAssets";
@@ -55,8 +55,8 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // unique-host set naturally drops them via Set semantics.
     const styleHosts  = uniqueOrigins([assets.styleUrl]);
     const scriptHosts = uniqueOrigins(assets.scriptUrls);
-    const integrationCsp = ctx.integrationInstances
-        ? collectIntegrationInstanceCspExtras(await ctx.integrationInstances.list())
+    const integrationCsp = ctx.integrationInstallations
+        ? collectIntegrationInstallationCspExtras(await ctx.integrationInstallations.list())
         : null;
     const cspExtras = {
         connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),

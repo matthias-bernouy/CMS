@@ -3,15 +3,15 @@ import postIntegrationImport from "cms-control/api/integrations/import.post";
 import { makeCms, manualSourceDefinition, postImport, sourceWithFunctionDefinition } from "./helpers";
 
 describe("POST /api/integrations/import", () => {
-    test("creates a tracked Test secret source instance without exposing the secret value", async () => {
-        const { cms, secrets, sources, integrationInstances } = makeCms();
+    test("creates a tracked Test secret source installation without exposing the secret value", async () => {
+        const { cms, secrets, sources, integrationInstallations } = makeCms();
 
         const res = await postIntegrationImport(postImport({
             kind: "test-secret-source",
             answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms);
         const body = await res.json();
-        const secretKey = body.instance.secretRefs.apiKey;
+        const secretKey = body.installation.secretRefs.apiKey;
 
         expect(res.status).toBe(200);
         expect(body.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "created" }]);
@@ -19,7 +19,7 @@ describe("POST /api/integrations/import", () => {
         expect(secretKey).toMatch(/^TEST_SOURCE_SECRET_SOURCE_MAIN_[A-F0-9]{8}_API_KEY$/);
         expect(JSON.stringify(body)).not.toContain("sk_test");
         expect(await secrets.get(secretKey)).toBe("sk_test");
-        expect(await integrationInstances.get("test-secret-source:secret-source-main")).not.toBeNull();
+        expect(await integrationInstallations.get("test-secret-source")).not.toBeNull();
 
         const source = await sources.getSource("urn:secret-source-main");
         expect(source?.endpoints[0]?.headers).toEqual([
@@ -27,8 +27,8 @@ describe("POST /api/integrations/import", () => {
         ]);
     });
 
-    test("imports a manual declarative definition as a tracked instance", async () => {
-        const { cms, sources, integrationInstances } = makeCms();
+    test("imports a manual declarative definition as a tracked installation", async () => {
+        const { cms, sources, integrationInstallations } = makeCms();
 
         const res = await postIntegrationImport(postImport({
             definition: manualSourceDefinition(),
@@ -36,11 +36,11 @@ describe("POST /api/integrations/import", () => {
         }), cms);
         const body = await res.json();
 
-        expect(body.instance.id).toBe("manual-source:manual");
+        expect(body.installation.id).toBe("manual-source");
         expect(body.artifacts).toEqual([{ type: "source", id: "urn:manual", action: "created" }]);
         expect((await sources.getSource("urn:manual"))?.endpoints[0]?.targetUrl)
             .toBe("https://api.example.com/items");
-        expect(await integrationInstances.get("manual-source:manual")).not.toBeNull();
+        expect(await integrationInstallations.get("manual-source")).not.toBeNull();
     });
 
     test("imports function artifacts through the configured function repository", async () => {
@@ -70,27 +70,31 @@ describe("POST /api/integrations/import", () => {
         });
     });
 
-    test("requires a tracked identity for integrations without an id answer", async () => {
-        const { cms } = makeCms([{ kind: "no-id", label: "No ID", inputs: [] }]);
+    test("uses the integration kind as the installation id", async () => {
+        const { cms, integrationInstallations } = makeCms([{ kind: "no-id", label: "No ID", inputs: [] }]);
 
-        await expect(postIntegrationImport(postImport({
+        const res = await postIntegrationImport(postImport({
             kind: "no-id",
             answers: {},
-        }), cms)).rejects.toThrow(/instance\.id/);
+        }), cms);
+        const body = await res.json();
+
+        expect(body.installation.id).toBe("no-id");
+        expect(await integrationInstallations.get("no-id")).not.toBeNull();
     });
 
-    test("fails before writing when no integration instance repository is configured", async () => {
+    test("fails before writing when no integration installation repository is configured", async () => {
         const { cms, sources, secrets } = makeCms();
-        Object.defineProperty(cms, "integrationInstances", {
+        Object.defineProperty(cms, "integrationInstallations", {
             get() {
-                throw new Error("integration instances repository not configured");
+                throw new Error("integration installations repository not configured");
             },
         });
 
         await expect(postIntegrationImport(postImport({
             kind: "test-secret-source",
             answers: { id: "secret-source-main", apiKey: "sk_test" },
-        }), cms)).rejects.toThrow(/integration instances repository not configured/);
+        }), cms)).rejects.toThrow(/integration installations repository not configured/);
 
         expect(await sources.getSource("urn:secret-source-main")).toBeNull();
         expect(await secrets.listKeys()).toEqual([]);

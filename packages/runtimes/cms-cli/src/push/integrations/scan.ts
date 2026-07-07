@@ -3,10 +3,8 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-    createIntegrationInstanceId,
     type IntegrationAnswerValue,
     type IntegrationDefinition,
-    type IntegrationImportInstanceInput,
     type IntegrationImportOptions,
 } from "@bernouy/cms-integrations";
 
@@ -14,12 +12,11 @@ export type LocalIntegrationImport = {
     kind: string;
     answers: Record<string, IntegrationAnswerValue>;
     options?: IntegrationImportOptions;
-    instance?: IntegrationImportInstanceInput;
     definition?: IntegrationDefinition;
 };
 
 export type LocalIntegration = {
-    /** Tracked integration instance id (e.g. "test:main"). */
+    /** Integration identifier, equal to the imported kind. */
     id:      string;
     /** File stem (e.g. "shop"). */
     slug:    string;
@@ -66,37 +63,23 @@ export function canonicalIntegrationHash(request: LocalIntegrationImport): strin
     return createHash("sha256").update(stableJson(request)).digest("hex");
 }
 
-function normalizeIntegrationImport(value: unknown, slug: string): LocalIntegrationImport {
+function normalizeIntegrationImport(value: unknown, _slug: string): LocalIntegrationImport {
     if (!isRecord(value)) throw new Error("JSON root must be an object");
     const kind = stringField(value, "kind");
     if (!kind) throw new Error(`missing "kind"`);
     const answers = recordField(value, "answers");
     if (!answers) throw new Error(`missing "answers" object`);
     const options = optionalRecord(value.options) as IntegrationImportOptions | undefined;
-    const instance = normalizeInstance(value.instance, kind, answers, slug);
     return {
         kind,
         answers: answers as Record<string, IntegrationAnswerValue>,
         ...(options ? { options } : {}),
-        ...(instance ? { instance } : {}),
         ...(isRecord(value.definition) ? { definition: value.definition as unknown as IntegrationDefinition } : {}),
     };
 }
 
-function normalizeInstance(
-    value: unknown,
-    kind: string,
-    answers: Record<string, unknown>,
-    slug: string,
-): IntegrationImportInstanceInput | undefined {
-    const input = optionalRecord(value) as IntegrationImportInstanceInput | undefined;
-    if (input?.id || input?.label) return input;
-    if (createIntegrationInstanceId(kind, answers as Record<string, IntegrationAnswerValue>, input)) return input;
-    return { id: `${kind}:${slug}` };
-}
-
-function integrationImportId(request: LocalIntegrationImport, slug: string): string {
-    return createIntegrationInstanceId(request.kind, request.answers, request.instance) ?? `${request.kind}:${slug}`;
+function integrationImportId(request: LocalIntegrationImport, _slug: string): string {
+    return request.kind;
 }
 
 function recordField(value: Record<string, unknown>, key: string): Record<string, unknown> | null {

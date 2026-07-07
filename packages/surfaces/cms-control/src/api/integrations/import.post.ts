@@ -5,7 +5,7 @@ import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import {
     type IntegrationImportDeps,
     parseIntegrationImportRequest,
-    runIntegrationInstance,
+    runIntegrationInstallation,
 } from "@bernouy/cms-integrations";
 
 export default async function postIntegrationImport(req: Request, cms: ControlCms) {
@@ -23,10 +23,10 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         },
         connectorDeployers: cms.integrationConnectorDeployers,
     };
-    const result = await runIntegrationInstance({
+    const result = await runIntegrationInstallation({
         mode: "create",
         deps,
-        instances: cms.integrationInstances,
+        installations: cms.integrationInstallations,
         dto: request.dto,
         siteIntegrations: request.siteIntegrations,
     });

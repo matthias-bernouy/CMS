@@ -2,7 +2,7 @@ import type {
     IntegrationAnswerValue,
     IntegrationArtifactResult,
     IntegrationDefinition,
-    IntegrationInstance,
+    IntegrationInstallation,
     IntegrationRun,
 } from "@bernouy/cms-integrations";
 
@@ -12,10 +12,9 @@ export type RemoteIntegrationListItem = {
 
 export type RemoteIntegrationDetail = {
     id: string;
-    kind: string;
     label: string;
     definitionVersion: string;
-    status: IntegrationInstance["status"];
+    status: IntegrationInstallation["status"];
     createdAt: string | Date;
     updatedAt: string | Date;
     runCount: number;

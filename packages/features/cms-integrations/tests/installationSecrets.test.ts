@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
-    InMemoryIntegrationInstanceRepository,
-    runIntegrationInstance,
+    InMemoryIntegrationInstallationRepository,
+    runIntegrationInstallation,
     type IntegrationConnectorDeployer,
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
@@ -9,65 +9,64 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { TEST_SECRET_SOURCE_DEFINITION } from "./helpers";
 
-describe("@bernouy/cms-integrations instance secrets", () => {
+describe("@bernouy/cms-integrations installation secrets", () => {
     test("tracks a named import without storing secret values", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const instances = new InMemoryIntegrationInstanceRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
 
-        const result = await runIntegrationInstance({
+        const result = await runIntegrationInstallation({
             mode: "create",
             deps: { sources, secrets },
-            instances,
+            installations,
             siteIntegrations: [TEST_SECRET_SOURCE_DEFINITION],
             dto: { kind: "test-secret-source", answers: { id: "secret-source-main", apiKey: "sk_test" }, options: {} },
         });
 
-        expect(result.instance.id).toBe("test-secret-source:secret-source-main");
-        expect(result.instance.runCount).toBe(1);
-        expect(result.instance.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "created" }]);
-        const secretKey = result.instance.secretRefs.apiKey;
+        expect(result.installation.id).toBe("test-secret-source");
+        expect(result.installation.runCount).toBe(1);
+        expect(result.installation.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "created" }]);
+        const secretKey = result.installation.secretRefs.apiKey;
         expect(secretKey).toMatch(/^TEST_SOURCE_SECRET_SOURCE_MAIN_[A-F0-9]{8}_API_KEY$/);
-        expect(JSON.stringify(result.instance)).not.toContain("sk_test");
+        expect(JSON.stringify(result.installation)).not.toContain("sk_test");
         expect(await secrets.get(secretKey)).toBe("sk_test");
     });
 
     test("rejects password answers that are not declared as secrets", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const instances = new InMemoryIntegrationInstanceRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
         const definition: IntegrationDefinition = {
             kind: "password-only",
             label: "Password Only",
             inputs: [{ name: "password", label: "Password", type: "password", required: true }],
         };
 
-        await expect(runIntegrationInstance({
+        await expect(runIntegrationInstallation({
             mode: "create",
             deps: { sources, secrets },
-            instances,
+            installations,
             siteIntegrations: [definition],
             dto: {
                 kind: "password-only",
                 answers: { password: "plain_password" },
                 options: {},
-                instance: { id: "password-only:main" },
             },
         })).rejects.toThrow(/password inputs must declare secret: true/);
 
-        expect(await instances.get("password-only:main")).toBeNull();
+        expect(await installations.get("password-only")).toBeNull();
     });
 
     test("maps secret references by input name instead of declaration position", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const instances = new InMemoryIntegrationInstanceRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
         const definition: IntegrationDefinition = twoSecretsDefinition();
 
-        const result = await runIntegrationInstance({
+        const result = await runIntegrationInstallation({
             mode: "create",
             deps: { sources, secrets },
-            instances,
+            installations,
             siteIntegrations: [definition],
             dto: {
                 kind: "two-secrets",
@@ -76,13 +75,13 @@ describe("@bernouy/cms-integrations instance secrets", () => {
             },
         });
 
-        expect(result.instance.secretRefs).toEqual({ apiKey: "API_KEY", serviceKey: "SERVICE_KEY" });
+        expect(result.installation.secretRefs).toEqual({ apiKey: "API_KEY", serviceKey: "SERVICE_KEY" });
     });
 
-    test("tracks generated connector secrets without storing generated values on the instance", async () => {
+    test("tracks generated connector secrets without storing generated values on the installation", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
-        const instances = new InMemoryIntegrationInstanceRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
         const deployer: IntegrationConnectorDeployer = {
             provider: "supabase",
             async deploy() {
@@ -90,21 +89,21 @@ describe("@bernouy/cms-integrations instance secrets", () => {
             },
         };
 
-        const result = await runIntegrationInstance({
+        const result = await runIntegrationInstallation({
             mode: "create",
             deps: { sources, secrets, connectorDeployers: [deployer] },
-            instances,
+            installations,
             siteIntegrations: [generatedSecretDefinition()],
             dto: { kind: "generated-secret", answers: { id: "main" }, options: {} },
         });
 
-        expect(result.instance.secretInputs).toEqual(["cmsApiKey"]);
-        expect(result.instance.secretRefs).toEqual({ cmsApiKey: "GENERATED_MAIN_API_KEY" });
+        expect(result.installation.secretInputs).toEqual(["cmsApiKey"]);
+        expect(result.installation.secretRefs).toEqual({ cmsApiKey: "GENERATED_MAIN_API_KEY" });
         const generated = await secrets.get("GENERATED_MAIN_API_KEY");
         expect(generated?.startsWith("cms_")).toBe(true);
         if (!generated) throw new Error("missing generated secret");
-        expect(JSON.stringify(result.instance)).not.toContain(generated);
-        expect(result.instance.runs[0]?.connectors).toEqual([{
+        expect(JSON.stringify(result.installation)).not.toContain(generated);
+        expect(result.installation.runs[0]?.connectors).toEqual([{
             provider: "supabase",
             outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
         }]);

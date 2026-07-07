@@ -2,9 +2,9 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
-import { GENERATED_INTEGRATION_INSTANCES_FILE } from "cms-cli/dev-server/integrations";
+import { GENERATED_INTEGRATION_INSTALLATIONS_FILE } from "cms-cli/dev-server/integrations";
 import { safeJoin } from "cms-cli/push/shared/safeJoin";
-import type { IntegrationInstance } from "@bernouy/cms-integrations";
+import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -79,21 +79,21 @@ export async function writeBlocSource(target: string, source: Record<string, str
 }
 
 async function readGeneratedIntegrationBlocIds(siteDir: string): Promise<Set<string>> {
-    const file = join(siteDir, GENERATED_INTEGRATION_INSTANCES_FILE);
+    const file = join(siteDir, GENERATED_INTEGRATION_INSTALLATIONS_FILE);
     if (!existsSync(file)) return new Set();
     try {
         const parsed = JSON.parse(await readFile(file, "utf-8")) as unknown;
         if (!Array.isArray(parsed)) return new Set();
-        return new Set(parsed.flatMap(instanceBlocArtifacts));
+        return new Set(parsed.flatMap(installationBlocArtifacts));
     } catch {
         return new Set();
     }
 }
 
-function instanceBlocArtifacts(value: unknown): string[] {
-    const instance = value as Partial<IntegrationInstance> | null;
-    if (!instance || !Array.isArray(instance.artifacts)) return [];
-    return instance.artifacts
+function installationBlocArtifacts(value: unknown): string[] {
+    const installation = value as Partial<IntegrationInstallation> | null;
+    if (!installation || !Array.isArray(installation.artifacts)) return [];
+    return installation.artifacts
         .filter(artifact => artifact.type === "bloc")
         .map(artifact => artifact.id);
 }

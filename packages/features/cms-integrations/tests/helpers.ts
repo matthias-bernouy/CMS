@@ -1,7 +1,7 @@
 import {
-    InMemoryIntegrationInstanceRepository,
+    InMemoryIntegrationInstallationRepository,
     type IntegrationDefinition,
-    type IntegrationInstance,
+    type IntegrationInstallation,
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
@@ -236,17 +236,17 @@ export class DeleteFailingSecretStore extends InMemorySecretStore {
     }
 }
 
-export class CreateFailingIntegrationInstanceRepository extends InMemoryIntegrationInstanceRepository {
+export class CreateFailingIntegrationInstallationRepository extends InMemoryIntegrationInstallationRepository {
     async create(): Promise<never> {
-        throw new Error("instance create failed");
+        throw new Error("installation create failed");
     }
 }
 
-export class SuccessReplaceFailingIntegrationInstanceRepository extends InMemoryIntegrationInstanceRepository {
-    async replace(instance: IntegrationInstance): Promise<IntegrationInstance> {
-        if (instance.status === "success" && instance.runCount === 2) {
-            throw new Error("instance replace failed");
+export class SuccessReplaceFailingIntegrationInstallationRepository extends InMemoryIntegrationInstallationRepository {
+    async replace(installation: IntegrationInstallation): Promise<IntegrationInstallation> {
+        if (installation.status === "success" && installation.runCount === 2) {
+            throw new Error("installation replace failed");
         }
-        return super.replace(instance);
+        return super.replace(installation);
     }
 }

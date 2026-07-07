@@ -1,14 +1,13 @@
 import type {
     IntegrationDefinition,
     IntegrationImportDto,
-    IntegrationInstanceStatus,
+    IntegrationInstallationStatus,
 } from "@bernouy/cms-integrations";
 
-export type IntegrationInstanceRow = {
+export type IntegrationInstallationRow = {
     id: string;
-    kind: string;
     label: string;
-    status: IntegrationInstanceStatus;
+    status: IntegrationInstallationStatus;
     runCount: number;
     artifactCount: number;
     missingArtifactCount: number;
@@ -37,18 +36,18 @@ export type BoundDataWaiter = {
 
 export type IntegrationBrowserHost = HTMLElement & {
     definitions: IntegrationDefinition[];
-    instances: IntegrationInstanceRow[];
+    installations: IntegrationInstallationRow[];
     activeDefinition: IntegrationDefinition | null;
     definitionsLoaded: boolean;
-    instancesLoaded: boolean;
+    installationsLoaded: boolean;
     observer: MutationObserver | null;
     waiters: BoundDataWaiter[];
     tab: BrowserTab;
-    selectedInstanceId: string;
+    selectedIntegrationId: string;
     query<T extends Element>(selector: string): T;
     renderAll(): void;
     setTab(tab: BrowserTab): void;
-    openDetail(instanceId: string): void;
+    openDetail(integrationId: string): void;
     openSetup(definition: IntegrationDefinition, options?: { answers?: Record<string, unknown>; error?: string }): void;
     closeDetail(): void;
     waitForBoundData(predicate: () => boolean, timeoutMs?: number): Promise<void>;

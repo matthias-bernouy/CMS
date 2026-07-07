@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import postIntegrationImport from "cms-control/api/integrations/import.post";
-import postIntegrationInstanceRerun from "cms-control/api/integrations/instances/rerun.post";
+import postIntegrationInstallationRerun from "cms-control/api/integrations/installations/rerun.post";
 import { makeCms, postImport, postRerun } from "./helpers";
 
-describe("POST /api/integrations/instances/rerun", () => {
-    test("reruns a tracked integration instance with stored secrets", async () => {
+describe("POST /api/integrations/installations/rerun", () => {
+    test("reruns a tracked integration installation with stored secrets", async () => {
         const { cms, sources } = makeCms();
 
         await postIntegrationImport(postImport({
@@ -12,12 +12,12 @@ describe("POST /api/integrations/instances/rerun", () => {
             answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms);
 
-        const res = await postIntegrationInstanceRerun(postRerun("test-secret-source:secret-source-main"), cms);
+        const res = await postIntegrationInstallationRerun(postRerun("test-secret-source"), cms);
         const body = await res.json();
 
         expect(res.status).toBe(200);
         expect(body.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "updated" }]);
-        expect(body.instance.runCount).toBe(2);
+        expect(body.installation.runCount).toBe(2);
         expect((await sources.getSource("urn:secret-source-main"))?.endpoints).toHaveLength(1);
         expect(JSON.stringify(body)).not.toContain("sk_test");
     });
@@ -30,18 +30,18 @@ describe("POST /api/integrations/instances/rerun", () => {
             answers: { id: "secret-source-main", apiKey: "sk_old" },
         }), cms);
 
-        const res = await postIntegrationInstanceRerun(postRerun("test-secret-source:secret-source-main", {
+        const res = await postIntegrationInstallationRerun(postRerun("test-secret-source", {
             answers: { apiKey: "sk_new" },
         }), cms);
         const body = await res.json();
 
-        expect(body.instance.runCount).toBe(2);
+        expect(body.installation.runCount).toBe(2);
         expect(JSON.stringify(body)).not.toContain("sk_new");
     });
 
-    test("requires an instance id", async () => {
+    test("requires an integration id", async () => {
         const { cms } = makeCms();
 
-        await expect(postIntegrationInstanceRerun(postRerun(), cms)).rejects.toThrow(/Missing param id/);
+        await expect(postIntegrationInstallationRerun(postRerun(), cms)).rejects.toThrow(/Missing param id/);
     });
 });

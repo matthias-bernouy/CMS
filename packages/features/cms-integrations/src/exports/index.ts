@@ -36,22 +36,21 @@ export type {
     IntegrationBlocImporter,
     IntegrationImportDeps,
     IntegrationImportDto,
-    IntegrationImportInstanceInput,
     IntegrationImportOptions,
     IntegrationImportRequest,
     IntegrationImportResult,
     IntegrationSecretResult,
 } from "../interfaces/IntegrationImport";
 export type {
-    IntegrationInstance,
-    IntegrationInstanceStatus,
+    IntegrationInstallation,
+    IntegrationInstallationStatus,
     IntegrationRun,
     IntegrationRunError,
-} from "../interfaces/IntegrationInstance";
+} from "../interfaces/IntegrationInstallation";
 export type {
-    IntegrationInstanceCreate,
-    IntegrationInstanceRepository,
-} from "../interfaces/IntegrationInstanceRepository";
+    IntegrationInstallationCreate,
+    IntegrationInstallationRepository,
+} from "../interfaces/IntegrationInstallationRepository";
 export type {
     IntegrationAsset,
     IntegrationDefinitionIndex,
@@ -61,10 +60,10 @@ export type {
 } from "../interfaces/IntegrationDefinitionRepository";
 
 export {
-    DuplicateIntegrationInstanceError,
+    DuplicateIntegrationInstallationError,
     IntegrationInputError,
     IntegrationRuntimeError,
-    MissingIntegrationInstanceError,
+    MissingIntegrationInstallationError,
     MissingIntegrationParam,
 } from "../core/errors";
 export {
@@ -82,11 +81,11 @@ export {
     importIntegration,
 } from "../core/importIntegration";
 export {
-    createIntegrationInstanceId,
-    runIntegrationInstance,
-    type RunIntegrationInstanceCreateRequest,
-    type RunIntegrationInstanceRerunRequest,
-} from "../core/instance/runIntegrationInstance";
+    integrationInstallationId,
+    runIntegrationInstallation,
+    type RunIntegrationInstallationCreateRequest,
+    type RunIntegrationInstallationRerunRequest,
+} from "../core/installation/runIntegrationInstallation";
 export {
     resolveTemplate,
     resolveTemplates,
@@ -94,10 +93,10 @@ export {
 } from "../core/templates";
 export {
     collectIntegrationDefinitionCspExtras,
-    collectIntegrationInstanceCspExtras,
+    collectIntegrationInstallationCspExtras,
     emptyIntegrationCspExtras,
     type IntegrationCspExtras,
 } from "../core/security/csp";
 export {
-    InMemoryIntegrationInstanceRepository,
-} from "../default-implementation/InMemoryIntegrationInstanceRepository";
+    InMemoryIntegrationInstallationRepository,
+} from "../default-implementation/InMemoryIntegrationInstallationRepository";

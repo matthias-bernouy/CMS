@@ -17,7 +17,7 @@ import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createDevSources, GENERATED_BLOCS_DIR } from "./dev-server/integrations";
 import { LocalFsDashboardRepository } from "./dev-server/dashboards";
 import { LocalFsFunctionRepository } from "./dev-server/functions";
-import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
+import { LocalFsIntegrationInstallationRepository } from "./dev-server/integrationInstallations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
 import { SupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
@@ -121,7 +121,7 @@ export default async function CLI_dev(args: string[]) {
     const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
     const integrationCatalog = createIntegrationCatalog(`http://${publicHost}:${port}/.cms/repository`);
     const integrationConnectorDeployers = createIntegrationConnectorDeployers();
-    const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
+    const integrationInstallations = new LocalFsIntegrationInstallationRepository(config.siteDir);
     const dashboards = new LocalFsDashboardRepository(config.siteDir);
     const functions = new LocalFsFunctionRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
@@ -168,7 +168,7 @@ export default async function CLI_dev(args: string[]) {
         deliveryUrl: `http://${publicHost}:${deliveryPort}`,
         publicAuth: { ...publicAuth, allowSignup: false },
         integrationCatalog,
-        integrationInstances,
+        integrationInstallations,
         integrationConnectorDeployers,
         dashboards,
         functions,
@@ -206,7 +206,7 @@ export default async function CLI_dev(args: string[]) {
         variantStore,
         sources,
         functions,
-        integrationInstances,
+        integrationInstallations,
         sourceResolveSecret: resolveSecret,
         roles,
         auth: publicAuth,
