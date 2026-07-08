@@ -1,212 +1,39 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Settings</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
 
-    <p9r-container size="md">
-        <p9r-tabs active="general">
+    <p9r-container size="lg">
+        <cms-shell-detail>
+            <a slot="back" href="{{BASE_PATH}}/admin/settings/general" aria-label="Open general settings">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 21v-7"></path>
+                    <path d="M4 10V3"></path>
+                    <path d="M12 21v-9"></path>
+                    <path d="M12 8V3"></path>
+                    <path d="M20 21v-5"></path>
+                    <path d="M20 12V3"></path>
+                    <path d="M2 14h4"></path>
+                    <path d="M10 8h4"></path>
+                    <path d="M18 16h4"></path>
+                </svg>
+            </a>
+            <span slot="title">Settings</span>
 
-            <p9r-tab-panel id="general" label="General">
-                <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
-                    <template>
-                        <form id="settings-form" cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false">
-                            <p9r-stack gap="lg">
-                                <p9r-card>
-                                    <span slot="header">Site</span>
-                                    <p9r-stack gap="md">
-                                        <p9r-input name="site.name"    label="Site name"   value="{{ site.name }}"    placeholder="My Website"></p9r-input>
-                                        <p9r-input name="site.host"    label="Host"        value="{{ site.host }}"    placeholder="https://example.com"></p9r-input>
-                                        <cms-media-input name="site.favicon" label="Favicon" value="{{ site.favicon }}" types="image" size="128"></cms-media-input>
-                                        <p9r-select name="site.language" label="Language" value="{{ site.language }}">
-                                            <option value="">— Default —</option>
-                                            <option value="en">English</option>
-                                            <option value="fr">Français</option>
-                                            <option value="de">Deutsch</option>
-                                            <option value="es">Español</option>
-                                            <option value="pt">Português</option>
-                                            <option value="it">Italiano</option>
-                                            <option value="nl">Nederlands</option>
-                                            <option value="pl">Polski</option>
-                                            <option value="ja">日本語</option>
-                                            <option value="zh">中文</option>
-                                        </p9r-select>
-                                        <p9r-select name="site.notFound" label="404 page" value="{{ site.notFound.path }}">
-                                            <option value="">— None —</option>
-                                            <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
-                                        </p9r-select>
-                                        <p9r-select name="site.serverError" label="500 page" value="{{ site.serverError.path }}">
-                                            <option value="">— None —</option>
-                                            <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
-                                        </p9r-select>
-                                    </p9r-stack>
-                                </p9r-card>
-
-                                <p9r-card>
-                                    <span slot="header">Editor</span>
-                                    <p9r-select name="editor.layoutCategory" label="Layout category" value="{{ editor.layoutCategory }}">
-                                        <option value="">— None —</option>
-                                        <option cms-repeat="layoutCategories" value="{{value}}">{{value}}</option>
-                                    </p9r-select>
-                                </p9r-card>
-
-                                <p9r-card>
-                                    <span slot="header">Theme CSS</span>
-                                    <p9r-textarea name="site.theme" rows="16" autosize value="{{ site.theme }}" placeholder="/* your CSS */"></p9r-textarea>
-                                </p9r-card>
-
-                                <p9r-stack direction="row" justify="end">
-                                    <p9r-button type="submit" color="primary">Save</p9r-button>
-                                </p9r-stack>
-                            </p9r-stack>
-                        </form>
-                    </template>
-                </div>
-            </p9r-tab-panel>
-
-            <p9r-tab-panel id="email" label="Email">
-                <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
-                    <template>
-                        <p9r-stack gap="lg">
-                            <form cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false">
-                                <p9r-stack gap="lg">
-                                    <p9r-card>
-                                        <span slot="header">Sender</span>
-                                        <p9r-stack gap="md">
-                                            <input type="hidden" name="email.enabled" value="false">
-                                            <w13c-checkbox cms-condition="email.enabled" name="email.enabled" value="true" checked>Enabled</w13c-checkbox>
-                                            <w13c-checkbox cms-condition="!email.enabled" name="email.enabled" value="true">Enabled</w13c-checkbox>
-                                            <input type="hidden" name="email.transport" value="smtp">
-                                            <p9r-input name="email.fromEmail" label="From email" value="{{ email.fromEmail }}" placeholder="no-reply@example.com"></p9r-input>
-                                            <p9r-input name="email.fromName" label="From name" value="{{ email.fromName }}" placeholder="{{ site.name }}"></p9r-input>
-                                            <p9r-input name="email.replyTo" label="Reply-to" value="{{ email.replyTo }}" placeholder="support@example.com"></p9r-input>
-                                        </p9r-stack>
-                                    </p9r-card>
-
-                                    <p9r-card>
-                                        <span slot="header">SMTP</span>
-                                        <p9r-stack gap="md">
-                                            <p9r-input name="email.smtp.host" label="Host" value="{{ email.smtp.host }}" placeholder="smtp.example.com"></p9r-input>
-                                            <p9r-input name="email.smtp.port" label="Port" value="{{ email.smtp.port }}" placeholder="587"></p9r-input>
-                                            <input type="hidden" name="email.smtp.secure" value="false">
-                                            <w13c-checkbox cms-condition="email.smtp.secure" name="email.smtp.secure" value="true" checked>Use TLS wrapper</w13c-checkbox>
-                                            <w13c-checkbox cms-condition="!email.smtp.secure" name="email.smtp.secure" value="true">Use TLS wrapper</w13c-checkbox>
-                                            <p9r-input name="email.smtp.username" label="Username" value="{{ email.smtp.username }}" placeholder="postmaster@example.com"></p9r-input>
-                                            <cms-credential-select name="email.smtp.passwordSecretRef" label="Password secret" value="{{ email.smtp.passwordSecretRef }}" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-                                        </p9r-stack>
-                                    </p9r-card>
-
-                                    <p9r-stack direction="row" justify="end">
-                                        <p9r-button type="submit" color="primary">Save</p9r-button>
-                                    </p9r-stack>
-                                </p9r-stack>
-                            </form>
-
-                            <form cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false">
-                                <p9r-stack gap="lg">
-                                    <p9r-card>
-                                        <span slot="header">Email verification template</span>
-                                        <p9r-stack gap="md">
-                                            <p9r-input name="email.templates.emailVerification.subject" label="Subject" value="{{ email.templates.emailVerification.subject }}" placeholder="Verify your email"></p9r-input>
-                                            <p9r-textarea name="email.templates.emailVerification.html" label="HTML" rows="10" autosize value="{{ email.templates.emailVerification.html }}" placeholder="&lt;p&gt;&lt;a href=&quot;https://example.com&quot;&gt;Verify email&lt;/a&gt;&lt;/p&gt;"></p9r-textarea>
-                                        </p9r-stack>
-                                    </p9r-card>
-
-                                    <p9r-card>
-                                        <span slot="header">Password reset template</span>
-                                        <p9r-stack gap="md">
-                                            <p9r-input name="email.templates.passwordReset.subject" label="Subject" value="{{ email.templates.passwordReset.subject }}" placeholder="Reset your password"></p9r-input>
-                                            <p9r-textarea name="email.templates.passwordReset.html" label="HTML" rows="10" autosize value="{{ email.templates.passwordReset.html }}" placeholder="&lt;p&gt;&lt;a href=&quot;https://example.com&quot;&gt;Reset password&lt;/a&gt;&lt;/p&gt;"></p9r-textarea>
-                                        </p9r-stack>
-                                    </p9r-card>
-
-                                    <p9r-stack direction="row" justify="end">
-                                        <p9r-button type="submit" color="primary">Save</p9r-button>
-                                    </p9r-stack>
-                                </p9r-stack>
-                            </form>
-
-                            <form cms-source="{{BASE_PATH}}/api/system/email-test as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="email:test">
-                                <p9r-card>
-                                    <span slot="header">Test email</span>
-                                    <p9r-stack gap="md">
-                                        <p9r-select name="kind" label="Template" value="email_verification">
-                                            <option value="email_verification">Email verification</option>
-                                            <option value="password_reset">Password reset</option>
-                                        </p9r-select>
-                                        <p9r-input name="to" label="Recipient" placeholder="you@example.com"></p9r-input>
-                                        <p9r-stack direction="row" justify="end">
-                                            <p9r-button type="submit">Send test</p9r-button>
-                                        </p9r-stack>
-                                    </p9r-stack>
-                                </p9r-card>
-                            </form>
-                        </p9r-stack>
-                    </template>
-                </div>
-            </p9r-tab-panel>
-
-            <p9r-tab-panel id="secrets" label="Secrets">
-                <cms-secrets api="{{BASE_PATH}}/api/secrets"></cms-secrets>
-            </p9r-tab-panel>
-
-            <p9r-tab-panel id="identity" label="Identity">
-                <p9r-stack gap="lg">
-                    <p9r-stack direction="row" justify="end">
-                        <p9r-open-modal modal-target="add-idp-modal">
-                            <p9r-button color="primary">+ Add provider</p9r-button>
-                        </p9r-open-modal>
-                    </p9r-stack>
-
-                    <p9r-table cms-source="{{BASE_PATH}}/api/identity/providers" cms-reload-on="idp:changed">
-                        <p9r-row slot="header" cms-condition="$source.loaded">
-                            <p9r-cell><strong>Provider</strong></p9r-cell>
-                            <p9r-cell><strong>Kind</strong></p9r-cell>
-                            <p9r-cell><strong>Manage</strong></p9r-cell>
-                        </p9r-row>
-
-                        <p9r-row cms-repeat="." cms-condition="$source.loaded">
-                            <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
-                            <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
-                            <p9r-cell>
-                                <cms-provider-actions provider-id="{{ id }}" kind="{{ kind }}" enabled="{{ enabled }}" base-url="{{BASE_PATH}}/api/identity/provider" emit="idp:changed"></cms-provider-actions>
-                                <p9r-modal id="edit-{{ id }}" aria-label="Edit provider">
-                                    <span slot="title">Edit provider</span>
-                                    <form cms-source="{{BASE_PATH}}/api/identity/provider as result" cms-source-trigger="submit" cms-source-method="PATCH" cms-source-publish="idp:changed" cms-source-success-reset="false">
-                                        <p9r-stack gap="md">
-                                            <input type="hidden" name="id" value="{{ id }}">
-                                            <p9r-input name="displayName" label="Name" value="{{ displayName }}"></p9r-input>
-                                            <p9r-input name="issuer" label="Issuer URL" value="{{ issuer }}"></p9r-input>
-                                            <p9r-input name="clientId" label="Client ID" value="{{ clientId }}"></p9r-input>
-                                            <cms-credential-select name="clientSecretRef" label="Client secret" value="{{ clientSecretRef }}" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-                                            <p9r-input name="scopes" label="Scopes" value="{{ scopes }}"></p9r-input>
-                                            <p9r-button type="submit" color="primary" fullWidth>Save</p9r-button>
-                                        </p9r-stack>
-                                    </form>
-                                </p9r-modal>
-                            </p9r-cell>
-                        </p9r-row>
-
-                        <cms-empty-state cms-condition="$source.empty">
-                            <p slot="title">No providers</p>
-                            <p slot="hint">The local email/password provider is seeded at provisioning; add Google/OIDC for more.</p>
-                        </cms-empty-state>
-                    </p9r-table>
+            <cms-detail-section slot="main" heading="Configuration areas">
+                <p9r-stack gap="md">
+                    <a href="{{BASE_PATH}}/admin/settings/general">General</a>
+                    <a href="{{BASE_PATH}}/admin/settings/email">Email</a>
+                    <a href="{{BASE_PATH}}/admin/settings/secrets">Secrets</a>
+                    <a href="{{BASE_PATH}}/admin/settings/identity">Identity</a>
+                    <a href="{{BASE_PATH}}/admin/settings/connectors">Connector providers</a>
                 </p9r-stack>
-            </p9r-tab-panel>
+            </cms-detail-section>
 
-        </p9r-tabs>
+            <cms-detail-section slot="aside" heading="Settings navigation">
+                <p9r-stack gap="sm">
+                    <span>Use the secondary navigation to open each settings page.</span>
+                </p9r-stack>
+            </cms-detail-section>
+        </cms-shell-detail>
     </p9r-container>
 </w13c-fixed-admin-layout>
-
-<p9r-modal id="add-idp-modal" aria-label="Add identity provider">
-    <span slot="title">Add identity provider</span>
-    <form cms-source="{{BASE_PATH}}/api/identity/provider as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="idp:changed">
-        <p9r-stack gap="md">
-            <input type="hidden" name="kind" value="oidc">
-            <p9r-input name="displayName" label="Name" placeholder="Google"></p9r-input>
-            <p9r-input name="issuer" label="Issuer URL" placeholder="https://accounts.google.com"></p9r-input>
-            <p9r-input name="clientId" label="Client ID" placeholder="xxxx.apps.googleusercontent.com"></p9r-input>
-            <cms-credential-select name="clientSecretRef" label="Client secret" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-            <p9r-input name="scopes" label="Scopes" value="openid email profile"></p9r-input>
-            <p9r-button color="primary" fullWidth type="submit">Add provider</p9r-button>
-        </p9r-stack>
-    </form>
-</p9r-modal>

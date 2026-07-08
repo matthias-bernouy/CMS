@@ -1,5 +1,4 @@
 import { showToast } from "@bernouy/components";
-import { secretKeyError } from "@bernouy/cms-secrets";
 import { postSecret, deleteSecret } from "./actions";
 
 /**
@@ -12,33 +11,6 @@ export async function opSaveRow(api: string, key: string, value: string): Promis
     const r = await postSecret(api, key, value);
     if (r.ok) showToast(`Secret ${key} updated`, { type: 'success' });
     else      showToast(`Update failed: ${r.error}`, { type: 'error' });
-}
-
-export async function opAddSecret(
-    api: string,
-    keyEl: HTMLInputElement,
-    valueEl: HTMLInputElement,
-    knownKeys: Set<string>,
-): Promise<void> {
-    const key   = keyEl.value.trim();
-    const value = valueEl.value;
-    if (!key)                 { showToast('Key is required', { type: 'error' }); return; }
-    const keyError = secretKeyError(key);
-    if (keyError) {
-        showToast(`Invalid key: ${keyError}`, { type: 'error' });
-        return;
-    }
-    if (knownKeys.has(key)) {
-        showToast(`Secret ${key} already exists — edit it inline below`, { type: 'warning' });
-        return;
-    }
-    const r = await postSecret(api, key, value);
-    if (r.ok) {
-        keyEl.value = ''; valueEl.value = '';
-        showToast(`Secret ${key} created`, { type: 'success' });
-    } else {
-        showToast(`Create failed: ${r.error}`, { type: 'error' });
-    }
 }
 
 export async function opDeleteSecret(api: string, key: string): Promise<void> {

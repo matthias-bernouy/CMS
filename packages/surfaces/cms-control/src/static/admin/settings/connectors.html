@@ -1,0 +1,31 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Settings</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
+
+    <p9r-container size="lg">
+        <cms-shell-detail>
+            <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 7H5a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h2"></path>
+                    <path d="M15 17h4a2 2 0 0 0 2-2v-2a4 4 0 0 0-4-4h-2"></path>
+                    <path d="M8 12h8"></path>
+                    <path d="M12 8v8"></path>
+                </svg>
+            </a>
+            <span slot="title">Connector providers</span>
+
+            <cms-detail-section slot="main" heading="Connector providers">
+                <cms-empty-state fluid>
+                    <p slot="title">No connector providers configured</p>
+                    <p slot="hint">Supabase and other integration connector providers will be managed here.</p>
+                </cms-empty-state>
+            </cms-detail-section>
+
+            <cms-detail-section slot="aside" heading="Scope">
+                <p9r-stack gap="sm">
+                    <span>Connector providers back integration deployment targets such as Supabase projects.</span>
+                </p9r-stack>
+            </cms-detail-section>
+        </cms-shell-detail>
+    </p9r-container>
+</w13c-fixed-admin-layout>

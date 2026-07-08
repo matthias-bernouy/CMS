@@ -1,0 +1,78 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Settings</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
+
+    <p9r-container size="lg">
+        <cms-shell-detail>
+            <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="m17 11 2 2 4-4"></path>
+                </svg>
+            </a>
+            <span slot="title">Identity</span>
+            <p9r-open-modal slot="actions" modal-target="add-idp-modal">
+                <p9r-button color="primary">+ Add provider</p9r-button>
+            </p9r-open-modal>
+
+            <cms-detail-section slot="main" heading="Login providers">
+                <p9r-table cms-source="{{BASE_PATH}}/api/identity/providers" cms-reload-on="idp:changed">
+                    <p9r-row slot="header" cms-condition="$source.loaded">
+                        <p9r-cell><strong>Provider</strong></p9r-cell>
+                        <p9r-cell><strong>Kind</strong></p9r-cell>
+                        <p9r-cell><strong>Manage</strong></p9r-cell>
+                    </p9r-row>
+
+                    <p9r-row cms-repeat="." cms-condition="$source.loaded">
+                        <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
+                        <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
+                        <p9r-cell>
+                            <cms-provider-actions provider-id="{{ id }}" kind="{{ kind }}" enabled="{{ enabled }}" base-url="{{BASE_PATH}}/api/identity/provider" emit="idp:changed"></cms-provider-actions>
+                            <p9r-modal id="edit-{{ id }}" aria-label="Edit provider">
+                                <span slot="title">Edit provider</span>
+                                <form cms-source="{{BASE_PATH}}/api/identity/provider as result" cms-source-trigger="submit" cms-source-method="PATCH" cms-source-publish="idp:changed" cms-source-success-reset="false">
+                                    <p9r-stack gap="md">
+                                        <input type="hidden" name="id" value="{{ id }}">
+                                        <p9r-input name="displayName" label="Name" value="{{ displayName }}"></p9r-input>
+                                        <p9r-input name="issuer" label="Issuer URL" value="{{ issuer }}"></p9r-input>
+                                        <p9r-input name="clientId" label="Client ID" value="{{ clientId }}"></p9r-input>
+                                        <cms-credential-select name="clientSecretRef" label="Client secret" value="{{ clientSecretRef }}" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                        <p9r-input name="scopes" label="Scopes" value="{{ scopes }}"></p9r-input>
+                                        <p9r-button type="submit" color="primary" fullWidth>Save</p9r-button>
+                                    </p9r-stack>
+                                </form>
+                            </p9r-modal>
+                        </p9r-cell>
+                    </p9r-row>
+
+                    <cms-empty-state cms-condition="$source.empty">
+                        <p slot="title">No providers</p>
+                        <p slot="hint">The local email/password provider is seeded at provisioning; add Google/OIDC for more.</p>
+                    </cms-empty-state>
+                </p9r-table>
+            </cms-detail-section>
+
+            <cms-detail-section slot="aside" heading="Provider types">
+                <p9r-stack gap="sm">
+                    <span>The local provider is managed by the CMS. OIDC providers add external login methods.</span>
+                </p9r-stack>
+            </cms-detail-section>
+        </cms-shell-detail>
+    </p9r-container>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="add-idp-modal" aria-label="Add identity provider">
+    <span slot="title">Add identity provider</span>
+    <form cms-source="{{BASE_PATH}}/api/identity/provider as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="idp:changed">
+        <p9r-stack gap="md">
+            <input type="hidden" name="kind" value="oidc">
+            <p9r-input name="displayName" label="Name" placeholder="Google"></p9r-input>
+            <p9r-input name="issuer" label="Issuer URL" placeholder="https://accounts.google.com"></p9r-input>
+            <p9r-input name="clientId" label="Client ID" placeholder="xxxx.apps.googleusercontent.com"></p9r-input>
+            <cms-credential-select name="clientSecretRef" label="Client secret" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+            <p9r-input name="scopes" label="Scopes" value="openid email profile"></p9r-input>
+            <p9r-button color="primary" fullWidth type="submit">Add provider</p9r-button>
+        </p9r-stack>
+    </form>
+</p9r-modal>

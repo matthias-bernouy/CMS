@@ -1,0 +1,74 @@
+<cms-event-toast event="email:test" message="Test email sent" type="success"></cms-event-toast>
+
+<w13c-fixed-admin-layout>
+    <span slot="title">Settings</span>
+    <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
+
+    <p9r-container size="lg">
+        <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
+            <template>
+                <cms-shell-detail>
+                    <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                            <path d="m3 7 9 6 9-6"></path>
+                        </svg>
+                    </a>
+                    <span slot="title">Email</span>
+                    <p9r-button slot="actions" form="email-settings-form" type="submit" color="primary">Save email settings</p9r-button>
+
+                    <form id="email-settings-form" slot="main" cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false" style="display: grid; gap: 16px; margin: 0;">
+                        <cms-detail-section heading="Sender">
+                            <p9r-stack gap="md">
+                                <input type="hidden" name="email.enabled" value="false">
+                                <w13c-checkbox cms-condition="email.enabled" name="email.enabled" value="true" checked>Enabled</w13c-checkbox>
+                                <w13c-checkbox cms-condition="!email.enabled" name="email.enabled" value="true">Enabled</w13c-checkbox>
+                                <input type="hidden" name="email.transport" value="smtp">
+                                <p9r-input name="email.fromEmail" label="From email" value="{{ email.fromEmail }}" placeholder="no-reply@example.com"></p9r-input>
+                                <p9r-input name="email.fromName" label="From name" value="{{ email.fromName }}" placeholder="{{ site.name }}"></p9r-input>
+                                <p9r-input name="email.replyTo" label="Reply-to" value="{{ email.replyTo }}" placeholder="support@example.com"></p9r-input>
+                            </p9r-stack>
+                        </cms-detail-section>
+
+                        <cms-detail-section heading="SMTP">
+                            <p9r-stack gap="md">
+                                <input type="hidden" name="email.transport" value="smtp">
+                                <p9r-input name="email.smtp.host" label="Host" value="{{ email.smtp.host }}" placeholder="smtp.example.com"></p9r-input>
+                                <p9r-input name="email.smtp.port" label="Port" value="{{ email.smtp.port }}" placeholder="587"></p9r-input>
+                                <input type="hidden" name="email.smtp.secure" value="false">
+                                <w13c-checkbox cms-condition="email.smtp.secure" name="email.smtp.secure" value="true" checked>Use TLS wrapper</w13c-checkbox>
+                                <w13c-checkbox cms-condition="!email.smtp.secure" name="email.smtp.secure" value="true">Use TLS wrapper</w13c-checkbox>
+                                <p9r-input name="email.smtp.username" label="Username" value="{{ email.smtp.username }}" placeholder="postmaster@example.com"></p9r-input>
+                                <cms-credential-select name="email.smtp.passwordSecretRef" label="Password secret" value="{{ email.smtp.passwordSecretRef }}" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                            </p9r-stack>
+                        </cms-detail-section>
+
+                        <cms-detail-section heading="Templates">
+                            <p9r-stack gap="md">
+                                <p9r-input name="email.templates.emailVerification.subject" label="Email verification subject" value="{{ email.templates.emailVerification.subject }}" placeholder="Verify your email"></p9r-input>
+                                <p9r-textarea name="email.templates.emailVerification.html" label="Email verification HTML" rows="10" autosize value="{{ email.templates.emailVerification.html }}" placeholder="&lt;p&gt;&lt;a href=&quot;https://example.com&quot;&gt;Verify email&lt;/a&gt;&lt;/p&gt;"></p9r-textarea>
+                                <p9r-input name="email.templates.passwordReset.subject" label="Password reset subject" value="{{ email.templates.passwordReset.subject }}" placeholder="Reset your password"></p9r-input>
+                                <p9r-textarea name="email.templates.passwordReset.html" label="Password reset HTML" rows="10" autosize value="{{ email.templates.passwordReset.html }}" placeholder="&lt;p&gt;&lt;a href=&quot;https://example.com&quot;&gt;Reset password&lt;/a&gt;&lt;/p&gt;"></p9r-textarea>
+                            </p9r-stack>
+                        </cms-detail-section>
+                    </form>
+
+                    <cms-detail-section slot="aside" heading="Test email">
+                        <form cms-source="{{BASE_PATH}}/api/system/email-test as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="email:test">
+                            <p9r-stack gap="md">
+                                <p9r-select name="kind" label="Template" value="email_verification">
+                                    <option value="email_verification">Email verification</option>
+                                    <option value="password_reset">Password reset</option>
+                                </p9r-select>
+                                <p9r-input name="to" label="Recipient" placeholder="you@example.com"></p9r-input>
+                                <p9r-stack direction="row" justify="end">
+                                    <p9r-button type="submit">Send test</p9r-button>
+                                </p9r-stack>
+                            </p9r-stack>
+                        </form>
+                    </cms-detail-section>
+                </cms-shell-detail>
+            </template>
+        </div>
+    </p9r-container>
+</w13c-fixed-admin-layout>

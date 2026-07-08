@@ -8,10 +8,11 @@ const realFetch = globalThis.fetch;
 afterEach(() => {
     globalThis.fetch = realFetch;
     document.body.replaceChildren();
+    window.history.replaceState(null, "", "/");
 });
 
 describe("admin settings binding", () => {
-    test("renders the settings forms from the loaded settings source", async () => {
+    test("renders the general settings page from the loaded settings source", async () => {
         globalThis.fetch = (async (url: string | URL | Request) => {
             const href = String(url);
             if (href.includes("/api/system/settings")) {
@@ -54,24 +55,76 @@ describe("admin settings binding", () => {
             return json({});
         }) as typeof fetch;
 
+        window.history.replaceState(null, "", "/admin/settings/general");
         document.head.innerHTML = `<meta name="basePath" content="">`;
         document.body.innerHTML = `
             <cms-binding-core>
-                ${settingsHtml()}
+                ${settingsHtml("settings/general.html")}
             </cms-binding-core>
         `;
 
         await waitFor(() => document.querySelector("#settings-form") !== null);
 
         expect(document.querySelector("#settings-form")).not.toBeNull();
-        expect(document.querySelectorAll("p9r-card").length).toBeGreaterThan(0);
+        expect(document.querySelector("cms-shell-detail")).not.toBeNull();
+        expect(document.querySelectorAll("cms-detail-section").length).toBeGreaterThan(0);
+        expect(document.querySelector("p9r-tabs")).toBeNull();
+        expect(document.querySelector("cms-settings-nav")).not.toBeNull();
+        expect(document.querySelector("cms-settings-sections")).toBeNull();
         expect(document.querySelector("p9r-input[name='site.name']")?.getAttribute("value")).toBe("Demo");
         expect(document.querySelector("p9r-select[name='site.notFound'] option[value='/404']")).not.toBeNull();
+
+        const settingsNav = document.querySelector("cms-settings-nav");
+        const general = settingsNav?.shadowRoot?.querySelector<HTMLElement>("[data-settings-section='general']");
+        const connectors = settingsNav?.shadowRoot?.querySelector<HTMLElement>("[data-settings-section='connectors']");
+        expect(general?.hasAttribute("active")).toBe(true);
+        expect(connectors?.getAttribute("href")).toBe("/admin/settings/connectors");
+    });
+
+    test("renders connector providers as its own settings detail page", () => {
+        window.history.replaceState(null, "", "/admin/settings/connectors");
+        document.head.innerHTML = `<meta name="basePath" content="">`;
+        document.body.innerHTML = `
+            <cms-binding-core>
+                ${settingsHtml("settings/connectors.html")}
+            </cms-binding-core>
+        `;
+
+        expect(document.querySelector("cms-shell-detail")).not.toBeNull();
+        expect(document.querySelector("cms-settings-nav")).not.toBeNull();
+        expect(document.querySelector("#settings-form")).toBeNull();
+        expect(document.body.textContent).toContain("Connector providers");
+        expect(document.querySelector("p9r-tabs")).toBeNull();
+    });
+
+    test("renders secret creation from the detail header modal", async () => {
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            const href = String(url);
+            if (href.includes("/api/secrets")) return json([]);
+            return json({});
+        }) as typeof fetch;
+
+        window.history.replaceState(null, "", "/admin/settings/secrets");
+        document.head.innerHTML = `<meta name="basePath" content="">`;
+        document.body.innerHTML = `
+            <cms-binding-core>
+                ${settingsHtml("settings/secrets.html")}
+            </cms-binding-core>
+        `;
+
+        await waitFor(() => document.querySelector("cms-secrets")?.shadowRoot !== null);
+
+        const secrets = document.querySelector("cms-secrets");
+        expect(document.querySelector("p9r-open-modal[slot='actions']")).not.toBeNull();
+        expect(document.querySelector("#add-secret-modal")).not.toBeNull();
+        expect(document.querySelector("#add-secret-modal p9r-input[name='key']")).not.toBeNull();
+        expect(secrets?.shadowRoot?.querySelector(".add")).toBeNull();
+        expect(secrets?.shadowRoot?.querySelector("[data-action='add-submit']")).toBeNull();
     });
 });
 
-function settingsHtml(): string {
-    const path = join(import.meta.dir, "../../src/static/admin/settings.html");
+function settingsHtml(relativePath: string): string {
+    const path = join(import.meta.dir, "../../src/static/admin", relativePath);
     return readFileSync(path, "utf8").replaceAll("{{BASE_PATH}}", "");
 }
 

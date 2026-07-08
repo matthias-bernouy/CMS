@@ -3,7 +3,7 @@ import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { fetchSecrets, SECRETS_RELOAD_EVENT } from "./actions";
 import { injectIcons } from "./icons";
-import { opSaveRow, opAddSecret, opDeleteSecret } from "./ops";
+import { opSaveRow, opDeleteSecret } from "./ops";
 
 /**
  * `<cms-secrets>` — Secrets tab UI. Self-driving: fetches the list on
@@ -19,7 +19,6 @@ export class CmsSecrets extends Component {
     private _list: HTMLElement | null = null;
     private _rowTemplate: HTMLTemplateElement | null = null;
     private _empty: HTMLElement | null = null;
-    private _knownKeys = new Set<string>();
     private _onReload = () => this._reload();
 
     constructor() {
@@ -31,7 +30,6 @@ export class CmsSecrets extends Component {
         this._list        = sr.querySelector('[data-role="list"]')         as HTMLElement;
         this._empty       = sr.querySelector('[data-role="empty"]')        as HTMLElement;
         this._rowTemplate = sr.querySelector('[data-role="row-template"]') as HTMLTemplateElement;
-        sr.querySelector('[data-action="add-submit"]')?.addEventListener('click', () => this._add());
         document.addEventListener(SECRETS_RELOAD_EVENT, this._onReload);
         this._reload();
     }
@@ -47,7 +45,6 @@ export class CmsSecrets extends Component {
         try {
             const items = await fetchSecrets(this._api);
             items.sort((a, b) => a.key.localeCompare(b.key));
-            this._knownKeys = new Set(items.map(it => it.key));
             this._list.replaceChildren(...items.map(it => this._buildRow(it.key, it.value)));
             this._empty.hidden = items.length > 0;
         } catch {
@@ -60,7 +57,9 @@ export class CmsSecrets extends Component {
         const frag = this._rowTemplate!.content.cloneNode(true) as DocumentFragment;
         const row  = frag.firstElementChild as HTMLElement;
         row.dataset.key = key;
-        (row.querySelector('[data-role="key"]')   as HTMLElement).textContent = key;
+        const keyEl = row.querySelector('[data-role="key"]') as HTMLElement;
+        keyEl.textContent = key;
+        keyEl.title = key;
         (row.querySelector('[data-role="value"]') as HTMLInputElement).value = value;
         injectIcons(row);
         row.querySelector('[data-action="reveal"]')?.addEventListener('click', () => this._toggleReveal(row));
@@ -81,12 +80,6 @@ export class CmsSecrets extends Component {
         return opSaveRow(this._api, key, value);
     }
 
-    private _add(): Promise<void> {
-        const sr = this.shadowRoot!;
-        const keyEl   = sr.querySelector('[data-role="add-key"]')   as HTMLInputElement;
-        const valueEl = sr.querySelector('[data-role="add-value"]') as HTMLInputElement;
-        return opAddSecret(this._api, keyEl, valueEl, this._knownKeys);
-    }
 }
 
 if (!customElements.get('cms-secrets')) customElements.define('cms-secrets', CmsSecrets);
