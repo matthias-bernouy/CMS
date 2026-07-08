@@ -1,13 +1,11 @@
-import { categories, installedCounts, matches } from "../domain";
+import { installedCounts } from "../domain";
 import type { IntegrationBrowserHost, IntegrationDefinition, IntegrationInstallationRow } from "../model";
 import { integrationRouteUrl } from "../api";
 import { cloneElement, text } from "./templates";
 import { appendBadges, artifactLabels, formatRelativeDate, integrationIcon, statusLabel } from "./resources";
 
 export function renderBrowser(host: IntegrationBrowserHost): void {
-    renderCategories(host);
     renderInstallations(host);
-    renderCatalogue(host);
     renderCounts(host);
 }
 
@@ -16,29 +14,12 @@ export function renderCounts(host: IntegrationBrowserHost): void {
     text(host, "[data-catalogue-count]", availableDefinitions(host).length);
 }
 
-export function renderCategories(host: IntegrationBrowserHost): void {
-    const select = host.query<HTMLSelectElement>("[data-category]");
-    select.replaceChildren(new Option("All categories", ""));
-    for (const category of categories(availableDefinitions(host))) select.append(new Option(category, category));
-}
-
 export function renderInstallations(host: IntegrationBrowserHost): void {
     const root = host.query<HTMLElement>("[data-installations]");
     const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
     root.replaceChildren();
     if (rows.length) root.append(cloneElement("installed-head"), ...rows.map(row => installationRow(host, row)));
     host.query<HTMLElement>("[data-installations-empty]").hidden = rows.length > 0;
-}
-
-export function renderCatalogue(host: IntegrationBrowserHost): void {
-    const query = host.query<HTMLInputElement>("[data-search]").value.trim();
-    const category = host.query<HTMLSelectElement>("[data-category]").value;
-    const visible = availableDefinitions(host)
-        .filter(definition => matches(definition, query, category))
-        .sort((left, right) => left.label.localeCompare(right.label));
-    host.query<HTMLElement>("[data-catalogue]").replaceChildren(...visible.map(definition => definitionCard(definition)));
-    host.query<HTMLElement>("[data-catalogue-empty]").hidden = visible.length > 0;
-    renderCounts(host);
 }
 
 export function availableDefinitions(host: IntegrationBrowserHost): IntegrationDefinition[] {
@@ -66,15 +47,4 @@ function installationRow(host: IntegrationBrowserHost, installation: Integration
     appendBadges(row.querySelector<HTMLElement>("[data-badges]")!, definition ? artifactLabels(definition) : ["Unknown"]);
     text(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
-}
-
-function definitionCard(definition: IntegrationDefinition): HTMLElement {
-    const card = cloneElement<HTMLAnchorElement>("catalogue-card");
-    card.href = integrationRouteUrl({ view: "setup", kind: definition.kind });
-    card.dataset.definitionKind = definition.kind;
-    card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text(card, "[data-label]", definition.label);
-    text(card, "[data-description]", definition.description ?? "");
-    appendBadges(card.querySelector<HTMLElement>("[data-badges]")!, [definition.category ?? "Other", ...artifactLabels(definition)]);
-    return card;
 }

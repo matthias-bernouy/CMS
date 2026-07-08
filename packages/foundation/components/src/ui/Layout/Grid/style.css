@@ -1,5 +1,7 @@
 :host {
     --min: 240px;
+    --item-max: none;
+    --item-justify: stretch;
     --gap: var(--p9r-space-md, 16px);
     --max-width: 100%;
 
@@ -9,6 +11,7 @@
        container narrower than `--min`. No media queries. */
     grid-template-columns: repeat(auto-fill, minmax(min(var(--min), 100%), 1fr));
     gap: var(--gap);
+    justify-items: var(--item-justify);
 
     /* Content zone: own width + horizontal placement within the parent.
        Placement via margin-inline (works under any parent), exposed in the
@@ -19,11 +22,31 @@
     margin-inline: 0 auto;
 }
 
+::slotted(*) {
+    box-sizing: border-box;
+    max-width: var(--item-max);
+}
+
+:host([max]:not([max="none"])) {
+    --item-justify: center;
+}
+
+:host([max]:not([max="none"])) ::slotted(*) {
+    width: 100%;
+}
+
 /* --- Min item width (drives the column count via minmax) --- */
 :host([min="sm"]) { --min: 180px; }
 :host([min="md"]) { --min: 240px; }
 :host([min="lg"]) { --min: 300px; }
 :host([min="xl"]) { --min: 360px; }
+
+/* --- Max item width (caps direct children without changing column count) --- */
+:host([max="none"]) { --item-max: none; }
+:host([max="sm"])   { --item-max: 240px; }
+:host([max="md"])   { --item-max: 320px; }
+:host([max="lg"])   { --item-max: 420px; }
+:host([max="xl"])   { --item-max: 560px; }
 
 /* --- Content zone width (size) --- */
 :host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
@@ -36,6 +59,12 @@
 :host([align-self="start"])  { margin-inline: 0 auto; }
 :host([align-self="center"]) { margin-inline: auto; }
 :host([align-self="end"])    { margin-inline: auto 0; }
+
+/* --- Children horizontal placement within grid cells --- */
+:host([justify-items="start"])   { --item-justify: start; }
+:host([justify-items="center"])  { --item-justify: center; }
+:host([justify-items="end"])     { --item-justify: end; }
+:host([justify-items="stretch"]) { --item-justify: stretch; }
 
 /* --- Gap --- */
 :host([gap="none"]) { --gap: 0; }

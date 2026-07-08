@@ -1,6 +1,6 @@
 import template from "./template.html" with { type: "text" };
 import { handleClick, openSetup as renderSetupError } from "./ui/actions";
-import { renderBrowser, renderCatalogue } from "./ui/browser";
+import { renderBrowser } from "./ui/browser";
 import { disconnectBoundSources, startBoundSources, waitForBoundData } from "./ui/data";
 import styles from "./ui/styles";
 import { currentIntegrationRoute, pushIntegrationRoute, replaceIntegrationRoute } from "./api";
@@ -85,8 +85,6 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
     }
 
     private bind(): void {
-        this.query<HTMLInputElement>("[data-search]").addEventListener("input", () => renderCatalogue(this));
-        this.query<HTMLSelectElement>("[data-category]").addEventListener("change", () => renderCatalogue(this));
         this.addEventListener("click", (event) => void handleClick(this, event));
     }
 

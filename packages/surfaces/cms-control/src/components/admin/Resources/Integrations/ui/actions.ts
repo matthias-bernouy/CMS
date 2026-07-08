@@ -23,8 +23,10 @@ export async function handleClick(host: IntegrationBrowserHost, event: Event): P
     const definition = target.closest("[data-definition-kind]") as HTMLElement | null;
     if (definition?.dataset.definitionKind) {
         if (!shouldInterceptNavigation(event)) return;
+        const known = host.definitions.find(item => item.kind === definition.dataset.definitionKind);
+        if (!known) return;
         event.preventDefault();
-        openDefinition(host, definition.dataset.definitionKind);
+        host.openSetup(known);
     }
 }
 
@@ -76,11 +78,6 @@ async function runIntegrationSync(host: IntegrationBrowserHost, button: HTMLElem
         button.textContent = "Run sync";
         if (status) status.textContent = error instanceof Error ? error.message : "Sync failed";
     }
-}
-
-function openDefinition(host: IntegrationBrowserHost, kind: string): void {
-    const definition = host.definitions.find(item => item.kind === kind);
-    if (definition) host.openSetup(definition);
 }
 
 function closeAndSetTab(host: IntegrationBrowserHost, tab: BrowserTab): void {

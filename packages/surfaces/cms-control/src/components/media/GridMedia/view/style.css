@@ -1,6 +1,7 @@
 :host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
+    --grid-max-col: 240px;
     --empty-color: var(--text-muted, #94a3b8);
     --border: var(--border-default, #e2e8f0);
     --bg: var(--bg-base, #f8fafc);
@@ -211,6 +212,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-col), 1fr));
     gap: var(--grid-gap);
+    justify-items: center;
+}
+
+.grid > * {
+    width: 100%;
+    max-width: var(--grid-max-col);
 }
 
 .grid:empty + .empty {

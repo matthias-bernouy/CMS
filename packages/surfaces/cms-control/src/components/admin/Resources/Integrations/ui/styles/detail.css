@@ -17,15 +17,10 @@
     gap: 10px;
 }
 
-.catalogue-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-    gap: 10px;
-}
-
 .catalogue-card {
     display: grid;
     gap: 14px;
+    width: 100%;
     min-height: 116px;
     border: 1px solid #dfe5e2;
     border-radius: 8px;

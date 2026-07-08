@@ -12,6 +12,11 @@
     gap: 14px;
 }
 
+.catalogue-view > [data-catalogue-source] {
+    display: grid;
+    gap: 14px;
+}
+
 .integration-tab {
     display: inline-flex;
     align-items: center;

@@ -28,12 +28,32 @@
         </section>
 
         <section class="catalogue-view" data-catalogue-view hidden>
-            <div class="filters">
-                <p9r-input type="search" label="Search" placeholder="Search integrations" data-search></p9r-input>
-                <p9r-select label="Category" data-category><option value="">All categories</option></p9r-select>
-            </div>
-            <div class="catalogue-grid" data-catalogue></div>
-            <p class="empty" data-catalogue-empty hidden>No matching integrations.</p>
+            <section data-catalogue-source cms-reload-on="integration:updated">
+                <template>
+                    <div class="filters">
+                        <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
+                        <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
+                            <option value="">All categories</option>
+                            <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
+                        </p9r-select>
+                    </div>
+                    <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
+                        <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
+                            <span class="card-head">
+                                <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
+                                <span>
+                                    <strong>{{ integration.label }}</strong>
+                                    <small>{{ integration.description }}</small>
+                                </span>
+                            </span>
+                            <span class="badge-row">
+                                <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
+                            </span>
+                        </a>
+                    </p9r-grid>
+                    <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
+                </template>
+            </section>
         </section>
     </section>
 

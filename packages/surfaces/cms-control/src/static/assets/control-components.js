@@ -721,7 +721,7 @@
 `;
   var al = Be + Ve;
 
-  class Ke extends s {
+  class je extends s {
     _close;
     _message;
     _messageSlot;
@@ -762,7 +762,7 @@
       this._handleClose();
     }
   }
-  var je = `<div class="avatar" part="avatar">
+  var Ke = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
@@ -857,7 +857,7 @@
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: Ne, template: je });
+      super({ css: Ne, template: Ke });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -2110,7 +2110,7 @@ input {
   display: none;
 }
 `;
-  var Kr = `input:checked ~ .custom-box {
+  var jr = `input:checked ~ .custom-box {
   background-color: var(--cb-active-bg);
   border-color: var(--cb-active-border);
 }
@@ -2167,7 +2167,7 @@ input:focus-visible ~ .custom-box {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var jr = (t, e) => {
+  var Kr = (t, e) => {
     if (!e)
       return;
     if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
@@ -2202,7 +2202,7 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
-  var Bl = Vr + Kr;
+  var Bl = Vr + jr;
 
   class Ur extends Y {
     _input;
@@ -2217,7 +2217,7 @@ input:focus-visible ~ .custom-box {
       this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
-      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => c(this, t)), jr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), P(this, this._input, this._internals);
+      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => c(this, t)), Kr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), P(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
@@ -4384,7 +4384,7 @@ p9r-tag:hover {
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var K = (t, e, r, i) => {
+  var j = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
     let o = te(t);
@@ -4453,12 +4453,12 @@ p9r-tag:hover {
       return;
     e.textContent = t.getAttribute("hint") ?? "", ee(e, r, i);
   };
-  var Kd = (t, e) => {
+  var jd = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var jd = (t, e) => {
+  var Kd = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -4477,12 +4477,12 @@ p9r-tag:hover {
     ee(i, e, o);
   };
   var ie = (t, e, r, i, o, n, a) => {
-    Fd(t, r), Rd(t, e), Pd(t, e), Dd(t, e), qd(t, e), Bd(t, e), Vd(t, i, n, o), Kd(t, i), jd(t, e), re(t, n, a, i, o);
+    Fd(t, r), Rd(t, e), Pd(t, e), Dd(t, e), qd(t, e), Bd(t, e), Vd(t, i, n, o), jd(t, i), Kd(t, e), re(t, n, a, i, o);
   };
   var Lo = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), K(t, e, i, o), tt(t, e);
+    r.setFormValue(e.value), j(t, e, i, o), tt(t, e);
   };
   var Ao = (t, e) => {
     if (!t)
@@ -4520,7 +4520,7 @@ p9r-tag:hover {
       if (t !== null)
         this.value = t;
       else
-        K(this, this._textarea, this._counter, this._count);
+        j(this, this._textarea, this._counter, this._count);
     }
     disconnectedCallback() {
       this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
@@ -4534,7 +4534,7 @@ p9r-tag:hover {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "max-count")
-        re(this, this._counter, this._max, this._hint, this._meta), K(this, this._textarea, this._counter, this._count);
+        re(this, this._counter, this._max, this._hint, this._meta), j(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
         tt(this, this._textarea);
       else
@@ -4546,7 +4546,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), K(this, this._textarea, this._counter, this._count), tt(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), j(this, this._textarea, this._counter, this._count), tt(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -4901,15 +4901,17 @@ input:hover:not(:disabled) {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-  class Ko extends s {
+  class jo extends s {
     constructor() {
       super({ css: Vo, template: Bo });
     }
   }
-  var jo = `<slot></slot>
+  var Ko = `<slot></slot>
 `;
   var No = `:host {
     --min: 240px;
+    --item-max: none;
+    --item-justify: stretch;
     --gap: var(--p9r-space-md, 16px);
     --max-width: 100%;
 
@@ -4919,6 +4921,7 @@ input:hover:not(:disabled) {
        container narrower than \`--min\`. No media queries. */
     grid-template-columns: repeat(auto-fill, minmax(min(var(--min), 100%), 1fr));
     gap: var(--gap);
+    justify-items: var(--item-justify);
 
     /* Content zone: own width + horizontal placement within the parent.
        Placement via margin-inline (works under any parent), exposed in the
@@ -4929,11 +4932,31 @@ input:hover:not(:disabled) {
     margin-inline: 0 auto;
 }
 
+::slotted(*) {
+    box-sizing: border-box;
+    max-width: var(--item-max);
+}
+
+:host([max]:not([max="none"])) {
+    --item-justify: center;
+}
+
+:host([max]:not([max="none"])) ::slotted(*) {
+    width: 100%;
+}
+
 /* --- Min item width (drives the column count via minmax) --- */
 :host([min="sm"]) { --min: 180px; }
 :host([min="md"]) { --min: 240px; }
 :host([min="lg"]) { --min: 300px; }
 :host([min="xl"]) { --min: 360px; }
+
+/* --- Max item width (caps direct children without changing column count) --- */
+:host([max="none"]) { --item-max: none; }
+:host([max="sm"])   { --item-max: 240px; }
+:host([max="md"])   { --item-max: 320px; }
+:host([max="lg"])   { --item-max: 420px; }
+:host([max="xl"])   { --item-max: 560px; }
 
 /* --- Content zone width (size) --- */
 :host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
@@ -4947,6 +4970,12 @@ input:hover:not(:disabled) {
 :host([align-self="center"]) { margin-inline: auto; }
 :host([align-self="end"])    { margin-inline: auto 0; }
 
+/* --- Children horizontal placement within grid cells --- */
+:host([justify-items="start"])   { --item-justify: start; }
+:host([justify-items="center"])  { --item-justify: center; }
+:host([justify-items="end"])     { --item-justify: end; }
+:host([justify-items="stretch"]) { --item-justify: stretch; }
+
 /* --- Gap --- */
 :host([gap="none"]) { --gap: 0; }
 :host([gap="xs"])   { --gap: var(--p9r-space-xs, 4px); }
@@ -4958,7 +4987,7 @@ input:hover:not(:disabled) {
 
   class $o extends s {
     constructor() {
-      super({ css: No, template: jo });
+      super({ css: No, template: Ko });
     }
   }
   var Oo = `<div class="app-container" part="container">
@@ -6568,7 +6597,7 @@ p {
     _onPopstate = () => kt(this, this._anchor);
     _onKey = (t) => fn(this, this._anchor, t);
   }
-  var Kn = `:host {
+  var jn = `:host {
   display: flex;
   flex: 1;
 
@@ -6657,7 +6686,7 @@ p {
 
 .description.is-empty { display: none; }
 `;
-  var jn = `:host([data-state="active"], [state="active"]) {
+  var Kn = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -6718,7 +6747,7 @@ p {
   margin-top: 0.4rem;
 }
 `;
-  var Mc = Kn + jn;
+  var Mc = jn + Kn;
   var $n = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
@@ -7293,9 +7322,9 @@ p {
         d.setAttribute("disabled", "");
       e.appendChild(d), n.setAttribute("role", "tabpanel"), n.setAttribute("aria-labelledby", `tab-${l}`);
     }), o)
-      j(t, e, r, o);
+      K(t, e, r, o);
   };
-  var j = (t, e, r, i) => {
+  var K = (t, e, r, i) => {
     let o = de(r), n = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
     if (o.forEach((l) => {
       let u = l.id === i;
@@ -7314,7 +7343,7 @@ p {
       return;
     let n = o.dataset.target;
     if (n)
-      j(t, e, r, n);
+      K(t, e, r, n);
   };
   var va = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
@@ -7337,7 +7366,7 @@ p {
       return;
     let d = u.dataset.target;
     if (d)
-      j(t, e, r, d);
+      K(t, e, r, d);
     u.focus();
   };
   var Uc = pa + ha;
@@ -7360,7 +7389,7 @@ p {
     }
     attributeChangedCallback(t, e, r) {
       if (t === "active" && r !== null)
-        j(this, this._tablist, this._slot, r);
+        K(this, this._tablist, this._slot, r);
     }
     get active() {
       return this.getAttribute("active") ?? "";
@@ -7953,13 +7982,13 @@ p {
       return `<div class="bar"><span class="bar-key" title="${w(i.label)}">${w(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${ue(i.value, "int")} · ${n}` : n}</span></div>`;
     }).join("");
   }
-  var Ka = `<div class="stat">
+  var ja = `<div class="stat">
     <span class="label"></span>
     <strong class="value">—</strong>
     <span class="note"></span>
 </div>
 `;
-  var ja = `:host {
+  var Ka = `:host {
     display: block;
     flex: 1 1 0;
     min-width: 0;
@@ -8006,7 +8035,7 @@ p {
 
   class Na extends s {
     constructor() {
-      super({ css: ja, template: Ka });
+      super({ css: Ka, template: ja });
     }
     connectedCallback() {
       let t = this.shadowRoot;
@@ -8984,7 +9013,7 @@ p {
   function F(t, e, r) {
     r.setSourceStatus?.(t, e);
   }
-  function Ks(t, e, r, i, o) {
+  function js(t, e, r, i, o) {
     let n = o.sourceStatusesFor?.(t, r) ?? Vu(t, r), a = { $source: r, $sources: n };
     if (e)
       a[e] = i;
@@ -9050,20 +9079,20 @@ p {
       F(this.el, r, this.options), this.renderer.body(this.scope(i.alias, r, e)), this.renderedBody = true;
     }
     scope(t, e, r) {
-      return Ks(this.el, t, e, r, this.options);
+      return js(this.el, t, e, r, this.options);
     }
     hasConditions(t) {
       return this.conditions.has(t);
     }
   }
-  var Ku = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  var ju = new Set(["POST", "PUT", "PATCH", "DELETE"]);
   function Ns(t, e) {
     let r = (t ?? "").trim().toUpperCase();
     if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
       return r;
     return e;
   }
-  function ju(t) {
+  function Ku(t) {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
@@ -9072,11 +9101,11 @@ p {
     return e;
   }
   function Nu(t, e) {
-    let r = ju(t), i = e.method;
+    let r = Ku(t), i = e.method;
     if (i === "GET" || i === "HEAD")
-      return { kind: "query", url: $u(e.url, r), formData: r, data: js(r) };
-    let o = Ou(js(r), r, e.bodyFields);
-    if (Ku.has(i) && Zu(r))
+      return { kind: "query", url: $u(e.url, r), formData: r, data: Ks(r) };
+    let o = Ou(Ks(r), r, e.bodyFields);
+    if (ju.has(i) && Zu(r))
       return { kind: "formData", url: e.url, formData: r, data: o, body: r };
     return { kind: "json", url: e.url, formData: r, data: o, body: JSON.stringify(o) };
   }
@@ -9095,7 +9124,7 @@ p {
       return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
     }
   }
-  function js(t) {
+  function Ks(t) {
     let e = {};
     for (let [r, i] of t.entries()) {
       if (ke(i))
@@ -9959,7 +9988,7 @@ p {
             Users
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="settings">
+        <w13c-lateral-menu-item data-route="settings/general">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path
@@ -12531,15 +12560,7 @@ p9r-action-menu {
   customElements.define("cms-token-create", CmsTokenCreate);
 
   // src/components/admin/Secrets/template.html
-  var template_default4 = `<div class="add">
-    <p9r-input data-role="add-key"
-        placeholder="MY_API_KEY"></p9r-input>
-    <p9r-input data-role="add-value" type="password"
-        placeholder="Value (kept server-side)"></p9r-input>
-    <p9r-button color="primary" data-action="add-submit">Add</p9r-button>
-</div>
-
-<div data-role="list"></div>
+  var template_default4 = `<div data-role="list"></div>
 
 <template data-role="row-template">
     <div class="row">
@@ -12559,19 +12580,6 @@ p9r-action-menu {
     display: block;
 }
 
-.add {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-    margin-bottom: 16px;
-}
-
-.add > p9r-input { flex: 1; min-width: 0; }
-
 [data-role="list"] {
     display: flex;
     flex-direction: column;
@@ -12579,7 +12587,8 @@ p9r-action-menu {
 }
 
 .row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(180px, 0.9fr) minmax(220px, 1.1fr) 32px 32px 32px;
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
@@ -12589,13 +12598,19 @@ p9r-action-menu {
 }
 
 .row > [data-role="key"] {
-    min-width: 14rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-family: ui-monospace, monospace;
     font-size: 13px;
     color: var(--text-main, #1e293b);
 }
 
-.row > [data-role="value"] { flex: 1; min-width: 0; }
+.row > [data-role="value"] {
+    width: 100%;
+    min-width: 0;
+}
 
 .icon-btn {
     display: inline-flex;
@@ -12628,6 +12643,16 @@ p9r-action-menu {
     color: var(--text-muted, #94a3b8);
     border: 1px dashed var(--border-default, #e2e8f0);
     border-radius: 8px;
+}
+
+@media (max-width: 680px) {
+    .row {
+        grid-template-columns: minmax(0, 1fr) 32px 32px 32px;
+    }
+
+    .row > [data-role="key"] {
+        grid-column: 1 / -1;
+    }
 }
 `;
 
@@ -12709,31 +12734,6 @@ p9r-action-menu {
     else
       au(`Update failed: ${r.error}`, { type: "error" });
   }
-  async function opAddSecret(api, keyEl, valueEl, knownKeys) {
-    const key = keyEl.value.trim();
-    const value = valueEl.value;
-    if (!key) {
-      au("Key is required", { type: "error" });
-      return;
-    }
-    const keyError = secretKeyError(key);
-    if (keyError) {
-      au(`Invalid key: ${keyError}`, { type: "error" });
-      return;
-    }
-    if (knownKeys.has(key)) {
-      au(`Secret ${key} already exists — edit it inline below`, { type: "warning" });
-      return;
-    }
-    const r = await postSecret(api, key, value);
-    if (r.ok) {
-      keyEl.value = "";
-      valueEl.value = "";
-      au(`Secret ${key} created`, { type: "success" });
-    } else {
-      au(`Create failed: ${r.error}`, { type: "error" });
-    }
-  }
   async function opDeleteSecret(api, key) {
     if (!confirm(`Delete secret "${key}"?`))
       return;
@@ -12749,7 +12749,6 @@ p9r-action-menu {
     _list = null;
     _rowTemplate = null;
     _empty = null;
-    _knownKeys = new Set;
     _onReload = () => this._reload();
     constructor() {
       super({ css: style_default3, template: template_default4 });
@@ -12759,7 +12758,6 @@ p9r-action-menu {
       this._list = sr.querySelector('[data-role="list"]');
       this._empty = sr.querySelector('[data-role="empty"]');
       this._rowTemplate = sr.querySelector('[data-role="row-template"]');
-      sr.querySelector('[data-action="add-submit"]')?.addEventListener("click", () => this._add());
       document.addEventListener(SECRETS_RELOAD_EVENT, this._onReload);
       this._reload();
     }
@@ -12775,7 +12773,6 @@ p9r-action-menu {
       try {
         const items = await fetchSecrets(this._api);
         items.sort((a, b) => a.key.localeCompare(b.key));
-        this._knownKeys = new Set(items.map((it2) => it2.key));
         this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key, it2.value)));
         this._empty.hidden = items.length > 0;
       } catch {
@@ -12787,7 +12784,9 @@ p9r-action-menu {
       const frag = this._rowTemplate.content.cloneNode(true);
       const row = frag.firstElementChild;
       row.dataset.key = key;
-      row.querySelector('[data-role="key"]').textContent = key;
+      const keyEl = row.querySelector('[data-role="key"]');
+      keyEl.textContent = key;
+      keyEl.title = key;
       row.querySelector('[data-role="value"]').value = value;
       injectIcons(row);
       row.querySelector('[data-action="reveal"]')?.addEventListener("click", () => this._toggleReveal(row));
@@ -12805,18 +12804,154 @@ p9r-action-menu {
       const value = row.querySelector('[data-role="value"]').value;
       return opSaveRow(this._api, key, value);
     }
-    _add() {
-      const sr = this.shadowRoot;
-      const keyEl = sr.querySelector('[data-role="add-key"]');
-      const valueEl = sr.querySelector('[data-role="add-value"]');
-      return opAddSecret(this._api, keyEl, valueEl, this._knownKeys);
-    }
   }
   if (!customElements.get("cms-secrets"))
     customElements.define("cms-secrets", CmsSecrets);
 
-  // src/components/admin/ShellDetail/style.css
+  // src/components/admin/SettingsSections/style.css
   var style_default4 = `:host {
+    display: block;
+    height: 100%;
+}
+
+w13c-lateral-menu {
+    width: 100%;
+    height: 100%;
+    --menu-brand-mark-display: none;
+    --menu-header-font-size: .875rem;
+    --menu-item-font-size: .875rem;
+    --menu-section-font-size: .6875rem;
+}
+
+w13c-lateral-menu-item {
+    --item-font-size: .875rem;
+}
+`;
+
+  // src/components/admin/SettingsSections/template.html
+  var template_default5 = `<w13c-lateral-menu
+    aria-label="Settings navigation"
+    style="width: 100%; height: 100%; --menu-brand-mark-display: none; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;"
+>
+    <span slot="header">Settings</span>
+
+    <w13c-lateral-menu-item data-settings-section="general">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 21v-7" />
+            <path d="M4 10V3" />
+            <path d="M12 21v-9" />
+            <path d="M12 8V3" />
+            <path d="M20 21v-5" />
+            <path d="M20 12V3" />
+            <path d="M2 14h4" />
+            <path d="M10 8h4" />
+            <path d="M18 16h4" />
+        </svg>
+        General
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-settings-section="email">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m3 7 9 6 9-6" />
+        </svg>
+        Email
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-settings-section="secrets">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="7.5" cy="15.5" r="5.5" />
+            <path d="m12 11 8-8" />
+            <path d="m15 6 3 3" />
+            <path d="m17 4 3 3" />
+        </svg>
+        Secrets
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-settings-section="identity">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="m17 11 2 2 4-4" />
+        </svg>
+        Identity
+    </w13c-lateral-menu-item>
+
+    <w13c-lateral-menu-item data-settings-section="connectors">
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 7H5a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h2" />
+            <path d="M15 17h4a2 2 0 0 0 2-2v-2a4 4 0 0 0-4-4h-2" />
+            <path d="M8 12h8" />
+            <path d="M12 8v8" />
+        </svg>
+        Connector providers
+    </w13c-lateral-menu-item>
+</w13c-lateral-menu>
+`;
+
+  // src/components/admin/SettingsSections/SettingsSections.ts
+  var SETTINGS_SECTIONS = ["general", "email", "secrets", "identity", "connectors"];
+  var DEFAULT_SECTION = "general";
+
+  class CmsSettingsNav extends A {
+    constructor() {
+      super({ css: style_default4, template: template_default5 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.configureLinks();
+      this.syncActive();
+      window.addEventListener("popstate", this.syncActive);
+    }
+    disconnectedCallback() {
+      window.removeEventListener("popstate", this.syncActive);
+    }
+    configureLinks() {
+      const basePath = this.basePath();
+      const items = Array.from(this.shadowRoot.querySelectorAll("[data-settings-section]"));
+      for (const item of items) {
+        const section = item.dataset.settingsSection ?? "";
+        if (!isSettingsSection(section))
+          continue;
+        item.setAttribute("href", `${basePath}/admin/settings/${section}`);
+      }
+    }
+    syncActive = () => {
+      const active = this.activeSection();
+      const items = Array.from(this.shadowRoot.querySelectorAll("[data-settings-section]"));
+      for (const item of items) {
+        item.toggleAttribute("active", item.dataset.settingsSection === active);
+      }
+    };
+    activeSection() {
+      const basePath = this.basePath();
+      let path = window.location.pathname;
+      if (basePath && path.startsWith(`${basePath}/`))
+        path = path.slice(basePath.length);
+      path = path.replace(/^\/+|\/+$/g, "");
+      if (path === "admin/settings")
+        return DEFAULT_SECTION;
+      const section = path.match(/^admin\/settings\/([^/]+)$/)?.[1] ?? "";
+      return isSettingsSection(section) ? section : DEFAULT_SECTION;
+    }
+    basePath() {
+      const meta = document.querySelector('meta[name="basePath"]');
+      return (meta?.getAttribute("content") ?? "").replace(/\/+$/, "");
+    }
+  }
+  if (!customElements.get("cms-settings-nav"))
+    customElements.define("cms-settings-nav", CmsSettingsNav);
+  function isSettingsSection(value) {
+    return SETTINGS_SECTIONS.includes(value);
+  }
+
+  // src/components/admin/ShellDetail/style.css
+  var style_default5 = `:host {
     display: block;
 }
 
@@ -12947,7 +13082,7 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 `;
 
   // src/components/admin/ShellDetail/template.html
-  var template_default5 = `<article class="shell-detail">
+  var template_default6 = `<article class="shell-detail">
     <header class="shell-detail-header">
         <div class="shell-detail-identity">
             <slot name="back"></slot>
@@ -13106,7 +13241,7 @@ p {
   // src/components/admin/ShellDetail/ShellDetail.ts
   class CmsShellDetail extends A {
     constructor() {
-      super({ css: style_default4, template: template_default5 });
+      super({ css: style_default5, template: template_default6 });
     }
   }
   if (!customElements.get("cms-shell-detail"))
@@ -13521,7 +13656,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Resources/Dashboards/style.css
-  var style_default5 = `:host {
+  var style_default6 = `:host {
     display: block;
 }
 
@@ -13666,7 +13801,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/template.html
-  var template_default6 = `<main class="content">
+  var template_default7 = `<main class="content">
     <cms-binding-core class="binding-source">
         <span data-dashboard-list-source hidden>
             <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
@@ -14594,7 +14729,7 @@ p {
     customElements.define("cms-dashboard-w-row", DashboardWRow);
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default6 = `:host {
+  var style_default7 = `:host {
     display: block;
     --dashboard-table-columns: 46px 1fr;
 }
@@ -14690,7 +14825,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default7 = `<section class="w-table-shell">
+  var template_default8 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -14720,7 +14855,7 @@ slot {
     value = { title: "", actions: [], columns: [], rows: [] };
     selectedRow = "";
     constructor() {
-      super({ css: style_default6, template: template_default7 });
+      super({ css: style_default7, template: template_default8 });
     }
     set data(value) {
       this.value = value;
@@ -15030,7 +15165,13 @@ slot {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/style.css
-  var style_default7 = `:host { display: block; }
+  var style_default8 = `:host {
+    --media-grid-item-max: 120px;
+    --media-grid-item-max-mobile: 112px;
+    --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
+
+    display: block;
+}
 
 .media-field { display: grid; gap: 10px; }
 
@@ -15049,7 +15190,13 @@ slot {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
     gap: 8px;
+    justify-items: center;
     max-width: 100%;
+}
+
+.media-grid > * {
+    max-width: var(--media-grid-item-max);
+    width: 100%;
 }
 
 .media-tile,
@@ -15072,7 +15219,11 @@ slot {
     transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 
-.media-tile:first-child { grid-column: span 2; grid-row: span 2; }
+.media-tile:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+    max-width: var(--media-grid-featured-item-max);
+}
 
 .media-tile:hover,
 .media-tile:focus-visible {
@@ -15147,15 +15298,20 @@ button {
         grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
     }
 
+    .media-grid > * {
+        max-width: var(--media-grid-item-max-mobile);
+    }
+
     .media-tile:first-child {
         grid-column: span 1;
         grid-row: span 1;
+        max-width: var(--media-grid-item-max-mobile);
     }
 }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/template.html
-  var template_default8 = `<section class="media-field">
+  var template_default9 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
     </div>
@@ -15285,7 +15441,7 @@ button {
     pendingPick = { action: "upload" };
     suppressClick = false;
     constructor() {
-      super({ css: style_default7, template: template_default8 });
+      super({ css: style_default8, template: template_default9 });
     }
     static get observedAttributes() {
       return ["label", "accept"];
@@ -15688,7 +15844,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/style.css
-  var style_default8 = `:host {
+  var style_default9 = `:host {
     display: block;
 }
 
@@ -15911,7 +16067,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/template.html
-  var template_default9 = `<cms-shell-detail>
+  var template_default10 = `<cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="4" y="5" width="16" height="14" rx="2"></rect>
@@ -15948,7 +16104,7 @@ p9r-token-input {
     optionsScopeKey = "";
     lookupReloadTimer = null;
     constructor() {
-      super({ css: style_default8, template: template_default9 });
+      super({ css: style_default9, template: template_default10 });
     }
     set data(value) {
       this.value = value;
@@ -16595,7 +16751,7 @@ p9r-token-input {
     drafts = new Map;
     observer = null;
     constructor() {
-      super({ css: style_default5, template: template_default6 });
+      super({ css: style_default6, template: template_default7 });
       configureDashboardBindingFilters();
     }
     connectedCallback() {
@@ -16785,7 +16941,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Integrations/template.html
-  var template_default10 = `<div class="integrations-root">
+  var template_default11 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
         <div data-definitions-source cms-reload-on="integration:updated">
             <template>
@@ -16815,12 +16971,32 @@ p9r-token-input {
         </section>
 
         <section class="catalogue-view" data-catalogue-view hidden>
-            <div class="filters">
-                <p9r-input type="search" label="Search" placeholder="Search integrations" data-search></p9r-input>
-                <p9r-select label="Category" data-category><option value="">All categories</option></p9r-select>
-            </div>
-            <div class="catalogue-grid" data-catalogue></div>
-            <p class="empty" data-catalogue-empty hidden>No matching integrations.</p>
+            <section data-catalogue-source cms-reload-on="integration:updated">
+                <template>
+                    <div class="filters">
+                        <p9r-input type="search" label="Search" placeholder="Search integrations" data-search cms-param-sync="integrationSearch"></p9r-input>
+                        <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
+                            <option value="">All categories</option>
+                            <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
+                        </p9r-select>
+                    </div>
+                    <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
+                        <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
+                            <span class="card-head">
+                                <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
+                                <span>
+                                    <strong>{{ integration.label }}</strong>
+                                    <small>{{ integration.description }}</small>
+                                </span>
+                            </span>
+                            <span class="badge-row">
+                                <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
+                            </span>
+                        </a>
+                    </p9r-grid>
+                    <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
+                </template>
+            </section>
         </section>
     </section>
 
@@ -16975,14 +17151,6 @@ p9r-token-input {
       counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
     return counts;
   }
-  function categories(definitions) {
-    return Array.from(new Set(definitions.map((definition) => definition.category ?? "Other"))).sort();
-  }
-  function matches(definition, query2, category) {
-    const text = [definition.kind, definition.label, definition.category, definition.description].join(" ").toLowerCase();
-    const categoryMatch = !category || category === (definition.category ?? "Other");
-    return categoryMatch && (!query2 || text.includes(query2.toLowerCase()));
-  }
 
   // src/components/admin/Resources/Integrations/ui/templates/browser.html
   var browser_default = `<template data-template="installed-head">
@@ -17006,19 +17174,6 @@ p9r-token-input {
         <span><span class="status-pill" data-status></span></span>
         <span class="badge-row" data-badges></span>
         <span class="muted" data-updated></span>
-    </a>
-</template>
-
-<template data-template="catalogue-card">
-    <a class="catalogue-card">
-        <span class="card-head">
-            <span data-icon-host></span>
-            <span>
-                <strong data-label></strong>
-                <small data-description></small>
-            </span>
-        </span>
-        <span class="badge-row" data-badges></span>
     </a>
 </template>
 `;
@@ -17392,20 +17547,12 @@ p9r-token-input {
   }
   // src/components/admin/Resources/Integrations/ui/browser.ts
   function renderBrowser(host) {
-    renderCategories(host);
     renderInstallations(host);
-    renderCatalogue(host);
     renderCounts(host);
   }
   function renderCounts(host) {
     text(host, "[data-installed-count]", host.installations.length);
     text(host, "[data-catalogue-count]", availableDefinitions(host).length);
-  }
-  function renderCategories(host) {
-    const select3 = host.query("[data-category]");
-    select3.replaceChildren(new Option("All categories", ""));
-    for (const category of categories(availableDefinitions(host)))
-      select3.append(new Option(category, category));
   }
   function renderInstallations(host) {
     const root = host.query("[data-installations]");
@@ -17414,14 +17561,6 @@ p9r-token-input {
     if (rows.length)
       root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
     host.query("[data-installations-empty]").hidden = rows.length > 0;
-  }
-  function renderCatalogue(host) {
-    const query2 = host.query("[data-search]").value.trim();
-    const category = host.query("[data-category]").value;
-    const visible = availableDefinitions(host).filter((definition) => matches(definition, query2, category)).sort((left, right) => left.label.localeCompare(right.label));
-    host.query("[data-catalogue]").replaceChildren(...visible.map((definition) => definitionCard(definition)));
-    host.query("[data-catalogue-empty]").hidden = visible.length > 0;
-    renderCounts(host);
   }
   function availableDefinitions(host) {
     const counts = installedCounts(host.installations);
@@ -17446,16 +17585,6 @@ p9r-token-input {
     appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
     text(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
-  }
-  function definitionCard(definition) {
-    const card = cloneElement("catalogue-card");
-    card.href = integrationRouteUrl({ view: "setup", kind: definition.kind });
-    card.dataset.definitionKind = definition.kind;
-    card.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text(card, "[data-label]", definition.label);
-    text(card, "[data-description]", definition.description ?? "");
-    appendBadges(card.querySelector("[data-badges]"), [definition.category ?? "Other", ...artifactLabels(definition)]);
-    return card;
   }
 
   // src/components/admin/Resources/Integrations/ui/detail.ts
@@ -17556,8 +17685,11 @@ p9r-token-input {
     if (definition?.dataset.definitionKind) {
       if (!shouldInterceptNavigation(event))
         return;
+      const known = host.definitions.find((item) => item.kind === definition.dataset.definitionKind);
+      if (!known)
+        return;
       event.preventDefault();
-      openDefinition(host, definition.dataset.definitionKind);
+      host.openSetup(known);
     }
   }
   function openSetup(host, definition, options2 = {}) {
@@ -17606,11 +17738,6 @@ p9r-token-input {
         status.textContent = error instanceof Error ? error.message : "Sync failed";
     }
   }
-  function openDefinition(host, kind) {
-    const definition = host.definitions.find((item) => item.kind === kind);
-    if (definition)
-      host.openSetup(definition);
-  }
   function closeAndSetTab(host, tab) {
     pushIntegrationRoute({ view: "list", tab });
     host.renderAll();
@@ -17625,8 +17752,10 @@ p9r-token-input {
   function startBoundSources(host) {
     const definitions = host.query("[data-definitions-source]");
     const installations = host.query("[data-installations-source]");
+    const catalogue = host.query("[data-catalogue-source]");
     definitions.setAttribute("cms-source", `${route2("/api/integrations/list")} as definitions`);
     installations.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
+    catalogue.setAttribute("cms-source", `${route2("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
     host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
@@ -17841,6 +17970,11 @@ button[slot="back"] svg {
     gap: 14px;
 }
 
+.catalogue-view > [data-catalogue-source] {
+    display: grid;
+    gap: 14px;
+}
+
 .integration-tab {
     display: inline-flex;
     align-items: center;
@@ -17985,15 +18119,10 @@ button[slot="back"] svg {
     gap: 10px;
 }
 
-.catalogue-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-    gap: 10px;
-}
-
 .catalogue-card {
     display: grid;
     gap: 14px;
+    width: 100%;
     min-height: 116px;
     border: 1px solid #dfe5e2;
     border-radius: 8px;
@@ -18314,8 +18443,6 @@ button[slot="back"]:disabled {
       return element;
     }
     bind() {
-      this.query("[data-search]").addEventListener("input", () => renderCatalogue(this));
-      this.query("[data-category]").addEventListener("change", () => renderCatalogue(this));
       this.addEventListener("click", (event) => void handleClick(this, event));
     }
     renderRoute() {
@@ -18366,7 +18493,7 @@ button[slot="back"]:disabled {
       const style = document.createElement("style");
       style.textContent = styles_default;
       const body = document.createElement("template");
-      body.innerHTML = template_default10;
+      body.innerHTML = template_default11;
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
@@ -18374,7 +18501,7 @@ button[slot="back"]:disabled {
     customElements.define("cms-integrations-admin", IntegrationBrowser);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default11 = `<header class="topbar">
+  var template_default12 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -18425,7 +18552,7 @@ button[slot="back"]:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/style.css
-  var style_default9 = `:host {
+  var style_default10 = `:host {
     display: block;
     min-width: 0;
     border-bottom: 1px solid var(--editor-v2-border);
@@ -18684,7 +18811,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template3 = document.createElement("template");
-  template3.innerHTML = `<style>${String(style_default9)}</style>${String(template_default11)}`;
+  template3.innerHTML = `<style>${String(style_default10)}</style>${String(template_default12)}`;
   var TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
   var TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
   var TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
@@ -18850,7 +18977,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default12 = `<aside class="panel">
+  var template_default13 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -18866,7 +18993,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default10 = `:host {
+  var style_default11 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -18966,7 +19093,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(style_default10)}</style>${String(template_default12)}`;
+  template4.innerHTML = `<style>${String(style_default11)}</style>${String(template_default13)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -19477,7 +19604,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/template.html
-  var template_default13 = `<div class="backdrop" hidden>
+  var template_default14 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -19508,7 +19635,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: contents;
 }
 
@@ -20010,7 +20137,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/DataSourcePicker.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default11)}</style>${String(template_default13)}`;
+  template5.innerHTML = `<style>${String(style_default12)}</style>${String(template_default14)}`;
   var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
   var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 
@@ -20206,7 +20333,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/template.html
-  var template_default14 = `<div class="backdrop" hidden>
+  var template_default15 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -20225,7 +20352,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/style.css
-  var style_default12 = `:host {
+  var style_default13 = `:host {
     display: contents;
 }
 
@@ -20415,7 +20542,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/ConditionPicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(style_default12)}</style>${String(template_default14)}`;
+  template6.innerHTML = `<style>${String(style_default13)}</style>${String(template_default15)}`;
   var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
   var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
   var STATES = ["loaded", "loading", "empty", "error"];
@@ -20597,7 +20724,7 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/template.html
-  var template_default15 = `<div class="backdrop" hidden>
+  var template_default16 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -20627,7 +20754,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: contents;
 }
 
@@ -21107,7 +21234,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default13)}</style>${String(template_default15)}`;
+  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default16)}`;
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   class BlockPickerModal extends HTMLElement {
@@ -21213,13 +21340,13 @@ dd {
         this._renderSidebar();
         this._renderEntries();
       }, this._sourceCount("media"), this._sourceCount("media") === 0));
-      const categories2 = this._categories();
+      const categories = this._categories();
       this.categories.append(this._filterButton("All", this._activeCategory === "", () => {
         this._activeCategory = "";
         this._renderSidebar();
         this._renderEntries();
       }, this._sourceCount(this._activeSource)));
-      for (const category of categories2) {
+      for (const category of categories) {
         this.categories.append(this._filterButton(category, this._activeCategory === category, () => {
           this._activeCategory = category;
           this._renderSidebar();
@@ -21370,13 +21497,13 @@ dd {
       return this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === this._activeSource && blockPickerCategoryLabel(option2) === category).length ?? 0;
     }
     _categories() {
-      const categories2 = new Set;
+      const categories = new Set;
       for (const option2 of this._activeGroup()?.options ?? []) {
         if (blockPickerOptionItem(option2).kind !== this._activeSource)
           continue;
-        categories2.add(blockPickerCategoryLabel(option2));
+        categories.add(blockPickerCategoryLabel(option2));
       }
-      return [...categories2].sort((a, b) => a.localeCompare(b));
+      return [...categories].sort((a, b) => a.localeCompare(b));
     }
     _activeGroup() {
       return this._groups.find((group) => (group.slot ?? "") === this._activeSlotKey) ?? this._groups[0];
@@ -22809,13 +22936,13 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default16 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default17 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default14 = `:host {
+  var style_default15 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -22957,12 +23084,12 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template8 = document.createElement("template");
   template8.innerHTML = `<style>${[
-    style_default14,
+    style_default15,
     sourceStates_default,
     badges_default,
     context_default
   ].map((css) => String(css)).join(`
-`)}</style>${String(template_default16)}`;
+`)}</style>${String(template_default17)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -23004,7 +23131,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default17 = `<main class="canvas">
+  var template_default18 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -23015,7 +23142,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default15 = `:host {
+  var style_default16 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -23102,7 +23229,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default15)}</style>${String(template_default17)}`;
+  template9.innerHTML = `<style>${String(style_default16)}</style>${String(template_default18)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -23253,7 +23380,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default18 = `<section class="section">
+  var template_default19 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -23265,7 +23392,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
 }
 
@@ -23354,7 +23481,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template10 = createFieldTemplate(template_default18, style_default16);
+  var template10 = createFieldTemplate(template_default19, style_default17);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -23378,7 +23505,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default19 = `<div class="field">
+  var template_default20 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -23399,7 +23526,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default17 = `:host {
+  var style_default18 = `:host {
     display: block;
 }
 
@@ -23827,7 +23954,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template11 = createFieldTemplate(template_default19, `${String(style_default17)}${String(dynamicDataPicker_default)}`);
+  var template11 = createFieldTemplate(template_default20, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -23887,7 +24014,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default20 = `<div class="field">
+  var template_default21 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -23908,7 +24035,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -23980,7 +24107,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template12 = createFieldTemplate(template_default20, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default21, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -24277,7 +24404,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default21 = `<div class="field">
+  var template_default22 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -24294,7 +24421,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -24527,7 +24654,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template13 = document.createElement("template");
-  template13.innerHTML = `<style>${String(style_default19)}</style>${String(template_default21)}`;
+  template13.innerHTML = `<style>${String(style_default20)}</style>${String(template_default22)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -24654,7 +24781,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default22 = `<label class="field">
+  var template_default23 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -24662,7 +24789,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -24766,7 +24893,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template14 = createFieldTemplate(template_default22, style_default20);
+  var template14 = createFieldTemplate(template_default23, style_default21);
 
   class Select extends HTMLElement {
     constructor() {
@@ -24803,7 +24930,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default23 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default24 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -24813,7 +24940,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -24926,7 +25053,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template15 = createFieldTemplate(template_default23, style_default21);
+  var template15 = createFieldTemplate(template_default24, style_default22);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -24943,13 +25070,13 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default24 = `<div class="segmented">
+  var template_default25 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -24995,7 +25122,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template16 = createFieldTemplate(template_default24, style_default22);
+  var template16 = createFieldTemplate(template_default25, style_default23);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -25008,7 +25135,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default25 = `<div class="page-link">
+  var template_default26 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -25045,7 +25172,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -25344,7 +25471,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default26 = `<div class="backdrop" hidden>
+  var template_default27 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -25377,7 +25504,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     color: var(--editor-v2-text, #111);
     font: 12px/1.35 system-ui, sans-serif;
 }
@@ -25507,6 +25634,7 @@ input {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     align-content: start;
     gap: 10px;
+    justify-items: center;
     overflow-x: hidden;
     overflow-y: auto;
     padding: 12px;
@@ -25516,6 +25644,8 @@ input {
     display: grid;
     grid-template-rows: 108px auto;
     gap: 8px;
+    width: 100%;
+    max-width: 180px;
     min-height: 168px;
     min-width: 0;
     border: 1px solid var(--editor-v2-border, #d7ddd9);
@@ -25721,7 +25851,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template17 = document.createElement("template");
-  template17.innerHTML = `<style>${String(style_default24)}</style>${String(template_default26)}`;
+  template17.innerHTML = `<style>${String(style_default25)}</style>${String(template_default27)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -26031,7 +26161,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(style_default23)}</style>${String(template_default25)}`;
+  template18.innerHTML = `<style>${String(style_default24)}</style>${String(template_default26)}`;
 
   class PageLink extends HTMLElement {
     _pages = [];
@@ -26372,13 +26502,13 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default27 = `<div class="settings-view">
+  var template_default28 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -26666,7 +26796,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(style_default25)}</style>${String(template_default27)}`;
+  template19.innerHTML = `<style>${String(style_default26)}</style>${String(template_default28)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -27353,7 +27483,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/template.html
-  var template_default28 = `<div class="backdrop" hidden>
+  var template_default29 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -27373,7 +27503,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     display: contents;
 }
 
@@ -27716,7 +27846,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/RepeatPicker.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(style_default26)}</style>${String(template_default28)}`;
+  template20.innerHTML = `<style>${String(style_default27)}</style>${String(template_default29)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -28733,8 +28863,8 @@ label {
     }
     if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value))
       return true;
-    const matches2 = value.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
-    for (const match of matches2) {
+    const matches = value.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
+    for (const match of matches) {
       const expression = match[1]?.trim() ?? "";
       const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
       if (head && expression[head.length] !== ".")
@@ -30839,7 +30969,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default29 = `<div class="shell">
+  var template_default30 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -30901,7 +31031,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -31030,11 +31160,11 @@ label {
   function createShellTemplate() {
     const template21 = document.createElement("template");
     template21.innerHTML = `<style>${[
-      style_default27,
+      style_default28,
       pageSettings_default,
       pageSettingsTags_default
     ].map((css) => String(css)).join(`
-`)}</style>${String(template_default29)}`;
+`)}</style>${String(template_default30)}`;
     return template21;
   }
 
@@ -31542,7 +31672,7 @@ label {
   });
 
   // src/components/media/CardMedia/template.html
-  var template_default30 = `<div class="card">
+  var template_default31 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -31564,7 +31694,7 @@ label {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -31689,8 +31819,8 @@ label {
   class CardMedia extends A {
     constructor() {
       super({
-        css: style_default28,
-        template: template_default30
+        css: style_default29,
+        template: template_default31
       });
     }
   }
@@ -31699,7 +31829,7 @@ label {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default31 = `<div class="backdrop" id="backdrop">
+  var template_default32 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -31738,7 +31868,7 @@ label {
 `;
 
   // src/components/media/CropSystem/style.css
-  var style_default29 = `:host {
+  var style_default30 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -31940,8 +32070,8 @@ label {
   class CropSystem extends A {
     constructor() {
       super({
-        css: style_default29,
-        template: template_default31
+        css: style_default30,
+        template: template_default32
       });
     }
     connectedCallback() {
@@ -31978,7 +32108,7 @@ label {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default32 = `<div class="backdrop" id="backdrop">
+  var template_default33 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -32020,7 +32150,7 @@ label {
 `;
 
   // src/components/media/DetailMedia/style.css
-  var style_default30 = `:host {
+  var style_default31 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -32233,8 +32363,8 @@ label {
   class DetailMedia extends A {
     constructor() {
       super({
-        css: style_default30,
-        template: template_default32
+        css: style_default31,
+        template: template_default33
       });
     }
     connectedCallback() {
@@ -32266,7 +32396,7 @@ label {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default33 = `<div class="toolbar">
+  var template_default34 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -32328,9 +32458,10 @@ label {
 `;
 
   // src/components/media/GridMedia/view/style.css
-  var style_default31 = `:host {
+  var style_default32 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
+    --grid-max-col: 240px;
     --empty-color: var(--text-muted, #94a3b8);
     --border: var(--border-default, #e2e8f0);
     --bg: var(--bg-base, #f8fafc);
@@ -32541,6 +32672,12 @@ label {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-col), 1fr));
     gap: var(--grid-gap);
+    justify-items: center;
+}
+
+.grid > * {
+    width: 100%;
+    max-width: var(--grid-max-col);
 }
 
 .grid:empty + .empty {
@@ -33323,8 +33460,8 @@ label {
     _items = [];
     constructor() {
       super({
-        css: style_default31,
-        template: template_default33
+        css: style_default32,
+        template: template_default34
       });
     }
     get detail() {
@@ -33465,7 +33602,7 @@ label {
     customElements.define("cms-media-admin", MediaAdmin);
 
   // src/components/media/MediaCenter/template.html
-  var template_default34 = `<dialog>
+  var template_default35 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -33533,9 +33670,10 @@ label {
 `;
 
   // src/components/media/MediaCenter/style.css
-  var style_default32 = `:host {
+  var style_default33 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
+    --mc-grid-item-max: 180px;
     --mc-text: #1e293b;
     --mc-text-muted: #64748b;
     --mc-primary: #2563eb;
@@ -33707,6 +33845,12 @@ dialog::backdrop {
     gap: 12px;
     padding: 20px;
     align-content: start;
+    justify-items: center;
+}
+
+.media-grid > * {
+    width: 100%;
+    max-width: var(--mc-grid-item-max);
 }
 
 .media-grid:empty {
@@ -33934,8 +34078,8 @@ dialog::backdrop {
     _dragCounter = 0;
     constructor() {
       super({
-        css: style_default32,
-        template: template_default34
+        css: style_default33,
+        template: template_default35
       });
     }
     connectedCallback() {
@@ -34276,14 +34420,14 @@ dialog::backdrop {
   define("p9r-action-menu", rn);
   define("p9r-action-menu-item", an);
   define("p9r-action-menu-section", dn);
-  define("p9r-alert", Ke);
+  define("p9r-alert", je);
   define("p9r-avatar", $e);
   define("p9r-badge", Xe);
   define("p9r-button", qr);
   define("p9r-card", ir);
   define("w13c-checkbox", Ur);
   define("p9r-combobox", Jr);
-  define("p9r-container", Ko);
+  define("p9r-container", jo);
   define("p9r-grid", $o);
   define("p9r-icon-button", ni);
   define("w13c-lateral-dialog", wr);

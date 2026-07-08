@@ -4,8 +4,10 @@ import type { IntegrationBrowserHost, IntegrationDefinition, IntegrationInstalla
 export function startBoundSources(host: IntegrationBrowserHost): void {
     const definitions = host.query<HTMLElement>("[data-definitions-source]");
     const installations = host.query<HTMLElement>("[data-installations-source]");
+    const catalogue = host.query<HTMLElement>("[data-catalogue-source]");
     definitions.setAttribute("cms-source", `${route("/api/integrations/list")} as definitions`);
     installations.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
+    catalogue.setAttribute("cms-source", `${route("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
     host.observer.observe(installations, { attributes: true, childList: true, subtree: true });

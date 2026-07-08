@@ -1,6 +1,7 @@
 :host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
+    --mc-grid-item-max: 180px;
     --mc-text: #1e293b;
     --mc-text-muted: #64748b;
     --mc-primary: #2563eb;
@@ -172,6 +173,12 @@ dialog::backdrop {
     gap: 12px;
     padding: 20px;
     align-content: start;
+    justify-items: center;
+}
+
+.media-grid > * {
+    width: 100%;
+    max-width: var(--mc-grid-item-max);
 }
 
 .media-grid:empty {

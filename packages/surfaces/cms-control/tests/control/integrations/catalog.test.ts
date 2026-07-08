@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import getIntegrationCatalogue from "cms-control/api/integrations/catalogue.get";
 import getIntegrations from "cms-control/api/integrations/list.get";
+import postIntegrationImport from "cms-control/api/integrations/import.post";
 import type { IntegrationDefinition, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
-import { makeCms } from "./helpers";
+import { makeCms, postImport, TEST_SECRET_SOURCE_DEFINITION } from "./helpers";
 
 describe("GET /api/integrations/list", () => {
     test("lists configured declarative integrations", async () => {
@@ -55,5 +57,78 @@ describe("GET /api/integrations/list", () => {
         )).json();
 
         expect(body).toEqual([validDefinition]);
+    });
+});
+
+describe("GET /api/integrations/catalogue", () => {
+    test("returns bindable catalogue items, categories, and base-path aware URLs", async () => {
+        const products: IntegrationDefinition = {
+            kind: "products",
+            label: "Products",
+            description: "Manage product catalogue entries.",
+            category: "Commerce",
+            version: "1.0.0",
+            icon: { path: "assets/icon.svg" },
+            inputs: [],
+            artifacts: [
+                { type: "source", source: { id: "products", meta: { name: "Products" }, endpoints: [] } },
+            ],
+        };
+        const newsletter: IntegrationDefinition = {
+            kind: "newsletter",
+            label: "Newsletter",
+            description: "Collect subscribers.",
+            category: "Marketing",
+            inputs: [],
+            artifacts: [],
+        };
+        const { cms } = makeCms([products, newsletter]);
+
+        const res = await getIntegrationCatalogue(
+            new Request("http://localhost/cms/api/integrations/catalogue?q=product&category=Commerce"),
+            cms,
+        );
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(body.total).toBe(2);
+        expect(body.count).toBe(1);
+        expect(body.hasItems).toBe(true);
+        expect(body.categories).toEqual(["Commerce", "Marketing"]);
+        expect(body.items).toEqual([expect.objectContaining({
+            kind: "products",
+            label: "Products",
+            category: "Commerce",
+            setupUrl: "/cms/admin/integrations?setup=products",
+            badges: [
+                { label: "Commerce", className: "badge" },
+                { label: "Source", className: "badge" },
+            ],
+        })]);
+        expect(body.items[0].iconHtml).toContain('class="integration-icon"');
+        expect(body.items[0].iconHtml).toContain("/cms/api/integrations/asset?kind=products");
+    });
+
+    test("excludes installed integrations from the catalogue", async () => {
+        const spare: IntegrationDefinition = {
+            kind: "spare",
+            label: "Spare",
+            category: "Other",
+            inputs: [],
+        };
+        const { cms } = makeCms([TEST_SECRET_SOURCE_DEFINITION, spare]);
+
+        await postIntegrationImport(postImport({
+            kind: "test-secret-source",
+            answers: { id: "installed-source", apiKey: "sk_test" },
+        }), cms);
+
+        const body = await (await getIntegrationCatalogue(
+            new Request("http://localhost/cms/api/integrations/catalogue"),
+            cms,
+        )).json();
+
+        expect(body.total).toBe(1);
+        expect(body.items.map((item: { kind: string }) => item.kind)).toEqual(["spare"]);
     });
 });
