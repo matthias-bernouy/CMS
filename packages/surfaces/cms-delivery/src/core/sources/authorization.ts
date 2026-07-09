@@ -1,10 +1,13 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import type { Subject } from "@bernouy/cms-auth";
-import { ADMIN_ROLE, PUBLIC_ROLE, canRole } from "@bernouy/cms-permissions";
+import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, canRole } from "@bernouy/cms-permissions";
 import {
     SYSTEM_AUTH_SOURCE_URN,
+    sourceEndpointAccessAllows,
+    sourceEndpointAccessMode,
     sourceUrnOf,
     type SourceAuthorizationResult,
+    type SourceEndpointAccessMode,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 
@@ -33,6 +36,14 @@ export async function authorizeDeliverySourceEndpoint(
     const subject = Object.prototype.hasOwnProperty.call(options, "subject")
         ? options.subject ?? null
         : await resolveDeliverySubject(delivery, req);
+
+    if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerAccessMode(subject?.role ?? PUBLIC_ROLE))) {
+        return {
+            authorized: false,
+            status: subject ? 403 : 401,
+        };
+    }
+
     if (subject?.role === ADMIN_ROLE) return true;
 
     const definitions = await roles.list();
@@ -42,4 +53,10 @@ export async function authorizeDeliverySourceEndpoint(
         authorized: false,
         status: subject ? 403 : 401,
     };
+}
+
+function callerAccessMode(roleId: string): SourceEndpointAccessMode {
+    if (roleId === PUBLIC_ROLE) return "public";
+    if (roleId === USER_ROLE) return "auth";
+    return "admin";
 }
