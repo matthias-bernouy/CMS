@@ -2,6 +2,7 @@ import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { TriggerRepository } from "@bernouy/cms-triggers";
+import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type {
@@ -55,6 +56,7 @@ export type IntegrationImportDeps = {
     sources: SourceRepository;
     functions?: FunctionRepository;
     triggers?: TriggerRepository;
+    roles?: RolesRepository;
     secrets: SecretStore;
     dashboards?: DashboardRepository;
     relations?: RelationRepository;

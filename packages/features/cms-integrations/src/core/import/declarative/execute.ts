@@ -15,6 +15,10 @@ import {
     type DeclarativeArtifactWriteResults,
 } from "./artifactWriteStack";
 import {
+    applyIntegrationAccessGrants,
+    buildIntegrationAccessGrants,
+} from "./accessGrants";
+import {
     buildBlocArtifacts,
     buildDashboardArtifacts,
     buildDashboardRelationProjectionArtifacts,
@@ -72,6 +76,7 @@ export async function executeDeclarativeIntegration<T>(
         const sourceArtifacts = buildSourceArtifacts(definition, context);
         const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
         const functionArtifacts = buildFunctionArtifacts(definition, context);
+        const accessGrants = buildIntegrationAccessGrants(sourceArtifacts, functionArtifacts);
         const triggerArtifacts = buildTriggerArtifacts(definition, context);
         const dashboardArtifacts = buildDashboardArtifacts(definition, context);
         const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
@@ -94,6 +99,7 @@ export async function executeDeclarativeIntegration<T>(
             const triggerWrites = await buildTriggerWrites(deps, triggerArtifacts, options);
             const finish = async (results: DeclarativeArtifactWriteResults) => {
                 const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
+                await applyIntegrationAccessGrants(deps.roles, accessGrants);
                 const importResult = {
                     artifacts: [
                         ...results.sourceResults,
