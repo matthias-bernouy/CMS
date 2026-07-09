@@ -1,150 +1,28 @@
-import type { Authentication, LocalAuthentication, OidcAuthentication, PublicAuthRoutesConfig } from "@bernouy/cms-auth";
-import type { Runner } from "@bernouy/http-runner";
-import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
+import type { Authentication, IdentityProviderRepository, LocalCredentialStore, PatRepository, PublicAuthRoutesConfig, UsersRepository } from "@bernouy/cms-auth";
+import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { Cache } from "@bernouy/http-runner";
-import { InMemoryCache } from "@bernouy/http-runner";
-import type { SecretStore } from "@bernouy/cms-secrets";
-import { InMemorySecretStore, ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
-import { CMS_FILES_ROUTE, filesPrefix, serveFilesRequest } from "@bernouy/cms-files";
-import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
-import type { CmsFilesBlobStore } from "@bernouy/cms-files";
-import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
-import {
-    AUTH_ROUTES,
-    authMethodsHandler,
-    createAuthGuard,
-    localLoginHandler,
-    localLogoutHandler,
-    oidcCallbackHandler,
-    oidcLoginHandler,
-    PUBLIC_AUTH_ROUTES,
-    executeAuthSystemSourceEndpoint,
-    registerPublicAuthRoutes,
-} from "@bernouy/cms-auth";
-import type { RolesRepository } from "@bernouy/cms-permissions";
-import { ADMIN_ROLE, can, effectiveGrantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
-import type { SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
-import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest } from "@bernouy/cms-sources";
-import type { FunctionRepository } from "@bernouy/cms-functions";
-import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN, withFunctionsSource } from "@bernouy/cms-functions";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import {
-    ANALYTICS_ROUTES,
-    analyticsBreakdownHandler,
-    analyticsSummaryHandler,
-    analyticsTimeseriesHandler,
-    analyticsTopPagesHandler,
-    type AnalyticsStore,
-} from "@bernouy/cms-analytics";
-import type { CMS_ROLES } from "types/roles";
-import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
-import { serveApi } from "./core/registerEndpoints/serveApiFolder";
+import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
+import type { FunctionRepository } from "@bernouy/cms-functions";
+import { collectIntegrationInstallationCspExtras, type IntegrationConnectorDeployer, type IntegrationDefinitionRepository, type IntegrationInstallationRepository } from "@bernouy/cms-integrations";
+import type { RelationRepository } from "@bernouy/cms-relations";
+import type { Cache, CspExtras, Runner } from "@bernouy/http-runner";
+import type { RolesRepository } from "@bernouy/cms-permissions";
+import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
+import { SourceOverlaySourceRepository, type ExecutorDeps, type SourceOverlayRepository, type SourceRepository } from "@bernouy/cms-sources";
+import { withFunctionsSource } from "@bernouy/cms-functions";
 import { join } from "node:path";
-import type { CspExtras } from "@bernouy/http-runner";
-import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
-import type {
-    IntegrationConnectorDeployer,
-    IntegrationDefinitionRepository,
-    IntegrationInstallationRepository,
-} from "@bernouy/cms-integrations";
-import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
+import type { CMS_ROLES } from "types/roles";
+import { mergeUnique } from "cms-control/core/control/defaults";
+import { mountControlCmsRoutes } from "cms-control/core/control/mountRoutes";
+import { createControlCmsState } from "cms-control/core/control/state";
+import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/control/types";
 
-type Configuration = {
-    /**
-     * Absolute URL of the Delivery service paired with this Control instance.
-     * Used by admin UI surfaces that need to construct public-facing URLs
-     * (Settings' MediaCenter preview, page share links…). In multi-tenant
-     * setups each tenant's Control points at its own Delivery. Left
-     * undefined when admin-only previews are not needed.
-     */
-    deliveryUrl?: string;
-    /**
-     * Optional unguarded first-party auth API used by admin login/reset/email
-     * verification pages. Control disables public signup when mounting it; user
-     * creation stays an admin API concern on this surface.
-     */
-    publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>;
-}
+export type { ControlAuthBackends, ControlCmsOptions } from "cms-control/core/control/types";
 
-export type ControlCmsOptions = Configuration & {
-    /** Optional catalogue of declarative integrations available to this
-     *  Control surface. Runtimes can provide a local FS repository today and
-     *  an HTTP-backed official repository later. */
-    integrationCatalog?: IntegrationDefinitionRepository;
-    /** Integration installation/run store. Runtimes must pass a durable repository
-     *  before enabling the integration API. */
-    integrationInstallations?: IntegrationInstallationRepository;
-    /** Optional connector deployers used by declarative integrations that ship
-     *  deployable provider assets. */
-    integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
-    /** Dashboard store. Runtimes can inject a durable implementation; the
-     *  default memory store keeps the admin surface bootable before persistence
-     *  is wired. */
-    dashboards?: DashboardRepository;
-    /** Optional trusted function store. When set, functions are exposed as the
-     *  readonly `system-functions` source and execute through the source proxy. */
-    functions?: FunctionRepository;
-    /** Optional bloc repository used only for integration-generated bloc
-     *  artifacts. Defaults to the main content repository. */
-    integrationBlocRepository?: CmsRepository;
-}
-
-type ControlAuthBackends = {
-    local?: LocalAuthentication<CMS_ROLES>;
-    oidc?:  OidcAuthentication<CMS_ROLES>;
-};
-
-const EMPTY_INTEGRATION_CATALOG: IntegrationDefinitionRepository = {
-    list:         async () => [],
-    getIndex:     async () => null,
-    listVersions: async () => [],
-    get:          async () => null,
-};
-
-/**
- * Admin + API layer of the CMS. Mounts under whatever `basePath` the runner
- * carries — the consumer scopes the runner before passing it in:
- *
- *   rootRunner.group("/cms", (scoped) => {
- *       const control = new ControlCms(scoped, ...);
- *   });
- *
- * Multi-tenant follows the same pattern:
- *
- *   rootRunner.group(`/tenant-${id}/cms`, (scoped) => {
- *       const control = new ControlCms(scoped, ...);
- *   });
- *
- * `basePath` is exposed so admin-UI code can build absolute API URLs
- * without hard-coding any prefix.
- */
 export class ControlCms {
-
     readonly ready: Promise<void>;
-
-    private configuration:    ControlCmsOptions;
-    private _repository:      CmsRepository;
-    private _runner:          Runner;
-    private _auth:            Authentication<CMS_ROLES>;
-    private _cache:           Cache;
-    private _secrets:         SecretStore;
-    private _filesMetadata:   CmsFilesMetadataRepository | null;
-    private _filesBlob:       CmsFilesBlobStore | null;
-    private _users:               UsersRepository<CMS_ROLES> | null;
-    private _identityProviders:   IdentityProviderRepository | null;
-    private _pats:                PatRepository | null;
-    private _credentials:         LocalCredentialStore | null;
-    private _sources:             SourceRepository | null;
-    private _analytics:           AnalyticsStore | null;
-    private _roles:               RolesRepository;
-    private _integrationCatalog: IntegrationDefinitionRepository;
-    private _integrationInstallations: IntegrationInstallationRepository | null;
-    private _dashboards: DashboardRepository;
-    private _functions: FunctionRepository | null;
-    private _integrationBlocRepository: CmsRepository | null;
+    private readonly state: ControlCmsState;
 
     constructor(
         runner: Runner,
@@ -163,308 +41,102 @@ export class ControlCms {
         analytics?: AnalyticsStore,
         roles?: RolesRepository,
         authBackends: ControlAuthBackends = {},
-    ){
-        this.configuration = configuration;
-        this._auth = auth;
-        this._runner = runner;
-        this._repository = repository;
-        this._cache = cache || new InMemoryCache();
-        this._secrets = secrets || new ValidatingSecretStore(new InMemorySecretStore());
-        this._filesMetadata = filesMetadata ?? null;
-        this._filesBlob = filesBlob ?? null;
-        this._users = users ?? null;
-        this._identityProviders = identityProviders ?? null;
-        this._pats = pats ?? null;
-        this._credentials = credentials ?? null;
-        this._sources = sources ?? null;
-        this._analytics = analytics ?? null;
-        this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
-        this._integrationCatalog = configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG;
-        this._integrationInstallations = configuration.integrationInstallations ?? null;
-        this._dashboards = configuration.dashboards ?? new InMemoryDashboardRepository();
-        this._functions = configuration.functions ?? null;
-        this._integrationBlocRepository = configuration.integrationBlocRepository ?? null;
+    ) {
+        this.state = createControlCmsState({
+            configuration, runner, repository, auth, cache, secrets, filesMetadata, filesBlob,
+            users, identityProviders, pats, credentials, sources, analytics, roles, authBackends,
+        });
         this.ready = Promise.resolve();
-
-        const authGuard = createAuthGuard<CMS_ROLES>({
-            basePath:     this.basePath,
-            auth:         this._auth,
-            requiredRole: "admin",
-            onForbidden:  (_req, ctx) => renderForbiddenPage(ctx.basePath, ctx.logoutUrl),
-        });
-        // Unguarded: the standalone login page. The guard redirects
-        // unauthenticated users here via `buildLoginUrl`; registered before the
-        // guarded groups so it is reachable without a session (first-match-wins).
-        runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, this.basePath));
-
-        const controlPublicAuth = this.configuration.publicAuth
-            ? { ...this.configuration.publicAuth, allowSignup: false }
-            : undefined;
-
-        if (controlPublicAuth) {
-            runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
-                registerPublicAuthRoutes(authRunner, controlPublicAuth);
-            });
-        }
-
-        runner.group(AUTH_ROUTES.base, (authRunner) => {
-            const supportedKinds: ("local" | "oidc")[] = [];
-            if (authBackends.local) {
-                supportedKinds.push("local");
-                authRunner.addEndpoint("POST", AUTH_ROUTES.login,  (req) => localLoginHandler(authBackends.local!, req));
-                authRunner.addEndpoint("GET",  AUTH_ROUTES.logout, (req) => localLogoutHandler(authBackends.local!, req));
-            }
-            if (authBackends.oidc) {
-                supportedKinds.push("oidc");
-                authRunner.addEndpoint("GET", AUTH_ROUTES.oidcLogin,    (req) => oidcLoginHandler(authBackends.oidc!, req));
-                authRunner.addEndpoint("GET", AUTH_ROUTES.oidcCallback, (req) => oidcCallbackHandler(authBackends.oidc!, req));
-            }
-            authRunner.addEndpoint("GET", AUTH_ROUTES.methods, () => authMethodsHandler({
-                publicBasePath:    `${this.basePath}${AUTH_ROUTES.base}`,
-                identityProviders: this._identityProviders,
-                supportedKinds,
-            }));
-        });
-
-        // Bare tenant root / `/admin` land on the Pages list instead of the
-        // empty index page. Guarded → unauth falls through to login.
-        const toPages = () => redirect(`${this.basePath}/admin/pages`);
-        runner.addEndpoint("GET", "/",      toPages, [authGuard]);
-        runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
-
-        // Shared `.cms/*` mounts — the same feature handlers Delivery calls, here
-        // admin-guarded: the editor preview + media library + source preview run
-        // in the admin's same-origin session, so the guard passes. Registered
-        // before the `/` and `/api` groups. Control alone wires the source
-        // `resolveSecret` so `secret`-sourced headers resolve (delivery leaves it
-        // unwired → clean 500).
-        const resolveSecret = createSecretResolver(this._secrets);
-        const resolveContext = async (req: Request) => {
-            const subject = await this._auth.getSubject(req).catch(() => null);
-            return subject ? { userID: subject.identifier } : {};
-        };
-        const authorizeEndpoint = async (endpoint: { urn: string }, req: Request) => {
-            const subject = await this._auth.getSubject(req).catch(() => null);
-            if (!subject) return false;
-            if (subject.role === ADMIN_ROLE) return true;
-            const definitions = await this._roles.list();
-            return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
-        };
-        const sourceDeps = { resolveSecret, resolveContext };
-        const proxiedSources = this._sources && this._functions ? withFunctionsSource(this._sources, this._functions) : this._sources;
-        const executeSystemEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
-            if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-                if (!this._functions || !this._sources) return new Response("function executor not configured", { status: 501 });
-                const subject = await this._auth.getSubject(req).catch(() => null);
-                return executeFunctionSystemSourceEndpoint(endpoint, req, {
-                    functions: this._functions,
-                    sources: this._sources,
-                    deps: sourceDeps,
-                    resolveUser: async () => subject ? { id: subject.identifier, role: subject.role } : {},
-                });
-            }
-            if (controlPublicAuth) return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, req);
-            return new Response("system source executor not configured", { status: 501 });
-        };
-        runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
-            const prefix = sourcesPrefix(runner.basePath);
-            for (const method of SOURCE_PROXY_METHODS) {
-                proxyRunner.setDefaultEndpoint(method, (req) =>
-                    handleSourceRequest(proxiedSources, req, {
-                        prefix,
-                        deps: { resolveSecret, resolveContext, executeSystemEndpoint, authorizeEndpoint },
-                    }));
-            }
-        }, [authGuard]);
-
-        runner.group(CMS_FILES_ROUTE, (filesRunner) => {
-            const prefix = filesPrefix(runner.basePath);
-            filesRunner.setDefaultEndpoint("GET", (req) =>
-                serveFilesRequest({ metadata: this.filesMetadata, blob: this.filesBlob }, req, { prefix }));
-        }, [authGuard]);
-
-        runner.addEndpoint("GET", "/.cms/style", (req) =>
-            cachedResponseAsync(
-                req,
-                P9R_CACHE.STYLE,
-                this._cache,
-                () => generateStyleEntry(this._repository),
-                publicAssetCacheControl(req),
-            ),
-        [authGuard]);
-
-        runner.group("/", (staticRunner) => {
-            serveStaticFolder(staticRunner, {
-                cache:     this._cache,
-                cspExtras: () => this.getCspExtras(),
-            });
-        }, [authGuard]);
-
-        runner.group("/api", (apiRunner) => {
-            serveApi(apiRunner, join(__dirname, "./api"), this);
-            if (this._analytics) {
-                const analytics = this._analytics;
-                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary,    (req) => analyticsSummaryHandler(analytics, req));
-                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.timeseries, (req) => analyticsTimeseriesHandler(analytics, req));
-                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages,   (req) => analyticsTopPagesHandler(analytics, req));
-                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown,  (req) => analyticsBreakdownHandler(analytics, req));
-            }
-        }, [authGuard]);
+        mountControlCmsRoutes(this, this.state, authBackends, join(__dirname, "./api"));
     }
 
-    get config(){
-        return this.configuration;
-    }
+    get config() { return this.state.configuration; }
+    get repository() { return this.state.repository; }
+    get auth() { return this.state.auth; }
+    get runner() { return this.state.runner; }
+    get cache() { return this.state.cache; }
+    get secrets() { return this.state.secrets; }
+    get roles(): RolesRepository { return this.state.roles; }
+    get integrationCatalog(): IntegrationDefinitionRepository { return this.state.integrationCatalog; }
+    get dashboards(): DashboardRepository { return this.state.dashboards; }
+    get relations(): RelationRepository { return this.state.relations; }
+    get functions(): FunctionRepository | null { return this.state.functions; }
+    get triggers() { return this.state.triggers; }
+    get sourceOverlays() { return this.state.sourceOverlays; }
+    get configuredIntegrationInstallations(): IntegrationInstallationRepository | null { return this.state.integrationInstallations; }
+    get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined { return this.state.configuration.integrationConnectorDeployers; }
+    get integrationBlocRepository(): CmsRepository | null { return this.state.integrationBlocRepository; }
+    get sourceExecutorDeps(): ExecutorDeps { return { resolveSecret: createSecretResolver(this.state.secrets) }; }
 
-    get repository(){
-        return this._repository;
-    }
-
-    get auth(){
-        return this._auth;
-    }
-
-    get runner(){
-        return this._runner;
-    }
-
-    get cache(){
-        return this._cache;
-    }
-
-    get secrets(){
-        return this._secrets;
-    }
-
-    /** File-tree metadata (folders + file records). Throws until a files
-     *  backend is wired (media transition in progress). */
     get filesMetadata(): CmsFilesMetadataRepository {
-        if (!this._filesMetadata) throw new Error("files metadata backend not configured");
-        return this._filesMetadata;
+        if (!this.state.filesMetadata) throw new Error("files metadata backend not configured");
+        return this.state.filesMetadata;
     }
 
-    /** Opaque byte storage for files. Throws until wired (see `filesMetadata`). */
     get filesBlob(): CmsFilesBlobStore {
-        if (!this._filesBlob) throw new Error("files blob backend not configured");
-        return this._filesBlob;
-    }
-
-    /** CMS membership store (authz: `sub → role`). Throws until wired. */
-    get roles(): RolesRepository {
-        return this._roles;
+        if (!this.state.filesBlob) throw new Error("files blob backend not configured");
+        return this.state.filesBlob;
     }
 
     get users(): UsersRepository<CMS_ROLES> {
-        if (!this._users) throw new Error("users repository not configured");
-        return this._users;
+        if (!this.state.users) throw new Error("users repository not configured");
+        return this.state.users;
     }
 
-    /** Configured login providers (identity-as-data). Throws until wired. */
     get identityProviders(): IdentityProviderRepository {
-        if (!this._identityProviders) throw new Error("identity providers repository not configured");
-        return this._identityProviders;
+        if (!this.state.identityProviders) throw new Error("identity providers repository not configured");
+        return this.state.identityProviders;
     }
 
-    /** Personal Access Tokens (CLI / server-to-server). Throws until wired. */
     get pats(): PatRepository {
-        if (!this._pats) throw new Error("PAT repository not configured");
-        return this._pats;
+        if (!this.state.pats) throw new Error("PAT repository not configured");
+        return this.state.pats;
     }
 
-    /** Local email/password credential store (authn secrets for the builtin
-     *  `local` provider). Backs the admin "add user by hand" flow. Throws until
-     *  wired. */
     get credentials(): LocalCredentialStore {
-        if (!this._credentials) throw new Error("local credential store not configured");
-        return this._credentials;
+        if (!this.state.credentials) throw new Error("local credential store not configured");
+        return this.state.credentials;
     }
 
-    /** Public auth flow configuration (tokens + email transport/templates +
-     *  frontend action URLs). Throws until wired by the composition root. */
     get publicAuth(): PublicAuthRoutesConfig<CMS_ROLES> {
-        if (!this.configuration.publicAuth) throw new Error("public auth not configured");
-        return this.configuration.publicAuth;
-    }
-
-    /** Declarative integration catalogue. */
-    get integrationCatalog(): IntegrationDefinitionRepository {
-        return this._integrationCatalog;
+        if (!this.state.configuration.publicAuth) throw new Error("public auth not configured");
+        return this.state.configuration.publicAuth;
     }
 
     get integrationInstallations(): IntegrationInstallationRepository {
-        if (!this._integrationInstallations) throw new Error("integration installations repository not configured");
-        return this._integrationInstallations;
+        if (!this.state.integrationInstallations) throw new Error("integration installations repository not configured");
+        return this.state.integrationInstallations;
     }
 
-    get configuredIntegrationInstallations(): IntegrationInstallationRepository | null {
-        return this._integrationInstallations;
-    }
-
-    get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined {
-        return this.configuration.integrationConnectorDeployers;
-    }
-
-    get dashboards(): DashboardRepository {
-        return this._dashboards;
-    }
-
-    get functions(): FunctionRepository | null {
-        return this._functions;
-    }
-
-    get integrationBlocRepository(): CmsRepository | null {
-        return this._integrationBlocRepository;
-    }
-
-    /** Source store. Backs source reads and integration-created writes;
-     *  must be the same instance Delivery reads. Throws until wired. */
     get sources(): SourceRepository {
-        if (!this._sources) throw new Error("sources repository not configured");
-        return this._functions ? withFunctionsSource(this._sources, this._functions) : this._sources;
+        if (!this.state.sources) throw new Error("sources repository not configured");
+        const overlaySources = this.state.sourceOverlays
+            ? new SourceOverlaySourceRepository(this.state.sources, this.state.sourceOverlays, { deps: this.sourceExecutorDeps })
+            : this.state.sources;
+        return this.state.functions ? withFunctionsSource(overlaySources, this.state.functions) : overlaySources;
     }
 
-    /** Analytics store (reader). Backs the admin analytics dashboards;
-     *  must be the same instance Delivery writes. Throws until wired. */
     get analytics(): AnalyticsStore {
-        if (!this._analytics) throw new Error("analytics store not configured");
-        return this._analytics;
+        if (!this.state.analytics) throw new Error("analytics store not configured");
+        return this.state.analytics;
     }
 
-    /**
-     * Tenant-level prefix, derived from `runner.basePath`. `"/"` (root-scoped
-     * runner) becomes `""` so admin-UI code concatenating `${basePath}/api`
-     * doesn't emit a double slash. Anything else (`"/cms"`, `"/tenant-1/cms"`)
-     * is returned verbatim.
-     */
-    get basePath(){
-        const base = this._runner.basePath;
+    get basePath() {
+        const base = this.state.runner.basePath;
         return base === "/" ? "" : base;
     }
 
-    /**
-     * CSP extras for admin HTML responses: combines the CDN's own public
-     * origins (`media.origins`) with the user-managed
-     * `system.security.{connect,media}Extras`. Resolved per-request from
-     * `serveStaticFolder` so settings updates take effect without a
-     * server restart.
-     *
-     */
     async getCspExtras(): Promise<CspExtras> {
-        const settings = await this._repository.getSystem();
-        const integrationCsp = this._integrationInstallations
-            ? collectIntegrationInstallationCspExtras(await this._integrationInstallations.list())
+        const settings = await this.state.repository.getSystem();
+        const integrationCsp = this.state.integrationInstallations
+            ? collectIntegrationInstallationCspExtras(await this.state.integrationInstallations.list())
             : null;
         return {
             connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
-            mediaExtras:   mergeUnique(settings.security.mediaExtras,   integrationCsp?.mediaExtras),
-            styleExtras:   mergeUnique([],                              integrationCsp?.styleExtras),
-            scriptExtras:  mergeUnique([],                              integrationCsp?.scriptExtras),
-            frameExtras:   mergeUnique([],                              integrationCsp?.frameExtras),
+            mediaExtras: mergeUnique(settings.security.mediaExtras, integrationCsp?.mediaExtras),
+            styleExtras: mergeUnique([], integrationCsp?.styleExtras),
+            scriptExtras: mergeUnique([], integrationCsp?.scriptExtras),
+            frameExtras: mergeUnique([], integrationCsp?.frameExtras),
         };
     }
-
-}
-
-function mergeUnique(primary: readonly string[], secondary: readonly string[] | undefined): string[] {
-    return [...new Set([...primary, ...(secondary ?? [])])];
 }
