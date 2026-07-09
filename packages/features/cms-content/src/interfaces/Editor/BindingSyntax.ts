@@ -28,6 +28,20 @@ export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSource
 export type CmsSourceBodyBinding = CmsSourceParamMap;
 export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
+export type CmsConditionLiteral = string | number | boolean | null;
+export const CMS_CONDITION_FIELD_OPERATORS = [
+    "truthy",
+    "falsy",
+    "equals",
+    "notEquals",
+    "greaterThan",
+    "greaterThanOrEqual",
+    "lessThan",
+    "lessThanOrEqual",
+    "empty",
+    "notEmpty",
+] as const;
+export type CmsConditionFieldOperator = typeof CMS_CONDITION_FIELD_OPERATORS[number];
 export type CmsRepeatBinding = { path: string; alias?: string };
 export const CMS_SOURCE_TRIGGERS = ["auto", "submit"] as const;
 export type CmsSourceTrigger = typeof CMS_SOURCE_TRIGGERS[number];
@@ -121,6 +135,31 @@ export function asCondition(expression: CmsConditionExpression): string {
 export function parseCondition(value: string): CmsConditionExpression | null {
     const expression = value.trim();
     return expression ? expression : null;
+}
+
+export function asFieldCondition(
+    path: string,
+    operator: CmsConditionFieldOperator = "truthy",
+    value: CmsConditionLiteral = true,
+): CmsConditionExpression {
+    const normalizedPath = normalizeConditionPath(path);
+    if (operator === "truthy") return normalizedPath;
+    if (operator === "falsy") return `!${normalizedPath}`;
+    if (operator === "empty") return `${normalizedPath}.length == 0`;
+    if (operator === "notEmpty") return `${normalizedPath}.length > 0`;
+
+    const comparison = comparisonOperator(operator);
+    return `${normalizedPath} ${comparison} ${asConditionLiteral(value)}`;
+}
+
+export function asConditionLiteral(value: CmsConditionLiteral): string {
+    if (typeof value === "string") return JSON.stringify(value);
+    if (typeof value === "number") {
+        if (!Number.isFinite(value)) throw new Error(`Invalid condition number: ${value}`);
+        return String(value);
+    }
+    if (typeof value === "boolean") return value ? "true" : "false";
+    return "null";
 }
 
 export function asSourceStatusCondition(state: CmsSourceState, sourceId?: string): CmsConditionExpression {
@@ -235,6 +274,26 @@ function parseSingleSourceStatusCondition(value: string): CmsSourceStatusConditi
     const match = /^\$sources\.([A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)$/.exec(expression);
     if (!match) return null;
     return { sourceId: match[1]!, state: match[2] as CmsSourceState };
+}
+
+function normalizeConditionPath(path: string): string {
+    const normalized = path.trim();
+    if (!normalized) throw new Error("Condition path is required");
+    if (normalized === ".") return normalized;
+    if (!/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(normalized)) {
+        throw new Error(`Invalid condition path: "${path}"`);
+    }
+    return normalized;
+}
+
+function comparisonOperator(operator: CmsConditionFieldOperator): "==" | "!=" | ">" | ">=" | "<" | "<=" {
+    if (operator === "equals") return "==";
+    if (operator === "notEquals") return "!=";
+    if (operator === "greaterThan") return ">";
+    if (operator === "greaterThanOrEqual") return ">=";
+    if (operator === "lessThan") return "<";
+    if (operator === "lessThanOrEqual") return "<=";
+    throw new Error(`Unsupported comparison operator: ${operator}`);
 }
 
 function encodeSourceParamValue(value: CmsSourceParamValue): string {

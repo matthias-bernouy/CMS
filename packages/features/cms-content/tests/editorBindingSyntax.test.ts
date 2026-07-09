@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceStatusCondition, applySourceStatusConditions, asCondition, asInterpolation, asRepeat, asSource, asSourceBody, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceBody, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceStatusCondition, applySourceStatusConditions, asCondition, asFieldCondition, asInterpolation, asRepeat, asSource, asSourceBody, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceBody, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
@@ -103,6 +103,13 @@ describe("editor binding syntax", () => {
         expect(parseCondition(" plan.status == 'active' ")).toBe("plan.status == 'active'");
         expect(parseCondition("")).toBeNull();
         expect(parseCondition("   ")).toBeNull();
+    });
+
+    test("formats field condition expressions", () => {
+        expect(asFieldCondition("plan.visible")).toBe("plan.visible");
+        expect(asFieldCondition("plan.archived", "falsy")).toBe("!plan.archived");
+        expect(asFieldCondition("plan.status", "equals", "active")).toBe('plan.status == "active"');
+        expect(asFieldCondition("items", "notEmpty")).toBe("items.length > 0");
     });
 
     test("formats and parses source status conditions", () => {

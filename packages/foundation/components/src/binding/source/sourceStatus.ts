@@ -55,9 +55,7 @@ export function scopeForSourceStatus(
 
 function sourceStatusConditionStates(value: string | null): SourceState[] {
     const states: SourceState[] = [];
-    for (const part of (value ?? "").split(/\s*\|\|\s*/)) {
-        const match = /^\s*(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)\s*$/.exec(part);
-        if (!match) return [];
+    for (const match of (value ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g)) {
         states.push(match[1] as SourceState);
     }
     return states;

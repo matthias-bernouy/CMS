@@ -3116,6 +3116,21 @@ describe("Shell", () => {
         expect(child.getAttribute("cms-condition")).toBe("$sources.demo-outer.loaded || $sources.demo-inner.empty");
     });
 
+    test("shell writes a generic condition expression", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        class DemoEditor extends Editor {}
+        const child = document.createElement("demo-child");
+        const childEditor = new DemoEditor(child);
+        const shell = new Shell();
+        document.body.append(shell);
+
+        shellParts(shell).mutations.setCondition(childEditor, "plan.status == \"active\"");
+
+        expect(child.getAttribute("cms-condition")).toBe("plan.status == \"active\"");
+    });
+
     test("shell preserves source status conditions when replacing children", async () => {
         installDom();
 
@@ -3322,6 +3337,50 @@ describe("Shell", () => {
         expect(detail?.action).toBe("set-source-status-conditions");
         expect(detail?.editor).toBe(childEditor);
         expect(detail?.sourceConditions).toEqual([{ sourceEditor: outerEditor, sourceState: "error" }]);
+    });
+
+    test("structure tree condition modal emits generic field conditions", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+        class SourceEditor extends Editor {
+            protected override dataScopes(): DataScope[] {
+                return [{ name: "plan", label: "Plan", fields: [{ path: "status", type: "string" }] }];
+            }
+        }
+        class ChildEditor extends Editor {}
+        const source = document.createElement("demo-source");
+        const child = document.createElement("demo-child");
+        source.append(child);
+        const sourceNode: EditorStructureNode = {
+            editor: new SourceEditor(source), target: source, tag: "demo-source", label: "Source", badges: [], children: [],
+        };
+        const childNode: EditorStructureNode = {
+            editor: new ChildEditor(child), target: child, tag: "demo-child", label: "Child", badges: [], children: [],
+        };
+        sourceNode.children = [childNode];
+        const tree = new StructureTree();
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", event => { detail = (event as CustomEvent<StructureTreeActionDetail>).detail; });
+        document.body.append(tree);
+        tree.setStructure([sourceNode], null);
+
+        tree.controller.menus.openContextMenu(childNode, 0, 0);
+        Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"))
+            .find(button => button.textContent === "Add condition")!.click();
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
+        Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".mode"))
+            .find(button => button.textContent === "Data field")!.click();
+        picker.shadowRoot!.querySelector<HTMLSelectElement>(".field-operator")!.selectedIndex = 2;
+        picker.shadowRoot!.querySelector<HTMLSelectElement>(".field-operator")!.dispatchEvent(new Event("change"));
+        const valueInput = picker.shadowRoot!.querySelector<HTMLInputElement>(".field-value")!;
+        valueInput.value = "active";
+        valueInput.dispatchEvent(new Event("input"));
+        expect(picker.shadowRoot!.querySelector<HTMLInputElement>(".field-value")).toBe(valueInput);
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".apply")!.click();
+
+        expect(detail?.action).toBe("set-condition");
+        expect(detail?.conditionExpression).toBe('plan.status == "active"');
     });
 
     test("structure tree expands collapsed parents to reveal selected children", async () => {

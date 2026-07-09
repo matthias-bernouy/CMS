@@ -32,6 +32,7 @@ export type StructureTreeAction =
     | "remove-repeat"
     | "remove-source-status-condition"
     | "remove-source"
+    | "set-condition"
     | "set-source-status-condition"
     | "set-source-status-conditions"
     | "set-source";
@@ -45,6 +46,7 @@ export type StructureTreeActionDetail = {
     dataSource?: EditorDataSource;
     sourceBinding?: DataSourcePickerSourceBinding;
     sourceConditions?: Array<{ sourceEditor: Editor; sourceState: SourceStateName }>;
+    conditionExpression?: string;
     slot?: string;
     sourceState?: SourceStateName;
 };

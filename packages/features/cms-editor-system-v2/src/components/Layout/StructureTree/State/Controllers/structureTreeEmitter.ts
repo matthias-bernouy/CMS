@@ -30,6 +30,7 @@ export class StructureTreeEmitter {
         dataSource?: EditorDataSource,
         sourceBinding?: DataSourcePickerSourceBinding,
         sourceConditions?: ConditionPickerCondition[],
+        conditionExpression?: string,
     ): void {
         this.host.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
             bubbles: true,
@@ -42,6 +43,7 @@ export class StructureTreeEmitter {
                 dataSource,
                 sourceBinding,
                 sourceConditions,
+                conditionExpression,
                 entry: item?.kind === "block" ? item.entry : undefined,
                 slot,
                 sourceState,

@@ -1,4 +1,5 @@
 import {
+    CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
     type CmsSourceState,
     type Editor,
@@ -71,8 +72,17 @@ export class ShellBindingMutations {
         this.reload(editor.target);
     }
 
+    setCondition(editor: Editor, expression: string): void {
+        const value = expression.trim();
+        if (!value) return;
+        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.condition, value);
+        this.reload(editor.target);
+    }
+
     removeSourceStatusCondition(editor: Editor): void {
-        if (!removeSourceStatusConditionBinding(editor)) return;
+        if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)) {
+            editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+        } else if (!removeSourceStatusConditionBinding(editor)) return;
         this.reload(editor.target);
     }
 

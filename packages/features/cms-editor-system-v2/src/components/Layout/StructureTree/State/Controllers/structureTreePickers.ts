@@ -1,4 +1,5 @@
-import { CMS_BINDING_ATTRIBUTES, parseSource, type Editor } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, parseSource, sourceStatusConditionsFromElement, type DataScope, type Editor } from "@bernouy/cms-content/editor";
+import { conditionFieldOptions } from "../../../ConditionPicker/fieldOptions";
 import type { BlockPickerItem, BlockPickerSlotGroup } from "../../../BlockPickerModal/BlockPickerModal";
 import type { EditorStructureNode } from "../../../../../runtime";
 import {
@@ -24,29 +25,19 @@ import type { StructureTreeController } from "./structureTreeController";
 export class StructureTreePickers {
     constructor(private readonly tree: StructureTreeController) {}
 
-    rootGroups(): BlockPickerSlotGroup[] {
-        return rootGroups(this.groupContext());
-    }
+    rootGroups(): BlockPickerSlotGroup[] { return rootGroups(this.groupContext()); }
 
-    defaultTemplateGroups(templates: BlockPickerItem[]): BlockPickerSlotGroup[] {
-        return defaultTemplateGroups(templates);
-    }
+    defaultTemplateGroups(templates: BlockPickerItem[]): BlockPickerSlotGroup[] { return defaultTemplateGroups(templates); }
 
-    childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
-        return childGroups(this.groupContext(), node);
-    }
+    childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] { return childGroups(this.groupContext(), node); }
 
-    replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
-        return replaceGroups(this.groupContext(), node);
-    }
+    replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] { return replaceGroups(this.groupContext(), node); }
 
     isSlotFull(parent: EditorStructureNode, slot: Parameters<typeof isSlotFull>[2]): boolean {
         return isSlotFull(this.groupContext(), parent, slot);
     }
 
-    hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean {
-        return hasEnabledGroup(groups);
-    }
+    hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean { return hasEnabledGroup(groups); }
 
     openRootPicker(): void {
         this.tree.state.pendingPickerAction = { action: "add-root" };
@@ -63,9 +54,7 @@ export class StructureTreePickers {
             onRemove:               this.tree.events.onDataSourceRemove,
             onSelect:               this.tree.events.onDataSourceSelect as EventListener,
             picker:                 this.tree.refs.dataSourcePicker,
-            setPendingSourceEditor: editor => {
-                this.tree.state.pendingSourceEditor = editor;
-            },
+            setPendingSourceEditor: editor => { this.tree.state.pendingSourceEditor = editor; },
         });
     }
 
@@ -87,14 +76,14 @@ export class StructureTreePickers {
         picker.open({
             sources,
             selected:     this.selectedConditions(node),
+            fields:       conditionFieldOptions(this.dataScopes(node)),
+            expression:   this.customConditionExpression(node),
             contextLabel: node.label,
-            canRemove:    this.tree.nodes.sourceStatusConditions(node).length > 0,
+            canRemove:    node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition),
         });
     }
 
-    defaultTemplateItems(): BlockPickerItem[] {
-        return defaultTemplateItems(this.groupContext());
-    }
+    defaultTemplateItems(): BlockPickerItem[] { return defaultTemplateItems(this.groupContext()); }
 
     useDefaultTemplate(templates = this.defaultTemplateItems()): boolean {
         return useDefaultTemplate(templates, this.defaultTemplateGroups(templates), this.blockPickerContext());
@@ -104,9 +93,7 @@ export class StructureTreePickers {
         return {
             emitAction:              (action, item, slot) => this.tree.emitter.emitAction(action, editor, item, slot),
             openBlockPicker:         (groups, contextLabel) => this.tree.refs.blockPicker.open(groups, contextLabel),
-            setPendingPickerAction: action => {
-                this.tree.state.pendingPickerAction = action;
-            },
+            setPendingPickerAction: action => { this.tree.state.pendingPickerAction = action; },
         };
     }
 
@@ -142,6 +129,17 @@ export class StructureTreePickers {
         if (!binding) return undefined;
         const dataSource = this.tree.state.dataSources.find(candidate => sourceUrlMatchesBinding(candidate.url, binding.url));
         return dataSource?.label ?? binding.alias ?? binding.url;
+    }
+
+    private dataScopes(node: EditorStructureNode): DataScope[] {
+        const nodes: EditorStructureNode[] = [];
+        for (let current: EditorStructureNode | null = node; current; current = this.tree.nodes.parentNode(current)) nodes.unshift(current);
+        return nodes.flatMap(candidate => candidate.editor.getDataScopes());
+    }
+
+    private customConditionExpression(node: EditorStructureNode): string {
+        const value = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
+        return value && sourceStatusConditionsFromElement(node.target).length === 0 ? value : "";
     }
 }
 

@@ -47,6 +47,7 @@ export class ShellMutations {
         else if (action === "remove-source" && editor) this.bindings.removeSource(editor);
         else if (action === "configure-repeat" && editor) this.bindings.openRepeatPicker(editor);
         else if (action === "remove-repeat" && editor) this.bindings.removeRepeat(editor);
+        else if (action === "set-condition" && editor && detail.conditionExpression) this.bindings.setCondition(editor, detail.conditionExpression);
         else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState) this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
         else if (action === "set-source-status-conditions" && editor && detail.sourceConditions) this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
         else if (action === "remove-source-status-condition" && editor) this.bindings.removeSourceStatusCondition(editor);
@@ -87,6 +88,10 @@ export class ShellMutations {
 
     setSourceStatusCondition(editor: Editor, sourceEditor: Editor, state: CmsSourceState): void {
         this.bindings.setSourceStatusCondition(editor, sourceEditor, state);
+    }
+
+    setCondition(editor: Editor, expression: string): void {
+        this.bindings.setCondition(editor, expression);
     }
 
     setSourceStatusConditions(editor: Editor, conditions: Array<{ sourceEditor: Editor; sourceState: CmsSourceState }>): void {

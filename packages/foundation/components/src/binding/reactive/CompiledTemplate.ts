@@ -1,7 +1,7 @@
 import { BINDING_CORE_TAG, CONDITION_ATTR, REPEAT_ATTR, SOURCE_ATTR, SOURCE_TRIGGER_ATTR } from "../attrs";
 import { interpolateString, type FilterMap } from "../interpolate";
 import { parseRepeat, type RepeatSpec } from "../render/repeat";
-import { evaluateCondition } from "../render/condition";
+import { collectConditionReferences, compileCondition, type CompiledCondition } from "../render/condition";
 import { lookup, type Scope } from "../scope";
 import { clearBetween, MountedInPlaceRegion, MountedRegion, type LiveBindingSite } from "./MountedRegion";
 import { parseSourceSpec } from "../source/sourceSpec";
@@ -21,7 +21,7 @@ type AttributePlan = {
 
 type ConditionPlan = {
     path: NodePath;
-    expression: string;
+    condition: CompiledCondition;
     template: CompiledTemplate;
 };
 
@@ -29,7 +29,7 @@ type RepeatPlan = {
     path: NodePath;
     spec: RepeatSpec;
     template: CompiledTemplate;
-    rootCondition: string | null;
+    rootCondition: CompiledCondition | null;
 };
 
 type RawHtmlPlan = {
@@ -135,12 +135,12 @@ class ConditionSite implements LiveBindingSite {
     constructor(
         private readonly start: Comment,
         private readonly end: Comment,
-        private readonly expression: string,
+        private readonly condition: CompiledCondition,
         private readonly template: CompiledTemplate,
     ) {}
 
     update(scope: Scope): void {
-        if (!evaluateCondition(this.expression, scope)) {
+        if (!this.condition.evaluate(scope)) {
             this.unmount();
             return;
         }
@@ -170,7 +170,7 @@ class RepeatSite implements LiveBindingSite {
         private readonly end: Comment,
         private readonly spec: RepeatSpec,
         private readonly template: CompiledTemplate,
-        private readonly rootCondition: string | null,
+        private readonly rootCondition: CompiledCondition | null,
     ) {}
 
     update(scope: Scope): void {
@@ -191,7 +191,7 @@ class RepeatSite implements LiveBindingSite {
             const childScope: Scope = this.spec.name
                 ? { vars: { [this.spec.name]: item }, parent: scope }
                 : { value: item, parent: scope };
-            if (this.rootCondition && !evaluateCondition(this.rootCondition, childScope)) continue;
+            if (this.rootCondition && !this.rootCondition.evaluate(childScope)) continue;
             this.regions.push(this.template.mount(parent, childScope, this.end));
         }
     }
@@ -268,7 +268,7 @@ function compileNode(
                 removeCondition: !!options.submitBoundary && !!rootCondition && !rootConditionOwnedBySubmit,
                 submitBoundary: options.submitBoundary,
             }),
-            rootCondition: rootConditionOwnedBySubmit ? null : rootCondition,
+            rootCondition: rootConditionOwnedBySubmit || !rootCondition ? null : compileCondition(rootCondition),
         });
         return;
     }
@@ -276,7 +276,7 @@ function compileNode(
     if (!options.skipCondition && el.hasAttribute(CONDITION_ATTR) && !conditionOwnedBySubmitSource(el.getAttribute(CONDITION_ATTR) ?? "", options.submitBoundary)) {
         plan.conditions.push({
             path,
-            expression: el.getAttribute(CONDITION_ATTR) ?? "",
+            condition: compileCondition(el.getAttribute(CONDITION_ATTR) ?? ""),
             template: compileElementTemplate(el, filters, {
                 removeCondition: !!options.submitBoundary,
                 submitBoundary: options.submitBoundary,
@@ -333,7 +333,7 @@ function instantiateSites(root: Node, plan: CompilePlan, filters: FilterMap): Li
 
     for (const { plan: condition, node } of conditionTargets) {
         const range = replaceWithAnchors(node, "cms-condition");
-        sites.push(new ConditionSite(range.start, range.end, condition.expression, condition.template));
+        sites.push(new ConditionSite(range.start, range.end, condition.condition, condition.template));
     }
 
     for (const { plan: repeat, node } of repeatTargets) {
@@ -402,8 +402,6 @@ function replaceWithAnchors(node: Node, label: string): { start: Comment; end: C
 
 const RAW_HTML = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
 const BINDING_TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-const CONDITION_PATH = /!?([A-Za-z_$][\w$]*(?:\.[\w$-]+)*)/g;
-
 function rawHtmlExpression(el: Element): string | null {
     if (el.childNodes.length !== 1) return null;
     const only = el.firstChild;
@@ -426,9 +424,8 @@ function bindingOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundar
 
 function conditionOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundary | null): boolean {
     if (!boundary) return false;
-    CONDITION_PATH.lastIndex = 0;
-    for (const match of value.matchAll(CONDITION_PATH)) {
-        if (pathOwnedBySubmitSource(match[1] ?? "", boundary)) return true;
+    for (const path of collectConditionReferences(value)) {
+        if (pathOwnedBySubmitSource(path, boundary)) return true;
     }
     return false;
 }

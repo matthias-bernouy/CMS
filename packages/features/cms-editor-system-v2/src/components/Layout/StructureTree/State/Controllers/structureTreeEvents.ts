@@ -45,7 +45,11 @@ export class StructureTreeEvents {
 
     readonly onConditionApply = (event: CustomEvent<ConditionPickerApplyDetail>): void => {
         if (!this.tree.state.pendingConditionEditor) return;
-        this.tree.emitter.emitAction("set-source-status-conditions", this.tree.state.pendingConditionEditor, undefined, undefined, undefined, undefined, undefined, undefined, event.detail.conditions);
+        if (event.detail.expression) {
+            this.tree.emitter.emitAction("set-condition", this.tree.state.pendingConditionEditor, undefined, undefined, undefined, undefined, undefined, undefined, undefined, event.detail.expression);
+        } else {
+            this.tree.emitter.emitAction("set-source-status-conditions", this.tree.state.pendingConditionEditor, undefined, undefined, undefined, undefined, undefined, undefined, event.detail.conditions);
+        }
         this.tree.state.pendingConditionEditor = null;
     };
 
