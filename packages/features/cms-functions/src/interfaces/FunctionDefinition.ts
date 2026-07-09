@@ -68,6 +68,47 @@ export type FunctionReturn = {
     body?: FunctionValue;
 };
 
+export type FunctionExecuteField =
+    | {
+        control: "text";
+        path: string;
+        label?: string;
+    }
+    | {
+        control: "source-select";
+        path: string;
+        label?: string;
+        source: string;
+        endpoint: string;
+        params?: Record<string, FunctionValue>;
+        itemsPath?: string;
+        labelPath?: string;
+        valuePath?: string;
+    }
+    | {
+        control: "json-object";
+        path: string;
+        label?: string;
+        seed?: {
+            type: "paths";
+            dependsOn?: string;
+            source: string;
+            endpoint: string;
+            params?: Record<string, FunctionValue>;
+            pathsPath: string;
+            pathNamePath?: string;
+            samplePath?: string;
+        };
+    };
+
+export type FunctionExecuteUi = {
+    fields?: FunctionExecuteField[];
+};
+
+export type FunctionUi = {
+    execute?: FunctionExecuteUi;
+};
+
 export type FunctionDefinition = {
     id: string;
     method: HTTPMethod;
@@ -75,6 +116,7 @@ export type FunctionDefinition = {
     meta?: SourceMeta;
     input?: FunctionEndpointInput;
     output?: EndpointResponse[];
+    ui?: FunctionUi;
     steps: FunctionStep[];
     return: FunctionReturn;
 };

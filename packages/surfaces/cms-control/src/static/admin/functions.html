@@ -12,7 +12,7 @@
             <p9r-cell><strong>Return</strong></p9r-cell>
         </p9r-row>
 
-        <p9r-row cms-repeat="." cms-condition="$source.loaded">
+        <p9r-row cms-repeat="." cms-condition="$source.loaded" href="{{BASE_PATH}}/admin/functions/detail?id={{ id }}">
             <p9r-cell>
                 <strong>{{ label }}</strong>
                 <div style="color: var(--color-text-muted); font-size: .8125rem; margin-top: .25rem;">{{ id }}</div>
@@ -20,7 +20,7 @@
             </p9r-cell>
             <p9r-cell><p9r-tag>{{ method }}</p9r-tag></p9r-cell>
             <p9r-cell><p9r-tag>{{ access }}</p9r-tag></p9r-cell>
-            <p9r-cell>{{ paramsLabel }} / {{ bodyLabel }}</p9r-cell>
+            <p9r-cell>{{ inputLabel }}</p9r-cell>
             <p9r-cell>{{ stepsLabel }}</p9r-cell>
             <p9r-cell>{{ outputLabel }}</p9r-cell>
             <p9r-cell>{{ returnLabel }}</p9r-cell>

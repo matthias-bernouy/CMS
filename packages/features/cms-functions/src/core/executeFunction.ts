@@ -16,6 +16,8 @@ export type ExecuteFunctionOptions = {
     deps?: ExecutorDeps;
     user?: FunctionUserContext;
     maxResponseBytes?: number;
+    includeCallErrorDetails?: boolean;
+    maxCallErrorBytes?: number;
 };
 
 export async function executeFunction(
@@ -37,7 +39,11 @@ export async function executeFunction(
         const body = resolveFunctionValue(fn.return.body, vars);
         return body === undefined ? new Response(null, { status }) : json(body, status);
     } catch (error) {
-        if (error instanceof FunctionExecutionError) return json({ error: error.message }, error.status);
+        if (error instanceof FunctionExecutionError) {
+            const body: Record<string, unknown> = { error: error.message };
+            if (error.details !== undefined) body.details = error.details;
+            return json(body, error.status);
+        }
         return json({ error: "Function execution failed" }, 500);
     }
 }

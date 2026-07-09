@@ -1,5 +1,5 @@
 import type { CmsFunction, FunctionStep } from "@bernouy/cms-functions";
-import type { SourceEndpointAccessMode } from "@bernouy/cms-sources";
+import type { DataShape, SourceEndpointAccessMode } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
 
 export type FunctionListItem = {
@@ -10,10 +10,17 @@ export type FunctionListItem = {
     access: SourceEndpointAccessMode;
     paramsLabel: string;
     bodyLabel: string;
+    inputLabel: string;
     stepsLabel: string;
     outputLabel: string;
     returnLabel: string;
+    params?: Record<string, DataShape>;
+    body?: DataShape;
+    paramsSample: Record<string, unknown>;
+    bodySample?: unknown;
 };
+
+export type FunctionDetailItem = FunctionListItem & Pick<CmsFunction, "steps" | "output" | "return" | "ui">;
 
 export type FunctionListResponse = FunctionListItem[];
 
@@ -23,10 +30,10 @@ export default async function listFunctions(_req: Request, cms: ControlCms): Pro
 
     const functions = await repository.getAllFunctions();
     functions.sort((left, right) => left.id.localeCompare(right.id));
-    return Response.json(functions.map(toListItem) satisfies FunctionListResponse);
+    return Response.json(functions.map(toFunctionListItem) satisfies FunctionListResponse);
 }
 
-function toListItem(fn: CmsFunction): FunctionListItem {
+export function toFunctionListItem(fn: CmsFunction): FunctionListItem {
     return {
         id: fn.id,
         label: fn.meta?.name ?? fn.id,
@@ -34,16 +41,46 @@ function toListItem(fn: CmsFunction): FunctionListItem {
         method: fn.method,
         access: fn.access?.mode ?? "admin",
         paramsLabel: paramsLabel(fn),
-        bodyLabel: fn.input?.body ? "Body" : "No body",
+        bodyLabel: bodyLabel(fn),
+        inputLabel: inputLabel(fn),
         stepsLabel: countLabel(countSteps(fn.steps), "step"),
         outputLabel: outputLabel(fn),
         returnLabel: returnLabel(fn),
+        ...(fn.input?.params ? { params: fn.input.params } : {}),
+        ...(fn.input?.body ? { body: fn.input.body, bodySample: sampleValue(fn.input.body) } : {}),
+        paramsSample: paramsSample(fn),
+    };
+}
+
+export function toFunctionDetailItem(fn: CmsFunction): FunctionDetailItem {
+    return {
+        ...toFunctionListItem(fn),
+        steps: fn.steps,
+        output: fn.output,
+        ...(fn.ui ? { ui: fn.ui } : {}),
+        return: fn.return,
     };
 }
 
 function paramsLabel(fn: CmsFunction): string {
-    const count = Object.keys(fn.input?.params ?? {}).length;
-    return count ? countLabel(count, "param") : "No params";
+    const names = Object.keys(fn.input?.params ?? {});
+    return names.length ? `Params: ${names.join(", ")}` : "No params";
+}
+
+function bodyLabel(fn: CmsFunction): string {
+    const body = fn.input?.body;
+    if (!body) return "No body";
+    if (body.type === "object") {
+        const names = Object.keys(body.properties ?? {});
+        return names.length ? `Body: ${names.join(", ")}` : "Body: object";
+    }
+    if (body.type === "array") return "Body: array";
+    return `Body: ${body.type}`;
+}
+
+function inputLabel(fn: CmsFunction): string {
+    const labels = [paramsLabel(fn), bodyLabel(fn)].filter(label => !label.startsWith("No "));
+    return labels.length ? labels.join(" / ") : "No input";
 }
 
 function outputLabel(fn: CmsFunction): string {
@@ -63,4 +100,26 @@ function countSteps(steps: readonly FunctionStep[]): number {
 
 function countLabel(count: number, singular: string): string {
     return count === 1 ? `1 ${singular}` : `${count} ${singular}s`;
+}
+
+function paramsSample(fn: CmsFunction): Record<string, unknown> {
+    const sample: Record<string, unknown> = {};
+    for (const [name, shape] of Object.entries(fn.input?.params ?? {})) {
+        sample[name] = sampleValue(shape);
+    }
+    return sample;
+}
+
+function sampleValue(shape: DataShape): unknown {
+    if (shape.type === "object") {
+        const sample: Record<string, unknown> = {};
+        for (const [name, child] of Object.entries(shape.properties ?? {})) {
+            sample[name] = sampleValue(child);
+        }
+        return sample;
+    }
+    if (shape.type === "array") return [];
+    if (shape.type === "number") return 0;
+    if (shape.type === "boolean") return false;
+    return "";
 }

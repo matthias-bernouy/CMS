@@ -1,2 +1,3 @@
 export const MAX_FUNCTION_CALLS = 50;
 export const MAX_FUNCTION_RESPONSE_BYTES = 2 * 1024 * 1024;
+export const MAX_FUNCTION_CALL_ERROR_BYTES = 16 * 1024;

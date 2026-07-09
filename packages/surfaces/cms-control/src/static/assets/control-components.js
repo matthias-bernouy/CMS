@@ -17100,6 +17100,687 @@ p9r-token-input {
     }
   }
 
+  // src/components/admin/Resources/Functions/api.ts
+  function basePath2() {
+    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
+    return raw.replace(/\/+$/, "");
+  }
+  function route2(path) {
+    return `${basePath2()}${path}`;
+  }
+  function currentFunctionId() {
+    return new URL(window.location.href).searchParams.get("id")?.trim() ?? "";
+  }
+  async function fetchFunctionDetail(id2) {
+    const response = await fetch(route2(`/api/functions/detail?id=${encodeURIComponent(id2)}`), {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok)
+      throw new Error(await response.text());
+    return response.json();
+  }
+  async function executeFunctionDetail(input) {
+    const payload = { id: input.id, params: input.params };
+    if (input.includeBody)
+      payload.body = input.body;
+    const response = await fetch(route2("/api/functions/execute"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const contentType = response.headers.get("content-type") ?? "";
+    return {
+      ok: response.ok,
+      status: response.status,
+      body: await readResponseBody(response, contentType),
+      contentType
+    };
+  }
+  async function fetchSourceEndpoint(source, endpoint, params = {}) {
+    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source)}/${encodeURIComponent(endpoint)}`), window.location.origin);
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== "")
+        url.searchParams.set(key, value);
+    }
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!response.ok)
+      throw new Error(await response.text());
+    const contentType = response.headers.get("content-type") ?? "";
+    return readResponseBody(response, contentType);
+  }
+  async function readResponseBody(response, contentType) {
+    if (response.status === 204)
+      return null;
+    if (contentType.includes("application/json"))
+      return response.json().catch(() => null);
+    const text = await response.text();
+    return text || null;
+  }
+
+  // src/components/admin/Resources/Functions/draft.ts
+  function initialDraft(params, body) {
+    return { params: structuredClone(params), body: structuredClone(body ?? {}) };
+  }
+  function readFallbackDraft(root, hasBody) {
+    return {
+      params: parseObject(root.querySelector("[data-role='params']")?.value ?? "{}", "Params"),
+      body: hasBody ? parseJson3(root.querySelector("[data-role='body']")?.value ?? "{}", "Body") : undefined
+    };
+  }
+  function readPathDraft(root, draft) {
+    const next = structuredClone(draft);
+    for (const input of Array.from(root.querySelectorAll("[data-path]"))) {
+      const path = input.dataset.path ?? "";
+      const value = input instanceof HTMLTextAreaElement ? parseObject(input.value || "{}", path || "JSON") : input.value;
+      setDraftValue(next, path, value);
+    }
+    return next;
+  }
+  function resolvedParams(params, draft) {
+    const out = {};
+    for (const [key, value] of Object.entries(params ?? {})) {
+      const resolved = resolveUiValue(value, draft);
+      if (resolved !== undefined && resolved !== null)
+        out[key] = String(resolved);
+    }
+    return out;
+  }
+  function valueAtDraft(draft, path) {
+    if (path === "body")
+      return draft.body;
+    if (path === "params")
+      return draft.params;
+    if (path.startsWith("body."))
+      return valueAt2(draft.body, path.slice("body.".length));
+    if (path.startsWith("params."))
+      return valueAt2(draft.params, path.slice("params.".length));
+    return;
+  }
+  function setDraftValue(draft, path, value) {
+    if (path === "body") {
+      draft.body = value;
+      return;
+    }
+    if (path.startsWith("body.")) {
+      if (!isRecord2(draft.body))
+        draft.body = {};
+      setPathValue(draft.body, path.slice("body.".length), value);
+      return;
+    }
+    if (path.startsWith("params."))
+      setPathValue(draft.params, path.slice("params.".length), value);
+  }
+  function setPathValue(target, path, value) {
+    if (!isRecord2(target))
+      return;
+    const parts = path.split(".").filter(Boolean);
+    let current = target;
+    for (const [index, part] of parts.entries()) {
+      if (index === parts.length - 1) {
+        current[part] = value;
+        return;
+      }
+      if (!isRecord2(current[part]))
+        current[part] = {};
+      current = current[part];
+    }
+  }
+  function valueAt2(value, path) {
+    if (!path)
+      return value;
+    return path.split(".").filter(Boolean).reduce((current, part) => {
+      if (current === null || current === undefined)
+        return;
+      if (Array.isArray(current) && /^\d+$/.test(part))
+        return current[Number(part)];
+      if (!isRecord2(current))
+        return;
+      return current[part];
+    }, value);
+  }
+  function arrayAt2(value, path) {
+    const found = valueAt2(value, path);
+    return Array.isArray(found) ? found : [];
+  }
+  function stringify(value) {
+    return JSON.stringify(value, null, 2);
+  }
+  function parseObject(value, label) {
+    const parsed = parseJson3(value || "{}", label);
+    if (!isRecord2(parsed))
+      throw new Error(`${label} must be a JSON object.`);
+    return parsed;
+  }
+  function parseJson3(value, label) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      throw new Error(`${label} is not valid JSON.`);
+    }
+  }
+  function stringValue2(value) {
+    return typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : "";
+  }
+  function labelFromPath(path) {
+    const last = path.split(".").filter(Boolean).at(-1) ?? path;
+    return last.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+  }
+  function cssEscape2(value) {
+    return globalThis.CSS?.escape?.(value) ?? value.replace(/["\\]/g, "\\$&");
+  }
+  function resolveUiValue(value, draft) {
+    if (typeof value === "string" && value.startsWith("$"))
+      return valueAtDraft(draft, value.slice(1));
+    return value;
+  }
+  function isRecord2(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+
+  // src/components/admin/Resources/Functions/dom.ts
+  function styleNode(css) {
+    const el = document.createElement("style");
+    el.textContent = css;
+    return el;
+  }
+  function state(message) {
+    return div("state", message);
+  }
+  function backLink() {
+    const back = document.createElement("a");
+    back.slot = "back";
+    back.href = route2("/admin/functions");
+    back.textContent = "<";
+    back.title = "Back to functions";
+    back.setAttribute("aria-label", "Back to functions");
+    return back;
+  }
+  function title(detail) {
+    const wrap = document.createElement("span");
+    wrap.slot = "title";
+    wrap.textContent = detail.label;
+    return wrap;
+  }
+  function detailSection(slot, heading4) {
+    const section = document.createElement("cms-detail-section");
+    section.slot = slot;
+    section.setAttribute("heading", heading4);
+    return section;
+  }
+  function fieldWrap(titleText, control, hint) {
+    const wrap = div("field", label(titleText), control);
+    if (hint)
+      wrap.append(hint);
+    return wrap;
+  }
+  function schemaBlock(titleText, value) {
+    return div("schema-block", label(titleText), pre(value === null ? "None" : stringify(value)));
+  }
+  function keyValues(rows) {
+    const list = document.createElement("dl");
+    list.className = "kv";
+    for (const [key, value] of rows) {
+      const dt2 = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt2.textContent = key;
+      dd.textContent = value;
+      list.append(dt2, dd);
+    }
+    return list;
+  }
+  function label(text) {
+    const el = document.createElement("label");
+    el.textContent = text;
+    return el;
+  }
+  function helper(text) {
+    return div("helper", text);
+  }
+  function textarea2(role, value) {
+    const el = document.createElement("textarea");
+    el.dataset.role = role;
+    el.spellcheck = false;
+    el.value = value;
+    return el;
+  }
+  function button(text, tone) {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = `button ${tone}`;
+    el.textContent = text;
+    return el;
+  }
+  function option(value, text) {
+    const el = document.createElement("option");
+    el.value = value;
+    el.textContent = text;
+    return el;
+  }
+  function pre(text) {
+    const el = document.createElement("pre");
+    el.textContent = text;
+    return el;
+  }
+  function div(className, ...children) {
+    const el = document.createElement("div");
+    el.className = className;
+    for (const child of children)
+      el.append(typeof child === "string" ? document.createTextNode(child) : child);
+    return el;
+  }
+
+  // src/components/admin/Resources/Functions/fields.ts
+  function executeFields(detail, draft, onChange) {
+    const fields = detail.ui?.execute?.fields ?? [];
+    if (!fields.length)
+      return fallbackJsonFields(detail);
+    return div("fields-stack", ...fields.map((field) => executeField(field, draft, onChange)));
+  }
+  async function hydrateExecuteFields(root, detail, draft) {
+    for (const field of detail.ui?.execute?.fields ?? []) {
+      if (field.control === "source-select")
+        await hydrateSourceSelect(root, field, draft);
+    }
+  }
+  async function seedDependents(root, detail, path, draft) {
+    for (const field of detail.ui?.execute?.fields ?? []) {
+      if (field.control !== "json-object" || field.seed?.dependsOn !== path)
+        continue;
+      const input = root.querySelector(`textarea[data-path="${cssEscape2(field.path)}"]`);
+      if (!input || !field.seed)
+        continue;
+      const seed = await seedObject(field.seed, draft).catch(() => null);
+      if (seed === null)
+        continue;
+      setDraftValue(draft, field.path, seed);
+      input.value = stringify(seed);
+    }
+  }
+  function executeField(field, draft, onChange) {
+    if (field.control === "source-select")
+      return sourceSelectField(field, draft, onChange);
+    if (field.control === "json-object")
+      return jsonObjectField(field, draft, onChange);
+    return textField(field, draft, onChange);
+  }
+  function sourceSelectField(field, draft, onChange) {
+    const select2 = document.createElement("select");
+    select2.dataset.path = field.path;
+    select2.append(option("", "Loading..."));
+    select2.value = String(valueAtDraft(draft, field.path) ?? "");
+    select2.addEventListener("change", () => {
+      setDraftValue(draft, field.path, select2.value);
+      onChange(field.path);
+    });
+    return fieldWrap(field.label ?? labelFromPath(field.path), select2, helper("Choose a configured source value."));
+  }
+  function jsonObjectField(field, draft, onChange) {
+    const input = textarea2("json-field", stringify(valueAtDraft(draft, field.path) ?? {}));
+    input.dataset.path = field.path;
+    input.addEventListener("input", () => onChange());
+    const hint = field.seed ? "Seeded from the selected value when available." : "Edit a JSON object.";
+    return fieldWrap(field.label ?? labelFromPath(field.path), input, helper(hint));
+  }
+  function textField(field, draft, onChange) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.dataset.path = field.path;
+    input.value = String(valueAtDraft(draft, field.path) ?? "");
+    input.addEventListener("input", () => {
+      setDraftValue(draft, field.path, input.value);
+      onChange(field.path);
+    });
+    return fieldWrap(field.label ?? labelFromPath(field.path), input);
+  }
+  async function hydrateSourceSelect(root, field, draft) {
+    const select2 = root.querySelector(`select[data-path="${cssEscape2(field.path)}"]`);
+    if (!select2)
+      return;
+    try {
+      const response = await fetchSourceEndpoint(field.source, field.endpoint, resolvedParams(field.params, draft));
+      const items = arrayAt2(response, field.itemsPath ?? "items");
+      select2.replaceChildren(option("", "Select..."));
+      for (const item of items) {
+        const value = stringValue2(valueAt2(item, field.valuePath ?? "id"));
+        if (!value)
+          continue;
+        const label2 = stringValue2(valueAt2(item, field.labelPath ?? field.valuePath ?? "id")) || value;
+        select2.append(option(value, label2));
+      }
+      select2.value = String(valueAtDraft(draft, field.path) ?? "");
+    } catch (error) {
+      select2.replaceChildren(option("", error instanceof Error ? error.message : "Failed to load options"));
+    }
+  }
+  async function seedObject(seed, draft) {
+    const response = await fetchSourceEndpoint(seed.source, seed.endpoint, resolvedParams(seed.params, draft));
+    const out = {};
+    for (const token of arrayAt2(response, seed.pathsPath)) {
+      const path = typeof token === "string" ? token : stringValue2(valueAt2(token, seed.pathNamePath ?? "name"));
+      if (!path)
+        continue;
+      const sample = typeof token === "string" ? "" : valueAt2(token, seed.samplePath ?? "sample") ?? "";
+      setPathValue(out, path, sample);
+    }
+    return out;
+  }
+  function fallbackJsonFields(detail) {
+    const fields = [fieldWrap("Params JSON", textarea2("params", stringify(detail.paramsSample)))];
+    if (detail.body)
+      fields.push(fieldWrap("Body JSON", textarea2("body", stringify(detail.bodySample ?? {}))));
+    return div("fields-stack", ...fields);
+  }
+
+  // src/components/admin/Resources/Functions/result.ts
+  function readableResult(result) {
+    if (!result.ok)
+      return nestedError(result.body) ?? `Function failed with status ${result.status}`;
+    const count = sentCount(result.body);
+    if (count !== null)
+      return `${count} email${count === 1 ? "" : "s"} sent.`;
+    return result.status === 204 ? "Function completed without response body." : "Function completed.";
+  }
+  function nestedError(value) {
+    for (const candidate of [valueAt2(value, "details.body.error"), valueAt2(value, "error")]) {
+      if (typeof candidate === "string" && candidate.trim())
+        return candidate;
+    }
+    return null;
+  }
+  function sentCount(value) {
+    const messages = valueAt2(value, "messages");
+    return Array.isArray(messages) ? messages.length : null;
+  }
+
+  // src/components/admin/Resources/Functions/style.css
+  var style_default10 = `:host {
+    display: block;
+}
+* {
+    box-sizing: border-box;
+}
+.functions-shell {
+    --w-detail-main-width: 640px;
+    --w-detail-aside-width: 300px;
+}
+.state {
+    color: var(--p9r-color-muted, #64748b);
+    padding: 1rem 0;
+}
+.header-actions,
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.fields-stack,
+.field,
+.schema-block,
+.raw-result {
+    display: grid;
+    gap: .5rem;
+}
+.fields-stack {
+    gap: 1rem;
+}
+label {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .75rem;
+    font-weight: 700;
+}
+input,
+select,
+textarea,
+pre {
+    width: 100%;
+    border: 1px solid var(--p9r-color-border, #d8e1ea);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--p9r-color-text, #0f172a);
+    font: inherit;
+}
+input,
+select {
+    min-height: 2.25rem;
+    padding: 0 .625rem;
+}
+textarea,
+pre {
+    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+textarea {
+    min-height: 8rem;
+    padding: .75rem;
+    resize: vertical;
+}
+pre {
+    min-height: 5rem;
+    margin: 0;
+    overflow: auto;
+    padding: .75rem;
+    white-space: pre-wrap;
+}
+.button {
+    min-height: 2rem;
+    border: 1px solid #047857;
+    border-radius: 6px;
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 700;
+    padding: 0 .75rem;
+    cursor: pointer;
+}
+.button.primary {
+    background: #047857;
+    color: #fff;
+}
+.button.secondary {
+    background: #fff;
+    color: #047857;
+}
+.button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+.status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    padding: 0 .5rem;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: .75rem;
+    font-weight: 700;
+}
+.status.ok {
+    background: #ecfdf5;
+    color: #047857;
+}
+.status.error {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+.helper,
+.result-message,
+.kv dt {
+    color: var(--p9r-color-muted, #64748b);
+    font-size: .8125rem;
+}
+.result-message.error {
+    color: #b91c1c;
+    font-weight: 700;
+}
+.result-message.ok {
+    color: #047857;
+    font-weight: 700;
+}
+.kv {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: .5rem .75rem;
+    margin: 0;
+}
+.kv dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-weight: 650;
+}
+`;
+
+  // src/components/admin/Resources/Functions/FunctionDetail.ts
+  class CmsFunctionDetail extends HTMLElement {
+    initialized = false;
+    detail = null;
+    draft = { params: {}, body: {} };
+    runButton = null;
+    resultStatus = null;
+    resultMessage = null;
+    resultBody = null;
+    connectedCallback() {
+      if (this.initialized)
+        return;
+      this.initialized = true;
+      this.load();
+    }
+    async load() {
+      const id2 = currentFunctionId();
+      if (!id2)
+        return this.renderState("Missing function id.");
+      this.renderState("Loading function...");
+      try {
+        this.detail = await fetchFunctionDetail(id2);
+        this.resetDraft();
+        this.renderDetail();
+      } catch (error) {
+        this.renderState(error instanceof Error ? error.message : "Failed to load function.");
+      }
+    }
+    resetDraft() {
+      if (this.detail)
+        this.draft = initialDraft(this.detail.paramsSample, this.detail.bodySample ?? {});
+    }
+    renderState(message) {
+      this.replaceChildren(styleNode(style_default10), state(message));
+    }
+    renderDetail() {
+      if (!this.detail)
+        return;
+      const shell = document.createElement("cms-shell-detail");
+      shell.className = "functions-shell";
+      shell.append(backLink(), title(this.detail), this.headerActions(), this.inputsSection(), this.resultSection(), this.summarySection(), this.contractSection());
+      this.replaceChildren(styleNode(style_default10), shell);
+      this.bindRefs();
+      hydrateExecuteFields(this, this.detail, this.draft);
+    }
+    bindRefs() {
+      this.runButton = this.querySelector("[data-role='run']");
+      this.resultStatus = this.querySelector("[data-role='result-status']");
+      this.resultMessage = this.querySelector("[data-role='result-message']");
+      this.resultBody = this.querySelector("[data-role='result-body']");
+      this.runButton?.addEventListener("click", () => void this.execute());
+      this.querySelector("[data-role='reset']")?.addEventListener("click", () => {
+        this.resetDraft();
+        this.renderDetail();
+      });
+    }
+    headerActions() {
+      const wrap = div("header-actions");
+      wrap.slot = "actions";
+      const reset = button("Reset draft", "secondary");
+      const run = button("Run", "primary");
+      reset.dataset.role = "reset";
+      run.dataset.role = "run";
+      wrap.append(reset, run);
+      return wrap;
+    }
+    inputsSection() {
+      const section = detailSection("main", "Inputs");
+      if (this.detail)
+        section.append(executeFields(this.detail, this.draft, (path) => void this.onInputChange(path)));
+      return section;
+    }
+    resultSection() {
+      const section = detailSection("main", "Result");
+      const status = div("status", "Not executed");
+      const message = div("result-message empty", "Run the function to see its result.");
+      const raw = document.createElement("details");
+      status.dataset.role = "result-status";
+      message.dataset.role = "result-message";
+      raw.className = "raw-result";
+      raw.append(summary("Raw response"), pre(""));
+      raw.querySelector("pre").dataset.role = "result-body";
+      section.append(div("result-header", status), message, raw);
+      return section;
+    }
+    summarySection() {
+      const d = this.detail;
+      const section = detailSection("aside", "Function");
+      section.append(keyValues([["Id", d.id], ["Method", d.method], ["Access", d.access], ["Input", d.inputLabel], ["Steps", d.stepsLabel], ["Return", d.returnLabel]]));
+      return section;
+    }
+    contractSection() {
+      const d = this.detail;
+      const section = detailSection("aside", "Contract");
+      const details = document.createElement("details");
+      details.append(summary("Schemas"), schemaBlock("Params", d.params ?? null), schemaBlock("Body", d.body ?? null), schemaBlock("Output", d.output ?? null));
+      section.append(details);
+      return section;
+    }
+    async onInputChange(path) {
+      this.clearResult();
+      if (path && this.detail)
+        await seedDependents(this, this.detail, path, this.draft);
+    }
+    async execute() {
+      if (!this.detail || !this.runButton)
+        return;
+      try {
+        this.draft = this.detail.ui?.execute?.fields?.length ? readPathDraft(this, this.draft) : readFallbackDraft(this, Boolean(this.detail.body));
+      } catch (error) {
+        this.showResult({ ok: false, status: 0, contentType: "application/json", body: { error: error instanceof Error ? error.message : "Invalid input" } });
+        return;
+      }
+      this.runButton.disabled = true;
+      this.runButton.textContent = "Running...";
+      this.showPending();
+      try {
+        this.showResult(await executeFunctionDetail({ id: this.detail.id, params: this.draft.params, body: this.draft.body, includeBody: Boolean(this.detail.body) }));
+      } catch (error) {
+        this.showResult({ ok: false, status: 0, contentType: "application/json", body: { error: error instanceof Error ? error.message : "Execution failed" } });
+      } finally {
+        this.runButton.disabled = false;
+        this.runButton.textContent = "Run";
+      }
+    }
+    showPending() {
+      this.setResult("status", "Running", "Waiting for response...", "");
+    }
+    clearResult() {
+      this.setResult("status", "Not executed", "Run the function to see its result.", "");
+    }
+    showResult(result) {
+      this.setResult(`status ${result.ok ? "ok" : "error"}`, result.status ? String(result.status) : "Invalid input", readableResult(result), stringify(result.body));
+    }
+    setResult(statusClass, status, message, body) {
+      if (this.resultStatus) {
+        this.resultStatus.className = statusClass;
+        this.resultStatus.textContent = status;
+      }
+      if (this.resultMessage)
+        this.resultMessage.textContent = message;
+      if (this.resultBody)
+        this.resultBody.textContent = body;
+    }
+  }
+  if (!customElements.get("cms-function-detail"))
+    customElements.define("cms-function-detail", CmsFunctionDetail);
+  function summary(text) {
+    const el = document.createElement("summary");
+    el.textContent = text;
+    return el;
+  }
+
   // src/components/admin/Resources/Integrations/template.html
   var template_default11 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
@@ -17173,12 +17854,12 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Integrations/api.ts
-  function basePath2() {
+  function basePath3() {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
   }
-  function route2(path) {
-    return `${basePath2()}${path}`;
+  function route3(path) {
+    return `${basePath3()}${path}`;
   }
   function currentIntegrationRoute() {
     const params = new URL(window.location.href).searchParams;
@@ -17199,7 +17880,7 @@ p9r-token-input {
     else if (next.tab === "catalogue")
       params.set("tab", "catalogue");
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route2(`/admin/integrations${suffix}`);
+    return route3(`/admin/integrations${suffix}`);
   }
   function pushIntegrationRoute(next) {
     history.pushState(null, "", integrationRouteUrl(next));
@@ -17208,12 +17889,12 @@ p9r-token-input {
     history.replaceState(null, "", integrationRouteUrl(next));
   }
   async function importIntegration(payload) {
-    const result = await postJson(route2("/api/integrations/import"), payload);
+    const result = await postJson(route3("/api/integrations/import"), payload);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     return result;
   }
   async function rerunIntegrationInstallation(id2) {
-    await postJson(`${route2("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, {});
+    await postJson(`${route3("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, {});
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
@@ -17263,7 +17944,7 @@ p9r-token-input {
   }
   function control(input) {
     if (input.type === "json")
-      return textarea2(input, 6);
+      return textarea3(input, 6);
     if (input.type === "select")
       return select2(input);
     const element = document.createElement("input");
@@ -17280,15 +17961,15 @@ p9r-token-input {
   function select2(input) {
     const element = document.createElement("select");
     element.name = input.name;
-    for (const option of input.options ?? []) {
+    for (const option2 of input.options ?? []) {
       const child = document.createElement("option");
-      child.value = option.value;
-      child.textContent = option.label;
+      child.value = option2.value;
+      child.textContent = option2.label;
       element.append(child);
     }
     return element;
   }
-  function textarea2(input, rows) {
+  function textarea3(input, rows) {
     const element = document.createElement("textarea");
     element.name = input.name;
     element.rows = rows;
@@ -17614,15 +18295,15 @@ p9r-token-input {
     const params = new URLSearchParams({ kind: definition.kind, path });
     if (definition.version)
       params.set("version", definition.version);
-    return route2(`/api/integrations/asset?${params.toString()}`);
+    return route3(`/api/integrations/asset?${params.toString()}`);
   }
   // src/components/admin/Resources/Integrations/ui/resources/render.ts
   function appendBadges(root, labels) {
     root.replaceChildren();
     const visible = labels.slice(0, 4);
     const remaining = labels.length - visible.length;
-    for (const label of visible)
-      root.append(badge2(label));
+    for (const label2 of visible)
+      root.append(badge2(label2));
     if (remaining > 0) {
       const more = badge2(`+${remaining} others`);
       more.classList.add("badge-muted");
@@ -17654,9 +18335,9 @@ p9r-token-input {
     }
     root.replaceChildren(grid);
   }
-  function renderPlaceholder(root, title, copy) {
+  function renderPlaceholder(root, title2, copy) {
     const element = cloneElement("placeholder");
-    text(element, "[data-title]", title);
+    text(element, "[data-title]", title2);
     text(element, "[data-copy]", copy);
     root.replaceChildren(element);
   }
@@ -17666,9 +18347,9 @@ p9r-token-input {
     element.textContent = message;
     return element;
   }
-  function badge2(label) {
+  function badge2(label2) {
     const element = cloneElement("badge");
-    element.textContent = label;
+    element.textContent = label2;
     return element;
   }
   // src/components/admin/Resources/Integrations/ui/resources/rows.ts
@@ -17776,7 +18457,7 @@ p9r-token-input {
     const definition = definitionFor(host, installation);
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template").content;
-    shell.setAttribute("cms-source", `${route2("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
+    shell.setAttribute("cms-source", `${route3("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
     text(content, "[data-title]", installation.label);
     text(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
@@ -17824,7 +18505,7 @@ p9r-token-input {
   }
   function applyAnswers(root, answers) {
     for (const [name, value] of Object.entries(answers)) {
-      const element = root.querySelector(`[name="${cssEscape2(name)}"]`);
+      const element = root.querySelector(`[name="${cssEscape3(name)}"]`);
       if (!element)
         continue;
       if (element instanceof HTMLInputElement && element.type === "checkbox")
@@ -17833,7 +18514,7 @@ p9r-token-input {
         element.value = value == null ? "" : typeof value === "string" ? value : JSON.stringify(value);
     }
   }
-  function cssEscape2(value) {
+  function cssEscape3(value) {
     return typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(value) : value.replaceAll('"', "\\\"");
   }
 
@@ -17895,25 +18576,25 @@ p9r-token-input {
       openSetup(host, definition, { answers, error: error instanceof Error ? error.message : "Import failed" });
     }
   }
-  async function runIntegrationSync(host, button) {
-    const id2 = button.dataset.integrationId;
+  async function runIntegrationSync(host, button2) {
+    const id2 = button2.dataset.integrationId;
     if (!id2)
       return;
     const status = host.querySelector("[data-action-status]");
-    button.setAttribute("aria-busy", "true");
-    button.textContent = "Syncing";
+    button2.setAttribute("aria-busy", "true");
+    button2.textContent = "Syncing";
     if (status)
       status.textContent = "";
     try {
       await rerunIntegrationInstallation(id2);
       await host.waitForBoundData(() => true);
-      button.removeAttribute("aria-busy");
-      button.textContent = "Run sync";
+      button2.removeAttribute("aria-busy");
+      button2.textContent = "Run sync";
       if (status)
         status.textContent = "Synced";
     } catch (error) {
-      button.removeAttribute("aria-busy");
-      button.textContent = "Run sync";
+      button2.removeAttribute("aria-busy");
+      button2.textContent = "Run sync";
       if (status)
         status.textContent = error instanceof Error ? error.message : "Sync failed";
     }
@@ -17933,9 +18614,9 @@ p9r-token-input {
     const definitions = host.query("[data-definitions-source]");
     const installations = host.query("[data-installations-source]");
     const catalogue = host.query("[data-catalogue-source]");
-    definitions.setAttribute("cms-source", `${route2("/api/integrations/list")} as definitions`);
-    installations.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
-    catalogue.setAttribute("cms-source", `${route2("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
+    definitions.setAttribute("cms-source", `${route3("/api/integrations/list")} as definitions`);
+    installations.setAttribute("cms-source", `${route3("/api/integrations/installations")} as installations`);
+    catalogue.setAttribute("cms-source", `${route3("/api/integrations/catalogue")}?q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
     host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
@@ -18626,12 +19307,12 @@ button[slot="back"]:disabled {
       this.addEventListener("click", (event) => void handleClick(this, event));
     }
     renderRoute() {
-      const route3 = currentIntegrationRoute();
-      if (route3.view === "installation")
-        return this.showInstallation(route3.id);
-      if (route3.view === "setup")
-        return this.showSetup(route3.kind);
-      this.showList(route3.tab);
+      const route4 = currentIntegrationRoute();
+      if (route4.view === "installation")
+        return this.showInstallation(route4.id);
+      if (route4.view === "setup")
+        return this.showSetup(route4.kind);
+      this.showList(route4.tab);
     }
     showList(tab) {
       this.selectedIntegrationId = "";
@@ -18704,7 +19385,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default10 = `.triggers-surface {
+  var style_default11 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -18783,21 +19464,21 @@ input[type="checkbox"] {
 `;
 
   // src/components/admin/Resources/Triggers/api.ts
-  function basePath3() {
+  function basePath4() {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
   }
-  function route3(path) {
-    return `${basePath3()}${path}`;
+  function route4(path) {
+    return `${basePath4()}${path}`;
   }
   async function fetchTriggers() {
-    const response = await fetch(route3("/api/triggers"), { headers: { Accept: "application/json" } });
+    const response = await fetch(route4("/api/triggers"), { headers: { Accept: "application/json" } });
     if (!response.ok)
       throw new Error(await response.text());
     return response.json();
   }
   async function setTriggerEnabled(id2, enabled) {
-    const response = await fetch(route3("/api/triggers/enabled"), {
+    const response = await fetch(route4("/api/triggers/enabled"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: id2, enabled })
@@ -18820,7 +19501,7 @@ input[type="checkbox"] {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default10;
+      style.textContent = style_default11;
       const body = document.createElement("template");
       body.innerHTML = template_default12;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -18859,9 +19540,9 @@ input[type="checkbox"] {
         input.disabled = false;
       }
     }
-    show(state) {
+    show(state2) {
       for (const el of Array.from(this.querySelectorAll("[data-state]"))) {
-        el.hidden = el.dataset.state !== state;
+        el.hidden = el.dataset.state !== state2;
       }
     }
   }
@@ -18953,7 +19634,7 @@ input[type="checkbox"] {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
     min-width: 0;
     border-bottom: 1px solid var(--editor-v2-border);
@@ -19212,7 +19893,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template3 = document.createElement("template");
-  template3.innerHTML = `<style>${String(style_default11)}</style>${String(template_default13)}`;
+  template3.innerHTML = `<style>${String(style_default12)}</style>${String(template_default13)}`;
   var TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
   var TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
   var TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
@@ -19255,13 +19936,13 @@ button:hover {
     set sourceState(sourceState) {
       this._setSourceState(sourceState, false);
     }
-    set saveStatus(label) {
+    set saveStatus(label2) {
       const target = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
       if (target)
-        target.textContent = label;
+        target.textContent = label2;
     }
-    setPageTitle(title, path) {
-      this.shadowRoot.querySelector(".name").textContent = title;
+    setPageTitle(title2, path) {
+      this.shadowRoot.querySelector(".name").textContent = title2;
       this.shadowRoot.querySelector(".path").textContent = path;
     }
     setNavigation(input) {
@@ -19271,40 +19952,40 @@ button:hover {
       this.shadowRoot.querySelector(".settings-label").textContent = input.settingsLabel;
     }
     _onClick = (event) => {
-      const button = event.target?.closest("button");
-      if (!button)
+      const button2 = event.target?.closest("button");
+      if (!button2)
         return;
-      const viewport = button.dataset.viewport;
+      const viewport = button2.dataset.viewport;
       if (viewport) {
         this._setViewport(viewport, true);
         return;
       }
-      const mode = button.dataset.editorMode;
+      const mode = button2.dataset.editorMode;
       if (mode) {
         this._setMode(mode, true);
         return;
       }
-      const sourceState = button.dataset.sourceState;
+      const sourceState = button2.dataset.sourceState;
       if (sourceState) {
         this._setSourceState(sourceState, true);
         return;
       }
-      if (button.dataset.action === "save") {
+      if (button2.dataset.action === "save") {
         this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
           bubbles: true,
           composed: true
         }));
-      } else if (button.dataset.action === "delete") {
+      } else if (button2.dataset.action === "delete") {
         this.dispatchEvent(new CustomEvent(TOPBAR_DELETE_EVENT, {
           bubbles: true,
           composed: true
         }));
-      } else if (button.dataset.action === "page-settings") {
+      } else if (button2.dataset.action === "page-settings") {
         this.dispatchEvent(new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
           bubbles: true,
           composed: true
         }));
-      } else if (button.dataset.action === "view-reload") {
+      } else if (button2.dataset.action === "view-reload") {
         this.dispatchEvent(new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
           bubbles: true,
           composed: true
@@ -19359,10 +20040,10 @@ button:hover {
         reload.disabled = this._mode !== "view";
     }
     _syncButtonGroup(selector, dataKey, value) {
-      for (const button of Array.from(this.shadowRoot.querySelectorAll(selector))) {
-        const isActive = button.dataset[dataKey] === value;
-        button.classList.toggle("active", isActive);
-        button.setAttribute("aria-pressed", String(isActive));
+      for (const button2 of Array.from(this.shadowRoot.querySelectorAll(selector))) {
+        const isActive = button2.dataset[dataKey] === value;
+        button2.classList.toggle("active", isActive);
+        button2.setAttribute("aria-pressed", String(isActive));
       }
     }
     _emitViewportChange() {
@@ -19394,7 +20075,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default12 = `:host {
+  var style_default13 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -19494,7 +20175,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(style_default12)}</style>${String(template_default14)}`;
+  template4.innerHTML = `<style>${String(style_default13)}</style>${String(template_default14)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -19505,9 +20186,9 @@ button:hover {
       this._syncHeaderVisibility();
     }
     _syncHeaderVisibility() {
-      const title = this.querySelector("[slot='title']");
+      const title2 = this.querySelector("[slot='title']");
       const action = this.querySelector("[slot='action']");
-      this.toggleAttribute("has-header", Boolean(title || action));
+      this.toggleAttribute("has-header", Boolean(title2 || action));
     }
   }
   if (!customElements.get("cms-editor-v2-panel")) {
@@ -19543,9 +20224,9 @@ button:hover {
     const queryParam = tokenValue2(value, "#");
     if (queryParam)
       return { from: "queryParam", name: queryParam };
-    const state = tokenValue2(value, "@");
-    if (state)
-      return { from: "state", name: state };
+    const state2 = tokenValue2(value, "@");
+    if (state2)
+      return { from: "state", name: state2 };
     return { from: "raw", value };
   }
   function tokenValue2(value, prefix) {
@@ -19656,13 +20337,13 @@ button:hover {
       return;
     }
     for (const group of groups) {
-      const button = document.createElement("button");
-      button.className = "provider";
-      button.type = "button";
-      button.ariaPressed = String(group.key === activeProvider);
-      button.innerHTML = `<span>${escapeHtml2(group.label)}</span><span class="count">${group.count}</span>`;
-      button.addEventListener("click", () => onSelect(group.key));
-      container.append(button);
+      const button2 = document.createElement("button");
+      button2.className = "provider";
+      button2.type = "button";
+      button2.ariaPressed = String(group.key === activeProvider);
+      button2.innerHTML = `<span>${escapeHtml2(group.label)}</span><span class="count">${group.count}</span>`;
+      button2.addEventListener("click", () => onSelect(group.key));
+      container.append(button2);
     }
   }
   function renderSourceButtons(container, sources, activeSource, onSelect, onConfirm) {
@@ -19672,10 +20353,10 @@ button:hover {
       return;
     }
     for (const source of sources) {
-      const button = document.createElement("button");
-      button.className = "source";
-      button.type = "button";
-      button.ariaSelected = String(source === activeSource);
+      const button2 = document.createElement("button");
+      button2.className = "source";
+      button2.type = "button";
+      button2.ariaSelected = String(source === activeSource);
       const header = document.createElement("span");
       header.className = "source-header";
       const method = document.createElement("span");
@@ -19691,10 +20372,10 @@ button:hover {
       const url = document.createElement("span");
       url.className = "url";
       url.textContent = source.url;
-      button.append(header, description, url);
-      button.addEventListener("click", () => onSelect(source));
-      button.addEventListener("dblclick", () => onConfirm(source));
-      container.append(button);
+      button2.append(header, description, url);
+      button2.addEventListener("click", () => onSelect(source));
+      button2.addEventListener("dblclick", () => onConfirm(source));
+      container.append(button2);
     }
   }
   function empty2(message) {
@@ -19752,14 +20433,14 @@ button:hover {
     return aliasLabel;
   }
   function renderTriggerSelect(value) {
-    const label = document.createElement("label");
-    label.textContent = "Trigger";
+    const label2 = document.createElement("label");
+    label2.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option("auto", "Auto"), option("submit", "Submit"));
+    trigger.append(option2("auto", "Auto"), option2("submit", "Submit"));
     selectOption(trigger, value);
-    label.append(trigger);
-    return label;
+    label2.append(trigger);
+    return label2;
   }
   function defaultTrigger(source) {
     return (source.method ?? "GET") === "GET" ? "auto" : "submit";
@@ -19833,7 +20514,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option("queryParam", "Query param"), option("raw", "Raw value"), option("state", "Page state"));
+    mode.append(option2("queryParam", "Query param"), option2("raw", "Raw value"), option2("state", "Page state"));
     const value = document.createElement("input");
     value.className = "param-value";
     value.placeholder = name;
@@ -19856,10 +20537,10 @@ button:hover {
   function isBindableBodyType(type) {
     return type !== "object" && type !== "array";
   }
-  function option(value, label) {
+  function option2(value, label2) {
     const element = document.createElement("option");
     element.value = value;
-    element.textContent = label;
+    element.textContent = label2;
     return element;
   }
   function textSpan(value) {
@@ -19871,7 +20552,7 @@ button:hover {
     selectOption(select3, value);
   }
   function selectOption(select3, value) {
-    const index = Array.from(select3.options).findIndex((option2) => option2.value === value);
+    const index = Array.from(select3.options).findIndex((option3) => option3.value === value);
     if (index >= 0)
       select3.selectedIndex = index;
   }
@@ -19947,12 +20628,12 @@ button:hover {
       container.append(detailsEmpty("Select a source to configure its binding."));
       return;
     }
-    const title = document.createElement("div");
-    title.className = "config-heading";
-    title.textContent = "Binding";
+    const title2 = document.createElement("div");
+    title2.className = "config-heading";
+    title2.textContent = "Binding";
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
-    scroll.append(title, renderBindingConfig(source, options2.initialBinding));
+    scroll.append(title2, renderBindingConfig(source, options2.initialBinding));
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
     if (options2.canRemove)
@@ -19984,14 +20665,14 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourcePickerRenderer.ts
-  function renderDataSourcePicker(state, handlers) {
-    const activeSource = normalizeActiveSource(state.activeSource, state.visibleSources);
-    renderProviderButtons(state.providers, state.groups, state.activeProvider, handlers.providerSelect);
-    renderSourceButtons(state.sourcesList, state.visibleSources, activeSource, handlers.sourceSelect, handlers.sourceConfirm);
-    renderDetailsPanel(state.details, activeSource);
-    renderBindingPanel(state.binding, activeSource, {
-      canRemove: state.canRemove,
-      initialBinding: state.initialBinding,
+  function renderDataSourcePicker(state2, handlers) {
+    const activeSource = normalizeActiveSource(state2.activeSource, state2.visibleSources);
+    renderProviderButtons(state2.providers, state2.groups, state2.activeProvider, handlers.providerSelect);
+    renderSourceButtons(state2.sourcesList, state2.visibleSources, activeSource, handlers.sourceSelect, handlers.sourceConfirm);
+    renderDetailsPanel(state2.details, activeSource);
+    renderBindingPanel(state2.binding, activeSource, {
+      canRemove: state2.canRemove,
+      initialBinding: state2.initialBinding,
       onSelect: handlers.bindingSelect,
       onRemove: handlers.remove
     });
@@ -20036,7 +20717,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: contents;
 }
 
@@ -20538,7 +21219,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/DataSourcePicker.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default15)}`;
+  template5.innerHTML = `<style>${String(style_default14)}</style>${String(template_default15)}`;
   var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
   var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 
@@ -20709,23 +21390,23 @@ h2 {
     }
     _selectMethodFilter(value) {
       const options2 = Array.from(this.methodFilter.options);
-      const index = options2.findIndex((option2) => option2.value === value);
+      const index = options2.findIndex((option3) => option3.value === value);
       this.methodFilter.selectedIndex = index >= 0 ? index : 0;
-      options2.forEach((option2, i) => {
-        option2.selected = i === this.methodFilter.selectedIndex;
-        option2.toggleAttribute("selected", option2.selected);
+      options2.forEach((option3, i) => {
+        option3.selected = i === this.methodFilter.selectedIndex;
+        option3.toggleAttribute("selected", option3.selected);
       });
       this.methodFilter.setAttribute("value", options2[this.methodFilter.selectedIndex]?.value ?? "GET");
     }
     _selectedMethodFilter() {
       const options2 = Array.from(this.methodFilter.options);
-      const selected = options2.find((option2) => option2.selected);
+      const selected = options2.find((option3) => option3.selected);
       if (selected?.value)
         return selected.value;
       const selectedIndexValue = this.methodFilter.options[this.methodFilter.selectedIndex]?.value;
       if (selectedIndexValue)
         return selectedIndexValue;
-      const selectedAttr = options2.find((option2) => option2.hasAttribute("selected"));
+      const selectedAttr = options2.find((option3) => option3.hasAttribute("selected"));
       return selectedAttr?.value ?? this.methodFilter.getAttribute("value") ?? "GET";
     }
   }
@@ -20753,7 +21434,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/style.css
-  var style_default14 = `:host {
+  var style_default15 = `:host {
     display: contents;
 }
 
@@ -20943,7 +21624,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/ConditionPicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(style_default14)}</style>${String(template_default16)}`;
+  template6.innerHTML = `<style>${String(style_default15)}</style>${String(template_default16)}`;
   var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
   var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
   var STATES = ["loaded", "loading", "empty", "error"];
@@ -20994,43 +21675,43 @@ input {
     renderSource(source) {
       const section = document.createElement("section");
       section.className = "source";
-      const title = document.createElement("div");
-      title.className = "source-title";
-      title.textContent = source.label;
+      const title2 = document.createElement("div");
+      title2.className = "source-title";
+      title2.textContent = source.label;
       const name = document.createElement("div");
       name.className = "source-name";
       name.textContent = source.sourceName ? `Source: ${source.sourceName}` : "";
       const states = document.createElement("div");
       states.className = "states";
-      for (const state of STATES)
-        states.append(this.renderState(source, state));
-      section.append(title);
+      for (const state2 of STATES)
+        states.append(this.renderState(source, state2));
+      section.append(title2);
       if (source.sourceName)
         section.append(name);
       section.append(states);
       return section;
     }
-    renderState(source, state) {
-      const label = document.createElement("label");
+    renderState(source, state2) {
+      const label2 = document.createElement("label");
       const input = document.createElement("input");
       input.type = "checkbox";
-      input.checked = this._selected.has(this.key(source.editor, state));
+      input.checked = this._selected.has(this.key(source.editor, state2));
       input.addEventListener("change", () => {
-        const key = this.key(source.editor, state);
+        const key = this.key(source.editor, state2);
         input.checked ? this._selected.add(key) : this._selected.delete(key);
         this.applyButton.disabled = this._selected.size === 0;
       });
       const text2 = document.createElement("span");
-      text2.textContent = state;
-      label.append(input, text2);
-      return label;
+      text2.textContent = state2;
+      label2.append(input, text2);
+      return label2;
     }
     _apply = () => {
       const conditions = [];
       for (const source of this._sources) {
-        for (const state of STATES) {
-          if (this._selected.has(this.key(source.editor, state))) {
-            conditions.push({ sourceEditor: source.editor, sourceState: state });
+        for (const state2 of STATES) {
+          if (this._selected.has(this.key(source.editor, state2))) {
+            conditions.push({ sourceEditor: source.editor, sourceState: state2 });
           }
         }
       }
@@ -21060,8 +21741,8 @@ input {
       if (!this.backdrop.hidden && event.key === "Escape")
         this.close();
     };
-    key(editor, state) {
-      return `${this._sources.findIndex((source) => source.editor === editor)}:${state}`;
+    key(editor, state2) {
+      return `${this._sources.findIndex((source) => source.editor === editor)}:${state2}`;
     }
     get backdrop() {
       return this.shadowRoot.querySelector(".backdrop");
@@ -21155,7 +21836,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/style.css
-  var style_default15 = `:host {
+  var style_default16 = `:host {
     display: contents;
 }
 
@@ -21549,32 +22230,32 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option2) {
-    if (option2.item) {
+  function normalizeBlockPickerOption(option3) {
+    if (option3.item) {
       return {
-        ...option2,
-        kind: option2.item.kind
+        ...option3,
+        kind: option3.item.kind
       };
     }
-    if (!option2.entry) {
+    if (!option3.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option2,
+      ...option3,
       kind: "block",
       item: {
         kind: "block",
-        entry: option2.entry
+        entry: option3.entry
       }
     };
   }
-  function blockPickerOptionItem(option2) {
-    if (option2.item)
-      return option2.item;
-    if (option2.entry) {
+  function blockPickerOptionItem(option3) {
+    if (option3.item)
+      return option3.item;
+    if (option3.entry) {
       return {
         kind: "block",
-        entry: option2.entry
+        entry: option3.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -21613,29 +22294,29 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option2) {
-    const item = blockPickerOptionItem(option2);
+  function blockPickerCategoryLabel(option3) {
+    const item = blockPickerOptionItem(option3);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option2, query2) {
+  function blockPickerOptionMatches(option3, query2) {
     if (!query2)
       return true;
-    const item = blockPickerOptionItem(option2);
+    const item = blockPickerOptionItem(option3);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option2.slotLabel
+      option3.slotLabel
     ].some((value) => value?.toLowerCase().includes(query2));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default17)}`;
+  template7.innerHTML = `<style>${String(style_default16)}</style>${String(template_default17)}`;
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   class BlockPickerModal extends HTMLElement {
@@ -21663,7 +22344,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option2) => normalizeBlockPickerOption(option2))
+        options: group.options.map((option3) => normalizeBlockPickerOption(option3))
       }));
       this._activeSlotKey = this._firstEnabledGroup()?.slot ?? "";
       this._activeSource = "block";
@@ -21690,7 +22371,7 @@ dd {
     _renderEntries() {
       const query2 = this.search.value.trim().toLowerCase();
       const group = this._activeGroup();
-      const options2 = group?.options.filter((option2) => this._isVisibleOption(option2, query2)) ?? [];
+      const options2 = group?.options.filter((option3) => this._isVisibleOption(option3, query2)) ?? [];
       this.results.replaceChildren();
       if (group?.disabledReason) {
         const empty3 = document.createElement("div");
@@ -21713,8 +22394,8 @@ dd {
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      for (const option2 of options2) {
-        this.results.append(this._renderOption(option2));
+      for (const option3 of options2) {
+        this.results.append(this._renderOption(option3));
       }
       this._renderDetails();
     }
@@ -21755,41 +22436,41 @@ dd {
         }, this._categoryCount(category)));
       }
     }
-    _filterButton(label, active, onClick, count, disabled = false) {
-      const button = document.createElement("button");
-      button.className = "filter";
-      button.type = "button";
-      button.disabled = disabled;
-      button.ariaPressed = String(active);
-      button.addEventListener("click", () => {
-        if (button.disabled)
+    _filterButton(label2, active, onClick, count, disabled = false) {
+      const button2 = document.createElement("button");
+      button2.className = "filter";
+      button2.type = "button";
+      button2.disabled = disabled;
+      button2.ariaPressed = String(active);
+      button2.addEventListener("click", () => {
+        if (button2.disabled)
           return;
         onClick();
       });
       const text2 = document.createElement("span");
-      text2.textContent = label;
+      text2.textContent = label2;
       const badge3 = document.createElement("span");
       badge3.className = "count";
       badge3.textContent = String(count);
-      button.append(text2, badge3);
-      return button;
+      button2.append(text2, badge3);
+      return button2;
     }
     _renderDetails() {
       this.details.replaceChildren();
-      const option2 = this._activeOption;
-      if (!option2) {
+      const option3 = this._activeOption;
+      if (!option3) {
         const empty3 = document.createElement("div");
         empty3.className = "details-empty";
         empty3.textContent = "Select content to see details.";
         this.details.append(empty3);
         return;
       }
-      const item = blockPickerOptionItem(option2);
+      const item = blockPickerOptionItem(option3);
       const eyebrow = document.createElement("div");
       eyebrow.className = "details-eyebrow";
       eyebrow.textContent = blockPickerSourceLabel(item.kind);
-      const title = document.createElement("h3");
-      title.textContent = blockPickerItemLabel(item);
+      const title2 = document.createElement("h3");
+      title2.textContent = blockPickerItemLabel(item);
       const description = document.createElement("p");
       description.textContent = blockPickerItemDescription(item);
       const preview = document.createElement("div");
@@ -21799,19 +22480,19 @@ dd {
       previewIcon.textContent = blockPickerIconText(item);
       preview.append(previewIcon);
       const meta = document.createElement("dl");
-      meta.append(this._metaRow("Source", blockPickerSourceLabel(item.kind)), this._metaRow("Handle", blockPickerItemHandle(item)), this._metaRow("Slot", option2.slotLabel), this._metaRow("Category", blockPickerCategoryLabel(option2)));
+      meta.append(this._metaRow("Source", blockPickerSourceLabel(item.kind)), this._metaRow("Handle", blockPickerItemHandle(item)), this._metaRow("Slot", option3.slotLabel), this._metaRow("Category", blockPickerCategoryLabel(option3)));
       const insert = document.createElement("button");
       insert.className = "insert";
       insert.type = "button";
       insert.textContent = "Insert";
-      insert.addEventListener("click", () => this._selectOption(option2));
-      this.details.append(preview, eyebrow, title, description, meta, insert);
+      insert.addEventListener("click", () => this._selectOption(option3));
+      this.details.append(preview, eyebrow, title2, description, meta, insert);
     }
-    _metaRow(label, value) {
+    _metaRow(label2, value) {
       const wrapper = document.createElement("div");
       const term = document.createElement("dt");
       const detail = document.createElement("dd");
-      term.textContent = label;
+      term.textContent = label2;
       detail.textContent = value;
       wrapper.append(term, detail);
       return wrapper;
@@ -21819,38 +22500,38 @@ dd {
     _renderTabs() {
       this.tabs.replaceChildren();
       for (const group of this._groups) {
-        const button = document.createElement("button");
+        const button2 = document.createElement("button");
         const slotKey = group.slot ?? "";
-        button.className = "tab";
-        button.type = "button";
-        button.role = "tab";
-        button.textContent = group.label;
-        button.disabled = Boolean(group.disabledReason);
-        button.ariaSelected = String(slotKey === this._activeSlotKey);
+        button2.className = "tab";
+        button2.type = "button";
+        button2.role = "tab";
+        button2.textContent = group.label;
+        button2.disabled = Boolean(group.disabledReason);
+        button2.ariaSelected = String(slotKey === this._activeSlotKey);
         if (group.disabledReason)
-          button.title = group.disabledReason;
-        button.addEventListener("click", () => {
-          if (button.disabled)
+          button2.title = group.disabledReason;
+        button2.addEventListener("click", () => {
+          if (button2.disabled)
             return;
           this._activeSlotKey = slotKey;
           this._activeCategory = "";
           this._activeOption = null;
           this._render();
         });
-        this.tabs.append(button);
+        this.tabs.append(button2);
       }
     }
-    _renderOption(option2) {
-      const button = document.createElement("button");
-      button.className = "block";
-      button.type = "button";
-      button.ariaSelected = String(option2 === this._activeOption);
-      button.addEventListener("click", () => {
-        this._activeOption = option2;
+    _renderOption(option3) {
+      const button2 = document.createElement("button");
+      button2.className = "block";
+      button2.type = "button";
+      button2.ariaSelected = String(option3 === this._activeOption);
+      button2.addEventListener("click", () => {
+        this._activeOption = option3;
         this._renderEntries();
       });
-      button.addEventListener("dblclick", () => this._selectOption(option2));
-      const item = blockPickerOptionItem(option2);
+      button2.addEventListener("dblclick", () => this._selectOption(option3));
+      const item = blockPickerOptionItem(option3);
       const icon = document.createElement("span");
       icon.className = "icon";
       icon.textContent = blockPickerIconText(item);
@@ -21863,46 +22544,46 @@ dd {
       description.textContent = blockPickerItemDescription(item);
       const category = document.createElement("span");
       category.className = "category";
-      category.textContent = blockPickerCategoryLabel(option2);
+      category.textContent = blockPickerCategoryLabel(option3);
       body.append(name, description, category);
-      button.append(icon, body);
-      return button;
+      button2.append(icon, body);
+      return button2;
     }
-    _selectOption(option2) {
+    _selectOption(option3) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option2 }
+        detail: { option: option3 }
       }));
       this.close();
     }
-    _isVisibleOption(option2, query2) {
-      const item = blockPickerOptionItem(option2);
+    _isVisibleOption(option3, query2) {
+      const item = blockPickerOptionItem(option3);
       if (item.kind !== this._activeSource)
         return false;
-      if (this._activeCategory && blockPickerCategoryLabel(option2) !== this._activeCategory)
+      if (this._activeCategory && blockPickerCategoryLabel(option3) !== this._activeCategory)
         return false;
-      return blockPickerOptionMatches(option2, query2);
+      return blockPickerOptionMatches(option3, query2);
     }
     _sourceCount(source) {
-      return this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === source).length ?? 0;
+      return this._activeGroup()?.options.filter((option3) => blockPickerOptionItem(option3).kind === source).length ?? 0;
     }
     _selectSingleSourceOption(source) {
-      const options2 = this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === source) ?? [];
+      const options2 = this._activeGroup()?.options.filter((option3) => blockPickerOptionItem(option3).kind === source) ?? [];
       if (options2.length !== 1)
         return false;
       this._selectOption(options2[0]);
       return true;
     }
     _categoryCount(category) {
-      return this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === this._activeSource && blockPickerCategoryLabel(option2) === category).length ?? 0;
+      return this._activeGroup()?.options.filter((option3) => blockPickerOptionItem(option3).kind === this._activeSource && blockPickerCategoryLabel(option3) === category).length ?? 0;
     }
     _categories() {
       const categories = new Set;
-      for (const option2 of this._activeGroup()?.options ?? []) {
-        if (blockPickerOptionItem(option2).kind !== this._activeSource)
+      for (const option3 of this._activeGroup()?.options ?? []) {
+        if (blockPickerOptionItem(option3).kind !== this._activeSource)
           continue;
-        categories.add(blockPickerCategoryLabel(option2));
+        categories.add(blockPickerCategoryLabel(option3));
       }
       return [...categories].sort((a, b) => a.localeCompare(b));
     }
@@ -21953,45 +22634,45 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureDragDrop.ts
-  function onStructureDragStart(state, node, event) {
-    state.draggedNode = node;
+  function onStructureDragStart(state2, node, event) {
+    state2.draggedNode = node;
     event.dataTransfer?.setData("text/plain", node.label);
     if (event.dataTransfer)
       event.dataTransfer.effectAllowed = "move";
   }
-  function onStructureDragOver(state, node, row, event, context) {
-    if (!canDropOnNode(state, node, context))
+  function onStructureDragOver(state2, node, row, event, context) {
+    if (!canDropOnNode(state2, node, context))
       return;
     event.preventDefault();
     context.clearDropRow();
     const position = structureDropPosition(row, event);
     row.classList.add(position === "before" ? "drop-before" : "drop-after");
-    state.dropRow = row;
+    state2.dropRow = row;
     if (event.dataTransfer)
       event.dataTransfer.dropEffect = "move";
   }
-  function onStructureDrop(state, node, event, context) {
-    if (!canDropOnNode(state, node, context))
+  function onStructureDrop(state2, node, event, context) {
+    if (!canDropOnNode(state2, node, context))
       return;
     event.preventDefault();
     const position = structureDropPosition(event.currentTarget, event);
-    context.emitMove(position === "before" ? "move-before" : "move-after", node, state.draggedNode);
-    clearStructureDragState(state);
+    context.emitMove(position === "before" ? "move-before" : "move-after", node, state2.draggedNode);
+    clearStructureDragState(state2);
   }
   function structureDropPosition(target, event) {
     const rect = target.getBoundingClientRect();
     return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
   }
-  function clearStructureDragState(state) {
-    state.draggedNode = null;
-    clearStructureDropRow(state);
+  function clearStructureDragState(state2) {
+    state2.draggedNode = null;
+    clearStructureDropRow(state2);
   }
-  function clearStructureDropRow(state) {
-    state.dropRow?.classList.remove("drop-before", "drop-after");
-    state.dropRow = null;
+  function clearStructureDropRow(state2) {
+    state2.dropRow?.classList.remove("drop-before", "drop-after");
+    state2.dropRow = null;
   }
-  function canDropOnNode(state, node, context) {
-    return Boolean(state.draggedNode && state.draggedNode !== node && !context.isDescendantNode(node, state.draggedNode));
+  function canDropOnNode(state2, node, context) {
+    return Boolean(state2.draggedNode && state2.draggedNode !== node && !context.isDescendantNode(node, state2.draggedNode));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureKeyboard.ts
@@ -22135,20 +22816,20 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuItems.ts
-  function contextMenuButton(label, action, closeContextMenu, variant, disabled = false) {
-    const button = document.createElement("button");
-    button.className = variant ? `context-item ${variant}` : "context-item";
-    button.type = "button";
-    button.disabled = disabled;
-    button.textContent = label;
-    button.addEventListener("click", (event) => {
+  function contextMenuButton(label2, action, closeContextMenu, variant, disabled = false) {
+    const button2 = document.createElement("button");
+    button2.className = variant ? `context-item ${variant}` : "context-item";
+    button2.type = "button";
+    button2.disabled = disabled;
+    button2.textContent = label2;
+    button2.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (button.disabled)
+      if (button2.disabled)
         return;
       closeContextMenu();
       action();
     });
-    return button;
+    return button2;
   }
   function contextSeparator() {
     const separator = document.createElement("div");
@@ -22322,9 +23003,9 @@ dd {
       iconEl.textContent = icon;
       badge3.append(iconEl);
     }
-    const label = document.createElement("span");
-    label.textContent = value;
-    badge3.append(label);
+    const label2 = document.createElement("span");
+    label2.textContent = value;
+    badge3.append(label2);
     return badge3;
   }
   function structureBadgeClass(value) {
@@ -22363,8 +23044,8 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeNodes.ts
   class StructureTreeNodes {
     state;
-    constructor(state) {
-      this.state = state;
+    constructor(state2) {
+      this.state = state2;
     }
     canDuplicate(node) {
       return canDuplicateNode(node, (child) => this.parentNode(child), (parent, child) => this.slotForChild(parent, child), (parent, slot) => this.slotChildCount(parent, slot));
@@ -22518,9 +23199,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option2 = singleEnabledOption(groups);
-    if (option2?.item?.kind === "media") {
-      context.emitAction(action.action, option2.item, option2.slot);
+    const option3 = singleEnabledOption(groups);
+    if (option3?.item?.kind === "media") {
+      context.emitAction(action.action, option3.item, option3.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -22604,9 +23285,9 @@ dd {
       slotLabel: slot.label
     }] : [];
     return [
-      ...blockOptions.filter((option2) => canFitItem(context, parent, slot, option2.item, replaced)),
+      ...blockOptions.filter((option3) => canFitItem(context, parent, slot, option3.item, replaced)),
       ...externalOptions,
-      ...mediaOptions.filter((option2) => option2.item && canFitItem(context, parent, slot, option2.item, replaced))
+      ...mediaOptions.filter((option3) => option3.item && canFitItem(context, parent, slot, option3.item, replaced))
     ];
   }
   function mediaAcceptForSlot(slot) {
@@ -22896,16 +23577,16 @@ dd {
   function renderEmptyStructureTree(context) {
     const empty3 = document.createElement("div");
     empty3.className = "empty";
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = context.defaultTemplates.length > 0 ? "Use default template" : "Add block";
-    button.addEventListener("click", (event) => {
+    const button2 = document.createElement("button");
+    button2.type = "button";
+    button2.textContent = context.defaultTemplates.length > 0 ? "Use default template" : "Add block";
+    button2.addEventListener("click", (event) => {
       event.stopPropagation();
       if (context.useDefaultTemplate(context.defaultTemplates))
         return;
       context.openRootPicker();
     });
-    empty3.append("No editable elements", button);
+    empty3.append("No editable elements", button2);
     return empty3;
   }
 
@@ -22939,13 +23620,13 @@ dd {
     const icon = document.createElement("span");
     icon.className = context.iconClass(node);
     icon.textContent = context.iconText(node);
-    const label = document.createElement("span");
-    label.className = "label";
-    label.textContent = context.nodeLabel(node);
+    const label2 = document.createElement("span");
+    label2.className = "label";
+    label2.textContent = context.nodeLabel(node);
     const badges = document.createElement("span");
     badges.className = "badges";
     appendBadges2(badges, node, context);
-    item.append(icon, label, badges);
+    item.append(icon, label2, badges);
     row.append(item);
     return row;
   }
@@ -23343,7 +24024,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -23485,7 +24166,7 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template8 = document.createElement("template");
   template8.innerHTML = `<style>${[
-    style_default16,
+    style_default17,
     sourceStates_default,
     badges_default,
     context_default
@@ -23543,7 +24224,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default17 = `:host {
+  var style_default18 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -23630,7 +24311,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default17)}</style>${String(template_default19)}`;
+  template9.innerHTML = `<style>${String(style_default18)}</style>${String(template_default19)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -23770,10 +24451,10 @@ iframe {
   }
   var EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
   function installEditorFormGuard(document2) {
-    const state = document2;
-    if (state[EDITOR_FORM_GUARD_KEY])
+    const state2 = document2;
+    if (state2[EDITOR_FORM_GUARD_KEY])
       return;
-    state[EDITOR_FORM_GUARD_KEY] = true;
+    state2[EDITOR_FORM_GUARD_KEY] = true;
     document2.addEventListener("submit", (event) => {
       if (!event.defaultPrevented)
         event.preventDefault();
@@ -23793,7 +24474,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -23870,19 +24551,19 @@ iframe {
     return root;
   }
   function syncFieldCopy(host) {
-    const label = host.getAttribute("label") ?? "";
-    host.shadowRoot.querySelector(".label").textContent = label;
+    const label2 = host.getAttribute("label") ?? "";
+    host.shadowRoot.querySelector(".label").textContent = label2;
     host.shadowRoot.querySelector(".hint").textContent = host.getAttribute("hint") ?? "";
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
       const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control2?.setAttribute("aria-label", ariaLabel ?? label);
+      control2?.setAttribute("aria-label", ariaLabel ?? label2);
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template10 = createFieldTemplate(template_default20, style_default18);
+  var template10 = createFieldTemplate(template_default20, style_default19);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -23927,7 +24608,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -24161,7 +24842,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query2) {
     const normalized = query2.trim().toLowerCase();
-    return normalized ? options2.filter((option2) => `${option2.label} ${option2.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option3) => `${option3.label} ${option3.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -24172,19 +24853,19 @@ input:disabled {
       list.append(empty3);
       return;
     }
-    for (const option2 of options2) {
-      const button = document.createElement("button");
-      button.className = "data-option";
-      button.type = "button";
-      button.dataset.path = option2.path;
-      const label = document.createElement("span");
-      label.className = "data-label";
-      label.textContent = option2.label;
+    for (const option3 of options2) {
+      const button2 = document.createElement("button");
+      button2.className = "data-option";
+      button2.type = "button";
+      button2.dataset.path = option3.path;
+      const label2 = document.createElement("span");
+      label2.className = "data-label";
+      label2.textContent = option3.label;
       const path = document.createElement("code");
-      path.textContent = option2.path;
-      button.append(label, path);
-      button.addEventListener("click", () => onSelect(option2.path));
-      list.append(button);
+      path.textContent = option3.path;
+      button2.append(label2, path);
+      button2.addEventListener("click", () => onSelect(option3.path));
+      list.append(button2);
     }
   }
 
@@ -24193,9 +24874,9 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option2 of options2) {
-        if (!byPath.has(option2.path))
-          byPath.set(option2.path, option2);
+      for (const option3 of options2) {
+        if (!byPath.has(option3.path))
+          byPath.set(option3.path, option3);
       }
     }
     return [...byPath.values()];
@@ -24209,8 +24890,8 @@ input:disabled {
       const children = fieldOptions(field.children ?? [], scopeName, scopeLabel, relativePath);
       if (field.type === "object" || field.children?.length)
         return children;
-      const label = field.label ? `${scopeLabel} / ${field.label}` : `${scopeLabel} / ${relativePath}`;
-      return [{ label, path }, ...children];
+      const label2 = field.label ? `${scopeLabel} / ${field.label}` : `${scopeLabel} / ${relativePath}`;
+      return [{ label: label2, path }, ...children];
     });
   }
 
@@ -24355,7 +25036,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template11 = createFieldTemplate(template_default21, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template11 = createFieldTemplate(template_default21, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -24436,7 +25117,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -24508,7 +25189,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template12 = createFieldTemplate(template_default22, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default22, `${String(style_default21)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -24774,31 +25455,31 @@ textarea:disabled {
     if (capability.size)
       toolbar.append(renderSizeButton("decrease", handlers.textSize), renderSizeButton("increase", handlers.textSize));
     for (const action of richTextActions(capability)) {
-      const button = document.createElement("button");
-      button.className = "tool";
-      button.type = "button";
-      button.innerHTML = richTextActionIcon(action);
-      button.title = richTextActionTitle(action);
-      bindToolButton(button, () => handlers.action(action));
-      toolbar.append(button);
+      const button2 = document.createElement("button");
+      button2.className = "tool";
+      button2.type = "button";
+      button2.innerHTML = richTextActionIcon(action);
+      button2.title = richTextActionTitle(action);
+      bindToolButton(button2, () => handlers.action(action));
+      toolbar.append(button2);
     }
   }
   function renderSizeButton(direction, onSelect) {
-    const button = document.createElement("button");
-    button.className = "tool size-tool";
-    button.type = "button";
-    button.title = direction === "increase" ? "Increase text size" : "Decrease text size";
-    button.textContent = direction === "increase" ? "+" : "-";
-    bindToolButton(button, () => onSelect(direction));
-    return button;
+    const button2 = document.createElement("button");
+    button2.className = "tool size-tool";
+    button2.type = "button";
+    button2.title = direction === "increase" ? "Increase text size" : "Decrease text size";
+    button2.textContent = direction === "increase" ? "+" : "-";
+    bindToolButton(button2, () => onSelect(direction));
+    return button2;
   }
-  function bindToolButton(button, onSelect) {
-    button.addEventListener("pointerdown", (event) => {
+  function bindToolButton(button2, onSelect) {
+    button2.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       event.stopPropagation();
       onSelect();
     });
-    button.addEventListener("click", (event) => {
+    button2.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
     });
@@ -24822,7 +25503,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -25055,7 +25736,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template13 = document.createElement("template");
-  template13.innerHTML = `<style>${String(style_default21)}</style>${String(template_default23)}`;
+  template13.innerHTML = `<style>${String(style_default22)}</style>${String(template_default23)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -25190,7 +25871,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -25294,7 +25975,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template14 = createFieldTemplate(template_default24, style_default22);
+  var template14 = createFieldTemplate(template_default24, style_default23);
 
   class Select extends HTMLElement {
     constructor() {
@@ -25305,11 +25986,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option2) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option3) => {
         const element = document.createElement("option");
-        element.textContent = option2.label;
-        element.value = option2.value;
-        element.selected = option2.value === current;
+        element.textContent = option3.label;
+        element.value = option3.value;
+        element.selected = option3.value === current;
         return element;
       }));
     }
@@ -25341,7 +26022,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -25454,7 +26135,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template15 = createFieldTemplate(template_default25, style_default23);
+  var template15 = createFieldTemplate(template_default25, style_default24);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -25477,7 +26158,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -25523,7 +26204,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template16 = createFieldTemplate(template_default26, style_default24);
+  var template16 = createFieldTemplate(template_default26, style_default25);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -25573,7 +26254,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -25905,7 +26586,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     color: var(--editor-v2-text, #111);
     font: 12px/1.35 system-ui, sans-serif;
 }
@@ -26200,14 +26881,14 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
-  function fileUrl(basePath4, id2) {
-    return `${basePath4}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+  function fileUrl(basePath5, id2) {
+    return `${basePath5}/.cms/files/by-id/${encodeURIComponent(id2)}`;
   }
-  function fileDetail(basePath4, item) {
+  function fileDetail(basePath5, item) {
     return {
       id: item.id,
       label: item.name,
-      src: fileUrl(basePath4, item.id),
+      src: fileUrl(basePath5, item.id),
       mimeType: item.mimeType
     };
   }
@@ -26252,7 +26933,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template17 = document.createElement("template");
-  template17.innerHTML = `<style>${String(style_default26)}</style>${String(template_default28)}`;
+  template17.innerHTML = `<style>${String(style_default27)}</style>${String(template_default28)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -26325,16 +27006,16 @@ input {
     _renderBreadcrumb() {
       this.breadcrumb.replaceChildren();
       this._trail.forEach((entry, index) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = entry.label;
-        button.ariaCurrent = index === this._trail.length - 1 ? "page" : null;
-        button.addEventListener("click", () => {
+        const button2 = document.createElement("button");
+        button2.type = "button";
+        button2.textContent = entry.label;
+        button2.ariaCurrent = index === this._trail.length - 1 ? "page" : null;
+        button2.addEventListener("click", () => {
           this._folder = entry.id;
           this._trail = this._trail.slice(0, index + 1);
           this._load();
         });
-        this.breadcrumb.append(button);
+        this.breadcrumb.append(button2);
       });
     }
     _renderItems() {
@@ -26349,12 +27030,12 @@ input {
       });
       this.empty.hidden = items.length > 0;
       for (const item of items) {
-        const button = document.createElement("button");
-        button.className = "item";
-        button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
-        button.type = "button";
-        button.ariaSelected = String(this._isSelected(item));
-        button.addEventListener("click", () => {
+        const button2 = document.createElement("button");
+        button2.className = "item";
+        button2.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
+        button2.type = "button";
+        button2.ariaSelected = String(this._isSelected(item));
+        button2.addEventListener("click", () => {
           if (item.type === "folder") {
             this._openFolder(item);
             return;
@@ -26363,7 +27044,7 @@ input {
           this._renderItems();
           this._updateSelection();
         });
-        button.addEventListener("dblclick", () => {
+        button2.addEventListener("dblclick", () => {
           if (item.type === "file" && !this._multiple)
             this._confirm();
         });
@@ -26377,8 +27058,8 @@ input {
         meta.className = "meta";
         meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
         copy.append(name, meta);
-        button.append(preview, copy);
-        this.grid.append(button);
+        button2.append(preview, copy);
+        this.grid.append(button2);
       }
     }
     _openFolder(item) {
@@ -26562,7 +27243,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(style_default25)}</style>${String(template_default27)}`;
+  template18.innerHTML = `<style>${String(style_default26)}</style>${String(template_default27)}`;
 
   class PageLink extends HTMLElement {
     _pages = [];
@@ -26678,14 +27359,14 @@ input {
         this.tabs.append(this._tab("Media", "media"));
       }
     }
-    _tab(label, mode) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.role = "tab";
-      button.textContent = label;
-      button.ariaSelected = String(this._mode === mode);
-      button.disabled = this.disabled;
-      button.addEventListener("click", () => {
+    _tab(label2, mode) {
+      const button2 = document.createElement("button");
+      button2.type = "button";
+      button2.role = "tab";
+      button2.textContent = label2;
+      button2.ariaSelected = String(this._mode === mode);
+      button2.disabled = this.disabled;
+      button2.addEventListener("click", () => {
         if (this.disabled)
           return;
         this._mode = mode;
@@ -26695,7 +27376,7 @@ input {
           this.externalInput.value = this._value;
         this._render();
       });
-      return button;
+      return button2;
     }
     _renderPanels() {
       this.pagePanel.hidden = this._mode !== "page" || !this._allowPage();
@@ -26720,26 +27401,26 @@ input {
       });
       this.empty.hidden = !this._pickerOpen || pages.length > 0;
       for (const page of pages) {
-        const button = document.createElement("button");
-        button.className = "page-option";
-        button.type = "button";
-        button.ariaSelected = String(page.path === this._value);
-        button.disabled = this.disabled;
-        button.addEventListener("click", () => {
+        const button2 = document.createElement("button");
+        button2.className = "page-option";
+        button2.type = "button";
+        button2.ariaSelected = String(page.path === this._value);
+        button2.disabled = this.disabled;
+        button2.addEventListener("click", () => {
           if (this.disabled)
             return;
           this._setValue(page.path);
           this.searchInput.value = "";
           this._closePicker();
         });
-        const title = document.createElement("span");
-        title.className = "page-title";
-        title.textContent = page.title;
+        const title2 = document.createElement("span");
+        title2.className = "page-title";
+        title2.textContent = page.title;
         const path = document.createElement("span");
         path.className = "page-path";
         path.textContent = page.path;
-        button.append(title, path);
-        this.pageList.append(button);
+        button2.append(title2, path);
+        this.pageList.append(button2);
       }
     }
     _renderSummary() {
@@ -26788,13 +27469,13 @@ input {
       center.show({ accept: ["folder", "file"] });
     }
     _renderMediaFile() {
-      const title = this.fileTitle;
+      const title2 = this.fileTitle;
       const value = this.fileValue;
       const preview = this.filePreview;
       const action = this.fileAction;
       const hasValue = this._mode === "media" && this._value !== "";
       const isImage = hasValue && isImageMediaLink(this._value);
-      title.textContent = hasValue ? mediaDisplayName(this._value, isImage, this._mediaLabel) : "Choose file";
+      title2.textContent = hasValue ? mediaDisplayName(this._value, isImage, this._mediaLabel) : "Choose file";
       value.textContent = hasValue ? mediaSelectionLabel(isImage) : "No file selected";
       value.toggleAttribute("hidden", hasValue && isImage);
       action.textContent = hasValue ? "Change" : "Choose";
@@ -26909,7 +27590,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     display: block;
 }
 
@@ -27197,7 +27878,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(style_default27)}</style>${String(template_default29)}`;
+  template19.innerHTML = `<style>${String(style_default28)}</style>${String(template_default29)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -27278,26 +27959,26 @@ cms-editor-v2-segmented-control button svg:only-child {
     _renderStates(states) {
       const section = document.createElement("cms-editor-v2-section");
       section.setAttribute("label", "States");
-      for (const state of states) {
-        const button = document.createElement("button");
-        button.className = "state-button";
-        button.type = "button";
-        button.ariaPressed = String(state.isActive());
-        const label = document.createElement("span");
-        label.className = "state-label";
-        label.textContent = state.label;
+      for (const state2 of states) {
+        const button2 = document.createElement("button");
+        button2.className = "state-button";
+        button2.type = "button";
+        button2.ariaPressed = String(state2.isActive());
+        const label2 = document.createElement("span");
+        label2.className = "state-label";
+        label2.textContent = state2.label;
         const description = document.createElement("span");
         description.className = "state-description";
-        description.textContent = state.description ?? (state.isActive() ? "Active" : "Inactive");
-        button.append(label, description);
-        button.addEventListener("click", () => {
+        description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
+        button2.append(label2, description);
+        button2.addEventListener("click", () => {
           this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
             bubbles: true,
             composed: true,
-            detail: { state }
+            detail: { state: state2 }
           }));
         });
-        section.append(button);
+        section.append(button2);
       }
       return section;
     }
@@ -27326,11 +28007,11 @@ cms-editor-v2-segmented-control button svg:only-child {
     _renderSettingRow(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "setting-row";
-      const label = setting.label ? this._renderFieldLabel(setting.label, setting.labelDisplay) : null;
-      if (label) {
-        label.classList.add("setting-row-label");
+      const label2 = setting.label ? this._renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label2) {
+        label2.classList.add("setting-row-label");
         wrapper.classList.add("setting-row-labeled");
-        wrapper.append(label);
+        wrapper.append(label2);
       }
       const controls = document.createElement("div");
       controls.className = "setting-row-controls";
@@ -27359,30 +28040,30 @@ cms-editor-v2-segmented-control button svg:only-child {
       if (setting.type === "segmented") {
         const wrapper = document.createElement("div");
         wrapper.className = "field";
-        const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
+        const label2 = this._renderFieldLabel(setting.label, setting.labelDisplay);
         const control3 = document.createElement("cms-editor-v2-segmented-control");
         control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-        for (const option2 of setting.options) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.value = option2.value;
-          button.disabled = setting.disabled === true;
-          button.title = option2.ariaLabel ?? option2.label;
-          button.ariaLabel = option2.ariaLabel ?? option2.label;
-          button.ariaPressed = String(option2.value === setting.defaultValue);
-          button.append(...this._renderOptionContent(setting.display, option2.display, option2.icon ?? setting.icon, option2.label));
-          button.addEventListener("click", () => {
+        for (const option3 of setting.options) {
+          const button2 = document.createElement("button");
+          button2.type = "button";
+          button2.value = option3.value;
+          button2.disabled = setting.disabled === true;
+          button2.title = option3.ariaLabel ?? option3.label;
+          button2.ariaLabel = option3.ariaLabel ?? option3.label;
+          button2.ariaPressed = String(option3.value === setting.defaultValue);
+          button2.append(...this._renderOptionContent(setting.display, option3.display, option3.icon ?? setting.icon, option3.label));
+          button2.addEventListener("click", () => {
             if (setting.disabled)
               return;
             for (const item of Array.from(control3.querySelectorAll("button"))) {
-              item.ariaPressed = String(item === button);
+              item.ariaPressed = String(item === button2);
             }
-            this._emitSettingChange(setting, option2.value);
+            this._emitSettingChange(setting, option3.value);
           });
-          control3.append(button);
+          control3.append(button2);
         }
-        if (label)
-          wrapper.append(label);
+        if (label2)
+          wrapper.append(label2);
         wrapper.append(control3);
         return wrapper;
       }
@@ -27416,40 +28097,40 @@ cms-editor-v2-segmented-control button svg:only-child {
     _renderColorSetting(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field color-field";
-      const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
-      if (label)
-        wrapper.append(label);
+      const label2 = this._renderFieldLabel(setting.label, setting.labelDisplay);
+      if (label2)
+        wrapper.append(label2);
       const tokens = setting.tokens ?? [];
       if (tokens.length > 0) {
         const swatches = document.createElement("div");
         swatches.className = "color-swatches";
-        for (const option2 of tokens) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "color-swatch-button";
-          button.disabled = setting.disabled === true;
-          button.title = option2.ariaLabel ?? option2.label;
-          button.ariaLabel = option2.ariaLabel ?? option2.label;
-          button.ariaPressed = String(option2.value === setting.defaultValue);
-          button.style.setProperty("--color-swatch", colorSwatchValue(option2.value));
+        for (const option3 of tokens) {
+          const button2 = document.createElement("button");
+          button2.type = "button";
+          button2.className = "color-swatch-button";
+          button2.disabled = setting.disabled === true;
+          button2.title = option3.ariaLabel ?? option3.label;
+          button2.ariaLabel = option3.ariaLabel ?? option3.label;
+          button2.ariaPressed = String(option3.value === setting.defaultValue);
+          button2.style.setProperty("--color-swatch", colorSwatchValue(option3.value));
           const swatch = document.createElement("span");
           swatch.className = "color-swatch";
-          button.append(swatch);
-          button.addEventListener("click", () => {
+          button2.append(swatch);
+          button2.addEventListener("click", () => {
             if (setting.disabled)
               return;
             const customInput = wrapper.querySelector(".color-custom-input");
             const customValue = customInput?.value.trim() ?? setting.customDefaultValue ?? "";
             for (const item of Array.from(swatches.querySelectorAll("button"))) {
-              item.ariaPressed = String(item === button);
+              item.ariaPressed = String(item === button2);
             }
             const custom = wrapper.querySelector(".color-custom");
             if (custom)
-              custom.hidden = option2.value !== "custom" || setting.allowCustom !== true;
-            wrapper.toggleAttribute("data-custom-open", option2.value === "custom" && setting.allowCustom === true);
-            this._emitSettingChange(setting, option2.value, colorAttributes(setting, option2.value, customValue));
+              custom.hidden = option3.value !== "custom" || setting.allowCustom !== true;
+            wrapper.toggleAttribute("data-custom-open", option3.value === "custom" && setting.allowCustom === true);
+            this._emitSettingChange(setting, option3.value, colorAttributes(setting, option3.value, customValue));
           });
-          swatches.append(button);
+          swatches.append(button2);
         }
         wrapper.append(swatches);
       }
@@ -27489,7 +28170,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       }
       return wrapper;
     }
-    _renderOptionContent(settingDisplay, optionDisplay, iconName, label) {
+    _renderOptionContent(settingDisplay, optionDisplay, iconName, label2) {
       const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
       const nodes = [];
       const icon = iconName ? settingIcon(iconName) : null;
@@ -27498,7 +28179,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       }
       if (display !== "icon" || !icon) {
         const text2 = document.createElement("span");
-        text2.textContent = label;
+        text2.textContent = label2;
         nodes.push(text2);
       }
       return nodes;
@@ -27520,30 +28201,30 @@ cms-editor-v2-segmented-control button svg:only-child {
       this._applyDisabled(control2, setting);
       return control2;
     }
-    _renderFieldLabel(label, display) {
+    _renderFieldLabel(label2, display) {
       if (display === "hidden")
         return null;
       const element = document.createElement("div");
       element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-      element.textContent = label;
+      element.textContent = label2;
       return element;
     }
     _renderEndpointPickerSetting(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field endpoint-field";
-      const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
-      const button = document.createElement("button");
-      button.className = "endpoint-button";
-      button.type = "button";
-      button.ariaLabel = setting.ariaLabel ?? setting.label;
-      button.disabled = setting.disabled === true;
-      this._syncEndpointButton(button, setting);
+      const label2 = this._renderFieldLabel(setting.label, setting.labelDisplay);
+      const button2 = document.createElement("button");
+      button2.className = "endpoint-button";
+      button2.type = "button";
+      button2.ariaLabel = setting.ariaLabel ?? setting.label;
+      button2.disabled = setting.disabled === true;
+      this._syncEndpointButton(button2, setting);
       if (!setting.disabled) {
-        button.addEventListener("click", () => this._openEndpointPicker(setting, button));
+        button2.addEventListener("click", () => this._openEndpointPicker(setting, button2));
       }
-      if (label)
-        wrapper.append(label);
-      wrapper.append(button);
+      if (label2)
+        wrapper.append(label2);
+      wrapper.append(button2);
       if (setting.help) {
         const help = document.createElement("div");
         help.className = "field-help";
@@ -27552,28 +28233,28 @@ cms-editor-v2-segmented-control button svg:only-child {
       }
       return wrapper;
     }
-    _syncEndpointButton(button, setting, selected = this._selectedEndpoint(setting), fallbackValue = setting.defaultValue) {
-      button.replaceChildren();
+    _syncEndpointButton(button2, setting, selected = this._selectedEndpoint(setting), fallbackValue = setting.defaultValue) {
+      button2.replaceChildren();
       const method = selected?.method ?? setting.defaultMethod;
       if (method) {
         const methodBadge = document.createElement("span");
         methodBadge.className = "endpoint-method";
         methodBadge.textContent = method;
-        button.append(methodBadge);
+        button2.append(methodBadge);
       }
       const value = document.createElement("span");
       value.className = selected ? "endpoint-value" : "endpoint-placeholder";
       value.textContent = selected?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
-      button.append(value);
+      button2.append(value);
     }
-    _openEndpointPicker(setting, button) {
+    _openEndpointPicker(setting, button2) {
       const picker = this._ensureEndpointPicker();
       this._disconnectEndpointPickerEvents?.();
       const onSelect = (event) => {
         this._disconnectEndpointPickerEvents?.();
         const detail = event.detail;
         const value = this._endpointValue(setting, detail);
-        this._syncEndpointButton(button, setting, detail.source, value);
+        this._syncEndpointButton(button2, setting, detail.source, value);
         this._emitSettingChange(setting, value, this._endpointAttributes(setting, detail, value));
       };
       const onRemove = () => {
@@ -27585,7 +28266,7 @@ cms-editor-v2-segmented-control button svg:only-child {
           attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = null;
           attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
         }
-        this._syncEndpointButton(button, setting, null, "");
+        this._syncEndpointButton(button2, setting, null, "");
         this._emitSettingChange(setting, "", attributes);
       };
       const cleanup = () => {
@@ -27700,7 +28381,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         capability.link ? "link" : null,
         capability.code ? "code" : null,
         capability.dynamic ? "dynamic" : null
-      ].filter((option2) => Boolean(option2));
+      ].filter((option3) => Boolean(option3));
       return options2.length > 0 ? options2.join(", ") : "Plain text";
     }
     _wireTextControl(control2, selector, setting) {
@@ -27752,15 +28433,15 @@ cms-editor-v2-segmented-control button svg:only-child {
     }
     _wireToggleControl(control2, setting) {
       const wire = () => {
-        const button = control2.shadowRoot?.querySelector("button");
-        if (!button)
+        const button2 = control2.shadowRoot?.querySelector("button");
+        if (!button2)
           return;
-        button.disabled = setting.disabled === true;
+        button2.disabled = setting.disabled === true;
         if (setting.disabled)
           return;
-        button.addEventListener("click", () => {
-          const checked = button.ariaPressed !== "true";
-          button.ariaPressed = String(checked);
+        button2.addEventListener("click", () => {
+          const checked = button2.ariaPressed !== "true";
+          button2.ariaPressed = String(checked);
           control2.toggleAttribute("checked", checked);
           this._emitSettingChange(setting, checked);
         });
@@ -27904,7 +28585,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     display: contents;
 }
 
@@ -28209,9 +28890,9 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option2 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option2.path))
-        byPath.set(option2.path, option2);
+    for (const option3 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option3.path))
+        byPath.set(option3.path, option3);
     }
     return [...byPath.values()];
   }
@@ -28233,10 +28914,10 @@ label {
     const normalizedQuery = query2.trim().toLowerCase();
     if (!normalizedQuery)
       return options2;
-    return options2.filter((option2) => [
-      option2.path,
-      option2.label,
-      option2.scopeLabel
+    return options2.filter((option3) => [
+      option3.path,
+      option3.label,
+      option3.scopeLabel
     ].some((value) => value.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
@@ -28247,7 +28928,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/RepeatPicker.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(style_default28)}</style>${String(template_default30)}`;
+  template20.innerHTML = `<style>${String(style_default29)}</style>${String(template_default30)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -28300,24 +28981,24 @@ label {
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      for (const option2 of options2) {
-        const button = document.createElement("button");
-        button.className = "array";
-        button.type = "button";
-        button.ariaSelected = String(option2 === this._activeOption);
+      for (const option3 of options2) {
+        const button2 = document.createElement("button");
+        button2.className = "array";
+        button2.type = "button";
+        button2.ariaSelected = String(option3 === this._activeOption);
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = option2.path;
+        name.textContent = option3.path;
         const scope = document.createElement("span");
         scope.className = "scope";
-        scope.textContent = option2.scopeLabel;
-        button.append(name, scope);
-        button.addEventListener("click", () => {
-          this._activeOption = option2;
+        scope.textContent = option3.scopeLabel;
+        button2.append(name, scope);
+        button2.addEventListener("click", () => {
+          this._activeOption = option3;
           this._render();
         });
-        button.addEventListener("dblclick", () => this._select(option2));
-        this.arrays.append(button);
+        button2.addEventListener("dblclick", () => this._select(option3));
+        this.arrays.append(button2);
       }
     }
     _renderDetails() {
@@ -28329,11 +29010,11 @@ label {
         this.details.append(empty3);
         return;
       }
-      const option2 = this._activeOption;
+      const option3 = this._activeOption;
       const heading4 = document.createElement("div");
       heading4.className = "details-eyebrow";
       heading4.textContent = "Response fields";
-      this.details.append(heading4, this._renderFields(option2.fields));
+      this.details.append(heading4, this._renderFields(option3.fields));
     }
     _renderBinding() {
       this.binding.replaceChildren();
@@ -28344,7 +29025,7 @@ label {
         this.binding.append(empty3);
         return;
       }
-      const option2 = this._activeOption;
+      const option3 = this._activeOption;
       const heading4 = document.createElement("div");
       heading4.className = "details-eyebrow";
       heading4.textContent = "Binding";
@@ -28353,22 +29034,22 @@ label {
       const pathLabel2 = document.createElement("span");
       pathLabel2.textContent = "Array";
       const pathValue = document.createElement("strong");
-      pathValue.textContent = option2.path;
+      pathValue.textContent = option3.path;
       path.append(pathLabel2, pathValue);
       const config = document.createElement("section");
       config.className = "binding-config";
-      const label = document.createElement("label");
-      label.textContent = "Alias";
+      const label2 = document.createElement("label");
+      label2.textContent = "Alias";
       const alias = document.createElement("input");
       alias.className = "alias";
-      alias.value = defaultRepeatAlias(option2.path);
-      label.append(alias);
-      config.append(label);
+      alias.value = defaultRepeatAlias(option3.path);
+      label2.append(alias);
+      config.append(label2);
       const insert = document.createElement("button");
       insert.className = "insert";
       insert.type = "button";
       insert.textContent = "Use repeat";
-      insert.addEventListener("click", () => this._select(option2, alias.value));
+      insert.addEventListener("click", () => this._select(option3, alias.value));
       const scroll = document.createElement("div");
       scroll.className = "binding-scroll";
       scroll.append(heading4, path, config);
@@ -28410,7 +29091,7 @@ label {
       }
       return item;
     }
-    _select(option2, alias = defaultRepeatAlias(option2.path)) {
+    _select(option3, alias = defaultRepeatAlias(option3.path)) {
       const cleanAlias = alias.trim();
       if (!cleanAlias)
         return;
@@ -28418,7 +29099,7 @@ label {
         bubbles: true,
         composed: true,
         detail: {
-          path: option2.path,
+          path: option3.path,
           alias: cleanAlias
         }
       }));
@@ -28664,11 +29345,11 @@ label {
     const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
     const source = `[${CMS_BINDING_ATTRIBUTES.source}]`;
     const condition = CMS_BINDING_ATTRIBUTES.condition;
-    const state = CMS_BINDING_ATTRIBUTES.sourceStateForce;
+    const state2 = CMS_BINDING_ATTRIBUTES.sourceStateForce;
     const hiddenFor = (current) => {
       const selectors = [
-        `${core}[${state}="${current}"] ${source} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
-        `${core}[${state}="${current}"] ${source} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
+        `${core}[${state2}="${current}"] ${source} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
+        `${core}[${state2}="${current}"] ${source} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
       ];
       return `${selectors.join(",")}{display:none!important}`;
     };
@@ -29122,9 +29803,9 @@ label {
         this.content.reloadFrameDocument(clone);
         return;
       }
-      if (!canInsertSibling(this.context.runtime(), editor, clone, (element, state) => {
-        if (state.length)
-          applySourceStatusConditions(element, state);
+      if (!canInsertSibling(this.context.runtime(), editor, clone, (element, state2) => {
+        if (state2.length)
+          applySourceStatusConditions(element, state2);
       }, (reference) => sourceStatusConditionsFromElement(reference.target)))
         return;
       editor.target.after(clone);
@@ -29150,9 +29831,9 @@ label {
       return this.context.runtime()?.getClosestEditor(parent)?.target ?? null;
     }
   }
-  function applySiblingSourceStatus(target, state) {
-    if (state.length)
-      applySourceStatusConditions(target, state);
+  function applySiblingSourceStatus(target, state2) {
+    if (state2.length)
+      applySourceStatusConditions(target, state2);
     else if (sourceStatusConditionsFromElement(target).length)
       target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
   }
@@ -29350,7 +30031,7 @@ label {
   function removeRepeat(editor) {
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
   }
-  function setSourceStatusCondition(editor, sourceEditor, state) {
+  function setSourceStatusCondition(editor, sourceEditor, state2) {
     if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target))
       return false;
     if (hasNonSourceStatusCondition2(editor.target))
@@ -29358,7 +30039,7 @@ label {
     const sourceId = ensureSourceId(sourceEditor.target);
     if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target))
       return false;
-    applySourceStatusCondition(editor.target, state, sourceId);
+    applySourceStatusCondition(editor.target, state2, sourceId);
     return true;
   }
   function setSourceStatusConditions(editor, conditions) {
@@ -29496,8 +30177,8 @@ label {
       setRepeat(editor, path, alias);
       this.reload(editor.target);
     }
-    setSourceStatusCondition(editor, sourceEditor, state) {
-      if (!setSourceStatusCondition(editor, sourceEditor, state))
+    setSourceStatusCondition(editor, sourceEditor, state2) {
+      if (!setSourceStatusCondition(editor, sourceEditor, state2))
         return;
       this.reload(editor.target);
     }
@@ -29589,8 +30270,8 @@ label {
     removeSource(editor) {
       this.bindings.removeSource(editor);
     }
-    setSourceStatusCondition(editor, sourceEditor, state) {
-      this.bindings.setSourceStatusCondition(editor, sourceEditor, state);
+    setSourceStatusCondition(editor, sourceEditor, state2) {
+      this.bindings.setSourceStatusCondition(editor, sourceEditor, state2);
     }
     setSourceStatusConditions(editor, conditions) {
       this.bindings.setSourceStatusConditions(editor, conditions);
@@ -29874,21 +30555,21 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/stateSessions.ts
-  function toggleStateSession(sessionsByEditor, editor, state) {
+  function toggleStateSession(sessionsByEditor, editor, state2) {
     const sessions = sessionsByEditor.get(editor) ?? new Map;
-    if (sessions.has(state.id)) {
-      exitStateSession(sessionsByEditor, editor, state.id);
+    if (sessions.has(state2.id)) {
+      exitStateSession(sessionsByEditor, editor, state2.id);
       return;
     }
-    if (state.group) {
+    if (state2.group) {
       for (const candidate of editor.getStates()) {
-        if (candidate.id !== state.id && candidate.group === state.group) {
+        if (candidate.id !== state2.id && candidate.group === state2.group) {
           exitStateSession(sessionsByEditor, editor, candidate.id);
         }
       }
     }
-    const session = state.enter();
-    sessions.set(state.id, session);
+    const session = state2.enter();
+    sessions.set(state2.id, session);
     sessionsByEditor.set(editor, sessions);
   }
   function exitStateSession(sessionsByEditor, editor, stateId) {
@@ -29982,8 +30663,8 @@ label {
       }
       this.renderSettings();
     }
-    toggleState(editor, state) {
-      toggleStateSession(this.context.stateSessions(), editor, state);
+    toggleState(editor, state2) {
+      toggleStateSession(this.context.stateSessions(), editor, state2);
     }
     exitAllStateSessions() {
       const runtime = this.context.runtime();
@@ -30193,8 +30874,8 @@ label {
       this.context.state.pageConfig = pageConfig;
       applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
     }
-    setSaveStatus(label) {
-      this.context.refs.topBar.saveStatus = label;
+    setSaveStatus(label2) {
+      this.context.refs.topBar.saveStatus = label2;
     }
     syncStructureTreeCatalog() {
       syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog, this.context.state.insertItems, this.context.state.defaultTemplateSelection);
@@ -30254,10 +30935,10 @@ label {
       });
     };
     onSettingsTabsClick = (event) => {
-      const button = event.target?.closest("[data-settings-mode]");
-      if (!button)
+      const button2 = event.target?.closest("[data-settings-mode]");
+      if (!button2)
         return;
-      this.context.state.settingsMode = button.dataset.settingsMode === "overrides" ? "overrides" : "settings";
+      this.context.state.settingsMode = button2.dataset.settingsMode === "overrides" ? "overrides" : "settings";
       this.context.commands.syncSettingsTabs();
       this.context.commands.renderSettings();
     };
@@ -30922,7 +31603,7 @@ label {
         pageConfig: () => this.context.state.pageConfig,
         contentHtml: () => this.getContentHtml(),
         syncEditorMode: () => this.syncEditorMode(),
-        setSaveStatus: (label) => this.setSaveStatus(label),
+        setSaveStatus: (label2) => this.setSaveStatus(label2),
         saveEventName: this.context.saveEventName
       });
     }
@@ -30949,8 +31630,8 @@ label {
     applySetting(editor, setting, value, attributes) {
       this.context.selection.applySetting(editor, setting, value, attributes);
     }
-    toggleState(editor, state) {
-      this.context.selection.toggleState(editor, state);
+    toggleState(editor, state2) {
+      this.context.selection.toggleState(editor, state2);
     }
     exitAllStateSessions() {
       this.context.selection.exitAllStateSessions();
@@ -30996,8 +31677,8 @@ label {
     getContentHtml() {
       return this.context.renderSync.getContentHtml();
     }
-    setSaveStatus(label) {
-      this.context.renderSync.setSaveStatus(label);
+    setSaveStatus(label2) {
+      this.context.renderSync.setSaveStatus(label2);
     }
   }
 
@@ -31062,10 +31743,10 @@ label {
     }
     syncSettingsTabs() {
       const buttons = this.context.refs.settingsTabs.querySelectorAll("[data-settings-mode]");
-      for (const button of Array.from(buttons)) {
-        const isActive = button.dataset.settingsMode === this.context.state.settingsMode;
-        button.classList.toggle("active", isActive);
-        button.ariaPressed = String(isActive);
+      for (const button2 of Array.from(buttons)) {
+        const isActive = button2.dataset.settingsMode === this.context.state.settingsMode;
+        button2.classList.toggle("active", isActive);
+        button2.ariaPressed = String(isActive);
       }
     }
     syncViewport() {
@@ -31102,8 +31783,8 @@ label {
     getContentHtml() {
       return this.context.frames.contentHtml();
     }
-    setSaveStatus(label) {
-      this.context.sync.setSaveStatus(label);
+    setSaveStatus(label2) {
+      this.context.sync.setSaveStatus(label2);
     }
     syncStructureTreeCatalog() {
       this.context.sync.syncStructureTreeCatalog();
@@ -31126,13 +31807,13 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellServices.ts
-  function createShellControllerServices(host, state, refs, frames, highlight, stateSessions) {
+  function createShellControllerServices(host, state2, refs, frames, highlight, stateSessions) {
     let events;
     const mutations = new ShellMutations({
       frameDocument: () => frames.frameDocument,
-      editorDocument: () => state.editorDocument,
-      runtime: () => state.runtime,
-      insertItems: () => state.insertItems,
+      editorDocument: () => state2.editorDocument,
+      runtime: () => state2.runtime,
+      insertItems: () => state2.insertItems,
       repeatPicker: () => refs.repeatPicker,
       findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
       isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
@@ -31140,10 +31821,10 @@ label {
       syncViewFrameContent: () => renderSync.syncViewFrameContent()
     });
     const selection = new ShellSelection({
-      runtime: () => state.runtime,
+      runtime: () => state2.runtime,
       settings: () => refs.settings,
-      dataSources: () => state.dataSources,
-      settingsMode: () => state.settingsMode,
+      dataSources: () => state2.dataSources,
+      settingsMode: () => state2.settingsMode,
       stateSessions: () => stateSessions,
       highlight: () => highlight,
       renderStructure: (options2) => renderSync.renderStructure(options2),
@@ -31151,13 +31832,13 @@ label {
     });
     const sync = new ShellSync({
       host,
-      state,
+      state: state2,
       refs
     });
-    const renderSync = new ShellRenderSyncCommands({ host, state, refs, frames, sync });
+    const renderSync = new ShellRenderSyncCommands({ host, state: state2, refs, frames, sync });
     const commands = new ShellCommands({
       host,
-      state,
+      state: state2,
       frames,
       selection,
       renderSync,
@@ -31166,7 +31847,7 @@ label {
       deleteEventName: "editor-v2:delete-document"
     });
     events = new ShellEvents({
-      state,
+      state: state2,
       refs,
       mutations,
       commands,
@@ -31183,7 +31864,7 @@ label {
       events,
       api: new ShellApi({
         host,
-        state,
+        state: state2,
         refs,
         renderSync,
         commands
@@ -31432,7 +32113,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default29 = `:host {
+  var style_default30 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -31561,7 +32242,7 @@ label {
   function createShellTemplate() {
     const template21 = document.createElement("template");
     template21.innerHTML = `<style>${[
-      style_default29,
+      style_default30,
       pageSettings_default,
       pageSettingsTags_default
     ].map((css) => String(css)).join(`
@@ -31572,14 +32253,14 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellControllerParts.ts
   function createShellControllerParts(host) {
     host.attachShadow({ mode: "open" }).append(createShellTemplate().content.cloneNode(true));
-    const state = createShellState();
+    const state2 = createShellState();
     const refs = new ShellDomRefs(host);
     const frames = new ShellFrames;
     const highlight = new FrameHighlight;
     const stateSessions = new WeakMap;
-    const services = createShellControllerServices(host, state, refs, frames, highlight, stateSessions);
+    const services = createShellControllerServices(host, state2, refs, frames, highlight, stateSessions);
     return {
-      state,
+      state: state2,
       refs,
       frames,
       mutations: services.mutations,
@@ -31594,9 +32275,9 @@ label {
         commands: services.commands,
         renderSync: services.renderSync,
         highlight,
-        runtime: () => state.runtime,
+        runtime: () => state2.runtime,
         setRuntime: (runtime) => {
-          state.runtime = runtime;
+          state2.runtime = runtime;
         }
       }
     };
@@ -31729,8 +32410,8 @@ label {
     setPageConfig(config) {
       this._parts.api.setPageConfig(config);
     }
-    setSaveStatus(label) {
-      this._parts.renderSync.setSaveStatus(label);
+    setSaveStatus(label2) {
+      this._parts.renderSync.setSaveStatus(label2);
     }
     loadDocument(document2, selectedTarget = null) {
       this._parts.api.loadDocument(document2, selectedTarget);
@@ -32095,7 +32776,7 @@ label {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default30 = `:host {
+  var style_default31 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -32220,7 +32901,7 @@ label {
   class CardMedia extends A {
     constructor() {
       super({
-        css: style_default30,
+        css: style_default31,
         template: template_default32
       });
     }
@@ -32269,7 +32950,7 @@ label {
 `;
 
   // src/components/media/CropSystem/style.css
-  var style_default31 = `:host {
+  var style_default32 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -32471,7 +33152,7 @@ label {
   class CropSystem extends A {
     constructor() {
       super({
-        css: style_default31,
+        css: style_default32,
         template: template_default33
       });
     }
@@ -32551,7 +33232,7 @@ label {
 `;
 
   // src/components/media/DetailMedia/style.css
-  var style_default32 = `:host {
+  var style_default33 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -32764,7 +33445,7 @@ label {
   class DetailMedia extends A {
     constructor() {
       super({
-        css: style_default32,
+        css: style_default33,
         template: template_default34
       });
     }
@@ -32781,9 +33462,9 @@ label {
           this.close();
       });
     }
-    open(label) {
-      if (label) {
-        this.shadowRoot.getElementById("title").textContent = label;
+    open(label2) {
+      if (label2) {
+        this.shadowRoot.getElementById("title").textContent = label2;
       }
       this.setAttribute("open", "");
     }
@@ -32859,7 +33540,7 @@ label {
 `;
 
   // src/components/media/GridMedia/view/style.css
-  var style_default33 = `:host {
+  var style_default34 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --grid-max-col: 240px;
@@ -33324,13 +34005,13 @@ label {
     return trail;
   }
   // src/components/media/GridMedia/api/write.ts
-  async function renameItem(id2, label) {
+  async function renameItem(id2, label2) {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id2);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label })
+      body: JSON.stringify({ name: label2 })
     });
     return res.ok;
   }
@@ -33341,11 +34022,11 @@ label {
     const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
   }
-  async function createFolder(label, parent) {
+  async function createFolder(label2, parent) {
     const res = await fetch(`${filesBase()}/folder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label, parentId: parent })
+      body: JSON.stringify({ name: label2, parentId: parent })
     });
     return res.ok;
   }
@@ -33422,10 +34103,10 @@ label {
       } else {
         appendMediaPreview(card, item);
       }
-      const label = document.createElement("span");
-      label.slot = "label";
-      label.textContent = item.label;
-      card.appendChild(label);
+      const label2 = document.createElement("span");
+      label2.slot = "label";
+      label2.textContent = item.label;
+      card.appendChild(label2);
       grid.appendChild(card);
     }
   }
@@ -33861,7 +34542,7 @@ label {
     _items = [];
     constructor() {
       super({
-        css: style_default33,
+        css: style_default34,
         template: template_default35
       });
     }
@@ -33898,7 +34579,7 @@ label {
       renderGrid(this.shadowRoot.getElementById("grid"), this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
     }
-    _navigateTo(folderId, label) {
+    _navigateTo(folderId, label2) {
       const url = new URL(window.location.href);
       if (folderId)
         url.searchParams.set("folder", folderId);
@@ -33908,8 +34589,8 @@ label {
       this._folder = folderId;
       if (!folderId)
         this._breadcrumb = [];
-      else if (label)
-        this._breadcrumb.push({ id: folderId, label });
+      else if (label2)
+        this._breadcrumb.push({ id: folderId, label: label2 });
       this._refresh();
     }
     async _confirmDelete(id2) {
@@ -33982,7 +34663,7 @@ label {
       this._grid?.refresh();
     }
     async _handleCreateFolder() {
-      const button = this.querySelector('[data-action="create-folder"]');
+      const button2 = this.querySelector('[data-action="create-folder"]');
       const input = this.querySelector('[data-role="folder-name"]');
       const name = input?.value?.trim();
       if (!name)
@@ -33992,7 +34673,7 @@ label {
         return;
       if (input)
         input.value = "";
-      button?.dispatchEvent(new BubblesEvent("form:success"));
+      button2?.dispatchEvent(new BubblesEvent("form:success"));
       this._grid?.refresh();
     }
     _currentFolder() {
@@ -34071,7 +34752,7 @@ label {
 `;
 
   // src/components/media/MediaCenter/style.css
-  var style_default34 = `:host {
+  var style_default35 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
     --mc-grid-item-max: 180px;
@@ -34479,7 +35160,7 @@ dialog::backdrop {
     _dragCounter = 0;
     constructor() {
       super({
-        css: style_default34,
+        css: style_default35,
         template: template_default36
       });
     }
@@ -34622,12 +35303,12 @@ dialog::backdrop {
       }));
       this._dialog?.close();
     }
-    _navigateTo(folderId, label) {
+    _navigateTo(folderId, label2) {
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label) {
-        this._breadcrumb.push({ id: folderId, label });
+      } else if (label2) {
+        this._breadcrumb.push({ id: folderId, label: label2 });
       }
       this._refresh();
     }
@@ -34749,13 +35430,13 @@ dialog::backdrop {
       const raw = this.getAttribute("types") || "image";
       return ["folder", ...raw.split(",").map((t) => t.trim()).filter(Boolean)];
     }
-    _build(label) {
+    _build(label2) {
       const shadow = this.attachShadow({ mode: "open" });
       const size = this.getAttribute("size") || "64";
       shadow.innerHTML = `
             <style>${MediaInput_default}</style>
             <div class="field" style="--tile-size:${size}px">
-                ${label ? `<span class="label">${label}</span>` : ""}
+                ${label2 ? `<span class="label">${label2}</span>` : ""}
                 <button class="tile" type="button" title="Choose a file">
                     <img class="preview" alt="" />
                     <span class="placeholder">

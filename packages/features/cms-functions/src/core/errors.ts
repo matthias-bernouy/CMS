@@ -8,6 +8,7 @@ export class FunctionExecutionError extends Error {
     constructor(
         message: string,
         readonly status = 500,
+        readonly details?: unknown,
     ) {
         super(message);
     }

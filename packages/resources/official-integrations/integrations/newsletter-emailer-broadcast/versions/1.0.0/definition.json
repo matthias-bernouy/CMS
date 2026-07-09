@@ -1,0 +1,198 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "newsletter-emailer-broadcast",
+    "label": "Newsletter email broadcast",
+    "version": "1.0.0",
+    "category": "Marketing",
+    "description": "Create a CMS function that sends one Emailer template to active Newsletter subscribers.",
+    "inputs": [],
+    "dependencies": [
+        {
+            "name": "newsletter",
+            "kind": "newsletter"
+        },
+        {
+            "name": "emailer",
+            "kind": "emailer"
+        }
+    ],
+    "ui": {
+        "mark": "NE",
+        "markClass": "newsletter-emailer",
+        "emit": "functions:updated",
+        "instructions": [
+            [
+                "Install dependencies",
+                "Newsletter and Emailer must already be installed successfully."
+            ],
+            [
+                "Create broadcast function",
+                "Install a CMS function that lists active subscribers and sends one Emailer template to each subscriber in the batch."
+            ]
+        ],
+        "scopes": [
+            "Newsletter active subscribers lookup",
+            "Emailer template sends",
+            "CMS function only"
+        ],
+        "checks": [
+            "The function sends at most 25 emails per call in version 1.",
+            "The function stops on the first failed Emailer send.",
+            "No new provider connector, table, or secret is created."
+        ],
+        "resources": [
+            [
+                "Functions",
+                "Newsletter broadcast sender"
+            ]
+        ],
+        "review": [
+            "Use this version for small smoke tests only.",
+            "Use a queued broadcast job before sending large campaigns."
+        ],
+        "sync": [
+            "Validate dependencies",
+            "Install broadcast function",
+            "Refresh Functions"
+        ],
+        "syncNote": "This integration stores one CMS function. It reuses the installed Newsletter and Emailer sources."
+    },
+    "artifacts": [
+        {
+            "type": "function",
+            "function": {
+                "id": "sendNewsletterBroadcast",
+                "method": "POST",
+                "access": {
+                    "mode": "admin"
+                },
+                "meta": {
+                    "name": "Send newsletter broadcast",
+                    "description": "Send one Emailer template to the first 25 active newsletter subscribers."
+                },
+                "input": {
+                    "body": {
+                        "type": "object",
+                        "properties": {
+                            "templateKey": {
+                                "type": "string"
+                            },
+                            "data": {
+                                "type": "object"
+                            }
+                        },
+                        "required": [
+                            "templateKey"
+                        ]
+                    }
+                },
+                "output": [
+                    {
+                        "status": "200",
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "subscribers": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
+                                "messages": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ui": {
+                    "execute": {
+                        "fields": [
+                            {
+                                "path": "body.templateKey",
+                                "label": "Template",
+                                "control": "source-select",
+                                "source": "{{dependencies.emailer.sourceId}}",
+                                "endpoint": "listTemplates",
+                                "params": {
+                                    "status": "active",
+                                    "limit": 100
+                                },
+                                "itemsPath": "items",
+                                "labelPath": "name",
+                                "valuePath": "key"
+                            },
+                            {
+                                "path": "body.data",
+                                "label": "Data",
+                                "control": "json-object",
+                                "seed": {
+                                    "type": "paths",
+                                    "dependsOn": "body.templateKey",
+                                    "source": "{{dependencies.emailer.sourceId}}",
+                                    "endpoint": "getTemplate",
+                                    "params": {
+                                        "key": "$body.templateKey"
+                                    },
+                                    "pathsPath": "requiredTokens",
+                                    "pathNamePath": "name",
+                                    "samplePath": "sample"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "steps": [
+                    {
+                        "id": "subscriptions",
+                        "call": {
+                            "source": "{{dependencies.newsletter.sourceId}}",
+                            "endpoint": "listSubscriptions",
+                            "params": {
+                                "subscribed": "true",
+                                "limit": 25
+                            }
+                        }
+                    },
+                    {
+                        "id": "messages",
+                        "forEach": {
+                            "items": "$steps.subscriptions.subscriptions",
+                            "max": 25,
+                            "steps": [
+                                {
+                                    "id": "message",
+                                    "call": {
+                                        "source": "{{dependencies.emailer.sourceId}}",
+                                        "endpoint": "sendTemplateEmail",
+                                        "body": {
+                                            "key": "$input.body.templateKey",
+                                            "toEmails": [
+                                                "$item.email"
+                                            ],
+                                            "data": "$input.body.data"
+                                        }
+                                    }
+                                }
+                            ],
+                            "yield": {
+                                "email": "$item.email",
+                                "message": "$steps.message"
+                            }
+                        }
+                    }
+                ],
+                "return": {
+                    "status": 200,
+                    "body": {
+                        "subscribers": "$steps.subscriptions.subscriptions",
+                        "messages": "$steps.messages"
+                    }
+                }
+            }
+        }
+    ]
+}

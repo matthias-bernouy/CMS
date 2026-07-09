@@ -10,11 +10,14 @@ export type {
     FunctionCondition,
     FunctionDefinition,
     FunctionDto,
+    FunctionExecuteField,
+    FunctionExecuteUi,
     FunctionEndpointInput,
     FunctionExpression,
     FunctionForEach,
     FunctionReturn,
     FunctionStep,
+    FunctionUi,
     FunctionValue,
 } from "../interfaces/FunctionDefinition";
 export type { FunctionRepository } from "../interfaces/FunctionRepository";

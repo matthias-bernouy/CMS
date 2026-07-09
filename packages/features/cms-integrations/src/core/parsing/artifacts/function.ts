@@ -17,6 +17,7 @@ export function parseFunctionTemplate(value: Record<string, unknown>, name: stri
         ...(isRecord(value.meta) ? { meta: value.meta as FunctionDto["meta"] } : {}),
         ...(isRecord(value.input) ? { input: value.input as FunctionDto["input"] } : {}),
         ...(Array.isArray(value.output) ? { output: value.output as FunctionDto["output"] } : {}),
+        ...(isRecord(value.ui) ? { ui: value.ui as FunctionDto["ui"] } : {}),
         steps: value.steps as FunctionDto["steps"],
         return: value.return as FunctionDto["return"],
     };

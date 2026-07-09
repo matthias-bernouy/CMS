@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+    executeFunction,
     functionAsEndpoint,
     InMemoryFunctionRepository,
     validateFunction,
@@ -82,4 +83,45 @@ describe("cms functions", () => {
 
         expect(functionAsEndpoint(fn).access).toEqual({ mode: "auth" });
     });
+
+    test("only includes source error body when explicitly requested", async () => {
+        const sources = new InMemorySourceRepository();
+        await sources.createSource(productsSource());
+        const fetchImpl = async () => json({ error: "template key is missing" }, 400);
+
+        const hidden = await executeFunction(updateMyProductFunction(), updateRequest(), {
+            sources,
+            user: { id: "user-1", role: "seller" },
+            deps: { fetchImpl },
+        });
+        expect(hidden.status).toBe(502);
+        expect(await hidden.json()).toEqual({
+            error: 'Function call "getProduct" failed with status 400',
+        });
+
+        const detailed = await executeFunction(updateMyProductFunction(), updateRequest(), {
+            sources,
+            user: { id: "user-1", role: "seller" },
+            deps: { fetchImpl },
+            includeCallErrorDetails: true,
+        });
+        expect(detailed.status).toBe(502);
+        expect(await detailed.json()).toEqual({
+            error: 'Function call "getProduct" failed with status 400',
+            details: {
+                call: "getProduct",
+                status: 400,
+                contentType: "application/json",
+                body: { error: "template key is missing" },
+            },
+        });
+    });
 });
+
+function updateRequest(): Request {
+    return new Request("https://cms.test/function", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ productId: "p1", title: "New title" }),
+    });
+}
