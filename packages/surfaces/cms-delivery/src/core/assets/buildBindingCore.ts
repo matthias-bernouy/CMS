@@ -17,6 +17,11 @@ export async function generateBindingCoreJsEntry(): Promise<CacheEntry> {
     // bundle to just the binding engine (~18KB, tree-shaken — vs ~60KB pulling
     // the bundled dist) AND reads LIVE source, so editing the engine reflects
     // without a cms-blocs rebuild.
-    const result = await Bun.build({ entrypoints: [SOURCE], format: "iife", conditions: ["bun"] });
+    const result = await Bun.build({
+        entrypoints: [SOURCE],
+        format: "iife",
+        conditions: ["bun"],
+        minify: process.env.MODE === "PROD",
+    });
     return compress(await result.outputs[0]!.text(), "text/javascript");
 }

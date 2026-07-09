@@ -15,6 +15,10 @@ const SOURCE = join(import.meta.dir, "../../endpoints/assets/component.client.ts
  * served with a content-hash URL so browsers can cache it forever.
  */
 export async function generateComponentJsEntry(): Promise<CacheEntry> {
-    const result = await Bun.build({ entrypoints: [SOURCE], format: "iife" });
+    const result = await Bun.build({
+        entrypoints: [SOURCE],
+        format: "iife",
+        minify: process.env.MODE === "PROD",
+    });
     return compress(await result.outputs[0]!.text(), "text/javascript");
 }
