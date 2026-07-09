@@ -1,0 +1,1113 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "emailer",
+    "label": "Emailer",
+    "version": "1.0.0",
+    "category": "Messaging",
+    "description": "Manage transactional email templates and send system emails through SMTP.",
+    "icon": {
+        "path": "assets/icon.svg"
+    },
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "emailer"
+        }
+    ],
+    "ui": {
+        "mark": "E",
+        "markClass": "emailer",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Provide provider SMTP secrets",
+                "Configure SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, and optional SMTP_REPLY_TO in the connector provider."
+            ],
+            [
+                "Connect the CMS",
+                "Install the Emailer source and dashboard with the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "Transactional email template management",
+            "System-only template email sending",
+            "Admin test sends",
+            "Delivery audit rows",
+            "Backoffice Emailer dashboard"
+        ],
+        "checks": [
+            "SMTP configuration is provided by the connector provider, not by integration answers.",
+            "The sendTemplateEmail endpoint is system-only.",
+            "Templates use data interpolation only; arbitrary JavaScript is not executed.",
+            "The connector schema stays private to anon and authenticated Supabase roles."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Emailer source contract"
+            ],
+            [
+                "Dashboards",
+                "Emailer templates and messages dashboard"
+            ],
+            [
+                "Secrets",
+                "Generated private CMS Emailer API key"
+            ],
+            [
+                "Supabase",
+                "Private emailer schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Configure dedicated SMTP credentials in the provider environment with the minimum permissions available.",
+            "Call system sends through CMS functions or triggers rather than public pages.",
+            "Do not place sensitive data in template samples.",
+            "Add provider webhooks or bounce processing in a later integration version if delivery state must be authoritative."
+        ],
+        "sync": [
+            "Validate answers",
+            "Generate private API key",
+            "Deploy Supabase connector",
+            "Install Emailer source",
+            "Install Emailer dashboard",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a CMS source backed by a Supabase Edge Function. Supabase stores templates and message audit rows; the SMTP provider sends email."
+    },
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "EMAILER_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_em_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "emailer"
+            ],
+            "schemas": [
+                {
+                    "path": "schema.sql"
+                }
+            ],
+            "functions": [
+                {
+                    "name": "cms-emailer",
+                    "directory": "functions/cms-emailer",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Emailer",
+                    "description": "Supabase-backed transactional email templates and system sends.",
+                    "icon": "mail"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listTemplates",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/templates",
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getTemplate",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template",
+                        "params": [
+                            {
+                                "name": "key",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertTemplate",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "fromEmail": {
+                                    "type": "string"
+                                },
+                                "replyTo": {
+                                    "type": "string"
+                                },
+                                "subject": {
+                                    "type": "string"
+                                },
+                                "htmlBody": {
+                                    "type": "string"
+                                },
+                                "textBody": {
+                                    "type": "string"
+                                },
+                                "requiredTokens": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
+                                "sampleDataJson": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "name",
+                                "subject",
+                                "htmlBody"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "archiveTemplate",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template/archive",
+                        "params": [
+                            {
+                                "name": "key",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "renderTemplate",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template/render",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "data": {
+                                    "type": "object"
+                                },
+                                "sampleDataJson": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "key"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "subject": {
+                                            "type": "string"
+                                        },
+                                        "htmlBody": {
+                                            "type": "string"
+                                        },
+                                        "textBody": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "sendTestEmail",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template/send-test",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "toEmail": {
+                                    "type": "string"
+                                },
+                                "data": {
+                                    "type": "object"
+                                },
+                                "sampleDataJson": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "toEmail"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "sendTemplateEmail",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template/send",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "toEmails": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "ccEmails": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "bccEmails": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "data": {
+                                    "type": "object"
+                                },
+                                "idempotencyKey": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "toEmails"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listMessages",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/messages",
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "templateKey",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getMessage",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/message",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-emailer",
+                "source": "{{answers.id}}",
+                "meta": {
+                    "name": "Emailer",
+                    "icon": "mail"
+                },
+                "views": [
+                    {
+                        "widget": "w-tabs",
+                        "id": "emailerTabs",
+                        "tabs": [
+                            {
+                                "id": "templates",
+                                "label": "Templates",
+                                "children": [
+                                    {
+                                        "widget": "w-table",
+                                        "id": "templatesTable",
+                                        "title": "Templates",
+                                        "source": {
+                                            "endpoint": "listTemplates",
+                                            "itemsPath": "items",
+                                            "totalPath": "total",
+                                            "params": {
+                                                "q": "$filter.q",
+                                                "status": "$filter.status",
+                                                "limit": "$param.limit",
+                                                "offset": "$param.offset"
+                                            }
+                                        },
+                                        "rowKey": "key",
+                                        "pageSize": 25,
+                                        "filters": [
+                                            {
+                                                "id": "q",
+                                                "label": "Search",
+                                                "param": "q",
+                                                "type": "text",
+                                                "placeholder": "Key, name, subject"
+                                            },
+                                            {
+                                                "id": "status",
+                                                "label": "Status",
+                                                "param": "status",
+                                                "type": "select",
+                                                "options": [
+                                                    {
+                                                        "value": "draft",
+                                                        "label": "Draft"
+                                                    },
+                                                    {
+                                                        "value": "active",
+                                                        "label": "Active"
+                                                    },
+                                                    {
+                                                        "value": "archived",
+                                                        "label": "Archived"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "id": "name",
+                                                "label": "Template",
+                                                "path": "name",
+                                                "primary": true
+                                            },
+                                            {
+                                                "id": "key",
+                                                "label": "Key",
+                                                "path": "key"
+                                            },
+                                            {
+                                                "id": "status",
+                                                "label": "Status",
+                                                "path": "status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "id": "updatedAt",
+                                                "label": "Updated",
+                                                "path": "updatedAt",
+                                                "format": "date"
+                                            }
+                                        ],
+                                        "selection": {
+                                            "opens": "templateDetail"
+                                        }
+                                    },
+                                    {
+                                        "widget": "w-detail",
+                                        "id": "templateDetail",
+                                        "source": {
+                                            "endpoint": "getTemplate",
+                                            "params": {
+                                                "key": "$selection.id"
+                                            }
+                                        },
+                                        "title": {
+                                            "path": "name",
+                                            "fallback": "Template"
+                                        },
+                                        "status": {
+                                            "path": "status"
+                                        },
+                                        "actions": [
+                                            {
+                                                "id": "saveTemplate",
+                                                "label": "Save",
+                                                "tone": "primary",
+                                                "placement": "primary",
+                                                "endpoint": {
+                                                    "endpoint": "upsertTemplate",
+                                                    "body": {
+                                                        "key": "$field.key",
+                                                        "name": "$field.name",
+                                                        "status": "$field.status",
+                                                        "fromEmail": "$field.fromEmail",
+                                                        "replyTo": "$field.replyTo",
+                                                        "subject": "$field.subject",
+                                                        "htmlBody": "$field.htmlBody",
+                                                        "textBody": "$field.textBody",
+                                                        "requiredTokens": "$field.requiredTokens",
+                                                        "sampleDataJson": "$field.sampleDataJson"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "id": "sendTestEmail",
+                                                "label": "Send test",
+                                                "placement": "secondary",
+                                                "endpoint": {
+                                                    "endpoint": "sendTestEmail",
+                                                    "body": {
+                                                        "key": "$resource.key",
+                                                        "toEmail": "$field.testRecipient",
+                                                        "sampleDataJson": "$field.sampleDataJson"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "id": "archiveTemplate",
+                                                "label": "Archive",
+                                                "tone": "danger",
+                                                "placement": "more",
+                                                "confirm": "Archive this template?",
+                                                "endpoint": {
+                                                    "endpoint": "archiveTemplate",
+                                                    "params": {
+                                                        "key": "$resource.key"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "main": [
+                                            {
+                                                "id": "templateBasics",
+                                                "title": "Template",
+                                                "fields": [
+                                                    {
+                                                        "id": "key",
+                                                        "label": "Key",
+                                                        "type": "text",
+                                                        "path": "key",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "id": "name",
+                                                        "label": "Name",
+                                                        "type": "text",
+                                                        "path": "name",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "id": "status",
+                                                        "label": "Status",
+                                                        "type": "select",
+                                                        "path": "status",
+                                                        "options": [
+                                                            {
+                                                                "value": "draft",
+                                                                "label": "Draft"
+                                                            },
+                                                            {
+                                                                "value": "active",
+                                                                "label": "Active"
+                                                            },
+                                                            {
+                                                                "value": "archived",
+                                                                "label": "Archived"
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "id": "subject",
+                                                        "label": "Subject",
+                                                        "type": "text",
+                                                        "path": "subject",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "id": "htmlBody",
+                                                        "label": "HTML body",
+                                                        "type": "textarea",
+                                                        "path": "htmlBody",
+                                                        "rows": 12,
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "id": "textBody",
+                                                        "label": "Text body",
+                                                        "type": "textarea",
+                                                        "path": "textBody",
+                                                        "rows": 8
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "templateTokens",
+                                                "title": "Tokens",
+                                                "fields": [
+                                                    {
+                                                        "id": "requiredTokens",
+                                                        "label": "Required tokens",
+                                                        "type": "table",
+                                                        "path": "requiredTokens",
+                                                        "editable": true,
+                                                        "columns": [
+                                                            {
+                                                                "id": "name",
+                                                                "label": "Name",
+                                                                "path": "name",
+                                                                "editable": true
+                                                            },
+                                                            {
+                                                                "id": "description",
+                                                                "label": "Description",
+                                                                "path": "description",
+                                                                "editable": true
+                                                            },
+                                                            {
+                                                                "id": "sample",
+                                                                "label": "Sample",
+                                                                "path": "sample",
+                                                                "editable": true
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "id": "sampleDataJson",
+                                                        "label": "Sample data JSON",
+                                                        "type": "textarea",
+                                                        "path": "sampleDataJson",
+                                                        "rows": 8
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "aside": [
+                                            {
+                                                "id": "sender",
+                                                "title": "Sender",
+                                                "fields": [
+                                                    {
+                                                        "id": "fromEmail",
+                                                        "label": "From override",
+                                                        "type": "text",
+                                                        "path": "fromEmail"
+                                                    },
+                                                    {
+                                                        "id": "replyTo",
+                                                        "label": "Reply-to override",
+                                                        "type": "text",
+                                                        "path": "replyTo"
+                                                    },
+                                                    {
+                                                        "id": "testRecipient",
+                                                        "label": "Test recipient",
+                                                        "type": "text",
+                                                        "path": "testRecipient"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "messages",
+                                "label": "Messages",
+                                "children": [
+                                    {
+                                        "widget": "w-table",
+                                        "id": "messagesTable",
+                                        "title": "Messages",
+                                        "source": {
+                                            "endpoint": "listMessages",
+                                            "itemsPath": "items",
+                                            "totalPath": "total",
+                                            "params": {
+                                                "q": "$filter.q",
+                                                "status": "$filter.status",
+                                                "limit": "$param.limit",
+                                                "offset": "$param.offset"
+                                            }
+                                        },
+                                        "rowKey": "id",
+                                        "pageSize": 25,
+                                        "filters": [
+                                            {
+                                                "id": "q",
+                                                "label": "Search",
+                                                "param": "q",
+                                                "type": "text",
+                                                "placeholder": "Subject or sender"
+                                            },
+                                            {
+                                                "id": "status",
+                                                "label": "Status",
+                                                "param": "status",
+                                                "type": "select",
+                                                "options": [
+                                                    {
+                                                        "value": "sent",
+                                                        "label": "Sent"
+                                                    },
+                                                    {
+                                                        "value": "failed",
+                                                        "label": "Failed"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "id": "subject",
+                                                "label": "Subject",
+                                                "path": "subject",
+                                                "primary": true
+                                            },
+                                            {
+                                                "id": "templateKey",
+                                                "label": "Template",
+                                                "path": "templateKey"
+                                            },
+                                            {
+                                                "id": "status",
+                                                "label": "Status",
+                                                "path": "status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "id": "createdAt",
+                                                "label": "Created",
+                                                "path": "createdAt",
+                                                "format": "date"
+                                            }
+                                        ],
+                                        "selection": {
+                                            "opens": "messageDetail"
+                                        }
+                                    },
+                                    {
+                                        "widget": "w-detail",
+                                        "id": "messageDetail",
+                                        "source": {
+                                            "endpoint": "getMessage",
+                                            "params": {
+                                                "id": "$selection.id"
+                                            }
+                                        },
+                                        "title": {
+                                            "path": "subject",
+                                            "fallback": "Message"
+                                        },
+                                        "status": {
+                                            "path": "status"
+                                        },
+                                        "main": [
+                                            {
+                                                "id": "messageInfo",
+                                                "title": "Message",
+                                                "fields": [
+                                                    {
+                                                        "id": "id",
+                                                        "label": "ID",
+                                                        "type": "readonly",
+                                                        "path": "id"
+                                                    },
+                                                    {
+                                                        "id": "templateKey",
+                                                        "label": "Template",
+                                                        "type": "readonly",
+                                                        "path": "templateKey"
+                                                    },
+                                                    {
+                                                        "id": "toEmails",
+                                                        "label": "To",
+                                                        "type": "readonly",
+                                                        "path": "toEmails"
+                                                    },
+                                                    {
+                                                        "id": "subject",
+                                                        "label": "Subject",
+                                                        "type": "readonly",
+                                                        "path": "subject"
+                                                    },
+                                                    {
+                                                        "id": "error",
+                                                        "label": "Error",
+                                                        "type": "readonly",
+                                                        "path": "error"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "id": "messageRender",
+                                                "title": "Rendered content",
+                                                "fields": [
+                                                    {
+                                                        "id": "htmlBody",
+                                                        "label": "HTML body",
+                                                        "type": "textarea",
+                                                        "path": "htmlBody",
+                                                        "rows": 12
+                                                    },
+                                                    {
+                                                        "id": "textBody",
+                                                        "label": "Text body",
+                                                        "type": "textarea",
+                                                        "path": "textBody",
+                                                        "rows": 8
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "aside": [
+                                            {
+                                                "id": "messageDelivery",
+                                                "title": "Delivery",
+                                                "fields": [
+                                                    {
+                                                        "id": "fromEmail",
+                                                        "label": "From",
+                                                        "type": "readonly",
+                                                        "path": "fromEmail"
+                                                    },
+                                                    {
+                                                        "id": "providerMessageId",
+                                                        "label": "Provider message ID",
+                                                        "type": "readonly",
+                                                        "path": "providerMessageId"
+                                                    },
+                                                    {
+                                                        "id": "createdAt",
+                                                        "label": "Created",
+                                                        "type": "readonly",
+                                                        "path": "createdAt",
+                                                        "format": "date"
+                                                    },
+                                                    {
+                                                        "id": "sentAt",
+                                                        "label": "Sent",
+                                                        "type": "readonly",
+                                                        "path": "sentAt",
+                                                        "format": "date"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
