@@ -25,6 +25,7 @@ export function iconForResourceType(type: string): string {
     if (normalized === "source") return "receipt";
     if (normalized === "bloc") return "grid";
     if (normalized === "function") return "spark";
+    if (normalized === "trigger") return "share";
     if (normalized === "secret") return "key";
     if (normalized === "connector") return "truck";
     return "grid";

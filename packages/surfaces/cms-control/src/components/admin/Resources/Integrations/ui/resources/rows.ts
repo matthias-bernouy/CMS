@@ -29,8 +29,24 @@ function artifactRow(artifact: NonNullable<IntegrationDefinition["artifacts"]>[n
     if (artifact.type === "function") {
         return { type: "Function", label: artifact.function.meta?.name ?? artifact.function.id, detail: `${artifact.function.method} ${artifact.function.id}` };
     }
+    if (artifact.type === "trigger") {
+        const event = artifact.trigger.event;
+        const source = event.source ?? "*";
+        const endpoint = event.endpoint ?? "*";
+        return { type: "Trigger", label: artifact.trigger.label ?? artifact.trigger.id, detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}` };
+    }
     if (artifact.type === "sourceOverlay") {
         return { type: "Source overlay", label: artifact.overlay.label ?? artifact.overlay.id, detail: `Overlay id: ${artifact.overlay.id}` };
+    }
+    if (artifact.type === "relation") {
+        return { type: "Relation", label: artifact.relation.label ?? artifact.relation.id, detail: `Relation id: ${artifact.relation.id}` };
+    }
+    if (artifact.type === "dashboardRelation") {
+        return {
+            type: "Dashboard relation",
+            label: artifact.projection.title ?? artifact.projection.relationId,
+            detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`,
+        };
     }
     return { type: "Source", label: artifact.source.meta?.name ?? artifact.source.id, detail: `Source id: ${artifact.source.id}` };
 }

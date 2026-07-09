@@ -26,5 +26,6 @@ export function statusLabel(status: string): string {
 
 function typeLabel(type: string): string {
     if (type === "sourceOverlay") return "Source overlay";
+    if (type === "dashboardRelation") return "Dashboard relation";
     return type[0]!.toUpperCase() + type.slice(1);
 }
