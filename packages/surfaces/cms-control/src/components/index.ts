@@ -118,6 +118,7 @@ import "./admin/ShellDetail/ShellDetail"
 import "./admin/Resources/Dashboards/DashboardNav"
 import "./admin/Resources/Dashboards/DashboardView"
 import "./admin/Resources/Integrations/IntegrationBrowser"
+import "./admin/Resources/Triggers/TriggersAdmin"
 
 // Editor
 import "./editorSystemV2/bootstrap"
