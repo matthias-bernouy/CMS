@@ -35,8 +35,9 @@ export async function runCreate(request: RunIntegrationInstallationCreateRequest
     await assertSecretKeysAvailable(request.installations, integrationId, plannedSecretRefs);
     const startedAt = new Date();
 
+    const deps = { ...request.deps, installations: request.deps.installations ?? request.installations };
     const { importResult, committed } = await importDeclarativeIntegrationWithCommit(
-        request.deps,
+        deps,
         definition,
         request.dto.answers,
         request.dto.options,

@@ -6,6 +6,7 @@ import type {
     IntegrationAnswerValue,
     IntegrationDefinition,
 } from "./Integration";
+import type { IntegrationInstallationRepository } from "./IntegrationInstallationRepository";
 import type {
     IntegrationConnectorDeployer,
     IntegrationConnectorDeployResult,
@@ -53,6 +54,7 @@ export type IntegrationImportDeps = {
     functions?: FunctionRepository;
     secrets: SecretStore;
     dashboards?: DashboardRepository;
+    installations?: IntegrationInstallationRepository;
     blocs?: IntegrationBlocImporter;
     connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     env?: Record<string, string | undefined>;

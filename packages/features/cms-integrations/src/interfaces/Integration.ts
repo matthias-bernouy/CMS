@@ -47,6 +47,12 @@ export type IntegrationSecurityDefinition = {
     csp?: IntegrationCspPolicy;
 };
 
+export type IntegrationDependency = {
+    name: string;
+    kind: string;
+    optional?: boolean;
+};
+
 export type DeclarativeSecretTemplate = {
     input: string;
     key: string;
@@ -126,6 +132,7 @@ export type IntegrationDefinition = {
     inputs: IntegrationInput[];
     ui?: IntegrationUiDefinition;
     security?: IntegrationSecurityDefinition;
+    dependencies?: IntegrationDependency[];
     secrets?: DeclarativeSecretTemplate[];
     generatedSecrets?: DeclarativeGeneratedSecretTemplate[];
     connectors?: DeclarativeConnectorTemplate[];

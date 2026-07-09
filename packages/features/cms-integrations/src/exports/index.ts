@@ -14,6 +14,7 @@ export type {
     DeclarativeSecretTemplate,
     IntegrationCspPolicy,
     IntegrationDefinition,
+    IntegrationDependency,
     IntegrationIcon,
     IntegrationInput,
     IntegrationSecurityDefinition,

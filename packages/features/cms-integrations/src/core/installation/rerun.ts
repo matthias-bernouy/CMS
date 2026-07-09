@@ -52,8 +52,9 @@ async function runRerunImport(
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, dto.answers);
     await assertSecretKeysAvailable(request.installations, installation.id, plannedSecretRefs);
 
+    const deps = { ...request.deps, installations: request.deps.installations ?? request.installations };
     const { importResult, committed } = await importDeclarativeIntegrationWithCommit(
-        request.deps,
+        deps,
         definition,
         dto.answers,
         dto.options,

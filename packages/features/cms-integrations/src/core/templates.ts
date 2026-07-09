@@ -2,9 +2,16 @@ import { createHash } from "node:crypto";
 import { IntegrationInputError } from "./errors";
 import type { IntegrationAnswerValue } from "../interfaces/Integration";
 
+export type DependencyTemplateContext = Record<string, {
+    id: string;
+    answers: Record<string, IntegrationAnswerValue>;
+    sourceId?: string;
+}>;
+
 export type TemplateContext = {
     answers: Record<string, IntegrationAnswerValue>;
     secrets: Record<string, string>;
+    dependencies?: DependencyTemplateContext;
     generated?: Record<string, string>;
     connectors?: Record<string, Record<string, string>>;
     connectorSecrets?: Record<string, string>;
@@ -61,6 +68,9 @@ function resolveExpression(expression: string, context: TemplateContext): string
         }
         return value;
     }
+    if (expression.startsWith("dependencies.")) {
+        return resolveDependencyExpression(expression, context);
+    }
     if (expression.startsWith("secrets.")) {
         const key = expression.slice("secrets.".length);
         const value = context.secrets[key];
@@ -88,6 +98,32 @@ function resolveExpression(expression: string, context: TemplateContext): string
         return value;
     }
     throw new IntegrationInputError("template", `unsupported expression "${expression}"`);
+}
+
+function resolveDependencyExpression(expression: string, context: TemplateContext): string | boolean {
+    const parts = expression.slice("dependencies.".length).split(".");
+    const [name, key, ...rest] = parts;
+    const dependency = name ? context.dependencies?.[name] : undefined;
+    if (!name || !dependency) throw new IntegrationInputError("template", `unknown dependency "${name ?? ""}"`);
+    if (key === "id" && !rest.length) return dependency.id;
+    if (key === "sourceId" && !rest.length) {
+        if (!dependency.sourceId) {
+            throw new IntegrationInputError("template", `dependency "${name}" does not expose a single sourceId`);
+        }
+        return dependency.sourceId;
+    }
+    if (key === "answers" && rest.length === 1) {
+        const answerKey = rest[0]!;
+        if (!(answerKey in dependency.answers)) {
+            throw new IntegrationInputError("template", `unknown dependency answer "${name}.${answerKey}"`);
+        }
+        const value = dependency.answers[answerKey];
+        if (typeof value !== "string" && typeof value !== "boolean") {
+            throw new IntegrationInputError("template", `dependency answer "${name}.${answerKey}" cannot be interpolated as text`);
+        }
+        return value;
+    }
+    throw new IntegrationInputError("template", `invalid dependency expression "${expression}"`);
 }
 
 function envSegment(value: string): string {
