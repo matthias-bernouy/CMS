@@ -14,9 +14,11 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
-import { createDevSources, GENERATED_BLOCS_DIR } from "./dev-server/integrations";
+import { createDevSources, GENERATED_BLOCS_DIR, warnMissingGeneratedIntegrationArtifacts } from "./dev-server/integrations";
 import { LocalFsDashboardRepository } from "./dev-server/dashboards";
+import { LocalFsRelationRepository } from "./dev-server/relations";
 import { LocalFsFunctionRepository } from "./dev-server/functions";
+import { LocalFsTriggerRepository } from "./dev-server/triggers";
 import { LocalFsIntegrationInstallationRepository } from "./dev-server/integrationInstallations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
@@ -40,6 +42,8 @@ import {
     TemplatedAuthEmailComposer,
 } from "@bernouy/cms-auth";
 import { InMemoryRolesRepository, type CMS_ROLES, ValidatingRolesRepository } from "@bernouy/cms-permissions";
+import { SourceOverlaySourceRepository } from "@bernouy/cms-sources";
+import { LocalFsSourceOverlayRepository } from "./dev-server/sourceOverlays";
 
 export function parseDevFlags(args: string[]): { port: number; host: string; deliveryPort: number; publicHost: string } {
     let port = 5000;
@@ -86,6 +90,7 @@ export default async function CLI_dev(args: string[]) {
     const { port, host, deliveryPort, publicHost } = parsed;
 
     console.log(`→ Site dir : ${config.siteDir}`);
+    await warnMissingGeneratedIntegrationArtifacts(config.siteDir);
 
     // Initial scan + build of every local bloc. The same `built` map is then
     // passed to both the repo (BlocsStore reads from it) and the watcher
@@ -118,14 +123,18 @@ export default async function CLI_dev(args: string[]) {
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const sources = await createDevSources(config.siteDir);
+    const sourceOverlays = new LocalFsSourceOverlayRepository(config.siteDir);
     const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
     const integrationCatalog = createIntegrationCatalog(`http://${publicHost}:${port}/.cms/repository`);
     const integrationConnectorDeployers = createIntegrationConnectorDeployers();
     const integrationInstallations = new LocalFsIntegrationInstallationRepository(config.siteDir);
     const dashboards = new LocalFsDashboardRepository(config.siteDir);
+    const relations = new LocalFsRelationRepository(config.siteDir);
     const functions = new LocalFsFunctionRepository(config.siteDir);
+    const triggers = new LocalFsTriggerRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
+    const deliverySources = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { resolveSecret } });
     const roles = new ValidatingRolesRepository(new InMemoryRolesRepository());
     const publicAuth = {
         local: new LocalAuthentication<CMS_ROLES>({
@@ -171,7 +180,10 @@ export default async function CLI_dev(args: string[]) {
         integrationInstallations,
         integrationConnectorDeployers,
         dashboards,
+        relations,
         functions,
+        triggers,
+        sourceOverlays,
         integrationBlocRepository,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
@@ -204,8 +216,9 @@ export default async function CLI_dev(args: string[]) {
         filesMetadata,
         filesBlob: files,
         variantStore,
-        sources,
+        sources: deliverySources,
         functions,
+        triggers,
         integrationInstallations,
         sourceResolveSecret: resolveSecret,
         roles,
