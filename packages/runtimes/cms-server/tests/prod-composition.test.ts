@@ -8,11 +8,13 @@ describe("production CMS composition", () => {
         expect(source).toContain("sourceResolveSecret: resolveSecret,");
     });
 
-    test("wires the durable functions repository into Control and Delivery", async () => {
+    test("wires durable functions and triggers into Control and Delivery", async () => {
         const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
 
         expect(source).toContain("const functions         = new MongoFunctionRepository(db);");
-        expect(source).toContain("dashboards,\n    functions,\n    publicAuth:");
-        expect(source).toContain("sources, analytics,\n    functions,");
+        expect(source).toContain("const triggers          = new MongoTriggerRepository(db);");
+        expect(source).toContain("const relations         = new MongoRelationRepository(db);");
+        expect(source).toContain("dashboards,\n    relations,\n    functions,\n    triggers,\n    sourceOverlays,");
+        expect(source).toContain("sources: deliverySources, analytics,\n    functions,\n    triggers,");
     });
 });

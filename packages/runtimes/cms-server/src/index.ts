@@ -1,8 +1,8 @@
 // Production CMS image — single Bun process serving Control and Delivery
-// on two BunRunner instances behind an nginx + certbot sidecar (see
+// on two BunRunner installations behind an nginx + certbot sidecar (see
 // compose.yml). Persistent storage in MongoDB (content, users, secrets,
 // PATs, rate limits, file metadata) + local-filesystem blob storage for
-// media bytes. Cache stays in-memory — single-instance only.
+// media bytes. Cache stays in-memory — single-installation only.
 //
 // All non-default envs are validated by docker-compose's ${VAR:?msg}
 // before the container starts; this file assumes they're present.
@@ -15,10 +15,12 @@ import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secret
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { RepositoryCms } from "@bernouy/cms-repository";
-import { CompositeSourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository } from "@bernouy/cms-sources";
-import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
+import { CompositeSourceRepository, SourceOverlaySourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository } from "@bernouy/cms-sources";
+import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
+import { MongoTriggerRepository } from "@bernouy/cms-triggers/mongo";
 import { MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
+import { MongoRelationRepository } from "@bernouy/cms-relations/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
 import { MongoIntegrationInstallationRepository } from "@bernouy/cms-integrations/mongo";
@@ -74,7 +76,7 @@ const {
     ANALYTICS_SALT_SECRET: CONFIGURED_ANALYTICS_SALT_SECRET,
 } = readRuntimeEnv(process.env);
 // Optional: shared secret salting the cookieless visitor id. Set it (and keep it
-// identical) across instances for consistent unique-visitor counts; unset → an
+// identical) across installations for consistent unique-visitor counts; unset → an
 // ephemeral per-boot salt (a mid-day restart recounts that day's visitors).
 const ANALYTICS_SALT_SECRET = CONFIGURED_ANALYTICS_SALT_SECRET || crypto.randomUUID();
 
@@ -112,8 +114,11 @@ const pats              = new MongoPatRepository(db);                           
 const authTokens        = new MongoAuthTokenStore(db);                             await authTokens.init();
 const mongoSources      = new MongoSourceRepository(db);                          await mongoSources.init();
 const sources           = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
+const sourceOverlays     = new MongoSourceOverlayRepository(db);                 await sourceOverlays.init();
 const functions         = new MongoFunctionRepository(db);                        await functions.init();
+const triggers          = new MongoTriggerRepository(db);                         await triggers.init();
 const dashboards        = new MongoDashboardRepository(db);                       await dashboards.init();
+const relations         = new MongoRelationRepository(db);                        await relations.init();
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
 const integrationsStore = new MongoIntegrationInstallationRepository(db);              await integrationsStore.init();
@@ -129,6 +134,7 @@ const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStor
     secretCrypto,
 }));
 const resolveSecret     = createSecretResolver(secrets);
+const deliverySources   = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { resolveSecret } });
 const cache = new InMemoryCache();
 
 // Seed the builtin `local` identity provider (idempotent).
@@ -203,7 +209,10 @@ const controlCms = new ControlCms(controlRunner, repo, auth, {
     integrationInstallations: integrationsStore,
     integrationConnectorDeployers,
     dashboards,
+    relations,
     functions,
+    triggers,
+    sourceOverlays,
     publicAuth: {
         ...publicAuthBase,
         emailVerificationUrl: CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -218,8 +227,9 @@ await controlCms.ready;
 // are immediately usable by the `/.cms/sources/*` proxy.
 const deliveryRunner = new BunRunner();
 new DeliveryCms({
-    runner: deliveryRunner, repository: repo, cache, sources, analytics,
+    runner: deliveryRunner, repository: repo, cache, sources: deliverySources, analytics,
     functions,
+    triggers,
     integrationInstallations: integrationsStore,
     analyticsSalt: ANALYTICS_SALT_SECRET,
     sourceResolveSecret: resolveSecret,
