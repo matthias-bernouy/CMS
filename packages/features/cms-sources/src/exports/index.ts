@@ -9,8 +9,9 @@ export type {
     Source, SourceEndpoint, HTTPMethod, ParamIn,
     EndpointHeader, HeaderSource, EndpointParam, SourceMeta, EndpointResponse,
     ComputedParamRef, ParamValueSource, ResponseKind,
+    SourceEndpointAccess, SourceEndpointAccessMode,
 } from "../interfaces/Source";
-export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS } from "../interfaces/Source";
+export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS, SOURCE_ENDPOINT_ACCESS_MODES } from "../interfaces/Source";
 export type { DataShape } from "../interfaces/DataShape";
 export {
     FORBIDDEN_REQUEST_HEADERS, HEADER_NAME_RE, isForbiddenHeaderName, isValidHeaderName,
@@ -47,6 +48,12 @@ export {
     systemSourceUrnOf,
 } from "../core/systemSources";
 export { SourceValidationError, DuplicateSourceError } from "../core/errors";
+export {
+    DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE,
+    isSourceEndpointAccessMode,
+    sourceEndpointAccessAllows,
+    sourceEndpointAccessMode,
+} from "../core/access";
 export { parseDataShape } from "../core/parseDataShape";
 export {
     sourceDtoToSource,

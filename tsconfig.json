@@ -14,6 +14,7 @@
         { "path": "packages/features/cms-sources" },
         { "path": "packages/features/cms-functions" },
         { "path": "packages/features/cms-dashboards" },
+        { "path": "packages/features/cms-relations" },
         { "path": "packages/features/cms-integrations" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },

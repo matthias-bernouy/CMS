@@ -8,6 +8,13 @@ export type HTTPMethod = typeof HTTP_METHODS[number];
 export const RESPONSE_KINDS = ['json', 'file'] as const;
 export type ResponseKind = typeof RESPONSE_KINDS[number];
 
+export const SOURCE_ENDPOINT_ACCESS_MODES = ['public', 'auth', 'admin', 'system'] as const;
+export type SourceEndpointAccessMode = typeof SOURCE_ENDPOINT_ACCESS_MODES[number];
+
+export type SourceEndpointAccess = {
+    mode: SourceEndpointAccessMode;
+};
+
 /** Where a request header's value comes from.
  *  - `static`: a plaintext fixed value injected verbatim upstream.
  *  - `secret`: a credential reference (`${KEY}` shape) resolved server-side — NOT
@@ -67,6 +74,7 @@ export type SourceEndpoint = {
     urn: string;            // e.g. "urn:source-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
     targetUrl: string;      // e.g. "https://api.example.com/v1/users/{id}"
+    access?: SourceEndpointAccess;
     responseKind?: ResponseKind;
     mediaType?: string;
 

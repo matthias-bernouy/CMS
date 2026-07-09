@@ -1,0 +1,19 @@
+{
+    "name": "@bernouy/cms-relations",
+    "version": "0.1.0",
+    "description": "Relation contracts, repositories, and bounded runtime helpers for CMS sources.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-sources": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}
