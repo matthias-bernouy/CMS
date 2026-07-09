@@ -72,6 +72,7 @@
                     {
                         "endpointId": "search",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "https://api-adresse.data.gouv.fr/search/",
                         "meta": {
                             "name": "Address search",
@@ -191,6 +192,7 @@
                     {
                         "endpointId": "reverse",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "https://api-adresse.data.gouv.fr/reverse/",
                         "meta": {
                             "name": "Reverse geocoding",

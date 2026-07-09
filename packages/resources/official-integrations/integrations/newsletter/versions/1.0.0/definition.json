@@ -136,6 +136,7 @@
                     {
                         "endpointId": "setSubscription",
                         "method": "POST",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
                         "meta": {
                             "name": "Set subscription",

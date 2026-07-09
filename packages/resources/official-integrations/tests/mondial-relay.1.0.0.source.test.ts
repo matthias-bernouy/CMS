@@ -11,6 +11,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import {
     handleSourceRequest,
     InMemorySourceRepository,
@@ -300,6 +301,7 @@ async function createHarness(options: {
 } = {}) {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const importedBlocs: IntegrationBlocArtifact[] = [];
@@ -324,6 +326,7 @@ async function createHarness(options: {
         {
             sources,
             secrets,
+            roles,
             dashboards,
             connectorDeployers: [deployer],
             blocs: {
@@ -402,6 +405,7 @@ async function createHarness(options: {
         result,
         sources,
         secrets,
+        roles,
         dashboards,
         importedBlocs,
         deployment,

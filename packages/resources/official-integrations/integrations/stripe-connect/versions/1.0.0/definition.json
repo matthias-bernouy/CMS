@@ -222,6 +222,7 @@
                     {
                         "endpointId": "getConnectClientConfig",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/config",
                         "params": [],
                         "headers": [
@@ -261,6 +262,7 @@
                     {
                         "endpointId": "getConnectStatus",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/status",
                         "params": [],
                         "headers": [
@@ -370,6 +372,7 @@
                     {
                         "endpointId": "createOnboardingLink",
                         "method": "POST",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/onboarding",
                         "params": [],
                         "headers": [
@@ -441,6 +444,7 @@
                     {
                         "endpointId": "createOnboardingSession",
                         "method": "POST",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/onboarding/session",
                         "params": [],
                         "headers": [

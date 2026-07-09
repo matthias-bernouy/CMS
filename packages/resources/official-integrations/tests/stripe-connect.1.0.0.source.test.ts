@@ -14,6 +14,7 @@ import {
     type SourceRepository,
 } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -144,6 +145,7 @@ async function createHarness() {
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
@@ -166,6 +168,7 @@ async function createHarness() {
         {
             sources,
             secrets,
+            roles,
             dashboards,
             connectorDeployers: [deployer],
             blocs: {
@@ -203,6 +206,7 @@ async function createHarness() {
         result,
         sources,
         secrets,
+        roles,
         dashboards,
         importedBlocs,
         deployment,

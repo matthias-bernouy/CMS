@@ -85,10 +85,10 @@ Optional attributes:
 - `locale`: passed to Stripe Connect.js.
 - `auto`: starts onboarding as soon as the bloc connects.
 
-For the POC, permissions are still manual. The site must allow the current user
-to call `getConnectClientConfig`, `createOnboardingSession`, and
-`getConnectStatus`. The integration definition declares the Stripe Connect.js
-script, network, and frame CSP origins used by the bloc.
+The integration grants authenticated users access to
+`getConnectClientConfig`, `createOnboardingSession`, `createOnboardingLink`,
+and `getConnectStatus` during import. The integration definition declares the
+Stripe Connect.js script, network, and frame CSP origins used by the bloc.
 
 ## Tables
 
