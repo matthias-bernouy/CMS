@@ -13,6 +13,7 @@
         { "path": "packages/features/cms-bloc-compile" },
         { "path": "packages/features/cms-sources" },
         { "path": "packages/features/cms-functions" },
+        { "path": "packages/features/cms-triggers" },
         { "path": "packages/features/cms-dashboards" },
         { "path": "packages/features/cms-relations" },
         { "path": "packages/features/cms-integrations" },

@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/cms-triggers",
+    "version": "0.1.0",
+    "description": "Declarative CMS triggers that listen to source endpoint executions and call CMS functions as side effects.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-functions": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}
