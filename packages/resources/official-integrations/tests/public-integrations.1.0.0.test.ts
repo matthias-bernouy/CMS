@@ -8,9 +8,10 @@ import {
 } from "@bernouy/cms-integrations";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import { InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 
 describe("public integrations 1.0.0", () => {
     test.each([
@@ -23,6 +24,16 @@ describe("public integrations 1.0.0", () => {
             functionName: "cms-newsletter",
             schemas: ["newsletter"],
             expectedEndpoints: ["setSubscription", "listSubscriptions", "exportSubscriptions", "getSubscription", "deleteSubscription"],
+        },
+        {
+            kind: "emailer",
+            sourceId: "emailer",
+            dashboardId: "emailer-templates",
+            blocTags: [],
+            answers: { id: "emailer" },
+            functionName: "cms-emailer",
+            schemas: ["emailer"],
+            expectedEndpoints: ["listTemplates", "getTemplate", "upsertTemplate", "sendTestEmail", "sendTemplateEmail", "listMessages", "getSettings", "updateSettings"],
         },
         {
             kind: "stripe-connect",
@@ -83,17 +94,53 @@ describe("public integrations 1.0.0", () => {
             expect(dashboardJson).toContain("exportSubscriptions");
             expect(dashboardJson).toContain("newsletter-subscriptions.csv");
         }
+        if (scenario.kind === "emailer") {
+            const settingsDashboard = await harness.dashboards.getDashboard("emailer-settings");
+            expect(settingsDashboard).toBeTruthy();
+            expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
+            const settingsJson = JSON.stringify(settingsDashboard);
+            expect(dashboardJson).toContain("newTemplate");
+            expect(dashboardJson).toContain("sendTestEmail");
+            expect(dashboardJson).not.toContain("messagesTable");
+            expect(dashboardJson).not.toContain("textBody");
+            expect(dashboardJson).not.toContain("sampleDataJson");
+            expect(settingsJson).toContain("emailerSettings");
+            expect(settingsJson).toContain("getSettings");
+            expect(settingsJson).toContain("saveSettings");
+            expect(settingsJson).toContain("updateSettings");
+        }
+    });
+
+    test("declares response outputs for every official JSON endpoint", async () => {
+        const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+        const missing: string[] = [];
+
+        for (const entry of await repo.list()) {
+            const definition = await repo.get(entry.kind);
+            for (const artifact of definition?.artifacts ?? []) {
+                if (artifact.type !== "source") continue;
+                for (const endpoint of artifact.source.endpoints) {
+                    if ((endpoint.responseKind ?? "json") !== "json") continue;
+                    if (endpoint.output?.length) continue;
+                    missing.push(`${entry.kind}:${artifact.source.id}:${endpoint.endpointId}`);
+                }
+            }
+        }
+
+        expect(missing).toEqual([]);
     });
 });
 
-export async function importScenario(kind: string, answers: Record<string, string>) {
+export async function importScenario(kind: string, answers: Record<string, string | boolean>) {
     const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
     const definition = await repo.get(kind);
     if (!definition) throw new Error(`${kind} definition not found`);
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const sourceOverlays = new InMemorySourceOverlayRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
@@ -115,7 +162,9 @@ export async function importScenario(kind: string, answers: Record<string, strin
         {
             sources,
             secrets,
+            roles,
             dashboards,
+            sourceOverlays,
             connectorDeployers: [deployer],
             blocs: {
                 async importBloc(artifact) {
@@ -128,5 +177,5 @@ export async function importScenario(kind: string, answers: Record<string, strin
         [definition as IntegrationDefinition],
     );
 
-    return { result, sources, secrets, dashboards, importedBlocs, deployment };
+    return { result, sources, sourceOverlays, secrets, dashboards, importedBlocs, deployment };
 }

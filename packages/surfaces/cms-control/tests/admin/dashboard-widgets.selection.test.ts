@@ -34,6 +34,32 @@ describe("dashboard widget selection", () => {
         expect(detailWidgets[0]?.id).toBe("productDetail");
     });
 
+    test("keeps unreferenced detail widgets visible without a row selection", () => {
+        const dashboard = {
+            id:     "settings",
+            source: "emailer",
+            views:  [
+                {
+                    widget: "w-detail",
+                    id:     "emailerSettings",
+                    source: { endpoint: "getSettings" },
+                    title:  { path: "provider", fallback: "Settings" },
+                    main:   [{
+                        id: "provider",
+                        title: "Provider",
+                        fields: [{ id: "smtpHost", label: "SMTP host", path: "smtpHost", type: "readonly" }],
+                    }],
+                },
+            ],
+        } as DashboardDto;
+
+        const widgets = widgetsForSelection(dashboard, null);
+
+        expect(widgets).toHaveLength(1);
+        expect(widgets[0]?.widget).toBe("w-detail");
+        expect(widgets[0]?.id).toBe("emailerSettings");
+    });
+
     test("attaches relation table widgets to selected details", () => {
         const dashboard = {
             id:     "products",

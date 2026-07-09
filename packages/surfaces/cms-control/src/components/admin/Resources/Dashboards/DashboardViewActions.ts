@@ -20,22 +20,23 @@ export type DashboardViewActionContext = {
 export async function runDashboardWidgetAction(context: DashboardViewActionContext, action: WidgetActionDetail): Promise<void> {
     const { group, dashboard, detail } = context;
     if (!group || !dashboard) return;
-    const key = detail ? detailKey(detail.collection, detail.row) : "";
+    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
+    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
     try {
-        const result = detail
-            ? await executeDashboardAction(group, dashboard, detail, action.action, {
+        const result = actionDetail
+            ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
                 ...(context.drafts.get(key) ?? {}),
                 ...(action.fields ?? {}),
             }, action.resource)
             : await executeDashboardTableAction(group, dashboard, action.action, action.widget);
-        if (detail) context.drafts.delete(key);
+        if (actionDetail) context.drafts.delete(key);
         if (result.kind === "download") {
             downloadBlob(result.blob, result.filename);
             showToast(`${action.action} downloaded`, { type: "success" });
             return;
         }
         showToast(`${action.action} completed`, { type: "success" });
-        const after = result.kind === "value" ? afterTarget(result.after, result.value, detail) : null;
+        const after = result.kind === "value" ? afterTarget(result.after, result.value, actionDetail) : null;
         if (after) context.openDetail(after.collection, after.row);
         else if (!detail) context.render();
         else if (action.action.startsWith("delete")) context.clearDetail();

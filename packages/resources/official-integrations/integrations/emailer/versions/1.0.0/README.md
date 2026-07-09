@@ -13,7 +13,7 @@ delivery, and audit rows.
 
 - `definition.json`: declarative CMS integration definition.
 - `connectors/supabase/schema.sql`: private Supabase Postgres schema with
-  `emailer.templates` and `emailer.messages`.
+  `emailer.templates`, `emailer.messages`, and `emailer.settings`.
 - `connectors/supabase/functions/cms-emailer/index.ts`: Supabase Edge Function
   exposing the CMS-facing email API.
 - `connectors/supabase/functions/cms-emailer/deno.json`: function-local npm
@@ -53,10 +53,18 @@ Import `definition.json` with kind `emailer`. Configure:
 The import generates the private CMS API key, deploys the Supabase connector,
 installs the source, and installs the dashboard.
 
+The dashboards expose template creation and editing, test sends, and an editable
+Settings detail for provider SMTP configuration.
+
 ## Provider SMTP Configuration
 
-The Supabase connector deployer must receive these function secrets from the
-provider environment:
+The Settings dashboard writes SMTP host, port, secure mode, user, password,
+default sender, and optional reply-to into the provider-owned
+`emailer.settings` row. The SMTP password is write-only in the CMS UI: the Edge
+Function returns only a configured/missing status.
+
+The Supabase connector can also receive these function secrets from the provider
+environment:
 
 - `SMTP_HOST`
 - `SMTP_PORT`
@@ -67,5 +75,6 @@ provider environment:
 - `SMTP_REPLY_TO` (optional)
 
 These values are pushed to Supabase Edge Function secrets by the provider
-deployer. They are not integration installation answers and are not stored as
-CMS integration secrets.
+deployer and act as fallbacks when the `emailer.settings` row leaves a value
+empty. They are not integration installation answers and are not stored as CMS
+integration secrets.

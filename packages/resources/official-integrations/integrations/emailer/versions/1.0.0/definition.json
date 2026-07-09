@@ -32,7 +32,7 @@
             ],
             [
                 "Connect the CMS",
-                "Install the Emailer source and dashboard with the deployed function URL."
+                "Install the Emailer source and dashboards with the deployed function URL."
             ]
         ],
         "scopes": [
@@ -55,7 +55,7 @@
             ],
             [
                 "Dashboards",
-                "Emailer templates and messages dashboard"
+                "Emailer templates and settings dashboards"
             ],
             [
                 "Secrets",
@@ -77,7 +77,7 @@
             "Generate private API key",
             "Deploy Supabase connector",
             "Install Emailer source",
-            "Install Emailer dashboard",
+            "Install Emailer dashboards",
             "Refresh Sources"
         ],
         "syncNote": "This integration creates a CMS source backed by a Supabase Edge Function. Supabase stores templates and message audit rows; the SMTP provider sends email."
@@ -220,6 +220,168 @@
                                     },
                                     "required": [
                                         "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getSettings",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/settings",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "provider": {
+                                            "type": "string"
+                                        },
+                                        "functionName": {
+                                            "type": "string"
+                                        },
+                                        "cmsApiKeyConfigured": {
+                                            "type": "string"
+                                        },
+                                        "smtpHost": {
+                                            "type": "string"
+                                        },
+                                        "smtpPort": {
+                                            "type": "string"
+                                        },
+                                        "smtpSecure": {
+                                            "type": "string"
+                                        },
+                                        "smtpPasswordConfigured": {
+                                            "type": "string"
+                                        },
+                                        "defaultFrom": {
+                                            "type": "string"
+                                        },
+                                        "defaultReplyTo": {
+                                            "type": "string"
+                                        },
+                                        "smtpUser": {
+                                            "type": "string"
+                                        },
+                                        "smtpPassword": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "provider",
+                                        "functionName",
+                                        "cmsApiKeyConfigured"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "updateSettings",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/settings",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "smtpHost": {
+                                    "type": "string"
+                                },
+                                "smtpPort": {
+                                    "type": "string"
+                                },
+                                "smtpSecure": {
+                                    "type": "string"
+                                },
+                                "smtpUser": {
+                                    "type": "string"
+                                },
+                                "smtpPassword": {
+                                    "type": "string"
+                                },
+                                "defaultFrom": {
+                                    "type": "string"
+                                },
+                                "defaultReplyTo": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "provider": {
+                                            "type": "string"
+                                        },
+                                        "functionName": {
+                                            "type": "string"
+                                        },
+                                        "cmsApiKeyConfigured": {
+                                            "type": "string"
+                                        },
+                                        "smtpHost": {
+                                            "type": "string"
+                                        },
+                                        "smtpPort": {
+                                            "type": "string"
+                                        },
+                                        "smtpSecure": {
+                                            "type": "string"
+                                        },
+                                        "smtpPasswordConfigured": {
+                                            "type": "string"
+                                        },
+                                        "defaultFrom": {
+                                            "type": "string"
+                                        },
+                                        "defaultReplyTo": {
+                                            "type": "string"
+                                        },
+                                        "smtpUser": {
+                                            "type": "string"
+                                        },
+                                        "smtpPassword": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "provider",
+                                        "functionName",
+                                        "cmsApiKeyConfigured"
                                     ]
                                 }
                             }
@@ -630,479 +792,431 @@
         {
             "type": "dashboard",
             "dashboard": {
-                "id": "{{answers.id}}-emailer",
+                "id": "{{answers.id}}-templates",
                 "source": "{{answers.id}}",
                 "meta": {
-                    "name": "Emailer",
+                    "name": "Templates",
                     "icon": "mail"
                 },
                 "views": [
                     {
-                        "widget": "w-tabs",
-                        "id": "emailerTabs",
-                        "tabs": [
+                        "widget": "w-table",
+                        "id": "templatesTable",
+                        "title": "Templates",
+                        "source": {
+                            "endpoint": "listTemplates",
+                            "itemsPath": "items",
+                            "totalPath": "total",
+                            "params": {
+                                "q": "$filter.q",
+                                "status": "$filter.status",
+                                "limit": "$param.limit",
+                                "offset": "$param.offset"
+                            }
+                        },
+                        "rowKey": "key",
+                        "pageSize": 25,
+                        "filters": [
                             {
-                                "id": "templates",
-                                "label": "Templates",
-                                "children": [
+                                "id": "q",
+                                "label": "Search",
+                                "param": "q",
+                                "type": "text",
+                                "placeholder": "Key, name, subject"
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "param": "status",
+                                "type": "select",
+                                "options": [
                                     {
-                                        "widget": "w-table",
-                                        "id": "templatesTable",
-                                        "title": "Templates",
-                                        "source": {
-                                            "endpoint": "listTemplates",
-                                            "itemsPath": "items",
-                                            "totalPath": "total",
-                                            "params": {
-                                                "q": "$filter.q",
-                                                "status": "$filter.status",
-                                                "limit": "$param.limit",
-                                                "offset": "$param.offset"
-                                            }
-                                        },
-                                        "rowKey": "key",
-                                        "pageSize": 25,
-                                        "filters": [
-                                            {
-                                                "id": "q",
-                                                "label": "Search",
-                                                "param": "q",
-                                                "type": "text",
-                                                "placeholder": "Key, name, subject"
-                                            },
-                                            {
-                                                "id": "status",
-                                                "label": "Status",
-                                                "param": "status",
-                                                "type": "select",
-                                                "options": [
-                                                    {
-                                                        "value": "draft",
-                                                        "label": "Draft"
-                                                    },
-                                                    {
-                                                        "value": "active",
-                                                        "label": "Active"
-                                                    },
-                                                    {
-                                                        "value": "archived",
-                                                        "label": "Archived"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "columns": [
-                                            {
-                                                "id": "name",
-                                                "label": "Template",
-                                                "path": "name",
-                                                "primary": true
-                                            },
-                                            {
-                                                "id": "key",
-                                                "label": "Key",
-                                                "path": "key"
-                                            },
-                                            {
-                                                "id": "status",
-                                                "label": "Status",
-                                                "path": "status",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "id": "updatedAt",
-                                                "label": "Updated",
-                                                "path": "updatedAt",
-                                                "format": "date"
-                                            }
-                                        ],
-                                        "selection": {
-                                            "opens": "templateDetail"
-                                        }
+                                        "value": "draft",
+                                        "label": "Draft"
                                     },
                                     {
-                                        "widget": "w-detail",
-                                        "id": "templateDetail",
-                                        "source": {
-                                            "endpoint": "getTemplate",
-                                            "params": {
-                                                "key": "$selection.id"
-                                            }
-                                        },
-                                        "title": {
-                                            "path": "name",
-                                            "fallback": "Template"
-                                        },
-                                        "status": {
-                                            "path": "status"
-                                        },
-                                        "actions": [
+                                        "value": "active",
+                                        "label": "Active"
+                                    },
+                                    {
+                                        "value": "archived",
+                                        "label": "Archived"
+                                    }
+                                ]
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "id": "name",
+                                "label": "Template",
+                                "path": "name",
+                                "primary": true
+                            },
+                            {
+                                "id": "key",
+                                "label": "Key",
+                                "path": "key"
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "path": "status",
+                                "format": "badge"
+                            },
+                            {
+                                "id": "updatedAt",
+                                "label": "Updated",
+                                "path": "updatedAt",
+                                "format": "date"
+                            }
+                        ],
+                        "selection": {
+                            "opens": "templateDetail"
+                        },
+                        "actions": [
+                            {
+                                "id": "newTemplate",
+                                "label": "New template",
+                                "tone": "primary",
+                                "selection": {
+                                    "opens": "templateDetail"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "templateDetail",
+                        "source": {
+                            "endpoint": "getTemplate",
+                            "params": {
+                                "key": "$selection.id"
+                            }
+                        },
+                        "title": {
+                            "path": "name",
+                            "fallback": "Template"
+                        },
+                        "status": {
+                            "path": "status"
+                        },
+                        "actions": [
+                            {
+                                "id": "saveTemplate",
+                                "label": "Save",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "upsertTemplate",
+                                    "body": {
+                                        "key": "$field.key",
+                                        "name": "$field.name",
+                                        "status": "$field.status",
+                                        "fromEmail": "$field.fromEmail",
+                                        "replyTo": "$field.replyTo",
+                                        "subject": "$field.subject",
+                                        "htmlBody": "$field.htmlBody",
+                                        "requiredTokens": "$field.requiredTokens"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "templateDetail",
+                                    "row": "$result.key"
+                                }
+                            },
+                            {
+                                "id": "sendTestEmail",
+                                "label": "Send test",
+                                "placement": "secondary",
+                                "endpoint": {
+                                    "endpoint": "sendTestEmail",
+                                    "body": {
+                                        "key": "$field.key",
+                                        "toEmail": "$field.testRecipient"
+                                    }
+                                }
+                            },
+                            {
+                                "id": "archiveTemplate",
+                                "label": "Archive",
+                                "tone": "danger",
+                                "placement": "more",
+                                "confirm": "Archive this template?",
+                                "endpoint": {
+                                    "endpoint": "archiveTemplate",
+                                    "params": {
+                                        "key": "$resource.key"
+                                    }
+                                }
+                            }
+                        ],
+                        "main": [
+                            {
+                                "id": "templateBasics",
+                                "title": "Template",
+                                "fields": [
+                                    {
+                                        "id": "key",
+                                        "label": "Key",
+                                        "type": "text",
+                                        "path": "key",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "name",
+                                        "label": "Name",
+                                        "type": "text",
+                                        "path": "name",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "status",
+                                        "label": "Status",
+                                        "type": "select",
+                                        "path": "status",
+                                        "options": [
                                             {
-                                                "id": "saveTemplate",
-                                                "label": "Save",
-                                                "tone": "primary",
-                                                "placement": "primary",
-                                                "endpoint": {
-                                                    "endpoint": "upsertTemplate",
-                                                    "body": {
-                                                        "key": "$field.key",
-                                                        "name": "$field.name",
-                                                        "status": "$field.status",
-                                                        "fromEmail": "$field.fromEmail",
-                                                        "replyTo": "$field.replyTo",
-                                                        "subject": "$field.subject",
-                                                        "htmlBody": "$field.htmlBody",
-                                                        "textBody": "$field.textBody",
-                                                        "requiredTokens": "$field.requiredTokens",
-                                                        "sampleDataJson": "$field.sampleDataJson"
-                                                    }
-                                                }
+                                                "value": "draft",
+                                                "label": "Draft"
                                             },
                                             {
-                                                "id": "sendTestEmail",
-                                                "label": "Send test",
-                                                "placement": "secondary",
-                                                "endpoint": {
-                                                    "endpoint": "sendTestEmail",
-                                                    "body": {
-                                                        "key": "$resource.key",
-                                                        "toEmail": "$field.testRecipient",
-                                                        "sampleDataJson": "$field.sampleDataJson"
-                                                    }
-                                                }
+                                                "value": "active",
+                                                "label": "Active"
                                             },
                                             {
-                                                "id": "archiveTemplate",
-                                                "label": "Archive",
-                                                "tone": "danger",
-                                                "placement": "more",
-                                                "confirm": "Archive this template?",
-                                                "endpoint": {
-                                                    "endpoint": "archiveTemplate",
-                                                    "params": {
-                                                        "key": "$resource.key"
-                                                    }
-                                                }
-                                            }
-                                        ],
-                                        "main": [
-                                            {
-                                                "id": "templateBasics",
-                                                "title": "Template",
-                                                "fields": [
-                                                    {
-                                                        "id": "key",
-                                                        "label": "Key",
-                                                        "type": "text",
-                                                        "path": "key",
-                                                        "required": true
-                                                    },
-                                                    {
-                                                        "id": "name",
-                                                        "label": "Name",
-                                                        "type": "text",
-                                                        "path": "name",
-                                                        "required": true
-                                                    },
-                                                    {
-                                                        "id": "status",
-                                                        "label": "Status",
-                                                        "type": "select",
-                                                        "path": "status",
-                                                        "options": [
-                                                            {
-                                                                "value": "draft",
-                                                                "label": "Draft"
-                                                            },
-                                                            {
-                                                                "value": "active",
-                                                                "label": "Active"
-                                                            },
-                                                            {
-                                                                "value": "archived",
-                                                                "label": "Archived"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "subject",
-                                                        "label": "Subject",
-                                                        "type": "text",
-                                                        "path": "subject",
-                                                        "required": true
-                                                    },
-                                                    {
-                                                        "id": "htmlBody",
-                                                        "label": "HTML body",
-                                                        "type": "textarea",
-                                                        "path": "htmlBody",
-                                                        "rows": 12,
-                                                        "required": true
-                                                    },
-                                                    {
-                                                        "id": "textBody",
-                                                        "label": "Text body",
-                                                        "type": "textarea",
-                                                        "path": "textBody",
-                                                        "rows": 8
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "id": "templateTokens",
-                                                "title": "Tokens",
-                                                "fields": [
-                                                    {
-                                                        "id": "requiredTokens",
-                                                        "label": "Required tokens",
-                                                        "type": "table",
-                                                        "path": "requiredTokens",
-                                                        "editable": true,
-                                                        "columns": [
-                                                            {
-                                                                "id": "name",
-                                                                "label": "Name",
-                                                                "path": "name",
-                                                                "editable": true
-                                                            },
-                                                            {
-                                                                "id": "description",
-                                                                "label": "Description",
-                                                                "path": "description",
-                                                                "editable": true
-                                                            },
-                                                            {
-                                                                "id": "sample",
-                                                                "label": "Sample",
-                                                                "path": "sample",
-                                                                "editable": true
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "id": "sampleDataJson",
-                                                        "label": "Sample data JSON",
-                                                        "type": "textarea",
-                                                        "path": "sampleDataJson",
-                                                        "rows": 8
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "aside": [
-                                            {
-                                                "id": "sender",
-                                                "title": "Sender",
-                                                "fields": [
-                                                    {
-                                                        "id": "fromEmail",
-                                                        "label": "From override",
-                                                        "type": "text",
-                                                        "path": "fromEmail"
-                                                    },
-                                                    {
-                                                        "id": "replyTo",
-                                                        "label": "Reply-to override",
-                                                        "type": "text",
-                                                        "path": "replyTo"
-                                                    },
-                                                    {
-                                                        "id": "testRecipient",
-                                                        "label": "Test recipient",
-                                                        "type": "text",
-                                                        "path": "testRecipient"
-                                                    }
-                                                ]
+                                                "value": "archived",
+                                                "label": "Archived"
                                             }
                                         ]
+                                    },
+                                    {
+                                        "id": "subject",
+                                        "label": "Subject",
+                                        "type": "text",
+                                        "path": "subject",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "htmlBody",
+                                        "label": "HTML body",
+                                        "type": "textarea",
+                                        "path": "htmlBody",
+                                        "rows": 12,
+                                        "required": true
                                     }
                                 ]
                             },
                             {
-                                "id": "messages",
-                                "label": "Messages",
-                                "children": [
+                                "id": "templateTokens",
+                                "title": "Tokens",
+                                "fields": [
                                     {
-                                        "widget": "w-table",
-                                        "id": "messagesTable",
-                                        "title": "Messages",
-                                        "source": {
-                                            "endpoint": "listMessages",
-                                            "itemsPath": "items",
-                                            "totalPath": "total",
-                                            "params": {
-                                                "q": "$filter.q",
-                                                "status": "$filter.status",
-                                                "limit": "$param.limit",
-                                                "offset": "$param.offset"
-                                            }
-                                        },
-                                        "rowKey": "id",
-                                        "pageSize": 25,
-                                        "filters": [
-                                            {
-                                                "id": "q",
-                                                "label": "Search",
-                                                "param": "q",
-                                                "type": "text",
-                                                "placeholder": "Subject or sender"
-                                            },
-                                            {
-                                                "id": "status",
-                                                "label": "Status",
-                                                "param": "status",
-                                                "type": "select",
-                                                "options": [
-                                                    {
-                                                        "value": "sent",
-                                                        "label": "Sent"
-                                                    },
-                                                    {
-                                                        "value": "failed",
-                                                        "label": "Failed"
-                                                    }
-                                                ]
-                                            }
-                                        ],
+                                        "id": "requiredTokens",
+                                        "label": "Required tokens",
+                                        "type": "table",
+                                        "path": "requiredTokens",
+                                        "editable": true,
                                         "columns": [
                                             {
-                                                "id": "subject",
-                                                "label": "Subject",
-                                                "path": "subject",
-                                                "primary": true
+                                                "id": "name",
+                                                "label": "Name",
+                                                "path": "name",
+                                                "editable": true
                                             },
                                             {
-                                                "id": "templateKey",
-                                                "label": "Template",
-                                                "path": "templateKey"
+                                                "id": "description",
+                                                "label": "Description",
+                                                "path": "description",
+                                                "editable": true
                                             },
                                             {
-                                                "id": "status",
-                                                "label": "Status",
-                                                "path": "status",
-                                                "format": "badge"
-                                            },
-                                            {
-                                                "id": "createdAt",
-                                                "label": "Created",
-                                                "path": "createdAt",
-                                                "format": "date"
-                                            }
-                                        ],
-                                        "selection": {
-                                            "opens": "messageDetail"
-                                        }
-                                    },
-                                    {
-                                        "widget": "w-detail",
-                                        "id": "messageDetail",
-                                        "source": {
-                                            "endpoint": "getMessage",
-                                            "params": {
-                                                "id": "$selection.id"
-                                            }
-                                        },
-                                        "title": {
-                                            "path": "subject",
-                                            "fallback": "Message"
-                                        },
-                                        "status": {
-                                            "path": "status"
-                                        },
-                                        "main": [
-                                            {
-                                                "id": "messageInfo",
-                                                "title": "Message",
-                                                "fields": [
-                                                    {
-                                                        "id": "id",
-                                                        "label": "ID",
-                                                        "type": "readonly",
-                                                        "path": "id"
-                                                    },
-                                                    {
-                                                        "id": "templateKey",
-                                                        "label": "Template",
-                                                        "type": "readonly",
-                                                        "path": "templateKey"
-                                                    },
-                                                    {
-                                                        "id": "toEmails",
-                                                        "label": "To",
-                                                        "type": "readonly",
-                                                        "path": "toEmails"
-                                                    },
-                                                    {
-                                                        "id": "subject",
-                                                        "label": "Subject",
-                                                        "type": "readonly",
-                                                        "path": "subject"
-                                                    },
-                                                    {
-                                                        "id": "error",
-                                                        "label": "Error",
-                                                        "type": "readonly",
-                                                        "path": "error"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "id": "messageRender",
-                                                "title": "Rendered content",
-                                                "fields": [
-                                                    {
-                                                        "id": "htmlBody",
-                                                        "label": "HTML body",
-                                                        "type": "textarea",
-                                                        "path": "htmlBody",
-                                                        "rows": 12
-                                                    },
-                                                    {
-                                                        "id": "textBody",
-                                                        "label": "Text body",
-                                                        "type": "textarea",
-                                                        "path": "textBody",
-                                                        "rows": 8
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "aside": [
-                                            {
-                                                "id": "messageDelivery",
-                                                "title": "Delivery",
-                                                "fields": [
-                                                    {
-                                                        "id": "fromEmail",
-                                                        "label": "From",
-                                                        "type": "readonly",
-                                                        "path": "fromEmail"
-                                                    },
-                                                    {
-                                                        "id": "providerMessageId",
-                                                        "label": "Provider message ID",
-                                                        "type": "readonly",
-                                                        "path": "providerMessageId"
-                                                    },
-                                                    {
-                                                        "id": "createdAt",
-                                                        "label": "Created",
-                                                        "type": "readonly",
-                                                        "path": "createdAt",
-                                                        "format": "date"
-                                                    },
-                                                    {
-                                                        "id": "sentAt",
-                                                        "label": "Sent",
-                                                        "type": "readonly",
-                                                        "path": "sentAt",
-                                                        "format": "date"
-                                                    }
-                                                ]
+                                                "id": "sample",
+                                                "label": "Sample",
+                                                "path": "sample",
+                                                "editable": true
                                             }
                                         ]
                                     }
                                 ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "sender",
+                                "title": "Sender",
+                                "fields": [
+                                    {
+                                        "id": "fromEmail",
+                                        "label": "From override",
+                                        "type": "text",
+                                        "path": "fromEmail"
+                                    },
+                                    {
+                                        "id": "replyTo",
+                                        "label": "Reply-to override",
+                                        "type": "text",
+                                        "path": "replyTo"
+                                    },
+                                    {
+                                        "id": "testRecipient",
+                                        "label": "Test recipient",
+                                        "type": "text",
+                                        "path": "testRecipient"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-settings",
+                "source": "{{answers.id}}",
+                "meta": {
+                    "name": "Settings",
+                    "icon": "settings"
+                },
+                "views": [
+                    {
+                        "widget": "w-detail",
+                        "id": "emailerSettings",
+                        "source": {
+                            "endpoint": "getSettings"
+                        },
+                        "title": {
+                            "path": "provider",
+                            "fallback": "Settings"
+                        },
+                        "status": {
+                            "path": "cmsApiKeyConfigured"
+                        },
+                        "main": [
+                            {
+                                "id": "providerSettings",
+                                "title": "Provider",
+                                "fields": [
+                                    {
+                                        "id": "provider",
+                                        "label": "Provider",
+                                        "type": "readonly",
+                                        "path": "provider",
+                                        "format": "badge"
+                                    },
+                                    {
+                                        "id": "functionName",
+                                        "label": "Function",
+                                        "type": "readonly",
+                                        "path": "functionName"
+                                    },
+                                    {
+                                        "id": "smtpHost",
+                                        "label": "SMTP host",
+                                        "type": "text",
+                                        "path": "smtpHost",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "smtpPort",
+                                        "label": "SMTP port",
+                                        "type": "text",
+                                        "path": "smtpPort",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "smtpSecure",
+                                        "label": "SMTP secure",
+                                        "type": "select",
+                                        "path": "smtpSecure",
+                                        "options": [
+                                            {
+                                                "value": "false",
+                                                "label": "No"
+                                            },
+                                            {
+                                                "value": "true",
+                                                "label": "Yes"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "smtpUser",
+                                        "label": "SMTP user",
+                                        "type": "text",
+                                        "path": "smtpUser",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "smtpPassword",
+                                        "label": "SMTP password",
+                                        "type": "text",
+                                        "path": "smtpPassword"
+                                    },
+                                    {
+                                        "id": "defaultFrom",
+                                        "label": "Default from",
+                                        "type": "text",
+                                        "path": "defaultFrom",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "defaultReplyTo",
+                                        "label": "Default reply-to",
+                                        "type": "text",
+                                        "path": "defaultReplyTo"
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "providerSecrets",
+                                "title": "Provider secrets",
+                                "fields": [
+                                    {
+                                        "id": "cmsApiKeyConfigured",
+                                        "label": "CMS API key",
+                                        "type": "readonly",
+                                        "path": "cmsApiKeyConfigured",
+                                        "format": "badge"
+                                    },
+                                    {
+                                        "id": "smtpPasswordConfigured",
+                                        "label": "SMTP password",
+                                        "type": "readonly",
+                                        "path": "smtpPasswordConfigured",
+                                        "format": "badge"
+                                    },
+                                    {
+                                        "id": "updatedAt",
+                                        "label": "Updated",
+                                        "type": "readonly",
+                                        "path": "updatedAt",
+                                        "format": "date"
+                                    }
+                                ]
+                            }
+                        ],
+                        "actions": [
+                            {
+                                "id": "saveSettings",
+                                "label": "Save settings",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "updateSettings",
+                                    "body": {
+                                        "smtpHost": "$field.smtpHost",
+                                        "smtpPort": "$field.smtpPort",
+                                        "smtpSecure": "$field.smtpSecure",
+                                        "smtpUser": "$field.smtpUser",
+                                        "smtpPassword": "$field.smtpPassword",
+                                        "defaultFrom": "$field.defaultFrom",
+                                        "defaultReplyTo": "$field.defaultReplyTo"
+                                    }
+                                }
                             }
                         ]
                     }

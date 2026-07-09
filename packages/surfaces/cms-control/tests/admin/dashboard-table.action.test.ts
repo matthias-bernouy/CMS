@@ -79,6 +79,73 @@ describe("dashboard table actions", () => {
         expect(await requests[0]!.json()).toEqual({ recipientName: "Ada Lovelace" });
         expect(opened).toEqual([{ collection: "shipmentDetail", row: "shipment-1" }]);
     });
+
+    test("keeps table widget actions routed as table actions", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            const request = new Request(input, init);
+            requests.push(request);
+            return new Response(JSON.stringify({ ok: true }), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+        let renderCount = 0;
+
+        await runDashboardWidgetAction({
+            group: tableActionGroup(),
+            dashboard: tableActionDashboard(),
+            detail: null,
+            drafts: new Map(),
+            render() { renderCount++; },
+            reload() { throw new Error("reload should not run"); },
+            clearDetail() { throw new Error("clearDetail should not run"); },
+            openDetail() { throw new Error("openDetail should not run"); },
+        }, {
+            action: "clearQueue",
+            widget: "queueTable",
+        });
+
+        expect(requests).toHaveLength(1);
+        expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/newsletter/clearQueue");
+        expect(renderCount).toBe(1);
+    });
+
+    test("runs detail widget actions rendered without a selected row", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            const request = new Request(input, init);
+            requests.push(request);
+            return new Response(JSON.stringify({ smtpHost: "smtp.saved.test" }), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+        let renderCount = 0;
+
+        await runDashboardWidgetAction({
+            group: emailerGroup(),
+            dashboard: emailerDashboard(),
+            detail: null,
+            drafts: new Map(),
+            render() { renderCount++; },
+            reload() { throw new Error("reload should not run"); },
+            clearDetail() { throw new Error("clearDetail should not run"); },
+            openDetail() { throw new Error("openDetail should not run"); },
+        }, {
+            action: "saveSettings",
+            detail: true,
+            widget: "emailerSettings",
+            row: "",
+            resource: { provider: "supabase", smtpHost: "smtp.old.test" },
+            fields: { smtpHost: "smtp.saved.test" },
+        });
+
+        expect(requests).toHaveLength(1);
+        expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/emailer/updateSettings");
+        expect(await requests[0]!.json()).toEqual({ smtpHost: "smtp.saved.test" });
+        expect(renderCount).toBe(1);
+    });
 });
 
 function group(): DashboardSourceGroup {
@@ -196,6 +263,105 @@ function deliveryDashboard(): DashboardDto {
                         ],
                     },
                 ],
+            },
+        ],
+    };
+}
+
+function emailerGroup(): DashboardSourceGroup {
+    return {
+        source: {
+            urn: "urn:emailer",
+            id: "emailer",
+            name: "Emailer",
+            endpointCount: 1,
+            dashboardCount: 1,
+            readonly: false,
+        },
+        endpoints: [
+            {
+                endpointId: "updateSettings",
+                method: "POST",
+                targetUrl: "https://project.supabase.co/functions/v1/cms-emailer/settings",
+                params: [],
+            },
+        ],
+        dashboards: [],
+    };
+}
+
+function emailerDashboard(): DashboardDto {
+    return {
+        id: "emailer-settings",
+        source: "emailer",
+        views: [
+            {
+                widget: "w-detail",
+                id: "emailerSettings",
+                source: { endpoint: "getSettings" },
+                title: { path: "provider", fallback: "Settings" },
+                actions: [
+                    {
+                        id: "saveSettings",
+                        label: "Save settings",
+                        endpoint: {
+                            endpoint: "updateSettings",
+                            body: { smtpHost: "$field.smtpHost" },
+                        },
+                    },
+                ],
+                main: [
+                    {
+                        id: "provider",
+                        title: "Provider",
+                        fields: [
+                            { id: "smtpHost", label: "SMTP host", path: "smtpHost", type: "text" },
+                        ],
+                    },
+                ],
+            },
+        ],
+    };
+}
+
+function tableActionGroup(): DashboardSourceGroup {
+    return {
+        source: {
+            urn: "urn:newsletter",
+            id: "newsletter",
+            name: "Newsletter",
+            endpointCount: 1,
+            dashboardCount: 1,
+            readonly: false,
+        },
+        endpoints: [
+            {
+                endpointId: "clearQueue",
+                method: "POST",
+                targetUrl: "https://project.supabase.co/functions/v1/cms-newsletter/queue/clear",
+                params: [],
+            },
+        ],
+        dashboards: [],
+    };
+}
+
+function tableActionDashboard(): DashboardDto {
+    return {
+        id: "newsletter-queue",
+        source: "newsletter",
+        views: [
+            {
+                widget: "w-table",
+                id: "queueTable",
+                source: { endpoint: "listQueue", itemsPath: "items" },
+                rowKey: "id",
+                columns: [{ id: "id", label: "ID", path: "id", primary: true }],
+                actions: [{
+                    id: "clearQueue",
+                    label: "Clear queue",
+                    endpoint: { endpoint: "clearQueue" },
+                }],
             },
         ],
     };

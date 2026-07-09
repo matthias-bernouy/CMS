@@ -9935,7 +9935,7 @@ p {
             Analytics
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item disabled>
+        <w13c-lateral-menu-item data-route="functions">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.35"
                 stroke-linecap="round">
                 <path d="M9 5c-2.3 2-3.4 4.3-3.4 7S6.7 17 9 19" />
@@ -13857,23 +13857,53 @@ p {
   // src/components/admin/Resources/Dashboards/domain.ts
   function widgetsForSelection(dashboard, detail, projections = []) {
     if (!detail)
-      return mainWidgetsFor(dashboard.views);
+      return mainWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
     const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
     return detailWidgetsFor(dashboard.views, detail.collection).map((widget) => relationWidgets.length ? { ...widget, relationWidgets } : widget);
   }
   function detailKey(collection, row) {
     return `${collection}:${row}`;
   }
-  function mainWidgetsFor(widgets) {
+  function mainWidgetsFor(widgets, detailTargets) {
     return widgets.flatMap((widget) => {
       if (isDetailWidget(widget))
-        return [];
+        return detailTargets.has(widget.id) ? [] : [widget];
       if (widget.widget === "w-section")
-        return sectionWithChildren(widget, mainWidgetsFor(widget.children));
+        return sectionWithChildren(widget, mainWidgetsFor(widget.children, detailTargets));
       if (widget.widget === "w-tabs")
-        return tabsWithChildren(widget, (tab) => mainWidgetsFor(tab.children));
+        return tabsWithChildren(widget, (tab) => mainWidgetsFor(tab.children, detailTargets));
       return [widget];
     });
+  }
+  function detailTargetsFor(widgets) {
+    const targets = new Set;
+    for (const widget of widgets)
+      collectDetailTargets(widget, targets);
+    return targets;
+  }
+  function collectDetailTargets(widget, targets) {
+    if (widget.widget === "w-table") {
+      if (widget.selection?.opens)
+        targets.add(widget.selection.opens);
+      for (const action of widget.actions ?? []) {
+        if (action.selection?.opens)
+          targets.add(action.selection.opens);
+        if (action.after?.opens)
+          targets.add(action.after.opens);
+      }
+      return;
+    }
+    if (widget.widget === "w-section") {
+      for (const child of widget.children)
+        collectDetailTargets(child, targets);
+      return;
+    }
+    if (widget.widget === "w-tabs") {
+      for (const tab of widget.tabs) {
+        for (const child of tab.children)
+          collectDetailTargets(child, targets);
+      }
+    }
   }
   function detailWidgetsFor(widgets, detailWidgetId) {
     return widgets.flatMap((widget) => {
@@ -14374,13 +14404,14 @@ p {
     const { group, dashboard, detail } = context;
     if (!group || !dashboard)
       return;
-    const key = detail ? detailKey(detail.collection, detail.row) : "";
+    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
+    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
     try {
-      const result = detail ? await executeDashboardAction(group, dashboard, detail, action.action, {
+      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
         ...context.drafts.get(key) ?? {},
         ...action.fields ?? {}
       }, action.resource) : await executeDashboardTableAction(group, dashboard, action.action, action.widget);
-      if (detail)
+      if (actionDetail)
         context.drafts.delete(key);
       if (result.kind === "download") {
         downloadBlob(result.blob, result.filename);
@@ -14388,7 +14419,7 @@ p {
         return;
       }
       au(`${action.action} completed`, { type: "success" });
-      const after = result.kind === "value" ? afterTarget(result.after, result.value, detail) : null;
+      const after = result.kind === "value" ? afterTarget(result.after, result.value, actionDetail) : null;
       if (after)
         context.openDetail(after.collection, after.row);
       else if (!detail)
@@ -16251,9 +16282,13 @@ p9r-token-input {
       if (target?.closest("[data-back]"))
         emitWidgetEvent(this, WIDGET_BACK_EVENT, {});
       const action = findActionTarget(event);
+      const widget = parseJson2(this.dataset.configJson ?? "");
       if (action?.dataset.action)
         emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
           action: action.dataset.action,
+          detail: true,
+          widget: widget?.id,
+          row: this.value.rowKey,
           resource: this.currentResource(),
           fields: this.currentFields()
         });
@@ -16662,6 +16697,101 @@ p9r-token-input {
     return encodeURIComponent(value);
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/mountSource.ts
+  function sourceWrapper(sourceId, ref, vars, alias) {
+    return urlSourceWrapper(sourceUrl2(sourceId, ref, vars), alias);
+  }
+  function urlSourceWrapper(url, alias) {
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
+    return wrapper;
+  }
+  function jsonAttr(value) {
+    return JSON.stringify(value);
+  }
+  function tableRowsTemplate(widget) {
+    const row = document.createElement("cms-dashboard-w-row");
+    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    if (widget.selection?.opens)
+      row.setAttribute("collection", widget.selection.opens);
+    for (const column of widget.columns) {
+      const cell = document.createElement("cms-dashboard-w-cell");
+      cell.setAttribute("column", column.id);
+      if (column.primary)
+        cell.toggleAttribute("primary", true);
+      if (column.primary)
+        cell.setAttribute("meta", "{{ row.id }}");
+      if (column.format === "badge")
+        cell.setAttribute("tone", "badge");
+      cell.textContent = bindingPath("row", column.path);
+      row.append(cell);
+    }
+    return row;
+  }
+  function sourceUrl2(sourceId, ref, vars) {
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
+      url.searchParams.set(key, value);
+    return `${url.pathname}${url.search}`;
+  }
+  function repeatPath(alias, path) {
+    return path ? `${alias}.${path}` : alias;
+  }
+  function bindingPath(alias, path) {
+    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mountRelations.ts
+  function relationDetailSectionElement(widget) {
+    const section = document.createElement("cms-detail-section");
+    section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
+    section.setAttribute("heading", widget.title ?? "Related items");
+    if (widget.placement === "aside")
+      section.setAttribute("density", "compact");
+    section.append(relationTableElement(widget));
+    return section;
+  }
+  function relationTableElement(widget) {
+    const tableWidget = {
+      widget: "w-table",
+      id: widget.id,
+      source: {
+        endpoint: widget.relationId,
+        itemsPath: "items"
+      },
+      rowKey: widget.rowKey,
+      columns: widget.columns,
+      ...widget.pageSize ? { pageSize: widget.pageSize } : {},
+      ...widget.actions?.length ? { actions: widget.actions.map(tableAction) } : {}
+    };
+    const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
+    const element = document.createElement("cms-dashboard-w-table");
+    element.setAttribute("data-config-json", jsonAttr(tableWidget));
+    element.toggleAttribute("embedded", true);
+    element.append(tableRowsTemplate(tableWidget));
+    wrapper.append(element);
+    return wrapper;
+  }
+  function tableAction(action) {
+    return {
+      id: action.id,
+      label: action.label,
+      ...action.icon ? { icon: action.icon } : {},
+      ...action.tone ? { tone: action.tone } : {},
+      ...action.placement ? { placement: action.placement } : {}
+    };
+  }
+  function relationPageUrl(widget) {
+    const url = new URL(route("/api/relations/page"), window.location.origin);
+    url.searchParams.set("relation", widget.relationId);
+    url.searchParams.set("fromId", widget.fromId);
+    url.searchParams.set("limit", String(widget.pageSize ?? 25));
+    url.searchParams.set("offset", "0");
+    return `${url.pathname}${url.search}`;
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/mount.ts
   function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
     const core = document.createElement("cms-binding-core");
@@ -16738,96 +16868,6 @@ p9r-token-input {
     }
     wrapper.append(element);
     return wrapper;
-  }
-  function relationDetailSectionElement(widget) {
-    const section = document.createElement("cms-detail-section");
-    section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
-    section.setAttribute("heading", widget.title ?? "Related items");
-    if (widget.placement === "aside")
-      section.setAttribute("density", "compact");
-    section.append(relationTableElement(widget));
-    return section;
-  }
-  function relationTableElement(widget) {
-    const tableWidget = {
-      widget: "w-table",
-      id: widget.id,
-      source: {
-        endpoint: widget.relationId,
-        itemsPath: "items"
-      },
-      rowKey: widget.rowKey,
-      columns: widget.columns,
-      ...widget.pageSize ? { pageSize: widget.pageSize } : {},
-      ...widget.actions?.length ? {
-        actions: widget.actions.map((action) => ({
-          id: action.id,
-          label: action.label,
-          ...action.icon ? { icon: action.icon } : {},
-          ...action.tone ? { tone: action.tone } : {},
-          ...action.placement ? { placement: action.placement } : {}
-        }))
-      } : {}
-    };
-    const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
-    const element = document.createElement("cms-dashboard-w-table");
-    element.setAttribute("data-config-json", jsonAttr(tableWidget));
-    element.toggleAttribute("embedded", true);
-    element.append(tableRowsTemplate(tableWidget));
-    wrapper.append(element);
-    return wrapper;
-  }
-  function sourceWrapper(sourceId, ref, vars, alias) {
-    return urlSourceWrapper(sourceUrl2(sourceId, ref, vars), alias);
-  }
-  function urlSourceWrapper(url, alias) {
-    const wrapper = document.createElement("div");
-    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
-    return wrapper;
-  }
-  function sourceUrl2(sourceId, ref, vars) {
-    const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
-      url.searchParams.set(key, value);
-    return `${url.pathname}${url.search}`;
-  }
-  function relationPageUrl(widget) {
-    const url = new URL(route("/api/relations/page"), window.location.origin);
-    url.searchParams.set("relation", widget.relationId);
-    url.searchParams.set("fromId", widget.fromId);
-    url.searchParams.set("limit", String(widget.pageSize ?? 25));
-    url.searchParams.set("offset", "0");
-    return `${url.pathname}${url.search}`;
-  }
-  function jsonAttr(value) {
-    return JSON.stringify(value);
-  }
-  function tableRowsTemplate(widget) {
-    const row = document.createElement("cms-dashboard-w-row");
-    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens)
-      row.setAttribute("collection", widget.selection.opens);
-    for (const column of widget.columns) {
-      const cell = document.createElement("cms-dashboard-w-cell");
-      cell.setAttribute("column", column.id);
-      if (column.primary)
-        cell.toggleAttribute("primary", true);
-      if (column.primary)
-        cell.setAttribute("meta", "{{ row.id }}");
-      if (column.format === "badge")
-        cell.setAttribute("tone", "badge");
-      cell.textContent = bindingPath("row", column.path);
-      row.append(cell);
-    }
-    return row;
-  }
-  function repeatPath(alias, path) {
-    return path ? `${alias}.${path}` : alias;
-  }
-  function bindingPath(alias, path) {
-    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
   }
 
   // src/components/admin/Resources/Dashboards/rendering.ts

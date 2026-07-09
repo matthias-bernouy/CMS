@@ -37,6 +37,29 @@ type MessageRow = {
     updated_at?: string;
 };
 
+type SettingsRow = {
+    id: string;
+    smtp_host: string | null;
+    smtp_port: number | null;
+    smtp_secure: boolean | null;
+    smtp_user: string | null;
+    smtp_password: string | null;
+    default_from: string | null;
+    default_reply_to: string | null;
+    created_at?: string;
+    updated_at?: string;
+};
+
+type EmailSettings = {
+    smtpHost: string;
+    smtpPort: number | null;
+    smtpSecure: boolean;
+    smtpUser: string;
+    smtpPassword: string;
+    defaultFrom: string;
+    defaultReplyTo: string;
+};
+
 type TokenDefinition = {
     name: string;
     description?: string;
@@ -107,6 +130,18 @@ const messageSelect = [
     "sent_at",
     "updated_at",
 ].join(",");
+const settingsSelect = [
+    "id",
+    "smtp_host",
+    "smtp_port",
+    "smtp_secure",
+    "smtp_user",
+    "smtp_password",
+    "default_from",
+    "default_reply_to",
+    "created_at",
+    "updated_at",
+].join(",");
 
 Deno.serve(async (request) => {
     try {
@@ -114,7 +149,7 @@ Deno.serve(async (request) => {
 
         const route = routePath(request);
         if (route === "/health") return await withMethod(request, "GET", () => health(request));
-        if (route === "/settings") return await withMethod(request, "GET", () => settings(request));
+        if (route === "/settings") return await settingsRoute(request);
         if (route === "/templates") return await withMethod(request, "GET", () => listTemplates(request));
         if (route === "/template/archive") return await withMethod(request, "POST", () => archiveTemplate(request));
         if (route === "/template/render") return await withMethod(request, "POST", () => renderTemplateRoute(request));
@@ -130,6 +165,12 @@ Deno.serve(async (request) => {
     }
 });
 
+async function settingsRoute(request: Request): Promise<Response> {
+    if (request.method === "GET") return settings(request);
+    if (request.method === "POST") return updateSettings(request);
+    return methodNotAllowed("GET, POST, OPTIONS");
+}
+
 async function templateRoute(request: Request): Promise<Response> {
     if (request.method === "GET") return getTemplate(request);
     if (request.method === "POST") return upsertTemplate(request);
@@ -143,18 +184,14 @@ async function health(request: Request): Promise<Response> {
 
 async function settings(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    return json({
-        provider: "supabase",
-        functionName: "cms-emailer",
-        cmsApiKeyConfigured: envStatus("CMS_EMAILER_API_KEY"),
-        smtpHost: optionalEnv("SMTP_HOST"),
-        smtpPort: optionalEnv("SMTP_PORT"),
-        smtpSecure: optionalEnv("SMTP_SECURE") || "false",
-        smtpUserConfigured: envStatus("SMTP_USER"),
-        smtpPasswordConfigured: envStatus("SMTP_PASSWORD"),
-        defaultFrom: optionalEnv("SMTP_FROM"),
-        defaultReplyTo: optionalEnv("SMTP_REPLY_TO"),
-    });
+    return json(publicSettings(await settingsRow()));
+}
+
+async function updateSettings(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+    const patch = settingsPatch(await readJsonObject(request));
+    const row = await upsertSettingsRow(patch);
+    return json(publicSettings(row));
 }
 
 async function listTemplates(request: Request): Promise<Response> {
@@ -186,8 +223,8 @@ async function listTemplates(request: Request): Promise<Response> {
 
 async function getTemplate(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    const key = requiredQuery(request, "key");
-    if (key === "__new__") return json(defaultTemplate());
+    const key = new URL(request.url).searchParams.get("key")?.trim() ?? "";
+    if (!key || key === "__new__") return json(defaultTemplate());
     const row = await templateByKey(key);
     if (!row) throw new HttpError(404, "template not found");
     return json(publicTemplate(row));
@@ -264,11 +301,12 @@ async function sendRenderedTemplate(
         replyTo?: string;
     },
 ): Promise<JsonRecord> {
+    const settings = await emailSettings();
     const rendered = renderTemplate(template, input.data);
-    const fromEmail = input.fromEmail ?? template.from_email ?? defaultFromEmail();
-    const replyTo = input.replyTo ?? template.reply_to ?? defaultReplyTo();
+    const fromEmail = input.fromEmail ?? template.from_email ?? defaultFromEmail(settings);
+    const replyTo = input.replyTo ?? template.reply_to ?? defaultReplyTo(settings);
     try {
-        const transport = await emailTransport();
+        const transport = await emailTransport(settings);
         const info = await transport.sendMail({
             from: fromEmail,
             ...(replyTo ? { replyTo } : {}),
@@ -460,6 +498,42 @@ async function messageByIdempotencyKey(key: string): Promise<MessageRow | null> 
     return rows[0] ?? null;
 }
 
+async function settingsRow(): Promise<SettingsRow | null> {
+    const query = new URLSearchParams();
+    query.set("select", settingsSelect);
+    query.set("id", "eq.default");
+    query.set("limit", "1");
+    const response = await rest(`settings?${query.toString()}`, { method: "GET" });
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as SettingsRow[];
+    return rows[0] ?? null;
+}
+
+async function upsertSettingsRow(patch: JsonRecord): Promise<SettingsRow> {
+    const response = await rest(`settings?on_conflict=id&select=${encodeURIComponent(settingsSelect)}`, {
+        method: "POST",
+        headers: { prefer: "resolution=merge-duplicates,return=representation" },
+        body: JSON.stringify({ id: "default", ...patch }),
+    });
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as SettingsRow[];
+    return rows[0]!;
+}
+
+function settingsPatch(body: JsonRecord): JsonRecord {
+    const patch: JsonRecord = {
+        smtp_host: optionalTextValue(body.smtpHost, "smtpHost", 300) ?? null,
+        smtp_port: optionalIntegerValue(body.smtpPort, "smtpPort", 1, 65535),
+        smtp_secure: optionalBooleanValue(body.smtpSecure, "smtpSecure"),
+        smtp_user: optionalTextValue(body.smtpUser, "smtpUser", 500) ?? null,
+        default_from: optionalEmailValue(body.defaultFrom, "defaultFrom") ?? null,
+        default_reply_to: optionalEmailValue(body.defaultReplyTo, "defaultReplyTo") ?? null,
+    };
+    const smtpPassword = optionalTextValue(body.smtpPassword, "smtpPassword", 1000);
+    if (smtpPassword) patch.smtp_password = smtpPassword;
+    return patch;
+}
+
 function templatePayload(body: JsonRecord): JsonRecord {
     const key = templateKey(body.key);
     if (key === "__new__") throw new HttpError(400, "key must be changed before saving");
@@ -469,6 +543,7 @@ function templatePayload(body: JsonRecord): JsonRecord {
     assertTemplateTokens(htmlBody, "htmlBody");
     const textBody = optionalTextValue(body.textBody, "textBody", 200_000) ?? "";
     assertTemplateTokens(textBody, "textBody");
+    const requiredTokens = normalizeTokenDefinitions(body.requiredTokens);
     return {
         key,
         name: requiredTextValue(body.name, "name", 200),
@@ -478,9 +553,43 @@ function templatePayload(body: JsonRecord): JsonRecord {
         subject,
         html_body: htmlBody,
         text_body: textBody || null,
-        required_tokens: normalizeTokenDefinitions(body.requiredTokens),
-        sample_data: sampleDataPayload(body),
+        required_tokens: requiredTokens,
+        sample_data: sampleDataPayload(body, sampleDataFromTokens(requiredTokens)),
         metadata: objectValue(body.metadata, "metadata", {}),
+    };
+}
+
+async function emailSettings(): Promise<EmailSettings> {
+    return settingsFromRow(await settingsRow());
+}
+
+function settingsFromRow(row: SettingsRow | null): EmailSettings {
+    return {
+        smtpHost: settingText(row?.smtp_host, "SMTP_HOST"),
+        smtpPort: settingInteger(row?.smtp_port, "SMTP_PORT"),
+        smtpSecure: settingBoolean(row?.smtp_secure, "SMTP_SECURE"),
+        smtpUser: settingText(row?.smtp_user, "SMTP_USER"),
+        smtpPassword: settingText(row?.smtp_password, "SMTP_PASSWORD"),
+        defaultFrom: settingText(row?.default_from, "SMTP_FROM"),
+        defaultReplyTo: settingText(row?.default_reply_to, "SMTP_REPLY_TO"),
+    };
+}
+
+function publicSettings(row: SettingsRow | null): JsonRecord {
+    const settings = settingsFromRow(row);
+    return {
+        provider: "supabase",
+        functionName: "cms-emailer",
+        cmsApiKeyConfigured: envStatus("CMS_EMAILER_API_KEY"),
+        smtpHost: settings.smtpHost,
+        smtpPort: settings.smtpPort === null ? "" : String(settings.smtpPort),
+        smtpSecure: settings.smtpSecure ? "true" : "false",
+        smtpUser: settings.smtpUser,
+        smtpPassword: "",
+        smtpPasswordConfigured: settings.smtpPassword ? "configured" : "missing",
+        defaultFrom: settings.defaultFrom,
+        defaultReplyTo: settings.defaultReplyTo,
+        updatedAt: row?.updated_at ?? "",
     };
 }
 
@@ -580,19 +689,19 @@ async function restError(response: Response): Promise<HttpError> {
     return new HttpError(response.status, message || `Supabase request failed with ${response.status}`);
 }
 
-async function emailTransport(): Promise<EmailTransport> {
+async function emailTransport(settings: EmailSettings): Promise<EmailTransport> {
     const injected = (globalThis as unknown as { __CMS_EMAILER_TRANSPORT__?: EmailTransport }).__CMS_EMAILER_TRANSPORT__;
     if (injected) return injected;
     const mod = await import("nodemailer") as unknown as { default?: { createTransport: (options: JsonRecord) => EmailTransport }; createTransport?: (options: JsonRecord) => EmailTransport };
     const createTransport = mod.createTransport ?? mod.default?.createTransport;
     if (!createTransport) throw new HttpError(500, "SMTP transport is not available");
     return createTransport({
-        host: requiredEnv("SMTP_HOST"),
-        port: Number(requiredEnv("SMTP_PORT")),
-        secure: envBoolean("SMTP_SECURE"),
+        host: requiredSetting(settings.smtpHost, "SMTP host"),
+        port: settings.smtpPort ?? missingSetting("SMTP port"),
+        secure: settings.smtpSecure,
         auth: {
-            user: requiredEnv("SMTP_USER"),
-            pass: requiredEnv("SMTP_PASSWORD"),
+            user: requiredSetting(settings.smtpUser, "SMTP user"),
+            pass: requiredSetting(settings.smtpPassword, "SMTP password"),
         },
     });
 }
@@ -613,13 +722,12 @@ function supabaseServiceKey(): string {
     return requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 }
 
-function defaultFromEmail(): string {
-    return emailField(requiredEnv("SMTP_FROM"), "SMTP_FROM");
+function defaultFromEmail(settings: EmailSettings): string {
+    return emailField(requiredSetting(settings.defaultFrom, "Default from"), "defaultFrom");
 }
 
-function defaultReplyTo(): string | undefined {
-    const value = Deno.env.get("SMTP_REPLY_TO")?.trim();
-    return value ? emailField(value, "SMTP_REPLY_TO") : undefined;
+function defaultReplyTo(settings: EmailSettings): string | undefined {
+    return settings.defaultReplyTo ? emailField(settings.defaultReplyTo, "defaultReplyTo") : undefined;
 }
 
 function requireCmsRequest(request: Request): void {
@@ -643,9 +751,25 @@ function envStatus(name: string): string {
     return optionalEnv(name) ? "configured" : "missing";
 }
 
-function envBoolean(name: string): boolean {
-    const value = Deno.env.get(name)?.trim().toLowerCase();
-    return value === "true" || value === "1";
+function settingText(value: unknown, envName: string): string {
+    return textOrEmpty(value) || optionalEnv(envName);
+}
+
+function settingInteger(value: unknown, envName: string): number | null {
+    return integerOrNull(value) ?? integerOrNull(optionalEnv(envName));
+}
+
+function settingBoolean(value: unknown, envName: string): boolean {
+    return booleanOrNull(value) ?? booleanOrNull(optionalEnv(envName)) ?? false;
+}
+
+function requiredSetting(value: string, label: string): string {
+    if (!value) throw new HttpError(500, `${label} is not configured`);
+    return value;
+}
+
+function missingSetting(label: string): never {
+    throw new HttpError(500, `${label} is not configured`);
 }
 
 function dataPayload(body: JsonRecord, fallback: JsonRecord): JsonRecord {
@@ -663,6 +787,27 @@ function sampleDataPayload(body: JsonRecord, fallback: JsonRecord = {}): JsonRec
     } catch {
         throw new HttpError(400, "sampleDataJson must be valid JSON");
     }
+}
+
+function sampleDataFromTokens(tokens: TokenDefinition[]): JsonRecord {
+    const data: JsonRecord = {};
+    for (const token of tokens) {
+        if (!token.sample) continue;
+        assignPath(data, token.name, token.sample);
+    }
+    return data;
+}
+
+function assignPath(target: JsonRecord, path: string, value: string): void {
+    const segments = path.split(".").filter(Boolean);
+    let current = target;
+    for (const segment of segments.slice(0, -1)) {
+        const existing = current[segment];
+        if (!isRecord(existing)) current[segment] = {};
+        current = current[segment] as JsonRecord;
+    }
+    const last = segments.at(-1);
+    if (last) current[last] = value;
 }
 
 function normalizeTokenDefinitions(value: unknown): TokenDefinition[] {
@@ -729,6 +874,20 @@ function enumField<T extends string>(value: unknown, field: string, allowed: rea
     return value as T;
 }
 
+function optionalIntegerValue(value: unknown, field: string, min: number, max: number): number | null {
+    if (value === undefined || value === null || String(value).trim() === "") return null;
+    const parsed = integerOrNull(value);
+    if (parsed === null || parsed < min || parsed > max) throw new HttpError(400, `${field} must be an integer between ${min} and ${max}`);
+    return parsed;
+}
+
+function optionalBooleanValue(value: unknown, field: string): boolean | null {
+    if (value === undefined || value === null || String(value).trim() === "") return null;
+    const parsed = booleanOrNull(value);
+    if (parsed === null) throw new HttpError(400, `${field} must be true or false`);
+    return parsed;
+}
+
 function requiredTextValue(value: unknown, field: string, max: number): string {
     const result = optionalTextValue(value, field, max);
     if (!result) throw new HttpError(400, `${field} is required`);
@@ -741,6 +900,25 @@ function optionalTextValue(value: unknown, field: string, max: number): string |
     if (!result) return undefined;
     if (result.length > max) throw new HttpError(400, `${field} is too long`);
     return result;
+}
+
+function textOrEmpty(value: unknown): string {
+    if (value === undefined || value === null) return "";
+    return String(value).trim();
+}
+
+function integerOrNull(value: unknown): number | null {
+    if (value === undefined || value === null || String(value).trim() === "") return null;
+    const parsed = Number(value);
+    return Number.isInteger(parsed) ? parsed : null;
+}
+
+function booleanOrNull(value: unknown): boolean | null {
+    if (typeof value === "boolean") return value;
+    const text = textOrEmpty(value).toLowerCase();
+    if (text === "true" || text === "1") return true;
+    if (text === "false" || text === "0") return false;
+    return null;
 }
 
 function optionalText(value: string | null, max: number): string | undefined {

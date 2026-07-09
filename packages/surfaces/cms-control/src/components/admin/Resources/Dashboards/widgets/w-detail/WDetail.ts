@@ -117,8 +117,12 @@ export class DashboardWDetail extends Component {
         const target = event.target as Element | null;
         if (target?.closest("[data-back]")) emitWidgetEvent(this, WIDGET_BACK_EVENT, {});
         const action = findActionTarget(event);
+        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
         if (action?.dataset.action) emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
             action: action.dataset.action,
+            detail: true,
+            widget: widget?.id,
+            row: this.value.rowKey,
             resource: this.currentResource(),
             fields: this.currentFields(),
         });

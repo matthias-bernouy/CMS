@@ -68,6 +68,33 @@ create table if not exists emailer.messages (
     )
 );
 
+create table if not exists emailer.settings (
+    id text primary key default 'default',
+    smtp_host text,
+    smtp_port integer,
+    smtp_secure boolean,
+    smtp_user text,
+    smtp_password text,
+    default_from text,
+    default_reply_to text,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    constraint emailer_settings_id_default check (id = 'default'),
+    constraint emailer_settings_smtp_port_valid check (
+        smtp_port is null or (smtp_port > 0 and smtp_port <= 65535)
+    ),
+    constraint emailer_settings_default_from_email check (
+        default_from is null or default_from = '' or default_from ~* '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    ),
+    constraint emailer_settings_default_reply_to_email check (
+        default_reply_to is null or default_reply_to = '' or default_reply_to ~* '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    )
+);
+
+insert into emailer.settings (id)
+values ('default')
+on conflict (id) do nothing;
+
 create unique index if not exists emailer_messages_idempotency_key_idx
     on emailer.messages(idempotency_key)
     where idempotency_key is not null;
@@ -102,10 +129,17 @@ create trigger emailer_messages_set_updated_at
 before update on emailer.messages
 for each row execute function emailer.set_updated_at();
 
+drop trigger if exists emailer_settings_set_updated_at on emailer.settings;
+create trigger emailer_settings_set_updated_at
+before update on emailer.settings
+for each row execute function emailer.set_updated_at();
+
 alter table emailer.templates enable row level security;
 alter table emailer.templates force row level security;
 alter table emailer.messages enable row level security;
 alter table emailer.messages force row level security;
+alter table emailer.settings enable row level security;
+alter table emailer.settings force row level security;
 
 revoke all on all tables in schema emailer from public;
 revoke all on all tables in schema emailer from anon;
@@ -135,5 +169,7 @@ comment on table emailer.templates is
     'Transactional templates rendered by cms-emailer.';
 comment on table emailer.messages is
     'Delivery audit rows written by cms-emailer.';
+comment on table emailer.settings is
+    'Provider-owned SMTP settings used by cms-emailer.';
 
 commit;

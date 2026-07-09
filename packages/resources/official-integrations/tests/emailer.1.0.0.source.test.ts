@@ -62,12 +62,23 @@ describe("emailer 1.0.0 source", () => {
     test("installs source, dashboard, connector, and system send endpoint", async () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:emailer");
-        const dashboard = await harness.dashboards.getDashboard("emailer-emailer");
+        const templatesDashboard = await harness.dashboards.getDashboard("emailer-templates");
+        const settingsDashboard = await harness.dashboards.getDashboard("emailer-settings");
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
-        expect(dashboard).toBeTruthy();
-        expect(validateDashboard(dashboard!, { source })).toEqual([]);
+        expect(templatesDashboard).toBeTruthy();
+        expect(settingsDashboard).toBeTruthy();
+        expect(validateDashboard(templatesDashboard!, { source })).toEqual([]);
+        expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
+        const dashboardJson = JSON.stringify(templatesDashboard);
+        const settingsJson = JSON.stringify(settingsDashboard);
+        expect(dashboardJson).toContain("newTemplate");
+        expect(dashboardJson).toContain("sendTestEmail");
+        expect(dashboardJson).not.toContain("messagesTable");
+        expect(dashboardJson).not.toContain("textBody");
+        expect(dashboardJson).not.toContain("sampleDataJson");
+        expect(settingsJson).toContain("emailerSettings");
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer"]);
         expect(harness.deployment?.functions.map(fn => fn.name)).toEqual(["cms-emailer"]);
         expect(String(harness.deployment?.functions[0]?.secrets?.CMS_EMAILER_API_KEY)).toStartWith("cms_em_");
@@ -85,6 +96,78 @@ describe("emailer 1.0.0 source", () => {
         expect(sendEndpoint?.access).toEqual({ mode: "system" });
     });
 
+    test("exposes provider settings and template defaults without leaking SMTP secrets", async () => {
+        const harness = await createHarness();
+        const settings = await okJson(await sourceRequest(harness, "getSettings"));
+        const defaults = await okJson(await sourceRequest(harness, "getTemplate", { key: "__new__" }));
+        const emptyDefaults = await okJson(await sourceRequest(harness, "getTemplate", { key: "" }));
+
+        expect(settings).toMatchObject({
+            provider: "supabase",
+            functionName: "cms-emailer",
+            smtpHost: "smtp.example.test",
+            smtpPort: "587",
+            smtpSecure: "false",
+            smtpUser: "smtp-user",
+            smtpPasswordConfigured: "configured",
+            smtpPassword: "",
+            defaultFrom: "no-reply@example.test",
+            defaultReplyTo: "support@example.test",
+        });
+        expect(defaults).toMatchObject({
+            key: "__new__",
+            status: "draft",
+            htmlBody: "<p>Hello {{ user.name }}</p>",
+            testRecipient: "",
+        });
+        expect(emptyDefaults).toMatchObject({ key: "__new__", status: "draft" });
+    });
+
+    test("updates provider SMTP settings without exposing the saved password", async () => {
+        const harness = await createHarness();
+        const updated = await okJson(await sourceJson(harness, "updateSettings", {
+            smtpHost: "smtp.saved.test",
+            smtpPort: "2525",
+            smtpSecure: "true",
+            smtpUser: "saved-user",
+            smtpPassword: "saved-password",
+            defaultFrom: "saved@example.test",
+            defaultReplyTo: "reply@example.test",
+        }));
+        const afterBlankPasswordSave = await okJson(await sourceJson(harness, "updateSettings", {
+            smtpHost: "smtp.saved.test",
+            smtpPort: "2525",
+            smtpSecure: "true",
+            smtpUser: "saved-user",
+            smtpPassword: "",
+            defaultFrom: "saved@example.test",
+            defaultReplyTo: "reply@example.test",
+        }));
+        const settings = await okJson(await sourceRequest(harness, "getSettings"));
+
+        expect(updated).toMatchObject({
+            smtpHost: "smtp.saved.test",
+            smtpPort: "2525",
+            smtpSecure: "true",
+            smtpUser: "saved-user",
+            smtpPassword: "",
+            smtpPasswordConfigured: "configured",
+            defaultFrom: "saved@example.test",
+            defaultReplyTo: "reply@example.test",
+        });
+        expect(afterBlankPasswordSave).toMatchObject({ smtpPassword: "", smtpPasswordConfigured: "configured" });
+        expect(settings).toMatchObject({ smtpHost: "smtp.saved.test", smtpPassword: "", smtpPasswordConfigured: "configured" });
+        expect(harness.rest.rows("settings")[0]).toMatchObject({
+            smtp_host: "smtp.saved.test",
+            smtp_port: 2525,
+            smtp_secure: true,
+            smtp_user: "saved-user",
+            smtp_password: "saved-password",
+            default_from: "saved@example.test",
+            default_reply_to: "reply@example.test",
+        });
+    });
+
     test("writes, renders, sends, logs, and archives templates through the installed CMS source", async () => {
         const harness = await createHarness();
         const sent: JsonRecord[] = [];
@@ -96,6 +179,16 @@ describe("emailer 1.0.0 source", () => {
         };
 
         const saved = await okJson(await sourceJson(harness, "upsertTemplate", welcomeTemplate()));
+        const created = await okJson(await sourceJson(harness, "upsertTemplate", {
+            key: "billing.receipt",
+            name: "Receipt email",
+            status: "draft",
+            subject: "Receipt {{ order.number }}",
+            htmlBody: "<p>Receipt {{ order.number }}</p>",
+            requiredTokens: [
+                { name: "order.number", description: "Order number", sample: "A-100" },
+            ],
+        }));
         const listed = await okJson(await sourceRequest(harness, "listTemplates", { q: "welcome" }));
         const fetched = await okJson(await sourceRequest(harness, "getTemplate", { key: "auth.welcome" }));
         const rendered = await okJson(await sourceJson(harness, "renderTemplate", {
@@ -105,6 +198,10 @@ describe("emailer 1.0.0 source", () => {
         const testMessage = await okJson(await sourceJson(harness, "sendTestEmail", {
             key: "auth.welcome",
             toEmail: "TEST@Example.COM",
+        }));
+        const createdTestMessage = await okJson(await sourceJson(harness, "sendTestEmail", {
+            key: "billing.receipt",
+            toEmail: "receipt@example.test",
         }));
         const systemMessage = await okJson(await sourceJson(harness, "sendTemplateEmail", {
             key: "auth.welcome",
@@ -116,7 +213,8 @@ describe("emailer 1.0.0 source", () => {
         const archived = await okJson(await sourceJson(harness, "archiveTemplate", {}, { key: "auth.welcome" }));
 
         expect(saved).toMatchObject({ key: "auth.welcome", name: "Welcome email", status: "active" });
-        expect(listed.items).toEqual([expect.objectContaining({ key: "auth.welcome" })]);
+        expect(created).toMatchObject({ key: "billing.receipt", name: "Receipt email", status: "draft" });
+        expect(listed.items).toContainEqual(expect.objectContaining({ key: "auth.welcome" }));
         expect(String(fetched.sampleDataJson)).toContain("Ada");
         expect(rendered).toMatchObject({
             key: "auth.welcome",
@@ -125,15 +223,20 @@ describe("emailer 1.0.0 source", () => {
             textBody: "Hello Bea",
         });
         expect(testMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-1" });
-        expect(systemMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-2", idempotencyKey: "welcome-1" });
-        expect(messages.total).toBe(2);
-        expect(sent).toHaveLength(2);
+        expect(createdTestMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-2" });
+        expect(systemMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-3", idempotencyKey: "welcome-1" });
+        expect(messages.total).toBe(3);
+        expect(sent).toHaveLength(3);
         expect(sent[0]).toMatchObject({
             to: ["test@example.com"],
             subject: "Welcome Ada",
             html: "<p>Hello Ada</p>",
         });
         expect(sent[1]).toMatchObject({
+            to: ["receipt@example.test"],
+            subject: "Receipt A-100",
+        });
+        expect(sent[2]).toMatchObject({
             to: ["buyer@example.test"],
             subject: "Welcome Bea",
         });
@@ -278,6 +381,18 @@ class EmailerRestMock {
     private readonly tables: Record<string, JsonRecord[]> = {
         templates: [],
         messages: [],
+        settings: [{
+            id: "default",
+            smtp_host: null,
+            smtp_port: null,
+            smtp_secure: null,
+            smtp_user: null,
+            smtp_password: null,
+            default_from: null,
+            default_reply_to: null,
+            created_at: "2026-07-09T10:00:00.000Z",
+            updated_at: "2026-07-09T10:00:00.000Z",
+        }],
     };
 
     async fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -332,6 +447,18 @@ class EmailerRestMock {
             const index = rows.findIndex(row => same(row.key, value.key));
             const next = {
                 ...(index >= 0 ? rows[index] : { created_at: now }),
+                ...value,
+                updated_at: now,
+            };
+            if (index >= 0) rows[index] = next;
+            else rows.push(next);
+            return { ...next };
+        }
+        if (table === "settings") {
+            const id = String(value.id ?? "default");
+            const index = rows.findIndex(row => same(row.id, id));
+            const next = {
+                ...(index >= 0 ? rows[index] : { id, created_at: now }),
                 ...value,
                 updated_at: now,
             };
