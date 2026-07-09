@@ -9944,7 +9944,7 @@ p {
             Functions
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item disabled>
+        <w13c-lateral-menu-item data-route="triggers">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="6" cy="12" r="2.5" />
@@ -10634,6 +10634,7 @@ ${followMessage}`)) {
   // src/components/admin/CredentialSelect/CredentialSelect.ts
   class CredentialSelect extends HTMLElement {
     static formAssociated = true;
+    static observedAttributes = ["value"];
     _refs;
     _internals;
     _value = "";
@@ -10647,6 +10648,15 @@ ${followMessage}`)) {
     constructor() {
       super();
       this._internals = this.attachInternals();
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (name !== "value" || oldValue === newValue)
+        return;
+      const value = newValue ?? "";
+      if (this._refs)
+        setValue(this, value);
+      else
+        this._value = value;
     }
     connectedCallback() {
       if (!this.shadowRoot) {
@@ -11139,7 +11149,7 @@ cms-endpoints-input .ep-add:hover {
     ]
   };
 
-  // ../../features/cms-sources/src/core/validateSource.ts
+  // ../../features/cms-sources/src/core/sourceEndpointValidation.ts
   var RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
   function isValidResponseStatus(status) {
     return status === "default" || RESPONSE_STATUS.test(status);
@@ -12955,6 +12965,10 @@ w13c-lateral-menu-item {
     display: block;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 .shell-detail {
     --shell-detail-main-width: var(--w-detail-main-width, 600px);
     --shell-detail-aside-width: var(--w-detail-aside-width, 285px);
@@ -12962,6 +12976,7 @@ w13c-lateral-menu-item {
     display: grid;
     gap: var(--shell-detail-gap);
     width: min(100%, calc(var(--shell-detail-main-width) + var(--shell-detail-aside-width) + var(--shell-detail-gap)));
+    min-width: 0;
 }
 
 .shell-detail-header {
@@ -13031,9 +13046,10 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 
 .shell-detail-layout {
     display: grid;
-    grid-template-columns: var(--shell-detail-main-width) var(--shell-detail-aside-width);
+    grid-template-columns: minmax(0, var(--shell-detail-main-width)) minmax(0, var(--shell-detail-aside-width));
     gap: var(--shell-detail-gap);
     align-items: start;
+    min-width: 0;
 }
 
 .shell-detail-main,
@@ -13044,11 +13060,11 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 }
 
 .shell-detail-main {
-    width: var(--shell-detail-main-width);
+    width: 100%;
 }
 
 .shell-detail-aside {
-    width: var(--shell-detail-aside-width);
+    width: 100%;
 }
 
 .shell-detail-main > slot,
@@ -13056,6 +13072,12 @@ slot[name="actions"]::slotted(p9r-action-menu) {
     display: grid;
     gap: 16px;
     min-width: 0;
+}
+
+slot[name="main"]::slotted(*),
+slot[name="aside"]::slotted(*) {
+    min-width: 0;
+    max-width: 100%;
 }
 
 @media (max-width: 880px) {
@@ -13833,8 +13855,11 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/domain.ts
-  function widgetsForSelection(dashboard, detail) {
-    return detail ? detailWidgetsFor(dashboard.views, detail.collection) : mainWidgetsFor(dashboard.views);
+  function widgetsForSelection(dashboard, detail, projections = []) {
+    if (!detail)
+      return mainWidgetsFor(dashboard.views);
+    const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
+    return detailWidgetsFor(dashboard.views, detail.collection).map((widget) => relationWidgets.length ? { ...widget, relationWidgets } : widget);
   }
   function detailKey(collection, row) {
     return `${collection}:${row}`;
@@ -13868,6 +13893,25 @@ p {
   }
   function isDetailWidget(widget) {
     return widget.widget === "w-detail";
+  }
+  function relationWidgetsFor(dashboard, detail, projections) {
+    return projections.filter((projection) => projection.dashboardId === dashboard.id && projection.viewId === detail.collection && projection.widget === "table").map((projection) => ({
+      widget: "w-relation-table",
+      id: projection.sectionId ?? `${projection.relationId}Relation`,
+      ...projection.title ? { title: projection.title } : {},
+      placement: projection.placement === "side" ? "aside" : "main",
+      relationId: projection.relationId,
+      fromId: detail.row,
+      ...projection.pageSize ? { pageSize: projection.pageSize } : {},
+      rowKey: projection.rowKey ?? "id",
+      columns: projection.columns?.length ? projection.columns : [{
+        id: "id",
+        label: "ID",
+        path: projection.rowKey ?? "id",
+        primary: true
+      }],
+      ...projection.actions?.length ? { actions: projection.actions } : {}
+    }));
   }
 
   // src/components/admin/Resources/Dashboards/runtime/expressions.ts
@@ -13996,7 +14040,8 @@ p {
     });
   }
   function sourceUrl(sourceId, ref, vars) {
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
     for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
       url.searchParams.set(key, value);
     return url;
@@ -14742,6 +14787,12 @@ p {
     background: #fff;
 }
 
+:host([embedded]) .w-table-shell {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
 .w-table-header {
     display: flex;
     align-items: center;
@@ -14795,6 +14846,10 @@ small,
     background: #f7f8f7;
 }
 
+:host([embedded]) .w-table-head {
+    border-radius: 6px 6px 0 0;
+}
+
 .w-table-head span {
     color: #3d4a46;
     font-size: 12px;
@@ -14821,6 +14876,10 @@ slot {
     margin: 0;
     padding: 22px 16px;
     color: #66736f;
+}
+
+:host([embedded]) .w-table-empty {
+    padding-inline: 0;
 }
 `;
 
@@ -14892,7 +14951,7 @@ slot {
     render() {
       setText(this.shadowRoot, "[data-title]", this.value.title);
       setText(this.shadowRoot, "[data-subtitle]", this.value.subtitle ?? "");
-      this.query("[data-header]").hidden = !this.value.subtitle && !this.value.actions?.length;
+      this.query("[data-header]").hidden = !this.value.title && !this.value.subtitle && !this.value.actions?.length;
       this.renderActions();
       this.renderColumns();
       this.syncRows();
@@ -15023,7 +15082,13 @@ slot {
 
   // src/components/admin/Resources/Dashboards/runtime/lookups.ts
   async function detailLookupOptions(sourceId, widget, resource, fields) {
-    const entries = await Promise.all(detailFields(widget).filter(isLookupField).map(async (field) => [field.id, await lookupOptions(sourceId, field, resource, fields)]));
+    const entries = await Promise.all(detailFields(widget).filter(isLookupField).map(async (field) => {
+      try {
+        return [field.id, await lookupOptions(sourceId, field, resource, fields)];
+      } catch {
+        return [field.id, []];
+      }
+    }));
     return Object.fromEntries(entries);
   }
   function detailFields(widget) {
@@ -16078,7 +16143,9 @@ p9r-token-input {
     <span slot="title" data-title></span>
     <div slot="actions" class="w-detail-actions" data-actions></div>
     <div slot="main" class="w-detail-main" data-main></div>
+    <slot name="main-extra" slot="main"></slot>
     <div slot="aside" class="w-detail-aside" data-aside></div>
+    <slot name="aside-extra" slot="aside"></slot>
 </cms-shell-detail>
 
 <template data-section-template>
@@ -16666,18 +16733,71 @@ p9r-token-input {
     element.setAttribute("data-source-json", "{{ dashboardData | json }}");
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
+    for (const relationWidget of widget.relationWidgets ?? []) {
+      element.append(relationDetailSectionElement(relationWidget));
+    }
+    wrapper.append(element);
+    return wrapper;
+  }
+  function relationDetailSectionElement(widget) {
+    const section = document.createElement("cms-detail-section");
+    section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
+    section.setAttribute("heading", widget.title ?? "Related items");
+    if (widget.placement === "aside")
+      section.setAttribute("density", "compact");
+    section.append(relationTableElement(widget));
+    return section;
+  }
+  function relationTableElement(widget) {
+    const tableWidget = {
+      widget: "w-table",
+      id: widget.id,
+      source: {
+        endpoint: widget.relationId,
+        itemsPath: "items"
+      },
+      rowKey: widget.rowKey,
+      columns: widget.columns,
+      ...widget.pageSize ? { pageSize: widget.pageSize } : {},
+      ...widget.actions?.length ? {
+        actions: widget.actions.map((action) => ({
+          id: action.id,
+          label: action.label,
+          ...action.icon ? { icon: action.icon } : {},
+          ...action.tone ? { tone: action.tone } : {},
+          ...action.placement ? { placement: action.placement } : {}
+        }))
+      } : {}
+    };
+    const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
+    const element = document.createElement("cms-dashboard-w-table");
+    element.setAttribute("data-config-json", jsonAttr(tableWidget));
+    element.toggleAttribute("embedded", true);
+    element.append(tableRowsTemplate(tableWidget));
     wrapper.append(element);
     return wrapper;
   }
   function sourceWrapper(sourceId, ref, vars, alias) {
+    return urlSourceWrapper(sourceUrl2(sourceId, ref, vars), alias);
+  }
+  function urlSourceWrapper(url, alias) {
     const wrapper = document.createElement("div");
-    wrapper.setAttribute("cms-source", `${sourceUrl2(sourceId, ref, vars)} as ${alias}`);
+    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
     return wrapper;
   }
   function sourceUrl2(sourceId, ref, vars) {
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
     for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
       url.searchParams.set(key, value);
+    return `${url.pathname}${url.search}`;
+  }
+  function relationPageUrl(widget) {
+    const url = new URL(route("/api/relations/page"), window.location.origin);
+    url.searchParams.set("relation", widget.relationId);
+    url.searchParams.set("fromId", widget.fromId);
+    url.searchParams.set("limit", String(widget.pageSize ?? 25));
+    url.searchParams.set("offset", "0");
     return `${url.pathname}${url.search}`;
   }
   function jsonAttr(value) {
@@ -16724,7 +16844,7 @@ p9r-token-input {
     const selectedRows = new Map;
     if (detail)
       selectedRows.set(detail.collection, detail.row);
-    const widgets = widgetsForSelection(dashboard, detail);
+    const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
     mountDashboardWidgets(query(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
@@ -17408,6 +17528,8 @@ p9r-token-input {
   function typeLabel(type) {
     if (type === "sourceOverlay")
       return "Source overlay";
+    if (type === "dashboardRelation")
+      return "Dashboard relation";
     return type[0].toUpperCase() + type.slice(1);
   }
   // src/components/admin/Resources/Integrations/ui/resources/icons.ts
@@ -17437,6 +17559,8 @@ p9r-token-input {
       return "grid";
     if (normalized === "function")
       return "spark";
+    if (normalized === "trigger")
+      return "share";
     if (normalized === "secret")
       return "key";
     if (normalized === "connector")
@@ -17537,8 +17661,24 @@ p9r-token-input {
     if (artifact.type === "function") {
       return { type: "Function", label: artifact.function.meta?.name ?? artifact.function.id, detail: `${artifact.function.method} ${artifact.function.id}` };
     }
+    if (artifact.type === "trigger") {
+      const event = artifact.trigger.event;
+      const source = event.source ?? "*";
+      const endpoint = event.endpoint ?? "*";
+      return { type: "Trigger", label: artifact.trigger.label ?? artifact.trigger.id, detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}` };
+    }
     if (artifact.type === "sourceOverlay") {
       return { type: "Source overlay", label: artifact.overlay.label ?? artifact.overlay.id, detail: `Overlay id: ${artifact.overlay.id}` };
+    }
+    if (artifact.type === "relation") {
+      return { type: "Relation", label: artifact.relation.label ?? artifact.relation.id, detail: `Relation id: ${artifact.relation.id}` };
+    }
+    if (artifact.type === "dashboardRelation") {
+      return {
+        type: "Dashboard relation",
+        label: artifact.projection.title ?? artifact.projection.relationId,
+        detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`
+      };
     }
     return { type: "Source", label: artifact.source.meta?.name ?? artifact.source.id, detail: `Source id: ${artifact.source.id}` };
   }
@@ -18500,8 +18640,229 @@ button[slot="back"]:disabled {
   if (!customElements.get("cms-integrations-admin"))
     customElements.define("cms-integrations-admin", IntegrationBrowser);
 
+  // src/components/admin/Resources/Triggers/template.html
+  var template_default12 = `<section class="triggers-surface">
+    <div data-state="loading" class="state">Loading triggers...</div>
+    <div data-state="error" class="state" hidden>Failed to load triggers.</div>
+    <div data-state="empty" class="state" hidden>No triggers installed.</div>
+    <div data-state="list" class="table-wrap" hidden>
+        <table>
+            <thead>
+                <tr>
+                    <th>Enabled</th>
+                    <th>Trigger</th>
+                    <th>Event</th>
+                    <th>Function</th>
+                    <th>Mode</th>
+                    <th>Last run</th>
+                </tr>
+            </thead>
+            <tbody data-role="rows"></tbody>
+        </table>
+    </div>
+</section>
+`;
+
+  // src/components/admin/Resources/Triggers/style.css
+  var style_default10 = `.triggers-surface {
+    max-width: 1120px;
+}
+
+.state {
+    color: var(--p9r-color-muted, #64748b);
+    padding: 1rem 0;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--p9r-color-border, #e2e8f0);
+    border-radius: 8px;
+    background: var(--p9r-color-surface, #fff);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .875rem;
+}
+
+th,
+td {
+    padding: .75rem .875rem;
+    text-align: left;
+    border-bottom: 1px solid var(--p9r-color-border, #e2e8f0);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+th {
+    color: var(--p9r-color-muted, #64748b);
+    font-weight: 600;
+    font-size: .75rem;
+}
+
+tr:last-child td {
+    border-bottom: 0;
+}
+
+.primary {
+    color: var(--p9r-color-text, #0f172a);
+    font-weight: 600;
+}
+
+.muted {
+    color: var(--p9r-color-muted, #64748b);
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    padding: 0 .5rem;
+    border-radius: 999px;
+    background: var(--p9r-color-muted-bg, #f1f5f9);
+    color: var(--p9r-color-muted, #475569);
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.status.ok {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.status.error {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+}
+`;
+
+  // src/components/admin/Resources/Triggers/api.ts
+  function basePath3() {
+    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
+    return raw.replace(/\/+$/, "");
+  }
+  function route3(path) {
+    return `${basePath3()}${path}`;
+  }
+  async function fetchTriggers() {
+    const response = await fetch(route3("/api/triggers"), { headers: { Accept: "application/json" } });
+    if (!response.ok)
+      throw new Error(await response.text());
+    return response.json();
+  }
+  async function setTriggerEnabled(id2, enabled) {
+    const response = await fetch(route3("/api/triggers/enabled"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id2, enabled })
+    });
+    if (!response.ok)
+      throw new Error(await response.text());
+    return response.json();
+  }
+
+  // src/components/admin/Resources/Triggers/TriggersAdmin.ts
+  class TriggersAdmin extends HTMLElement {
+    initialized = false;
+    rows = null;
+    connectedCallback() {
+      if (!this.initialized) {
+        this.mount();
+        this.initialized = true;
+      }
+      this.reload();
+    }
+    mount() {
+      const style = document.createElement("style");
+      style.textContent = style_default10;
+      const body = document.createElement("template");
+      body.innerHTML = template_default12;
+      this.replaceChildren(style, body.content.cloneNode(true));
+      this.rows = this.querySelector("[data-role='rows']");
+    }
+    async reload() {
+      this.show("loading");
+      try {
+        const triggers = await fetchTriggers();
+        this.renderRows(triggers);
+        this.show(triggers.length ? "list" : "empty");
+      } catch {
+        this.show("error");
+      }
+    }
+    renderRows(triggers) {
+      this.rows?.replaceChildren(...triggers.map((trigger) => this.row(trigger)));
+    }
+    row(trigger) {
+      const row = document.createElement("tr");
+      const enabled = document.createElement("input");
+      enabled.type = "checkbox";
+      enabled.checked = trigger.enabled;
+      enabled.setAttribute("aria-label", `Enable ${trigger.label ?? trigger.id}`);
+      enabled.addEventListener("change", () => void this.toggle(trigger.id, enabled));
+      row.append(cell(enabled), cell(textBlock(trigger.label ?? trigger.id, trigger.id)), cell(`${trigger.event.phase} ${trigger.event.source ?? "*"}.${trigger.event.endpoint ?? "*"}`), cell(trigger.function.id), cell(trigger.mode ?? "async"), cell(lastRun(trigger)));
+      return row;
+    }
+    async toggle(id2, input) {
+      input.disabled = true;
+      try {
+        await setTriggerEnabled(id2, input.checked);
+      } catch {
+        input.checked = !input.checked;
+      } finally {
+        input.disabled = false;
+      }
+    }
+    show(state) {
+      for (const el of Array.from(this.querySelectorAll("[data-state]"))) {
+        el.hidden = el.dataset.state !== state;
+      }
+    }
+  }
+  if (!customElements.get("cms-triggers-admin"))
+    customElements.define("cms-triggers-admin", TriggersAdmin);
+  function cell(content) {
+    const td2 = document.createElement("td");
+    if (typeof content === "string")
+      td2.textContent = content;
+    else
+      td2.append(content);
+    return td2;
+  }
+  function textBlock(primary, secondary) {
+    const wrap = document.createElement("div");
+    const top = document.createElement("div");
+    const bottom = document.createElement("div");
+    top.className = "primary";
+    bottom.className = "muted";
+    top.textContent = primary;
+    bottom.textContent = secondary;
+    wrap.append(top, bottom);
+    return wrap;
+  }
+  function lastRun(trigger) {
+    const badge3 = document.createElement("span");
+    badge3.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
+    badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} - ${formatDate(trigger.lastRun.at)}` : "Never";
+    if (trigger.lastRun?.error)
+      badge3.title = trigger.lastRun.error;
+    return badge3;
+  }
+  function formatDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime()))
+      return value;
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default12 = `<header class="topbar">
+  var template_default13 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -18552,7 +18913,7 @@ button[slot="back"]:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/style.css
-  var style_default10 = `:host {
+  var style_default11 = `:host {
     display: block;
     min-width: 0;
     border-bottom: 1px solid var(--editor-v2-border);
@@ -18811,7 +19172,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template3 = document.createElement("template");
-  template3.innerHTML = `<style>${String(style_default10)}</style>${String(template_default12)}`;
+  template3.innerHTML = `<style>${String(style_default11)}</style>${String(template_default13)}`;
   var TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
   var TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
   var TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
@@ -18977,7 +19338,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default13 = `<aside class="panel">
+  var template_default14 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -18993,7 +19354,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -19093,7 +19454,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(style_default11)}</style>${String(template_default13)}`;
+  template4.innerHTML = `<style>${String(style_default12)}</style>${String(template_default14)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -19604,7 +19965,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/template.html
-  var template_default14 = `<div class="backdrop" hidden>
+  var template_default15 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -19635,7 +19996,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/style.css
-  var style_default12 = `:host {
+  var style_default13 = `:host {
     display: contents;
 }
 
@@ -20137,7 +20498,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/DataSourcePicker.ts
   var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default12)}</style>${String(template_default14)}`;
+  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default15)}`;
   var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
   var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 
@@ -20333,7 +20694,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/template.html
-  var template_default15 = `<div class="backdrop" hidden>
+  var template_default16 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -20352,7 +20713,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: contents;
 }
 
@@ -20542,7 +20903,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/ConditionPicker.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(style_default13)}</style>${String(template_default15)}`;
+  template6.innerHTML = `<style>${String(style_default14)}</style>${String(template_default16)}`;
   var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
   var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
   var STATES = ["loaded", "loading", "empty", "error"];
@@ -20724,7 +21085,7 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/template.html
-  var template_default16 = `<div class="backdrop" hidden>
+  var template_default17 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -20754,7 +21115,7 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/style.css
-  var style_default14 = `:host {
+  var style_default15 = `:host {
     display: contents;
 }
 
@@ -21234,7 +21595,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default14)}</style>${String(template_default16)}`;
+  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default17)}`;
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   class BlockPickerModal extends HTMLElement {
@@ -22936,13 +23297,13 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default17 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default18 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default15 = `:host {
+  var style_default16 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -23084,12 +23445,12 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template8 = document.createElement("template");
   template8.innerHTML = `<style>${[
-    style_default15,
+    style_default16,
     sourceStates_default,
     badges_default,
     context_default
   ].map((css) => String(css)).join(`
-`)}</style>${String(template_default17)}`;
+`)}</style>${String(template_default18)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -23131,7 +23492,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default18 = `<main class="canvas">
+  var template_default19 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -23142,7 +23503,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -23229,7 +23590,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default16)}</style>${String(template_default18)}`;
+  template9.innerHTML = `<style>${String(style_default17)}</style>${String(template_default19)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -23380,7 +23741,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default19 = `<section class="section">
+  var template_default20 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -23392,7 +23753,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default17 = `:host {
+  var style_default18 = `:host {
     display: block;
 }
 
@@ -23481,7 +23842,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template10 = createFieldTemplate(template_default19, style_default17);
+  var template10 = createFieldTemplate(template_default20, style_default18);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -23505,7 +23866,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default20 = `<div class="field">
+  var template_default21 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -23526,7 +23887,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -23954,7 +24315,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template11 = createFieldTemplate(template_default20, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
+  var template11 = createFieldTemplate(template_default21, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -24014,7 +24375,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default21 = `<div class="field">
+  var template_default22 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -24035,7 +24396,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -24107,7 +24468,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template12 = createFieldTemplate(template_default21, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default22, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -24404,7 +24765,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default22 = `<div class="field">
+  var template_default23 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -24421,7 +24782,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -24654,7 +25015,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template13 = document.createElement("template");
-  template13.innerHTML = `<style>${String(style_default20)}</style>${String(template_default22)}`;
+  template13.innerHTML = `<style>${String(style_default21)}</style>${String(template_default23)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -24781,7 +25142,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default23 = `<label class="field">
+  var template_default24 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -24789,7 +25150,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -24893,7 +25254,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template14 = createFieldTemplate(template_default23, style_default21);
+  var template14 = createFieldTemplate(template_default24, style_default22);
 
   class Select extends HTMLElement {
     constructor() {
@@ -24930,7 +25291,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default24 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default25 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -24940,7 +25301,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -25053,7 +25414,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template15 = createFieldTemplate(template_default24, style_default22);
+  var template15 = createFieldTemplate(template_default25, style_default23);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -25070,13 +25431,13 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default25 = `<div class="segmented">
+  var template_default26 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -25122,7 +25483,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template16 = createFieldTemplate(template_default25, style_default23);
+  var template16 = createFieldTemplate(template_default26, style_default24);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -25135,7 +25496,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default26 = `<div class="page-link">
+  var template_default27 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -25172,7 +25533,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -25471,7 +25832,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default27 = `<div class="backdrop" hidden>
+  var template_default28 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -25504,7 +25865,7 @@ code {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     color: var(--editor-v2-text, #111);
     font: 12px/1.35 system-ui, sans-serif;
 }
@@ -25799,14 +26160,14 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
-  function fileUrl(basePath3, id2) {
-    return `${basePath3}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+  function fileUrl(basePath4, id2) {
+    return `${basePath4}/.cms/files/by-id/${encodeURIComponent(id2)}`;
   }
-  function fileDetail(basePath3, item) {
+  function fileDetail(basePath4, item) {
     return {
       id: item.id,
       label: item.name,
-      src: fileUrl(basePath3, item.id),
+      src: fileUrl(basePath4, item.id),
       mimeType: item.mimeType
     };
   }
@@ -25851,7 +26212,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
   var template17 = document.createElement("template");
-  template17.innerHTML = `<style>${String(style_default25)}</style>${String(template_default27)}`;
+  template17.innerHTML = `<style>${String(style_default26)}</style>${String(template_default28)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -26161,7 +26522,7 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(style_default24)}</style>${String(template_default26)}`;
+  template18.innerHTML = `<style>${String(style_default25)}</style>${String(template_default27)}`;
 
   class PageLink extends HTMLElement {
     _pages = [];
@@ -26502,13 +26863,13 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default28 = `<div class="settings-view">
+  var template_default29 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -26796,7 +27157,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(style_default26)}</style>${String(template_default28)}`;
+  template19.innerHTML = `<style>${String(style_default27)}</style>${String(template_default29)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -27483,7 +27844,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/template.html
-  var template_default29 = `<div class="backdrop" hidden>
+  var template_default30 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -27503,7 +27864,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     display: contents;
 }
 
@@ -27846,7 +28207,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/RepeatPicker.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(style_default27)}</style>${String(template_default29)}`;
+  template20.innerHTML = `<style>${String(style_default28)}</style>${String(template_default30)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -30969,7 +31330,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default30 = `<div class="shell">
+  var template_default31 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -31031,7 +31392,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -31160,11 +31521,11 @@ label {
   function createShellTemplate() {
     const template21 = document.createElement("template");
     template21.innerHTML = `<style>${[
-      style_default28,
+      style_default29,
       pageSettings_default,
       pageSettingsTags_default
     ].map((css) => String(css)).join(`
-`)}</style>${String(template_default30)}`;
+`)}</style>${String(template_default31)}`;
     return template21;
   }
 
@@ -31672,7 +32033,7 @@ label {
   });
 
   // src/components/media/CardMedia/template.html
-  var template_default31 = `<div class="card">
+  var template_default32 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -31694,7 +32055,7 @@ label {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default29 = `:host {
+  var style_default30 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -31819,8 +32180,8 @@ label {
   class CardMedia extends A {
     constructor() {
       super({
-        css: style_default29,
-        template: template_default31
+        css: style_default30,
+        template: template_default32
       });
     }
   }
@@ -31829,7 +32190,7 @@ label {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default32 = `<div class="backdrop" id="backdrop">
+  var template_default33 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -31868,7 +32229,7 @@ label {
 `;
 
   // src/components/media/CropSystem/style.css
-  var style_default30 = `:host {
+  var style_default31 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -32070,8 +32431,8 @@ label {
   class CropSystem extends A {
     constructor() {
       super({
-        css: style_default30,
-        template: template_default32
+        css: style_default31,
+        template: template_default33
       });
     }
     connectedCallback() {
@@ -32108,7 +32469,7 @@ label {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default33 = `<div class="backdrop" id="backdrop">
+  var template_default34 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -32150,7 +32511,7 @@ label {
 `;
 
   // src/components/media/DetailMedia/style.css
-  var style_default31 = `:host {
+  var style_default32 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -32363,8 +32724,8 @@ label {
   class DetailMedia extends A {
     constructor() {
       super({
-        css: style_default31,
-        template: template_default33
+        css: style_default32,
+        template: template_default34
       });
     }
     connectedCallback() {
@@ -32396,7 +32757,7 @@ label {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default34 = `<div class="toolbar">
+  var template_default35 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -32458,7 +32819,7 @@ label {
 `;
 
   // src/components/media/GridMedia/view/style.css
-  var style_default32 = `:host {
+  var style_default33 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --grid-max-col: 240px;
@@ -33460,8 +33821,8 @@ label {
     _items = [];
     constructor() {
       super({
-        css: style_default32,
-        template: template_default34
+        css: style_default33,
+        template: template_default35
       });
     }
     get detail() {
@@ -33602,7 +33963,7 @@ label {
     customElements.define("cms-media-admin", MediaAdmin);
 
   // src/components/media/MediaCenter/template.html
-  var template_default35 = `<dialog>
+  var template_default36 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -33670,7 +34031,7 @@ label {
 `;
 
   // src/components/media/MediaCenter/style.css
-  var style_default33 = `:host {
+  var style_default34 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
     --mc-grid-item-max: 180px;
@@ -34078,8 +34439,8 @@ dialog::backdrop {
     _dragCounter = 0;
     constructor() {
       super({
-        css: style_default33,
-        template: template_default35
+        css: style_default34,
+        template: template_default36
       });
     }
     connectedCallback() {
