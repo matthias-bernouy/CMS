@@ -262,7 +262,26 @@ function createIntegrationConnectorDeployers(): IntegrationConnectorDeployer[] |
         integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
         accessToken,
         projectRef,
+        functionSecrets: readSupabaseFunctionSecrets(process.env),
     })];
+}
+
+function readSupabaseFunctionSecrets(source: Record<string, string | undefined>): Record<string, string> {
+    const keys = [
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_SECURE",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
+        "SMTP_FROM",
+        "SMTP_REPLY_TO",
+    ];
+    const secrets: Record<string, string> = {};
+    for (const key of keys) {
+        const value = source[key]?.trim();
+        if (value) secrets[key] = value;
+    }
+    return secrets;
 }
 
 function parsePortFlag(raw: string): number {

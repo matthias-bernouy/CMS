@@ -16,7 +16,16 @@ export type SupabaseConnectorDeployerConfig = {
     accessToken: string;
     apiBaseUrl?: string;
     fetch?: typeof fetch;
+    functionSecrets?: SupabaseConnectorFunctionSecrets;
 };
+
+export type SupabaseConnectorFunctionSecrets =
+    | Record<string, string | undefined>
+    | ((input: {
+        deployment: IntegrationConnectorDeployment;
+        fn: IntegrationConnectorFunctionDeployment;
+        context: IntegrationConnectorDeployContext;
+    }) => Record<string, string | undefined>);
 
 type SupabaseFunctionConfig = {
     entrypoint_path?: string;
@@ -44,6 +53,7 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
     private readonly accessToken: string;
     private readonly apiBaseUrl: string;
     private readonly fetchImpl: typeof fetch;
+    private readonly functionSecrets?: SupabaseConnectorFunctionSecrets;
 
     constructor(config: SupabaseConnectorDeployerConfig) {
         this.integrationsRoot = config.integrationsRoot;
@@ -51,11 +61,12 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         this.accessToken = requiredText(config.accessToken, "accessToken");
         this.apiBaseUrl = (config.apiBaseUrl ?? "https://api.supabase.com").replace(/\/+$/, "");
         this.fetchImpl = config.fetch ?? fetch;
+        this.functionSecrets = config.functionSecrets;
     }
 
     async deploy(
         deployment: IntegrationConnectorDeployment,
-        _context: IntegrationConnectorDeployContext,
+        context: IntegrationConnectorDeployContext,
     ): Promise<IntegrationConnectorDeployResult> {
         if (deployment.provider !== this.provider) {
             throw new IntegrationRuntimeError(`Supabase deployer cannot deploy provider "${deployment.provider}"`);
@@ -94,8 +105,12 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         }
 
         for (const fn of deployment.functions) {
-            const secrets = Object.entries(fn.secrets ?? {})
-                .filter(([, value]) => value.length > 0)
+            const mergedSecrets = {
+                ...this.resolveFunctionSecrets(deployment, fn, context),
+                ...(fn.secrets ?? {}),
+            };
+            const secrets = Object.entries(mergedSecrets)
+                .filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
                 .map(([name, value]) => ({ name, value }));
             if (secrets.length) {
                 await this.request(`/v1/projects/${this.projectRef}/secrets`, {
@@ -122,6 +137,16 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
             },
             resources,
         };
+    }
+
+    private resolveFunctionSecrets(
+        deployment: IntegrationConnectorDeployment,
+        fn: IntegrationConnectorFunctionDeployment,
+        context: IntegrationConnectorDeployContext,
+    ): Record<string, string | undefined> {
+        if (!this.functionSecrets) return {};
+        if (typeof this.functionSecrets !== "function") return this.functionSecrets;
+        return this.functionSecrets({ deployment, fn, context });
     }
 
     private connectorRoot(deployment: IntegrationConnectorDeployment): string {

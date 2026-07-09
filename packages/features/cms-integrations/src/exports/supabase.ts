@@ -5,4 +5,5 @@
 export {
     SupabaseConnectorDeployer,
     type SupabaseConnectorDeployerConfig,
+    type SupabaseConnectorFunctionSecrets,
 } from "../default-implementation/SupabaseConnectorDeployer";
