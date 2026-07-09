@@ -36,3 +36,6 @@ export {
     validateDashboard,
     type ValidateDashboardOptions,
 } from "../core/validateDashboard";
+export {
+    applyDashboardSourceOverlays,
+} from "../core/sourceOverlayDashboard";
