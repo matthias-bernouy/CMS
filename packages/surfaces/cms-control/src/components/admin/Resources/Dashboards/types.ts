@@ -1,5 +1,6 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
-import type { SourceEndpointDto } from "@bernouy/cms-sources";
+import type { DashboardRelationProjection } from "@bernouy/cms-relations";
+import type { SourceEndpointDto, SourceOverlay } from "@bernouy/cms-sources";
 
 export type DashboardSourceSummary = {
     urn: string;
@@ -16,6 +17,8 @@ export type DashboardSourceGroup = {
     source: DashboardSourceSummary;
     endpoints: SourceEndpointDto[];
     dashboards: DashboardDto[];
+    sourceOverlays?: SourceOverlay[];
+    dashboardRelationProjections?: DashboardRelationProjection[];
 };
 
 export type DashboardListResponse = DashboardSourceGroup[];

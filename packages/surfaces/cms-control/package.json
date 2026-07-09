@@ -56,6 +56,7 @@
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
+        "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
