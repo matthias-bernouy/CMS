@@ -45,20 +45,26 @@ export function mountControlCmsRoutes(
         ? { ...state.configuration.publicAuth, allowSignup: false }
         : undefined;
     if (controlPublicAuth) {
-        runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => registerPublicAuthRoutes(authRunner, controlPublicAuth));
+        runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
+            registerPublicAuthRoutes(authRunner, controlPublicAuth);
+        });
     }
 
     runner.group(AUTH_ROUTES.base, (authRunner) => {
         const supportedKinds: ("local" | "oidc")[] = [];
         if (authBackends.local) {
             supportedKinds.push("local");
-            authRunner.addEndpoint("POST", AUTH_ROUTES.login, (req) => localLoginHandler(authBackends.local!, req));
-            authRunner.addEndpoint("GET", AUTH_ROUTES.logout, (req) => localLogoutHandler(authBackends.local!, req));
+            authRunner.addEndpoint("POST", AUTH_ROUTES.login, (req) =>
+                localLoginHandler(authBackends.local!, req));
+            authRunner.addEndpoint("GET", AUTH_ROUTES.logout, (req) =>
+                localLogoutHandler(authBackends.local!, req));
         }
         if (authBackends.oidc) {
             supportedKinds.push("oidc");
-            authRunner.addEndpoint("GET", AUTH_ROUTES.oidcLogin, (req) => oidcLoginHandler(authBackends.oidc!, req));
-            authRunner.addEndpoint("GET", AUTH_ROUTES.oidcCallback, (req) => oidcCallbackHandler(authBackends.oidc!, req));
+            authRunner.addEndpoint("GET", AUTH_ROUTES.oidcLogin, (req) =>
+                oidcLoginHandler(authBackends.oidc!, req));
+            authRunner.addEndpoint("GET", AUTH_ROUTES.oidcCallback, (req) =>
+                oidcCallbackHandler(authBackends.oidc!, req));
         }
         authRunner.addEndpoint("GET", AUTH_ROUTES.methods, () => authMethodsHandler({
             publicBasePath: `${cms.basePath}${AUTH_ROUTES.base}`,
@@ -70,11 +76,15 @@ export function mountControlCmsRoutes(
     const toPages = () => redirect(`${cms.basePath}/admin/pages`);
     runner.addEndpoint("GET", "/", toPages, [authGuard]);
     runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
-    mountControlSourceProxy(cms, state, authGuard, controlPublicAuth);
+    mountControlSourceProxy(state, authGuard, controlPublicAuth);
     runner.group(CMS_FILES_ROUTE, (filesRunner) => {
         const prefix = filesPrefix(runner.basePath);
         filesRunner.setDefaultEndpoint("GET", (req) =>
-            serveFilesRequest({ metadata: cms.filesMetadata, blob: cms.filesBlob }, req, { prefix }));
+            serveFilesRequest(
+                { metadata: cms.filesMetadata, blob: cms.filesBlob },
+                req,
+                { prefix },
+            ));
     }, [authGuard]);
     runner.addEndpoint("GET", "/.cms/style", (req) => cachedResponseAsync(
         req,
@@ -84,15 +94,22 @@ export function mountControlCmsRoutes(
         publicAssetCacheControl(req),
     ), [authGuard]);
     runner.group("/", (staticRunner) => {
-        serveStaticFolder(staticRunner, { cache: state.cache, cspExtras: () => cms.getCspExtras() });
+        serveStaticFolder(staticRunner, {
+            cache: state.cache,
+            cspExtras: () => cms.getCspExtras(),
+        });
     }, [authGuard]);
     runner.group("/api", (apiRunner) => {
         serveApi(apiRunner, apiDir, cms);
         if (!state.analytics) return;
         const analytics = state.analytics;
-        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary, (req) => analyticsSummaryHandler(analytics, req));
-        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.timeseries, (req) => analyticsTimeseriesHandler(analytics, req));
-        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages, (req) => analyticsTopPagesHandler(analytics, req));
-        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown, (req) => analyticsBreakdownHandler(analytics, req));
+        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary, (req) =>
+            analyticsSummaryHandler(analytics, req));
+        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.timeseries, (req) =>
+            analyticsTimeseriesHandler(analytics, req));
+        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages, (req) =>
+            analyticsTopPagesHandler(analytics, req));
+        apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown, (req) =>
+            analyticsBreakdownHandler(analytics, req));
     }, [authGuard]);
 }

@@ -1,15 +1,32 @@
-import type { Authentication, IdentityProviderRepository, LocalCredentialStore, PatRepository, PublicAuthRoutesConfig, UsersRepository } from "@bernouy/cms-auth";
+import type {
+    Authentication,
+    IdentityProviderRepository,
+    LocalCredentialStore,
+    PatRepository,
+    PublicAuthRoutesConfig,
+    UsersRepository,
+} from "@bernouy/cms-auth";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { FunctionRepository } from "@bernouy/cms-functions";
-import { collectIntegrationInstallationCspExtras, type IntegrationConnectorDeployer, type IntegrationDefinitionRepository, type IntegrationInstallationRepository } from "@bernouy/cms-integrations";
+import {
+    collectIntegrationInstallationCspExtras,
+    type IntegrationConnectorDeployer,
+    type IntegrationDefinitionRepository,
+    type IntegrationInstallationRepository,
+} from "@bernouy/cms-integrations";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { Cache, CspExtras, Runner } from "@bernouy/http-runner";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
-import { SourceOverlaySourceRepository, type ExecutorDeps, type SourceOverlayRepository, type SourceRepository } from "@bernouy/cms-sources";
+import {
+    SourceOverlaySourceRepository,
+    type ExecutorDeps,
+    type SourceOverlayRepository,
+    type SourceRepository,
+} from "@bernouy/cms-sources";
 import { withFunctionsSource } from "@bernouy/cms-functions";
 import { join } from "node:path";
 import type { CMS_ROLES } from "types/roles";
@@ -43,30 +60,94 @@ export class ControlCms {
         authBackends: ControlAuthBackends = {},
     ) {
         this.state = createControlCmsState({
-            configuration, runner, repository, auth, cache, secrets, filesMetadata, filesBlob,
-            users, identityProviders, pats, credentials, sources, analytics, roles, authBackends,
+            configuration,
+            runner,
+            repository,
+            auth,
+            cache,
+            secrets,
+            filesMetadata,
+            filesBlob,
+            users,
+            identityProviders,
+            pats,
+            credentials,
+            sources,
+            analytics,
+            roles,
+            authBackends,
         });
         this.ready = Promise.resolve();
         mountControlCmsRoutes(this, this.state, authBackends, join(__dirname, "./api"));
     }
 
-    get config() { return this.state.configuration; }
-    get repository() { return this.state.repository; }
-    get auth() { return this.state.auth; }
-    get runner() { return this.state.runner; }
-    get cache() { return this.state.cache; }
-    get secrets() { return this.state.secrets; }
-    get roles(): RolesRepository { return this.state.roles; }
-    get integrationCatalog(): IntegrationDefinitionRepository { return this.state.integrationCatalog; }
-    get dashboards(): DashboardRepository { return this.state.dashboards; }
-    get relations(): RelationRepository { return this.state.relations; }
-    get functions(): FunctionRepository | null { return this.state.functions; }
-    get triggers() { return this.state.triggers; }
-    get sourceOverlays() { return this.state.sourceOverlays; }
-    get configuredIntegrationInstallations(): IntegrationInstallationRepository | null { return this.state.integrationInstallations; }
-    get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined { return this.state.configuration.integrationConnectorDeployers; }
-    get integrationBlocRepository(): CmsRepository | null { return this.state.integrationBlocRepository; }
-    get sourceExecutorDeps(): ExecutorDeps { return { resolveSecret: createSecretResolver(this.state.secrets) }; }
+    get config() {
+        return this.state.configuration;
+    }
+
+    get repository() {
+        return this.state.repository;
+    }
+
+    get auth() {
+        return this.state.auth;
+    }
+
+    get runner() {
+        return this.state.runner;
+    }
+
+    get cache() {
+        return this.state.cache;
+    }
+
+    get secrets() {
+        return this.state.secrets;
+    }
+
+    get roles(): RolesRepository {
+        return this.state.roles;
+    }
+
+    get integrationCatalog(): IntegrationDefinitionRepository {
+        return this.state.integrationCatalog;
+    }
+
+    get dashboards(): DashboardRepository {
+        return this.state.dashboards;
+    }
+
+    get relations(): RelationRepository {
+        return this.state.relations;
+    }
+
+    get functions(): FunctionRepository | null {
+        return this.state.functions;
+    }
+
+    get triggers() {
+        return this.state.triggers;
+    }
+
+    get sourceOverlays() {
+        return this.state.sourceOverlays;
+    }
+
+    get configuredIntegrationInstallations(): IntegrationInstallationRepository | null {
+        return this.state.integrationInstallations;
+    }
+
+    get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined {
+        return this.state.configuration.integrationConnectorDeployers;
+    }
+
+    get integrationBlocRepository(): CmsRepository | null {
+        return this.state.integrationBlocRepository;
+    }
+
+    get sourceExecutorDeps(): ExecutorDeps {
+        return { resolveSecret: createSecretResolver(this.state.secrets) };
+    }
 
     get filesMetadata(): CmsFilesMetadataRepository {
         if (!this.state.filesMetadata) throw new Error("files metadata backend not configured");
@@ -111,9 +192,15 @@ export class ControlCms {
     get sources(): SourceRepository {
         if (!this.state.sources) throw new Error("sources repository not configured");
         const overlaySources = this.state.sourceOverlays
-            ? new SourceOverlaySourceRepository(this.state.sources, this.state.sourceOverlays, { deps: this.sourceExecutorDeps })
+            ? new SourceOverlaySourceRepository(
+                this.state.sources,
+                this.state.sourceOverlays,
+                { deps: this.sourceExecutorDeps },
+            )
             : this.state.sources;
-        return this.state.functions ? withFunctionsSource(overlaySources, this.state.functions) : overlaySources;
+        return this.state.functions
+            ? withFunctionsSource(overlaySources, this.state.functions)
+            : overlaySources;
     }
 
     get analytics(): AnalyticsStore {
