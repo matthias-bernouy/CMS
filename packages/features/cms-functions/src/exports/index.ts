@@ -12,6 +12,7 @@ export type {
     FunctionDto,
     FunctionEndpointInput,
     FunctionExpression,
+    FunctionForEach,
     FunctionReturn,
     FunctionStep,
     FunctionValue,
@@ -41,3 +42,12 @@ export {
     executeFunctionSystemSourceEndpoint,
     type FunctionSystemExecutorOptions,
 } from "../core/systemExecutor";
+export {
+    collectReferences,
+    resolveFunctionValue,
+    resolveReference,
+    valueAt,
+    type FunctionRuntimeVars,
+    type ReferenceResolver,
+} from "../core/expressions";
+export { evaluateCondition } from "../core/conditions";

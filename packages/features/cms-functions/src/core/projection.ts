@@ -27,6 +27,7 @@ export function functionAsEndpoint(fn: CmsFunction, sourceId = SYSTEM_FUNCTIONS_
         urn: makeEndpointUrn(sourceId, fn.id),
         method: fn.method,
         targetUrl: `${SYSTEM_FUNCTIONS_TARGET_SCHEME}${encodeURIComponent(fn.id)}`,
+        ...(fn.access ? { access: fn.access } : {}),
         ...(fn.meta ? { meta: fn.meta } : {}),
         ...(fn.input ? { input: endpointInput(fn.input) } : {}),
         ...(fn.output ? { output: fn.output } : {}),

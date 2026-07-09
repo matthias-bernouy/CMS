@@ -1,4 +1,4 @@
-import type { DataShape, EndpointResponse, HTTPMethod, SourceMeta } from "@bernouy/cms-sources";
+import type { DataShape, EndpointResponse, HTTPMethod, SourceEndpointAccess, SourceMeta } from "@bernouy/cms-sources";
 
 export type FunctionExpression = string;
 
@@ -43,10 +43,21 @@ export type FunctionAssert = {
     };
 };
 
+export type FunctionForEach = {
+    items: FunctionValue;
+    max: number;
+    steps: FunctionStep[];
+    yield?: FunctionValue;
+};
+
 export type FunctionStep =
     | {
         id: string;
         call: FunctionCall;
+    }
+    | {
+        id: string;
+        forEach: FunctionForEach;
     }
     | {
         assert: FunctionAssert;
@@ -60,6 +71,7 @@ export type FunctionReturn = {
 export type FunctionDefinition = {
     id: string;
     method: HTTPMethod;
+    access?: SourceEndpointAccess;
     meta?: SourceMeta;
     input?: FunctionEndpointInput;
     output?: EndpointResponse[];

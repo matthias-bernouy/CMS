@@ -12,13 +12,21 @@ export type FunctionRuntimeVars = {
         };
     };
     steps?: Record<string, unknown>;
+    item?: unknown;
+    index?: number;
 };
 
-export function resolveFunctionValue(value: FunctionValue | undefined, vars: FunctionRuntimeVars): unknown {
-    if (typeof value === "string" && value.startsWith("$")) return resolveReference(value, vars);
-    if (Array.isArray(value)) return value.map(item => resolveFunctionValue(item, vars));
+export type ReferenceResolver<Vars = FunctionRuntimeVars> = (ref: string, vars: Vars) => unknown;
+
+export function resolveFunctionValue<Vars = FunctionRuntimeVars>(
+    value: FunctionValue | undefined,
+    vars: Vars,
+    resolver: ReferenceResolver<Vars> = resolveReference as ReferenceResolver<Vars>,
+): unknown {
+    if (typeof value === "string" && value.startsWith("$")) return resolver(value, vars);
+    if (Array.isArray(value)) return value.map(item => resolveFunctionValue(item, vars, resolver));
     if (isRecord(value)) {
-        return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveFunctionValue(item, vars)]));
+        return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveFunctionValue(item, vars, resolver)]));
     }
     return value;
 }
@@ -27,11 +35,14 @@ export function resolveReference(ref: string, vars: FunctionRuntimeVars): unknow
     if (ref === "$input") return vars.input;
     if (ref === "$ctx") return vars.ctx;
     if (ref === "$steps") return vars.steps;
+    if (ref === "$item") return vars.item;
+    if (ref === "$index") return vars.index;
     if (ref.startsWith("$input.params.")) return valueAt(vars.input?.params, ref.slice("$input.params.".length));
     if (ref.startsWith("$input.body.")) return valueAt(vars.input?.body, ref.slice("$input.body.".length));
     if (ref === "$input.body") return vars.input?.body;
     if (ref.startsWith("$ctx.user.")) return valueAt(vars.ctx?.user, ref.slice("$ctx.user.".length));
     if (ref.startsWith("$steps.")) return valueAt(vars.steps, ref.slice("$steps.".length));
+    if (ref.startsWith("$item.")) return valueAt(vars.item, ref.slice("$item.".length));
     return undefined;
 }
 
