@@ -20,6 +20,7 @@ import { destroyCreateDialog, openCreateDialog } from "./dialog";
 export class CredentialSelect extends HTMLElement {
 
     static formAssociated = true;
+    static observedAttributes = ["value"];
 
     _refs!: Refs;
     _internals: ElementInternals;
@@ -33,6 +34,13 @@ export class CredentialSelect extends HTMLElement {
     constructor() {
         super();
         this._internals = this.attachInternals();
+    }
+
+    attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
+        if (name !== "value" || oldValue === newValue) return;
+        const value = newValue ?? "";
+        if (this._refs) setValue(this, value);
+        else this._value = value;
     }
 
     connectedCallback() {

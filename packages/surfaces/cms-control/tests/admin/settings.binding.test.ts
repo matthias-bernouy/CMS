@@ -97,6 +97,66 @@ describe("admin settings binding", () => {
         expect(document.querySelector("p9r-tabs")).toBeNull();
     });
 
+    test("hydrates the email password secret picker from loaded settings", async () => {
+        const secretRef = "${PROTON_SMTP_TOKEN}";
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            const href = String(url);
+            if (href.includes("/api/system/settings")) {
+                return json({
+                    site: {
+                        name:        "Demo",
+                        host:        "https://example.com",
+                        favicon:     "",
+                        language:    "",
+                        notFound:    { path: "" },
+                        serverError: { path: "" },
+                        theme:       "",
+                    },
+                    editor: { layoutCategory: "" },
+                    security: {},
+                    email: {
+                        enabled:   true,
+                        transport: "smtp",
+                        fromEmail: "no-reply@example.com",
+                        fromName:  "Demo",
+                        replyTo:   "",
+                        smtp:      {
+                            host:              "smtp.protonmail.ch",
+                            port:              587,
+                            secure:            true,
+                            username:          "matthias@bernouy.fr",
+                            passwordSecretRef: secretRef,
+                        },
+                        templates: {
+                            emailVerification: { subject: "", html: "" },
+                            passwordReset:     { subject: "", html: "" },
+                        },
+                    },
+                    pages:            [],
+                    layoutCategories: [],
+                });
+            }
+            if (href.includes("/api/secrets")) return json(["PROTON_SMTP_TOKEN"]);
+            return json({});
+        }) as typeof fetch;
+
+        window.history.replaceState(null, "", "/admin/settings/email");
+        document.head.innerHTML = `<meta name="basePath" content="">`;
+        document.body.innerHTML = `
+            <cms-binding-core>
+                ${settingsHtml("settings/email.html")}
+            </cms-binding-core>
+        `;
+
+        await waitFor(() => document
+            .querySelector("cms-credential-select[name='email.smtp.passwordSecretRef']")
+            ?.getAttribute("value") === secretRef);
+
+        const picker = document.querySelector<HTMLElement>("cms-credential-select[name='email.smtp.passwordSecretRef']");
+        expect(picker?.shadowRoot?.querySelector(".value")?.textContent).toBe("PROTON_SMTP_TOKEN");
+        expect((picker?.shadowRoot?.querySelector(".clear-btn") as HTMLElement | null)?.style.display).toBe("flex");
+    });
+
     test("renders secret creation from the detail header modal", async () => {
         globalThis.fetch = (async (url: string | URL | Request) => {
             const href = String(url);
