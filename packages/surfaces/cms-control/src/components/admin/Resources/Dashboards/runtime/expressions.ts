@@ -61,9 +61,27 @@ export function resolveBody(body: Record<string, string> | undefined, vars: Runt
     for (const [key, expression] of Object.entries(body)) {
         const value = resolveExpression(expression, vars);
         if (value === undefined) continue;
-        out[key] = value;
+        setBodyValue(out, key, value);
     }
     return out;
+}
+
+function setBodyValue(target: Record<string, unknown>, path: string, value: unknown): void {
+    const parts = path.split(".").filter(Boolean);
+    if (parts.length <= 1) {
+        target[path] = value;
+        return;
+    }
+
+    let current = target;
+    for (const part of parts.slice(0, -1)) {
+        const existing = current[part];
+        if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
+            current[part] = {};
+        }
+        current = current[part] as Record<string, unknown>;
+    }
+    current[parts[parts.length - 1]!] = value;
 }
 
 export function pathLabel(path: string): string {
