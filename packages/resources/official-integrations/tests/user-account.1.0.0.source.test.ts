@@ -9,12 +9,17 @@ import {
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { applyDashboardSourceOverlays } from "@bernouy/cms-dashboards";
 import {
     handleSourceRequest,
+    InMemorySourceOverlayRepository,
     InMemorySourceRepository,
+    materializeSourceOverlays,
+    SourceOverlaySourceRepository,
     type SourceRepository,
 } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -48,6 +53,25 @@ describe("user-account 1.0.0 source", () => {
     test("updates, reads, lists, and deletes personal information through the installed CMS source", async () => {
         const harness = await createHarness();
 
+        await okJson(await sourceJson(harness, "createExtraField", {
+            id: "company",
+            label: "Company",
+            type: "string",
+            showInDashboardTable: true,
+        }));
+        await okJson(await sourceJson(harness, "createExtraField", {
+            id: "employeeCount",
+            label: "Employees",
+            type: "number",
+        }));
+        const field = await okJson(await sourceRequest(harness, "getExtraField", { id: "company" }));
+        const upsertedField = await okJson(await sourceJson(harness, "createExtraField", {
+            id: "company",
+            label: "Company",
+            type: "string",
+            required: "true",
+            showInDashboardTable: "true",
+        }));
         const missing = await okJson(await sourceRequest(harness, "getAccount"));
         const updated = await okJson(await sourceJson(harness, "updateAccount", {
             email: "USER@Example.COM",
@@ -55,19 +79,32 @@ describe("user-account 1.0.0 source", () => {
             displayName: " Test User ",
             locale: "fr-FR",
             timezone: "Europe/Paris",
+            metadata: { company: "Bernouy", employeeCount: "12" },
         }));
         const adminCreated = await okJson(await sourceJson(harness, "createUserPersonalInformation", {
             email: "admin-target@example.com",
             displayName: "Admin Target",
+            metadata: { company: "Acme" },
         }, { userId: "target-user" }));
         const listed = await okJson(await sourceRequest(harness, "listAccounts", { q: "target", limit: "20" }));
         const fetched = await okJson(await sourceRequest(harness, "getAccountByUserId", { userId: "target-user" }));
         const deleted = await okJson(await sourceDelete(harness, "deleteUserPersonalInformation", { userId: "target-user" }));
-        const dashboard = await harness.dashboards.getDashboard("user-account-users");
+        const installedDashboard = await harness.dashboards.getDashboard("user-account-users");
+        const fieldsDashboard = await harness.dashboards.getDashboard("user-account-fields");
+        const dashboard = installedDashboard
+            ? applyDashboardSourceOverlays(installedDashboard, await harness.materializedOverlays())
+            : null;
         const accountsTable = dashboard?.views.find(view => view.id === "accountsTable") as JsonRecord | undefined;
         const accountDetail = dashboard?.views.find(view => view.id === "accountDetail") as JsonRecord | undefined;
+        const extraFieldsTable = fieldsDashboard?.views.find(view => view.id === "extraFieldsTable") as JsonRecord | undefined;
+        const extraFieldDetail = fieldsDashboard?.views.find(view => view.id === "extraFieldDetail") as JsonRecord | undefined;
+        const source = await harness.sources.getSource("urn:user-account");
+        const updateEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:updateAccount");
+        const getEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:getAccount");
 
         expect(missing).toMatchObject({ exists: false, userId: "user-123" });
+        expect(field).toMatchObject({ field: { id: "company", label: "Company", type: "string", showInDashboardTable: true } });
+        expect(upsertedField).toMatchObject({ field: { id: "company", label: "Company", type: "string", required: true, showInDashboardTable: true } });
         expect(updated).toMatchObject({
             exists: true,
             userId: "user-123",
@@ -76,14 +113,46 @@ describe("user-account 1.0.0 source", () => {
             displayName: "Test User",
             locale: "fr-FR",
             timezone: "Europe/Paris",
+            metadata: { company: "Bernouy", employeeCount: 12 },
         });
-        expect(adminCreated).toMatchObject({ exists: true, userId: "target-user", email: "admin-target@example.com" });
-        expect(listed.accounts).toEqual([expect.objectContaining({ userId: "target-user", displayName: "Admin Target" })]);
-        expect(fetched).toMatchObject({ exists: true, userId: "target-user", displayName: "Admin Target" });
+        expect(adminCreated).toMatchObject({ exists: true, userId: "target-user", email: "admin-target@example.com", metadata: { company: "Acme" } });
+        expect(listed.accounts).toEqual([expect.objectContaining({ userId: "target-user", displayName: "Admin Target", metadata: { company: "Acme" } })]);
+        expect(fetched).toMatchObject({ exists: true, userId: "target-user", displayName: "Admin Target", metadata: { company: "Acme" } });
         expect(deleted).toEqual({ deleted: true, userId: "target-user" });
         expect(harness.rest.rows("accounts").map(row => row.cms_user_id)).toEqual(["user-123"]);
         expect(accountsTable?.selection).toEqual({ opens: "accountDetail" });
+        expect((accountsTable?.columns as JsonRecord[]).map(column => column.id)).toContain("company");
         expect(accountDetail?.source).toEqual({ endpoint: "getAccountByUserId", params: { userId: "$selection.id" } });
+        expect(fieldsDashboard?.source).toBe("user-account");
+        expect(extraFieldsTable?.actions).toEqual([expect.objectContaining({ id: "newExtraField", selection: { opens: "extraFieldDetail" } })]);
+        expect(extraFieldDetail?.source).toEqual({
+            endpoint: "getExtraField",
+            params: { id: "$selection.id" },
+            itemPath: "field",
+        });
+        expect((accountDetail?.main as JsonRecord[]).find(section => section.id === "accountFields")).toMatchObject({
+            id: "accountFields",
+            fields: expect.arrayContaining([expect.objectContaining({ id: "company", path: "metadata.company" })]),
+        });
+        expect(updateEndpoint?.input?.body).toMatchObject({
+            properties: {
+                metadata: {
+                    properties: {
+                        company: { type: "string" },
+                        employeeCount: { type: "number" },
+                    },
+                },
+            },
+        });
+        expect(getEndpoint?.output?.[0]?.body).toMatchObject({
+            properties: {
+                metadata: {
+                    properties: {
+                        company: { type: "string" },
+                    },
+                },
+            },
+        });
     });
 
     test("stores and serves only the avatar referenced by the account row", async () => {
@@ -127,7 +196,9 @@ async function createHarness() {
     if (!definition) throw new Error("user-account definition not found");
 
     const sources = new InMemorySourceRepository();
+    const sourceOverlays = new InMemorySourceOverlayRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
@@ -150,7 +221,9 @@ async function createHarness() {
         {
             sources,
             secrets,
+            roles,
             dashboards,
+            sourceOverlays,
             connectorDeployers: [deployer],
             blocs: {
                 async importBloc(artifact) {
@@ -172,26 +245,43 @@ async function createHarness() {
     const handler = await loadEdgeHandler();
     const rest = new UserAccountSupabaseMock();
     activeFetch = async (input, init) => rest.fetch(input, init);
+    const sourceFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        try {
+            const request = requestFromFetchInput(input, init);
+            if (!request.url.startsWith(`${functionsBaseUrl}/cms-user-account/`)) {
+                throw new Error(`unexpected source proxy fetch: ${request.method} ${request.url}`);
+            }
+            return await handler(request);
+        } catch (error) {
+            return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
+        }
+    };
+    const overlayDeps = {
+        fetchImpl: sourceFetch,
+        resolveSecret: async (ref: string): Promise<string | undefined> => {
+            const key = secretRefToKey(ref) ?? ref;
+            return await secrets.get(key) ?? undefined;
+        },
+    };
+    const overlaySources = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: overlayDeps });
 
     return {
         result,
-        sources,
+        sources: overlaySources,
+        baseSources: sources,
+        sourceOverlays,
         secrets,
+        roles,
         dashboards,
         importedBlocs,
         deployment,
         rest,
-        async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-            try {
-                const request = requestFromFetchInput(input, init);
-                if (!request.url.startsWith(`${functionsBaseUrl}/cms-user-account/`)) {
-                    throw new Error(`unexpected source proxy fetch: ${request.method} ${request.url}`);
-                }
-                return await handler(request);
-            } catch (error) {
-                return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
-            }
+        async materializedOverlays() {
+            const source = await sources.getSource("urn:user-account");
+            if (!source) throw new Error("user-account source not installed");
+            return await materializeSourceOverlays(source, await sourceOverlays.getAllOverlays(), overlayDeps);
         },
+        sourceFetch,
         async resolveSecret(ref: string): Promise<string | undefined> {
             const key = secretRefToKey(ref) ?? ref;
             return await secrets.get(key) ?? undefined;
@@ -202,6 +292,7 @@ async function createHarness() {
 class UserAccountSupabaseMock {
     private readonly tables: Record<string, JsonRecord[]> = {
         accounts: [],
+        extra_fields: [],
     };
     private readonly storageObjects = new Map<string, { body: string; headers: Headers }>();
 
@@ -223,7 +314,7 @@ class UserAccountSupabaseMock {
         if (method === "GET") return jsonResponse(this.select(table, url));
         if (method === "POST") {
             const row = JSON.parse(await request.text()) as JsonRecord;
-            const inserted = this.insert(table, row);
+            const inserted = this.insert(table, row, url.searchParams.get("on_conflict") === "id");
             return jsonResponse([inserted], 201);
         }
         if (method === "PATCH") {
@@ -270,18 +361,31 @@ class UserAccountSupabaseMock {
     private selectRefs(table: string, url: URL): JsonRecord[] {
         let rows = this.tables[table]!;
         const userId = filterValue(url.searchParams.get("cms_user_id"));
+        const id = filterValue(url.searchParams.get("id"));
         const or = url.searchParams.get("or");
         if (userId?.operator === "eq") rows = rows.filter(row => same(row.cms_user_id, userId.value));
+        if (id?.operator === "eq") rows = rows.filter(row => same(row.id, id.value));
         if (or) {
             const search = or.match(/ilike\.\*([^*]+)\*/)?.[1]?.toLowerCase() ?? "";
             rows = rows.filter(row => ["cms_user_id", "email", "phone", "display_name"].some(key => String(row[key] ?? "").toLowerCase().includes(search)));
         }
+        if (table === "extra_fields") {
+            rows = [...rows].sort((left, right) =>
+                Number(left.position ?? 0) - Number(right.position ?? 0)
+                || String(left.id).localeCompare(String(right.id)));
+        }
         return rows;
     }
 
-    private insert(table: string, value: JsonRecord): JsonRecord {
+    private insert(table: string, value: JsonRecord, upsert = false): JsonRecord {
         const now = "2026-07-06T11:00:00.000Z";
-        const row = { ...value, created_at: now, updated_at: now };
+        if (table === "extra_fields" && upsert) {
+            const existing = this.tables[table]!.find(row => same(row.id, value.id));
+            if (existing) return this.update(table, existing, value);
+        }
+        const row = table === "extra_fields"
+            ? { required: false, show_in_dashboard_table: false, position: this.tables[table]!.length, ...value, created_at: now, updated_at: now }
+            : { ...value, created_at: now, updated_at: now };
         this.tables[table]!.push(row);
         return { ...row };
     }

@@ -140,6 +140,7 @@
                     {
                         "endpointId": "getAccount",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information",
                         "params": [],
                         "headers": [
@@ -210,6 +211,7 @@
                     {
                         "endpointId": "updateAccount",
                         "method": "POST",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information",
                         "params": [],
                         "headers": [
@@ -306,6 +308,7 @@
                     {
                         "endpointId": "uploadAccountAvatar",
                         "method": "POST",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/avatar",
                         "meta": {
                             "name": "Upload current user avatar",
@@ -349,6 +352,7 @@
                     {
                         "endpointId": "getAccountAvatar",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/avatar",
                         "responseKind": "file",
                         "mediaType": "image/*",
@@ -386,6 +390,7 @@
                     {
                         "endpointId": "deleteAccount",
                         "method": "POST",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/delete-account",
                         "params": [],
                         "headers": [
@@ -869,6 +874,212 @@
                         ]
                     },
                     {
+                        "endpointId": "listExtraFields",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields",
+                        "meta": {
+                            "name": "List personal information fields",
+                            "description": "List configured extra personal information fields."
+                        },
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fields": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "required": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "showInDashboardTable": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "label",
+                                                    "type"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "fields"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createExtraField",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields",
+                        "meta": {
+                            "name": "Create personal information field",
+                            "description": "Create a configured extra personal information field."
+                        },
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "type": {
+                                    "type": "string"
+                                },
+                                "required": {
+                                    "type": "boolean"
+                                },
+                                "showInDashboardTable": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "label",
+                                "type"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "field": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "label": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "label",
+                                                "type"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "field"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getExtraField",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields/field",
+                        "meta": {
+                            "name": "Get personal information field",
+                            "description": "Read one configured extra personal information field."
+                        },
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Configured extra field id or __new__."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "field": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "label": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "required": {
+                                                    "type": "boolean"
+                                                },
+                                                "showInDashboardTable": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "label",
+                                                "type"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "field"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
                         "endpointId": "health",
                         "method": "GET",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/health",
@@ -901,6 +1112,47 @@
                         ]
                     }
                 ]
+            }
+        },
+        {
+            "type": "sourceOverlay",
+            "overlay": {
+                "id": "{{answers.id}}-extra-fields",
+                "sourceId": "{{answers.id}}",
+                "label": "Extra fields",
+                "sections": [
+                    {
+                        "id": "accountFields",
+                        "label": "Personal information"
+                    }
+                ],
+                "input": [
+                    {
+                        "endpointId": "updateAccount",
+                        "editable": "self"
+                    },
+                    {
+                        "endpointId": "createUserPersonalInformation",
+                        "editable": "admin"
+                    }
+                ],
+                "output": [
+                    {
+                        "endpointId": "getAccount"
+                    },
+                    {
+                        "endpointId": "listAccounts",
+                        "path": "accounts[]"
+                    },
+                    {
+                        "endpointId": "getAccountByUserId"
+                    }
+                ],
+                "fieldSource": {
+                    "endpointId": "listExtraFields",
+                    "path": "fields"
+                },
+                "fields": []
             }
         },
         {
@@ -1107,6 +1359,191 @@
                     }
                 ]
             }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-fields",
+                "meta": {
+                    "name": "Fields",
+                    "icon": "layout"
+                },
+                "source": "{{answers.id}}",
+                "views": [
+                    {
+                        "widget": "w-table",
+                        "id": "extraFieldsTable",
+                        "title": "Personal information fields",
+                        "source": {
+                            "endpoint": "listExtraFields",
+                            "itemsPath": "fields"
+                        },
+                        "rowKey": "id",
+                        "columns": [
+                            {
+                                "id": "label",
+                                "label": "Label",
+                                "path": "label",
+                                "primary": true
+                            },
+                            {
+                                "id": "id",
+                                "label": "ID",
+                                "path": "id"
+                            },
+                            {
+                                "id": "type",
+                                "label": "Type",
+                                "path": "type",
+                                "format": "badge"
+                            }
+                        ],
+                        "selection": {
+                            "opens": "extraFieldDetail"
+                        },
+                        "actions": [
+                            {
+                                "id": "newExtraField",
+                                "label": "Add field",
+                                "tone": "primary",
+                                "selection": {
+                                    "opens": "extraFieldDetail"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-detail",
+                        "id": "extraFieldDetail",
+                        "source": {
+                            "endpoint": "getExtraField",
+                            "params": {
+                                "id": "$selection.id"
+                            },
+                            "itemPath": "field"
+                        },
+                        "title": {
+                            "path": "label",
+                            "fallback": "New field"
+                        },
+                        "status": {
+                            "path": "type"
+                        },
+                        "actions": [
+                            {
+                                "id": "saveExtraField",
+                                "label": "Save field",
+                                "tone": "primary",
+                                "placement": "primary",
+                                "endpoint": {
+                                    "endpoint": "createExtraField",
+                                    "body": {
+                                        "label": "$field.label",
+                                        "id": "$field.id",
+                                        "type": "$field.type",
+                                        "required": "$field.required",
+                                        "showInDashboardTable": "$field.showInDashboardTable"
+                                    }
+                                },
+                                "after": {
+                                    "opens": "extraFieldDetail",
+                                    "row": "$result.field.id"
+                                }
+                            }
+                        ],
+                        "main": [
+                            {
+                                "id": "field",
+                                "title": "Field",
+                                "fields": [
+                                    {
+                                        "id": "label",
+                                        "label": "Label",
+                                        "path": "label",
+                                        "type": "text",
+                                        "required": true
+                                    },
+                                    {
+                                        "id": "id",
+                                        "label": "ID",
+                                        "path": "id",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "type",
+                                        "label": "Type",
+                                        "path": "type",
+                                        "type": "select",
+                                        "required": true,
+                                        "options": [
+                                            {
+                                                "label": "Text",
+                                                "value": "string"
+                                            },
+                                            {
+                                                "label": "Number",
+                                                "value": "number"
+                                            },
+                                            {
+                                                "label": "Boolean",
+                                                "value": "boolean"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "required",
+                                        "label": "Required",
+                                        "path": "required",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "label": "No",
+                                                "value": "false"
+                                            },
+                                            {
+                                                "label": "Yes",
+                                                "value": "true"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "showInDashboardTable",
+                                        "label": "Show in users table",
+                                        "path": "showInDashboardTable",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "label": "No",
+                                                "value": "false"
+                                            },
+                                            {
+                                                "label": "Yes",
+                                                "value": "true"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "aside": [
+                            {
+                                "id": "notes",
+                                "title": "Usage",
+                                "fields": [
+                                    {
+                                        "id": "overlay",
+                                        "label": "Overlay",
+                                        "path": "id",
+                                        "type": "readonly",
+                                        "format": "badge"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
         }
-    ]
+    ],
+    "resources": []
 }

@@ -9,6 +9,18 @@ type UserAccountRow = {
     avatar_file_id: string | null;
     locale: string | null;
     timezone: string | null;
+    metadata: JsonRecord;
+    created_at: string;
+    updated_at: string;
+};
+
+type ExtraFieldRow = {
+    id: string;
+    label: string;
+    field_type: "string" | "number" | "boolean";
+    required: boolean;
+    show_in_dashboard_table: boolean;
+    position: number;
     created_at: string;
     updated_at: string;
 };
@@ -46,6 +58,17 @@ const accountSelect = [
     "avatar_file_id",
     "locale",
     "timezone",
+    "metadata",
+    "created_at",
+    "updated_at",
+].join(",");
+const extraFieldSelect = [
+    "id",
+    "label",
+    "field_type",
+    "required",
+    "show_in_dashboard_table",
+    "position",
     "created_at",
     "updated_at",
 ].join(",");
@@ -68,6 +91,14 @@ Deno.serve(async (request) => {
         }
         if (route === "/accounts" || route === "/personal-information/records") {
             return await withMethod(request, "GET", () => listAccounts(request));
+        }
+        if (route === "/extra-fields" || route === "/personal-information/extra-fields") {
+            if (request.method === "GET") return await listExtraFields(request);
+            if (request.method === "POST") return await createExtraField(request);
+            return methodNotAllowed("GET, POST, OPTIONS");
+        }
+        if (route === "/extra-fields/field" || route === "/personal-information/extra-fields/field") {
+            return await withMethod(request, "GET", () => getExtraField(request));
         }
         if (route === "/accounts/account" || route === "/personal-information/record") {
             if (request.method === "GET") return await getAccountByUserId(request);
@@ -170,6 +201,59 @@ async function listAccounts(request: Request): Promise<Response> {
     });
 }
 
+async function listExtraFields(request: Request): Promise<Response> {
+    requireCmsRequest(request, { requireUser: false });
+
+    const response = await rest(`extra_fields?select=${extraFieldSelect}&order=position.asc,id.asc`, { method: "GET" });
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as ExtraFieldRow[];
+    return json({ fields: rows.map(extraField) });
+}
+
+async function getExtraField(request: Request): Promise<Response> {
+    requireCmsRequest(request, { requireUser: false });
+
+    const id = requiredQueryText(request, "id", 64);
+    if (id === "__new__") {
+        return json({ field: { id: "", label: "", type: "string", required: false, showInDashboardTable: false } });
+    }
+
+    const response = await rest(
+        `extra_fields?id=eq.${encodeURIComponent(id)}&select=${extraFieldSelect}&limit=1`,
+        { method: "GET" },
+    );
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as ExtraFieldRow[];
+    if (!rows[0]) throw new HttpError(404, "field not found");
+    return json({ field: extraField(rows[0]) });
+}
+
+async function createExtraField(request: Request): Promise<Response> {
+    requireCmsRequest(request, { requireUser: false });
+
+    const body = await readJsonObject(request);
+    const label = requiredText(body, "label", 120);
+    const id = optionalText(body, "id", 64) ?? fieldIdFromLabel(label);
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new HttpError(400, "id is invalid");
+    const values = {
+        id,
+        label,
+        field_type: requiredFieldType(body, "type"),
+        required: optionalBoolean(body, "required") ?? false,
+        show_in_dashboard_table: optionalBoolean(body, "showInDashboardTable") ?? false,
+    };
+    const response = await rest(`extra_fields?on_conflict=id&select=${extraFieldSelect}`, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            prefer: "resolution=merge-duplicates,return=representation",
+        },
+        body: JSON.stringify(values),
+    });
+    if (!response.ok) throw await restError(response);
+    return json({ field: extraField(firstRow<ExtraFieldRow>(await response.json())) });
+}
+
 async function getAccountByUserId(request: Request): Promise<Response> {
     requireCmsRequest(request);
 
@@ -264,6 +348,7 @@ function accountValues(body: JsonRecord): JsonRecord {
         avatar_file_id: optionalText(body, "avatarFileId", 512),
         locale: optionalText(body, "locale", 35),
         timezone: optionalText(body, "timezone", 64),
+        metadata: optionalMetadata(body, "metadata"),
     });
 }
 
@@ -279,6 +364,7 @@ function publicAccount(row: UserAccountRow | null, userId: string): JsonRecord {
             avatarFileId: null,
             locale: null,
             timezone: null,
+            metadata: {},
             createdAt: null,
             updatedAt: null,
         };
@@ -294,8 +380,20 @@ function publicAccount(row: UserAccountRow | null, userId: string): JsonRecord {
         avatarFileId: row.avatar_file_id,
         locale: row.locale,
         timezone: row.timezone,
+        metadata: isRecord(row.metadata) ? row.metadata : {},
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+    };
+}
+
+function extraField(row: ExtraFieldRow): JsonRecord {
+    return {
+        id: row.id,
+        label: row.label,
+        type: row.field_type,
+        section: "accountFields",
+        required: row.required,
+        showInDashboardTable: row.show_in_dashboard_table,
     };
 }
 
@@ -514,6 +612,35 @@ function optionalText(body: JsonRecord, name: string, maxLength: number): string
     return normalized;
 }
 
+function requiredText(body: JsonRecord, name: string, maxLength: number): string {
+    const value = optionalText(body, name, maxLength);
+    if (!value) throw new HttpError(400, `${name} is required`);
+    return value;
+}
+
+function optionalBoolean(body: JsonRecord, name: string): boolean | undefined {
+    if (!Object.hasOwn(body, name)) return undefined;
+    const value = body[name];
+    if (value === "true") return true;
+    if (value === "false") return false;
+    if (typeof value !== "boolean") throw new HttpError(400, `${name} must be a boolean`);
+    return value;
+}
+
+function requiredFieldType(body: JsonRecord, name: string): "string" | "number" | "boolean" {
+    const value = body[name];
+    if (value === "string" || value === "number" || value === "boolean") return value;
+    throw new HttpError(400, `${name} must be string, number, or boolean`);
+}
+
+function fieldIdFromLabel(label: string): string {
+    return label
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "") || crypto.randomUUID().replace(/-/g, "_");
+}
+
 function optionalEmail(body: JsonRecord, name: string): string | null | undefined {
     const value = optionalText(body, name, 320);
     if (value === undefined || value === null) return value;
@@ -536,6 +663,15 @@ function optionalUrl(body: JsonRecord, name: string): string | null | undefined 
         throw new HttpError(400, `${name} must be an http or https URL`);
     }
     return parsed.toString();
+}
+
+function optionalMetadata(body: JsonRecord, name: string): JsonRecord | undefined {
+    if (!Object.hasOwn(body, name)) return undefined;
+    const value = body[name];
+    if (value === null) return {};
+    if (!isRecord(value)) throw new HttpError(400, `${name} must be an object`);
+    if (JSON.stringify(value).length > 16384) throw new HttpError(400, `${name} is too large`);
+    return value;
 }
 
 function requiredQueryText(request: Request, name: string, maxLength: number): string {
