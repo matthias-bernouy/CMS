@@ -10,6 +10,7 @@ export function buildAssetPreloads(
     document: Document,
     head: HTMLElement,
     assets: AssetsManifest,
+    options: { includeBindingCore?: boolean } = {},
 ): void {
     const stylePreload = document.createElement("link");
     stylePreload.setAttribute("rel",  "preload");
@@ -17,13 +18,29 @@ export function buildAssetPreloads(
     stylePreload.setAttribute("href", assets.styleUrl);
     head.appendChild(stylePreload);
 
-    for (const src of assets.scriptUrls) {
+    const scriptUrls = options.includeBindingCore
+        ? [...assets.scriptUrls, assets.bindingCoreUrl]
+        : assets.scriptUrls;
+    for (const src of new Set(scriptUrls)) {
         const preload = document.createElement("link");
         preload.setAttribute("rel",  "preload");
         preload.setAttribute("as",   "script");
         preload.setAttribute("href", src);
         head.appendChild(preload);
     }
+}
+
+/** Hide binding-owned source bodies before the deferred binding runtime starts. */
+export function buildBindingCloak(
+    document: Document,
+    head: HTMLElement,
+    enabled: boolean,
+): void {
+    if (!enabled) return;
+    const style = document.createElement("style");
+    style.id = "cms-binding-cloak";
+    style.textContent = "cms-binding-core{display:contents}[cms-source]:not([cms-ready]){visibility:hidden}";
+    head.appendChild(style);
 }
 
 /**

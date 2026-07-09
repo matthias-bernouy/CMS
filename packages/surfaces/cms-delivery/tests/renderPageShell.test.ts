@@ -43,6 +43,9 @@ describe("renderPage — binding core wrapper", () => {
         const html = await htmlOf();
         expect(html).toContain("HELLO_BODY");
         expect(html).toContain("<cms-binding-core");
+        expect(html).toContain(`<link href="${BINDING_CORE_URL}" as="script" rel="preload">`);
+        expect(html).toContain('id="cms-binding-cloak"');
+        expect(html).toContain("[cms-source]:not([cms-ready]){visibility:hidden}");
         expect(html).toContain(BINDING_CORE_URL);
     });
 

@@ -9,7 +9,7 @@ import { findUsedBlocTags } from "@bernouy/cms-content";
 import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
-import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "cms-delivery/core/head/buildAssets";
+import { buildAssetPreloads, buildBindingCloak, buildFoucShell, buildStylesheetLink } from "cms-delivery/core/head/buildAssets";
 import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
@@ -46,6 +46,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     const blocList = await ctx.repository.getBlocsList();
     const usedTags = findUsedBlocTags(composed, blocList);
     const assets   = await ctx.resolveAssets(usedTags);
+    const hasBindingCore = document.querySelector(CMS_BINDING_CORE_TAG) !== null;
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS
     // / JS to a public CDN whose host differs from the page's serving host
@@ -54,7 +55,10 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // `default-src 'self'`. Same-origin assets contribute nothing — the
     // unique-host set naturally drops them via Set semantics.
     const styleHosts  = uniqueOrigins([assets.styleUrl]);
-    const scriptHosts = uniqueOrigins(assets.scriptUrls);
+    const scriptHosts = uniqueOrigins([
+        ...assets.scriptUrls,
+        ...(hasBindingCore ? [assets.bindingCoreUrl] : []),
+    ]);
     const integrationCsp = ctx.integrationInstallations
         ? collectIntegrationInstallationCspExtras(await ctx.integrationInstallations.list())
         : null;
@@ -80,7 +84,8 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildMetaCsp       (document, head, cspExtras);
     for (const inject of ctx.headInjectors) inject({ document, head, usedTags });
     buildPreconnect    (document, head);
-    buildAssetPreloads (document, head, assets);
+    buildAssetPreloads (document, head, assets, { includeBindingCore: hasBindingCore });
+    buildBindingCloak  (document, head, hasBindingCore);
     buildFoucShell     (document, head, usedTags);
     defineMetaTags     (document, head, page, settings, ctx.defaultFaviconUrl);
     buildStylesheetLink(document, head, assets);
@@ -88,8 +93,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 
     // System bloc: load the data-binding runtime only when the page uses the
     // activation root. Pages are wrapped by default for now.
-    // Same-origin script → no CSP host to whitelist.
-    if (document.querySelector(CMS_BINDING_CORE_TAG)) {
+    if (hasBindingCore) {
         const bindingCoreScript = document.createElement("script");
         bindingCoreScript.setAttribute("defer", "");
         bindingCoreScript.setAttribute("src", assets.bindingCoreUrl);
