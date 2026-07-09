@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import {
     importIntegration,
+    InMemoryIntegrationInstallationRepository,
     parseIntegrationDefinition,
     type IntegrationConnectorDeployContext,
     type IntegrationConnectorDeployer,
@@ -10,6 +11,9 @@ import {
 } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository, type Dashboard } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
+import { InMemoryRelationRepository } from "@bernouy/cms-relations";
+import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
+import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { writeSecretsWithRollback } from "cms-integrations/core/import/secretWrites";
@@ -48,6 +52,188 @@ describe("@bernouy/cms-integrations declarative imports", () => {
 
         expect(await sources.getSource("urn:leaky")).toBeNull();
         expect(await secrets.get("API_KEY")).toBeNull();
+    });
+
+    test("rejects missing required dependencies before writing secrets", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const installations = new InMemoryIntegrationInstallationRepository();
+        const definition: IntegrationDefinition = {
+            kind: "products-offers-link",
+            label: "Products offers link",
+            dependencies: [{ name: "offers", kind: "offers" }],
+            inputs: [{ name: "apiKey", label: "API key", type: "password", required: true, secret: true }],
+            secrets: [{ input: "apiKey", key: "LINK_API_KEY" }],
+            artifacts: [sourceArtifact("link")],
+        };
+
+        await expect(importIntegration(
+            { sources, secrets, installations },
+            { kind: "products-offers-link", answers: { apiKey: "secret" }, options: {} },
+            [definition],
+        )).rejects.toThrow(/requires integration "offers" to be installed/);
+
+        expect(await secrets.listKeys()).toEqual([]);
+        expect(await sources.getSource("urn:link")).toBeNull();
+    });
+
+    test("resolves installed dependency answers and sourceId in templates", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const installations = new InMemoryIntegrationInstallationRepository();
+        await installations.create({
+            id: "products",
+            label: "Products",
+            definitionVersion: "1.0.0",
+            status: "success",
+            answersSnapshot: { id: "catalog", public: true },
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [{ type: "source", id: "urn:catalog", action: "created" }],
+            runs: [],
+        });
+        const definition: IntegrationDefinition = {
+            kind: "link",
+            label: "Link",
+            dependencies: [{ name: "products", kind: "products" }],
+            inputs: [],
+            artifacts: [{
+                type: "source",
+                source: {
+                    id: "{{dependencies.products.sourceId}}-link",
+                    meta: { name: "{{dependencies.products.answers.id}}" },
+                    endpoints: [{
+                        endpointId: "status",
+                        method: "GET",
+                        targetUrl: "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
+                        params: [],
+                    }],
+                },
+            }],
+        };
+
+        const result = await importIntegration(
+            { sources, secrets, installations },
+            { kind: "link", answers: {}, options: {} },
+            [definition],
+        );
+
+        expect(result.artifacts).toEqual([{ type: "source", id: "urn:catalog-link", action: "created" }]);
+        const source = await sources.getSource("urn:catalog-link");
+        expect(source?.meta?.name).toBe("catalog");
+        expect(source?.endpoints[0]?.targetUrl).toBe("https://api.example.com/products/true");
+    });
+
+    test("imports relation artifacts using dependency source ids", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const relations = new InMemoryRelationRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
+        await sources.createSource({
+            urn: "urn:offers",
+            meta: { name: "Offers" },
+            endpoints: [{
+                urn: "urn:offers:offers",
+                method: "GET",
+                access: { mode: "public" },
+                targetUrl: "https://api.example.com/offers",
+                input: {
+                    params: [
+                        { name: "productId", in: "query", schema: { type: "string" } },
+                        { name: "limit", in: "query", schema: { type: "number" } },
+                        { name: "offset", in: "query", schema: { type: "number" } },
+                    ],
+                },
+            }],
+        });
+        await installations.create({
+            id: "products",
+            label: "Products",
+            definitionVersion: "1.0.0",
+            status: "success",
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [{ type: "source", id: "urn:products", action: "created" }],
+            runs: [],
+        });
+        await installations.create({
+            id: "offers",
+            label: "Offers",
+            definitionVersion: "1.0.0",
+            status: "success",
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [{ type: "source", id: "urn:offers", action: "created" }],
+            runs: [],
+        });
+        const definition: IntegrationDefinition = {
+            kind: "products-offers-link",
+            label: "Products offers link",
+            dependencies: [
+                { name: "products", kind: "products" },
+                { name: "offers", kind: "offers" },
+            ],
+            inputs: [],
+            artifacts: [{
+                type: "relation",
+                relation: {
+                    id: "product-offers",
+                    label: "Offers",
+                    from: { sourceId: "{{dependencies.products.sourceId}}", idPath: "id" },
+                    to: { sourceId: "{{dependencies.offers.sourceId}}", idPath: "id" },
+                    cardinality: "many",
+                    binding: {
+                        kind: "reference",
+                        endpoint: {
+                            sourceId: "{{dependencies.offers.sourceId}}",
+                            endpointId: "offers",
+                        },
+                        params: { productId: "$from.id" },
+                    },
+                    page: {
+                        itemsPath: "items",
+                        totalPath: "total",
+                        limitParam: "limit",
+                        offsetParam: "offset",
+                        defaultLimit: 25,
+                        maxLimit: 100,
+                    },
+                },
+            }],
+        };
+
+        const result = await importIntegration(
+            { sources, secrets, installations, relations },
+            { kind: "products-offers-link", answers: {}, options: {} },
+            [definition],
+        );
+
+        expect(result.artifacts).toEqual([{ type: "relation", id: "product-offers", action: "created" }]);
+        expect(await relations.getRelation("product-offers")).toMatchObject({
+            from: { sourceId: "products" },
+            to: { sourceId: "offers" },
+            binding: {
+                kind: "reference",
+                endpoint: { sourceId: "offers", endpointId: "offers" },
+            },
+        });
+    });
+
+    test("validates dependency declarations", () => {
+        expect(() => parseIntegrationDefinition({
+            kind: "link",
+            label: "Link",
+            inputs: [],
+            dependencies: [{ name: "products", kind: "products" }, { name: "products", kind: "offers" }],
+        })).toThrow(/duplicate dependency name/);
+        expect(() => parseIntegrationDefinition({
+            kind: "link",
+            label: "Link",
+            inputs: [],
+            dependencies: [{ name: "self", kind: "link" }],
+        })).toThrow(/must not reference the integration itself/);
     });
 
     test("rolls back created sources and secrets when a later source write fails", async () => {
@@ -198,6 +384,156 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             { type: "function", id: "readMyProduct", action: "created" },
         ]);
         expect(await functions.getFunction("readMyProduct")).toMatchObject({ id: "readMyProduct" });
+    });
+
+    test("imports trigger artifacts and preserves enabled state on forced re-import", async () => {
+        const sources = new InMemorySourceRepository();
+        const functions = new InMemoryFunctionRepository();
+        const triggers = new InMemoryTriggerRepository();
+        const secrets = new InMemorySecretStore();
+        const definition: IntegrationDefinition = {
+            kind: "orders",
+            label: "Orders",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "orders",
+                        meta: { name: "Orders" },
+                        endpoints: [{
+                            endpointId: "createOrder",
+                            method: "POST",
+                            targetUrl: "https://example.com/orders",
+                            params: [],
+                        }],
+                    },
+                },
+                {
+                    type: "function",
+                    function: {
+                        id: "notifyOrder",
+                        method: "POST",
+                        steps: [],
+                        return: { status: 204 },
+                    },
+                },
+                {
+                    type: "trigger",
+                    trigger: {
+                        id: "notify-on-order",
+                        label: "Notify on order",
+                        event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
+                        mode: "sync",
+                        function: {
+                            id: "notifyOrder",
+                            body: { orderId: "$response.body.id" },
+                        },
+                    },
+                },
+            ],
+        };
+
+        const result = await importIntegration(
+            { sources, functions, triggers, secrets },
+            { kind: "orders", answers: {}, options: {} },
+            [definition],
+        );
+        await triggers.setEnabled("notify-on-order", false);
+        await triggers.recordRun("notify-on-order", { at: "2026-01-01T00:00:00.000Z", status: "error", error: "disabled test" });
+
+        const rerun = await importIntegration(
+            { sources, functions, triggers, secrets },
+            { kind: "orders", answers: {}, options: { force: true } },
+            [definition],
+        );
+
+        expect(result.artifacts).toEqual([
+            { type: "source", id: "urn:orders", action: "created" },
+            { type: "function", id: "notifyOrder", action: "created" },
+            { type: "trigger", id: "notify-on-order", action: "created" },
+        ]);
+        expect(rerun.artifacts).toContainEqual({ type: "trigger", id: "notify-on-order", action: "updated" });
+        expect(await triggers.getTrigger("notify-on-order")).toMatchObject({
+            id: "notify-on-order",
+            enabled: false,
+            lastRun: { status: "error", error: "disabled test" },
+        });
+    });
+
+    test("applies integration-declared public and auth endpoint grants", async () => {
+        const sources = new InMemorySourceRepository();
+        const functions = new InMemoryFunctionRepository();
+        const roles = new InMemoryRolesRepository();
+        const secrets = new InMemorySecretStore();
+        const definition = parseIntegrationDefinition({
+            kind: "shop",
+            label: "Shop",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "shop",
+                        meta: { name: "Shop" },
+                        endpoints: [
+                            {
+                                endpointId: "catalog",
+                                method: "GET",
+                                access: "public",
+                                targetUrl: "https://example.com/catalog",
+                                params: [],
+                            },
+                            {
+                                endpointId: "myOrders",
+                                method: "GET",
+                                access: { mode: "auth" },
+                                targetUrl: "https://example.com/orders/me",
+                                params: [],
+                            },
+                            {
+                                endpointId: "adminOrders",
+                                method: "GET",
+                                access: "admin",
+                                targetUrl: "https://example.com/orders",
+                                params: [],
+                            },
+                            {
+                                endpointId: "createOrder",
+                                method: "POST",
+                                access: "system",
+                                targetUrl: "https://example.com/orders",
+                                params: [],
+                            },
+                        ],
+                    },
+                },
+                {
+                    type: "function",
+                    function: {
+                        id: "checkout",
+                        method: "POST",
+                        access: "public",
+                        steps: [{ id: "catalog", call: { source: "shop", endpoint: "catalog" } }],
+                        return: { body: { ok: true } },
+                    },
+                },
+            ],
+        });
+
+        await importIntegration(
+            { sources, functions, roles, secrets },
+            { kind: "shop", answers: {}, options: {} },
+            [definition],
+        );
+
+        expect((await roles.get(PUBLIC_ROLE))?.grants.map(grant => grant.permission).sort()).toEqual([
+            "urn:shop:catalog",
+            "urn:system-functions:checkout",
+        ]);
+        expect((await roles.get(USER_ROLE))?.grants.map(grant => grant.permission)).toEqual([
+            "urn:shop:myOrders",
+        ]);
     });
 
     test("validates resolved declarative secret keys before writing", async () => {
