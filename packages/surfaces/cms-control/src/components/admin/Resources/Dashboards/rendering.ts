@@ -23,7 +23,7 @@ export function renderDashboardShell(
     renderIcon(query(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map<string, string>();
     if (detail) selectedRows.set(detail.collection, detail.row);
-    const widgets = widgetsForSelection(dashboard, detail);
+    const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
     mountDashboardWidgets(query(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
 }
 

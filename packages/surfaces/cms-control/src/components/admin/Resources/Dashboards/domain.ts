@@ -1,4 +1,5 @@
 import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardRelationProjection, RelationDashboardAction, RelationDashboardColumn } from "@bernouy/cms-relations";
 import type { DashboardSourceGroup } from "./types";
 
 export type DetailSelection = {
@@ -13,8 +14,34 @@ export type RenderContext = {
     drafts: ReadonlyMap<string, Record<string, unknown>>;
 };
 
-export function widgetsForSelection(dashboard: DashboardDto, detail: DetailSelection | null): DashboardWidget[] {
-    return detail ? detailWidgetsFor(dashboard.views, detail.collection) : mainWidgetsFor(dashboard.views);
+export type RelationTableWidget = {
+    widget: "w-relation-table";
+    id: string;
+    title?: string;
+    placement: "main" | "aside";
+    relationId: string;
+    fromId: string;
+    pageSize?: number;
+    rowKey: string;
+    columns: RelationDashboardColumn[];
+    actions?: RelationDashboardAction[];
+};
+
+export type RuntimeDetailWidget = Extract<DashboardWidget, { widget: "w-detail" }> & {
+    relationWidgets?: RelationTableWidget[];
+};
+
+export type DashboardRuntimeWidget = Exclude<DashboardWidget, Extract<DashboardWidget, { widget: "w-detail" }>> | RuntimeDetailWidget;
+
+export function widgetsForSelection(
+    dashboard: DashboardDto,
+    detail: DetailSelection | null,
+    projections: readonly DashboardRelationProjection[] = [],
+): DashboardRuntimeWidget[] {
+    if (!detail) return mainWidgetsFor(dashboard.views);
+    const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
+    return detailWidgetsFor(dashboard.views, detail.collection)
+        .map(widget => relationWidgets.length ? { ...widget, relationWidgets } : widget);
 }
 
 export function detailKey(collection: string, row: string): string {
@@ -49,4 +76,34 @@ function tabsWithChildren(widget: Extract<DashboardWidget, { widget: "w-tabs" }>
 
 function isDetailWidget(widget: DashboardWidget): boolean {
     return widget.widget === "w-detail";
+}
+
+function relationWidgetsFor(
+    dashboard: DashboardDto,
+    detail: DetailSelection,
+    projections: readonly DashboardRelationProjection[],
+): RelationTableWidget[] {
+    return projections
+        .filter(projection =>
+            projection.dashboardId === dashboard.id
+            && projection.viewId === detail.collection
+            && projection.widget === "table",
+        )
+        .map(projection => ({
+            widget: "w-relation-table",
+            id: projection.sectionId ?? `${projection.relationId}Relation`,
+            ...(projection.title ? { title: projection.title } : {}),
+            placement: projection.placement === "side" ? "aside" : "main",
+            relationId: projection.relationId,
+            fromId: detail.row,
+            ...(projection.pageSize ? { pageSize: projection.pageSize } : {}),
+            rowKey: projection.rowKey ?? "id",
+            columns: projection.columns?.length ? projection.columns : [{
+                id: "id",
+                label: "ID",
+                path: projection.rowKey ?? "id",
+                primary: true,
+            }],
+            ...(projection.actions?.length ? { actions: projection.actions } : {}),
+        }));
 }

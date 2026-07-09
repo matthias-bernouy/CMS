@@ -1,15 +1,15 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DetailSelection, RenderContext } from "../domain";
+import type { DashboardRuntimeWidget, DetailSelection, RenderContext, RuntimeDetailWidget } from "../domain";
 import "./../widgets/w-section/WSection";
 import "./../widgets/w-table/WTable";
 import "./../widgets/w-detail/WDetail";
-import { route } from "../api";
-import { resolveParams, type RuntimeVars } from "./expressions";
 import { detailReloadEvent } from "./reload";
+import { relationDetailSectionElement } from "./mountRelations";
+import { jsonAttr, sourceWrapper, tableRowsTemplate } from "./mountSource";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
-    widgets: DashboardWidget[],
+    widgets: DashboardRuntimeWidget[],
     context: RenderContext,
     key: string,
     tabState: Map<string, number>,
@@ -23,7 +23,7 @@ export function mountDashboardWidgets(
     root.replaceChildren(core);
 }
 
-function widgetElement(widget: DashboardWidget, context: RenderContext, key: string, tabState: Map<string, number>, detail: DetailSelection | null): HTMLElement {
+function widgetElement(widget: DashboardRuntimeWidget, context: RenderContext, key: string, tabState: Map<string, number>, detail: DetailSelection | null): HTMLElement {
     if (widget.widget === "w-section") return sectionElement(widget, context, key, tabState, detail);
     if (widget.widget === "w-tabs") return tabsElement(widget, context, key, tabState, detail);
     if (widget.widget === "w-table") return tableElement(widget, context);
@@ -76,7 +76,7 @@ function tableElement(widget: Extract<DashboardWidget, { widget: "w-table" }>, c
     return wrapper;
 }
 
-function detailElement(widget: Extract<DashboardWidget, { widget: "w-detail" }>, context: RenderContext, detail: DetailSelection | null): HTMLElement {
+function detailElement(widget: RuntimeDetailWidget, context: RenderContext, detail: DetailSelection | null): HTMLElement {
     const rowKey = detail?.row ?? "";
     const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData");
     wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
@@ -85,47 +85,9 @@ function detailElement(widget: Extract<DashboardWidget, { widget: "w-detail" }>,
     element.setAttribute("data-source-json", "{{ dashboardData | json }}");
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
+    for (const relationWidget of widget.relationWidgets ?? []) {
+        element.append(relationDetailSectionElement(relationWidget));
+    }
     wrapper.append(element);
     return wrapper;
-}
-
-function sourceWrapper(sourceId: string, ref: { endpoint: string; params?: Record<string, string> }, vars: RuntimeVars, alias: string): HTMLElement {
-    const wrapper = document.createElement("div");
-    wrapper.setAttribute("cms-source", `${sourceUrl(sourceId, ref, vars)} as ${alias}`);
-    return wrapper;
-}
-
-function sourceUrl(sourceId: string, ref: { endpoint: string; params?: Record<string, string> }, vars: RuntimeVars): string {
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) url.searchParams.set(key, value);
-    return `${url.pathname}${url.search}`;
-}
-
-function jsonAttr(value: unknown): string {
-    return JSON.stringify(value);
-}
-
-function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" }>): HTMLElement {
-    const row = document.createElement("cms-dashboard-w-row");
-    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens) row.setAttribute("collection", widget.selection.opens);
-    for (const column of widget.columns) {
-        const cell = document.createElement("cms-dashboard-w-cell");
-        cell.setAttribute("column", column.id);
-        if (column.primary) cell.toggleAttribute("primary", true);
-        if (column.primary) cell.setAttribute("meta", "{{ row.id }}");
-        if (column.format === "badge") cell.setAttribute("tone", "badge");
-        cell.textContent = bindingPath("row", column.path);
-        row.append(cell);
-    }
-    return row;
-}
-
-function repeatPath(alias: string, path: string | undefined): string {
-    return path ? `${alias}.${path}` : alias;
-}
-
-function bindingPath(alias: string, path: string): string {
-    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
 }
