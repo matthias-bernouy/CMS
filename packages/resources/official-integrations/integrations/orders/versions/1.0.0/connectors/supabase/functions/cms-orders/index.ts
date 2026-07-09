@@ -14,7 +14,6 @@ type OrderRow = {
     currency: string;
     subtotal_amount: number;
     total_amount: number;
-    external_checkout_ref: string | null;
     billing_address: JsonRecord;
     shipping_address: JsonRecord;
     metadata: JsonRecord;
@@ -29,10 +28,6 @@ type OrderRow = {
 type OrderLineRow = {
     id: number;
     order_id: string;
-    product_id: string | null;
-    variant_id: string | null;
-    external_product_ref: string | null;
-    external_variant_ref: string | null;
     title: string;
     sku: string | null;
     quantity: number;
@@ -43,22 +38,6 @@ type OrderLineRow = {
     variant_snapshot: JsonRecord;
     metadata: JsonRecord;
     created_at: string;
-};
-
-type OrderRefRow = {
-    id: number;
-    order_id: string;
-    kind: string;
-    provider: string;
-    external_id: string;
-    label: string | null;
-    status: string | null;
-    amount: number | null;
-    currency: string | null;
-    url: string | null;
-    metadata: JsonRecord;
-    created_at: string;
-    updated_at: string;
 };
 
 type OrderEventRow = {
@@ -99,7 +78,6 @@ const orderSelect = [
     "currency",
     "subtotal_amount",
     "total_amount",
-    "external_checkout_ref",
     "billing_address",
     "shipping_address",
     "metadata",
@@ -113,10 +91,6 @@ const orderSelect = [
 const lineSelect = [
     "id",
     "order_id",
-    "product_id",
-    "variant_id",
-    "external_product_ref",
-    "external_variant_ref",
     "title",
     "sku",
     "quantity",
@@ -127,21 +101,6 @@ const lineSelect = [
     "variant_snapshot",
     "metadata",
     "created_at",
-].join(",");
-const refSelect = [
-    "id",
-    "order_id",
-    "kind",
-    "provider",
-    "external_id",
-    "label",
-    "status",
-    "amount",
-    "currency",
-    "url",
-    "metadata",
-    "created_at",
-    "updated_at",
 ].join(",");
 const eventSelect = [
     "id",
@@ -168,7 +127,6 @@ Deno.serve(async (request) => {
         if (route === "/my-orders") return await withMethod(request, "GET", () => listMyOrders(request));
         if (route === "/my-order") return await withMethod(request, "GET", () => getMyOrder(request));
         if (route === "/order/status") return await withMethod(request, "POST", () => updateOrderStatus(request));
-        if (route === "/order/reference") return await withMethod(request, "POST", () => attachExternalReference(request));
         if (route === "/order/events") return await withMethod(request, "GET", () => orderEvents(request));
         if (route === "/order/defaults") return await withMethod(request, "GET", () => orderDefaults(request));
 
@@ -221,7 +179,6 @@ async function listOrders(request: Request): Promise<Response> {
             `order_number.ilike.*${q}*`,
             `buyer_email.ilike.*${q}*`,
             `buyer_name.ilike.*${q}*`,
-            `external_checkout_ref.ilike.*${q}*`,
         ].join(",")})`);
     }
 
@@ -293,7 +250,6 @@ async function createOrder(request: Request): Promise<Response> {
 
     const order = await insertOrder(payload.order);
     const lines = await insertOrderLines(order.id, payload.lines);
-    const refs = payload.references.length ? await upsertExternalRefs(order.id, payload.references) : [];
     await insertEvent(order.id, {
         event_type: "order.created",
         actor_user_id: userId || undefined,
@@ -305,7 +261,7 @@ async function createOrder(request: Request): Promise<Response> {
         },
     });
 
-    return json(await publicOrderDetail(order, lines, refs), 201);
+    return json(await publicOrderDetail(order, lines), 201);
 }
 
 async function updateOrderStatus(request: Request): Promise<Response> {
@@ -332,28 +288,6 @@ async function updateOrderStatus(request: Request): Promise<Response> {
     return json(await publicOrderDetail(updated));
 }
 
-async function attachExternalReference(request: Request): Promise<Response> {
-    const { userId } = requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    const orderId = requiredText(body.orderId ?? body.id, "orderId", 200);
-    const order = await getOrderRow(orderId);
-    if (!order) throw new HttpError(404, "order not found");
-    const reference = externalRefPayload(body);
-    const row = await upsertExternalRef(orderId, reference);
-    await insertEvent(orderId, {
-        event_type: `order.reference.${row.kind}`,
-        actor_user_id: userId || undefined,
-        message: optionalTextValue(body.message, "message", 1000),
-        data: {
-            kind: row.kind,
-            provider: row.provider,
-            externalId: row.external_id,
-            status: row.status,
-        },
-    });
-    return json(publicExternalRef(row));
-}
-
 async function orderEvents(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
     const orderId = requiredQueryText(request, "orderId", 200);
@@ -364,7 +298,6 @@ async function orderEvents(request: Request): Promise<Response> {
 function orderPayload(body: JsonRecord, actorUserId: string | undefined): {
     order: JsonRecord;
     lines: JsonRecord[];
-    references: JsonRecord[];
 } {
     const currency = currencyValue(body.currency ?? "eur", "currency");
     const lines = arrayField(body, "lines").map((line, index) => orderLinePayload(line, index, currency));
@@ -390,7 +323,6 @@ function orderPayload(body: JsonRecord, actorUserId: string | undefined): {
             currency,
             subtotal_amount: subtotalAmount,
             total_amount: subtotalAmount,
-            external_checkout_ref: optionalTextValue(body.externalCheckoutRef ?? body.external_checkout_ref, "externalCheckoutRef", 300),
             billing_address: objectValue(body.billingAddress ?? body.billing_address, "billingAddress"),
             shipping_address: objectValue(body.shippingAddress ?? body.shipping_address, "shippingAddress"),
             metadata: objectValue(body.metadata, "metadata"),
@@ -400,9 +332,6 @@ function orderPayload(body: JsonRecord, actorUserId: string | undefined): {
             created_by: actorUserId,
         }),
         lines,
-        references: Array.isArray(body.references)
-            ? body.references.map((ref, index) => externalRefPayload(ref, `references.${index}`))
-            : [],
     };
 }
 
@@ -412,10 +341,6 @@ function orderLinePayload(value: unknown, index: number, orderCurrency: string):
     const unitAmount = nonNegativeInteger(value.unitAmount ?? value.unit_amount, `lines.${index}.unitAmount`);
     const currency = currencyValue(value.currency ?? orderCurrency, `lines.${index}.currency`);
     return stripUndefined({
-        product_id: optionalTextValue(value.productId ?? value.product_id, `lines.${index}.productId`, 200),
-        variant_id: optionalTextValue(value.variantId ?? value.variant_id, `lines.${index}.variantId`, 200),
-        external_product_ref: optionalTextValue(value.externalProductRef ?? value.external_product_ref, `lines.${index}.externalProductRef`, 300),
-        external_variant_ref: optionalTextValue(value.externalVariantRef ?? value.external_variant_ref, `lines.${index}.externalVariantRef`, 300),
         title: requiredText(value.title, `lines.${index}.title`, 300),
         sku: optionalTextValue(value.sku, `lines.${index}.sku`, 120),
         quantity,
@@ -425,25 +350,6 @@ function orderLinePayload(value: unknown, index: number, orderCurrency: string):
         product_snapshot: objectValue(value.productSnapshot ?? value.product_snapshot, `lines.${index}.productSnapshot`),
         variant_snapshot: objectValue(value.variantSnapshot ?? value.variant_snapshot, `lines.${index}.variantSnapshot`),
         metadata: objectValue(value.metadata, `lines.${index}.metadata`),
-    });
-}
-
-function externalRefPayload(value: unknown, prefix = "reference"): JsonRecord {
-    if (!isRecord(value)) throw new HttpError(400, `${prefix} must be an object`);
-    const amount = optionalInteger(value.amount, `${prefix}.amount`);
-    const currency = value.currency === undefined || value.currency === null || value.currency === ""
-        ? undefined
-        : currencyValue(value.currency, `${prefix}.currency`);
-    return stripUndefined({
-        kind: referenceKind(requiredText(value.kind, `${prefix}.kind`, 80), `${prefix}.kind`),
-        provider: requiredText(value.provider, `${prefix}.provider`, 120),
-        external_id: requiredText(value.externalId ?? value.external_id, `${prefix}.externalId`, 300),
-        label: optionalTextValue(value.label, `${prefix}.label`, 200),
-        status: optionalTextValue(value.status, `${prefix}.status`, 120),
-        amount,
-        currency,
-        url: optionalUrl(value.url, `${prefix}.url`),
-        metadata: objectValue(value.metadata, `${prefix}.metadata`),
     });
 }
 
@@ -472,28 +378,6 @@ async function insertOrderLines(orderId: string, lines: JsonRecord[]): Promise<O
     });
     if (!response.ok) throw await restError(response);
     return await response.json() as OrderLineRow[];
-}
-
-async function upsertExternalRefs(orderId: string, refs: JsonRecord[]): Promise<OrderRefRow[]> {
-    const rows: OrderRefRow[] = [];
-    for (const ref of refs) rows.push(await upsertExternalRef(orderId, ref));
-    return rows;
-}
-
-async function upsertExternalRef(orderId: string, ref: JsonRecord): Promise<OrderRefRow> {
-    const query = new URLSearchParams();
-    query.set("on_conflict", "order_id,kind,provider,external_id");
-    query.set("select", refSelect);
-    const response = await rest(`order_external_refs?${query.toString()}`, {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-            prefer: "resolution=merge-duplicates,return=representation",
-        },
-        body: JSON.stringify({ order_id: orderId, ...ref }),
-    });
-    if (!response.ok) throw await restError(response);
-    return firstRow<OrderRefRow>(await response.json());
 }
 
 async function patchOrderRow(id: string, patch: JsonRecord): Promise<OrderRow> {
@@ -542,16 +426,6 @@ async function getOrderLines(orderId: string): Promise<OrderLineRow[]> {
     return await response.json() as OrderLineRow[];
 }
 
-async function getExternalRefs(orderId: string): Promise<OrderRefRow[]> {
-    const query = new URLSearchParams();
-    query.set("order_id", `eq.${orderId}`);
-    query.set("select", refSelect);
-    query.set("order", "created_at.desc");
-    const response = await rest(`order_external_refs?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    return await response.json() as OrderRefRow[];
-}
-
 async function getOrderEvents(orderId: string): Promise<OrderEventRow[]> {
     const query = new URLSearchParams();
     query.set("order_id", `eq.${orderId}`);
@@ -566,11 +440,9 @@ async function getOrderEvents(orderId: string): Promise<OrderEventRow[]> {
 async function publicOrderDetail(
     order: OrderRow,
     lines?: OrderLineRow[],
-    refs?: OrderRefRow[],
 ): Promise<JsonRecord> {
-    const [nextLines, nextRefs, events] = await Promise.all([
+    const [nextLines, events] = await Promise.all([
         lines ? Promise.resolve(lines) : getOrderLines(order.id),
-        refs ? Promise.resolve(refs) : getExternalRefs(order.id),
         getOrderEvents(order.id),
     ]);
     return {
@@ -578,7 +450,6 @@ async function publicOrderDetail(
         buyerEmail: order.buyer_email,
         buyerName: order.buyer_name,
         buyerPhone: order.buyer_phone,
-        externalCheckoutRef: order.external_checkout_ref,
         billingAddress: order.billing_address,
         shippingAddress: order.shipping_address,
         metadata: order.metadata,
@@ -586,7 +457,6 @@ async function publicOrderDetail(
         cancelledAt: order.cancelled_at,
         completedAt: order.completed_at,
         lines: nextLines.map(publicLine),
-        references: nextRefs.map(publicExternalRef),
         events: events.map(publicEvent),
     };
 }
@@ -612,10 +482,6 @@ function publicOrderSummary(row: OrderRow): JsonRecord {
 function publicLine(row: OrderLineRow): JsonRecord {
     return {
         id: String(row.id),
-        productId: row.product_id,
-        variantId: row.variant_id,
-        externalProductRef: row.external_product_ref,
-        externalVariantRef: row.external_variant_ref,
         title: row.title,
         sku: row.sku,
         quantity: row.quantity,
@@ -626,24 +492,6 @@ function publicLine(row: OrderLineRow): JsonRecord {
         variantSnapshot: row.variant_snapshot,
         metadata: row.metadata,
         createdAt: row.created_at,
-    };
-}
-
-function publicExternalRef(row: OrderRefRow): JsonRecord {
-    return {
-        id: String(row.id),
-        orderId: row.order_id,
-        kind: row.kind,
-        provider: row.provider,
-        externalId: row.external_id,
-        label: row.label,
-        status: row.status,
-        amount: row.amount,
-        currency: row.currency,
-        url: row.url,
-        metadata: row.metadata,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
     };
 }
 
@@ -847,25 +695,6 @@ function orderStatusValue(value: unknown, name: string): OrderStatus {
 function optionalOrderStatus(value: string | null): OrderStatus | undefined {
     if (!value) return undefined;
     return orderStatusValue(value, "status");
-}
-
-function referenceKind(value: string, name: string): string {
-    if (!["payment", "shipment", "stock_reservation", "fulfillment", "invoice", "other"].includes(value)) {
-        throw new HttpError(400, `${name} is invalid`);
-    }
-    return value;
-}
-
-function optionalUrl(value: unknown, name: string): string | undefined {
-    const url = optionalTextValue(value, name, 2048);
-    if (!url) return undefined;
-    try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("invalid protocol");
-        return parsed.toString();
-    } catch {
-        throw new HttpError(400, `${name} must be an HTTP URL`);
-    }
 }
 
 function optionalSearch(value: string | null): string | undefined {

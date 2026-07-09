@@ -3,7 +3,7 @@
     "kind": "orders",
     "label": "Orders",
     "category": "Commerce",
-    "description": "Store single-seller commerce orders with immutable line snapshots and external references to payment, delivery, stock, reservation, and fulfilment systems.",
+    "description": "Store single-seller commerce orders with immutable line snapshots and order status transitions.",
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [

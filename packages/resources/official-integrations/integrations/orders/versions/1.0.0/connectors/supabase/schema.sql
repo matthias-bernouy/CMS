@@ -2,7 +2,6 @@
 --
 -- Orders only: no payment, delivery, stock, reservation, tax, discount, or
 -- pricing engines. The cms-orders Edge Function owns all reads and writes.
--- External systems are linked through typed immutable references.
 
 begin;
 
@@ -27,7 +26,6 @@ create table if not exists orders.orders (
     currency text not null default 'eur',
     subtotal_amount integer not null default 0,
     total_amount integer not null default 0,
-    external_checkout_ref text,
     billing_address jsonb not null default '{}'::jsonb,
     shipping_address jsonb not null default '{}'::jsonb,
     metadata jsonb not null default '{}'::jsonb,
@@ -59,9 +57,6 @@ create table if not exists orders.orders (
     constraint orders_subtotal_non_negative check (subtotal_amount >= 0),
     constraint orders_total_non_negative check (total_amount >= 0),
     constraint orders_total_matches_subtotal check (total_amount = subtotal_amount),
-    constraint orders_external_checkout_ref_not_blank check (
-        external_checkout_ref is null or length(btrim(external_checkout_ref)) > 0
-    ),
     constraint orders_billing_address_object check (jsonb_typeof(billing_address) = 'object'),
     constraint orders_shipping_address_object check (jsonb_typeof(shipping_address) = 'object'),
     constraint orders_metadata_object check (jsonb_typeof(metadata) = 'object')
@@ -86,10 +81,6 @@ create index if not exists orders_created_at_idx
 create table if not exists orders.order_lines (
     id bigint generated always as identity primary key,
     order_id text not null references orders.orders(id) on delete cascade,
-    product_id text,
-    variant_id text,
-    external_product_ref text,
-    external_variant_ref text,
     title text not null,
     sku text,
     quantity integer not null,
@@ -100,18 +91,6 @@ create table if not exists orders.order_lines (
     variant_snapshot jsonb not null default '{}'::jsonb,
     metadata jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now(),
-    constraint order_lines_product_id_not_blank check (
-        product_id is null or length(btrim(product_id)) > 0
-    ),
-    constraint order_lines_variant_id_not_blank check (
-        variant_id is null or length(btrim(variant_id)) > 0
-    ),
-    constraint order_lines_external_product_ref_not_blank check (
-        external_product_ref is null or length(btrim(external_product_ref)) > 0
-    ),
-    constraint order_lines_external_variant_ref_not_blank check (
-        external_variant_ref is null or length(btrim(external_variant_ref)) > 0
-    ),
     constraint order_lines_title_not_blank check (length(btrim(title)) > 0),
     constraint order_lines_sku_not_blank check (
         sku is null or length(btrim(sku)) > 0
@@ -127,59 +106,6 @@ create table if not exists orders.order_lines (
 
 create index if not exists order_lines_order_idx
     on orders.order_lines(order_id, id);
-
-create index if not exists order_lines_product_idx
-    on orders.order_lines(product_id)
-    where product_id is not null;
-
-create index if not exists order_lines_variant_idx
-    on orders.order_lines(variant_id)
-    where variant_id is not null;
-
--- ---------------------------------------------------------------------------
--- References to external operational systems
--- ---------------------------------------------------------------------------
-create table if not exists orders.order_external_refs (
-    id bigint generated always as identity primary key,
-    order_id text not null references orders.orders(id) on delete cascade,
-    kind text not null,
-    provider text not null,
-    external_id text not null,
-    label text,
-    status text,
-    amount integer,
-    currency text,
-    url text,
-    metadata jsonb not null default '{}'::jsonb,
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now(),
-    constraint order_refs_kind_valid check (
-        kind in ('payment', 'shipment', 'stock_reservation', 'fulfillment', 'invoice', 'other')
-    ),
-    constraint order_refs_provider_not_blank check (length(btrim(provider)) > 0),
-    constraint order_refs_external_id_not_blank check (length(btrim(external_id)) > 0),
-    constraint order_refs_label_not_blank check (
-        label is null or length(btrim(label)) > 0
-    ),
-    constraint order_refs_status_not_blank check (
-        status is null or length(btrim(status)) > 0
-    ),
-    constraint order_refs_amount_non_negative check (amount is null or amount >= 0),
-    constraint order_refs_currency_format check (
-        currency is null or (currency = lower(currency) and currency ~ '^[a-z]{3}$')
-    ),
-    constraint order_refs_url_http check (
-        url is null or url ~* '^https?://'
-    ),
-    constraint order_refs_metadata_object check (jsonb_typeof(metadata) = 'object'),
-    constraint order_refs_key unique (order_id, kind, provider, external_id)
-);
-
-create index if not exists order_refs_order_kind_idx
-    on orders.order_external_refs(order_id, kind);
-
-create index if not exists order_refs_lookup_idx
-    on orders.order_external_refs(kind, provider, external_id);
 
 -- ---------------------------------------------------------------------------
 -- Order event timeline
@@ -224,17 +150,10 @@ create trigger orders_set_updated_at
 before update on orders.orders
 for each row execute function orders.set_updated_at();
 
-drop trigger if exists order_refs_set_updated_at on orders.order_external_refs;
-create trigger order_refs_set_updated_at
-before update on orders.order_external_refs
-for each row execute function orders.set_updated_at();
-
 alter table orders.orders enable row level security;
 alter table orders.orders force row level security;
 alter table orders.order_lines enable row level security;
 alter table orders.order_lines force row level security;
-alter table orders.order_external_refs enable row level security;
-alter table orders.order_external_refs force row level security;
 alter table orders.order_events enable row level security;
 alter table orders.order_events force row level security;
 
@@ -267,9 +186,7 @@ comment on schema orders is
 comment on table orders.orders is
     'Single-seller order headers with immutable commercial totals and customer snapshots.';
 comment on table orders.order_lines is
-    'Immutable order line snapshots. Product and variant ids are references only.';
-comment on table orders.order_external_refs is
-    'References to external payment, delivery, stock, reservation, fulfilment, invoice, or ERP systems.';
+    'Immutable order line snapshots.';
 comment on table orders.order_events is
     'Order timeline events written by the cms-orders Edge Function.';
 comment on column orders.orders.total_amount is

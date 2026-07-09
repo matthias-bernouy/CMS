@@ -9,6 +9,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import {
     handleSourceRequest,
     InMemorySourceRepository,
@@ -55,8 +56,11 @@ describe("orders 1.0.0 source", () => {
         expect(definition?.kind).toBe("orders");
         expect(definition?.version).toBe("1.0.0");
         expect(serialized).toContain("\"dataApiSchemas\":[\"orders\"]");
-        expect(serialized).toContain("attachExternalReference");
-        expect(serialized).toContain("stock_reservation");
+        expect(serialized).not.toContain("externalId");
+        expect(serialized).not.toContain("externalCheckoutRef");
+        expect(serialized).not.toContain("attachExternalReference");
+        expect(serialized).not.toContain("order_external_refs");
+        expect(serialized).not.toContain("stock_reservation");
         expect(serialized).not.toContain("paymentStatus");
         expect(serialized).not.toContain("shipmentStatus");
         expect(serialized).not.toContain("stockQuantity");
@@ -83,19 +87,24 @@ describe("orders 1.0.0 source", () => {
         expect(endpointUrns).toContain("urn:orders:myOrders");
         expect(endpointUrns).toContain("urn:orders:createOrder");
         expect(endpointUrns).toContain("urn:orders:updateOrderStatus");
-        expect(endpointUrns).toContain("urn:orders:attachExternalReference");
+        expect(endpointUrns).not.toContain("urn:orders:attachExternalReference");
 
         const dashboardJson = JSON.stringify(dashboard);
         expect(dashboardJson).toContain("Create order");
-        expect(dashboardJson).toContain("External references");
-        expect(dashboardJson).toContain("stock_reservation");
+        expect(dashboardJson).not.toContain("External id");
+        expect(dashboardJson).not.toContain("Checkout ref");
+        expect(dashboardJson).not.toContain("Attach reference");
+        expect(dashboardJson).not.toContain("External references");
+        expect(dashboardJson).not.toContain("Product ref");
+        expect(dashboardJson).not.toContain("Variant ref");
+        expect(dashboardJson).not.toContain("stock_reservation");
         expect(dashboardJson).not.toContain("paymentStatus");
         expect(dashboardJson).not.toContain("shipmentStatus");
         expect(dashboardJson).not.toContain("\"widget\":\"w-create\"");
         expect(dashboardJson).not.toContain("\"collection\"");
     });
 
-    test("creates an order, stores external references, and updates status through the installed source", async () => {
+    test("creates an order without external ids and updates status through the installed source", async () => {
         const harness = await createHarness();
         const createdResponse = await sourceJson(harness, "createOrder", validOrderBody());
         const created = await jsonBody(createdResponse);
@@ -113,21 +122,13 @@ describe("orders 1.0.0 source", () => {
         });
         expect(created.lines).toEqual([
             expect.objectContaining({
-                productId: "product-1",
-                variantId: "variant-1",
                 title: "Notebook",
                 quantity: 2,
                 unitAmount: 2500,
                 lineTotal: 5000,
             }),
         ]);
-        expect(created.references).toEqual([
-            expect.objectContaining({
-                kind: "payment",
-                provider: "stripe-connect",
-                externalId: "pi_1001",
-            }),
-        ]);
+        expect(Object.hasOwn(created, "references")).toBe(false);
         expect(harness.orders[0]).toMatchObject({
             id: "order-1001",
             seller_cms_user_id: "seller-1",
@@ -138,28 +139,9 @@ describe("orders 1.0.0 source", () => {
         });
         expect(harness.lines[0]).toMatchObject({
             order_id: "order-1001",
-            product_id: "product-1",
-            variant_id: "variant-1",
             quantity: 2,
             unit_amount: 2500,
             line_total: 5000,
-        });
-
-        const shipmentResponse = await sourceJson(harness, "attachExternalReference", {
-            orderId: "order-1001",
-            kind: "shipment",
-            provider: "mondial-relay",
-            externalId: "00435394",
-            status: "label_ready",
-            url: "https://tracking.test/00435394",
-        });
-        const shipment = await jsonBody(shipmentResponse);
-        expect(shipmentResponse.status).toBe(200);
-        expect(shipment).toMatchObject({
-            kind: "shipment",
-            provider: "mondial-relay",
-            externalId: "00435394",
-            status: "label_ready",
         });
 
         const statusResponse = await sourceJson(harness, "updateOrderStatus", {
@@ -173,10 +155,9 @@ describe("orders 1.0.0 source", () => {
             id: "order-1001",
             status: "placed",
         });
-        expect(updated.references).toHaveLength(2);
+        expect(Object.hasOwn(updated, "references")).toBe(false);
         expect(updated.events).toEqual([
             expect.objectContaining({ eventType: "order.status_changed", message: "Checkout confirmed" }),
-            expect.objectContaining({ eventType: "order.reference.shipment" }),
             expect.objectContaining({ eventType: "order.created" }),
         ]);
 
@@ -188,7 +169,7 @@ describe("orders 1.0.0 source", () => {
         ]);
     });
 
-    test("rejects total mismatches and invalid reference kinds", async () => {
+    test("rejects total mismatches", async () => {
         const harness = await createHarness();
         const totalResponse = await sourceJson(harness, "createOrder", {
             ...validOrderBody(),
@@ -196,22 +177,13 @@ describe("orders 1.0.0 source", () => {
         });
         expect(totalResponse.status).toBe(400);
         expect(await jsonBody(totalResponse)).toEqual({ error: "totalAmount must equal the sum of order lines" });
-
-        await sourceJson(harness, "createOrder", validOrderBody());
-        const refResponse = await sourceJson(harness, "attachExternalReference", {
-            orderId: "order-1001",
-            kind: "payment_status",
-            provider: "stripe-connect",
-            externalId: "pi_1001",
-        });
-        expect(refResponse.status).toBe(400);
-        expect(await jsonBody(refResponse)).toEqual({ error: "reference.kind is invalid" });
     });
 });
 
 async function createHarness() {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
@@ -235,6 +207,7 @@ async function createHarness() {
         {
             sources,
             secrets,
+            roles,
             dashboards,
             connectorDeployers: [deployer],
         },
@@ -253,10 +226,8 @@ async function createHarness() {
     const handler = await loadEdgeHandler();
     const orders: JsonRecord[] = [];
     const lines: JsonRecord[] = [];
-    const refs: JsonRecord[] = [];
     const events: JsonRecord[] = [];
     let lineId = 1;
-    let refId = 1;
     let eventId = 1;
 
     activeFetch = async (input, init) => {
@@ -293,23 +264,6 @@ async function createHarness() {
             lines.push(...inserted);
             return jsonResponse(inserted, 201);
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/order_external_refs" && method === "POST") {
-            const row = JSON.parse(requestBody) as JsonRecord;
-            const existing = refs.find(ref =>
-                ref.order_id === row.order_id &&
-                ref.kind === row.kind &&
-                ref.provider === row.provider &&
-                ref.external_id === row.external_id);
-            const next = {
-                ...(existing ?? { id: refId++ }),
-                ...row,
-                created_at: existing?.created_at ?? "2026-07-06T10:00:02.000Z",
-                updated_at: "2026-07-06T10:00:02.000Z",
-            };
-            if (existing) Object.assign(existing, next);
-            else refs.push(next);
-            return jsonResponse([next], 201);
-        }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/order_events" && method === "POST") {
             const row = {
                 id: eventId++,
@@ -325,10 +279,6 @@ async function createHarness() {
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/order_lines" && method === "GET") {
             const orderId = eqValue(url.searchParams.get("order_id"));
             return jsonResponse(lines.filter(line => line.order_id === orderId), 200);
-        }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/order_external_refs" && method === "GET") {
-            const orderId = eqValue(url.searchParams.get("order_id"));
-            return jsonResponse(refs.filter(ref => ref.order_id === orderId), 200);
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/order_events" && method === "GET") {
             const orderId = eqValue(url.searchParams.get("order_id"));
@@ -349,11 +299,11 @@ async function createHarness() {
         result,
         sources,
         secrets,
+        roles,
         dashboards,
         deployment,
         orders,
         lines,
-        refs,
         events,
         async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
             try {
@@ -446,11 +396,8 @@ function validOrderBody(): JsonRecord {
         buyerName: "Buyer Test",
         currency: "eur",
         status: "draft",
-        externalCheckoutRef: "checkout-1001",
         lines: [
             {
-                productId: "product-1",
-                variantId: "variant-1",
                 title: "Notebook",
                 sku: "NB-1",
                 quantity: 2,
@@ -463,14 +410,6 @@ function validOrderBody(): JsonRecord {
                     sku: "NB-1",
                     title: "Default",
                 },
-            },
-        ],
-        references: [
-            {
-                kind: "payment",
-                provider: "stripe-connect",
-                externalId: "pi_1001",
-                status: "created",
             },
         ],
     };
