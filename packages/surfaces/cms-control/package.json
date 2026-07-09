@@ -55,6 +55,7 @@
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
+        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",

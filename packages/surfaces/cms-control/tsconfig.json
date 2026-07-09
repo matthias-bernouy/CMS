@@ -32,7 +32,9 @@
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-functions" },
+        { "path": "../../features/cms-triggers" },
         { "path": "../../features/cms-dashboards" },
+        { "path": "../../features/cms-relations" },
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-analytics" }
     ]
