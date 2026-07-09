@@ -16,8 +16,13 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         ...(cms.functions ? { functions: cms.functions } : {}),
+        roles: cms.roles,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
+        relations: cms.relations,
+        installations: cms.integrationInstallations,
+        ...(cms.triggers ? { triggers: cms.triggers } : {}),
+        ...(cms.sourceOverlays ? { sourceOverlays: cms.sourceOverlays } : {}),
         blocs: {
             importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
