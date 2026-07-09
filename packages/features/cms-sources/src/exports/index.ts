@@ -19,7 +19,30 @@ export {
 } from "../core/headerPolicy";
 
 export type { SourceRepository } from "../interfaces/SourceRepository";
+export type {
+    SourceOverlay,
+    SourceOverlayDashboardDataRef,
+    SourceOverlayDashboardEndpointRef,
+    SourceOverlayDashboardField,
+    SourceOverlayDashboardFieldPatch,
+    SourceOverlayDashboardLookupRef,
+    SourceOverlayDashboardOption,
+    SourceOverlayEditableScope,
+    SourceOverlayEndpointTarget,
+    SourceOverlayField,
+    SourceOverlayFieldSource,
+    SourceOverlayFieldSourceMap,
+    SourceOverlayFieldType,
+    SourceOverlayRepository,
+    SourceOverlaySection,
+} from "../interfaces/SourceOverlay";
+export {
+    SOURCE_OVERLAY_EDITABLE_SCOPES,
+    SOURCE_OVERLAY_FIELD_TYPES,
+    sourceOverlayFieldShape,
+} from "../interfaces/SourceOverlay";
 export { InMemorySourceRepository } from "../default-implementation/InMemorySourceRepository";
+export { InMemorySourceOverlayRepository } from "../default-implementation/InMemorySourceOverlayRepository";
 export { ValidatingSourceRepository } from "../core/ValidatingSourceRepository";
 export { CompositeSourceRepository } from "../core/CompositeSourceRepository";
 
@@ -55,6 +78,13 @@ export {
     sourceEndpointAccessMode,
 } from "../core/access";
 export { parseDataShape } from "../core/parseDataShape";
+export {
+    SourceOverlaySourceRepository,
+    applySourceOverlays,
+    materializeSourceOverlays,
+    sourceOverlayFieldPath,
+    type SourceOverlaySourceRepositoryOptions,
+} from "../core/sourceOverlay";
 export {
     sourceDtoToSource,
     sourceToDto,

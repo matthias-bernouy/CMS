@@ -1,0 +1,65 @@
+import type { Source, SourceEndpoint } from "../interfaces/Source";
+import type { SourceRepository } from "../interfaces/SourceRepository";
+import type { SourceOverlayRepository } from "../interfaces/SourceOverlay";
+import type { ExecutorDeps } from "./executeEndpoint";
+import { materializeSourceOverlays } from "./sourceOverlayDynamicFields";
+import { applySourceOverlays, overlaysFor, sourceOverlayFieldPath } from "./sourceOverlayProjection";
+import { parseUrn, sourceUrnOf } from "./urn";
+
+export type SourceOverlaySourceRepositoryOptions = {
+    deps?: ExecutorDeps;
+};
+
+export class SourceOverlaySourceRepository implements SourceRepository {
+    constructor(
+        private readonly inner: SourceRepository,
+        private readonly overlays: SourceOverlayRepository,
+        private readonly options: SourceOverlaySourceRepositoryOptions = {},
+    ) {}
+
+    createSource(source: Source): Promise<Source> {
+        return this.inner.createSource(source);
+    }
+
+    updateSource(source: Source): Promise<Source | null> {
+        return this.inner.updateSource(source);
+    }
+
+    deleteSource(urn: string): Promise<boolean> {
+        return this.inner.deleteSource(urn);
+    }
+
+    async getSource(urn: string): Promise<Source | null> {
+        const source = await this.inner.getSource(urn);
+        if (!source) return null;
+        const overlays = await this.overlays.getOverlaysForSource(sourceId(source));
+        return applySourceOverlays(source, await materializeSourceOverlays(source, overlays, this.options.deps));
+    }
+
+    async getAllSources(): Promise<Source[]> {
+        const sources = await this.inner.getAllSources();
+        const overlays = await this.overlays.getAllOverlays();
+        return Promise.all(sources.map(async source =>
+            applySourceOverlays(
+                source,
+                await materializeSourceOverlays(source, overlaysFor(source, overlays), this.options.deps),
+            )));
+    }
+
+    async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
+        const sourceUrn = sourceUrnOf(urn);
+        if (!sourceUrn) return this.inner.getEndpoint(urn);
+        const source = await this.getSource(sourceUrn);
+        return source?.endpoints.find(endpoint => endpoint.urn === urn) ?? null;
+    }
+}
+
+function sourceId(source: Source): string {
+    return parseUrn(source.urn)?.source ?? "";
+}
+
+export {
+    applySourceOverlays,
+    materializeSourceOverlays,
+    sourceOverlayFieldPath,
+};
