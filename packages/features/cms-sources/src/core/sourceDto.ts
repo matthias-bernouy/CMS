@@ -1,56 +1,11 @@
 import type {
     SourceEndpoint,
-    EndpointHeader,
     EndpointParam,
-    EndpointResponse,
-    SourceMeta,
-    HTTPMethod,
-    ParamIn,
-    ParamValueSource,
     Source,
-    ResponseKind,
 } from "../interfaces/Source";
-import type { DataShape } from "../interfaces/DataShape";
+import type { CanonicalSourceDto, SourceDto, SourceEndpointDto, SourceFlatDto } from "./sourceDtoTypes";
 import { makeEndpointUrn, makeSourceUrn, parseUrn } from "./urn";
-
-export type SourceParamDto = {
-    name: string;
-    in: ParamIn;
-    type?: DataShape["type"];
-    required?: boolean;
-    description?: string;
-    source?: ParamValueSource;
-};
-
-export type SourceEndpointDto = {
-    endpointId: string;
-    method: HTTPMethod;
-    targetUrl: string;
-    responseKind?: ResponseKind;
-    mediaType?: string;
-    params: SourceParamDto[];
-    body?: DataShape;
-    output?: EndpointResponse[];
-    meta?: SourceMeta;
-    headers?: EndpointHeader[];
-};
-
-export type SourceDto = {
-    id: string;
-    meta: SourceMeta;
-    endpoints: SourceEndpointDto[];
-};
-
-export type SourceFlatDto = Record<string, string>;
-export type CanonicalSourceEndpointDto = Omit<SourceEndpointDto, "body" | "output" | "meta" | "headers"> & {
-        body: DataShape | null;
-        output: EndpointResponse[] | null;
-        meta: SourceMeta | null;
-        headers: EndpointHeader[] | null;
-};
-export type CanonicalSourceDto = Omit<SourceDto, "endpoints"> & {
-    endpoints: CanonicalSourceEndpointDto[];
-};
+export type { CanonicalSourceDto, CanonicalSourceEndpointDto, SourceDto, SourceEndpointDto, SourceFlatDto, SourceParamDto } from "./sourceDtoTypes";
 
 export function sourceDtoToSource(dto: SourceDto): Source {
     return {
@@ -72,22 +27,9 @@ export function sourceToDto(source: Source): SourceDto {
 export function sourceToFlatDto(source: Source): SourceFlatDto {
     const dto = sourceToDto(source);
     const flat: SourceFlatDto = { id: dto.id };
-    flat["meta.name"] = dto.meta.name;
-    if (dto.meta.description !== undefined) flat["meta.description"] = dto.meta.description;
-    if (dto.meta.icon !== undefined)        flat["meta.icon"]        = dto.meta.icon;
-    if (dto.meta.svg !== undefined)         flat["meta.svg"]         = dto.meta.svg;
-
+    assignMeta(flat, dto);
     dto.endpoints.forEach((e, i) => {
-        flat[`endpoints.${i}.endpointId`] = e.endpointId;
-        flat[`endpoints.${i}.method`]     = e.method;
-        flat[`endpoints.${i}.targetUrl`]  = e.targetUrl;
-        if (e.responseKind !== undefined) flat[`endpoints.${i}.responseKind`] = e.responseKind;
-        if (e.mediaType !== undefined)    flat[`endpoints.${i}.mediaType`]    = e.mediaType;
-        if (e.params.length)    flat[`endpoints.${i}.params`]  = JSON.stringify(e.params);
-        if (e.body !== undefined)    flat[`endpoints.${i}.body`]    = JSON.stringify(e.body);
-        if (e.output !== undefined)  flat[`endpoints.${i}.output`]  = JSON.stringify(e.output);
-        if (e.meta !== undefined)    flat[`endpoints.${i}.meta`]    = JSON.stringify(e.meta);
-        if (e.headers !== undefined) flat[`endpoints.${i}.headers`] = JSON.stringify(e.headers);
+        assignEndpoint(flat, e, i);
     });
     return flat;
 }
@@ -106,6 +48,7 @@ export function sourceToCanonicalDto(source: Source): CanonicalSourceDto {
             endpointId: e.endpointId,
             method: e.method,
             targetUrl: e.targetUrl,
+            ...(e.access !== undefined ? { access: e.access } : {}),
             responseKind: e.responseKind ?? "json",
             mediaType: e.mediaType ?? "",
             params: e.params.map(p => ({
@@ -138,6 +81,7 @@ function endpointDtoToEndpoint(sourceId: string, e: SourceEndpointDto): SourceEn
         method: e.method,
         targetUrl: e.targetUrl,
     };
+    if (e.access !== undefined) endpoint.access = e.access;
     if (e.responseKind !== undefined) endpoint.responseKind = e.responseKind;
     if (e.mediaType !== undefined) endpoint.mediaType = e.mediaType;
     if (params.length || e.body) {
@@ -156,6 +100,7 @@ function endpointToDto(endpoint: SourceEndpoint): SourceEndpointDto {
         endpointId: parseUrn(endpoint.urn)?.endpoint ?? "",
         method: endpoint.method,
         targetUrl: endpoint.targetUrl,
+        ...(endpoint.access !== undefined ? { access: endpoint.access } : {}),
         ...(endpoint.responseKind !== undefined ? { responseKind: endpoint.responseKind } : {}),
         ...(endpoint.mediaType !== undefined ? { mediaType: endpoint.mediaType } : {}),
         params: (endpoint.input?.params ?? []).map(p => ({
@@ -171,4 +116,26 @@ function endpointToDto(endpoint: SourceEndpoint): SourceEndpointDto {
         ...(endpoint.meta ? { meta: endpoint.meta } : {}),
         ...(endpoint.headers?.length ? { headers: endpoint.headers } : {}),
     };
+}
+
+function assignMeta(flat: SourceFlatDto, dto: SourceDto): void {
+    flat["meta.name"] = dto.meta.name;
+    if (dto.meta.description !== undefined) flat["meta.description"] = dto.meta.description;
+    if (dto.meta.icon !== undefined)        flat["meta.icon"]        = dto.meta.icon;
+    if (dto.meta.svg !== undefined)         flat["meta.svg"]         = dto.meta.svg;
+}
+
+function assignEndpoint(flat: SourceFlatDto, endpoint: SourceEndpointDto, index: number): void {
+    const prefix = `endpoints.${index}`;
+    flat[`${prefix}.endpointId`] = endpoint.endpointId;
+    flat[`${prefix}.method`] = endpoint.method;
+    flat[`${prefix}.targetUrl`] = endpoint.targetUrl;
+    if (endpoint.access !== undefined) flat[`${prefix}.access`] = JSON.stringify(endpoint.access);
+    if (endpoint.responseKind !== undefined) flat[`${prefix}.responseKind`] = endpoint.responseKind;
+    if (endpoint.mediaType !== undefined) flat[`${prefix}.mediaType`] = endpoint.mediaType;
+    if (endpoint.params.length) flat[`${prefix}.params`] = JSON.stringify(endpoint.params);
+    if (endpoint.body !== undefined) flat[`${prefix}.body`] = JSON.stringify(endpoint.body);
+    if (endpoint.output !== undefined) flat[`${prefix}.output`] = JSON.stringify(endpoint.output);
+    if (endpoint.meta !== undefined) flat[`${prefix}.meta`] = JSON.stringify(endpoint.meta);
+    if (endpoint.headers !== undefined) flat[`${prefix}.headers`] = JSON.stringify(endpoint.headers);
 }

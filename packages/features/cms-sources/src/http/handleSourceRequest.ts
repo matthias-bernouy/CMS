@@ -7,6 +7,11 @@ import { systemSourceUrnOf } from "../core/systemSources";
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 export type SourceSystemExecutor = (endpoint: SourceEndpoint, request: Request) => Response | Promise<Response>;
+export type SourceEndpointInterceptor = (
+    endpoint: SourceEndpoint,
+    request: Request,
+    next: (req: Request) => Promise<Response>,
+) => Promise<Response>;
 export type SourceAuthorizationResult = boolean | {
     authorized: boolean;
     status?: 401 | 403;
@@ -16,6 +21,7 @@ export type SourceEndpointAuthorizer = (endpoint: SourceEndpoint, request: Reque
 export type SourceHandlerDeps = ExecutorDeps & {
     executeSystemEndpoint?: SourceSystemExecutor;
     authorizeEndpoint?: SourceEndpointAuthorizer;
+    interceptEndpoint?: SourceEndpointInterceptor;
 };
 
 export function sourcesPrefix(basePath: string): string {
@@ -61,14 +67,25 @@ export async function handleSourceRequest(
         }
     }
 
-    if (systemSourceUrnOf(resolved.endpoint.urn)) {
-        if (!opts.deps?.executeSystemEndpoint) {
+    const dispatch = (req: Request) => dispatchEndpoint(resolved.endpoint, req, opts.deps);
+    return opts.deps?.interceptEndpoint
+        ? opts.deps.interceptEndpoint(resolved.endpoint, request, dispatch)
+        : dispatch(request);
+}
+
+async function dispatchEndpoint(
+    endpoint: SourceEndpoint,
+    request: Request,
+    deps: SourceHandlerDeps | undefined,
+): Promise<Response> {
+    if (systemSourceUrnOf(endpoint.urn)) {
+        if (!deps?.executeSystemEndpoint) {
             return new Response("system source executor not configured", { status: 501 });
         }
-        return opts.deps.executeSystemEndpoint(resolved.endpoint, request);
+        return deps.executeSystemEndpoint(endpoint, request);
     }
 
-    return executeEndpoint(resolved.endpoint, request, opts.deps);
+    return executeEndpoint(endpoint, request, deps);
 }
 
 export function isSourceAuthorized(result: SourceAuthorizationResult): boolean {

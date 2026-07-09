@@ -116,6 +116,7 @@ export {
     sourceAuthorizationStatus,
     type SourceHandlerDeps,
     type SourceSystemExecutor,
+    type SourceEndpointInterceptor,
     type SourceAuthorizationResult,
     type SourceEndpointAuthorizer,
 } from "../http/handleSourceRequest";
