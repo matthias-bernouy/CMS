@@ -1,6 +1,16 @@
-import type { DashboardDto } from "@bernouy/cms-dashboards";
-import type { FunctionDto } from "@bernouy/cms-functions";
-import type { SourceDto } from "@bernouy/cms-sources";
+import type { DeclarativeArtifactTemplate } from "./IntegrationArtifacts";
+
+export type {
+    DeclarativeArtifactTemplate,
+    DeclarativeBlocArtifactTemplate,
+    DeclarativeDashboardArtifactTemplate,
+    DeclarativeDashboardRelationProjectionArtifactTemplate,
+    DeclarativeFunctionArtifactTemplate,
+    DeclarativeRelationArtifactTemplate,
+    DeclarativeSourceArtifactTemplate,
+    DeclarativeSourceOverlayArtifactTemplate,
+    DeclarativeTriggerArtifactTemplate,
+} from "./IntegrationArtifacts";
 
 export type IntegrationIcon = { path: string };
 
@@ -84,43 +94,6 @@ export type DeclarativeConnectorTemplate = {
     schemas?: DeclarativeConnectorSchemaTemplate[];
     functions?: DeclarativeConnectorFunctionTemplate[];
 };
-
-export type DeclarativeSourceArtifactTemplate = {
-    type: "source";
-    source: SourceDto;
-};
-
-export type DeclarativeDashboardArtifactTemplate = {
-    type: "dashboard";
-    dashboard: DashboardDto;
-};
-
-export type DeclarativeFunctionArtifactTemplate = {
-    type: "function";
-    function: FunctionDto;
-};
-
-export type DeclarativeBlocArtifactTemplate = {
-    type: "bloc";
-    bloc: {
-        tag: string;
-        name: string;
-        group?: string;
-        description?: string;
-        path?: string;
-        view?: string;
-        editor?: string | null;
-        viewJS?: string;
-        editorJS?: string | null;
-        source?: Record<string, string>;
-    };
-};
-
-export type DeclarativeArtifactTemplate =
-    | DeclarativeSourceArtifactTemplate
-    | DeclarativeFunctionArtifactTemplate
-    | DeclarativeDashboardArtifactTemplate
-    | DeclarativeBlocArtifactTemplate;
 
 export type IntegrationDefinition = {
     kind: string;

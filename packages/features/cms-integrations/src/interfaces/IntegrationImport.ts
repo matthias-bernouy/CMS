@@ -12,7 +12,7 @@ import type {
     IntegrationConnectorDeployResult,
 } from "./IntegrationConnectorDeployer";
 
-export type IntegrationArtifactType = "source" | "function" | "dashboard" | "bloc";
+export type IntegrationArtifactType = "source" | "function" | "trigger" | "dashboard" | "bloc" | "sourceOverlay" | "relation" | "dashboardRelation";
 
 export type IntegrationArtifactAction = "created" | "updated" | "skipped";
 

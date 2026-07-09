@@ -6,12 +6,21 @@
  */
 
 export type {
+    DeclarativeArtifactTemplate,
+    DeclarativeBlocArtifactTemplate,
+    DeclarativeDashboardArtifactTemplate,
     IntegrationAnswerValue,
+    DeclarativeDashboardRelationProjectionArtifactTemplate,
     DeclarativeConnectorFunctionTemplate,
     DeclarativeConnectorSchemaTemplate,
     DeclarativeConnectorTemplate,
+    DeclarativeFunctionArtifactTemplate,
     DeclarativeGeneratedSecretTemplate,
+    DeclarativeRelationArtifactTemplate,
     DeclarativeSecretTemplate,
+    DeclarativeSourceArtifactTemplate,
+    DeclarativeSourceOverlayArtifactTemplate,
+    DeclarativeTriggerArtifactTemplate,
     IntegrationCspPolicy,
     IntegrationDefinition,
     IntegrationDependency,
