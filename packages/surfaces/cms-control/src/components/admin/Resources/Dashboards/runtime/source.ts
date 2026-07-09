@@ -41,7 +41,8 @@ async function sendSourceResponse(sourceId: string, ref: DashboardEndpointRef, m
 }
 
 function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVars): URL {
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
     for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) url.searchParams.set(key, value);
     return url;
 }

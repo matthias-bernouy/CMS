@@ -13,7 +13,13 @@ export async function detailLookupOptions(
 ): Promise<DetailOptions> {
     const entries = await Promise.all(detailFields(widget)
         .filter(isLookupField)
-        .map(async field => [field.id, await lookupOptions(sourceId, field, resource, fields)] as const));
+        .map(async field => {
+            try {
+                return [field.id, await lookupOptions(sourceId, field, resource, fields)] as const;
+            } catch {
+                return [field.id, []] as const;
+            }
+        }));
     return Object.fromEntries(entries);
 }
 
