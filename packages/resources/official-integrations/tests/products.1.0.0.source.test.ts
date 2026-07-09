@@ -13,6 +13,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import {
     handleSourceRequest,
     InMemorySourceRepository,
@@ -74,6 +75,21 @@ describe("products 1.0.0 source", () => {
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
+        expect(source!.endpoints
+            .filter(endpoint => (endpoint.responseKind ?? "json") === "json")
+            .filter(endpoint => !endpoint.output?.length)
+            .map(endpointIdFromUrn))
+            .toEqual([]);
+        expect(source!.endpoints.find(endpoint => endpoint.urn === "urn:products:product")?.output?.[0]?.body).toMatchObject({
+            type: "object",
+            properties: {
+                title: { type: "string" },
+                variants: { type: "array" },
+                variantMatrix: { type: "array" },
+            },
+        });
+        expect(source!.endpoints.find(endpoint => endpoint.urn === "urn:products:productImage")?.responseKind).toBe("file");
+        expect(source!.endpoints.find(endpoint => endpoint.urn === "urn:products:variantImage")?.responseKind).toBe("file");
         expect(endpointUrns).toContain("urn:products:products");
         expect(endpointUrns).toContain("urn:products:upsertProduct");
         expect(endpointUrns).toContain("urn:products:deleteProduct");
@@ -712,6 +728,16 @@ describe("products 1.0.0 source", () => {
 
         const detail = await okJson(await sourceRequest(harness, "product", { id: String(product.id) }));
         const variants = await okJson(await sourceRequest(harness, "variants", { productId: String(product.id), limit: "20" }));
+        const duplicate = variants.items[0] as JsonRecord;
+        harness.rest.seed("product_variants", {
+            product_id: product.id,
+            title: duplicate.title,
+            status: "inactive",
+            position: 99,
+            metadata: duplicate.metadata,
+        });
+        const dedupedDetail = await okJson(await sourceRequest(harness, "product", { id: String(product.id) }));
+        const dedupedVariants = await okJson(await sourceRequest(harness, "variants", { productId: String(product.id), limit: "20" }));
 
         expect(detail.variantAxes).toEqual([
             expect.objectContaining({ label: "Grip size", values: ["L1", "L2"] }),
@@ -734,6 +760,8 @@ describe("products 1.0.0 source", () => {
                 ],
             }),
         ]));
+        expect(dedupedDetail.variantMatrix).toHaveLength(4);
+        expect(dedupedVariants.items).toHaveLength(4);
         expect(harness.rest.rows("variant_attribute_values")).toHaveLength(0);
     });
 
@@ -801,6 +829,7 @@ describe("products 1.0.0 source", () => {
 async function createHarness() {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const importedBlocs: IntegrationBlocArtifact[] = [];
@@ -825,6 +854,7 @@ async function createHarness() {
         {
             sources,
             secrets,
+            roles,
             dashboards,
             connectorDeployers: [deployer],
             blocs: {
@@ -853,6 +883,7 @@ async function createHarness() {
         result,
         sources,
         secrets,
+        roles,
         dashboards,
         importedBlocs,
         deployment,
@@ -941,6 +972,10 @@ class ProductsRestMock {
 
     rows(table: string): JsonRecord[] {
         return this.tables[table]!.map(row => ({ ...row }));
+    }
+
+    seed(table: string, row: JsonRecord): JsonRecord {
+        return this.insert(table, row);
     }
 
     lastWriteHeaders(): Headers | undefined {
@@ -1355,6 +1390,10 @@ function matchesOr(row: JsonRecord, expression: string): boolean {
 
 function same(left: unknown, right: unknown): boolean {
     return String(left) === String(right);
+}
+
+function endpointIdFromUrn(endpoint: { urn: string }): string {
+    return endpoint.urn.split(":").at(-1) ?? endpoint.urn;
 }
 
 function tableHasUpdatedAt(table: string): boolean {

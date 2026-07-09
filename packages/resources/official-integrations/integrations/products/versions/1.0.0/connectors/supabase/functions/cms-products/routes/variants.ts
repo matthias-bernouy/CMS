@@ -5,7 +5,7 @@ import { appendEqualQuery, appendTextSearch, listQuery, listResponse, queryText,
 import { camelizeRecord } from "../core/records.ts";
 import { getOne, restJson } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
-import { enrichVariant, enrichVariants, variantSelect } from "./variantDetails.ts";
+import { dedupeGeneratedVariants, enrichVariant, enrichVariants, variantSelect } from "./variantDetails.ts";
 
 export async function variants(request: Request): Promise<Response> {
     requireCmsRequest(request);
@@ -15,7 +15,7 @@ export async function variants(request: Request): Promise<Response> {
     appendEqualQuery(query, "status", queryText(url, "status"));
     appendTextSearch(query, url, ["sku", "title"]);
     const rows = await restJson<JsonRecord[]>(`product_variants?${query.toString()}`, { method: "GET" });
-    return json(listResponse(await enrichVariants(rows), url));
+    return json(listResponse(await enrichVariants(dedupeGeneratedVariants(rows)), url));
 }
 
 export async function variant(request: Request): Promise<Response> {

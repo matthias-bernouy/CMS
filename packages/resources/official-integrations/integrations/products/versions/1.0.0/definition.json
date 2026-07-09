@@ -173,6 +173,7 @@
                     {
                         "endpointId": "products",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/products",
                         "params": [
                             {
@@ -238,7 +239,7 @@
                                                 "type": "object",
                                                 "properties": {
                                                     "id": {
-                                                        "type": "string"
+                                                        "type": "number"
                                                     },
                                                     "slug": {
                                                         "type": "string"
@@ -246,10 +247,25 @@
                                                     "title": {
                                                         "type": "string"
                                                     },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "brandId": {
+                                                        "type": "number"
+                                                    },
                                                     "status": {
                                                         "type": "string"
                                                     },
                                                     "visibility": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
                                                         "type": "string"
                                                     }
                                                 }
@@ -269,6 +285,7 @@
                     {
                         "endpointId": "product",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/product",
                         "params": [
                             {
@@ -289,6 +306,404 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "brandId": {
+                                            "type": "number"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        },
+                                        "brand": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "number"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "mainImageMediaId": {
+                                            "type": "string"
+                                        },
+                                        "categoryIds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "categoriesSummary": {
+                                            "type": "string"
+                                        },
+                                        "variants": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "isDefault": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "mainImageMediaId": {
+                                                        "type": "string"
+                                                    },
+                                                    "media": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "number"
+                                                                },
+                                                                "mediaId": {
+                                                                    "type": "number"
+                                                                },
+                                                                "sortOrder": {
+                                                                    "type": "number"
+                                                                },
+                                                                "isMain": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "media": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "cmsFileId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "url": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storageBucket": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storagePath": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "alt": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "mimeType": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "width": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "height": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "fileSize": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "originalFilename": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "attributeValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "optionValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "attributeId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeCode": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "optionId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "valueText": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantsSummary": {
+                                            "type": "string"
+                                        },
+                                        "categories": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "media": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "mediaId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sortOrder": {
+                                                        "type": "number"
+                                                    },
+                                                    "isMain": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "media": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "number"
+                                                            },
+                                                            "cmsFileId": {
+                                                                "type": "string"
+                                                            },
+                                                            "url": {
+                                                                "type": "string"
+                                                            },
+                                                            "storageBucket": {
+                                                                "type": "string"
+                                                            },
+                                                            "storagePath": {
+                                                                "type": "string"
+                                                            },
+                                                            "alt": {
+                                                                "type": "string"
+                                                            },
+                                                            "mimeType": {
+                                                                "type": "string"
+                                                            },
+                                                            "width": {
+                                                                "type": "number"
+                                                            },
+                                                            "height": {
+                                                                "type": "number"
+                                                            },
+                                                            "fileSize": {
+                                                                "type": "number"
+                                                            },
+                                                            "originalFilename": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantAxes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributes": {
+                                                        "type": "object"
+                                                    },
+                                                    "optionCount": {
+                                                        "type": "number"
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    },
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "values": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantMatrix": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "options": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "variantId": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantOptionGroups": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeCode": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeName": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "position": {
+                                                                    "type": "number"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantOptionsSummary": {
+                                            "type": "string"
+                                        },
+                                        "attributeValues": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -378,7 +793,27 @@
                                     }
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "deleteProduct",
@@ -408,11 +843,32 @@
                                     "ref": "userID"
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "productImage",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/product/image-file",
                         "params": [
                             {
@@ -431,7 +887,9 @@
                                     "prefix": "Bearer "
                                 }
                             }
-                        ]
+                        ],
+                        "responseKind": "file",
+                        "mediaType": "image/*"
                     },
                     {
                         "endpointId": "uploadProductImage",
@@ -538,6 +996,30 @@
                                     "ref": "userID"
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "mediaId": {
+                                            "type": "string"
+                                        },
+                                        "replacedMediaId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "mediaId",
+                                        "replacedMediaId"
+                                    ]
+                                }
+                            }
                         ]
                     },
                     {
@@ -570,6 +1052,26 @@
                                 "source": {
                                     "from": "computed",
                                     "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "mediaId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "mediaId"
+                                    ]
                                 }
                             }
                         ]
@@ -612,11 +1114,35 @@
                                     }
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "mediaIds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "mediaIds"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "variants",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/variants",
                         "params": [
                             {
@@ -654,11 +1180,165 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "isDefault": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "mainImageMediaId": {
+                                                        "type": "string"
+                                                    },
+                                                    "media": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "number"
+                                                                },
+                                                                "mediaId": {
+                                                                    "type": "number"
+                                                                },
+                                                                "sortOrder": {
+                                                                    "type": "number"
+                                                                },
+                                                                "isMain": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "media": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "cmsFileId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "url": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storageBucket": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storagePath": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "alt": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "mimeType": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "width": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "height": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "fileSize": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "originalFilename": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "attributeValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "optionValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "attributeId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeCode": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "optionId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "valueText": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "variant",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/variant",
                         "params": [
                             {
@@ -675,6 +1355,159 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "productId": {
+                                            "type": "number"
+                                        },
+                                        "sku": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "isDefault": {
+                                            "type": "boolean"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "position": {
+                                            "type": "number"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        },
+                                        "mainImageMediaId": {
+                                            "type": "string"
+                                        },
+                                        "media": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "mediaId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sortOrder": {
+                                                        "type": "number"
+                                                    },
+                                                    "isMain": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "media": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "number"
+                                                            },
+                                                            "cmsFileId": {
+                                                                "type": "string"
+                                                            },
+                                                            "url": {
+                                                                "type": "string"
+                                                            },
+                                                            "storageBucket": {
+                                                                "type": "string"
+                                                            },
+                                                            "storagePath": {
+                                                                "type": "string"
+                                                            },
+                                                            "alt": {
+                                                                "type": "string"
+                                                            },
+                                                            "mimeType": {
+                                                                "type": "string"
+                                                            },
+                                                            "width": {
+                                                                "type": "number"
+                                                            },
+                                                            "height": {
+                                                                "type": "number"
+                                                            },
+                                                            "fileSize": {
+                                                                "type": "number"
+                                                            },
+                                                            "originalFilename": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "attributeValues": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "optionValues": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "attributeId": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeCode": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeName": {
+                                                        "type": "string"
+                                                    },
+                                                    "optionId": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "valueText": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "optionsSummary": {
+                                            "type": "string"
+                                        },
+                                        "product": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "number"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -740,11 +1573,32 @@
                                     "type": "string"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "variantImage",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/variant/image-file",
                         "params": [
                             {
@@ -763,7 +1617,9 @@
                                     "prefix": "Bearer "
                                 }
                             }
-                        ]
+                        ],
+                        "responseKind": "file",
+                        "mediaType": "image/*"
                     },
                     {
                         "endpointId": "uploadVariantImage",
@@ -870,6 +1726,30 @@
                                     "ref": "userID"
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "mediaId": {
+                                            "type": "string"
+                                        },
+                                        "replacedMediaId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "mediaId",
+                                        "replacedMediaId"
+                                    ]
+                                }
+                            }
                         ]
                     },
                     {
@@ -902,6 +1782,26 @@
                                 "source": {
                                     "from": "computed",
                                     "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "mediaId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "mediaId"
+                                    ]
                                 }
                             }
                         ]
@@ -944,11 +1844,35 @@
                                     }
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "mediaIds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "mediaIds"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "categories",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/categories",
                         "params": [
                             {
@@ -986,11 +1910,69 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "parentId": {
+                                                        "type": "number"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "fullSlug": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "category",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/category",
                         "params": [
                             {
@@ -1011,6 +1993,66 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "parentId": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "fullSlug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "position": {
+                                            "type": "number"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        },
+                                        "parent": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "number"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                },
+                                                "fullSlug": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -1068,11 +2110,32 @@
                                     "type": "object"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "brands",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/brands",
                         "params": [
                             {
@@ -1105,11 +2168,60 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "brand",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/brand",
                         "params": [
                             {
@@ -1130,6 +2242,40 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -1181,11 +2327,32 @@
                                     "type": "object"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "attributes",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/attributes",
                         "params": [
                             {
@@ -1213,11 +2380,57 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "dataType": {
+                                                        "type": "string"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "attribute",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/attribute",
                         "params": [
                             {
@@ -1238,6 +2451,66 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "dataType": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        },
+                                        "options": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "optionsSummary": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -1292,11 +2565,32 @@
                                     }
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "attributeOptions",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/attribute-options",
                         "params": [
                             {
@@ -1319,11 +2613,54 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "productVariantAxes",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/variant-axes",
                         "params": [
                             {
@@ -1352,11 +2689,57 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributes": {
+                                                        "type": "object"
+                                                    },
+                                                    "optionCount": {
+                                                        "type": "number"
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
                         "endpointId": "productVariantAxisOptions",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/variant-axis-options",
                         "params": [
                             {
@@ -1388,6 +2771,51 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "optionId": {
+                                                        "type": "number"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributes": {
+                                                        "type": "object"
+                                                    },
+                                                    "attributeOptions": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -1436,7 +2864,27 @@
                                     "type": "number"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "upsertProductCategory",
@@ -1473,7 +2921,27 @@
                                     "type": "number"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "upsertProductAttributeValue",
@@ -1513,7 +2981,27 @@
                                     "type": "string"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "upsertVariantAttributeValue",
@@ -1553,7 +3041,27 @@
                                     "type": "string"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "upsertCategoryAttribute",
@@ -1593,7 +3101,27 @@
                                     "type": "number"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "upsertProductVariantAxis",
@@ -1640,7 +3168,30 @@
                                     "type": "number"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "optionCount": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "deleteProductVariantAxis",
@@ -1668,6 +3219,26 @@
                                 "source": {
                                     "from": "computed",
                                     "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
                                 }
                             }
                         ]
@@ -1714,7 +3285,27 @@
                                     "type": "number"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "deleteProductVariantAxisOption",
@@ -1742,6 +3333,26 @@
                                 "source": {
                                     "from": "computed",
                                     "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
                                 }
                             }
                         ]
@@ -1792,8 +3403,152 @@
                                         },
                                         "existing": {
                                             "type": "number"
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "isDefault": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "mainImageMediaId": {
+                                                        "type": "string"
+                                                    },
+                                                    "media": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "number"
+                                                                },
+                                                                "mediaId": {
+                                                                    "type": "number"
+                                                                },
+                                                                "sortOrder": {
+                                                                    "type": "number"
+                                                                },
+                                                                "isMain": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "media": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "cmsFileId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "url": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storageBucket": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storagePath": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "alt": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "mimeType": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "width": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "height": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "fileSize": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "originalFilename": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "attributeValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "optionValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "attributeId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeCode": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "optionId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "valueText": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "total",
+                                        "created",
+                                        "existing",
+                                        "items"
+                                    ]
                                 }
                             }
                         ]
@@ -1839,7 +3594,27 @@
                                     "type": "object"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "productDefaults",
@@ -1853,6 +3628,354 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "brandId": {
+                                            "type": "string"
+                                        },
+                                        "categoryIds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "media": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "mediaId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sortOrder": {
+                                                        "type": "number"
+                                                    },
+                                                    "isMain": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "media": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "number"
+                                                            },
+                                                            "cmsFileId": {
+                                                                "type": "string"
+                                                            },
+                                                            "url": {
+                                                                "type": "string"
+                                                            },
+                                                            "storageBucket": {
+                                                                "type": "string"
+                                                            },
+                                                            "storagePath": {
+                                                                "type": "string"
+                                                            },
+                                                            "alt": {
+                                                                "type": "string"
+                                                            },
+                                                            "mimeType": {
+                                                                "type": "string"
+                                                            },
+                                                            "width": {
+                                                                "type": "number"
+                                                            },
+                                                            "height": {
+                                                                "type": "number"
+                                                            },
+                                                            "fileSize": {
+                                                                "type": "number"
+                                                            },
+                                                            "originalFilename": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variants": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "isDefault": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "mainImageMediaId": {
+                                                        "type": "string"
+                                                    },
+                                                    "media": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "number"
+                                                                },
+                                                                "mediaId": {
+                                                                    "type": "number"
+                                                                },
+                                                                "sortOrder": {
+                                                                    "type": "number"
+                                                                },
+                                                                "isMain": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "media": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "cmsFileId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "url": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storageBucket": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "storagePath": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "alt": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "mimeType": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "width": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "height": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "fileSize": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "originalFilename": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "attributeValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "optionValues": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "attributeId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeCode": {
+                                                                    "type": "string"
+                                                                },
+                                                                "attributeName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "optionId": {
+                                                                    "type": "string"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "valueText": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantAxes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "productId": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributes": {
+                                                        "type": "object"
+                                                    },
+                                                    "optionCount": {
+                                                        "type": "number"
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    },
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "values": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantMatrix": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "options": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "variantId": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "variantOptionGroups": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "key": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeCode": {
+                                                        "type": "string"
+                                                    },
+                                                    "attributeName": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string"
+                                                                },
+                                                                "value": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "position": {
+                                                                    "type": "number"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "optionsSummary": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -1871,6 +3994,37 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "parentId": {
+                                            "type": "string"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "fullSlug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "position": {
+                                            "type": "number"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
@@ -1887,6 +4041,28 @@
                                     "prefix": "Bearer "
                                 }
                             }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
                         ]
                     },
                     {
@@ -1901,6 +4077,57 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "dataType": {
+                                            "type": "string"
+                                        },
+                                        "options": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "attributeId": {
+                                                        "type": "number"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "optionsSummary": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         ]

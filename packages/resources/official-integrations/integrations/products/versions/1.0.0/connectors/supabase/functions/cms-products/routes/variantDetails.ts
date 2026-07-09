@@ -18,6 +18,17 @@ export async function enrichVariants(variants: JsonRecord[]): Promise<JsonRecord
     return variants.map(variant => variantDetail(variant, media, attributeValues));
 }
 
+export function dedupeGeneratedVariants(variants: JsonRecord[]): JsonRecord[] {
+    const seen = new Set<string>();
+    return variants.filter(variant => {
+        const key = generatedVariantKey(variant);
+        if (!key) return true;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 export async function enrichVariant(variant: JsonRecord): Promise<JsonRecord> {
     return (await enrichVariants([variant]))[0] ?? camelizeRecord(variant);
 }
@@ -71,6 +82,37 @@ function metadataOptionValues(variant: JsonRecord): JsonRecord[] {
     });
 }
 
+function generatedVariantKey(variant: JsonRecord): string | null {
+    const metadata = record(variant.metadata);
+    const generated = metadata.generatedFromAxes === true
+        || text(metadata.optionKey)
+        || Array.isArray(metadata.optionValues)
+        || Array.isArray(variant.optionValues);
+    if (!generated) return null;
+
+    const options = optionValuesKey(variant.optionValues) || optionValuesKey(metadata.optionValues);
+    if (options) return `options:${options}`;
+    const optionKey = text(metadata.optionKey);
+    if (optionKey) return `key:${optionKey}`;
+    const summary = text(variant.optionsSummary ?? variant.options_summary);
+    if (summary) return `summary:${normalized(summary)}`;
+    const title = text(variant.title);
+    return title ? `title:${normalized(title)}` : null;
+}
+
+function optionValuesKey(value: unknown): string {
+    if (!Array.isArray(value)) return "";
+    return value
+        .map(item => {
+            const row = record(item);
+            const axis = text(row.axisKey) || text(row.attributeId) || text(row.attributeCode) || text(row.attributeName) || text(row.axisLabel);
+            const option = text(row.valueKey) || text(row.optionId) || text(row.value) || text(row.label) || text(row.valueText);
+            return axis && option ? `${normalized(axis)}:${normalized(option)}` : "";
+        })
+        .filter(Boolean)
+        .join("|");
+}
+
 function optionValue(row: JsonRecord): JsonRecord {
     const attribute = record(row.attributes);
     const option = record(row.attribute_options);
@@ -87,6 +129,15 @@ function optionValue(row: JsonRecord): JsonRecord {
 
 function record(value: unknown): JsonRecord {
     return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : {};
+}
+
+function text(value: unknown): string {
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function normalized(value: string): string {
+    return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function label(row: JsonRecord, preferred: string, fallback: string, empty: string): string {

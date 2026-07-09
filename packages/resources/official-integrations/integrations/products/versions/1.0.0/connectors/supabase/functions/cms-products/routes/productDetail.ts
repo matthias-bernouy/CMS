@@ -1,7 +1,7 @@
 import { camelizeRecord, camelizeValue } from "../core/records.ts";
 import { getOne, restJson } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
-import { enrichVariants, mainMediaId, variantSelect } from "./variantDetails.ts";
+import { dedupeGeneratedVariants, enrichVariants, mainMediaId, variantSelect } from "./variantDetails.ts";
 import {
     localVariantAxesFromProduct,
     variantMatrixRows,
@@ -32,7 +32,8 @@ export async function productDetail(row: JsonRecord): Promise<JsonRecord> {
     const variantOptionGroups = localAxes.length
         ? variantOptionGroupsFromAxes(localAxes)
         : buildVariantOptionGroups(variantAxes, variantAxisOptions);
-    const enrichedVariants = await enrichVariants(variants);
+    const dedupedVariants = dedupeGeneratedVariants(variants);
+    const enrichedVariants = await enrichVariants(dedupedVariants);
 
     return {
         ...camelizeRecord(row),
@@ -47,7 +48,7 @@ export async function productDetail(row: JsonRecord): Promise<JsonRecord> {
         variantAxes: localAxes.length
             ? localAxes.map(axis => ({ label: axis.label, values: axis.values, position: axis.position }))
             : variantAxes.map(axis => camelizeValue(withAxisOptionsSummary(axis, variantAxisOptions))),
-        variantMatrix: variantMatrixRows(localAxes, variants),
+        variantMatrix: variantMatrixRows(localAxes, dedupedVariants),
         variantOptionGroups,
         variantOptionsSummary: localAxes.length ? variantOptionsSummaryFromAxes(localAxes) : variantOptionsSummary(variantOptionGroups),
         attributeValues: attributeValues.map(camelizeValue),
