@@ -9,6 +9,7 @@ import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server"
 import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest, type SourceEndpoint } from "@bernouy/cms-sources";
 import { PUBLIC_AUTH_ROUTES, executeAuthSystemSourceEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN, withFunctionsSource } from "@bernouy/cms-functions";
+import { createTriggerInterceptor } from "@bernouy/cms-triggers";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
@@ -86,6 +87,18 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
         const proxiedSources = delivery.sources && delivery.functions
             ? withFunctionsSource(delivery.sources, delivery.functions)
             : delivery.sources;
+        const interceptEndpoint = delivery.triggers && delivery.functions && delivery.sources
+            ? createTriggerInterceptor({
+                triggers: delivery.triggers,
+                functions: delivery.functions,
+                sources: delivery.sources,
+                deps: sourceDeps,
+                resolveUser: async (req) => {
+                    const subject = await resolveDeliverySubject(delivery, req);
+                    return subject ? { id: subject.identifier, role: subject.role } : {};
+                },
+            })
+            : undefined;
         const deps = {
             ...sourceDeps,
             executeSystemEndpoint: async (endpoint: SourceEndpoint, req: Request) => {
@@ -104,6 +117,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
             },
             authorizeEndpoint: (endpoint: SourceEndpoint, req: Request) =>
                 authorizeDeliverySourceEndpoint(delivery, endpoint, req),
+            ...(interceptEndpoint ? { interceptEndpoint } : {}),
         };
         for (const method of SOURCE_PROXY_METHODS) {
             proxyRunner.setDefaultEndpoint(method, (req) =>

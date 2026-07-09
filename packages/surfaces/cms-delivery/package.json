@@ -13,6 +13,7 @@
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-functions": "workspace:*",
+        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",

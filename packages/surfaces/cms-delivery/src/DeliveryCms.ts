@@ -6,6 +6,7 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import type { SourceSecretResolver } from "@bernouy/cms-sources";
 import type { FunctionRepository } from "@bernouy/cms-functions";
+import type { TriggerRepository } from "@bernouy/cms-triggers";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
@@ -42,6 +43,8 @@ export type DeliveryCmsConfig = {
     /** Optional trusted function store projected as the `system-functions`
      * source when a source repository is also configured. */
     functions?: FunctionRepository;
+    /** Optional endpoint trigger store. Requires sources + functions to run. */
+    triggers?: TriggerRepository;
     /**
      * Optional secret resolver for source headers.
      *
@@ -129,6 +132,7 @@ export default class DeliveryCms {
     private _sources?:           SourceRepository;
     private _sourceResolveSecret?: SourceSecretResolver;
     private _functions?:         FunctionRepository;
+    private _triggers?:          TriggerRepository;
     private _auth?:              PublicAuthRoutesConfig<string>;
     private _roles?:             RolesRepository;
     private _integrationInstallations?: IntegrationInstallationRepository;
@@ -146,6 +150,7 @@ export default class DeliveryCms {
         this._headInjectors      = config.headInjectors ?? [];
         this._sources            = config.sources;
         this._functions          = config.functions;
+        this._triggers           = config.triggers;
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
         this._auth               = config.auth;
@@ -187,6 +192,10 @@ export default class DeliveryCms {
 
     get functions(){
         return this._functions;
+    }
+
+    get triggers(){
+        return this._triggers;
     }
 
     /** Public auth API config, or `undefined` when not mounted. */
