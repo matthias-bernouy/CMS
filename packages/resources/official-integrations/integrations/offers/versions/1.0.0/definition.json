@@ -162,6 +162,7 @@
                     {
                         "endpointId": "offers",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offers",
                         "meta": {
                             "name": "List offers",
@@ -199,12 +200,22 @@
                                 "type": "string"
                             },
                             {
+                                "name": "variantId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
                                 "name": "currency",
                                 "in": "query",
                                 "type": "string"
                             },
                             {
                                 "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
                                 "in": "query",
                                 "type": "number"
                             }
@@ -239,6 +250,15 @@
                                                     "title": {
                                                         "type": "string"
                                                     },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "productId": {
+                                                        "type": "string"
+                                                    },
+                                                    "variantId": {
+                                                        "type": "string"
+                                                    },
                                                     "sellerKind": {
                                                         "type": "string"
                                                     },
@@ -251,6 +271,12 @@
                                                     "currency": {
                                                         "type": "string"
                                                     },
+                                                    "compareAtAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "taxBehavior": {
+                                                        "type": "string"
+                                                    },
                                                     "status": {
                                                         "type": "string"
                                                     },
@@ -258,6 +284,24 @@
                                                         "type": "string"
                                                     },
                                                     "availability": {
+                                                        "type": "string"
+                                                    },
+                                                    "quantityAvailable": {
+                                                        "type": "number"
+                                                    },
+                                                    "startsAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "endsAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
                                                         "type": "string"
                                                     }
                                                 }
@@ -268,11 +312,11 @@
                                         },
                                         "limit": {
                                             "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
                                         }
-                                    },
-                                    "required": [
-                                        "items"
-                                    ]
+                                    }
                                 }
                             }
                         ]
@@ -280,6 +324,7 @@
                     {
                         "endpointId": "myOffers",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/my-offers",
                         "meta": {
                             "name": "List my offers",
@@ -331,15 +376,86 @@
                                     "type": "object",
                                     "properties": {
                                         "items": {
-                                            "type": "array"
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "number"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "productId": {
+                                                        "type": "string"
+                                                    },
+                                                    "variantId": {
+                                                        "type": "string"
+                                                    },
+                                                    "sellerKind": {
+                                                        "type": "string"
+                                                    },
+                                                    "sellerId": {
+                                                        "type": "string"
+                                                    },
+                                                    "priceAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "compareAtAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "taxBehavior": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "visibility": {
+                                                        "type": "string"
+                                                    },
+                                                    "availability": {
+                                                        "type": "string"
+                                                    },
+                                                    "quantityAvailable": {
+                                                        "type": "number"
+                                                    },
+                                                    "startsAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "endsAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "metadata": {
+                                                        "type": "object"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
                                         },
                                         "total": {
                                             "type": "number"
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
                                         }
-                                    },
-                                    "required": [
-                                        "items"
-                                    ]
+                                    }
                                 }
                             }
                         ]
@@ -347,6 +463,7 @@
                     {
                         "endpointId": "offer",
                         "method": "GET",
+                        "access": "public",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/offer",
                         "meta": {
                             "name": "Get offer",
@@ -395,6 +512,9 @@
                                         "productId": {
                                             "type": "string"
                                         },
+                                        "variantId": {
+                                            "type": "string"
+                                        },
                                         "sellerKind": {
                                             "type": "string"
                                         },
@@ -430,19 +550,17 @@
                                         },
                                         "endsAt": {
                                             "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
                                         }
-                                    },
-                                    "required": [
-                                        "slug",
-                                        "title",
-                                        "sellerKind",
-                                        "sellerId",
-                                        "priceAmount",
-                                        "currency",
-                                        "status",
-                                        "visibility",
-                                        "availability"
-                                    ]
+                                    }
                                 }
                             }
                         ]
@@ -459,6 +577,79 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "productId": {
+                                            "type": "string"
+                                        },
+                                        "variantId": {
+                                            "type": "string"
+                                        },
+                                        "sellerKind": {
+                                            "type": "string"
+                                        },
+                                        "sellerId": {
+                                            "type": "string"
+                                        },
+                                        "priceAmount": {
+                                            "type": "number"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "compareAtAmount": {
+                                            "type": "number"
+                                        },
+                                        "taxBehavior": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "availability": {
+                                            "type": "string"
+                                        },
+                                        "quantityAvailable": {
+                                            "type": "number"
+                                        },
+                                        "startsAt": {
+                                            "type": "string"
+                                        },
+                                        "endsAt": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -501,6 +692,9 @@
                                     "type": "string"
                                 },
                                 "productId": {
+                                    "type": "string"
+                                },
+                                "variantId": {
                                     "type": "string"
                                 },
                                 "sellerKind": {
@@ -555,13 +749,62 @@
                                         },
                                         "title": {
                                             "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "productId": {
+                                            "type": "string"
+                                        },
+                                        "variantId": {
+                                            "type": "string"
+                                        },
+                                        "sellerKind": {
+                                            "type": "string"
+                                        },
+                                        "sellerId": {
+                                            "type": "string"
+                                        },
+                                        "priceAmount": {
+                                            "type": "number"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "compareAtAmount": {
+                                            "type": "number"
+                                        },
+                                        "taxBehavior": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "availability": {
+                                            "type": "string"
+                                        },
+                                        "quantityAvailable": {
+                                            "type": "number"
+                                        },
+                                        "startsAt": {
+                                            "type": "string"
+                                        },
+                                        "endsAt": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
                                         }
-                                    },
-                                    "required": [
-                                        "id",
-                                        "slug",
-                                        "title"
-                                    ]
+                                    }
                                 }
                             }
                         ]
@@ -569,6 +812,7 @@
                     {
                         "endpointId": "upsertMyOffer",
                         "method": "POST",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-offers/my-offer",
                         "meta": {
                             "name": "Save my offer",
@@ -610,6 +854,9 @@
                                 "productId": {
                                     "type": "string"
                                 },
+                                "variantId": {
+                                    "type": "string"
+                                },
                                 "priceAmount": {
                                     "type": "number"
                                 },
@@ -620,7 +867,80 @@
                                     "type": "string"
                                 }
                             }
-                        }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "productId": {
+                                            "type": "string"
+                                        },
+                                        "variantId": {
+                                            "type": "string"
+                                        },
+                                        "sellerKind": {
+                                            "type": "string"
+                                        },
+                                        "sellerId": {
+                                            "type": "string"
+                                        },
+                                        "priceAmount": {
+                                            "type": "number"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "compareAtAmount": {
+                                            "type": "number"
+                                        },
+                                        "taxBehavior": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "availability": {
+                                            "type": "string"
+                                        },
+                                        "quantityAvailable": {
+                                            "type": "number"
+                                        },
+                                        "startsAt": {
+                                            "type": "string"
+                                        },
+                                        "endsAt": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "archiveOffer",
@@ -641,6 +961,79 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "number"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "productId": {
+                                            "type": "string"
+                                        },
+                                        "variantId": {
+                                            "type": "string"
+                                        },
+                                        "sellerKind": {
+                                            "type": "string"
+                                        },
+                                        "sellerId": {
+                                            "type": "string"
+                                        },
+                                        "priceAmount": {
+                                            "type": "number"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "compareAtAmount": {
+                                            "type": "number"
+                                        },
+                                        "taxBehavior": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "availability": {
+                                            "type": "string"
+                                        },
+                                        "quantityAvailable": {
+                                            "type": "number"
+                                        },
+                                        "startsAt": {
+                                            "type": "string"
+                                        },
+                                        "endsAt": {
+                                            "type": "string"
+                                        },
+                                        "metadata": {
+                                            "type": "object"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -664,6 +1057,26 @@
                                     "from": "secret",
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deleted": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "deleted",
+                                        "id"
+                                    ]
                                 }
                             }
                         ]
@@ -851,6 +1264,7 @@
                                         "title": "$field.title",
                                         "description": "$field.description",
                                         "productId": "$field.productId",
+                                        "variantId": "$field.variantId",
                                         "sellerKind": "$field.sellerKind",
                                         "sellerId": "$field.sellerId",
                                         "priceAmount": "$field.priceAmount",
@@ -923,6 +1337,12 @@
                                         "id": "productId",
                                         "label": "External item id",
                                         "path": "productId",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "variantId",
+                                        "label": "Variant id",
+                                        "path": "variantId",
                                         "type": "text"
                                     }
                                 ]

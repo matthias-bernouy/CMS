@@ -14,6 +14,7 @@ import {
     type SourceRepository,
 } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -84,6 +85,7 @@ describe("offers 1.0.0 source", () => {
         expect(dashboardJson).toContain("Save offer");
         expect(dashboardJson).toContain("Archive offer");
         expect(dashboardJson).toContain("External item id");
+        expect(dashboardJson).toContain("Variant id");
         expect(dashboardJson).not.toContain("productLookup");
         expect(dashboardJson).not.toContain("Coupon");
         expect(dashboardJson).not.toContain("Discount");
@@ -110,6 +112,7 @@ describe("offers 1.0.0 source", () => {
             visibility: "public",
             availability: "available",
             quantityAvailable: "12",
+            variantId: "variant-100-l2",
         }));
         const marketplace = await okJson(await sourceJson(harness, "upsertMyOffer", {
             slug: "seller-racket",
@@ -117,11 +120,13 @@ describe("offers 1.0.0 source", () => {
             sellerKind: "merchant",
             sellerId: "spoofed",
             productId: "100",
+            variantId: "variant-100-l3",
             priceAmount: 9900,
             currency: "eur",
             status: "active",
         }));
         const listed = await okJson(await sourceRequest(harness, "offers", { q: "racket", status: "active", limit: "20" }));
+        const listedByVariant = await okJson(await sourceRequest(harness, "offers", { productId: "100", variantId: "variant-100-l2" }));
         const mine = await okJson(await sourceRequest(harness, "myOffers", { status: "active" }));
         const detail = await okJson(await sourceRequest(harness, "offer", { id: String(merchant.id) }));
 
@@ -139,20 +144,25 @@ describe("offers 1.0.0 source", () => {
             visibility: "public",
             availability: "available",
             quantityAvailable: 12,
+            variantId: "variant-100-l2",
         });
         expect(marketplace).toMatchObject({
             slug: "seller-racket",
             sellerKind: "user",
             sellerId: "user-123",
+            variantId: "variant-100-l3",
         });
         expect(listed.items).toEqual([
             expect.objectContaining({ slug: "merchant-racket" }),
             expect.objectContaining({ slug: "seller-racket", sellerKind: "user", sellerId: "user-123" }),
         ]);
+        expect(listedByVariant.items).toEqual([
+            expect.objectContaining({ slug: "merchant-racket", variantId: "variant-100-l2" }),
+        ]);
         expect(mine.items).toEqual([
             expect.objectContaining({ slug: "seller-racket", sellerId: "user-123" }),
         ]);
-        expect(detail).toMatchObject({ id: merchant.id, slug: "merchant-racket", priceAmount: 12900 });
+        expect(detail).toMatchObject({ id: merchant.id, slug: "merchant-racket", priceAmount: 12900, variantId: "variant-100-l2" });
         expect(harness.rest.lastWriteHeaders()?.get("x-cms-user-id")).toBeNull();
         expect(harness.rest.checkedProfiles).toContain("offers");
         expect(harness.rest.checkedProfiles).not.toContain("products");
@@ -200,6 +210,7 @@ async function createHarness() {
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
@@ -221,6 +232,7 @@ async function createHarness() {
         {
             sources,
             secrets,
+            roles,
             dashboards,
             connectorDeployers: [deployer],
         },
@@ -242,6 +254,7 @@ async function createHarness() {
         result,
         sources,
         secrets,
+        roles,
         dashboards,
         deployment,
         rest,
@@ -320,7 +333,7 @@ class OffersRestMock {
     private select(table: string, url: URL): JsonRecord[] {
         let rows = this.tables[table]!;
         for (const [key, value] of url.searchParams.entries()) {
-            if (["select", "order", "limit"].includes(key)) continue;
+            if (["select", "order", "limit", "offset"].includes(key)) continue;
             const filter = filterValue(value);
             if (!filter) continue;
             rows = rows.filter(row => matchesFilter(row[key], filter));

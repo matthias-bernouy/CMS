@@ -6,6 +6,7 @@ type OfferRow = {
     title: string;
     description?: string | null;
     product_id?: string | null;
+    variant_id?: string | null;
     seller_kind: string;
     seller_id: string;
     price_amount: number;
@@ -53,6 +54,7 @@ const offerSelect = [
     "title",
     "description",
     "product_id",
+    "variant_id",
     "seller_kind",
     "seller_id",
     "price_amount",
@@ -120,6 +122,7 @@ async function listOffers(request: Request): Promise<Response> {
     appendEqualQuery(query, "seller_kind", url.searchParams.get("sellerKind"));
     appendEqualQuery(query, "seller_id", url.searchParams.get("sellerId"));
     appendEqualQuery(query, "product_id", url.searchParams.get("productId"));
+    appendEqualQuery(query, "variant_id", url.searchParams.get("variantId"));
     appendEqualQuery(query, "currency", normalizeOptionalCurrency(url.searchParams.get("currency")));
 
     const response = await rest(`offers?${query.toString()}`, {
@@ -133,6 +136,7 @@ async function listOffers(request: Request): Promise<Response> {
         items: rows.map(publicOffer),
         total: countFromContentRange(response.headers.get("content-range")) ?? rows.length,
         limit: boundedLimit(url.searchParams.get("limit")),
+        offset: boundedOffset(url.searchParams.get("offset")),
     });
 }
 
@@ -206,6 +210,7 @@ function defaultOffer(): JsonRecord {
         title: "",
         description: "",
         productId: "",
+        variantId: "",
         sellerKind: "merchant",
         sellerId: "default",
         priceAmount: 0,
@@ -231,6 +236,7 @@ function offerPatch(
     textPatch(patch, body, "title", "title", { trim: true });
     textPatch(patch, body, "description", "description", { trim: true, emptyAsNull: true });
     textPatch(patch, body, "productId", "product_id", { trim: true, emptyAsNull: true });
+    textPatch(patch, body, "variantId", "variant_id", { trim: true, emptyAsNull: true });
     integerPatch(patch, body, "priceAmount", "price_amount", { min: 0 });
     integerPatch(patch, body, "compareAtAmount", "compare_at_amount", { min: 0, emptyAsNull: true });
     integerPatch(patch, body, "quantityAvailable", "quantity_available", { min: 0, emptyAsNull: true });
@@ -432,6 +438,7 @@ function publicOffer(row: OfferRow): JsonRecord {
         title: row.title,
         description: row.description ?? "",
         productId: row.product_id ?? "",
+        variantId: row.variant_id ?? "",
         sellerKind: row.seller_kind,
         sellerId: row.seller_id,
         priceAmount: row.price_amount,
@@ -455,6 +462,8 @@ function listQuery(url: URL): URLSearchParams {
     query.set("select", offerSelect);
     query.set("order", "updated_at.desc");
     query.set("limit", String(boundedLimit(url.searchParams.get("limit"))));
+    const offset = boundedOffset(url.searchParams.get("offset"));
+    if (offset > 0) query.set("offset", String(offset));
     return query;
 }
 
@@ -473,6 +482,13 @@ function boundedLimit(value: string | null, fallback = 100): number {
     const parsed = Number(value);
     if (!Number.isInteger(parsed) || parsed < 1) throw new HttpError(400, "limit must be a positive integer");
     return Math.min(parsed, 200);
+}
+
+function boundedOffset(value: string | null): number {
+    if (!value) return 0;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0) throw new HttpError(400, "offset must be a non-negative integer");
+    return parsed;
 }
 
 function optionsResponse(): Response {

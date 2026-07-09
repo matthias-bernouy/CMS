@@ -18,6 +18,7 @@ create table if not exists offers.offers (
     title text not null,
     description text,
     product_id text,
+    variant_id text,
     seller_kind text not null default 'merchant',
     seller_id text not null default 'default',
     price_amount integer not null default 0,
@@ -37,6 +38,7 @@ create table if not exists offers.offers (
     constraint offers_title_not_blank check (length(btrim(title)) > 0),
     constraint offers_slug_key unique (slug),
     constraint offers_product_id_not_blank check (product_id is null or length(btrim(product_id)) > 0),
+    constraint offers_variant_id_not_blank check (variant_id is null or length(btrim(variant_id)) > 0),
     constraint offers_seller_kind_valid check (seller_kind in ('merchant', 'user', 'external')),
     constraint offers_seller_id_not_blank check (length(btrim(seller_id)) > 0),
     constraint offers_price_amount_non_negative check (price_amount >= 0),
@@ -50,6 +52,9 @@ create table if not exists offers.offers (
     constraint offers_dates_ordered check (starts_at is null or ends_at is null or starts_at <= ends_at),
     constraint offers_metadata_object check (jsonb_typeof(metadata) = 'object')
 );
+
+alter table offers.offers
+    add column if not exists variant_id text;
 
 create table if not exists offers.external_references (
     id bigint generated always as identity primary key,
@@ -75,6 +80,9 @@ create index if not exists offers_seller_idx
 
 create index if not exists offers_product_idx
     on offers.offers(product_id);
+
+create index if not exists offers_product_variant_idx
+    on offers.offers(product_id, variant_id);
 
 create index if not exists offers_currency_idx
     on offers.offers(currency);
@@ -139,6 +147,8 @@ comment on table offers.offers is
     'Sellable marketplace/ecommerce offer listings without promotions, orders, payments, delivery, or advanced inventory.';
 comment on column offers.offers.product_id is
     'Optional opaque reference to the external sellable item.';
+comment on column offers.offers.variant_id is
+    'Optional opaque reference to a concrete product variant.';
 comment on column offers.offers.price_amount is
     'Base offer price in the smallest currency unit.';
 comment on table offers.external_references is
