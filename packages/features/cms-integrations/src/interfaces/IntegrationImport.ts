@@ -1,6 +1,8 @@
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { FunctionRepository } from "@bernouy/cms-functions";
-import type { SourceRepository } from "@bernouy/cms-sources";
+import type { RelationRepository } from "@bernouy/cms-relations";
+import type { TriggerRepository } from "@bernouy/cms-triggers";
+import type { SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type {
     IntegrationAnswerValue,
@@ -52,8 +54,11 @@ export type IntegrationImportRequest = {
 export type IntegrationImportDeps = {
     sources: SourceRepository;
     functions?: FunctionRepository;
+    triggers?: TriggerRepository;
     secrets: SecretStore;
     dashboards?: DashboardRepository;
+    relations?: RelationRepository;
+    sourceOverlays?: SourceOverlayRepository;
     installations?: IntegrationInstallationRepository;
     blocs?: IntegrationBlocImporter;
     connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;

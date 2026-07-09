@@ -1,6 +1,11 @@
 import { type Dashboard } from "@bernouy/cms-dashboards";
 import { type CmsFunction } from "@bernouy/cms-functions";
-import { sourceDtoToSource, type Source } from "@bernouy/cms-sources";
+import type {
+    CmsRelation,
+    DashboardRelationProjection,
+} from "@bernouy/cms-relations";
+import { sourceDtoToSource, type Source, type SourceOverlay } from "@bernouy/cms-sources";
+import type { TriggerDefinition } from "@bernouy/cms-triggers";
 import { IntegrationInputError } from "../../errors";
 import { resolveTemplate, resolveTemplates, type TemplateContext } from "../../templates";
 import type {
@@ -31,6 +36,17 @@ export function buildFunctionArtifacts(definition: IntegrationDefinition, contex
     }
 }
 
+export function buildTriggerArtifacts(definition: IntegrationDefinition, context: TemplateContext): TriggerDefinition[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter(artifact => artifact.type === "trigger")
+            .map(artifact => resolveTemplates(artifact.trigger, context));
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid trigger artifact");
+    }
+}
+
 export function buildDashboardArtifacts(definition: IntegrationDefinition, context: TemplateContext): Dashboard[] {
     try {
         return (definition.artifacts ?? [])
@@ -39,6 +55,42 @@ export function buildDashboardArtifacts(definition: IntegrationDefinition, conte
     } catch (error) {
         if (error instanceof IntegrationInputError) throw error;
         throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid dashboard artifact");
+    }
+}
+
+export function buildSourceOverlayArtifacts(definition: IntegrationDefinition, context: TemplateContext): SourceOverlay[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter(artifact => artifact.type === "sourceOverlay")
+            .map(artifact => resolveTemplates(artifact.overlay, context));
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid source overlay artifact");
+    }
+}
+
+export function buildRelationArtifacts(definition: IntegrationDefinition, context: TemplateContext): CmsRelation[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter(artifact => artifact.type === "relation")
+            .map(artifact => resolveTemplates(artifact.relation, context));
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid relation artifact");
+    }
+}
+
+export function buildDashboardRelationProjectionArtifacts(
+    definition: IntegrationDefinition,
+    context: TemplateContext,
+): DashboardRelationProjection[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter(artifact => artifact.type === "dashboardRelation")
+            .map(artifact => resolveTemplates(artifact.projection, context));
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid dashboard relation projection artifact");
     }
 }
 

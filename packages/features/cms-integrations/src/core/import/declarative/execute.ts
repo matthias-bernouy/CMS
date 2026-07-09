@@ -1,10 +1,7 @@
 import { secretKeyToRef } from "@bernouy/cms-secrets";
-import { IntegrationRuntimeError } from "../../errors";
 import { type TemplateContext } from "../../templates";
 import { buildConnectorDeployments, deployConnectorDeployments } from "../connectorDeployments";
 import { resolveDependencyContext } from "../dependencies";
-import { writeDashboardsWithRollback } from "../dashboardWrites";
-import { writeFunctionsWithRollback } from "../functionWrites";
 import { writeSecretsWithRollback } from "../secretWrites";
 import { writeSourcesWithRollback } from "../sourceWrites";
 import type { IntegrationDefinition } from "../../../interfaces/Integration";
@@ -14,11 +11,21 @@ import type {
     IntegrationImportResult,
 } from "../../../interfaces/IntegrationImport";
 import {
+    writeDeclarativeArtifactStack,
+    type DeclarativeArtifactWriteResults,
+} from "./artifactWriteStack";
+import {
     buildBlocArtifacts,
     buildDashboardArtifacts,
+    buildDashboardRelationProjectionArtifacts,
     buildFunctionArtifacts,
+    buildRelationArtifacts,
     buildSourceArtifacts,
+    buildSourceOverlayArtifacts,
+    buildTriggerArtifacts,
 } from "./artifactBuilders";
+import { buildDashboardRelationProjectionWrites } from "./dashboardRelationWriteBuilders";
+import { buildRelationWrites } from "./relationWriteBuilders";
 import {
     assertUniqueSecretWrites,
     buildGeneratedSecretWrites,
@@ -31,6 +38,8 @@ import {
     buildSourceWrites,
     importBlocArtifacts,
 } from "./writeBuilders";
+import { buildSourceOverlayWrites } from "./sourceOverlayWriteBuilders";
+import { buildTriggerWrites } from "./triggerWriteBuilders";
 
 export async function executeDeclarativeIntegration<T>(
     deps: IntegrationImportDeps,
@@ -63,16 +72,39 @@ export async function executeDeclarativeIntegration<T>(
         const sourceArtifacts = buildSourceArtifacts(definition, context);
         const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
         const functionArtifacts = buildFunctionArtifacts(definition, context);
+        const triggerArtifacts = buildTriggerArtifacts(definition, context);
         const dashboardArtifacts = buildDashboardArtifacts(definition, context);
         const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
+        const sourceOverlayArtifacts = buildSourceOverlayArtifacts(definition, context);
+        const sourceOverlayWrites = await buildSourceOverlayWrites(deps, sourceOverlayArtifacts);
+        const relationArtifacts = buildRelationArtifacts(definition, context);
+        const relationWrites = await buildRelationWrites(deps, relationArtifacts, sourceArtifacts, options);
+        const projectionArtifacts = buildDashboardRelationProjectionArtifacts(definition, context);
+        const projectionWrites = await buildDashboardRelationProjectionWrites(
+            deps,
+            projectionArtifacts,
+            relationArtifacts,
+            dashboardArtifacts,
+            options,
+        );
         const blocArtifacts = buildBlocArtifacts(definition, context);
 
-        return writeSourcesWithRollback(deps.sources, sourceWrites, async artifacts => {
+        return writeSourcesWithRollback(deps.sources, sourceWrites, async sourceResults => {
             const functionWrites = await buildFunctionWrites(deps, functionArtifacts, options);
-            const buildResult = async (functionArtifacts: typeof artifacts, dashboardArtifacts: typeof artifacts) => {
+            const triggerWrites = await buildTriggerWrites(deps, triggerArtifacts, options);
+            const finish = async (results: DeclarativeArtifactWriteResults) => {
                 const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
                 const importResult = {
-                    artifacts: [...artifacts, ...functionArtifacts, ...dashboardArtifacts, ...blocImportResults],
+                    artifacts: [
+                        ...results.sourceResults,
+                        ...results.functionResults,
+                        ...results.triggerResults,
+                        ...results.dashboardResults,
+                        ...results.sourceOverlayResults,
+                        ...results.relationResults,
+                        ...results.dashboardRelationProjectionResults,
+                        ...blocImportResults,
+                    ],
                     ...(secretResults.length ? { secrets: secretResults } : {}),
                     ...(connectorDeployResult.results.length ? { connectors: connectorDeployResult.results } : {}),
                 };
@@ -80,21 +112,17 @@ export async function executeDeclarativeIntegration<T>(
                     ? { importResult, committed: await commit(importResult) }
                     : { importResult };
             };
-            const writeDashboards = (functionArtifacts: typeof artifacts) => {
-                if (!dashboardWrites.length) return buildResult(functionArtifacts, []);
-                return writeDashboardsWithRollback(deps.dashboards ?? missingDashboardRepository(), dashboardWrites, dashboardArtifacts =>
-                    buildResult(functionArtifacts, dashboardArtifacts));
-            };
-            if (!functionWrites.length) return writeDashboards([]);
-            return writeFunctionsWithRollback(deps.functions ?? missingFunctionRepository(), functionWrites, writeDashboards);
+            return writeDeclarativeArtifactStack({
+                deps,
+                sourceResults,
+                functionWrites,
+                triggerWrites,
+                dashboardWrites,
+                sourceOverlayWrites,
+                relationWrites,
+                dashboardRelationProjectionWrites: projectionWrites,
+                finish,
+            });
         });
     });
-}
-
-function missingDashboardRepository(): never {
-    throw new IntegrationRuntimeError("dashboard repository not configured");
-}
-
-function missingFunctionRepository(): never {
-    throw new IntegrationRuntimeError("function repository not configured");
 }
