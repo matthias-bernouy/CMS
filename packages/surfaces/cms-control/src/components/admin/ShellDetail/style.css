@@ -2,6 +2,10 @@
     display: block;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 .shell-detail {
     --shell-detail-main-width: var(--w-detail-main-width, 600px);
     --shell-detail-aside-width: var(--w-detail-aside-width, 285px);
@@ -9,6 +13,7 @@
     display: grid;
     gap: var(--shell-detail-gap);
     width: min(100%, calc(var(--shell-detail-main-width) + var(--shell-detail-aside-width) + var(--shell-detail-gap)));
+    min-width: 0;
 }
 
 .shell-detail-header {
@@ -78,9 +83,10 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 
 .shell-detail-layout {
     display: grid;
-    grid-template-columns: var(--shell-detail-main-width) var(--shell-detail-aside-width);
+    grid-template-columns: minmax(0, var(--shell-detail-main-width)) minmax(0, var(--shell-detail-aside-width));
     gap: var(--shell-detail-gap);
     align-items: start;
+    min-width: 0;
 }
 
 .shell-detail-main,
@@ -91,11 +97,11 @@ slot[name="actions"]::slotted(p9r-action-menu) {
 }
 
 .shell-detail-main {
-    width: var(--shell-detail-main-width);
+    width: 100%;
 }
 
 .shell-detail-aside {
-    width: var(--shell-detail-aside-width);
+    width: 100%;
 }
 
 .shell-detail-main > slot,
@@ -103,6 +109,12 @@ slot[name="actions"]::slotted(p9r-action-menu) {
     display: grid;
     gap: 16px;
     min-width: 0;
+}
+
+slot[name="main"]::slotted(*),
+slot[name="aside"]::slotted(*) {
+    min-width: 0;
+    max-width: 100%;
 }
 
 @media (max-width: 880px) {

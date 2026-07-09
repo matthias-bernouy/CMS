@@ -11,6 +11,12 @@
     background: #fff;
 }
 
+:host([embedded]) .w-table-shell {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
 .w-table-header {
     display: flex;
     align-items: center;
@@ -64,6 +70,10 @@ small,
     background: #f7f8f7;
 }
 
+:host([embedded]) .w-table-head {
+    border-radius: 6px 6px 0 0;
+}
+
 .w-table-head span {
     color: #3d4a46;
     font-size: 12px;
@@ -90,4 +100,8 @@ slot {
     margin: 0;
     padding: 22px 16px;
     color: #66736f;
+}
+
+:host([embedded]) .w-table-empty {
+    padding-inline: 0;
 }

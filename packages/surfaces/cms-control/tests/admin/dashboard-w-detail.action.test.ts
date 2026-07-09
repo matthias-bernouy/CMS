@@ -210,6 +210,124 @@ describe("dashboard detail widget actions", () => {
         expect((detail.shadowRoot!.querySelector<HTMLElement & { value: string }>("[data-field-control='recipientPostalCode']")!).value).toBe("75001");
     });
 
+    test("loads lookup options from an explicit source id", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            const request = new Request(input, init);
+            requests.push(request);
+            return Response.json({
+                items: [{ id: "product-1", title: "Racket", slug: "racket" }],
+            });
+        }) as typeof fetch;
+
+        const detail = document.createElement("cms-dashboard-w-detail");
+        detail.setAttribute("data-config-json", JSON.stringify({
+            widget: "w-detail",
+            id: "offerDetail",
+            source: { endpoint: "offer", params: { id: "$selection.id" } },
+            title: { path: "title", fallback: "Offer" },
+            main: [
+                {
+                    id: "details",
+                    title: "Details",
+                    fields: [
+                        {
+                            id: "productId",
+                            label: "Product",
+                            path: "productId",
+                            type: "combobox",
+                            lookup: {
+                                sourceId: "products",
+                                endpoint: "products",
+                                params: { q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
+                                subtitlePath: "slug",
+                            },
+                        },
+                    ],
+                },
+            ],
+        }));
+        detail.setAttribute("data-source-json", JSON.stringify({ id: "offer-1", productId: "product-1" }));
+        detail.setAttribute("data-row-key", "offer-1");
+        detail.setAttribute("data-source-id", "offers");
+
+        document.body.append(detail);
+        await waitFor(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")));
+
+        expect(requests[0]?.url).toContain("/.cms/sources/products/products");
+        expect(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")?.textContent).toBe("Racket");
+    });
+
+    test("keeps independent lookup options when a dependent lookup fails", async () => {
+        globalThis.fetch = (async (input, init) => {
+            const request = new Request(input, init);
+            const url = new URL(request.url);
+            if (url.pathname.endsWith("/products")) {
+                return Response.json({ items: [{ id: "product-1", title: "Racket", slug: "racket" }] });
+            }
+            if (url.pathname.endsWith("/variants")) {
+                return new Response("missing product id", { status: 400 });
+            }
+            return new Response("unexpected lookup", { status: 500 });
+        }) as typeof fetch;
+
+        const detail = document.createElement("cms-dashboard-w-detail");
+        detail.setAttribute("data-config-json", JSON.stringify({
+            widget: "w-detail",
+            id: "offerDetail",
+            source: { endpoint: "offer", params: { id: "$selection.id" } },
+            title: { path: "title", fallback: "Offer" },
+            main: [
+                {
+                    id: "details",
+                    title: "Details",
+                    fields: [
+                        {
+                            id: "productId",
+                            label: "Product",
+                            path: "productId",
+                            type: "combobox",
+                            lookup: {
+                                sourceId: "products",
+                                endpoint: "products",
+                                params: { q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
+                            },
+                        },
+                        {
+                            id: "variantId",
+                            label: "Variant",
+                            path: "variantId",
+                            type: "combobox",
+                            lookup: {
+                                sourceId: "products",
+                                endpoint: "variants",
+                                params: { productId: "$field.productId", q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
+                            },
+                        },
+                    ],
+                },
+            ],
+        }));
+        detail.setAttribute("data-source-json", JSON.stringify({ id: "offer-1", productId: "", variantId: "" }));
+        detail.setAttribute("data-row-key", "offer-1");
+        detail.setAttribute("data-source-id", "offers");
+
+        document.body.append(detail);
+        await waitFor(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")));
+
+        expect(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")?.textContent).toBe("Racket");
+        expect(detail.shadowRoot!.querySelector("p9r-combobox option[value='variant-1']")).toBeNull();
+    });
+
     test("keeps media items when lookup options rerender current fields", async () => {
         globalThis.fetch = (async (_input, _init) => Response.json({
             items: [{ id: "brand-1", name: "Acme", slug: "acme" }],

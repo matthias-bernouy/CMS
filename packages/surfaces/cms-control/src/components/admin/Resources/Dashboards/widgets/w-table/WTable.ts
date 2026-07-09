@@ -56,7 +56,7 @@ export class DashboardWTable extends Component {
     private render(): void {
         setText(this.shadowRoot!, "[data-title]", this.value.title);
         setText(this.shadowRoot!, "[data-subtitle]", this.value.subtitle ?? "");
-        this.query<HTMLElement>("[data-header]").hidden = !this.value.subtitle && !(this.value.actions?.length);
+        this.query<HTMLElement>("[data-header]").hidden = !this.value.title && !this.value.subtitle && !(this.value.actions?.length);
         this.renderActions();
         this.renderColumns();
         this.syncRows();

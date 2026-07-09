@@ -87,9 +87,11 @@ export class DashboardView extends Component {
     }
 
     private render(): void {
-        this.isExampleMode()
-            ? renderExampleShell(this.shadowRoot!, this.detailSelection?.row ?? null)
-            : renderDashboardShell(this.shadowRoot!, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState, this.drafts);
+        if (this.isExampleMode()) {
+            renderExampleShell(this.shadowRoot!, this.detailSelection?.row ?? null);
+            return;
+        }
+        renderDashboardShell(this.shadowRoot!, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState, this.drafts);
     }
 
     private activeGroup(): DashboardSourceGroup | null { return this.groups.find(group => group.source.id === this.selectedSource) ?? null; }
@@ -191,6 +193,7 @@ export class DashboardView extends Component {
         if (!dashboard) return;
         document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
+
 }
 
 if (!customElements.get("cms-dashboards-admin")) customElements.define("cms-dashboards-admin", DashboardView);
