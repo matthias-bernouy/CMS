@@ -1,4 +1,5 @@
 import { applyDashboardSourceOverlays, type DashboardDto } from "@bernouy/cms-dashboards";
+import { SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import type { DashboardRelationProjection, RelationRepository } from "@bernouy/cms-relations";
 import {
     isSystemSourceUrn,
@@ -57,7 +58,7 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
         dashboardsBySource.set(dashboard.source, list);
     }
 
-    const groups: DashboardSourceGroup[] = sources.map(source => {
+    const groups: DashboardSourceGroup[] = sources.filter(source => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN).map(source => {
         const dto = sourceToDto(source);
         const id = parseUrn(source.urn)?.source ?? dto.id;
         const overlays = sourceOverlays.filter(overlay => overlay.sourceId === id);

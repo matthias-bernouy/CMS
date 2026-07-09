@@ -1,0 +1,39 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Functions</span>
+
+    <p9r-table cms-source="{{BASE_PATH}}/api/functions">
+        <p9r-row slot="header" cms-condition="$source.loaded">
+            <p9r-cell><strong>Function</strong></p9r-cell>
+            <p9r-cell><strong>Method</strong></p9r-cell>
+            <p9r-cell><strong>Access</strong></p9r-cell>
+            <p9r-cell><strong>Input</strong></p9r-cell>
+            <p9r-cell><strong>Steps</strong></p9r-cell>
+            <p9r-cell><strong>Output</strong></p9r-cell>
+            <p9r-cell><strong>Return</strong></p9r-cell>
+        </p9r-row>
+
+        <p9r-row cms-repeat="." cms-condition="$source.loaded">
+            <p9r-cell>
+                <strong>{{ label }}</strong>
+                <div style="color: var(--color-text-muted); font-size: .8125rem; margin-top: .25rem;">{{ id }}</div>
+                <div style="color: var(--color-text-muted); font-size: .8125rem; margin-top: .25rem;">{{ description }}</div>
+            </p9r-cell>
+            <p9r-cell><p9r-tag>{{ method }}</p9r-tag></p9r-cell>
+            <p9r-cell><p9r-tag>{{ access }}</p9r-tag></p9r-cell>
+            <p9r-cell>{{ paramsLabel }} / {{ bodyLabel }}</p9r-cell>
+            <p9r-cell>{{ stepsLabel }}</p9r-cell>
+            <p9r-cell>{{ outputLabel }}</p9r-cell>
+            <p9r-cell>{{ returnLabel }}</p9r-cell>
+        </p9r-row>
+
+        <cms-empty-state cms-condition="$source.empty">
+            <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                <path d="M9 5c-2.3 2-3.4 4.3-3.4 7S6.7 17 9 19" />
+                <path d="M15 5c2.3 2 3.4 4.3 3.4 7S17.3 17 15 19" />
+            </svg>
+            <p slot="title">No functions installed</p>
+            <p slot="hint">Install an integration that provides function artifacts.</p>
+        </cms-empty-state>
+    </p9r-table>
+</w13c-fixed-admin-layout>

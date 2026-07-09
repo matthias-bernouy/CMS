@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryFunctionRepository, withFunctionsSource } from "@bernouy/cms-functions";
 import {
     CompositeSourceRepository,
     InMemorySourceRepository,
@@ -68,5 +69,24 @@ describe("GET /api/dashboards", () => {
             readonly: true,
         });
         expect(body[0].dashboards).toEqual([]);
+    });
+
+    test("does not list system functions in the admin sources screen", async () => {
+        const baseSources = new InMemorySourceRepository();
+        const dashboards = new InMemoryDashboardRepository();
+        const functions = new InMemoryFunctionRepository();
+        await functions.createFunction({
+            id: "updateMyProduct",
+            method: "POST",
+            steps: [],
+            return: {},
+        });
+
+        const body = await (await listDashboards(list(), {
+            sources: withFunctionsSource(baseSources, functions),
+            dashboards,
+        } as any)).json();
+
+        expect(body.map((group: any) => group.source.id)).not.toContain("system-functions");
     });
 });
