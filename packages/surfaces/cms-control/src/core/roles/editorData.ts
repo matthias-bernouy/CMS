@@ -1,7 +1,8 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { ADMIN_ROLE, CMS_PERMISSION_CATALOGUE, cmsPermission } from "@bernouy/cms-permissions";
 import type { SourceRepository } from "@bernouy/cms-sources";
-import { isSystemSourceUrn, parseUrn } from "@bernouy/cms-sources";
+import { parseUrn } from "@bernouy/cms-sources";
+import { isGrantableGatewaySource, roleCanBeGrantedEndpoint } from "cms-control/core/roles/gatewayAccess";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /** CMS capabilities of one feature, as pickable permissions. */
@@ -35,21 +36,26 @@ export async function roleEditorData(cms: ControlCms, id: string): Promise<RoleE
 
     return {
         role:    { id: def.id, label: def.label, builtin: !!def.builtin, grants: def.grants.map((g) => g.permission) },
-        catalog: { cms: cmsGroups, gateway: await sourcePermGroups(cms) },
+        catalog: { cms: cmsGroups, gateway: await sourcePermGroups(cms, id) },
     };
 }
 
 /** Source endpoints grouped by source, labelled by the source display
  *  name (fallback: its id, then its urn). Empty when sources are not configured. */
-async function sourcePermGroups(cms: ControlCms): Promise<SourcePermGroup[]> {
+async function sourcePermGroups(cms: ControlCms, roleId: string): Promise<SourcePermGroup[]> {
     let sources: SourceRepository | null = null;
     try { sources = cms.sources; } catch { sources = null; }
     if (!sources) return [];
 
     const providers = await sources.getAllSources();
-    return providers.filter((p) => !isSystemSourceUrn(p.urn)).map((p) => ({
-        provider:  p.urn,
-        label:     p.meta?.name ?? parseUrn(p.urn)?.source ?? p.urn,
-        endpoints: p.endpoints.map((e) => ({ id: e.urn, label: e.meta?.name ?? e.urn })),
-    }));
+    return providers
+        .filter(isGrantableGatewaySource)
+        .map((p) => ({
+            provider:  p.urn,
+            label:     p.meta?.name ?? parseUrn(p.urn)?.source ?? p.urn,
+            endpoints: p.endpoints
+                .filter((e) => roleCanBeGrantedEndpoint(roleId, e))
+                .map((e) => ({ id: e.urn, label: e.meta?.name ?? e.urn })),
+        }))
+        .filter((group) => group.endpoints.length > 0);
 }
