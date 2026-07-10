@@ -1,9 +1,0 @@
-{
-    "default-tag": "product-search",
-    "bloc": "./Bloc.ts",
-    "defaultContent": "./default.html",
-    "meta": {
-        "title": "Product search",
-        "description": "Searches products and submits the selected product id as a form value."
-    }
-}
