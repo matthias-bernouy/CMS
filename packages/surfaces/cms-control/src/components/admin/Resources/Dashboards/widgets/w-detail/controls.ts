@@ -1,5 +1,6 @@
 import type { WDetailField, WDetailFieldValue } from "./types";
 import { isMediaControl, mediaList } from "./mediaControl";
+import { DashboardWReorderableList, type ReorderableListData } from "../w-reorderable-list/WReorderableList";
 import { valueAt } from "../../runtime/expressions";
 
 type ValueControl = HTMLElement & { value: string };
@@ -12,6 +13,7 @@ export function createFieldControl(field: WDetailField): HTMLElement {
     if (field.input === "tokens") return tokenInput(field);
     if (field.input === "media-list") return mediaList(field);
     if (field.input === "table") return table(field);
+    if (field.input === "reorderable-list") return reorderableList(field);
     if (field.input === "chips") return chips(field);
     if (field.input === "badge") return badge(String(field.value));
     if (field.input === "readonly") return readonly(field.value);
@@ -19,7 +21,7 @@ export function createFieldControl(field: WDetailField): HTMLElement {
 }
 
 export function fieldUsesInternalLabel(field: WDetailField): boolean {
-    return ["text", "textarea", "select", "combobox", "tokens", "media-list"].includes(field.input);
+    return ["text", "textarea", "select", "combobox", "tokens", "media-list", "reorderable-list"].includes(field.input);
 }
 
 export function readFieldControlValue(field: WDetailField, control: HTMLElement): WDetailFieldValue {
@@ -31,6 +33,7 @@ export function readFieldControlValue(field: WDetailField, control: HTMLElement)
     if (field.input === "tokens" && isTokenControl(control)) return control.values;
     if (field.input === "media-list" && isMediaControl(control)) return control.items;
     if (field.input === "table") return readTableValue(field, control);
+    if (field.input === "reorderable-list" && isReorderableListControl(control)) return control.items;
     if (isValueControl(control)) return control.value;
     return Array.isArray(field.value) ? field.value : String(field.value);
 }
@@ -63,6 +66,22 @@ function table(field: WDetailField): HTMLElement {
         root.append(add);
     }
     return root;
+}
+
+function reorderableList(field: WDetailField): HTMLElement {
+    const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
+    const data: ReorderableListData = {
+        items: tableRows(field.value),
+        itemKey: field.itemKey ?? "id",
+        ...(field.positionPath ? { positionPath: field.positionPath } : {}),
+        fields: (field.reorderableFields ?? []).map(item => ({ ...item })),
+        ...(field.addLabel ? { addLabel: field.addLabel } : {}),
+        ...(field.minItems !== undefined ? { minItems: field.minItems } : {}),
+        ...(field.maxItems !== undefined ? { maxItems: field.maxItems } : {}),
+    };
+    list.data = data;
+    bindFieldControl(list, field);
+    return list;
 }
 
 export function tableRow(field: WDetailField, row: Record<string, unknown>): HTMLElement {
@@ -180,6 +199,10 @@ function isValueControl(control: HTMLElement): control is ValueControl {
 
 function isTokenControl(control: HTMLElement): control is TokenControl {
     return isValueControl(control) && "values" in control && Array.isArray((control as TokenControl).values);
+}
+
+function isReorderableListControl(control: HTMLElement): control is DashboardWReorderableList {
+    return control instanceof DashboardWReorderableList;
 }
 
 function arrayValue(field: WDetailField): string[] {

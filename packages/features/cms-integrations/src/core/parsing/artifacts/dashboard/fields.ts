@@ -1,5 +1,6 @@
 import type {
     DashboardField,
+    DashboardReorderableListItemField,
     DashboardSection,
     DashboardTableColumn,
     DashboardTableDerive,
@@ -58,6 +59,16 @@ function parseField(value: unknown, name: string): DashboardField {
         ...(value.editable === true ? { editable: true } : {}),
         ...(value.derive !== undefined ? { derive: parseTableDerive(value.derive, `${name}.derive`) } : {}),
     };
+    if (type === "reorderable-list") return {
+        ...base,
+        type,
+        itemKey: requiredText(value.itemKey, `${name}.itemKey`),
+        ...(text(value.positionPath) ? { positionPath: text(value.positionPath)! } : {}),
+        fields: parseReorderableListFields(value.fields, `${name}.fields`),
+        ...(text(value.addLabel) ? { addLabel: text(value.addLabel)! } : {}),
+        ...(typeof value.minItems === "number" ? { minItems: value.minItems } : {}),
+        ...(typeof value.maxItems === "number" ? { maxItems: value.maxItems } : {}),
+    };
     if (type === "media") return {
         ...base,
         type,
@@ -70,7 +81,21 @@ function parseField(value: unknown, name: string): DashboardField {
         type,
         ...(parseReadonlyFormat(value.format, `${name}.format`) ? { format: parseReadonlyFormat(value.format, `${name}.format`)! } : {}),
     };
-    throw new IntegrationInputError(`${name}.type`, "must be text, textarea, select, combobox, tokens, table, media, or readonly");
+    throw new IntegrationInputError(`${name}.type`, "must be text, textarea, select, combobox, tokens, table, reorderable-list, media, or readonly");
+}
+
+function parseReorderableListFields(value: unknown, name: string): DashboardReorderableListItemField[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => {
+        if (!isRecord(entry)) throw new IntegrationInputError(`${name}.${index}`, "must be an object");
+        return {
+            id: requiredText(entry.id, `${name}.${index}.id`),
+            label: requiredText(entry.label, `${name}.${index}.label`),
+            path: requiredText(entry.path, `${name}.${index}.path`),
+            ...(entry.required === true ? { required: true } : {}),
+            ...(text(entry.placeholder) ? { placeholder: text(entry.placeholder)! } : {}),
+        };
+    });
 }
 
 function parseTableColumns(value: unknown, name: string): DashboardTableColumn[] {

@@ -18,6 +18,7 @@ export type {
     DashboardLookupRef,
     DashboardMeta,
     DashboardOption,
+    DashboardReorderableListItemField,
     DashboardSection,
     DashboardTableColumn,
     DashboardTableDerive,

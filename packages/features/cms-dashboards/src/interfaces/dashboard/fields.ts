@@ -45,6 +45,14 @@ export type DashboardSelectableField = {
     allowCustom?: boolean;
 };
 
+export type DashboardReorderableListItemField = {
+    id: string;
+    label: string;
+    path: string;
+    required?: boolean;
+    placeholder?: string;
+};
+
 export type DashboardField =
     | (DashboardFieldBase & { type: "text"; placeholder?: string })
     | (DashboardFieldBase & { type: "textarea"; rows?: number })
@@ -56,6 +64,15 @@ export type DashboardField =
         columns: DashboardTableColumn[];
         editable?: boolean;
         derive?: DashboardTableDerive;
+    })
+    | (DashboardFieldBase & {
+        type: "reorderable-list";
+        itemKey: string;
+        positionPath?: string;
+        fields: DashboardReorderableListItemField[];
+        addLabel?: string;
+        minItems?: number;
+        maxItems?: number;
     })
     | (DashboardFieldBase & {
         type: "media";

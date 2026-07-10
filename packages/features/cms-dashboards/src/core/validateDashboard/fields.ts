@@ -4,7 +4,7 @@ import type {
     DashboardField,
     DashboardSection,
 } from "../../interfaces/Dashboard";
-import { validateMediaField, validateTableField } from "./complexFields";
+import { validateMediaField, validateReorderableListField, validateTableField } from "./complexFields";
 import { validateSelectableField } from "./selectableFields";
 import {
     validateOptions,
@@ -63,6 +63,9 @@ export function validateField(
             break;
         case "table":
             validateTableField(field, path, errors);
+            break;
+        case "reorderable-list":
+            validateReorderableListField(field, path, errors);
             break;
         case "media":
             validateMediaField(field, path, dashboard, source, errors);

@@ -19,16 +19,30 @@ export type WDetailTableDerive = {
 
 export type WDetailTableRow = Record<string, unknown>;
 
+export type WDetailReorderableListField = {
+    id: string;
+    label: string;
+    path: string;
+    required?: boolean;
+    placeholder?: string;
+};
+
 export type WDetailFieldValue = string | string[] | DashboardMediaItem[] | WDetailTableRow[];
 
 export type WDetailField = {
     id: string;
     label: string;
     value: WDetailFieldValue;
-    input: "text" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "table" | "readonly" | "badge";
+    input: "text" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "table" | "reorderable-list" | "readonly" | "badge";
     options?: Array<{ label: string; value: string }>;
     columns?: WDetailTableColumn[];
     derive?: WDetailTableDerive;
+    itemKey?: string;
+    positionPath?: string;
+    reorderableFields?: WDetailReorderableListField[];
+    addLabel?: string;
+    minItems?: number;
+    maxItems?: number;
     editable?: boolean;
     placeholder?: string;
     creatable?: boolean;

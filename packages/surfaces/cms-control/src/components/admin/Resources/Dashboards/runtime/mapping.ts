@@ -88,6 +88,17 @@ function detailField(field: DashboardField, resource: unknown, dynamicOptions: D
         ...(field.derive ? { derive: field.derive } : {}),
         ...(field.editable === true ? { editable: true } : {}),
     };
+    if (field.type === "reorderable-list") return {
+        ...base,
+        input: "reorderable-list",
+        value: tableValue(value),
+        itemKey: field.itemKey,
+        ...(field.positionPath ? { positionPath: field.positionPath } : {}),
+        reorderableFields: field.fields.map(item => ({ ...item })),
+        ...(field.addLabel ? { addLabel: field.addLabel } : {}),
+        ...(field.minItems !== undefined ? { minItems: field.minItems } : {}),
+        ...(field.maxItems !== undefined ? { maxItems: field.maxItems } : {}),
+    };
     if (field.type === "media") return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
     if (field.type === "readonly") return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     return { ...base, input: "text", value: textValue(value) };

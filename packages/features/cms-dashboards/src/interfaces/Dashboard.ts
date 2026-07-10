@@ -14,6 +14,7 @@ export type {
 export type {
     DashboardField,
     DashboardFieldBase,
+    DashboardReorderableListItemField,
     DashboardLookupCreate,
     DashboardLookupRef,
     DashboardSection,

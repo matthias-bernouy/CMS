@@ -65,6 +65,54 @@ describe("dashboard detail widget actions", () => {
         expect(actions[0]?.fields).toEqual({ title: "Edited title" });
     });
 
+    test("includes a reordered list in the field draft submitted by an action", async () => {
+        const detail = document.createElement("cms-dashboard-w-detail");
+        detail.setAttribute("data-config-json", JSON.stringify({
+            widget: "w-detail",
+            id: "fieldDetail",
+            source: { endpoint: "field" },
+            actions: [{ id: "saveField", label: "Save field", endpoint: { endpoint: "saveField" } }],
+            main: [{
+                id: "options",
+                title: "Allowed values",
+                fields: [{
+                    id: "options",
+                    label: "Allowed values",
+                    path: "options",
+                    type: "reorderable-list",
+                    itemKey: "id",
+                    positionPath: "position",
+                    fields: [
+                        { id: "value", label: "Value", path: "value", required: true },
+                        { id: "label", label: "Label", path: "label", required: true },
+                    ],
+                }],
+            }],
+        }));
+        detail.setAttribute("data-source-json", JSON.stringify({
+            options: [
+                { id: "agency", value: "agency", label: "Agency", position: 0 },
+                { id: "club", value: "club", label: "Club", position: 1 },
+            ],
+        }));
+        detail.setAttribute("data-row-key", "company");
+        const actions: WidgetActionDetail[] = [];
+        detail.addEventListener(WIDGET_ACTION_EVENT, event => actions.push((event as CustomEvent<WidgetActionDetail>).detail));
+
+        document.body.append(detail);
+        await Promise.resolve();
+        const list = detail.shadowRoot!.querySelector<HTMLElement>("cms-dashboard-w-reorderable-list")!;
+        const rows = list.shadowRoot!.querySelectorAll<HTMLElement>(".row");
+        rows[0]!.querySelector<HTMLElement>(".handle")!.dispatchEvent(new Event("dragstart", { bubbles: true }));
+        rows[1]!.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
+        (detail.shadowRoot!.querySelector("p9r-button") as HTMLElement).click();
+
+        expect(actions[0]?.fields?.options).toEqual([
+            { id: "club", value: "club", label: "Club", position: 0 },
+            { id: "agency", value: "agency", label: "Agency", position: 1 },
+        ]);
+    });
+
     test("applies inline-created lookup options without rerendering", async () => {
         const detail = document.createElement("cms-dashboard-w-detail") as HTMLElement & {
             applyLookupCreate: (fieldId: string, value: unknown, option: { value: string; label: string }) => void;
