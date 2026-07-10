@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import { CMS_BINDING_ATTRIBUTES, Editor } from "@bernouy/cms-content/editor";
 import type { DataSourcePickerSelectDetail } from "../src/components/Layout/DataSourcePicker/DataSourcePicker";
@@ -24,6 +24,21 @@ function installDom(): void {
         requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(callback, 0),
     });
 }
+
+const workspaceDomGlobals = {
+    document:              globalThis.document,
+    customElements:        globalThis.customElements,
+    Element:               globalThis.Element,
+    HTMLElement:           globalThis.HTMLElement,
+    CustomEvent:           globalThis.CustomEvent,
+    Event:                 globalThis.Event,
+    Node:                  globalThis.Node,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+};
+
+afterAll(() => {
+    Object.assign(globalThis, workspaceDomGlobals);
+});
 
 function dataSource(): EditorDataSource {
     return {

@@ -11,6 +11,7 @@ const SECURED: Source = {
     endpoints: [{
         urn: "urn:secured:get",
         method: "GET",
+        access: { mode: "public" },
         targetUrl: "https://api.example.com/data",
         headers: [{ name: "authorization", source: { from: "secret", ref: "${API_KEY}", prefix: "Bearer " } }],
     }],
@@ -21,6 +22,7 @@ const COMPUTED: Source = {
     endpoints: [{
         urn:       "urn:computed:me",
         method:    "GET",
+        access:    { mode: "auth" },
         targetUrl: "https://api.example.com/me",
         input: {
             params: [{
