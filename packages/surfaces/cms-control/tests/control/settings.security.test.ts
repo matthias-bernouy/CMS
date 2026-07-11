@@ -2,6 +2,36 @@ import { describe, test, expect } from "bun:test";
 import { parseSettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
+describe("parseSettingsUpdateDto — system pages", () => {
+    test("coerces all system page paths to page references", () => {
+        const dto = parseSettingsUpdateDto({
+            "site.notFound":    "/not-found",
+            "site.forbidden":   "/forbidden",
+            "site.serverError": "/error",
+            "site.login":       "/sign-in",
+        });
+
+        expect(dto.site?.notFound).toEqual({ path: "/not-found" });
+        expect(dto.site?.forbidden).toEqual({ path: "/forbidden" });
+        expect(dto.site?.serverError).toEqual({ path: "/error" });
+        expect(dto.site?.login).toEqual({ path: "/sign-in" });
+    });
+
+    test("coerces empty system page paths to null", () => {
+        const dto = parseSettingsUpdateDto({
+            "site.notFound": "",
+            "site.forbidden": "",
+            "site.serverError": "",
+            "site.login": "",
+        });
+
+        expect(dto.site?.notFound).toBeNull();
+        expect(dto.site?.forbidden).toBeNull();
+        expect(dto.site?.serverError).toBeNull();
+        expect(dto.site?.login).toBeNull();
+    });
+});
+
 // Parsing/coercion only: split the multiline textarea into trimmed lines.
 // The URL-validity + origin-normalization + dedupe RULE moved to
 // cms-content's `validateSettingsPatch` (see its test).

@@ -6,7 +6,7 @@ import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 const system: TSystem = {
     initializationStep: 1,
-    site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, serverError: null },
+    site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, forbidden: null, serverError: null, login: null },
     editor: { layoutCategory: "" },
     security: { connectExtras: [], mediaExtras: [] },
 };

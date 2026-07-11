@@ -23,7 +23,9 @@ describe("admin settings binding", () => {
                         favicon:     "",
                         language:    "",
                         notFound:    { path: "" },
+                        forbidden:   { path: "" },
                         serverError: { path: "" },
+                        login:       { path: "" },
                         theme:       "",
                     },
                     editor: { layoutCategory: "" },
@@ -73,6 +75,11 @@ describe("admin settings binding", () => {
         expect(document.querySelector("cms-settings-sections")).toBeNull();
         expect(document.querySelector("p9r-input[name='site.name']")?.getAttribute("value")).toBe("Demo");
         expect(document.querySelector("p9r-select[name='site.notFound'] option[value='/404']")).not.toBeNull();
+        expect(document.querySelector("p9r-select[name='site.forbidden'] option[value='/404']")).not.toBeNull();
+        expect(document.querySelector("p9r-select[name='site.serverError'] option[value='/404']")).not.toBeNull();
+        expect(document.querySelector("p9r-select[name='site.login'] option[value='/404']")).not.toBeNull();
+        expect(document.querySelector("p9r-select[name='site.notFound']")?.getAttribute("label")).toBe("Not Found page");
+        expect(document.querySelector("p9r-select[name='site.serverError']")?.getAttribute("label")).toBe("Internal Server Error page");
 
         const settingsNav = document.querySelector("cms-settings-nav");
         const general = settingsNav?.shadowRoot?.querySelector<HTMLElement>("[data-settings-section='general']");
@@ -109,7 +116,9 @@ describe("admin settings binding", () => {
                         favicon:     "",
                         language:    "",
                         notFound:    { path: "" },
+                        forbidden:   { path: "" },
                         serverError: { path: "" },
+                        login:       { path: "" },
                         theme:       "",
                     },
                     editor: { layoutCategory: "" },

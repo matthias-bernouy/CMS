@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
 
-function deliveryWithDraftFallback(field: "notFound" | "serverError") {
+function deliveryWithDraftFallback(field: "notFound" | "forbidden" | "serverError") {
     const calls: string[] = [];
     return {
         calls,
@@ -15,7 +15,9 @@ function deliveryWithDraftFallback(field: "notFound" | "serverError") {
                     language: "",
                     theme: "",
                     notFound: field === "notFound" ? { path: "/404" } : null,
+                    forbidden: field === "forbidden" ? { path: "/forbidden" } : null,
                     serverError: field === "serverError" ? { path: "/500" } : null,
+                    login: null,
                 },
             }),
             getPublishedPage: async (path: string) => {
@@ -46,5 +48,14 @@ describe("renderRef", () => {
         expect(res.status).toBe(500);
         expect(await res.text()).toBe("Internal server error");
         expect(delivery.calls).toEqual(["/500"]);
+    });
+
+    test("does not render a draft forbidden fallback page publicly", async () => {
+        const delivery = deliveryWithDraftFallback("forbidden");
+        const res = await renderRef(new Request("http://site/private"), delivery, "forbidden", 403, "Forbidden");
+
+        expect(res.status).toBe(403);
+        expect(await res.text()).toBe("Forbidden");
+        expect(delivery.calls).toEqual(["/forbidden"]);
     });
 });

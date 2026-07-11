@@ -9,7 +9,7 @@ const BINDING_CORE_URL = "/.cms/assets/cms-binding-core.js?v=core";
 function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
     const system: TSystem = {
         initializationStep: 1,
-        site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, serverError: null },
+        site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, forbidden: null, serverError: null, login: null },
         editor: { layoutCategory: "", ...legacyEditor },
         security: { connectExtras: [], mediaExtras: [] },
     };

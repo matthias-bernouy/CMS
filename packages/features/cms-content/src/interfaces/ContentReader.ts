@@ -25,7 +25,7 @@ export interface ContentReader {
     getBlocsList(): Promise<{ id: string; name: string; group: string; description: string }[]>;
     getBlocViewJS(tag: string): Promise<string | null>;
 
-    // SYSTEM (theme, favicon, host, language, notFound, serverError)
+    // SYSTEM (theme, favicon, host, language, system page refs)
     getSystem(): Promise<TSystem>;
 
 }

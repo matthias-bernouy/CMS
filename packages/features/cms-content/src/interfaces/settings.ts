@@ -29,8 +29,12 @@ export type TSystem = {
         theme: string;
         /** Page rendered when a dynamic route matches but the page is missing. */
         notFound: TPageRef;
+        /** Page rendered when an authenticated visitor cannot access a page dependency. */
+        forbidden: TPageRef;
         /** Page rendered when `renderPage` throws. */
         serverError: TPageRef;
+        /** Public page used to authenticate anonymous visitors before returning to their destination. */
+        login: TPageRef;
     },
 
     editor: {

@@ -14,7 +14,7 @@ const SHOP_SOURCE: Source = {
 
 const system: TSystem = {
     initializationStep: 1,
-    site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, serverError: null },
+    site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, forbidden: null, serverError: null, login: null },
     editor: { layoutCategory: "" },
     security: { connectExtras: [], mediaExtras: [] },
 };
@@ -57,6 +57,7 @@ export async function mountPage(options: {
     content: string;
     roles?: InMemoryRolesRepository;
     auth?: unknown;
+    systemPages?: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">>;
 }): Promise<{ handler: RouteHandler; roles: InMemoryRolesRepository }> {
     const runner = new CaptureRunner();
     const roles = options.roles ?? new InMemoryRolesRepository();
@@ -68,7 +69,7 @@ export async function mountPage(options: {
     await seedSources(sources, [SHOP_SOURCE]);
     new DeliveryCms({
         runner,
-        repository: pageRepository(options.content),
+        repository: pageRepository(options.content, options.systemPages),
         cache,
         sources,
         roles,
@@ -86,7 +87,10 @@ export function authSubject(subject: { identifier: string; role: string } | null
     };
 }
 
-function pageRepository(content: string): ContentReader {
+function pageRepository(
+    content: string,
+    systemPages: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">> = {},
+): ContentReader {
     const page: TPage = { path: "/products", title: "Products", description: "", content, visible: true, tags: [] };
     return {
         getPage: async () => page,
@@ -95,7 +99,7 @@ function pageRepository(content: string): ContentReader {
         getPublishedPages: async () => [page],
         getBlocsList: async () => [],
         getBlocViewJS: async () => null,
-        getSystem: async () => system,
+        getSystem: async () => ({ ...system, site: { ...system.site, ...systemPages } }),
     };
 }
 

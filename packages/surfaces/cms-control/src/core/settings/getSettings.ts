@@ -13,7 +13,7 @@ export type SettingsResponse = {
 
 /**
  * View-model for the admin Settings page. One round-trip returns the
- * full system record, the page links (path + title) for the 404/500
+ * full system record, the page links (path + title) for the system-page
  * selects, and the unique sorted template categories for the layout
  * select. Each repository call is narrow on purpose — no `getAllPages`
  * or `getAllTemplates` paying for fields the form never reads.

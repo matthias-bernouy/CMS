@@ -15,6 +15,19 @@ describe("Delivery page source access preflight", () => {
         expect(res.headers.get("location")).toBe("/login?returnTo=%2Fproducts%3Fcategory%3Dshoes");
     });
 
+    test("redirects anonymous visitors to the configured login page", async () => {
+        const { handler } = await mountPage({
+            content: `<section cms-source="/.cms/sources/shop/listProducts as products"><p>Products</p></section>`,
+            auth: authSubject(null),
+            systemPages: { login: { path: "/sign-in" } },
+        });
+
+        const res = await handler(new Request("http://site/products?category=shoes"));
+
+        expect(res.status).toBe(302);
+        expect(res.headers.get("location")).toBe("/sign-in?returnTo=%2Fproducts%3Fcategory%3Dshoes");
+    });
+
     test("returns 403 when an authenticated visitor lacks the auto source grant", async () => {
         const { handler } = await mountPage({
             content: `<section cms-source="/.cms/sources/shop/listProducts as products"><p>Products</p></section>`,
@@ -25,6 +38,19 @@ describe("Delivery page source access preflight", () => {
 
         expect(res.status).toBe(403);
         expect(await res.text()).toBe("Forbidden");
+    });
+
+    test("renders the configured forbidden page with status 403", async () => {
+        const { handler } = await mountPage({
+            content: `<section cms-source="/.cms/sources/shop/listProducts as products"><p>Forbidden page</p></section>`,
+            auth: authSubject({ identifier: "user-1", role: USER_ROLE }),
+            systemPages: { forbidden: { path: "/forbidden" } },
+        });
+
+        const res = await handler(new Request("http://site/products"));
+
+        expect(res.status).toBe(403);
+        expect(await res.text()).toContain("Forbidden page");
     });
 
     test("serves the page when the visitor role can access every auto source", async () => {

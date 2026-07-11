@@ -13,7 +13,7 @@ export type SystemPayload = {
 export type LocalSystem = {
     payload:  SystemPayload;
     hash:     string;
-    /** Page paths referenced by notFound / serverError — drive forward-compat validation. */
+    /** Paths referenced by system pages — drive forward-compat validation. */
     pageRefs: string[];
 };
 
@@ -65,7 +65,9 @@ async function readJson(path: string): Promise<Partial<SystemPayload>> {
 function collectPageRefs(payload: SystemPayload): string[] {
     const refs: string[] = [];
     pushPath(refs, payload.site.notFound);
+    pushPath(refs, payload.site.forbidden);
     pushPath(refs, payload.site.serverError);
+    pushPath(refs, payload.site.login);
     return refs;
 }
 

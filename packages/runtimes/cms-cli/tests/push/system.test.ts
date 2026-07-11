@@ -29,17 +29,19 @@ describe("scanSystem", () => {
         expect(local?.payload.site.theme).toBe(":root { --x: red; }");
     });
 
-    test("collects page refs from notFound + serverError", async () => {
+    test("collects all system page refs", async () => {
         const dir = tmpSite({
             "system.json": JSON.stringify({
                 site: {
                     notFound:    { path: "/404" },
+                    forbidden:   { path: "/forbidden" },
                     serverError: null,
+                    login:       { path: "/login" },
                 },
             }),
         });
         const local = await scanSystem(dir);
-        expect(local?.pageRefs).toEqual(["/404"]);
+        expect(local?.pageRefs).toEqual(["/404", "/forbidden", "/login"]);
     });
 
     test("hash is stable + sensitive to changes", async () => {
@@ -58,7 +60,9 @@ describe("flatten", () => {
                 name:        "Foo",
                 language:    "fr",
                 notFound:    { path: "/404" },
+                forbidden:   { path: "/forbidden" },
                 serverError: null,
+                login:       { path: "/login" },
             },
             editor: { layoutCategory: "Layouts" },
         });
@@ -66,7 +70,9 @@ describe("flatten", () => {
             "site.name":            "Foo",
             "site.language":        "fr",
             "site.notFound":        "/404",
+            "site.forbidden":       "/forbidden",
             "site.serverError":     "",
+            "site.login":           "/login",
             "editor.layoutCategory": "Layouts",
         });
     });

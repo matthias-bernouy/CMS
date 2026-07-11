@@ -7,7 +7,7 @@ export type SettingsUpdateDto = Partial<TSystem>;
 /**
  * Validates a flat dotted body (as emitted by the admin settings forms) against the
  * settings-update contract and produces a nested `Partial<TSystem>`.
- * `site.notFound` / `site.serverError` are coerced from `string` to
+ * System-page references are coerced from `string` to
  * `TPageRef` (`""` → `null`, `"/path"` → `{ path }`).
  */
 export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsUpdateDto {
@@ -15,9 +15,11 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
 
     if (hasSectionKey(body, "site")) {
         dto.site = {
-            ...collectStringSection(body, "site", ["notFound", "serverError"]),
+            ...collectStringSection(body, "site", ["notFound", "forbidden", "serverError", "login"]),
             notFound:    asPageRef(body["site.notFound"]),
+            forbidden:   asPageRef(body["site.forbidden"]),
             serverError: asPageRef(body["site.serverError"]),
+            login:       asPageRef(body["site.login"]),
         } as TSystem["site"];
     }
 

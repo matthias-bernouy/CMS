@@ -11,6 +11,7 @@ import {
     authorizeDeliverySourceEndpoint,
     resolveDeliverySubject,
 } from "cms-delivery/core/sources/authorization";
+import { renderRef } from "cms-delivery/core/pages/renderRef";
 
 export async function preflightPageSourceAccess(
     req: Request,
@@ -41,7 +42,7 @@ export async function preflightPageSourceAccess(
         const authorization = await authorizeDeliverySourceEndpoint(delivery, resolved.endpoint, req, { subject });
         if (isSourceAuthorized(authorization)) continue;
 
-        return sourceAccessDenied(req, delivery, sourceAuthorizationStatus(authorization));
+        return await sourceAccessDenied(req, delivery, sourceAuthorizationStatus(authorization));
     }
 
     return null;
@@ -64,16 +65,29 @@ function sourceSegments(rawUrl: string, requestUrl: URL, prefix: string): string
     }
 }
 
-function sourceAccessDenied(req: Request, delivery: DeliveryCms, status: 401 | 403): Response {
+async function sourceAccessDenied(req: Request, delivery: DeliveryCms, status: 401 | 403): Promise<Response> {
     if (status === 401 && delivery.auth) {
         const url = new URL(req.url);
+        const returnTo = `${url.pathname}${url.search}`;
+        const settings = await delivery.repository.getSystem().catch(() => null);
+        const loginPath = settings?.site.login?.path;
+        if (loginPath === url.pathname) {
+            return new Response("Unauthorized", { status });
+        }
+        const location = loginPath
+            ? `${loginPath}?returnTo=${encodeURIComponent(returnTo)}`
+            : delivery.auth.local.buildLoginUrl(returnTo);
         return new Response(null, {
             status: 302,
             headers: {
-                Location: delivery.auth.local.buildLoginUrl(`${url.pathname}${url.search}`),
+                Location: location,
             },
         });
     }
 
-    return new Response(status === 401 ? "Unauthorized" : "Forbidden", { status });
+    if (status === 403) {
+        return renderRef(req, delivery, "forbidden", 403, "Forbidden");
+    }
+
+    return new Response("Unauthorized", { status });
 }

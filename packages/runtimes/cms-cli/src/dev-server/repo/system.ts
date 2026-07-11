@@ -30,7 +30,9 @@ export class SystemStore {
                 language:    typeof json.site?.language    === "string"  ? json.site.language    : base.site.language,
                 theme:       theme,
                 notFound:    coercePageRef(json.site?.notFound),
+                forbidden:   coercePageRef(json.site?.forbidden),
                 serverError: coercePageRef(json.site?.serverError),
+                login:       coercePageRef(json.site?.login),
             },
             editor: {
                 layoutCategory: typeof json.editor?.layoutCategory === "string" ? json.editor.layoutCategory : base.editor.layoutCategory,

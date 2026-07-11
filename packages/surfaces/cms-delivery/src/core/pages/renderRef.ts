@@ -16,7 +16,7 @@ function textFallbackEntry(text: string) {
 }
 
 /**
- * Render the configured fallback page for `site.notFound` / `site.serverError`
+ * Render a configured system fallback page
  * with the given HTTP status. Falls back to plain text when:
  *  - no ref is configured
  *  - the referenced page no longer exists
@@ -28,7 +28,7 @@ function textFallbackEntry(text: string) {
 export async function renderRef(
     req: Request,
     delivery: DeliveryCms,
-    field: "notFound" | "serverError",
+    field: "notFound" | "forbidden" | "serverError",
     status: number,
     fallbackText: string,
 ): Promise<Response> {

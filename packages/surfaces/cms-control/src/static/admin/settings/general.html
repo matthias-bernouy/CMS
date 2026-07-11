@@ -55,13 +55,21 @@
                             </p9r-select>
                         </cms-detail-section>
 
-                        <cms-detail-section slot="aside" heading="Error pages">
+                        <cms-detail-section slot="aside" heading="System pages">
                             <p9r-stack gap="md">
-                                <p9r-select name="site.notFound" label="404 page" value="{{ site.notFound.path }}">
+                                <p9r-select name="site.notFound" label="Not Found page" value="{{ site.notFound.path }}">
                                     <option value="">— None —</option>
                                     <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
                                 </p9r-select>
-                                <p9r-select name="site.serverError" label="500 page" value="{{ site.serverError.path }}">
+                                <p9r-select name="site.forbidden" label="Forbidden page" value="{{ site.forbidden.path }}">
+                                    <option value="">— None —</option>
+                                    <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
+                                </p9r-select>
+                                <p9r-select name="site.serverError" label="Internal Server Error page" value="{{ site.serverError.path }}">
+                                    <option value="">— None —</option>
+                                    <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
+                                </p9r-select>
+                                <p9r-select name="site.login" label="Login page" value="{{ site.login.path }}">
                                     <option value="">— None —</option>
                                     <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
                                 </p9r-select>

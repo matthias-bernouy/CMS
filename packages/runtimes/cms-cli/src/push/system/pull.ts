@@ -19,7 +19,9 @@ export async function pullSystem(adminBase: URL, token: string, siteDir: string)
     const editor = remote.editor ?? {};
 
     site.notFound    = coercePageRef(site.notFound);
+    site.forbidden   = coercePageRef(site.forbidden);
     site.serverError = coercePageRef(site.serverError);
+    site.login       = coercePageRef(site.login);
 
     const json = JSON.stringify({ site, editor }, null, 4) + "\n";
     await writeFile(join(siteDir, "system.json"), json, "utf-8");

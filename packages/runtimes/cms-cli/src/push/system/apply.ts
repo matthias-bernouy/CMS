@@ -38,7 +38,7 @@ export function projectRemote(local: SystemPayload, remote: RemoteSystem): Syste
 export function flatten(payload: SystemPayload): Record<string, string> {
     const body: Record<string, string> = {};
     for (const [k, v] of Object.entries(payload.site)) {
-        if (k === "notFound" || k === "serverError") body[`site.${k}`] = pageRefToString(v as TPageRef);
+        if (k === "notFound" || k === "forbidden" || k === "serverError" || k === "login") body[`site.${k}`] = pageRefToString(v as TPageRef);
         else if (typeof v === "string")              body[`site.${k}`] = v;
     }
     for (const [k, v] of Object.entries(payload.editor)) {
