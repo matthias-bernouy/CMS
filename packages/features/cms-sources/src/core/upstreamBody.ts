@@ -17,8 +17,11 @@ export async function upstreamBody(endpoint: SourceEndpoint, request: Request): 
     }
 
     const shape = endpoint.input?.body;
-    if (!shape || !isJsonRequest(request)) {
+    if (!shape) {
         return { ok: true, body: request.body, streaming: true };
+    }
+    if (!isJsonRequest(request)) {
+        return { ok: false, response: new Response("JSON body required", { status: 415 }) };
     }
 
     let value: unknown;
@@ -53,12 +56,15 @@ function coerceBodyValue(value: unknown, shape: DataShape, path: string): unknow
 
 function coerceObject(value: unknown, shape: DataShape, path: string): unknown {
     if (!isRecord(value) || !shape.properties) return value;
-    const next: Record<string, unknown> = { ...value };
-    for (const [key, child] of Object.entries(shape.properties)) {
-        if (!Object.hasOwn(value, key)) continue;
-        next[key] = coerceBodyValue(value[key], child, `${path}.${key}`);
+    for (const key of Object.keys(value)) {
+        if (!Object.hasOwn(shape.properties, key)) {
+            throw new BodyCoercionError(`${path}.${key} is not allowed`);
+        }
     }
-    return next;
+
+    return Object.fromEntries(Object.entries(shape.properties)
+        .filter(([key]) => Object.hasOwn(value, key))
+        .map(([key, child]) => [key, coerceBodyValue(value[key], child, `${path}.${key}`)]));
 }
 
 function coerceArray(value: unknown, shape: DataShape, path: string): unknown {

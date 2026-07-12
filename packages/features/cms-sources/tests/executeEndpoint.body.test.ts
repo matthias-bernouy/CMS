@@ -32,7 +32,6 @@ describe("executeEndpoint JSON body coercion", () => {
                 numeric: 1,
                 employeeCount: "12",
                 nested: { marketing: "false", score: "9.5" },
-                undeclared: "true",
             }),
         }), { fetchImpl });
 
@@ -44,7 +43,6 @@ describe("executeEndpoint JSON body coercion", () => {
             numeric: true,
             employeeCount: 12,
             nested: { marketing: false, score: 9.5 },
-            undeclared: "true",
         }));
     });
 

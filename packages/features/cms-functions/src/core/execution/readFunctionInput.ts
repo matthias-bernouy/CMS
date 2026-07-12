@@ -22,8 +22,7 @@ export async function readFunctionInput(
         } catch {
             throw new FunctionExecutionError("Invalid JSON body", 400);
         }
-        assertShape(body, fn.input.body, "body");
-        input.body = body;
+        input.body = projectShape(body, fn.input.body, "body");
     }
     return input;
 }
@@ -42,23 +41,32 @@ function coerceParam(value: string, shape: DataShape, path: string): unknown {
     return value;
 }
 
-function assertShape(value: unknown, shape: DataShape, path: string): void {
+function projectShape(value: unknown, shape: DataShape, path: string): unknown {
     if (shape.type === "object") {
         if (!isRecord(value)) throw new FunctionExecutionError(`${path} must be an object`, 400);
         for (const key of shape.required ?? []) {
             if (!Object.hasOwn(value, key)) throw new FunctionExecutionError(`${path}.${key} is required`, 400);
         }
-        for (const [key, child] of Object.entries(shape.properties ?? {})) {
-            if (Object.hasOwn(value, key)) assertShape(value[key], child, `${path}.${key}`);
+        if (!shape.properties) return value;
+        for (const key of Object.keys(value)) {
+            if (!Object.hasOwn(shape.properties, key)) {
+                throw new FunctionExecutionError(`${path}.${key} is not allowed`, 400);
+            }
         }
-        return;
+
+        return Object.fromEntries(Object.entries(shape.properties)
+            .filter(([key]) => Object.hasOwn(value, key))
+            .map(([key, child]) => [key, projectShape(value[key], child, `${path}.${key}`)]));
     }
     if (shape.type === "array") {
         if (!Array.isArray(value)) throw new FunctionExecutionError(`${path} must be an array`, 400);
-        if (shape.items) value.forEach((item, index) => assertShape(item, shape.items!, `${path}.${index}`));
-        return;
+        if (!shape.items) return value;
+        return value.map((item, index) => projectShape(item, shape.items!, `${path}.${index}`));
     }
-    if (typeof value !== shape.type) throw new FunctionExecutionError(`${path} must be a ${shape.type}`, 400);
+    if (typeof value !== shape.type || (shape.type === "number" && !Number.isFinite(value))) {
+        throw new FunctionExecutionError(`${path} must be a ${shape.type}`, 400);
+    }
+    return value;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
