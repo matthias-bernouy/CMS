@@ -159,8 +159,8 @@ describe("validateBloc — graceful degradation", () => {
         expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("Invalid native tag");
     });
 
-    test("accepts native form tags without manifest runtime metadata", () => {
-        const tags = ["form", "fieldset", "legend", "label", "input", "textarea", "select", "option", "button", "output"];
+    test("accepts allowed native tags without manifest runtime metadata", () => {
+        const tags = ["form", "fieldset", "legend", "label", "input", "textarea", "select", "option", "button", "output", "img"];
         for (const tag of tags) {
             expect(validateBloc({ tag }).errors).toEqual([]);
         }

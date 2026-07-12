@@ -95,6 +95,7 @@ const NATIVE_BLOC_TAGS = new Set([
     "h4",
     "h5",
     "h6",
+    "img",
     "textarea",
 ]);
 
