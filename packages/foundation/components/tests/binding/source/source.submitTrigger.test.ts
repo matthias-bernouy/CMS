@@ -161,6 +161,42 @@ describe("Source — submit trigger", () => {
         runtime.stop();
     });
 
+    test("captures transient submit values before rendering the loading state", async () => {
+        let requestBody = "";
+        globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+            requestBody = String(init?.body);
+            return new Response(JSON.stringify({ ok: true }), {
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const root = el(`
+            <form cms-source="/api/newsletter as result" cms-source-trigger="submit" cms-source-method="POST">
+                <input name="email" value="reader@example.com">
+                <button type="submit">Subscribe</button>
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await settle();
+
+        const transient = document.createElement("input");
+        transient.type = "hidden";
+        transient.name = "subscribed";
+        transient.value = "true";
+        root.append(transient);
+        root.requestSubmit(root.querySelector("button")!);
+        transient.remove();
+
+        await waitFor(() => requestBody !== "");
+        expect(JSON.parse(requestBody)).toEqual({
+            email: "reader@example.com",
+            subscribed: "true",
+        });
+        runtime.stop();
+    });
+
     test("form-owned submit resolves cms-source-body fields", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
         globalThis.fetch = (async (url: string, init?: RequestInit) => {

@@ -23,6 +23,7 @@ export type SubmitFormOptions = {
     method: FormSubmitMethod;
     signal?: AbortSignal;
     bodyFields?: AdditionalFormFields;
+    formData?: FormData;
 };
 
 type FormControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | FormAssociatedLike;
@@ -56,9 +57,9 @@ export function collectFormData(form: HTMLFormElement): FormData {
 
 export function serializeForm(
     form: HTMLFormElement,
-    options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields },
+    options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields; formData?: FormData },
 ): SerializedForm {
-    const formData = collectFormData(form);
+    const formData = options.formData ?? collectFormData(form);
     const method = options.method;
 
     if (method === "GET" || method === "HEAD") {

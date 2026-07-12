@@ -21,7 +21,7 @@ import { resolveSourceBodyFields } from "./sourceBody";
 import { SourceRenderer } from "./sourceRenderer";
 import { SourcePresenter } from "./sourcePresenter";
 import { type SourceStatusOptions } from "./sourceStatus";
-import { normalizeFormMethod, submitForm, type FormSubmitResult } from "../submit/formSubmit";
+import { collectFormData, normalizeFormMethod, submitForm, type FormSubmitResult } from "../submit/formSubmit";
 import { type Scope } from "../scope";
 
 export { clearRuntimeStamps } from "./runtimeStamps";
@@ -121,6 +121,9 @@ export class Source {
         if (opts?.onlyIfUrlChanged && url === this.lastUrl) return;
         this.lastUrl = url;
 
+        const submission = this.formOwned ? this.captureSubmission() : null;
+        if (this.formOwned && !submission) return;
+
         this.presenter.loading(spec.alias);
         this.afterRender();
         this.abort?.abort();
@@ -128,16 +131,13 @@ export class Source {
         this.abort = ac;
 
         if (this.formOwned) {
-            const form = asOwnerForm(this.el, this.el.ownerDocument);
-            if (!form) return;
-            const method = this.sourceMethod();
-            const result = await submitForm(form, {
+            if (!submission) return;
+            const result = await submitForm(submission.form, {
                 url: this.submitUrl(url),
-                method,
+                method: submission.method,
                 signal: ac.signal,
-                bodyFields: method === "GET" || method === "HEAD"
-                    ? undefined
-                    : resolveSourceBodyFields(this.el.getAttribute(SOURCE_BODY_ATTR), this.el.ownerDocument),
+                bodyFields: submission.bodyFields,
+                formData: submission.formData,
             });
             if (ac.signal.aborted) return;
             this.presenter.result(spec.alias, result);
@@ -162,6 +162,25 @@ export class Source {
     private sourceMethod(): SourceMethod {
         const fallback = this.formOwned ? "POST" : "GET";
         return normalizeFormMethod(this.el.getAttribute(SOURCE_METHOD_ATTR), fallback) as SourceMethod;
+    }
+
+    private captureSubmission(): {
+        form: HTMLFormElement;
+        method: SourceMethod;
+        formData: FormData;
+        bodyFields: ReturnType<typeof resolveSourceBodyFields>;
+    } | null {
+        const form = asOwnerForm(this.el, this.el.ownerDocument);
+        if (!form) return null;
+        const method = this.sourceMethod();
+        return {
+            form,
+            method,
+            formData: collectFormData(form),
+            bodyFields: method === "GET" || method === "HEAD"
+                ? undefined
+                : resolveSourceBodyFields(this.el.getAttribute(SOURCE_BODY_ATTR), this.el.ownerDocument),
+        };
     }
 
     private submitUrl(url: string): string {
