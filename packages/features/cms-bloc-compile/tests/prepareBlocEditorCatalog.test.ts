@@ -8,6 +8,46 @@ afterEach(() => {
 });
 
 describe("prepare_bloc editor catalog output", () => {
+    test("materializes bundled source files used by view imports", async () => {
+        const view = new File([
+            `import template from "./template.html" with { type: "text" };`,
+            `import css from "./style.css" with { type: "text" };`,
+            `customElements.define("demo-separated", class extends HTMLElement { static template = template; static css = css; });`,
+        ], "Bloc.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            "Separated demo",
+            "Content",
+            "",
+            "demo-separated",
+            {
+                "template.html": Buffer.from("<p>Separated template</p>").toString("base64"),
+                "style.css": Buffer.from(":host { display: block; }").toString("base64"),
+            },
+        );
+
+        expect(bloc.viewJS).toContain("Separated template");
+        expect(bloc.viewJS).toContain("display: block");
+    });
+
+    test("rejects source paths escaping the temporary bundle", async () => {
+        const view = new File([
+            "customElements.define('demo-card', class extends HTMLElement {});",
+        ], "DemoCard.ts", { type: "text/typescript" });
+
+        await expect(prepare_bloc(
+            view,
+            null,
+            "Demo card",
+            "Content",
+            "",
+            "demo-card",
+            { "../outside.js": Buffer.from("unsafe").toString("base64") },
+        )).rejects.toThrow("Invalid bloc source path: ../outside.js");
+    });
+
     test("uses the stable editor catalog runtime for blocs without editor source", async () => {
         const view = new File([
             "customElements.define('demo-card', class extends HTMLElement {});",

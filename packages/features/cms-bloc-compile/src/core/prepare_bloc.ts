@@ -1,6 +1,6 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
 
 /** Synthetic editor source for blocs deployed without their own Editor module. */
@@ -32,6 +32,8 @@ export async function prepare_bloc(
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
 
     try {
+        await materializeSourceBundle(tempDir, source);
+
         const buildOptions = (entry: string) => ({
             entrypoints: [entry],
             target: "browser" as const,
@@ -79,6 +81,31 @@ export async function prepare_bloc(
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
     }
+}
+
+async function materializeSourceBundle(
+    tempDir: string,
+    source: Record<string, string> | undefined,
+): Promise<void> {
+    if (!source) return;
+
+    await Promise.all(Object.entries(source).map(async ([rawPath, content]) => {
+        const path = rawPath.replace(/^\.\/+/, "");
+        const segments = path.split("/");
+        if (
+            !path
+            || rawPath.includes("\\")
+            || rawPath.includes("\0")
+            || isAbsolute(rawPath)
+            || segments.some(segment => segment === "" || segment === "." || segment === "..")
+        ) {
+            throw new Error(`Invalid bloc source path: ${rawPath}`);
+        }
+
+        const destination = join(tempDir, ...segments);
+        await mkdir(dirname(destination), { recursive: true });
+        await Bun.write(destination, Buffer.from(content, "base64"));
+    }));
 }
 
 function jsStringLiteralContent(value: string): string {
