@@ -78,6 +78,12 @@ describe("interpolateString — filters (injected)", () => {
     test("no filter map → filter name ignored, raw value used", () => {
         expect(interpolateString("{{ name | up }}", s({ name: "ada" }))).toBe("ada");
     });
+
+    test("built-in urlencode preserves plus signs and query delimiters", () => {
+        expect(interpolateString("email={{ email | urlencode }}", s({
+            email: "seller+2@example.com",
+        }))).toBe("email=seller%2B2%40example.com");
+    });
 });
 
 describe("interpolateString — `value` reserved word via scope", () => {

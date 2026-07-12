@@ -59,13 +59,18 @@ export class Source {
         event.preventDefault();
         if (this.el.isConnected) void this.run();
     };
+    private readonly onChange = () => {
+        const form = asOwnerForm(this.el, this.el.ownerDocument) ?? this.el.closest("form");
+        const valid = typeof form?.reportValidity === "function" ? form.reportValidity() : true;
+        if (valid && this.el.isConnected) void this.run();
+    };
 
     constructor(
         private readonly el: Element,
         private readonly filters: FilterMap = {},
         private readonly options: SourceOptions = {},
     ) {
-        this.formOwned = asOwnerForm(el, el.ownerDocument) !== null && sourceTrigger(el) === "submit";
+        this.formOwned = asOwnerForm(el, el.ownerDocument) !== null && sourceTrigger(el) !== "auto";
         const captured = this.formOwned ? cloneSourceContent(el) : captureSourceContent(el);
         this.renderer = new SourceRenderer(el, captured, this.filters, { inPlace: this.formOwned });
         this.presenter = new SourcePresenter(el, captured, this.renderer, this.options);
@@ -76,6 +81,7 @@ export class Source {
             onReload: this.onReload,
             onReactiveUrlChange: this.onReactiveUrlChange,
             onSubmit: this.onSubmit,
+            onChange: this.onChange,
         });
         if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) void this.run();
         else {

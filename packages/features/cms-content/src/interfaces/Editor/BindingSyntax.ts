@@ -43,7 +43,7 @@ export const CMS_CONDITION_FIELD_OPERATORS = [
 ] as const;
 export type CmsConditionFieldOperator = typeof CMS_CONDITION_FIELD_OPERATORS[number];
 export type CmsRepeatBinding = { path: string; alias?: string };
-export const CMS_SOURCE_TRIGGERS = ["auto", "submit"] as const;
+export const CMS_SOURCE_TRIGGERS = ["auto", "submit", "change"] as const;
 export type CmsSourceTrigger = typeof CMS_SOURCE_TRIGGERS[number];
 export const CMS_SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
 export type CmsSourceMethod = typeof CMS_SOURCE_METHODS[number];

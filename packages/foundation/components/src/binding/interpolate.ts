@@ -16,16 +16,20 @@
  *    HTML-escaping here would double-encode `&`/`<` for display; it only
  *    belongs to HTML-string serialization, which this engine avoids by design.
  *
- * Filters are injected, not imported: `{{ size | bytes }}` routes the resolved
- * value through `filters.bytes` when present, and falls through to the raw value
- * when the name is unknown. Keeping the filter set out of this module leaves it
- * pure and lets callers decide which filters exist.
+ * Host filters are injected: `{{ size | bytes }}` routes the resolved value
+ * through `filters.bytes` when present. The runtime also owns the generic
+ * `urlencode` filter because interpolated URL values must be encoded before
+ * browsers parse their query strings (`+` otherwise becomes a space).
  */
 
 import { lookup, type Scope } from "./scope";
 
 export type Filter = (value: unknown) => unknown;
 export type FilterMap = Record<string, Filter>;
+
+const BUILTIN_FILTERS: FilterMap = {
+    urlencode: value => encodeURIComponent(value == null ? "" : String(value)),
+};
 
 /** `{{ path }}` or `{{ path | filter }}`. Paths are word chars, `$`, `.`, and `-`;
  *  the filter name is a bare word. Surrounding whitespace is ignored. */
@@ -35,7 +39,7 @@ export function interpolateString(str: string, scope: Scope, filters: FilterMap 
     return str.replace(TOKEN, (_whole: string, path: string, filter: string | undefined) => {
         const res = lookup(scope, path);
         if (!res.found) return ""; // absent in the whole scope chain → blank
-        const fn = filter ? filters[filter] : undefined;
+        const fn = filter ? filters[filter] ?? BUILTIN_FILTERS[filter] : undefined;
         const value = fn ? fn(res.value) : res.value;
         return value == null ? "" : String(value);
     });

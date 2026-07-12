@@ -152,4 +152,76 @@ describe("formSubmit", () => {
             globalThis.FormData = NativeFormData;
         }
     });
+
+    test("fallback collection reads files exposed by form-associated controls", () => {
+        const target = document.createElement("form");
+        const control = document.createElement("upload-control") as HTMLElement & {
+            name: string;
+            files: File[];
+        };
+        control.setAttribute("name", "file");
+        control.name = "file";
+        control.files = [new File(["avatar"], "avatar.png", { type: "image/png" })];
+        target.append(control);
+        const NativeFormData = globalThis.FormData;
+        class EmptyFormData extends NativeFormData {
+            constructor() { super(); }
+        }
+        globalThis.FormData = EmptyFormData as typeof FormData;
+        try {
+            const entries = Array.from(collectFormData(target).entries());
+            expect(entries).toHaveLength(1);
+            expect(entries[0]?.[0]).toBe("file");
+            const file: unknown = entries[0]?.[1];
+            expect(file).toBeInstanceOf(File);
+            if (!(file instanceof File)) throw new Error("expected file entry");
+            expect(file.name).toBe("avatar.png");
+        } finally {
+            globalThis.FormData = NativeFormData;
+        }
+    });
+
+    test("fallback collection preserves repeated values exposed by a custom control", () => {
+        const target = form(`<form><choice-group name="styles"></choice-group></form>`);
+        const control = target.querySelector("choice-group") as HTMLElement & { name: string; value: string[] };
+        control.name = "styles";
+        control.value = ["attacking", "defensive"];
+        const NativeFormData = globalThis.FormData;
+        class EmptyFormData extends NativeFormData {
+            constructor() { super(); }
+        }
+        globalThis.FormData = EmptyFormData as typeof FormData;
+        try {
+            expect(Array.from(collectFormData(target).entries())).toEqual([
+                ["styles", "attacking"],
+                ["styles", "defensive"],
+            ]);
+        } finally {
+            globalThis.FormData = NativeFormData;
+        }
+    });
+
+    test("fallback collection serializes an explicit unchecked custom-control value", () => {
+        const target = form(`<form><toggle-control name="notifications"></toggle-control></form>`);
+        const control = target.querySelector("toggle-control") as HTMLElement & {
+            name: string;
+            value: string;
+            checked: boolean;
+            uncheckedValue: string;
+        };
+        control.name = "notifications";
+        control.value = "true";
+        control.checked = false;
+        control.uncheckedValue = "false";
+        const NativeFormData = globalThis.FormData;
+        class EmptyFormData extends NativeFormData {
+            constructor() { super(); }
+        }
+        globalThis.FormData = EmptyFormData as typeof FormData;
+        try {
+            expect(Array.from(collectFormData(target).entries())).toEqual([["notifications", "false"]]);
+        } finally {
+            globalThis.FormData = NativeFormData;
+        }
+    });
 });

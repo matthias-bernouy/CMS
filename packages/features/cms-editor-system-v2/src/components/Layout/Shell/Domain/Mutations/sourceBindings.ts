@@ -25,7 +25,7 @@ export type SourceBinding = {
     method?: EditorDataSource["method"];
     params?: Record<string, unknown>;
     body?: Record<string, unknown>;
-    trigger?: "auto" | "submit";
+    trigger?: "auto" | "submit" | "change";
 };
 
 const BINDING_READY_ATTRIBUTE = "cms-ready";
@@ -36,10 +36,10 @@ export function setSource(
     binding: SourceBinding = { url: source.url },
 ): void {
     editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, (asSource as (source: SourceBinding | string) => string)(binding));
-    if (binding.trigger === "submit") editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, "submit");
+    if (binding.trigger === "submit" || binding.trigger === "change") editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, binding.trigger);
     else editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     const method = binding.method ?? source.method ?? "GET";
-    if (method && (method !== "GET" || binding.trigger === "submit")) editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
+    if (method && (method !== "GET" || binding.trigger === "submit" || binding.trigger === "change")) editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
     else editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
 
     const body = binding.body ? (asSourceBody as (body: Record<string, unknown>) => string)(binding.body) : "";

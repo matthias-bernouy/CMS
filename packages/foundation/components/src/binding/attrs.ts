@@ -16,7 +16,7 @@ export const PAGE_STATE_ATTR = "cms-page-state";
 
 export const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = typeof SOURCE_STATES[number];
-export const SOURCE_TRIGGERS = ["auto", "submit"] as const;
+export const SOURCE_TRIGGERS = ["auto", "submit", "change"] as const;
 export type SourceTrigger = typeof SOURCE_TRIGGERS[number];
 export const SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
 export type SourceMethod = typeof SOURCE_METHODS[number];

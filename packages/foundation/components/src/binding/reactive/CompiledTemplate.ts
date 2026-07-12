@@ -287,7 +287,8 @@ function compileNode(
 
     if (el.hasAttribute(SOURCE_ATTR)) {
         compileAttributes(el, path, plan, options.submitBoundary);
-        if (el.getAttribute(SOURCE_TRIGGER_ATTR)?.trim().toLowerCase() !== "submit") return;
+        const sourceTrigger = el.getAttribute(SOURCE_TRIGGER_ATTR)?.trim().toLowerCase();
+        if (sourceTrigger !== "submit" && sourceTrigger !== "change") return;
         const nextBoundary = submitBoundary(el);
         Array.from(el.childNodes).forEach((child, index) => {
             compileNode(child, [...path, index], { skipCondition: false, skipRepeat: false, submitBoundary: nextBoundary }, plan, filters);

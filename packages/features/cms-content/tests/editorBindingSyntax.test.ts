@@ -162,7 +162,7 @@ describe("editor binding syntax", () => {
 
     test("exposes stable source states and triggers", () => {
         expect(CMS_SOURCE_STATES).toEqual(["loaded", "loading", "empty", "error"]);
-        expect(CMS_SOURCE_TRIGGERS).toEqual(["auto", "submit"]);
+        expect(CMS_SOURCE_TRIGGERS).toEqual(["auto", "submit", "change"]);
         expect(isCmsSourceState("loaded")).toBe(true);
         expect(isCmsSourceState("loading")).toBe(true);
         expect(isCmsSourceState("empty")).toBe(true);
@@ -171,6 +171,7 @@ describe("editor binding syntax", () => {
         expect(isCmsSourceState(null)).toBe(false);
         expect(isCmsSourceTrigger("auto")).toBe(true);
         expect(isCmsSourceTrigger("submit")).toBe(true);
+        expect(isCmsSourceTrigger("change")).toBe(true);
         expect(isCmsSourceTrigger("manual")).toBe(false);
     });
 

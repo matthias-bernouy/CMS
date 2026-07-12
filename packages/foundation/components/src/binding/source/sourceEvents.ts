@@ -1,4 +1,4 @@
-import { SOURCE_ATTR, SOURCE_TRIGGER_ATTR, isSourceTrigger } from "../attrs";
+import { SOURCE_ATTR, SOURCE_TRIGGER_ATTR, isSourceTrigger, type SourceTrigger } from "../attrs";
 import { listenReactiveUrlChanges } from "./reactiveUrl";
 import { sourceUrl } from "./sourceSpec";
 
@@ -11,9 +11,10 @@ export type SourceEventCallbacks = {
     onReload: () => void;
     onReactiveUrlChange: () => void;
     onSubmit: (event: SubmitEvent) => void;
+    onChange: (event: Event) => void;
 };
 
-export function sourceTrigger(source: Element): "auto" | "submit" {
+export function sourceTrigger(source: Element): SourceTrigger {
     const value = source.getAttribute(SOURCE_TRIGGER_ATTR);
     return isSourceTrigger(value) ? value : "auto";
 }
@@ -23,12 +24,15 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
     const reloadEvents = [RELOAD_EVENT, ...namedReloadEvents(source)];
     for (const eventName of reloadEvents) doc.addEventListener(eventName, callbacks.onReload);
 
-    if (sourceTrigger(source) === "submit") {
+    const trigger = sourceTrigger(source);
+    if (trigger === "submit" || trigger === "change") {
         const form = asOwnerForm(source) ?? source.closest("form");
-        form?.addEventListener("submit", callbacks.onSubmit);
+        const eventName = trigger === "submit" ? "submit" : "change";
+        const listener = trigger === "submit" ? callbacks.onSubmit : callbacks.onChange;
+        form?.addEventListener(eventName, listener as EventListener);
         return () => {
             for (const eventName of reloadEvents) doc.removeEventListener(eventName, callbacks.onReload);
-            form?.removeEventListener("submit", callbacks.onSubmit);
+            form?.removeEventListener(eventName, listener as EventListener);
         };
     }
 

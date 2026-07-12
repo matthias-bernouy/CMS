@@ -7,6 +7,33 @@ import { el, res, resetDom, settle, text, waitFor } from "../testUtils";
 afterEach(resetDom);
 
 describe("Source — submit trigger", () => {
+    test("change-triggered form sources submit after a control change, not on startup", async () => {
+        const requests: RequestInit[] = [];
+        globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+            requests.push(init ?? {});
+            return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" } });
+        }) as typeof fetch;
+
+        const root = el(`
+            <form cms-source="/api/preferences as result" cms-source-trigger="change" cms-source-method="POST" cms-source-success-reset="false">
+                <select name="level"><option value="club" selected>Club</option></select>
+                <input name="style" value="defender">
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await settle();
+        expect(requests).toHaveLength(0);
+
+        root.querySelector("select")!.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitFor(() => requests.length === 1);
+
+        expect(requests[0]?.method).toBe("POST");
+        expect(requests[0]?.body).toBe(JSON.stringify({ level: "club", style: "defender" }));
+        runtime.stop();
+    });
+
     test("submit-triggered sources wait for the parent form submit", async () => {
         let calls = 0;
         const urls: string[] = [];
@@ -289,6 +316,58 @@ describe("Source — submit trigger", () => {
             "site.name": "Demo",
             "site.notFound": "/404",
             "email.enabled": "true",
+        }));
+        runtime.stop();
+    });
+
+    test("change form keeps an auth-bound hidden field around a nested read source", async () => {
+        let submittedBody: BodyInit | null | undefined;
+        globalThis.fetch = (async (url: string, init?: RequestInit) => {
+            if (url === "/account") {
+                return new Response(JSON.stringify({ metadata: {} }), {
+                    headers: { "content-type": "application/json" },
+                });
+            }
+            if (url === "/me") {
+                return new Response(JSON.stringify({ subject: { email: "seller+2@example.com" } }), {
+                    headers: { "content-type": "application/json" },
+                });
+            }
+            if (url === "/subscription?email=seller%2B2%40example.com") {
+                return new Response(JSON.stringify({ subscribed: false }), {
+                    headers: { "content-type": "application/json" },
+                });
+            }
+            submittedBody = init?.body;
+            return new Response(JSON.stringify({ subscribed: true }), {
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const root = el(`
+            <section cms-source="/account as data">
+                <div cms-source="/me as auth">
+                    <form cms-source="/subscription as result" cms-source-trigger="change" cms-source-method="POST" cms-source-success-reset="false">
+                        <input type="hidden" name="email" value="{{ auth.subject.email }}">
+                        <div cms-source="/subscription?email={{ auth.subject.email | urlencode }} as subscription">
+                            <input name="subscribed" value="true">
+                        </div>
+                    </form>
+                </div>
+            </section>
+        `);
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+
+        await waitFor(() => root.querySelector<HTMLInputElement>("[name=email]")?.value === "seller+2@example.com");
+        const subscribed = root.querySelector<HTMLInputElement>("[name=subscribed]")!;
+        subscribed.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitFor(() => submittedBody !== undefined);
+
+        expect(submittedBody).toBe(JSON.stringify({
+            email: "seller+2@example.com",
+            subscribed: "true",
         }));
         runtime.stop();
     });

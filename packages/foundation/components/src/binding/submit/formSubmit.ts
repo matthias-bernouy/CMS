@@ -29,7 +29,10 @@ type FormControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | 
 
 type FormAssociatedLike = HTMLElement & {
     name?: string;
-    value?: string;
+    value?: string | string[];
+    checked?: boolean;
+    uncheckedValue?: string | null;
+    files?: FileList | File[];
     disabled?: boolean;
 };
 
@@ -201,7 +204,23 @@ function appendControl(formData: FormData, control: FormControl): void {
         return;
     }
 
-    formData.append(name, String(control.value ?? ""));
+    if (!(control instanceof view.HTMLInputElement) && "files" in control) {
+        for (const file of Array.from(control.files ?? [])) formData.append(name, file);
+        return;
+    }
+
+    if (!(control instanceof view.HTMLInputElement) && "checked" in control && control.checked === false) {
+        const uncheckedValue = control.uncheckedValue;
+        if (uncheckedValue !== undefined && uncheckedValue !== null) formData.append(name, uncheckedValue);
+        return;
+    }
+
+    const value = control.value ?? "";
+    if (Array.isArray(value)) {
+        for (const item of value) formData.append(name, String(item));
+        return;
+    }
+    formData.append(name, String(value));
 }
 
 function hasFile(formData: FormData): boolean {

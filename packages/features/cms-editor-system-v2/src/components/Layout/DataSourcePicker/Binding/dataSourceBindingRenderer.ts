@@ -29,12 +29,12 @@ function renderAliasInput(value: string): HTMLElement {
     return aliasLabel;
 }
 
-function renderTriggerSelect(value: "auto" | "submit"): HTMLElement {
+function renderTriggerSelect(value: "auto" | "submit" | "change"): HTMLElement {
     const label = document.createElement("label");
     label.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option("auto", "Auto"), option("submit", "Submit"));
+    trigger.append(option("auto", "Auto"), option("submit", "Submit"), option("change", "Change"));
     selectOption(trigger, value);
     label.append(trigger);
     return label;

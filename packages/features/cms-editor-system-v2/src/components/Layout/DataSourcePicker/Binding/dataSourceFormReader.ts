@@ -14,8 +14,8 @@ export function readSourceBinding(root: ParentNode, source: EditorDataSource): D
     return {
         url: source.url,
         ...(alias ? { alias } : {}),
-        ...(method !== "GET" || trigger === "submit" ? { method } : {}),
-        ...(trigger === "submit" ? { trigger } : {}),
+        ...(method !== "GET" || trigger !== "auto" ? { method } : {}),
+        ...(trigger !== "auto" ? { trigger } : {}),
         ...(Object.keys(params).length ? { params } : {}),
         ...(Object.keys(body).length ? { body } : {}),
     };
@@ -43,7 +43,7 @@ function selectedMode(select: HTMLSelectElement): DataSourcePickerSourceParamVal
     return value === "raw" || value === "state" ? value : "queryParam";
 }
 
-function selectedTrigger(select: HTMLSelectElement | null): "auto" | "submit" {
+function selectedTrigger(select: HTMLSelectElement | null): "auto" | "submit" | "change" {
     const value = select?.options[select.selectedIndex]?.value;
-    return value === "submit" ? value : "auto";
+    return value === "submit" || value === "change" ? value : "auto";
 }

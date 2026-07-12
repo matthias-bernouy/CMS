@@ -606,7 +606,9 @@ export class SettingsView extends HTMLElement {
                 ? (asSourceBody as (body: NonNullable<DataSourcePickerSourceBinding["body"]>) => string)(detail.binding.body)
                 : "";
             attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = body || null;
-            attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" ? "submit" : null;
+            attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" || detail.binding.trigger === "change"
+                ? detail.binding.trigger
+                : null;
         }
         return attributes;
     }

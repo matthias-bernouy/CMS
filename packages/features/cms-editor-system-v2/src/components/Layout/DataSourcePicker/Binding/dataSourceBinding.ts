@@ -12,7 +12,7 @@ export type DataSourcePickerSourceBinding = {
     method?: EditorDataSourceMethod;
     params?: Record<string, DataSourcePickerSourceParamValue>;
     body?: Record<string, DataSourcePickerSourceParamValue>;
-    trigger?: "auto" | "submit";
+    trigger?: "auto" | "submit" | "change";
 };
 
 export function sourceForBinding(
