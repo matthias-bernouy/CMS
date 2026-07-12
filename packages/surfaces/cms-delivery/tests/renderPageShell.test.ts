@@ -80,6 +80,7 @@ describe("renderPage — binding core wrapper", () => {
         const html = new TextDecoder().decode(entry.raw);
         expect(html).toContain("script-src 'self' https://connect-js.stripe.com");
         expect(html).toContain("frame-src 'self' https://connect.stripe.com");
+        expect(html).not.toContain("frame-ancestors");
     });
 
 });

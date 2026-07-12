@@ -32,6 +32,6 @@ export function buildMetaCsp(
     if (process.env.MODE === "DEV") return;
     const meta = document.createElement("meta");
     meta.setAttribute("http-equiv", "Content-Security-Policy");
-    meta.setAttribute("content",    buildCspContent(extras));
+    meta.setAttribute("content",    buildCspContent(extras, { includeHeaderOnlyDirectives: false }));
     head.prepend(meta);
 }
