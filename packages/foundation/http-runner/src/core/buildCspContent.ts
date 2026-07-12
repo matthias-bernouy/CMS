@@ -34,7 +34,10 @@ export type CspExtras = {
 
 const EMPTY_EXTRAS: CspExtras = { connectExtras: [], mediaExtras: [] };
 
-export function buildCspContent(extras: CspExtras = EMPTY_EXTRAS): string {
+export function buildCspContent(
+    extras: CspExtras = EMPTY_EXTRAS,
+    options: { includeHeaderOnlyDirectives?: boolean } = {},
+): string {
     const style  = ["'self'", "'unsafe-inline'", ...(extras.styleExtras  ?? [])].join(" ");
     const script = ["'self'", ...(extras.scriptExtras ?? [])].join(" ");
 
@@ -46,8 +49,8 @@ export function buildCspContent(extras: CspExtras = EMPTY_EXTRAS): string {
         "base-uri 'self'",
         "form-action 'self'",
         "object-src 'none'",
-        "frame-ancestors 'none'",
     ];
+    if (options.includeHeaderOnlyDirectives !== false) parts.push("frame-ancestors 'none'");
     if (extras.connectExtras.length) {
         parts.push(`connect-src 'self' ${extras.connectExtras.join(" ")}`);
     }

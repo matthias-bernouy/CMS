@@ -63,6 +63,12 @@ describe("buildCspContent", () => {
         expect(buildCspContent()).toBe(expected);
     });
 
+    test("can omit header-only directives for meta CSP", () => {
+        const csp = buildCspContent(undefined, { includeHeaderOnlyDirectives: false });
+        expect(csp).not.toContain("frame-ancestors");
+        expect(csp).toContain("form-action 'self'");
+    });
+
     test("directives are joined with '; ' separator", () => {
         const csp = buildCspContent();
         expect(csp.split("; ").length).toBe(8);
