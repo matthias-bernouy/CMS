@@ -40,6 +40,9 @@ export async function getGatewayEndpoint(
     if (!sources || !isGatewayPermission(permission)) return null;
     const parsed = parseUrn(permission);
     if (!parsed?.endpoint) return null;
+    if (sources.getEndpointForAuthorization) {
+        return sources.getEndpointForAuthorization(permission);
+    }
     return sources.getEndpoint(permission);
 }
 

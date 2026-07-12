@@ -6,6 +6,10 @@ export type ResolveResult =
     | { ok: true;  endpoint: SourceEndpoint }
     | { ok: false; reason: "not_found" | "method_not_allowed" };
 
+export type ResolveEndpointOptions = {
+    forAuthorization?: boolean;
+};
+
 /**
  * Resolves an incoming request to a declared endpoint (B addressing:
  * `<source>/<endpoint>`). Uses the `SourceRepository` INTERFACE via injection
@@ -20,13 +24,16 @@ export async function resolveEndpoint(
     repo: SourceRepository,
     segments: string[],
     method: string,
+    options: ResolveEndpointOptions = {},
 ): Promise<ResolveResult> {
     if (segments.length !== 2 || !segments[0] || !segments[1]) {
         return { ok: false, reason: "not_found" };
     }
 
     const urn = makeEndpointUrn(segments[0], segments[1]);
-    const endpoint = await repo.getEndpoint(urn);
+    const endpoint = options.forAuthorization && repo.getEndpointForAuthorization
+        ? await repo.getEndpointForAuthorization(urn)
+        : await repo.getEndpoint(urn);
     if (!endpoint) return { ok: false, reason: "not_found" };
 
     if (endpoint.method.toUpperCase() !== method.toUpperCase()) {

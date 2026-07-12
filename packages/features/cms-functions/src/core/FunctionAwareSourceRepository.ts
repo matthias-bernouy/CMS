@@ -5,12 +5,21 @@ import { SYSTEM_FUNCTIONS_SOURCE_URN } from "./projection";
 
 export class FunctionAwareSourceRepository implements SourceRepository {
     private readonly functionSources: FunctionSourceRepository;
+    readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
 
     constructor(
         private readonly inner: SourceRepository,
         functions: FunctionRepository,
     ) {
         this.functionSources = new FunctionSourceRepository(functions);
+        if (inner.getEndpointForAuthorization) {
+            this.getEndpointForAuthorization = async (urn: string) => {
+                if (systemSourceUrnOf(urn) === SYSTEM_FUNCTIONS_SOURCE_URN) {
+                    return this.functionSources.getEndpoint(urn);
+                }
+                return inner.getEndpointForAuthorization!(urn);
+            };
+        }
     }
 
     async createSource(source: Source): Promise<Source> {

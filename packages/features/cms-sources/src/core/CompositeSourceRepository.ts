@@ -10,6 +10,7 @@ import { systemSourceUrnOf } from "./systemSources";
  */
 export class CompositeSourceRepository implements SourceRepository {
     private readonly systemSources = new Map<string, Source>();
+    readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
 
     constructor(
         private readonly inner: SourceRepository,
@@ -17,6 +18,17 @@ export class CompositeSourceRepository implements SourceRepository {
     ) {
         for (const source of systemSources) {
             this.systemSources.set(source.urn, structuredClone(source));
+        }
+        if (inner.getEndpointForAuthorization) {
+            this.getEndpointForAuthorization = async (urn: string) => {
+                const systemUrn = systemSourceUrnOf(urn);
+                if (systemUrn) {
+                    const system = this.systemSources.get(systemUrn);
+                    const endpoint = system?.endpoints.find(candidate => candidate.urn === urn);
+                    return endpoint ? structuredClone(endpoint) : null;
+                }
+                return inner.getEndpointForAuthorization!(urn);
+            };
         }
     }
 

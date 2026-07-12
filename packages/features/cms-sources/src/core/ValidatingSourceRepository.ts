@@ -1,5 +1,5 @@
 import type { SourceRepository } from "../interfaces/SourceRepository";
-import type { Source } from "../interfaces/Source";
+import type { Source, SourceEndpoint } from "../interfaces/Source";
 import { validateSource } from "./validateSource";
 import { SourceValidationError } from "./errors";
 
@@ -11,7 +11,13 @@ import { SourceValidationError } from "./errors";
  *   `new ValidatingSourceRepository(new MongoSourceRepository(db))`
  */
 export class ValidatingSourceRepository implements SourceRepository {
-    constructor(private readonly inner: SourceRepository) {}
+    readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
+
+    constructor(private readonly inner: SourceRepository) {
+        if (inner.getEndpointForAuthorization) {
+            this.getEndpointForAuthorization = (urn: string) => inner.getEndpointForAuthorization!(urn);
+        }
+    }
 
     async createSource(source: Source): Promise<Source> {
         this.validate(source);

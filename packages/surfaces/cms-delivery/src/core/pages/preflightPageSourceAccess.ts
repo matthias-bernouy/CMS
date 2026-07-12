@@ -36,7 +36,7 @@ export async function preflightPageSourceAccess(
 
         // Auto sources are fetched by the binding runtime with GET. Submit
         // sources are action-time checks and are handled by the proxy itself.
-        const resolved = await resolveEndpoint(sources, segments, "GET");
+        const resolved = await resolveEndpoint(sources, segments, "GET", { forAuthorization: true });
         if (!resolved.ok) continue;
 
         const authorization = await authorizeDeliverySourceEndpoint(delivery, resolved.endpoint, req, { subject });

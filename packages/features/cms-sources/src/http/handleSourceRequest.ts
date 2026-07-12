@@ -3,6 +3,7 @@ import type { SourceEndpoint } from "../interfaces/Source";
 import { resolveEndpoint } from "../core/resolveEndpoint";
 import { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
 import { systemSourceUrnOf } from "../core/systemSources";
+import { sourceEndpointAccessMode } from "../core/access";
 
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
@@ -54,23 +55,41 @@ export async function handleSourceRequest(
 
     const segments = url.pathname.slice(opts.prefix.length).split("/").filter(Boolean).map(decodeURIComponent);
 
-    const resolved = await resolveEndpoint(source, segments, request.method);
-    if (!resolved.ok) {
-        return new Response(resolved.reason, { status: resolved.reason === "method_not_allowed" ? 405 : 404 });
+    const authorizationResolved = await resolveEndpoint(source, segments, request.method, { forAuthorization: true });
+    if (!authorizationResolved.ok) {
+        return unresolvedEndpointResponse(authorizationResolved.reason);
     }
 
     if (opts.deps?.authorizeEndpoint) {
-        const authorization = await opts.deps.authorizeEndpoint(resolved.endpoint, request);
+        const authorization = await opts.deps.authorizeEndpoint(authorizationResolved.endpoint, request);
         if (!isSourceAuthorized(authorization)) {
             const status = sourceAuthorizationStatus(authorization);
             return new Response(sourceAuthorizationBody(authorization, status), { status });
         }
     }
 
+    const resolved = source.getEndpointForAuthorization
+        ? await resolveEndpoint(source, segments, request.method)
+        : authorizationResolved;
+    if (!resolved.ok) return unresolvedEndpointResponse(resolved.reason);
+    if (!sameAuthorizationDescriptor(authorizationResolved.endpoint, resolved.endpoint)) {
+        return new Response("source endpoint changed", { status: 409 });
+    }
+
     const dispatch = (req: Request) => dispatchEndpoint(resolved.endpoint, req, opts.deps);
     return opts.deps?.interceptEndpoint
         ? opts.deps.interceptEndpoint(resolved.endpoint, request, dispatch)
         : dispatch(request);
+}
+
+function unresolvedEndpointResponse(reason: "not_found" | "method_not_allowed"): Response {
+    return new Response(reason, { status: reason === "method_not_allowed" ? 405 : 404 });
+}
+
+function sameAuthorizationDescriptor(base: SourceEndpoint, enriched: SourceEndpoint): boolean {
+    return base.urn === enriched.urn
+        && base.method === enriched.method
+        && sourceEndpointAccessMode(base) === sourceEndpointAccessMode(enriched);
 }
 
 async function dispatchEndpoint(

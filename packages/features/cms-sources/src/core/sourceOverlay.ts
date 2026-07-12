@@ -1,6 +1,6 @@
 import type { Source, SourceEndpoint } from "../interfaces/Source";
 import type { SourceRepository } from "../interfaces/SourceRepository";
-import type { SourceOverlayRepository } from "../interfaces/SourceOverlay";
+import type { SourceOverlay, SourceOverlayRepository } from "../interfaces/SourceOverlay";
 import type { ExecutorDeps } from "./executeEndpoint";
 import { materializeSourceOverlays } from "./sourceOverlayDynamicFields";
 import { applySourceOverlays, overlaysFor, sourceOverlayFieldPath } from "./sourceOverlayProjection";
@@ -49,13 +49,42 @@ export class SourceOverlaySourceRepository implements SourceRepository {
     async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         const sourceUrn = sourceUrnOf(urn);
         if (!sourceUrn) return this.inner.getEndpoint(urn);
-        const source = await this.getSource(sourceUrn);
-        return source?.endpoints.find(endpoint => endpoint.urn === urn) ?? null;
+        const source = await this.inner.getSource(sourceUrn);
+        if (!source) return null;
+
+        const endpoint = source.endpoints.find(candidate => candidate.urn === urn);
+        if (!endpoint) return null;
+
+        const endpointId = parseUrn(urn)?.endpoint ?? "";
+        const overlays = (await this.overlays.getOverlaysForSource(sourceId(source)))
+            .filter(overlay => overlayTargetsEndpoint(overlay, endpointId));
+        if (!overlays.length) return structuredClone(endpoint);
+
+        const enriched = applySourceOverlays(
+            source,
+            await materializeSourceOverlays(source, overlays, this.options.deps),
+        );
+        return enriched.endpoints.find(candidate => candidate.urn === urn) ?? null;
+    }
+
+    async getEndpointForAuthorization(urn: string): Promise<SourceEndpoint | null> {
+        if (this.inner.getEndpointForAuthorization) {
+            return this.inner.getEndpointForAuthorization(urn);
+        }
+        return this.inner.getEndpoint(urn);
     }
 }
 
 function sourceId(source: Source): string {
     return parseUrn(source.urn)?.source ?? "";
+}
+
+function overlayTargetsEndpoint(
+    overlay: SourceOverlay,
+    endpointId: string,
+): boolean {
+    return [...(overlay.input ?? []), ...(overlay.output ?? [])]
+        .some(target => target.endpointId === endpointId);
 }
 
 export {

@@ -27,4 +27,12 @@ export interface SourceRepository {
      * uses to resolve an incoming request. `null` if not found.
      */
     getEndpoint(urn: string): Promise<SourceEndpoint | null>;
+
+    /**
+     * Optional side-effect-free endpoint lookup used before authorization.
+     * Decorators that enrich endpoint contracts through network, secret, or
+     * other privileged work must return the underlying endpoint descriptor
+     * here and defer enrichment until after authorization succeeds.
+     */
+    getEndpointForAuthorization?(urn: string): Promise<SourceEndpoint | null>;
 }

@@ -1,9 +1,11 @@
 import { describe, test, expect, mock } from "bun:test";
 import { handleSourceRequest } from "cms-sources/http/handleSourceRequest";
 import { InMemorySourceRepository } from "cms-sources/default-implementation/InMemorySourceRepository";
+import { InMemorySourceOverlayRepository } from "cms-sources/default-implementation/InMemorySourceOverlayRepository";
 import { CompositeSourceRepository } from "cms-sources/core/CompositeSourceRepository";
+import { SourceOverlaySourceRepository } from "cms-sources/core/sourceOverlay";
 import { SYSTEM_AUTH_SOURCE } from "cms-sources/core/systemSources";
-import type { Source } from "cms-sources/interfaces/Source";
+import type { Source, SourceEndpoint } from "cms-sources/interfaces/Source";
 
 const PREFIX = "/base/.cms/sources/";
 
@@ -18,6 +20,63 @@ async function seededRepo() {
     const r = new InMemorySourceRepository();
     await r.createSource(source);
     return r;
+}
+
+async function dynamicOverlayHarness() {
+    const inner = new InMemorySourceRepository();
+    const overlays = new InMemorySourceOverlayRepository();
+    await inner.createSource({
+        urn: "urn:shop",
+        endpoints: [
+            {
+                urn: "urn:shop:getCart",
+                method: "GET",
+                targetUrl: "https://api.shop.com/cart",
+                output: [{
+                    status: "200",
+                    body: {
+                        type: "object",
+                        properties: { id: { type: "string" } },
+                    },
+                }],
+            },
+            {
+                urn: "urn:shop:listFields",
+                method: "GET",
+                targetUrl: "https://api.shop.com/fields",
+                access: { mode: "admin" },
+                headers: [{
+                    name: "Authorization",
+                    source: { from: "secret", ref: "${FIELDS_KEY}", prefix: "Bearer " },
+                }],
+                output: [{ status: "200", body: { type: "object" } }],
+            },
+        ],
+    });
+    await overlays.upsertOverlay({
+        id: "shop-cart-fields",
+        sourceId: "shop",
+        output: [{ endpointId: "getCart" }],
+        fieldSource: { endpointId: "listFields" },
+        fields: [],
+    });
+
+    const fetchImpl = mock(async (input: Parameters<typeof fetch>[0]) => {
+        const url = new URL(input instanceof Request ? input.url : String(input));
+        if (url.pathname === "/fields") {
+            return Response.json({
+                fields: [{ id: "company", label: "Company", type: "string" }],
+            });
+        }
+        if (url.pathname === "/cart") return Response.json({ id: "cart-1" });
+        return new Response("not found", { status: 404 });
+    });
+    const resolveSecret = mock(async () => "field-source-secret");
+    const repo = new SourceOverlaySourceRepository(inner, overlays, {
+        deps: { fetchImpl, resolveSecret },
+    });
+
+    return { repo, fetchImpl, resolveSecret };
 }
 
 const okFetch = () => mock(async (_i: Parameters<typeof fetch>[0], _init?: Parameters<typeof fetch>[1]) => new Response("ok"));
@@ -100,6 +159,97 @@ describe("handleSourceRequest", () => {
 
         expect(res.status).toBe(200);
         expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+
+    test.each([
+        {
+            name: "unknown endpoint returns 404",
+            path: "shop/nope",
+            method: "GET",
+            authorization: "allow",
+            status: 404,
+            authorizationCalls: 0,
+        },
+        {
+            name: "wrong method returns 405",
+            path: "shop/getCart",
+            method: "POST",
+            authorization: "allow",
+            status: 405,
+            authorizationCalls: 0,
+        },
+        {
+            name: "forbidden endpoint returns 403",
+            path: "shop/getCart",
+            method: "GET",
+            authorization: "forbid",
+            status: 403,
+            authorizationCalls: 1,
+        },
+        {
+            name: "unauthenticated endpoint returns 401",
+            path: "shop/getCart",
+            method: "GET",
+            authorization: "unauthenticated",
+            status: 401,
+            authorizationCalls: 1,
+        },
+    ])("does no overlay work before authorization: $name", async ({
+        path,
+        method,
+        authorization,
+        status,
+        authorizationCalls,
+    }) => {
+        const { repo, fetchImpl, resolveSecret } = await dynamicOverlayHarness();
+        const authorizeEndpoint = mock(async () => {
+            if (authorization === "forbid") return false;
+            if (authorization === "unauthenticated") return { authorized: false, status: 401 as const };
+            return true;
+        });
+
+        const res = await handleSourceRequest(
+            repo,
+            new Request(`http://local${PREFIX}${path}`, { method }),
+            { prefix: PREFIX, deps: { fetchImpl, resolveSecret, authorizeEndpoint } },
+        );
+
+        expect(res.status).toBe(status);
+        expect(authorizeEndpoint).toHaveBeenCalledTimes(authorizationCalls);
+        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(resolveSecret).not.toHaveBeenCalled();
+    });
+
+    test("materializes dynamic overlays only after authorization", async () => {
+        const { repo, fetchImpl, resolveSecret } = await dynamicOverlayHarness();
+        const authorizeEndpoint = mock(async () => {
+            expect(fetchImpl).not.toHaveBeenCalled();
+            expect(resolveSecret).not.toHaveBeenCalled();
+            return true;
+        });
+        let dispatchedEndpoint: SourceEndpoint | undefined;
+        const interceptEndpoint = mock(async (endpoint, request, next) => {
+            dispatchedEndpoint = endpoint;
+            return next(request);
+        });
+
+        const res = await handleSourceRequest(
+            repo,
+            new Request(`http://local${PREFIX}shop/getCart`),
+            { prefix: PREFIX, deps: { fetchImpl, resolveSecret, authorizeEndpoint, interceptEndpoint } },
+        );
+
+        expect(res.status).toBe(200);
+        expect(authorizeEndpoint).toHaveBeenCalledTimes(1);
+        expect(resolveSecret).toHaveBeenCalledTimes(1);
+        expect(fetchImpl).toHaveBeenCalledTimes(2);
+        expect(dispatchedEndpoint?.output?.[0]?.body).toMatchObject({
+            properties: {
+                metadata: {
+                    properties: { company: { type: "string" } },
+                },
+            },
+        });
     });
 
     test("system endpoints require a system executor", async () => {
