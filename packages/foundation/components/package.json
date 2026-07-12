@@ -1,7 +1,7 @@
 {
   "name": "@bernouy/components",
   "version": "0.1.2",
-  "description": "CMS blocs and admin custom elements built with Bun and TypeScript. Each component extends a minimal base that attaches an open Shadow Root and inlines its CSS + HTML template.",
+  "description": "CMS blocs and admin custom elements built with Bun and TypeScript, with Shadow DOM components and transparent Light DOM compositions.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -36,8 +36,8 @@
       "default": "./dist/index.js"
     },
     "./base": {
-      "types": "./dist/base/Component.d.ts",
-      "bun": "./src/base/Component.ts",
+      "types": "./dist/base.d.ts",
+      "bun": "./src/base/index.ts",
       "import": "./dist/base.js",
       "default": "./dist/base.js"
     },
@@ -46,6 +46,12 @@
       "bun": "./binding.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./composition-runtime": {
+      "types": "./dist/base/compositionRuntime.d.ts",
+      "bun": "./src/base/compositionRuntime.ts",
+      "import": "./dist/composition-runtime.js",
+      "default": "./dist/composition-runtime.js"
     },
     "./style.css": "./dist/style.css",
     "./blocs/*": {

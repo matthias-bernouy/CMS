@@ -102,7 +102,8 @@ function dtsStub(entry: string): string {
 await rm(dist, { recursive: true, force: true });
 await mkdir(blocsDir, { recursive: true });
 
-await buildBundle("./src/base/Component.ts", dist, "base.js", "esm");
+await buildBundle("./src/base/index.ts", dist, "base.js", "esm");
+await buildBundle("./src/base/compositionRuntime.ts", dist, "composition-runtime.js", "esm");
 await buildBundle("./src/index.ts", dist, "index.js", "esm");
 
 await Promise.all(
@@ -115,6 +116,6 @@ await Promise.all(
 await cp("./src/assets/default.css", `${dist}/style.css`);
 
 await $`bunx tsc -p tsconfig.build.json`;
-await writeFile(`${dist}/base.d.ts`, `export * from "./base/Component";\n`);
+await writeFile(`${dist}/base.d.ts`, `export * from "./base/index";\n`);
 
 console.log(`Built index.js + ${blocs.length} blocs (esm + d.ts) → ${dist}/`);

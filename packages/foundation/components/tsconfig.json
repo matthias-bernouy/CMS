@@ -10,7 +10,7 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@bernouy/components/base": ["src/base/Component.ts"]
+      "@bernouy/components/base": ["src/base/index.ts"]
     },
 
     // Bundler mode

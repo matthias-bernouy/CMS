@@ -1,5 +1,17 @@
 // Base
-export { Component, type ComponentMetadata } from "./base/Component";
+export {
+    Component,
+    Composition,
+    type ComponentMetadata,
+    type CompositionMetadata,
+} from "./base";
+export {
+    COMPOSITION_INPUT_ATTRIBUTE,
+    COMPOSITION_OUTPUT_ATTRIBUTE,
+    COMPOSITION_RUNTIME_ATTRIBUTE,
+    clearCompositionRuntimeState,
+    isCompositionRuntimeElement,
+} from "./base/compositionRuntime";
 
 // Accordion
 export { Accordion } from "./ui/Accordion/Accordion";
