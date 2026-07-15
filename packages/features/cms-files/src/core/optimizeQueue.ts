@@ -16,7 +16,7 @@
 export class OptimizeQueue {
 
     private readonly inFlight = new Set<string>();
-    private readonly waiting: { key: string; run: () => Promise<void> }[] = [];
+    private readonly waiting = new Map<string, () => Promise<void>>();
     private active = 0;
 
     constructor(private readonly concurrency: number = 2) {}
@@ -24,20 +24,23 @@ export class OptimizeQueue {
     /** Schedule `run` under a dedupe `key`. A key already waiting or running is
      *  a no-op. Fire-and-forget — never throws to the caller. */
     enqueue(key: string, run: () => Promise<void>): void {
-        if (this.inFlight.has(key) || this.waiting.some((w) => w.key === key)) return;
-        this.waiting.push({ key, run });
+        if (this.inFlight.has(key) || this.waiting.has(key)) return;
+        this.waiting.set(key, run);
         this._drain();
     }
 
     private _drain(): void {
-        while (this.active < this.concurrency && this.waiting.length > 0) {
-            const job = this.waiting.shift()!;
-            this.inFlight.add(job.key);
+        while (this.active < this.concurrency && this.waiting.size > 0) {
+            const next = this.waiting.entries().next();
+            if (next.done) break;
+            const [key, run] = next.value;
+            this.waiting.delete(key);
+            this.inFlight.add(key);
             this.active++;
-            void job.run()
+            void run()
                 .catch(() => { /* best-effort; a failed job re-enqueues on the next render */ })
                 .finally(() => {
-                    this.inFlight.delete(job.key);
+                    this.inFlight.delete(key);
                     this.active--;
                     this._drain();
                 });
@@ -45,5 +48,5 @@ export class OptimizeQueue {
     }
 
     /** True while any job is waiting or running. */
-    get busy(): boolean { return this.active > 0 || this.waiting.length > 0; }
+    get busy(): boolean { return this.active > 0 || this.waiting.size > 0; }
 }

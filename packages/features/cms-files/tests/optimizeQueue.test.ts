@@ -43,4 +43,24 @@ describe("OptimizeQueue", () => {
         await until(() => !q.busy);
         expect(ran).toBe(true);
     });
+
+    test("dedupes a high-cardinality backlog while preserving every distinct job", async () => {
+        const q = new OptimizeQueue(1);
+        let release!: () => void;
+        const gate = new Promise<void>((resolve) => { release = resolve; });
+        let runs = 0;
+        let duplicateRuns = 0;
+
+        q.enqueue("blocker", () => gate);
+        for (let index = 0; index < 10_000; index++) {
+            const key = `image:${index}`;
+            q.enqueue(key, async () => { runs++; });
+            q.enqueue(key, async () => { duplicateRuns++; });
+        }
+
+        release();
+        await until(() => !q.busy);
+        expect(runs).toBe(10_000);
+        expect(duplicateRuns).toBe(0);
+    });
 });
