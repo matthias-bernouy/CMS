@@ -4,8 +4,11 @@ import {
     buildForwardHeaders,
     hasComputedHeaders,
     hasComputedParams,
-    responseHeaders,
 } from "./endpointHeaders";
+import {
+    projectEndpointResponse,
+    type ResponseProjectionOptions,
+} from "./response-projection/projectEndpointResponse";
 import { upstreamBody } from "./upstreamBody";
 
 /** Resolves a server-side secret reference used by source config headers. */
@@ -17,8 +20,10 @@ export type SourceSecretResolver = (ref: string) => Promise<string | undefined>;
  *  - `resolveSecret`: resolves a `secret`-sourced config header's `ref` to its value
  *    server-side. When provided, `secret` headers ARE applied; when absent, the
  *    executor keeps the 500 seam (a raw `${KEY}` ref is never forwarded upstream).
+ *  - response projection options: choose the global compatibility/strict policy
+ *    and receive sanitized legacy-contract observability events.
  */
-export type ExecutorDeps = {
+export type ExecutorDeps = ResponseProjectionOptions & {
     fetchImpl?: typeof fetch;
     resolveSecret?: SourceSecretResolver;
     resolveContext?: (request: Request) => Promise<SourceComputedContext>;
@@ -39,7 +44,8 @@ const TIMEOUT_MS = 15_000;
  *  - `secret`-sourced config headers are NOT applied: they return 500 (the scoped
  *    seam — a raw `${KEY}` ref is never forwarded upstream until the store is wired).
  *  - Response headers: allowlist; `set-cookie` / `access-control-*` / hop-by-hop dropped;
- *  - Timeout 15 s, body streamed without buffering; redirects NOT followed.
+ *  - Timeout 15 s; redirects NOT followed. Legacy/file bodies remain streamed;
+ *    declared JSON bodies are bounded and projected before being returned.
  */
 export async function executeEndpoint(
     endpoint: SourceEndpoint,
@@ -68,7 +74,6 @@ export async function executeEndpoint(
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), TIMEOUT_MS);
 
-    let upstream: Response;
     try {
         const init: RequestInit & { duplex?: "half" } = {
             method:   endpoint.method,
@@ -80,17 +85,12 @@ export async function executeEndpoint(
             init.body = body.body;
             if (body.streaming) init.duplex = "half";
         }
-        upstream = await doFetch(built.url, init);
+        const upstream = await doFetch(built.url, init);
+        return await projectEndpointResponse(endpoint, request, upstream, deps);
     } catch (err) {
         const aborted = (err as { name?: string })?.name === "AbortError";
         return new Response(aborted ? "Source Timeout" : "Bad Source", { status: aborted ? 504 : 502 });
     } finally {
         clearTimeout(timer);
     }
-
-    return new Response(upstream.body, {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers: responseHeaders(upstream),
-    });
 }

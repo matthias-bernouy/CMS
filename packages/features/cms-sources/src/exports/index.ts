@@ -107,6 +107,19 @@ export {
 } from "../core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps, type SourceSecretResolver } from "../core/executeEndpoint";
 export {
+    MAX_PROJECTED_JSON_BYTES,
+    RESPONSE_PROJECTION_MODES,
+    projectEndpointResponse,
+    type ResponseProjectionEvent,
+    type ResponseProjectionMode,
+    type ResponseProjectionOptions,
+    type ResponseProjectionReporter,
+} from "../core/response-projection/projectEndpointResponse";
+export {
+    projectDataShape,
+    type DataShapeProjectionResult,
+} from "../core/response-projection/projectDataShape";
+export {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
     sourcesPrefix,
