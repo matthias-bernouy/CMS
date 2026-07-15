@@ -14,5 +14,3 @@ export type ValidationState = {
     knownStepIds: Set<string>;
     stepShapes: Map<string, DataShape | null>;
 };
-
-export const MAX_LOOP_ITEMS = 50;

@@ -48,6 +48,9 @@ export type FunctionForEach = {
     max: number;
     steps: FunctionStep[];
     yield?: FunctionValue;
+    continueOnError?: boolean;
+    onError?: FunctionStep[];
+    errorYield?: FunctionValue;
 };
 
 export type FunctionStep =

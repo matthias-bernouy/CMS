@@ -10,6 +10,8 @@ import { FunctionExecutionError } from "../errors";
 import { resolveFunctionValue, type FunctionRuntimeVars } from "../expressions";
 import { MAX_FUNCTION_CALL_ERROR_BYTES, MAX_FUNCTION_RESPONSE_BYTES } from "./limits";
 
+export class RecoverableFunctionCallError extends FunctionExecutionError {}
+
 export async function executeFunctionCall(
     call: FunctionCall,
     vars: FunctionRuntimeVars,
@@ -23,21 +25,27 @@ export async function executeFunctionCall(
     const response = await executeEndpoint(endpoint, callRequest(endpoint, call, vars), options.deps);
     if (!response.ok) throw await callFailureError(call.endpoint, response, options);
 
-    const text = await response.text();
-    if (text.length > (options.maxResponseBytes ?? MAX_FUNCTION_RESPONSE_BYTES)) {
-        throw new FunctionExecutionError(`Function call "${call.endpoint}" response is too large`);
+    const { text, truncated } = await readLimitedText(
+        response,
+        options.maxResponseBytes ?? MAX_FUNCTION_RESPONSE_BYTES,
+    );
+    if (truncated) {
+        throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" response is too large`);
     }
     if (!text) return null;
     try {
         return JSON.parse(text) as unknown;
     } catch {
-        throw new FunctionExecutionError(`Function call "${call.endpoint}" returned invalid JSON`);
+        throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" returned invalid JSON`);
     }
 }
 
-async function callFailureError(endpoint: string, response: Response, options: ExecuteFunctionOptions): Promise<FunctionExecutionError> {
+async function callFailureError(endpoint: string, response: Response, options: ExecuteFunctionOptions): Promise<RecoverableFunctionCallError> {
     const message = `Function call "${endpoint}" failed with status ${response.status}`;
-    if (!options.includeCallErrorDetails) return new FunctionExecutionError(message, 502);
+    if (!options.includeCallErrorDetails) {
+        if (response.body) await response.body.cancel().catch(() => undefined);
+        return new RecoverableFunctionCallError(message, 502);
+    }
 
     const contentType = response.headers.get("content-type") ?? "";
     const { text, truncated } = await readLimitedText(response, options.maxCallErrorBytes ?? MAX_FUNCTION_CALL_ERROR_BYTES);
@@ -48,7 +56,7 @@ async function callFailureError(endpoint: string, response: Response, options: E
         body: parseErrorBody(text, contentType),
     };
     if (truncated) detail.truncated = true;
-    return new FunctionExecutionError(message, 502, detail);
+    return new RecoverableFunctionCallError(message, 502, detail);
 }
 
 async function readLimitedText(response: Response, maxBytes: number): Promise<{ text: string; truncated: boolean }> {

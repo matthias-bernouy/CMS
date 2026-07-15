@@ -4,11 +4,12 @@ import type {
     FunctionForEach,
     FunctionStep,
 } from "../../interfaces/FunctionDefinition";
+import { MAX_FUNCTION_LOOP_ITEMS } from "../execution/limits";
 import { isId } from "./ids";
 import { validateCall } from "./validateCall";
 import { validateReferences } from "./validateReferences";
 import { endpointOutputShape } from "./shapes";
-import { MAX_LOOP_ITEMS, type ValidationState } from "./state";
+import type { ValidationState } from "./state";
 
 export async function validateSteps(
     steps: FunctionStep[],
@@ -62,12 +63,13 @@ async function validateForEachStep(
     validateStepId(id, path, state);
     if (inLoop) state.errors.push(`${path}.forEach must not be nested`);
     validateReferences(loop.items, `${path}.forEach.items`, state, inLoop);
-    if (!Number.isInteger(loop.max) || loop.max < 1 || loop.max > MAX_LOOP_ITEMS) {
-        state.errors.push(`${path}.forEach.max must be an integer between 1 and ${MAX_LOOP_ITEMS}`);
+    if (!Number.isInteger(loop.max) || loop.max < 1 || loop.max > MAX_FUNCTION_LOOP_ITEMS) {
+        state.errors.push(`${path}.forEach.max must be an integer between 1 and ${MAX_FUNCTION_LOOP_ITEMS}`);
     }
     if (!Array.isArray(loop.steps) || !loop.steps.length) {
         state.errors.push(`${path}.forEach.steps must be a non-empty array`);
     }
+    validateRecoveryPolicy(loop, path, state.errors);
 
     const childState: ValidationState = {
         ...state,
@@ -78,11 +80,39 @@ async function validateForEachStep(
         ? await validateSteps(loop.steps, `${path}.forEach.steps`, childState, true)
         : 0;
     if (!inLoop && loop.yield !== undefined) validateReferences(loop.yield, `${path}.forEach.yield`, childState, true);
+
+    const errorState: ValidationState = {
+        ...state,
+        knownStepIds: new Set(state.knownStepIds),
+        stepShapes: new Map(state.stepShapes),
+    };
+    const errorCallCount = !inLoop && Array.isArray(loop.onError) && loop.onError.length
+        ? await validateSteps(loop.onError, `${path}.forEach.onError`, errorState, true)
+        : 0;
+    if (!inLoop && loop.errorYield !== undefined) {
+        validateReferences(loop.errorYield, `${path}.forEach.errorYield`, errorState, true);
+    }
     if (isId(id)) {
         state.stepShapes.set(id, null);
         state.knownStepIds.add(id);
     }
-    return childCallCount * (Number.isInteger(loop.max) ? loop.max : 0);
+    const callsPerItem = childCallCount + (loop.continueOnError === true ? errorCallCount : 0);
+    return callsPerItem * (Number.isInteger(loop.max) ? loop.max : 0);
+}
+
+function validateRecoveryPolicy(loop: FunctionForEach, path: string, errors: string[]): void {
+    if (loop.continueOnError !== undefined && typeof loop.continueOnError !== "boolean") {
+        errors.push(`${path}.forEach.continueOnError must be a boolean`);
+    }
+    if (loop.continueOnError === true && (!Array.isArray(loop.onError) || !loop.onError.length)) {
+        errors.push(`${path}.forEach.onError must be a non-empty array when continueOnError is true`);
+    }
+    if (loop.continueOnError !== true && loop.onError !== undefined) {
+        errors.push(`${path}.forEach.onError requires continueOnError to be true`);
+    }
+    if (loop.continueOnError !== true && loop.errorYield !== undefined) {
+        errors.push(`${path}.forEach.errorYield requires continueOnError to be true`);
+    }
 }
 
 function validateAssertStep(
