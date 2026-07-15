@@ -5,4 +5,4 @@
 export {
     FsIntegrationDefinitionRepository,
     type FsIntegrationDefinitionRepositoryConfig,
-} from "../default-implementation/FsIntegrationDefinitionRepository";
+} from "../default-implementation/fs-definition/repository";
