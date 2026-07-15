@@ -10,6 +10,8 @@ export type {
     DashboardTableColumn,
     DashboardTableDerive,
     DashboardVisibilityRule,
+    DashboardVisibilityCondition,
+    DashboardVisibilityValue,
 } from "./dashboard/refs";
 export type {
     DashboardField,

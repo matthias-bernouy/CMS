@@ -19,6 +19,7 @@ export type FieldValidator = (
     source: Source | null,
     fieldIds: Set<string>,
     errors: string[],
+    visibilityFieldIds?: ReadonlySet<string>,
 ) => void;
 
 export function validateSelectableField(
@@ -77,6 +78,7 @@ function validateLookupCreate(
         return;
     }
     const fieldIds = new Set<string>();
+    const visibilityFieldIds = new Set(create.fields.map(field => field.id).filter(Boolean));
     create.fields.forEach((field, index) =>
-        validateNestedField(field, `${path}.fields.${index}`, dashboard, source, fieldIds, errors));
+        validateNestedField(field, `${path}.fields.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
 }

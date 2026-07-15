@@ -6,6 +6,7 @@ import type {
     DashboardExpr,
     DashboardFilter,
     DashboardMeta,
+    DashboardVisibilityRule,
 } from "./refs";
 import type { DashboardSection } from "./fields";
 
@@ -26,6 +27,7 @@ export type DashboardAction = {
         row?: DashboardExpr;
     };
     confirm?: string;
+    visibleWhen?: DashboardVisibilityRule;
 };
 
 export type DashboardWidget =

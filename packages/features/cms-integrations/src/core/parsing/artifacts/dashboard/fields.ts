@@ -11,6 +11,7 @@ import { requiredText } from "../common";
 import { parseActions } from "./actions";
 import { parseColumn } from "./columns";
 import { parseEndpointRef, parseLookup, parseOptions } from "./refs";
+import { parseVisibilityRule } from "./visibility";
 
 export function parseSections(value: unknown, name: string): DashboardSection[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
@@ -38,7 +39,7 @@ function parseField(value: unknown, name: string): DashboardField {
         id: requiredText(value.id, `${name}.id`),
         label: requiredText(value.label, `${name}.label`),
         path: requiredText(value.path, `${name}.path`),
-        ...(value.visibleWhen !== undefined ? { visibleWhen: parseFieldVisibility(value.visibleWhen, `${name}.visibleWhen`) } : {}),
+        ...(value.visibleWhen !== undefined ? { visibleWhen: parseVisibilityRule(value.visibleWhen, `${name}.visibleWhen`) } : {}),
         ...(value.required === true ? { required: true } : {}),
     };
     const type = requiredText(value.type, `${name}.type`);
@@ -122,20 +123,6 @@ function parseTableDerive(value: unknown, name: string): DashboardTableDerive {
         labelPath: requiredText(value.labelPath, `${name}.labelPath`),
         valuesPath: requiredText(value.valuesPath, `${name}.valuesPath`),
     };
-}
-
-function parseFieldVisibility(value: unknown, name: string): NonNullable<DashboardField["visibleWhen"]> {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    const rule: NonNullable<DashboardField["visibleWhen"]> = { field: requiredText(value.field, `${name}.field`) };
-    if (value.equals !== undefined) rule.equals = parseVisibilityValue(value.equals, `${name}.equals`);
-    if (value.notEquals !== undefined) rule.notEquals = parseVisibilityValue(value.notEquals, `${name}.notEquals`);
-    if (rule.equals === undefined && rule.notEquals === undefined) throw new IntegrationInputError(name, "must declare equals or notEquals");
-    return rule;
-}
-
-function parseVisibilityValue(value: unknown, name: string): string | number | boolean | null {
-    if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
-    throw new IntegrationInputError(name, "must be a string, number, boolean, or null");
 }
 
 function parseMediaItem(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["item"] {

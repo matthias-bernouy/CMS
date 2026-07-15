@@ -1,7 +1,7 @@
 import type { DashboardAction, DashboardField, DashboardOption, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { WDetailData, WDetailField, WDetailSection } from "../widgets/w-detail/types";
 import type { WTableCell, WTableData, WTableRow } from "../widgets/w-table/types";
-import { pathLabel, textAt, valueAt } from "./expressions";
+import { matchesDashboardVisibility, pathLabel, textAt, valueAt } from "./expressions";
 import { mediaValue } from "./media";
 
 type TableWidget = Extract<DashboardWidget, { widget: "w-table" }>;
@@ -34,7 +34,9 @@ export function detailData(widget: DetailWidget, resource: unknown, rowKey: stri
         eyebrow: widget.id,
         title: textAt({ ...record(resource), ...fields }, widget.title?.path, widget.title?.fallback ?? widget.id),
         status: widget.status ? textAt({ ...record(resource), ...fields }, widget.status.path, widget.status.fallback) : undefined,
-        actions: (widget.actions ?? []).map(actionData),
+        actions: (widget.actions ?? [])
+            .filter(action => isActionVisible(action, fields, resource))
+            .map(actionData),
         main: sections(widget.main, resource, fields, options, sourceId),
         aside: sections(widget.aside ?? [], resource, fields, options, sourceId),
     };
@@ -61,13 +63,13 @@ function sections(sections: DetailWidget["main"], resource: unknown, fields: Rec
         title: section.title,
         ...(section.description ? { description: section.description } : {}),
         fields: section.fields
-            .filter(field => isVisible(field, fields))
-            .map(field => detailField(field, { ...record(resource), ...fields }, options[field.id] ?? [], sourceId)),
+            .filter(field => isVisible(field, fields, resource))
+            .map(field => detailField(field, resource, fields, options[field.id] ?? [], sourceId)),
     }));
 }
 
-function detailField(field: DashboardField, resource: unknown, dynamicOptions: DashboardOption[], sourceId: string): WDetailField {
-    const value = valueAt(resource, field.path);
+function detailField(field: DashboardField, resource: unknown, fields: Record<string, unknown>, dynamicOptions: DashboardOption[], sourceId: string): WDetailField {
+    const value = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
     const base = { id: field.id, label: field.label };
     if (field.type === "textarea") return { ...base, input: "textarea", value: textValue(value) };
     if (field.type === "select") return { ...base, input: "select", value: textValue(value), options: field.options.map(optionData) };
@@ -109,12 +111,12 @@ export function fieldValues(widget: DetailWidget, resource: unknown): Record<str
     return Object.fromEntries(all.map(field => [field.id, valueAt(resource, field.path)]));
 }
 
-function isVisible(field: DashboardField, fields: Record<string, unknown>): boolean {
-    if (!field.visibleWhen) return true;
-    const value = fields[field.visibleWhen.field];
-    if ("equals" in field.visibleWhen) return value === field.visibleWhen.equals;
-    if ("notEquals" in field.visibleWhen) return value !== field.visibleWhen.notEquals;
-    return true;
+function isVisible(field: DashboardField, fields: Record<string, unknown>, resource: unknown): boolean {
+    return matchesDashboardVisibility(field.visibleWhen, { fields, resource });
+}
+
+function isActionVisible(action: DashboardAction, fields: Record<string, unknown>, resource: unknown): boolean {
+    return matchesDashboardVisibility(action.visibleWhen, { fields, resource });
 }
 
 function actionData(action: DashboardAction): WDetailData["actions"][number] {

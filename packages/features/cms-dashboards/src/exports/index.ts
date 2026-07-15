@@ -23,6 +23,8 @@ export type {
     DashboardTableColumn,
     DashboardTableDerive,
     DashboardVisibilityRule,
+    DashboardVisibilityCondition,
+    DashboardVisibilityValue,
     DashboardWidget,
 } from "../interfaces/Dashboard";
 export type { DashboardRepository } from "../interfaces/DashboardRepository";
@@ -37,6 +39,12 @@ export {
     validateDashboard,
     type ValidateDashboardOptions,
 } from "../core/validateDashboard";
+export {
+    DASHBOARD_VISIBILITY_MAX_DEPTH,
+    DASHBOARD_VISIBILITY_MAX_NODES,
+    evaluateDashboardVisibility,
+    isDashboardVisibilityExpression,
+} from "../core/dashboardVisibility";
 export {
     applyDashboardSourceOverlays,
 } from "../core/sourceOverlayDashboard";

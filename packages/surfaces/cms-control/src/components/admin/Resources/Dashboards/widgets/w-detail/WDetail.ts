@@ -26,6 +26,8 @@ export class DashboardWDetail extends Component {
     private dynamicOptions: DetailOptions = {};
     private optionsRequestKey = "";
     private optionsScopeKey = "";
+    private conditionalScopeKey = "";
+    private conditionalDraft: Record<string, unknown> = {};
     private lookupReloadTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {
@@ -147,8 +149,23 @@ export class DashboardWDetail extends Component {
             this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
             this.updateDerivedTables(control.dataset.fieldControl ?? "");
             this.scheduleLookupOptionsReload(control.dataset.fieldControl ?? "");
+            this.refreshConditionalFields();
         }
     };
+
+    private refreshConditionalFields(): void {
+        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
+        const resource = this.currentResource();
+        if (!widget || resource === undefined) return;
+        const previous = this.value;
+        const next = detailData(widget, resource, this.value.rowKey, this.currentFields(), this.dynamicOptions, this.dataset.sourceId ?? "");
+        this.value = next;
+
+        if (previous.title !== next.title) setText(this.shadowRoot!, "[data-title]", next.title);
+        if (!sameActions(previous.actions, next.actions)) this.renderActions();
+        if (!sameSectionFields(previous.main, next.main)) this.renderSections(this.query("[data-main]"), next.main);
+        if (!sameSectionFields(previous.aside, next.aside)) this.renderSections(this.query("[data-aside]"), next.aside, "compact");
+    }
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {
         event.stopPropagation();
@@ -204,10 +221,12 @@ export class DashboardWDetail extends Component {
     private emitFieldChange(control: HTMLElement, created = false): void {
         const field = this.findField(control.dataset.fieldControl ?? "");
         if (!field) return;
+        const value = readFieldControlValue(field, control);
+        this.conditionalDraft[field.id] = value;
         emitWidgetEvent(this, WIDGET_FIELD_CHANGE_EVENT, {
             rowKey: this.value.rowKey,
             field: field.id,
-            value: readFieldControlValue(field, control),
+            value,
             ...(created ? { created } : {}),
         });
     }
@@ -221,11 +240,16 @@ export class DashboardWDetail extends Component {
         const rowKey = this.dataset.rowKey ?? "";
         const sourceId = this.dataset.sourceId ?? "";
         const scopeKey = `${sourceId}:${widget.id}:${rowKey}`;
+        const conditionalScopeKey = `${scopeKey}:${sourceJson}`;
+        if (this.conditionalScopeKey !== conditionalScopeKey) {
+            this.conditionalScopeKey = conditionalScopeKey;
+            this.conditionalDraft = {};
+        }
         if (this.optionsScopeKey !== scopeKey) {
             this.optionsScopeKey = scopeKey;
             this.dynamicOptions = {};
         }
-        this.value = detailData(widget, resource, rowKey, {}, this.dynamicOptions, sourceId);
+        this.value = detailData(widget, resource, rowKey, this.conditionalDraft, this.dynamicOptions, sourceId);
         if (this.isConnected) this.render();
         if (!sourceJson || !sourceId) return;
         void this.loadLookupOptions(widget, resource, rowKey, sourceId, fieldValues(widget, resource), { useLatestFields: true });
@@ -290,9 +314,10 @@ export class DashboardWDetail extends Component {
     }
 
     private currentFields(): Record<string, unknown> {
-        const fields: Record<string, unknown> = {};
+        const fields: Record<string, unknown> = { ...this.conditionalDraft };
+        const fieldsById = new Map(this.fields().map(field => [field.id, field]));
         for (const control of Array.from(this.shadowRoot!.querySelectorAll<HTMLElement>("[data-field-control]"))) {
-            const field = this.findField(control.dataset.fieldControl ?? "");
+            const field = fieldsById.get(control.dataset.fieldControl ?? "");
             if (field) fields[field.id] = readFieldControlValue(field, control);
         }
         return fields;
@@ -318,6 +343,20 @@ if (!customElements.get("cms-dashboard-w-detail")) customElements.define("cms-da
 export type { WDetailData, WDetailField, WDetailSection };
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
+
+function sameActions(current: WDetailData["actions"], next: WDetailData["actions"]): boolean {
+    return JSON.stringify(current) === JSON.stringify(next);
+}
+
+function sameSectionFields(current: WDetailSection[], next: WDetailSection[]): boolean {
+    if (current.length !== next.length) return false;
+    return current.every((section, sectionIndex) => {
+        const nextSection = next[sectionIndex];
+        return nextSection !== undefined
+            && section.fields.length === nextSection.fields.length
+            && section.fields.every((field, fieldIndex) => field.id === nextSection.fields[fieldIndex]?.id);
+    });
+}
 
 function parseJson<T>(value: string): T | null {
     if (!value) return null;

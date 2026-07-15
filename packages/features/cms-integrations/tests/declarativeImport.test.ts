@@ -647,7 +647,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                         type: "tokens",
                                         allowCustom: true,
                                         visibleWhen: {
-                                            field: "recipientCountry",
+                                            value: "$field.recipientCountry",
                                             equals: "FR",
                                         },
                                     },
@@ -714,7 +714,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                 type: "tokens",
                                 allowCustom: true,
                                 visibleWhen: {
-                                    field: "recipientCountry",
+                                    value: "$field.recipientCountry",
                                     equals: "FR",
                                 },
                             },

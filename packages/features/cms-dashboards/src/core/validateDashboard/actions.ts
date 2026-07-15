@@ -9,6 +9,7 @@ import {
     ACTION_AFTER_EXPR,
     isSafeDownloadFilename,
     validateRequiredId,
+    validateVisibility,
 } from "./shared";
 
 export function validateAction(
@@ -17,6 +18,7 @@ export function validateAction(
     dashboard: DashboardDto,
     source: Source | null,
     errors: string[],
+    visibilityFieldIds?: ReadonlySet<string>,
 ): void {
     validateRequiredId(`${path}.id`, action.id, errors);
     if (!action.label) errors.push(`${path}.label is required`);
@@ -27,6 +29,10 @@ export function validateAction(
         errors.push(`${path}.tone is not supported`);
     }
     if (action.section !== undefined && !action.section.trim()) errors.push(`${path}.section must be non-empty when provided`);
+    if (action.visibleWhen !== undefined) {
+        if (!visibilityFieldIds) errors.push(`${path}.visibleWhen is only supported on detail actions`);
+        else validateVisibility(action.visibleWhen, `${path}.visibleWhen`, errors, visibilityFieldIds);
+    }
     if (!action.endpoint && !action.selection) errors.push(`${path} must declare endpoint or selection`);
     if (action.endpoint) validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);
     if (action.download !== undefined) {

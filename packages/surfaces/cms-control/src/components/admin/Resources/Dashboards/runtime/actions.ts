@@ -3,6 +3,7 @@ import type { DashboardSourceGroup } from "../types";
 import type { DetailSelection } from "../domain";
 import type { WidgetMediaActionDetail } from "../widgets/shared";
 import type { DashboardMediaItem } from "../widgets/w-media-field/types";
+import { matchesDashboardVisibility } from "./expressions";
 import { fetchSourceJson, itemFrom, sendSourceDownload, sendSourceForm, sendSourceJson } from "./source";
 import { fieldValues } from "./mapping";
 
@@ -32,6 +33,9 @@ export async function executeDashboardAction(
     if (!action.endpoint) throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
+    if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
+        throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
+    }
     return executeEndpointAction(group, action, {
         selection: { id: detail.row },
         resource,

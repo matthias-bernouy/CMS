@@ -52,11 +52,34 @@ export function validateDetailWidget(
     validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
     validateBinding(widget.title, `${path}.title`, errors);
     validateBinding(widget.status, `${path}.status`, errors);
-    widget.actions?.forEach((action, index) => validateAction(action, `${path}.actions.${index}`, dashboard, source, errors));
+    const visibilityFieldIds = detailFieldIds(widget);
+    widget.actions?.forEach((action, index) => validateAction(
+        action,
+        `${path}.actions.${index}`,
+        dashboard,
+        source,
+        errors,
+        visibilityFieldIds,
+    ));
     if (!Array.isArray(widget.main) || widget.main.length === 0) errors.push(`${path}.main must contain at least one section`);
     const fieldIds = new Set<string>();
-    widget.main?.forEach((section, index) => validateSection(section, `${path}.main.${index}`, dashboard, source, fieldIds, errors));
-    widget.aside?.forEach((section, index) => validateSection(section, `${path}.aside.${index}`, dashboard, source, fieldIds, errors));
+    if (Array.isArray(widget.main)) {
+        widget.main.forEach((section, index) => validateSection(section, `${path}.main.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
+    }
+    if (Array.isArray(widget.aside)) {
+        widget.aside.forEach((section, index) => validateSection(section, `${path}.aside.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
+    }
+}
+
+function detailFieldIds(widget: Extract<DashboardWidget, { widget: "w-detail" }>): Set<string> {
+    const sections = [
+        ...(Array.isArray(widget.main) ? widget.main : []),
+        ...(Array.isArray(widget.aside) ? widget.aside : []),
+    ];
+    return new Set(sections
+        .flatMap(section => Array.isArray(section?.fields) ? section.fields : [])
+        .map(field => field?.id)
+        .filter(Boolean));
 }
 
 function validateColumn(column: DashboardColumn, path: string, errors: string[]): void {

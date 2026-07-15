@@ -3,6 +3,7 @@ import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../values";
 import { requiredText } from "../common";
 import { parseEndpointRef } from "./refs";
+import { parseVisibilityRule } from "./visibility";
 
 export function parseActions(value: unknown, name: string): DashboardAction[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
@@ -25,6 +26,7 @@ function parseAction(value: unknown, name: string): DashboardAction {
         ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
         ...(isRecord(value.after) ? { after: parseActionAfter(value.after, `${name}.after`) } : {}),
         ...(text(value.confirm) ? { confirm: text(value.confirm)! } : {}),
+        ...(value.visibleWhen !== undefined ? { visibleWhen: parseVisibilityRule(value.visibleWhen, `${name}.visibleWhen`) } : {}),
     };
 }
 

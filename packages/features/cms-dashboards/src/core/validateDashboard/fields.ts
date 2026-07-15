@@ -20,6 +20,7 @@ export function validateSection(
     source: Source | null,
     fieldIds: Set<string>,
     errors: string[],
+    visibilityFieldIds: ReadonlySet<string> = fieldIds,
 ): void {
     validateRequiredId(`${path}.id`, section.id, errors);
     if (!section.title) errors.push(`${path}.title is required`);
@@ -27,7 +28,15 @@ export function validateSection(
         errors.push(`${path}.fields must be an array`);
         return;
     }
-    section.fields.forEach((field, index) => validateField(field, `${path}.fields.${index}`, dashboard, source, fieldIds, errors));
+    section.fields.forEach((field, index) => validateField(
+        field,
+        `${path}.fields.${index}`,
+        dashboard,
+        source,
+        fieldIds,
+        errors,
+        visibilityFieldIds,
+    ));
 }
 
 export function validateField(
@@ -37,6 +46,7 @@ export function validateField(
     source: Source | null,
     fieldIds: Set<string>,
     errors: string[],
+    visibilityFieldIds: ReadonlySet<string> = fieldIds,
 ): void {
     validateRequiredId(`${path}.id`, field.id, errors);
     if (field.id) {
@@ -45,7 +55,7 @@ export function validateField(
     }
     if (!field.label) errors.push(`${path}.label is required`);
     validateRequiredPath("path", field.path, path, errors);
-    validateVisibility(field.visibleWhen, `${path}.visibleWhen`, errors);
+    validateVisibility(field.visibleWhen, `${path}.visibleWhen`, errors, visibilityFieldIds);
 
     switch (field.type) {
         case "text":

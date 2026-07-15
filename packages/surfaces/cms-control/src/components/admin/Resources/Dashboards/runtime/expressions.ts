@@ -1,3 +1,8 @@
+import {
+    evaluateDashboardVisibility,
+    type DashboardVisibilityRule,
+} from "@bernouy/cms-dashboards";
+
 export type RuntimeVars = {
     selection?: Record<string, unknown>;
     resource?: unknown;
@@ -43,6 +48,13 @@ export function resolveExpression(expression: string, vars: RuntimeVars): unknow
     if (expression === "$value") return vars.value;
     if (expression.startsWith("$value.")) return valueAt(vars.value, expression.slice("$value.".length));
     return expression;
+}
+
+export function matchesDashboardVisibility(
+    rule: DashboardVisibilityRule | undefined,
+    vars: Pick<RuntimeVars, "fields" | "resource">,
+): boolean {
+    return evaluateDashboardVisibility(rule, expression => resolveExpression(expression, vars));
 }
 
 export function resolveParams(params: Record<string, string> | undefined, vars: RuntimeVars): Record<string, string> {

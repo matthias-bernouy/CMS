@@ -31,10 +31,22 @@ export type DashboardOption = {
     media?: string;
 };
 
-export type DashboardVisibilityRule = {
-    field: string;
-    equals?: string | number | boolean | null;
-    notEquals?: string | number | boolean | null;
+export type DashboardVisibilityValue = string | number | boolean | null;
+
+export type DashboardVisibilityCondition = {
+    value: DashboardExpr;
+} & ({
+    equals: DashboardVisibilityValue;
+    notEquals?: never;
+} | {
+    equals?: never;
+    notEquals: DashboardVisibilityValue;
+});
+
+export type DashboardVisibilityRule = DashboardVisibilityCondition | {
+    all: DashboardVisibilityRule[];
+} | {
+    any: DashboardVisibilityRule[];
 };
 
 export type DashboardColumn = {
