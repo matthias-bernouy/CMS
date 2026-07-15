@@ -4,11 +4,13 @@
  *
  * The fields reuse JSON Schema vocabulary (`type`/`properties`/`items`/`required`),
  * so it is familiar AND directly assignable to the editor (`flattenScalars`).
+ * `nullable` explicitly admits JSON null without widening the declared base type.
  * We will add `enum`/`format`/`description` when validation or the editor
  * needs them.
  */
 export type DataShape = {
     type: "string" | "number" | "boolean" | "object" | "array";
+    nullable?: boolean;                       // `true` when JSON null is an explicitly valid value
     properties?: Record<string, DataShape>;   // when type === "object"
     required?: string[];                        // when type === "object": names of required properties
     items?: DataShape;                          // when type === "array"

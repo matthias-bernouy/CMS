@@ -32,6 +32,12 @@ function walkShape(value: unknown, path: string, depth: number, count: { n: numb
     }
     const type = v.type as DataShape["type"];
     const shape: DataShape = { type };
+    if (Object.hasOwn(v, "nullable")) {
+        if (typeof v.nullable !== "boolean") {
+            throw new SourceValidationError(`${path}.nullable`, "must be a boolean");
+        }
+        shape.nullable = v.nullable;
+    }
 
     if (type === "object" && v.properties != null) {
         if (typeof v.properties !== "object" || Array.isArray(v.properties)) {

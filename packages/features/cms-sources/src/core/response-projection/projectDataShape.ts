@@ -12,6 +12,8 @@ export type DataShapeProjectionResult =
  * contract pass.
  */
 export function projectDataShape(value: unknown, shape: DataShape): DataShapeProjectionResult {
+    if (value === null) return scalar(shape.nullable === true, value);
+
     switch (shape.type) {
         case "string":
             return scalar(typeof value === "string", value);

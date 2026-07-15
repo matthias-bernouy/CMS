@@ -32,6 +32,21 @@ describe("parseDataShape", () => {
         expect(parseDataShape(shape, "body")).toEqual(shape);
     });
 
+    test("nullable is validated and preserved recursively", () => {
+        const shape: DataShape = {
+            type: "object",
+            properties: {
+                email: { type: "string", nullable: true },
+                active: { type: "boolean", nullable: false },
+            },
+        };
+        expect(parseDataShape(shape, "body")).toEqual(shape);
+        expect(() => parseDataShape({ type: "string", nullable: "yes" } as any, "body"))
+            .toThrow(/body\.nullable.*boolean/);
+        expect(() => parseDataShape({ type: "string", nullable: null } as any, "body"))
+            .toThrow(/body\.nullable.*boolean/);
+    });
+
     test("unknown keys are dropped (normalised)", () => {
         const out = parseDataShape({ type: "string", description: "hi", enum: ["a"] } as any, "body");
         expect(out).toEqual({ type: "string" });

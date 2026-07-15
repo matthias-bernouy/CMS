@@ -68,6 +68,19 @@ describe("projectDataShape", () => {
         })).toEqual({ ok: false, reason: "type_mismatch" });
     });
 
+    test("accepts JSON null only when the shape declares it nullable", () => {
+        expect(projectDataShape(null, { type: "string", nullable: true }))
+            .toEqual({ ok: true, value: null });
+        expect(projectDataShape(null, { type: "string" }))
+            .toEqual({ ok: false, reason: "type_mismatch" });
+        expect(projectDataShape(null, { type: "string", nullable: false }))
+            .toEqual({ ok: false, reason: "type_mismatch" });
+        expect(projectDataShape({ email: null }, {
+            type: "object",
+            properties: { email: { type: "string", nullable: true } },
+        })).toEqual({ ok: true, value: { email: null } });
+    });
+
     test("only projects own properties", () => {
         const value = Object.assign(Object.create({ inherited: "secret" }), { own: "visible" });
         expect(projectDataShape(value, {

@@ -59,6 +59,26 @@ describe("executeEndpoint JSON body coercion", () => {
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
+    test("preserves null for explicitly nullable scalar body fields", async () => {
+        const fetchImpl = okFetch();
+        const endpoint = ep({
+            method: "POST",
+            input: { body: { type: "object", properties: {
+                subscribed: { type: "boolean", nullable: true },
+                employeeCount: { type: "number", nullable: true },
+            } } },
+        });
+
+        await executeEndpoint(endpoint, new Request("http://local/x", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ subscribed: null, employeeCount: null }),
+        }), { fetchImpl });
+
+        expect((fetchImpl.mock.calls[0]![1] as RequestInit).body)
+            .toBe(JSON.stringify({ subscribed: null, employeeCount: null }));
+    });
+
     test("does not coerce JSON bodies when endpoint has no body shape", async () => {
         const fetchImpl = okFetch();
         await executeEndpoint(ep({ method: "POST" }), new Request("http://local/x", {

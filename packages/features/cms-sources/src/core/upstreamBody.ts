@@ -47,6 +47,7 @@ function isJsonRequest(request: Request): boolean {
 }
 
 function coerceBodyValue(value: unknown, shape: DataShape, path: string): unknown {
+    if (value === null && shape.nullable === true) return null;
     if (shape.type === "boolean") return coerceBoolean(value, path);
     if (shape.type === "number") return coerceNumber(value, path);
     if (shape.type === "object") return coerceObject(value, shape, path);

@@ -42,6 +42,7 @@ function coerceParam(value: string, shape: DataShape, path: string): unknown {
 }
 
 function projectShape(value: unknown, shape: DataShape, path: string): unknown {
+    if (value === null && shape.nullable === true) return null;
     if (shape.type === "object") {
         if (!isRecord(value)) throw new FunctionExecutionError(`${path} must be an object`, 400);
         for (const key of shape.required ?? []) {

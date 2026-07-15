@@ -34,6 +34,20 @@ describe("function input projection", () => {
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: message });
     });
+
+    test("accepts null only for explicitly nullable fields", async () => {
+        const nullable = await executeFunction(strictFunction(), functionRequest({ nickname: null }), {
+            sources: new InMemorySourceRepository(),
+        });
+        const nonNullable = await executeFunction(strictFunction(), functionRequest({ title: null }), {
+            sources: new InMemorySourceRepository(),
+        });
+
+        expect(nullable.status).toBe(200);
+        expect(await nullable.json()).toEqual({ nickname: null });
+        expect(nonNullable.status).toBe(400);
+        expect(await nonNullable.json()).toEqual({ error: "body.title must be a string" });
+    });
 });
 
 function strictFunction(): CmsFunction {
@@ -45,6 +59,7 @@ function strictFunction(): CmsFunction {
                 type: "object",
                 properties: {
                     title: { type: "string" },
+                    nickname: { type: "string", nullable: true },
                     account: {
                         type: "object",
                         properties: { displayName: { type: "string" } },
