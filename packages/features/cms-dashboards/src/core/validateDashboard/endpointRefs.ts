@@ -2,6 +2,7 @@ import { makeEndpointUrn, type DataShape, type Source, type SourceEndpoint } fro
 import type {
     DashboardDataRef,
     DashboardDto,
+    DashboardEmbeddedLookupRef,
     DashboardEndpointRef,
 } from "../../interfaces/Dashboard";
 import {
@@ -9,7 +10,9 @@ import {
     validateExpressionMap,
     validateId,
     validatePath,
+    validateResourceExpression,
     validateRequiredId,
+    validateRequiredPath,
 } from "./shared";
 
 export function validateDataRef(
@@ -27,6 +30,22 @@ export function validateDataRef(
     validatePath("itemsPath", ref.itemsPath, path, errors);
     validatePath("itemPath", ref.itemPath, path, errors);
     validatePath("totalPath", ref.totalPath, path, errors);
+}
+
+export function validateEmbeddedLookupRef(
+    dashboard: DashboardDto,
+    ref: DashboardEmbeddedLookupRef,
+    path: string,
+    source: Source | null,
+    errors: string[],
+): void {
+    validateDataRef(dashboard, ref, path, source, errors);
+    if (!isRecord(ref)) return;
+    validateRequiredPath("valuePath", ref.valuePath, path, errors);
+    validateRequiredPath("labelPath", ref.labelPath, path, errors);
+    validatePath("subtitlePath", ref.subtitlePath, path, errors);
+    validatePath("mediaPath", ref.mediaPath, path, errors);
+    if (ref.selected !== undefined) validateResourceExpression(ref.selected, `${path}.selected`, errors);
 }
 
 export function validateEndpointRef(

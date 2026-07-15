@@ -5,7 +5,7 @@ import {
     dashboard,
     source,
     sourceOverlay,
-} from "./helpers/sourceOverlayDashboardFixtures";
+} from "./sourceOverlayDashboardFixtures";
 
 describe("dashboard source overlay", () => {
     test("adds dashboard columns, detail fields, and action body bindings", () => {
@@ -16,6 +16,8 @@ describe("dashboard source overlay", () => {
         expect(table.columns).toContainEqual({ id: "company", label: "Company", path: "metadata.company" });
         expect(detail.main[0]?.id).toBe("accountFields");
         expect(detail.main[0]?.fields).toContainEqual({ id: "company", label: "Company", path: "metadata.company", type: "text" });
+        expect(detail.main[0]?.fields).toContainEqual({ id: "score", label: "Score", path: "metadata.score", type: "number" });
+        expect(detail.main[0]?.fields).toContainEqual({ id: "optIn", label: "Opt-in", path: "metadata.optIn", type: "checkbox" });
         expect(detail.actions?.[0]?.endpoint?.body).toMatchObject({
             displayName: "$field.displayName",
             "metadata.company": "$field.company",

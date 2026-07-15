@@ -1,0 +1,2 @@
+export const DASHBOARD_MAX_OPTIONS = 256;
+export const DASHBOARD_MAX_NESTED_FIELDS = 64;

@@ -10,7 +10,7 @@ export function dashboardField(field: SourceOverlayField): DashboardField {
         id: overlayFieldId(field),
         label: field.label,
         path: sourceOverlayFieldPath(field),
-        type: "text",
+        type: field.type === "number" ? "number" : field.type === "boolean" ? "checkbox" : "text",
         ...(field.required ? { required: true } : {}),
     };
 }

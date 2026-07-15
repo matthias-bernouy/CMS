@@ -10,16 +10,21 @@ export type {
     DashboardDataRef,
     DashboardDefinition,
     DashboardDto,
+    DashboardEmbeddedLookupRef,
     DashboardEndpointRef,
     DashboardExpr,
     DashboardField,
+    DashboardFieldBase,
+    DashboardFieldExpression,
     DashboardFilter,
     DashboardLookupCreate,
+    DashboardLookupPresentation,
     DashboardLookupRef,
     DashboardMeta,
     DashboardOption,
     DashboardReorderableListItemField,
     DashboardResourceExpression,
+    DashboardSchemaExclusion,
     DashboardSection,
     DashboardTableColumn,
     DashboardTableDerive,
@@ -27,6 +32,10 @@ export type {
     DashboardVisibilityCondition,
     DashboardVisibilityValue,
     DashboardWidget,
+} from "../interfaces/Dashboard";
+export {
+    DASHBOARD_MAX_NESTED_FIELDS,
+    DASHBOARD_MAX_OPTIONS,
 } from "../interfaces/Dashboard";
 export type { DashboardRepository } from "../interfaces/DashboardRepository";
 export { InMemoryDashboardRepository } from "../default-implementation/InMemoryDashboardRepository";

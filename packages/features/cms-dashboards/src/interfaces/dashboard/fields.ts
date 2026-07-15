@@ -1,8 +1,10 @@
 import type {
     DashboardEndpointRef,
     DashboardDataRef,
+    DashboardEmbeddedLookupRef,
+    DashboardFieldExpression,
+    DashboardLookupPresentation,
     DashboardOption,
-    DashboardResourceExpression,
     DashboardTableColumn,
     DashboardTableDerive,
     DashboardVisibilityRule,
@@ -22,13 +24,8 @@ export type DashboardLookupCreate =
         fields: DashboardField[];
     });
 
-export type DashboardLookupRef = DashboardDataRef & {
-    valuePath: string;
-    labelPath: string;
-    subtitlePath?: string;
-    mediaPath?: string;
+export type DashboardLookupRef = DashboardDataRef & DashboardLookupPresentation & {
     descriptionPaths?: string[];
-    selected?: DashboardResourceExpression;
     create?: DashboardLookupCreate;
 };
 
@@ -46,7 +43,7 @@ export type DashboardSelectableField = {
     allowCustom?: boolean;
 };
 
-export type DashboardReorderableListItemField = {
+type DashboardReorderableListItemFieldBase = {
     id: string;
     label: string;
     path: string;
@@ -54,8 +51,28 @@ export type DashboardReorderableListItemField = {
     placeholder?: string;
 };
 
+export type DashboardReorderableListItemField = DashboardReorderableListItemFieldBase & (
+    | { type?: "text"; options?: never; lookup?: never }
+    | { type: "checkbox"; options?: never; lookup?: never }
+    | { type: "select"; options: DashboardOption[]; lookup?: never }
+    | { type: "combobox"; options?: DashboardOption[]; lookup?: DashboardEmbeddedLookupRef }
+);
+
+export type DashboardSchemaExclusion = {
+    from: DashboardFieldExpression;
+    valuePath: string;
+};
+
 export type DashboardField =
     | (DashboardFieldBase & { type: "text"; placeholder?: string })
+    | (DashboardFieldBase & {
+        type: "number";
+        placeholder?: string;
+        min?: number;
+        max?: number;
+        step?: number;
+    })
+    | (DashboardFieldBase & { type: "checkbox" })
     | (DashboardFieldBase & { type: "textarea"; rows?: number })
     | (DashboardFieldBase & { type: "select"; options: DashboardOption[] })
     | (DashboardFieldBase & { type: "combobox" } & DashboardSelectableField)
@@ -65,6 +82,7 @@ export type DashboardField =
         columns: DashboardTableColumn[];
         editable?: boolean;
         derive?: DashboardTableDerive;
+        addLabel?: string;
     })
     | (DashboardFieldBase & {
         type: "reorderable-list";
@@ -74,6 +92,11 @@ export type DashboardField =
         addLabel?: string;
         minItems?: number;
         maxItems?: number;
+    })
+    | (DashboardFieldBase & {
+        type: "schema";
+        schema: DashboardDataRef;
+        exclude?: DashboardSchemaExclusion;
     })
     | (DashboardFieldBase & {
         type: "media";

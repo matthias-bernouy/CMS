@@ -9,6 +9,27 @@ export function requiredText(value: unknown, name: string): string {
     return result;
 }
 
+export function optionalText(value: unknown, name: string): string | undefined {
+    if (value === undefined) return undefined;
+    const result = text(value);
+    if (!result) throw new IntegrationInputError(name, "must be a non-empty string");
+    return result;
+}
+
+export function optionalBoolean(value: unknown, name: string): boolean | undefined {
+    if (value === undefined) return undefined;
+    if (typeof value !== "boolean") throw new IntegrationInputError(name, "must be boolean");
+    return value;
+}
+
+export function optionalFiniteNumber(value: unknown, name: string): number | undefined {
+    if (value === undefined) return undefined;
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        throw new IntegrationInputError(name, "must be a finite number");
+    }
+    return value;
+}
+
 export function parseStringList(value: unknown, name: string): string[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
     return value.map((entry, index) => requiredText(entry, `${name}.${index}`));

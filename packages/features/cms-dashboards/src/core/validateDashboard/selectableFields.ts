@@ -5,11 +5,11 @@ import type {
     DashboardLookupCreate,
     DashboardLookupRef,
 } from "../../interfaces/Dashboard";
-import { validateDataRef, validateEndpointRef } from "./endpointRefs";
+import { DASHBOARD_MAX_NESTED_FIELDS as MAX_NESTED_FIELDS } from "../../interfaces/Dashboard";
+import { validateEmbeddedLookupRef, validateEndpointRef } from "./endpointRefs";
 import {
     validateOptions,
     validatePath,
-    validateResourceExpression,
     validateRequiredPath,
 } from "./shared";
 
@@ -48,13 +48,8 @@ function validateLookup(
     errors: string[],
     validateNestedField: FieldValidator,
 ): void {
-    validateDataRef(dashboard, lookup, path, source, errors);
-    validateRequiredPath("valuePath", lookup.valuePath, path, errors);
-    validateRequiredPath("labelPath", lookup.labelPath, path, errors);
-    validatePath("subtitlePath", lookup.subtitlePath, path, errors);
-    validatePath("mediaPath", lookup.mediaPath, path, errors);
+    validateEmbeddedLookupRef(dashboard, lookup, path, source, errors);
     lookup.descriptionPaths?.forEach((entry, index) => validatePath(`${index}`, entry, `${path}.descriptionPaths`, errors));
-    if (lookup.selected !== undefined) validateResourceExpression(lookup.selected, `${path}.selected`, errors);
     if (lookup.create) validateLookupCreate(lookup.create, `${path}.create`, dashboard, source, errors, validateNestedField);
 }
 
@@ -78,8 +73,11 @@ function validateLookupCreate(
         errors.push(`${path}.fields must contain at least one field`);
         return;
     }
+    if (create.fields.length > MAX_NESTED_FIELDS) {
+        errors.push(`${path}.fields must contain at most ${MAX_NESTED_FIELDS} fields`);
+    }
     const fieldIds = new Set<string>();
     const visibilityFieldIds = new Set(create.fields.map(field => field.id).filter(Boolean));
-    create.fields.forEach((field, index) =>
+    create.fields.slice(0, MAX_NESTED_FIELDS).forEach((field, index) =>
         validateNestedField(field, `${path}.fields.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
 }

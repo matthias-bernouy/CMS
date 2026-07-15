@@ -20,6 +20,17 @@ export type DashboardDataRef = DashboardEndpointRef & {
 };
 
 export type DashboardResourceExpression = `$resource.${string}`;
+export type DashboardFieldExpression = `$field.${string}`;
+
+export type DashboardLookupPresentation = {
+    valuePath: string;
+    labelPath: string;
+    subtitlePath?: string;
+    mediaPath?: string;
+    selected?: DashboardResourceExpression;
+};
+
+export type DashboardEmbeddedLookupRef = DashboardDataRef & DashboardLookupPresentation;
 
 export type DashboardBinding = {
     path: string;
@@ -60,10 +71,17 @@ export type DashboardColumn = {
     format?: "text" | "badge" | "date" | "money";
 };
 
-export type DashboardTableColumn = DashboardColumn & {
+type DashboardEditableTableColumn = {
     editable?: boolean;
     value?: "text" | "list";
 };
+
+export type DashboardTableColumn = DashboardColumn & DashboardEditableTableColumn & (
+    | { type?: "text"; options?: never; lookup?: never }
+    | { type: "select"; options: DashboardOption[]; lookup?: never }
+    | { type: "combobox"; options?: DashboardOption[]; lookup?: DashboardEmbeddedLookupRef }
+    | { type: "tokens"; options?: never; lookup?: never }
+);
 
 export type DashboardTableDerive = {
     type: "cartesian";

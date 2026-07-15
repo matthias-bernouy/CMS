@@ -3,8 +3,8 @@ import { importIntegration, parseIntegrationDefinition, type IntegrationDefiniti
 import { InMemoryDashboardRepository, type Dashboard } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import { sourceArtifact } from "../helpers";
-import { DELIVERY_DEFINITION, EXPECTED_DELIVERY_DASHBOARD } from "./fixtures/dashboardDefinitions";
+import { sourceArtifact } from "../../helpers";
+import { DELIVERY_DEFINITION, EXPECTED_DELIVERY_DASHBOARD } from "./dashboardDefinitions";
 
 describe("@bernouy/cms-integrations declarative imports", () => {
     test("parses dashboard select options and lookup field definitions", () => {

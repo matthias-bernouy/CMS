@@ -1,8 +1,5 @@
-import type {
-    DashboardBinding,
-    DashboardOption,
-    DashboardVisibilityRule,
-} from "../../interfaces/Dashboard";
+import type { DashboardBinding, DashboardOption, DashboardVisibilityRule } from "../../interfaces/Dashboard";
+import { DASHBOARD_MAX_OPTIONS } from "../../interfaces/Dashboard";
 import {
     isSafeDashboardExpression,
     isSafeDashboardPath,
@@ -14,10 +11,8 @@ import {
 } from "../dashboardVisibility";
 
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
-const PARAM_EXPRESSION_ROOTS = [
-    "row", "resource", "field", "filter", "param", "selection",
-    "search", "value", "input", "user", "media",
-];
+const PARAM_EXPRESSION_ROOTS = ["row", "resource", "field", "filter", "param", "selection",
+    "search", "value", "input", "user", "media"];
 
 export function validateRequiredId(path: string, value: string | undefined, errors: string[]): void {
     if (value === undefined || value === "") {
@@ -161,9 +156,17 @@ export function validateOptions(options: DashboardOption[] | undefined, path: st
         errors.push(`${path} must contain at least one option`);
         return;
     }
-    options.forEach((option, index) => {
+    if (options.length > DASHBOARD_MAX_OPTIONS) {
+        errors.push(`${path} must contain at most ${DASHBOARD_MAX_OPTIONS} options`);
+    }
+    const values = new Set<string>();
+    options.slice(0, DASHBOARD_MAX_OPTIONS).forEach((option, index) => {
         if (!option.value) errors.push(`${path}.${index}.value is required`);
         if (!option.label) errors.push(`${path}.${index}.label is required`);
+        if (option.value) {
+            if (values.has(option.value)) errors.push(`${path}.${index}.value is duplicated`);
+            values.add(option.value);
+        }
     });
 }
 
