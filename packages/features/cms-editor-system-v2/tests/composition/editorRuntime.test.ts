@@ -42,6 +42,10 @@ describe("composition editor runtime", () => {
                     <template ${COMPOSITION_INPUT_ATTRIBUTE}></template>
                     <p9r-composition-output ${COMPOSITION_OUTPUT_ATTRIBUTE}>
                         <x-child id="generated"></x-child>
+                        <x-parent id="nested-composition" ${COMPOSITION_RUNTIME_ATTRIBUTE}>
+                            <template ${COMPOSITION_INPUT_ATTRIBUTE}></template>
+                            <x-child id="nested-generated"></x-child>
+                        </x-parent>
                     </p9r-composition-output>
                 </x-parent>
             </main>
@@ -63,12 +67,16 @@ describe("composition editor runtime", () => {
         const contentRoot = document.getElementById("content-root")!;
         const composition = document.getElementById("composition")!;
         const generated = document.getElementById("generated")!;
+        const nestedComposition = document.getElementById("nested-composition")!;
+        const nestedGenerated = document.getElementById("nested-generated")!;
 
         runtime.load({ root: contentRoot, contentRoot });
 
         expect(runtime.getStructure().map(node => node.label)).toEqual(["Composition"]);
         expect(runtime.getEditor(generated)).toBeUndefined();
+        expect(runtime.getEditor(nestedComposition)).toBeUndefined();
         expect(runtime.getClosestEditor(generated)?.target).toBe(composition);
+        expect(runtime.getClosestEditor(nestedGenerated)?.target).toBe(composition);
         runtime.select(composition);
         expect(runtime.getSelection()?.contentSlots).toEqual([]);
         expect(runtime.getSelection()?.textCapability).toBeNull();

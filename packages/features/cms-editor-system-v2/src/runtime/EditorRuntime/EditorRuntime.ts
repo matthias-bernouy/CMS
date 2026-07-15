@@ -2,22 +2,24 @@ import {
     CMS_BINDING_ATTRIBUTES,
     Editor,
     type DataScope,
-    type DataField,
     type EditorCatalog,
     type EditorCatalogEntry,
     type EditorDocument,
     type SettingSection,
-    parseRepeat,
-    parseSourceStatusConditions,
-    parseSource,
 } from "@bernouy/cms-content/editor";
-import { isCompositionRuntimeElement } from "@bernouy/components/base";
 import { EditorRegistry } from "../EditorRegistry/EditorRegistry";
-import { createRuntimeEditor } from "./createRuntimeEditor";
 import type { EditorDataSource } from "../dataSources";
+import { createRuntimeEditor } from "./createRuntimeEditor";
+import { declareBindingDataScopes } from "./dataScopes";
+import {
+    buildRuntimeStructure,
+    findClosestRuntimeEditor,
+    findRichTextOwner,
+    runtimeElements,
+    type EditorRuntimeStructureContext,
+} from "./structure";
 import type {
     EditorRuntimeSelection,
-    EditorStructureNode,
     RuntimeManagedEditor,
     StructureNode,
 } from "./types";
@@ -46,7 +48,7 @@ export class EditorRuntime {
         this._assertDocument(document);
         this._document = document;
 
-        for (const element of this._walkElements(document.root)) {
+        for (const element of runtimeElements(document.root)) {
             const entry = this._catalogByTag.get(element.localName);
             if (!entry) continue;
 
@@ -57,7 +59,7 @@ export class EditorRuntime {
 
         for (const editor of this._editors) {
             editor.mount();
-            this._declareBindingDataScopes(editor);
+            declareBindingDataScopes(editor, this.registry, this._dataSources);
         }
     }
 
@@ -76,26 +78,11 @@ export class EditorRuntime {
     }
 
     getClosestEditor(target: Element | null): Editor | undefined {
-        const document = this._requireDocument();
-        if (!target || !document.contentRoot.contains(target)) return undefined;
-        const closest = this.registry.getClosestEditor(target, document.contentRoot);
-        if (!closest) return undefined;
-
-        let current: HTMLElement | null = closest.target;
-        while (current && document.contentRoot.contains(current)) {
-            const editor = this.registry.getEditor(current);
-            if (editor?.getStructureMode() === "opaque") return editor;
-            if (current === document.contentRoot) break;
-            current = current.parentElement;
-        }
-
-        return this._getRichTextOwner(closest.target) ?? closest;
+        return findClosestRuntimeEditor(this._structureContext(), target);
     }
 
     getStructure(): StructureNode[] {
-        const document = this._requireDocument();
-
-        return this._getStructureChildren(document.contentRoot);
+        return buildRuntimeStructure(this._structureContext());
     }
 
     select(targetOrEditor: HTMLElement | Editor | null): EditorRuntimeSelection | null {
@@ -107,9 +94,8 @@ export class EditorRuntime {
         const editor = targetOrEditor instanceof Editor
             ? targetOrEditor
             : this.registry.getEditor(targetOrEditor);
-
         this._selectedEditor = editor
-            ? this._getRichTextOwner(editor.target) ?? editor
+            ? findRichTextOwner(this._structureContext(), editor.target) ?? editor
             : null;
 
         return this.getSelection();
@@ -139,155 +125,13 @@ export class EditorRuntime {
         });
     }
 
-    private _declareBindingDataScopes(editor: Editor): void {
-        this._declareSourceDataScope(editor);
-        this._declareRepeatDataScope(editor);
-    }
-
-    private _declareSourceDataScope(editor: Editor): void {
-        const source = this._parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-        if (!source) return;
-
-        const dataSource = this._dataSources.find(candidate => candidate.url === this._sourceSchemaUrl(source.url));
-        editor.declareDataScope({
-            name: source.alias ?? "data",
-            label: dataSource?.label ?? source.url,
-            source: source.url,
-            fields: dataSource?.fields ?? [],
-        });
-    }
-
-    private _parseSourceBinding(value: string): { url: string; alias?: string } | null {
-        const parsed = parseSource(value) as string | { url: string; alias?: string } | null;
-        if (!parsed) return null;
-        return typeof parsed === "string" ? { url: parsed } : parsed;
-    }
-
-    private _sourceSchemaUrl(url: string): string {
-        return url.split("?")[0] ?? url;
-    }
-
-    private _declareRepeatDataScope(editor: Editor): void {
-        const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
-        if (!repeat?.alias) return;
-
-        const field = this._findDataField(this.registry.collectDataScopes(editor.target), repeat.path);
-        editor.declareDataScope({
-            name: repeat.alias,
-            label: repeat.alias,
-            fields: field?.children ?? [],
-        });
-    }
-
-    private _findDataField(scopes: DataScope[], path: string): DataField | undefined {
-        for (const scope of scopes) {
-            const field = this._findRootArrayField(scope, path)
-                ?? this._findDataFieldInList(scope.fields, path)
-                ?? this._findDataFieldInList(scope.fields, this._stripScopeName(scope.name, path));
-            if (field) return field;
-        }
-
-        return undefined;
-    }
-
-    private _findRootArrayField(scope: DataScope, path: string): DataField | undefined {
-        return path === scope.name ? this._findDataFieldInList(scope.fields, ".") : undefined;
-    }
-
-    private _findDataFieldInList(fields: DataField[], path: string): DataField | undefined {
-        for (const field of fields) {
-            if (field.path === path) return field;
-            const child = field.children ? this._findDataFieldInList(field.children, path) : undefined;
-            if (child) return child;
-        }
-
-        return undefined;
-    }
-
-    private _stripScopeName(scopeName: string, path: string): string {
-        const prefix = `${scopeName}.`;
-        return path.startsWith(prefix) ? path.slice(prefix.length) : path;
-    }
-
-    private _getStructureChildren(parent: HTMLElement): StructureNode[] {
-        const document = this._requireDocument();
-        const children: EditorStructureNode[] = [];
-
-        for (const editor of this._editors) {
-            if (!document.contentRoot.contains(editor.target)) continue;
-            if (editor.target === parent) continue;
-            if (this._getRichTextOwner(editor.target)) continue;
-            if (!parent.contains(editor.target)) continue;
-            if (this._getClosestStructureParent(editor.target, parent) !== parent) continue;
-
-            const entry = this._entriesByEditor.get(editor);
-            if (!entry) continue;
-
-            children.push({
-                kind:     "editor",
-                editor,
-                target: editor.target,
-                tag: entry.tag,
-                label: entry.label,
-                icon: entry.icon,
-                badges: this._getStructureBadges(editor),
-                children: editor.getStructureMode() === "opaque"
-                    ? []
-                    : this._getStructureChildren(editor.target),
-            });
-        }
-
-        return children;
-    }
-
-    private _getStructureBadges(editor: Editor): string[] {
-        const badges: string[] = [];
-        const slot = editor.target.getAttribute("slot");
-        if (slot) badges.push(slot);
-        if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) badges.push("Source");
-        if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)) badges.push("Repeat");
-        const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
-        const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map(item => item.state))];
-        if (sourceStatuses.length > 0) badges.push(...sourceStatuses);
-        else if (condition?.trim()) badges.push("condition");
-
-        return badges;
-    }
-
-    private _getClosestStructureParent(target: HTMLElement, stopAt: HTMLElement): HTMLElement {
-        const document = this._requireDocument();
-        let current = target.parentElement;
-
-        while (current && current !== stopAt) {
-            if (document.contentRoot.contains(current)) {
-                const editor = this.registry.getEditor(current);
-                if (editor && !this._getRichTextOwner(editor.target)) return current;
-            }
-            current = current.parentElement;
-        }
-
-        return stopAt;
-    }
-
-    private _getRichTextOwner(target: HTMLElement): Editor | undefined {
-        const document = this._requireDocument();
-        const owner = this.registry.getRichTextOwner(target);
-        return owner && document.contentRoot.contains(owner.target) ? owner : undefined;
-    }
-
-    private _walkElements(root: HTMLElement): HTMLElement[] {
-        const elements = [
-            root,
-            ...Array.from(root.querySelectorAll<HTMLElement>("*")),
-        ];
-        return elements.filter(element => !this._hasCompositionAncestor(element));
-    }
-
-    private _hasCompositionAncestor(element: HTMLElement): boolean {
-        for (let parent = element.parentElement; parent; parent = parent.parentElement) {
-            if (isCompositionRuntimeElement(parent)) return true;
-        }
-        return false;
+    private _structureContext(): EditorRuntimeStructureContext {
+        return {
+            document: this._requireDocument(),
+            registry: this.registry,
+            editors: this._editors,
+            entriesByEditor: this._entriesByEditor,
+        };
     }
 
     private _assertDocument(document: EditorDocument): void {
