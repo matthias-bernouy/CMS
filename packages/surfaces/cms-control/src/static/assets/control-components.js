@@ -11499,6 +11499,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "me"),
         method: "GET",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/me`,
         meta: { name: "Current user" },
         output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
@@ -11506,6 +11507,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "login"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
         meta: { name: "Log in" },
         input: { body: objectShape({ email: stringShape(), password: stringShape(), returnTo: stringShape() }, ["email", "password"]) },
@@ -11514,6 +11516,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "logout"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/logout`,
         meta: { name: "Log out" },
         output: [{ status: "200", body: okShape }]
@@ -11521,6 +11524,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
         meta: { name: "Sign up" },
         input: { body: objectShape({ email: stringShape(), password: stringShape(), displayName: stringShape() }, ["email", "password"]) },
@@ -11529,6 +11533,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/request`,
         meta: { name: "Request email verification" },
         input: { body: emailBody },
@@ -11537,6 +11542,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmEmailVerification"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/confirm`,
         meta: { name: "Confirm email verification" },
         input: { body: tokenBody },
@@ -11545,6 +11551,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestPasswordReset"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/request`,
         meta: { name: "Request password reset" },
         input: { body: emailBody },
@@ -11553,6 +11560,7 @@ cms-endpoints-input .ep-add:hover {
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmPasswordReset"),
         method: "POST",
+        access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/confirm`,
         meta: { name: "Confirm password reset" },
         input: { body: objectShape({ token: stringShape(), password: stringShape() }, ["token", "password"]) },
@@ -14542,6 +14550,8 @@ p {
         throw new SourceValidationError("urn", message);
     }
   }
+  // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
+  var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
   // ../../features/cms-dashboards/src/core/dashboardPaths.ts
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
   var EXPRESSION = /^\$([A-Za-z]+)(?:\.(.+))?$/;
