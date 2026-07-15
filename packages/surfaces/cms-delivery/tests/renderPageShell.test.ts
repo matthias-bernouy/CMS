@@ -83,4 +83,32 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).not.toContain("frame-ancestors");
     });
 
+    test("passes transitive composition dependencies to asset resolution", async () => {
+        const ctx = makeCtx();
+        const repository = ctx.repository as unknown as {
+            getBlocsList: () => Promise<{ id: string }[]>;
+            getBlocViewJS: (tag: string) => Promise<string | null>;
+        };
+        repository.getBlocsList = async () => [
+            { id: "site-header" },
+            { id: "base-nav" },
+            { id: "base-link" },
+        ];
+        repository.getBlocViewJS = async tag => ({
+            "site-header": "const t = `<base-nav></base-nav>`;",
+            "base-nav": "const t = `<base-link></base-link>`;",
+            "base-link": "LINK();",
+        }[tag] ?? null);
+        let resolvedTags: string[] = [];
+        const resolveAssets = ctx.resolveAssets;
+        ctx.resolveAssets = async tags => {
+            resolvedTags = tags;
+            return resolveAssets(tags);
+        };
+
+        await renderPage({ ...page, content: "<site-header></site-header>" }, ctx);
+
+        expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
+    });
+
 });

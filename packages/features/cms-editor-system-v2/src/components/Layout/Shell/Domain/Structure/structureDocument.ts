@@ -1,4 +1,5 @@
 import { clearBindingRuntimeState } from "@bernouy/cms-content/editor";
+import { clearCompositionRuntimeState } from "@bernouy/components/composition-runtime";
 
 export function isEmptyDocumentContent(contentRoot: HTMLElement | null | undefined): boolean {
     if (!contentRoot) return true;
@@ -21,12 +22,16 @@ export function isEmptyDocumentContent(contentRoot: HTMLElement | null | undefin
 }
 
 export function contentHtml(frameDocument: Document | null): string {
-    const content = frameDocument
-        ?.querySelector<HTMLElement>("[data-cms-content]")
-        ?.cloneNode(true) as HTMLElement | undefined;
+    const content = frameDocument?.querySelector<HTMLElement>("[data-cms-content]");
+    return serializableContentHtml(content);
+}
+
+export function serializableContentHtml(contentRoot: HTMLElement | null | undefined): string {
+    const content = contentRoot?.cloneNode(true) as HTMLElement | undefined;
 
     if (!content) return "";
 
+    clearCompositionRuntimeState(content);
     clearBindingRuntimeState(content);
 
     return content.innerHTML;

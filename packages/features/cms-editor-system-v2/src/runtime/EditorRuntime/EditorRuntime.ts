@@ -11,6 +11,7 @@ import {
     parseSourceStatusConditions,
     parseSource,
 } from "@bernouy/cms-content/editor";
+import { isCompositionRuntimeElement } from "@bernouy/components/composition-runtime";
 import { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import { createRuntimeEditor } from "./createRuntimeEditor";
 import type { EditorDataSource } from "../dataSources";
@@ -275,10 +276,18 @@ export class EditorRuntime {
     }
 
     private _walkElements(root: HTMLElement): HTMLElement[] {
-        return [
+        const elements = [
             root,
             ...Array.from(root.querySelectorAll<HTMLElement>("*")),
         ];
+        return elements.filter(element => !this._hasCompositionAncestor(element));
+    }
+
+    private _hasCompositionAncestor(element: HTMLElement): boolean {
+        for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+            if (isCompositionRuntimeElement(parent)) return true;
+        }
+        return false;
     }
 
     private _assertDocument(document: EditorDocument): void {

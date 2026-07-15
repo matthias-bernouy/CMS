@@ -91,9 +91,9 @@ function renderFrameDocument(input: {
     <title>${escapeHtml(input.title)}</title>
     <meta name="description" content="${escapeHtml(input.description)}">
     <link rel="stylesheet" href="${input.basePath}/.cms/style">
-    <script src="${input.basePath}/api/editor/component.js"></script>
-    <script src="${input.basePath}/api/editor/binding-core.js"></script>
-    <script src="${input.basePath}/api/editor/view-script.js"></script>
+    <script defer src="${input.basePath}/api/editor/component.js"></script>
+    <script defer src="${input.basePath}/api/editor/binding-core.js"></script>
+    <script defer src="${input.basePath}/api/editor/view-script.js"></script>
 </head>
 <body>
     <div data-cms-editor-root style="display:contents">${composed}</div>

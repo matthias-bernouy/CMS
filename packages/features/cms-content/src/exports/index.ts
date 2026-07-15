@@ -27,6 +27,7 @@ export { countValues, normalizeTags } from "cms-content/core/counts";
 export { isPublishedPage } from "cms-content/core/publication";
 export { ContentValidationError, ContentConflictError, DuplicateBlocTagError } from "cms-content/core/errors";
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/dependencies/pagesReferencing";
+export { createBlocUsageResolver } from "cms-content/core/blocs/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
 export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-content/core/editor/sourceBindings";

@@ -42,7 +42,7 @@ describe("invalidatePagesReferencingFile", () => {
         const { cms, deleteSpy, allInvalidated } = makeCms({ pages: [page("/a", "<p>x</p>")], favicon: `/.cms/files/by-id/${FID}` });
         await invalidatePagesReferencingFile(cms, FID);
         expect(allInvalidated()).toBe(true);
-        expect(deleteSpy).toHaveLength(0); // took the all-pages shortcut
+        expect(deleteSpy).toHaveLength(0);
     });
 
     test("a different file id does not match a similar one", async () => {

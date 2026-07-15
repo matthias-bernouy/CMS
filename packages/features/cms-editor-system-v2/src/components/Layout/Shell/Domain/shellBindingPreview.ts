@@ -2,6 +2,7 @@ import {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
 } from "@bernouy/cms-content/editor";
+import { serializableContentHtml } from "./Structure/structureDocument";
 
 export const BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
 
@@ -41,7 +42,7 @@ export function syncViewFrameContent(
     const viewContent = viewDocument?.querySelector<HTMLElement>("[data-cms-content]");
     if (!editorContent || !viewContent) return;
 
-    viewContent.innerHTML = editorContent.innerHTML;
+    viewContent.innerHTML = serializableContentHtml(editorContent);
     syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
     restartViewBindingRuntime(viewDocument);
 }

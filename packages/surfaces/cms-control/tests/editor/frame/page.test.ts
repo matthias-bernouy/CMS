@@ -32,6 +32,20 @@ describe("editor frame endpoint - pages", () => {
         expect(html).toContain(`<w13c-reserved-example data-id="hero">stale</w13c-reserved-example>`);
     });
 
+    test("defers editor runtimes until authored custom-element children are parsed", async () => {
+        const { cms } = cmsWithPage(pricingPage());
+        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        const html = await response.text();
+
+        const component = html.indexOf(`<script defer src="/cms/api/editor/component.js"></script>`);
+        const binding = html.indexOf(`<script defer src="/cms/api/editor/binding-core.js"></script>`);
+        const view = html.indexOf(`<script defer src="/cms/api/editor/view-script.js"></script>`);
+
+        expect(component).toBeGreaterThan(-1);
+        expect(binding).toBeGreaterThan(component);
+        expect(view).toBeGreaterThan(binding);
+    });
+
     test("sanitizes stored HTML before rendering the frame", async () => {
         const { cms } = cmsWithPage(pricingPage(`
             <a href="javascript:alert(1)">bad link</a>

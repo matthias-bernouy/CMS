@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { findUsedBlocTags } from "@bernouy/cms-content";
+import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/groupBlocsBySignature";
 
 /**
@@ -45,7 +45,8 @@ async function computeBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGrou
         repository.getBlocsList(),
     ]);
 
-    const pageBlocSets = pages.map(page => findUsedBlocTags(page.content, blocList));
+    const resolveUsage = createBlocUsageResolver(blocList, repository);
+    const pageBlocSets = await Promise.all(pages.map(page => resolveUsage(page.content)));
 
     return groupBlocsBySignature(pageBlocSets);
 }

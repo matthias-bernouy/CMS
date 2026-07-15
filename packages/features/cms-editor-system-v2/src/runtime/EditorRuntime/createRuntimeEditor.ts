@@ -7,6 +7,7 @@ import {
     type TextCapability,
 } from "@bernouy/cms-content/editor";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
+import { isCompositionRuntimeElement } from "@bernouy/components/composition-runtime";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
@@ -84,6 +85,7 @@ export function createRuntimeEditor(
         }
 
         override getContentSlots(): ContentSlot[] {
+            if (isCompositionRuntimeElement(this.target)) return [];
             return [
                 ...super.getContentSlots(),
                 ...this._addedContentSlots,
@@ -91,6 +93,7 @@ export function createRuntimeEditor(
         }
 
         override addContentSlots(slots: ContentSlot | ContentSlot[]): void {
+            if (isCompositionRuntimeElement(this.target)) return;
             const list = Array.isArray(slots) ? slots : [slots];
             this._addedContentSlots.push(...list);
             this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
@@ -100,12 +103,14 @@ export function createRuntimeEditor(
         }
 
         override getTextCapability(): TextCapability | null {
+            if (isCompositionRuntimeElement(this.target)) return null;
             return this._textCapabilityOverride !== undefined
                 ? this._textCapabilityOverride
                 : super.getTextCapability();
         }
 
         override setTextCapability(capability: TextCapability | null): void {
+            if (isCompositionRuntimeElement(this.target)) return;
             this._textCapabilityOverride = capability;
             this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
                 editor: this,

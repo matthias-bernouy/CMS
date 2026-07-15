@@ -9,6 +9,7 @@
         ".": "./src/exports/index.ts"
     },
     "dependencies": {
+        "@bernouy/components": "workspace:*",
         "@bernouy/cms-content": "workspace:*"
     },
     "devDependencies": {

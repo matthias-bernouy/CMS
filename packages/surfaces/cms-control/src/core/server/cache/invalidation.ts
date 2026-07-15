@@ -1,20 +1,25 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { findPagesReferencingBloc, findPagesReferencingText, P9R_CACHE } from "@bernouy/cms-content";
+import { createBlocUsageResolver, findPagesReferencingText, P9R_CACHE } from "@bernouy/cms-content";
 import { cmsFilesByIdRef } from "@bernouy/cms-files";
 
 /**
- * Invalidate every cached rendered page that references a given bloc tag —
- * directly in its content. Called after a bloc is re-imported so the HTML —
- * which now points at a stale `?v=<hash>` for that bloc — is regenerated on the
- * next hit.
+ * Invalidate every cached rendered page that uses a bloc directly or through
+ * another bloc's compiled template. The HTML carries immutable blocset hashes,
+ * so a nested dependency update must regenerate every affected page.
  *
  * Pages that don't use the bloc are left untouched so they keep serving
  * from cache, and their existing image-optimization work is preserved.
  */
 export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: string): Promise<void> {
-    for (const page of await findPagesReferencingBloc(cms.repository, blocTag)) {
-        cms.cache.delete(P9R_CACHE.page(page.path));
-    }
+    const pages = await cms.repository.getAllPages();
+    if (pages.length === 0) return;
+
+    const blocList = await cms.repository.getBlocsList();
+    const resolveUsage = createBlocUsageResolver(blocList, cms.repository);
+    const usages = await Promise.all(pages.map(page => resolveUsage(page.content)));
+    pages.forEach((page, index) => {
+        if (usages[index]?.includes(blocTag)) cms.cache.delete(P9R_CACHE.page(page.path));
+    });
 }
 
 export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {

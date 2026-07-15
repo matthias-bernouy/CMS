@@ -2,7 +2,7 @@ import type { BunPlugin } from "bun";
 
 /**
  * Bloc bundles must not re-bundle component/editor base classes. The view side
- * reads `Component` from `window.p9r`; the editor catalog side reads the stable
+ * reads the view bases from `window.p9r`; the editor catalog side reads the stable
  * editor API from `window.p9rEditor`. Each bloc bundle keeps only its own code.
  */
 export const p9rExternalsPlugin: BunPlugin = {
@@ -22,7 +22,9 @@ export const p9rExternalsPlugin: BunPlugin = {
                     args.path === "@bernouy/cms-control/component"
                 ) {
                     return {
-                        contents: `export const Component = window.p9r.Component;`,
+                        contents:
+                            `export const Component = window.p9r.Component;\n` +
+                            `export const Composition = window.p9r.Composition;`,
                         loader: "js",
                     };
                 }

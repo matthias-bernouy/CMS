@@ -5,7 +5,7 @@ import { compress } from "@bernouy/http-runner";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
-import { findUsedBlocTags } from "@bernouy/cms-content";
+import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
@@ -44,7 +44,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     sanitizeDomTree(document.body);
 
     const blocList = await ctx.repository.getBlocsList();
-    const usedTags = findUsedBlocTags(composed, blocList);
+    const usedTags = await createBlocUsageResolver(blocList, ctx.repository)(composed);
     const assets   = await ctx.resolveAssets(usedTags);
     const hasBindingCore = document.querySelector(CMS_BINDING_CORE_TAG) !== null;
 

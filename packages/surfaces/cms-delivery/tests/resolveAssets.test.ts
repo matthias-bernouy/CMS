@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
+import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
@@ -50,6 +51,15 @@ function repositoryWith(options: {
 }
 
 describe("resolveRuntimeAssets", () => {
+    test("exposes Component and Composition through the public runtime bundle", async () => {
+        const entry = await generateComponentJsEntry();
+        const js = new TextDecoder().decode(entry.raw);
+
+        expect(entry.contentType).toBe("text/javascript");
+        expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Component\s*:/);
+        expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Composition\s*:/);
+    });
+
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
         const assets = await resolveRuntimeAssets(
             deliveryWith(repositoryWith({

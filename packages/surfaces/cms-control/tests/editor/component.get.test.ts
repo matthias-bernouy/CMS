@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import editorComponentGet from "cms-control/api/editor/component.js.get";
 
 describe("editor component runtime endpoint", () => {
-    test("serves the shared Component runtime", async () => {
+    test("serves the shared component and composition runtime", async () => {
         const cache = new Map<string, unknown>();
         const cms = {
             cache: {
@@ -21,6 +21,7 @@ describe("editor component runtime endpoint", () => {
         expect(response.headers.get("content-type")).toContain("text/javascript");
         expect(js).toContain("window.p9r");
         expect(js).toContain("Component");
+        expect(js).toContain("Composition");
         expect(js).not.toContain(`define("base-container"`);
         expect(js).not.toContain(`define("base-card"`);
     });

@@ -1,5 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { groupBlocsBySignature } from "cms-delivery/core/blocs/groupBlocsBySignature";
+import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 describe("groupBlocsBySignature", () => {
     test("blocs used on the same set of pages land in one group", () => {
@@ -65,5 +67,30 @@ describe("groupBlocsBySignature", () => {
         const { groups, tagToGroup } = groupBlocsBySignature([]);
         expect(groups.size).toBe(0);
         expect(tagToGroup.size).toBe(0);
+    });
+});
+
+describe("getBlocGroupManifest", () => {
+    test("groups nested dependencies by their effective page signatures", async () => {
+        const views: Record<string, string> = {
+            "site-header": "const t = `<base-nav></base-nav>`;",
+            "base-nav": "NAV();",
+        };
+        const delivery = {
+            repository: {
+                getAllPages: async () => [
+                    { content: "<site-header></site-header>" },
+                    { content: "<site-header></site-header>" },
+                ],
+                getBlocsList: async () => Object.keys(views).map(id => ({ id })),
+                getBlocViewJS: async (tag: string) => views[tag] ?? null,
+            },
+        } as unknown as DeliveryCms;
+
+        const { groups, tagToGroup } = await getBlocGroupManifest(delivery);
+        const group = tagToGroup.get("site-header");
+        expect(group).toBeDefined();
+        expect(tagToGroup.get("base-nav")).toBe(group);
+        expect(groups.get(group!)).toEqual(["base-nav", "site-header"]);
     });
 });

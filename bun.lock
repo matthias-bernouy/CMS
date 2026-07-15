@@ -99,6 +99,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/components": "workspace:*",
       },
       "devDependencies": {
         "linkedom": "^0.18.12",

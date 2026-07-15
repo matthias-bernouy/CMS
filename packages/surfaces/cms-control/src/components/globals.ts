@@ -1,6 +1,7 @@
-import { Component } from "@bernouy/components/base";
+import { Component, Composition } from "@bernouy/components/base";
 
 
 (window as any).p9r = {
-    Component
+    Component,
+    Composition,
 }
