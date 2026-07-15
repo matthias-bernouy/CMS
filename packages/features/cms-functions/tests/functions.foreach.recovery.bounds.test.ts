@@ -51,7 +51,7 @@ describe("cms functions foreach recovery bounds", () => {
     });
 
     test("measures recovery call limits in UTF-8 bytes", async () => {
-        const sources = await productSources();
+        const sources = await productSources({ passthroughProductResponses: true });
         const requests: string[] = [];
         const response = await executeFunction(
             recoveringProductsFunction([{ id: "p1", recoveryId: "r1" }]),
@@ -74,7 +74,7 @@ describe("cms functions foreach recovery bounds", () => {
     test("cancels oversized success and ignored error response streams", async () => {
         const cancelled: number[] = [];
         for (const status of [200, 503]) {
-            const sources = await productSources();
+            const sources = await productSources({ passthroughProductResponses: true });
             const fn = recoveringProductsFunction([{ id: "p1", recoveryId: "r1" }]);
             const loop = recoveryLoop(fn);
             loop.onError = [{ assert: { condition: { exists: "$item" } } }];

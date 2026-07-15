@@ -58,9 +58,15 @@ export function productCall(productId: string): FunctionCall {
     };
 }
 
-export async function productSources(): Promise<InMemorySourceRepository> {
+export async function productSources(options: { passthroughProductResponses?: boolean } = {}): Promise<InMemorySourceRepository> {
     const sources = new InMemorySourceRepository();
-    await sources.createSource(productsSource());
+    const source = productsSource();
+    if (options.passthroughProductResponses) {
+        const productEndpoint = source.endpoints.find(endpoint => endpoint.urn === "urn:products:getProduct");
+        if (!productEndpoint) throw new Error("Expected the products fixture to expose getProduct");
+        productEndpoint.output = undefined;
+    }
+    await sources.createSource(source);
     return sources;
 }
 
