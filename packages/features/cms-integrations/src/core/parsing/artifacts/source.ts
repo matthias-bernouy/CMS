@@ -7,6 +7,7 @@ import type {
     SourceParamDto,
 } from "@bernouy/cms-sources";
 import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
+import { parseArtifactIcon } from "../icon";
 import { isJsonValue, isRecord, text } from "../values";
 import { parseAccessTemplate, requiredText } from "./common";
 
@@ -16,13 +17,14 @@ export function parseSourceTemplate(value: Record<string, unknown>, name: string
     if (!isRecord(value.meta)) throw new IntegrationInputError(`${name}.meta`, "must be an object");
     const metaName = text(value.meta.name);
     if (!metaName) throw new MissingIntegrationParam(`${name}.meta.name`);
+    const metaIcon = parseArtifactIcon(value.meta.icon, `${name}.meta.icon`);
     if (!Array.isArray(value.endpoints)) throw new IntegrationInputError(`${name}.endpoints`, "must be an array");
     return {
         id,
         meta: {
             name: metaName,
             ...(text(value.meta.description) ? { description: text(value.meta.description)! } : {}),
-            ...(text(value.meta.icon) ? { icon: text(value.meta.icon)! } : {}),
+            ...(metaIcon ? { icon: metaIcon } : {}),
             ...(text(value.meta.svg) ? { svg: text(value.meta.svg)! } : {}),
         },
         endpoints: value.endpoints.map((endpoint, index) => parseEndpointTemplate(endpoint, `${name}.endpoints.${index}`)),

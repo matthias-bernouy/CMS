@@ -1,4 +1,5 @@
 import { parseIntegrationDefinition } from "../core/parsing/definition";
+import { hydrateDefinitionIconAssets, SVG_ICON_MAX_BYTES } from "./definition-assets/icons";
 import type { IntegrationDefinition } from "../interfaces/Integration";
 import { responseAsset } from "./httpDefinitionAssets";
 import { parseIndex, parseSummaries, parseVersions } from "./httpDefinitionParsing";
@@ -45,16 +46,31 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
         const params = new URLSearchParams({ kind });
         if (version) params.set("version", version);
         const value = await this.getJsonOrNull(`/api/integrations/definition?${params.toString()}`);
-        return value ? parseIntegrationDefinition(value) : null;
+        if (!value) return null;
+        const definition = parseIntegrationDefinition(value);
+        assertDefinitionIdentity(definition, kind, version);
+        return await hydrateDefinitionIconAssets(
+            definition,
+            path => this.readAsset(kind, definition.version ?? version, path, SVG_ICON_MAX_BYTES),
+        );
     }
 
     async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
+        return await this.readAsset(kind, version, path);
+    }
+
+    private async readAsset(
+        kind: string,
+        version: string | undefined,
+        path: string,
+        maxBytes?: number,
+    ): Promise<IntegrationAsset | null> {
         const params = new URLSearchParams({ kind, path });
         if (version) params.set("version", version);
         const response = await this.fetchPath(`/api/integrations/asset?${params.toString()}`);
         if (response.status === 404) return null;
         if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
-        return responseAsset(response);
+        return responseAsset(response, maxBytes);
     }
 
     private async getJson(path: string): Promise<unknown> {
@@ -89,4 +105,19 @@ function requestHeaders(headers: HeadersInit | undefined): Headers {
     const result = new Headers(headers);
     if (!result.has("accept")) result.set("accept", "application/json");
     return result;
+}
+
+function assertDefinitionIdentity(
+    definition: IntegrationDefinition,
+    expectedKind: string,
+    expectedVersion: string | undefined,
+): void {
+    if (definition.kind !== expectedKind) {
+        throw new Error(`Integration repository returned kind "${definition.kind}" for "${expectedKind}"`);
+    }
+    if (expectedVersion && definition.version !== expectedVersion) {
+        throw new Error(
+            `Integration repository returned version "${definition.version ?? ""}" for "${expectedVersion}"`,
+        );
+    }
 }

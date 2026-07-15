@@ -2,15 +2,21 @@ import { Buffer } from "node:buffer";
 import { readdir, readFile } from "node:fs/promises";
 import { relative, sep } from "node:path";
 import type { DeclarativeArtifactTemplate, IntegrationDefinition } from "../../interfaces/Integration";
+import { hydrateDefinitionIconAssets, SVG_ICON_MAX_BYTES } from "../definition-assets/icons";
+import { readIntegrationAsset } from "./assets";
 import { isNodeError, resolveExistingPathWithin } from "./repositorySupport";
 
 export async function hydrateVersionAssets(
     definition: IntegrationDefinition,
     versionRoot: string,
 ): Promise<IntegrationDefinition> {
-    if (!definition.artifacts?.some(artifact => artifact.type === "bloc")) return definition;
-    const artifacts = await Promise.all(definition.artifacts.map(artifact => hydrateBloc(artifact, versionRoot)));
-    return { ...definition, artifacts };
+    const withIcons = await hydrateDefinitionIconAssets(
+        definition,
+        path => readIntegrationAsset(versionRoot, path, SVG_ICON_MAX_BYTES),
+    );
+    if (!withIcons.artifacts?.some(artifact => artifact.type === "bloc")) return withIcons;
+    const artifacts = await Promise.all(withIcons.artifacts.map(artifact => hydrateBloc(artifact, versionRoot)));
+    return { ...withIcons, artifacts };
 }
 
 async function hydrateBloc(

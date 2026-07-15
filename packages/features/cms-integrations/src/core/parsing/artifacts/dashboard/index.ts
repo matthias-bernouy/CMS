@@ -1,5 +1,6 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
+import { parseArtifactIcon } from "../../icon";
 import { isRecord, text } from "../../values";
 import { parseWidget } from "./widgets";
 
@@ -21,9 +22,10 @@ export function parseDashboardTemplate(value: Record<string, unknown>, name: str
 function parseDashboardMeta(value: Record<string, unknown>, name: string): DashboardDto["meta"] {
     const metaName = text(value.name);
     if (!metaName) throw new MissingIntegrationParam(`${name}.name`);
+    const icon = parseArtifactIcon(value.icon, `${name}.icon`);
     return {
         name: metaName,
-        ...(text(value.icon) ? { icon: text(value.icon)! } : {}),
+        ...(icon ? { icon } : {}),
         ...(text(value.svg) ? { svg: text(value.svg)! } : {}),
     };
 }
