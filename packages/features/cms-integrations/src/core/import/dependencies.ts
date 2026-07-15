@@ -1,6 +1,7 @@
 import { parseUrn } from "@bernouy/cms-sources";
 import { IntegrationInputError, IntegrationRuntimeError } from "../errors";
 import { integrationInstallationId } from "../installation/ids";
+import { sensitiveInputNames } from "../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
 import type { DependencyTemplateContext } from "../templates";
@@ -28,9 +29,16 @@ export async function resolveDependencyContext(
             .filter(artifact => artifact.type === "source")
             .map(artifact => parseUrn(artifact.id)?.source)
             .filter((sourceId): sourceId is string => typeof sourceId === "string" && sourceId.length > 0);
+        const secretInputs = new Set([
+            ...installation.secretInputs,
+            ...Object.keys(installation.secretRefs),
+            ...(installation.definitionSnapshot ? sensitiveInputNames(installation.definitionSnapshot) : []),
+        ]);
         context[dependency.name] = {
             id: installation.id,
-            answers: installation.answersSnapshot,
+            answers: Object.fromEntries(
+                Object.entries(installation.answersSnapshot).filter(([name]) => !secretInputs.has(name)),
+            ),
             ...(sourceIds.length === 1 ? { sourceId: sourceIds[0]! } : {}),
         };
     }

@@ -123,6 +123,9 @@ function resolveDependencyExpression(expression: string, context: TemplateContex
         }
         return value;
     }
+    if (key === "secrets" || key === "connectorSecrets") {
+        throw new IntegrationInputError("template", "dependency secrets are not accessible");
+    }
     throw new IntegrationInputError("template", `invalid dependency expression "${expression}"`);
 }
 
