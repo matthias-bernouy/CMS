@@ -1,10 +1,3 @@
-// `p9r dev` is the local development entry point. Flag the runtime so the
-// socle's security headers (CSP, COOP) downgrade to Report-Only and the
-// asset cache is bypassed — both already gated on `MODE === "DEV"`. Set
-// before the lazy-evaluated helpers in `@bernouy/cms-bloc-compile/server/compression`
-// observe it (they read at call time, not at import time).
-process.env.MODE = "DEV";
-
 import { relative } from "node:path";
 import { BunRunner } from "@bernouy/http-runner";
 import { ControlCms } from "@bernouy/cms-control";
@@ -78,6 +71,9 @@ function sseHandler(reload: ReloadEmitter): (req: Request) => Response {
 }
 
 export default async function CLI_dev(args: string[]) {
+    // Set the development profile only when the command actually runs. The
+    // lower-level helpers read it lazily; importing flag parsers must stay inert.
+    process.env.MODE = "DEV";
     const cwd = process.cwd();
     const config = await loadPushConfig(cwd);
     let parsed: ReturnType<typeof parseDevFlags>;

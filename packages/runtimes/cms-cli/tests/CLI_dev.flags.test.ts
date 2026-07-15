@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { parseDevFlags } from "../src/CLI_dev";
+
+const modeBeforeImport = process.env.MODE;
+const { parseDevFlags } = await import("../src/CLI_dev");
 
 describe("parseDevFlags", () => {
+    test("importing the parser does not change the runtime mode", () => {
+        expect(process.env.MODE).toBe(modeBeforeImport);
+    });
+
     test("defaults to the editor port and derived public port", () => {
         expect(parseDevFlags([])).toMatchObject({
             port:         5000,
