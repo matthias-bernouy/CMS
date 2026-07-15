@@ -19,8 +19,9 @@ export class DashboardWDetail extends Component {
     private readonly requests: DetailRequestCoordinator;
     private readonly lookups: DetailLookups;
     private readonly events: DetailEvents;
+    private mode: "bound" | "manual" = "bound";
     private bindingRevision = 0;
-    private connectionRevision = 0;
+    private lifecycleRevision = 0;
     private syncScheduled = false;
 
     constructor() {
@@ -39,12 +40,17 @@ export class DashboardWDetail extends Component {
             root,
             this.fields,
             this.lookups,
+            () => this.mode === "bound",
             () => this.value,
             () => this.refreshConditionalFields(),
         );
     }
 
     set data(value: WDetailData) {
+        this.mode = "manual";
+        this.lifecycleRevision += 1;
+        this.syncScheduled = false;
+        this.clearRuntimeState();
         this.value = value;
         if (this.isConnected) this.render();
     }
@@ -60,22 +66,24 @@ export class DashboardWDetail extends Component {
     }
 
     attributeChangedCallback(): void {
+        this.mode = "bound";
         this.bindingRevision += 1;
         this.scheduleBoundDataSync();
     }
 
     override connectedCallback(): void {
-        this.connectionRevision += 1;
+        this.lifecycleRevision += 1;
         this.syncScheduled = false;
         this.events.bind();
-        this.syncBoundData();
+        if (this.mode === "manual") this.render();
+        else this.syncBoundData();
     }
 
     disconnectedCallback(): void {
-        this.connectionRevision += 1;
+        this.lifecycleRevision += 1;
         this.syncScheduled = false;
         this.events.unbind();
-        this.resetInvalidState();
+        this.resetState(true);
     }
 
     private render(): void {
@@ -83,6 +91,7 @@ export class DashboardWDetail extends Component {
     }
 
     private refreshConditionalFields(): void {
+        if (this.mode !== "bound") return;
         const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
         const resource = this.fields.currentResource();
         if (!widget || resource === undefined) return;
@@ -105,12 +114,12 @@ export class DashboardWDetail extends Component {
         const sourceJson = this.dataset.sourceJson ?? "";
         const sourceData = parseJson<unknown>(sourceJson);
         if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
-            this.resetInvalidState();
+            this.resetState();
             return;
         }
         const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
         if (resource === undefined) {
-            this.resetInvalidState();
+            this.resetState();
             return;
         }
         const rowKey = this.dataset.rowKey ?? "";
@@ -130,9 +139,9 @@ export class DashboardWDetail extends Component {
         this.invalidateRequests();
         if (this.syncScheduled) return;
         this.syncScheduled = true;
-        const connectionRevision = this.connectionRevision;
+        const lifecycleRevision = this.lifecycleRevision;
         queueMicrotask(() => {
-            if (this.connectionRevision !== connectionRevision) return;
+            if (this.lifecycleRevision !== lifecycleRevision || this.mode !== "bound") return;
             this.syncScheduled = false;
             if (this.isConnected) this.syncBoundData();
         });
@@ -143,13 +152,15 @@ export class DashboardWDetail extends Component {
         this.requests.clear();
     }
 
-    private resetInvalidState(): void {
+    private clearRuntimeState(): void {
         this.invalidateRequests();
-        this.requests.syncScope("");
-        this.fields.syncScope("");
-        this.lookups.syncScope("");
+        this.fields.clear();
+    }
+
+    private resetState(forceRender = false): void {
+        this.clearRuntimeState();
         this.value = emptyDetailData();
-        if (this.isConnected) this.render();
+        if (forceRender || this.isConnected) this.render();
     }
 }
 

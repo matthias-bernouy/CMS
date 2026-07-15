@@ -73,4 +73,22 @@ describe("dashboard detail request coordinator", () => {
         expect(await requests.load(consumer, "catalog", { endpoint: "products" }, {})).toEqual({ items: [] });
         expect(calls).toBe(2);
     });
+
+    test("does not reject an arbitrary sixty-fifth request", async () => {
+        let calls = 0;
+        globalThis.fetch = (async () => {
+            calls += 1;
+            return Response.json({ items: [] });
+        }) as unknown as typeof fetch;
+        const requests = new DetailRequestCoordinator();
+
+        await Promise.all(Array.from({ length: 65 }, (_, index) => requests.load(
+            requests.createConsumer(),
+            "catalog",
+            { endpoint: `products-${index}` },
+            {},
+        )));
+
+        expect(calls).toBe(65);
+    });
 });

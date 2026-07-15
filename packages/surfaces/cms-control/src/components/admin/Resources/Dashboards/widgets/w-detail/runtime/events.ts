@@ -20,6 +20,7 @@ export class DetailEvents {
         private readonly root: ShadowRoot,
         private readonly fields: DetailFieldState,
         private readonly lookups: DetailLookups,
+        private readonly isBound: () => boolean,
         private readonly readData: () => WDetailData,
         private readonly refreshConditionalFields: () => void,
     ) {}
@@ -45,14 +46,14 @@ export class DetailEvents {
         const target = event.target as Element | null;
         if (target?.closest("[data-back]")) emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
         const action = findActionTarget(event);
-        const widget = parseJson<DetailWidget>(this.host.dataset.configJson ?? "");
+        const widget = this.isBound() ? parseJson<DetailWidget>(this.host.dataset.configJson ?? "") : null;
         const data = this.readData();
         if (action?.dataset.action) emitWidgetEvent(this.host, WIDGET_ACTION_EVENT, {
             action: action.dataset.action,
             detail: true,
             widget: widget?.id,
             row: data.rowKey,
-            resource: this.fields.currentResource(),
+            resource: this.isBound() ? this.fields.currentResource() : undefined,
             fields: this.fields.currentFields(),
         });
         const chip = target?.closest<HTMLButtonElement>(".chip");
@@ -67,7 +68,7 @@ export class DetailEvents {
         const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (control && field?.input === "table") updateDerivedTables(field.id, this.fields);
-        if (field) this.lookups.schedule(field.id);
+        if (field && this.isBound()) this.lookups.schedule(field.id);
     };
 
     private onChange = (event: Event): void => {
@@ -75,7 +76,7 @@ export class DetailEvents {
         if (!control) return;
         this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
         updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
-        this.lookups.schedule(control.dataset.fieldControl ?? "");
+        if (this.isBound()) this.lookups.schedule(control.dataset.fieldControl ?? "");
         this.refreshConditionalFields();
     };
 

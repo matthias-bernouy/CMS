@@ -2,8 +2,6 @@ import type { DashboardDataRef } from "@bernouy/cms-dashboards";
 import type { RuntimeVars } from "../../../runtime/expressions";
 import { fetchSourceJson, sourceRequestKey } from "../../../runtime/source";
 
-const MAX_IN_FLIGHT_REQUESTS = 64;
-
 export type DetailRequestConsumer = symbol;
 
 type InFlightRequest = {
@@ -36,9 +34,6 @@ export class DetailRequestCoordinator {
         const key = sourceRequestKey(sourceId, ref, vars);
         let request = this.inFlight.get(key);
         if (!request) {
-            if (this.inFlight.size >= MAX_IN_FLIGHT_REQUESTS) {
-                return Promise.reject(new Error("Too many concurrent detail data requests"));
-            }
             const controller = new AbortController();
             request = {
                 controller,

@@ -39,7 +39,6 @@ export class DetailLookups {
         if (this.scopeKey === scopeKey) return;
         this.clear();
         this.scopeKey = scopeKey;
-        this.currentOptions = {};
     }
 
     async load(
@@ -104,6 +103,7 @@ export class DetailLookups {
         this.consumers.clear();
         this.fieldGenerations.clear();
         this.clearPendingRefresh();
+        this.currentOptions = {};
     }
 
     private async loadField(

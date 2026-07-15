@@ -25,6 +25,11 @@ export class DetailFieldState {
         this.values = {};
     }
 
+    clear(): void {
+        this.scopeKey = "";
+        this.values = {};
+    }
+
     record(fieldId: string, value: unknown): void {
         this.values[fieldId] = value;
     }
