@@ -10,16 +10,17 @@ afterEach(() => {
 describe("dashboard reorderable list widget", () => {
     test("reorders items by drag and recomputes their persisted positions", () => {
         const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
+        const items = [
+            { id: "agency", details: { value: "agency", label: "Agency" }, order: { position: 0 } },
+            { id: "club", details: { value: "club", label: "Club" }, order: { position: 1 } },
+        ];
         list.data = {
-            items: [
-                { id: "agency", value: "agency", label: "Agency", position: 0 },
-                { id: "club", value: "club", label: "Club", position: 1 },
-            ],
+            items,
             itemKey: "id",
-            positionPath: "position",
+            positionPath: "order.position",
             fields: [
-                { id: "value", label: "Value", path: "value", required: true },
-                { id: "label", label: "Label", path: "label", required: true },
+                { id: "value", label: "Value", path: "details.value", required: true },
+                { id: "label", label: "Label", path: "details.label", required: true },
             ],
         };
         document.body.append(list);
@@ -31,31 +32,34 @@ describe("dashboard reorderable list widget", () => {
         rows[1]!.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
 
         expect(list.items).toEqual([
-            { id: "club", value: "club", label: "Club", position: 0 },
-            { id: "agency", value: "agency", label: "Agency", position: 1 },
+            { id: "club", details: { value: "club", label: "Club" }, order: { position: 0 } },
+            { id: "agency", details: { value: "agency", label: "Agency" }, order: { position: 1 } },
         ]);
+        expect(items.map(item => item.order.position)).toEqual([0, 1]);
+        const snapshot = list.items;
+        (snapshot[0]!.details as Record<string, unknown>).label = "Changed";
+        expect(list.items[0]?.details).toEqual({ value: "club", label: "Club" });
     });
 
     test("keeps the edited input mounted while its value changes", () => {
         const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
+        const items = [{ id: "agency", details: { label: "Agency" }, position: 0 }];
         list.data = {
-            items: [{ id: "agency", value: "agency", label: "Agency", position: 0 }],
+            items,
             itemKey: "id",
-            fields: [
-                { id: "value", label: "Value", path: "value", required: true },
-                { id: "label", label: "Label", path: "label", required: true },
-            ],
+            fields: [{ id: "label", label: "Label", path: "details.label", required: true }],
         };
         document.body.append(list);
 
-        const input = list.shadowRoot!.querySelector<HTMLInputElement>("[data-item-path='label']")!;
+        const input = list.shadowRoot!.querySelector<HTMLInputElement>("[data-item-path='details.label']")!;
         input.focus();
         input.value = "Agency updated";
         input.dispatchEvent(new Event("input", { bubbles: true }));
 
-        expect(list.shadowRoot!.querySelector("[data-item-path='label']")).toBe(input);
+        expect(list.shadowRoot!.querySelector("[data-item-path='details.label']")).toBe(input);
         expect(list.shadowRoot!.activeElement).toBe(input);
-        expect(list.items[0]?.label).toBe("Agency updated");
+        expect(list.items[0]?.details).toEqual({ label: "Agency updated" });
+        expect(items[0]!.details.label).toBe("Agency");
     });
 
     test("ignores unsafe nested item and position paths", () => {

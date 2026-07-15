@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { P9rInput, Button, Combobox, P9rSelect } from "@bernouy/components";
 import "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
+import {
+    createFieldControl,
+    readFieldControlValue,
+} from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
 import { WIDGET_ACTION_EVENT, type WidgetActionDetail } from "../../../src/components/admin/Resources/Dashboards/widgets/shared";
+import type { WDetailField } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/types";
 
 if (!customElements.get("p9r-input")) customElements.define("p9r-input", P9rInput);
 if (!customElements.get("p9r-button")) customElements.define("p9r-button", Button);
@@ -16,7 +21,7 @@ afterEach(() => {
 });
 
 describe("dashboard detail widget actions", () => {
-    test("snapshots editable table field values", async () => {
+    test("preserves the right row and nested values after deletion", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
         detail.setAttribute("data-config-json", JSON.stringify({
             widget: "w-detail",
@@ -43,8 +48,8 @@ describe("dashboard detail widget actions", () => {
                             type: "table",
                             editable: true,
                             columns: [
-                                { id: "label", label: "Label", path: "label", editable: true },
-                                { id: "values", label: "Values", path: "values", editable: true, value: "list" },
+                                { id: "label", label: "Label", path: "details.label", editable: true },
+                                { id: "values", label: "Values", path: "details.values", editable: true, value: "list" },
                             ],
                         },
                     ],
@@ -54,7 +59,10 @@ describe("dashboard detail widget actions", () => {
         detail.setAttribute("data-source-json", JSON.stringify({
             id: 2,
             title: "Product",
-            variantAxes: [{ label: "Grip size", values: ["L1", "L2"] }],
+            variantAxes: [
+                { id: "grip", details: { label: "Grip size", values: ["L1", "L2"] }, audit: { owner: "first" } },
+                { id: "weight", details: { label: "Weight", values: ["250"] }, audit: { owner: "second" } },
+            ],
         }));
 
         const actions: WidgetActionDetail[] = [];
@@ -65,16 +73,37 @@ describe("dashboard detail widget actions", () => {
         document.body.append(detail);
         await Promise.resolve();
 
+        detail.shadowRoot!.querySelector<HTMLButtonElement>("[data-table-remove]")!.click();
         const inputs = Array.from(detail.shadowRoot!.querySelectorAll("p9r-input")) as Array<HTMLElement & { value: string }>;
-        inputs[0]!.value = "Weight";
+        inputs[0]!.value = "Weight updated";
         inputs[1]!.value = "285, 300";
 
         const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
         save.shadowRoot.querySelector("button")!.click();
 
         expect(actions[0]?.fields).toEqual({
-            variantAxes: [{ label: "Weight", values: ["285", "300"] }],
+            variantAxes: [{
+                id: "weight",
+                details: { label: "Weight updated", values: ["285", "300"] },
+                audit: { owner: "second" },
+            }],
         });
+    });
+
+    test("returns deep snapshots for readonly table values", () => {
+        const source = [{ id: "axis", details: { label: "Size" } }];
+        const field: WDetailField = {
+            id: "axes",
+            label: "Axes",
+            input: "table",
+            value: source,
+            columns: [{ key: "label", label: "Label", path: "details.label" }],
+        };
+        const value = readFieldControlValue(field, createFieldControl(field)) as Array<Record<string, unknown>>;
+
+        (value[0]!.details as Record<string, unknown>).label = "Changed";
+
+        expect(source).toEqual([{ id: "axis", details: { label: "Size" } }]);
     });
 
     test("updates derived table fields from editable table input", async () => {

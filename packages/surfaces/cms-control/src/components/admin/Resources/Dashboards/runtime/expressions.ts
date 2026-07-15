@@ -27,6 +27,19 @@ export function valueAt(value: unknown, path: string | undefined): unknown {
     }, value);
 }
 
+export function setValueAt(target: Record<string, unknown>, path: string, value: unknown): boolean {
+    const parts = dashboardPathSegments(path);
+    if (!parts) return false;
+    let current = target;
+    for (const part of parts.slice(0, -1)) {
+        const existing = Object.hasOwn(current, part) ? current[part] : undefined;
+        if (!existing || typeof existing !== "object" || Array.isArray(existing)) current[part] = {};
+        current = current[part] as Record<string, unknown>;
+    }
+    current[parts.at(-1)!] = value;
+    return true;
+}
+
 export function textAt(value: unknown, path: string | undefined, fallback = ""): string {
     const found = valueAt(value, path);
     if (found === null || found === undefined) return fallback;
@@ -83,22 +96,7 @@ export function resolveBody(body: Record<string, string> | undefined, vars: Runt
 }
 
 function setBodyValue(target: Record<string, unknown>, path: string, value: unknown): void {
-    const parts = dashboardPathSegments(path);
-    if (!parts) throw new Error(`Unsafe dashboard body path "${path}"`);
-    if (parts.length === 1) {
-        target[parts[0]!] = value;
-        return;
-    }
-
-    let current = target;
-    for (const part of parts.slice(0, -1)) {
-        const existing = Object.hasOwn(current, part) ? current[part] : undefined;
-        if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
-            current[part] = {};
-        }
-        current = current[part] as Record<string, unknown>;
-    }
-    current[parts[parts.length - 1]!] = value;
+    if (!setValueAt(target, path, value)) throw new Error(`Unsafe dashboard body path "${path}"`);
 }
 
 export function pathLabel(path: string): string {
