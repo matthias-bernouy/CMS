@@ -173,31 +173,40 @@
                                             "type": "string"
                                         },
                                         "email": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "phone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "displayName": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarUrl": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarFileId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "locale": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "timezone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "createdAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "updatedAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         }
                                     },
                                     "required": [
@@ -270,25 +279,32 @@
                                             "type": "string"
                                         },
                                         "email": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "phone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "displayName": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarUrl": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarFileId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "locale": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "timezone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "createdAt": {
                                             "type": "string"
@@ -488,25 +504,32 @@
                                                         "type": "string"
                                                     },
                                                     "email": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "phone": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "displayName": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "avatarUrl": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "avatarFileId": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "locale": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "timezone": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "createdAt": {
                                                         "type": "string"
@@ -580,31 +603,40 @@
                                             "type": "string"
                                         },
                                         "email": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "phone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "displayName": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarUrl": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarFileId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "locale": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "timezone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "createdAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "updatedAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         }
                                     },
                                     "required": [
@@ -688,25 +720,32 @@
                                             "type": "string"
                                         },
                                         "email": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "phone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "displayName": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarUrl": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "avatarFileId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "locale": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "timezone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "createdAt": {
                                             "type": "string"
@@ -913,6 +952,9 @@
                                                     "type": {
                                                         "type": "string"
                                                     },
+                                                    "section": {
+                                                        "type": "string"
+                                                    },
                                                     "required": {
                                                         "type": "boolean"
                                                     },
@@ -923,7 +965,10 @@
                                                 "required": [
                                                     "id",
                                                     "label",
-                                                    "type"
+                                                    "type",
+                                                    "section",
+                                                    "required",
+                                                    "showInDashboardTable"
                                                 ]
                                             }
                                         }
@@ -996,12 +1041,24 @@
                                                 },
                                                 "type": {
                                                     "type": "string"
+                                                },
+                                                "section": {
+                                                    "type": "string"
+                                                },
+                                                "required": {
+                                                    "type": "boolean"
+                                                },
+                                                "showInDashboardTable": {
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
                                                 "id",
                                                 "label",
-                                                "type"
+                                                "type",
+                                                "section",
+                                                "required",
+                                                "showInDashboardTable"
                                             ]
                                         }
                                     },
@@ -1058,6 +1115,9 @@
                                                 "type": {
                                                     "type": "string"
                                                 },
+                                                "section": {
+                                                    "type": "string"
+                                                },
                                                 "required": {
                                                     "type": "boolean"
                                                 },
@@ -1068,7 +1128,9 @@
                                             "required": [
                                                 "id",
                                                 "label",
-                                                "type"
+                                                "type",
+                                                "required",
+                                                "showInDashboardTable"
                                             ]
                                         }
                                     },
@@ -1141,11 +1203,17 @@
                         "endpointId": "getAccount"
                     },
                     {
+                        "endpointId": "updateAccount"
+                    },
+                    {
                         "endpointId": "listAccounts",
                         "path": "accounts[]"
                     },
                     {
                         "endpointId": "getAccountByUserId"
+                    },
+                    {
+                        "endpointId": "createUserPersonalInformation"
                     }
                 ],
                 "fieldSource": {

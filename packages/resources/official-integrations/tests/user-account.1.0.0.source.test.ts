@@ -50,6 +50,18 @@ afterAll(() => {
 });
 
 describe("user-account 1.0.0 source", () => {
+    test("imports explicit nullable response fields", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("user-account");
+        const sourceArtifact = definition?.artifacts?.find(artifact => artifact.type === "source");
+        if (!sourceArtifact || sourceArtifact.type !== "source") throw new Error("user-account source artifact not found");
+        const getAccount = sourceArtifact.source.endpoints.find(endpoint => endpoint.endpointId === "getAccount");
+
+        expect(getAccount?.output?.[0]?.body?.properties).toMatchObject({
+            email: { type: "string", nullable: true },
+            createdAt: { type: "string", nullable: true },
+        });
+    });
+
     test("updates, reads, lists, and deletes personal information through the installed CMS source", async () => {
         const harness = await createHarness();
 
@@ -91,8 +103,9 @@ describe("user-account 1.0.0 source", () => {
         const deleted = await okJson(await sourceDelete(harness, "deleteUserPersonalInformation", { userId: "target-user" }));
         const installedDashboard = await harness.dashboards.getDashboard("user-account-users");
         const fieldsDashboard = await harness.dashboards.getDashboard("user-account-fields");
+        const materializedOverlays = await harness.materializedOverlays();
         const dashboard = installedDashboard
-            ? applyDashboardSourceOverlays(installedDashboard, await harness.materializedOverlays())
+            ? applyDashboardSourceOverlays(installedDashboard, materializedOverlays)
             : null;
         const accountsTable = dashboard?.views.find(view => view.id === "accountsTable") as JsonRecord | undefined;
         const accountDetail = dashboard?.views.find(view => view.id === "accountDetail") as JsonRecord | undefined;
@@ -102,9 +115,19 @@ describe("user-account 1.0.0 source", () => {
         const updateEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:updateAccount");
         const getEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:getAccount");
 
-        expect(missing).toMatchObject({ exists: false, userId: "user-123" });
-        expect(field).toMatchObject({ field: { id: "company", label: "Company", type: "string", showInDashboardTable: true } });
-        expect(upsertedField).toMatchObject({ field: { id: "company", label: "Company", type: "string", required: true, showInDashboardTable: true } });
+        expect(missing).toMatchObject({
+            exists: false,
+            userId: "user-123",
+            email: null,
+            avatarUrl: null,
+            createdAt: null,
+        });
+        expect(field).toMatchObject({
+            field: { id: "company", label: "Company", type: "string", section: "accountFields", showInDashboardTable: true },
+        });
+        expect(upsertedField).toMatchObject({
+            field: { id: "company", label: "Company", type: "string", section: "accountFields", required: true, showInDashboardTable: true },
+        });
         expect(updated).toMatchObject({
             exists: true,
             userId: "user-123",
@@ -120,6 +143,9 @@ describe("user-account 1.0.0 source", () => {
         expect(fetched).toMatchObject({ exists: true, userId: "target-user", displayName: "Admin Target", metadata: { company: "Acme" } });
         expect(deleted).toEqual({ deleted: true, userId: "target-user" });
         expect(harness.rest.rows("accounts").map(row => row.cms_user_id)).toEqual(["user-123"]);
+        expect(materializedOverlays[0]?.fields).toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: "company", section: "accountFields", required: true, showInDashboardTable: true }),
+        ]));
         expect(accountsTable?.selection).toEqual({ opens: "accountDetail" });
         expect((accountsTable?.columns as JsonRecord[]).map(column => column.id)).toContain("company");
         expect(accountDetail?.source).toEqual({ endpoint: "getAccountByUserId", params: { userId: "$selection.id" } });
@@ -146,6 +172,8 @@ describe("user-account 1.0.0 source", () => {
         });
         expect(getEndpoint?.output?.[0]?.body).toMatchObject({
             properties: {
+                email: { type: "string", nullable: true },
+                createdAt: { type: "string", nullable: true },
                 metadata: {
                     properties: {
                         company: { type: "string" },
