@@ -9,6 +9,7 @@ import {
     signupLocalUser,
 } from "cms-auth/core/publicAuth";
 import { AuthValidationError } from "cms-auth/core/validation";
+import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
 
 export const PUBLIC_AUTH_ROUTES = {
     base:                     "/.cms/auth",
@@ -46,7 +47,7 @@ export function registerPublicAuthRoutes<Role extends string>(
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.login, (req) => cfg.local.loginJson(req));
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.logout, () => cfg.local.logoutJson());
-    runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.me, async (req) => json({ subject: await cfg.local.getSubject(req) }));
+    runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.me, async (req) => privateAuthJsonResponse({ subject: await cfg.local.getSubject(req) }));
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.requestEmailVerification, async (req) => {
         const body = await readJsonObject(req);
@@ -95,10 +96,4 @@ function optionalString(body: Record<string, unknown>, field: string): string | 
     return typeof value === "string" && value ? value : undefined;
 }
 
-const ok = (): Response => json({ ok: true });
-
-function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
-    const out = new Headers(headers);
-    if (!out.has("Content-Type")) out.set("Content-Type", "application/json");
-    return new Response(JSON.stringify(body), { status, headers: out });
-}
+const ok = (): Response => privateAuthJsonResponse({ ok: true });

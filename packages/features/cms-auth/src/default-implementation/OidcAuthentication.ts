@@ -5,6 +5,7 @@ import type { SecretReader } from "@bernouy/cms-secrets";
 import type { IdentityProviderRepository, IdentityProvider } from "cms-auth/interfaces/IdentityProvider";
 import type { SubjectResolver } from "cms-auth/core/SubjectResolver";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/core/cookies";
+import { privateAuthResponse } from "cms-auth/http/authResponse";
 
 type FlightPayload = { kind: "oidc-flight"; state: string; nonce: string; codeVerifier: string; returnTo: string };
 type Meta = { authorization_endpoint: string; token_endpoint: string; jwks_uri: string };
@@ -117,7 +118,7 @@ export class OidcAuthentication<Role extends string = string> {
     /** `GET <basePath>/:provider/login` handler — mounted by the surface. */
     async login(req: Request): Promise<Response> {
         const r = await this._resolve(req);
-        if (!r) return new Response("Unknown provider", { status: 404 });
+        if (!r) return privateAuthResponse("Unknown provider", { status: 404 });
         const { p } = r;
         const meta = await this._discover(p.issuer!);
         const returnTo = new URL(req.url).searchParams.get("returnTo") ?? "";
@@ -138,7 +139,7 @@ export class OidcAuthentication<Role extends string = string> {
         url.searchParams.set("code_challenge", challenge);
         url.searchParams.set("code_challenge_method", "S256");
 
-        return new Response(null, {
+        return privateAuthResponse(null, {
             status: 302,
             headers: { Location: url.toString(), "Set-Cookie": setCookie(this._flightCookie(p.id), flight, 600, this.cfg.cookieSecure ?? false) },
         });
@@ -147,7 +148,7 @@ export class OidcAuthentication<Role extends string = string> {
     /** `GET <basePath>/:provider/callback` handler — mounted by the surface. */
     async callback(req: Request): Promise<Response> {
         const r = await this._resolve(req);
-        if (!r) return new Response("Unknown provider", { status: 404 });
+        if (!r) return privateAuthResponse("Unknown provider", { status: 404 });
         const { p, secret } = r;
         const q = new URL(req.url).searchParams;
 
@@ -203,11 +204,11 @@ export class OidcAuthentication<Role extends string = string> {
         const headers = new Headers({ Location: sanitizeReturnTo(flight.returnTo, this.cfg.defaultHome) });
         headers.append("Set-Cookie", setCookie(this.cfg.cookieName, session, this._ttl, secure));
         headers.append("Set-Cookie", clearCookie(this._flightCookie(p.id), secure));
-        return new Response(null, { status: 302, headers });
+        return privateAuthResponse(null, { status: 302, headers });
     }
 
     private _fail(providerId: string, reason: string): Response {
         console.warn(`[oidc:${providerId}] login failed: ${reason}`);
-        return new Response(null, { status: 302, headers: { Location: `${this.cfg.loginPagePath}?error=oidc` } });
+        return privateAuthResponse(null, { status: 302, headers: { Location: `${this.cfg.loginPagePath}?error=oidc` } });
     }
 }

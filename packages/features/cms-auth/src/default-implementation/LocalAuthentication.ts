@@ -5,6 +5,7 @@ import type { SubjectResolver } from "cms-auth/core/SubjectResolver";
 import type { PatRepository } from "cms-auth/interfaces/PatRepository";
 import type { RateLimiter } from "@bernouy/rate-limiter";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/core/cookies";
+import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
 
 type SessionPayload = { kind: "session"; sub: string };
 type LoginError = "invalid_credentials" | "rate_limited";
@@ -94,10 +95,13 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         const back = result.returnTo ? `&returnTo=${encodeURIComponent(result.returnTo)}` : "";
         if (!result.ok) {
             const error = result.error === "rate_limited" ? "rate_limited" : "1";
-            return redirect(`${this.cfg.loginPagePath}?error=${error}${back}`);
+            return privateAuthResponse(null, {
+                status: 302,
+                headers: { Location: `${this.cfg.loginPagePath}?error=${error}${back}` },
+            });
         }
         const dest  = sanitizeReturnTo(result.returnTo, this.cfg.defaultHome ?? "/");
-        return new Response(null, {
+        return privateAuthResponse(null, {
             status:  302,
             headers: { Location: dest, "Set-Cookie": this._sessionCookie(result.token) },
         });
@@ -107,9 +111,9 @@ export class LocalAuthentication<Role extends string = string> implements Authen
     async loginJson(req: Request): Promise<Response> {
         const result = await this._authenticate(req);
         if (!result.ok) {
-            return json({ error: result.error }, result.error === "rate_limited" ? 429 : 401);
+            return privateAuthJsonResponse({ error: result.error }, result.error === "rate_limited" ? 429 : 401);
         }
-        return json(
+        return privateAuthJsonResponse(
             { subject: result.subject },
             200,
             { "Set-Cookie": this._sessionCookie(result.token) },
@@ -119,7 +123,7 @@ export class LocalAuthentication<Role extends string = string> implements Authen
     /** `GET <basePath>/logout` handler — mounted by the surface. */
     logout(req: Request): Response {
         const dest = sanitizeReturnTo(new URL(req.url).searchParams.get("returnTo"), this.cfg.defaultHome ?? "/");
-        return new Response(null, {
+        return privateAuthResponse(null, {
             status:  302,
             headers: { Location: dest, "Set-Cookie": clearCookie(this.cfg.cookieName, this.cfg.cookieSecure ?? false) },
         });
@@ -127,7 +131,7 @@ export class LocalAuthentication<Role extends string = string> implements Authen
 
     /** JSON logout handler for first-party public auth APIs. */
     logoutJson(): Response {
-        return json({ ok: true }, 200, {
+        return privateAuthJsonResponse({ ok: true }, 200, {
             "Set-Cookie": clearCookie(this.cfg.cookieName, this.cfg.cookieSecure ?? false),
         });
     }
@@ -186,9 +190,3 @@ function readBearer(req: Request): string | null {
 }
 
 const str = (v: FormDataEntryValue | null): string | undefined => (typeof v === "string" && v ? v : undefined);
-const redirect = (location: string): Response => new Response(null, { status: 302, headers: { Location: location } });
-function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
-    const out = new Headers(headers);
-    if (!out.has("Content-Type")) out.set("Content-Type", "application/json");
-    return new Response(JSON.stringify(body), { status, headers: out });
-}

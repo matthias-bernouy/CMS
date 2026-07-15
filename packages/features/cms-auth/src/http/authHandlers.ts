@@ -2,6 +2,7 @@ import type { LocalAuthentication } from "cms-auth/default-implementation/LocalA
 import type { OidcAuthentication } from "cms-auth/default-implementation/OidcAuthentication";
 import type { IdentityProviderKind, IdentityProviderRepository } from "cms-auth/interfaces/IdentityProvider";
 import { toLoginMethod } from "cms-auth/core/toLoginMethod";
+import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
 
 export type AuthMethodsRoutesConfig = {
     /** Public auth prefix used in returned login URLs. Defaults to `basePath`. */
@@ -42,5 +43,5 @@ export async function authMethodsHandler(cfg: AuthMethodsRoutesConfig): Promise<
     const methods = providers
         .filter((p) => p.enabled && (!supportedKinds || supportedKinds.has(p.kind)))
         .map((p) => toLoginMethod(p, authBasePath));
-    return Response.json(methods);
+    return privateAuthJsonResponse(methods);
 }

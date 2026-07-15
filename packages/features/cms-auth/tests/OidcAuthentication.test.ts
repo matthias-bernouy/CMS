@@ -102,6 +102,14 @@ describe("OidcAuthentication", () => {
 
         expect(res.status).toBe(302);
         expect(res.headers.get("location")).toBe("/admin");
+        const responseCookies = res.headers.getSetCookie();
+        expect(responseCookies).toHaveLength(2);
+        expect(responseCookies[0]).toContain(`${COOKIE}=`);
+        expect(responseCookies[1]).toContain(`${COOKIE}-oidc-sso=`);
+        expect(responseCookies[1]).toContain("Max-Age=0");
+        expect(res.headers.get("cache-control")).toBe("private, no-store");
+        expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+        expect(res.headers.get("vary")).toBe("Cookie, Authorization");
         const user = await users.getBySub("sso:sub-1");
         expect(user?.email).toBeUndefined();
         expect(user?.displayName).toBe("Alice");

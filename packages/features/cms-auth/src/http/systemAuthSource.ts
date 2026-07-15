@@ -7,6 +7,7 @@ import {
     signupLocalUser,
 } from "cms-auth/core/publicAuth";
 import { AuthValidationError } from "cms-auth/core/validation";
+import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
 
 type SystemSourceEndpoint = {
     urn:       string;
@@ -21,13 +22,13 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
         case "/me":
-            return json({ subject: await cfg.local.getSubject(req) });
+            return privateAuthJsonResponse({ subject: await cfg.local.getSubject(req) });
         case "/login":
             return cfg.local.loginJson(req);
         case "/logout":
             return cfg.local.logoutJson();
         case "/signup": {
-            if (cfg.allowSignup === false) return new Response("not_found", { status: 404 });
+            if (cfg.allowSignup === false) return privateAuthResponse("not_found", { status: 404 });
             const body = await readJsonObject(req);
             await signupLocalUser(cfg, {
                 email: requiredString(body, "email"),
@@ -120,10 +121,4 @@ function optionalString(body: Record<string, unknown>, field: string): string | 
     return typeof value === "string" && value ? value : undefined;
 }
 
-const ok = (): Response => json({ ok: true });
-
-function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
-    const out = new Headers(headers);
-    if (!out.has("Content-Type")) out.set("Content-Type", "application/json");
-    return new Response(JSON.stringify(body), { status, headers: out });
-}
+const ok = (): Response => privateAuthJsonResponse({ ok: true });
