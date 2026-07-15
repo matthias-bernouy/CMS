@@ -551,6 +551,12 @@
                                                     },
                                                     "warning": {
                                                         "type": "string"
+                                                    },
+                                                    "photo": {
+                                                        "type": "string"
+                                                    },
+                                                    "openingHoursHtml": {
+                                                        "type": "string"
                                                     }
                                                 },
                                                 "required": [
