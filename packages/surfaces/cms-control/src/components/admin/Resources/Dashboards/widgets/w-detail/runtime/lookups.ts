@@ -1,4 +1,4 @@
-import { detailData, type DetailOptions } from "../../../runtime/mapping";
+import { detailData, type DetailOptions, type DetailSchemas } from "../../../runtime/mapping";
 import {
     allLookupTargetKeys,
     loadDetailLookupOptions,
@@ -12,6 +12,7 @@ type LookupCallbacks = {
     setData(value: WDetailData): void;
     render(): void;
     isConnected(): boolean;
+    schemas(): DetailSchemas;
 };
 type TargetLoad = {
     failed: boolean;
@@ -73,7 +74,15 @@ export class DetailLookups {
 
         const renderFields = loadOptions.useLatestFields ? this.fields.currentFields() : fields;
         this.currentOptions = next;
-        this.callbacks.setData(detailData(widget, resource, rowKey, renderFields, next, sourceId));
+        this.callbacks.setData(detailData(
+            widget,
+            resource,
+            rowKey,
+            renderFields,
+            next,
+            sourceId,
+            this.callbacks.schemas(),
+        ));
         if (this.callbacks.isConnected()) this.callbacks.render();
     }
 

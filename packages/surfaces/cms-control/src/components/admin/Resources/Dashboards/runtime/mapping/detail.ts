@@ -2,7 +2,7 @@ import type { DashboardAction, DashboardField, DashboardWidget } from "@bernouy/
 import type { WDetailData, WDetailSection } from "../../widgets/w-detail/types";
 import { matchesDashboardVisibility, textAt, valueAt } from "../expressions";
 import { detailField } from "./fields";
-import type { DetailOptions } from "./types";
+import type { DetailOptions, DetailSchemas } from "./types";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 
@@ -13,6 +13,7 @@ export function detailData(
     draft: Record<string, unknown> = {},
     options: DetailOptions = {},
     sourceId = "",
+    schemas: DetailSchemas = {},
 ): WDetailData {
     const fields = { ...fieldValues(widget, resource), ...draft };
     const scope = { ...record(resource), ...fields };
@@ -24,8 +25,8 @@ export function detailData(
         actions: (widget.actions ?? [])
             .filter(action => matchesDashboardVisibility(action.visibleWhen, { fields, resource }))
             .map(actionData),
-        main: sections(widget.main, resource, fields, options, sourceId),
-        aside: sections(widget.aside ?? [], resource, fields, options, sourceId),
+        main: sections(widget.main, resource, fields, options, sourceId, schemas),
+        aside: sections(widget.aside ?? [], resource, fields, options, sourceId, schemas),
     };
 }
 
@@ -40,13 +41,14 @@ function sections(
     fields: Record<string, unknown>,
     options: DetailOptions,
     sourceId: string,
+    schemas: DetailSchemas,
 ): WDetailSection[] {
     return sections.map(section => ({
         title: section.title,
         ...(section.description ? { description: section.description } : {}),
         fields: section.fields
             .filter(field => matchesDashboardVisibility(field.visibleWhen, { fields, resource }))
-            .map(field => detailField(field, resource, fields, options, sourceId)),
+            .map(field => detailField(field, resource, fields, options, sourceId, schemas)),
     }));
 }
 

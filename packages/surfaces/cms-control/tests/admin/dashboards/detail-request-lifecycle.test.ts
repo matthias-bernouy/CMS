@@ -9,11 +9,14 @@ afterEach(() => {
 });
 
 describe("dashboard detail request lifecycle", () => {
-    test("waits for resolved bound data and coalesces equivalent lookup requests", async () => {
+    test("waits for resolved bound data and shares equivalent lookup and schema requests", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
             requests.push(new Request(input, init));
-            return Response.json({ items: [{ id: "brand-1", name: "Acme" }] });
+            return Response.json({
+                items: [{ id: "brand-1", name: "Acme" }],
+                fields: [{ id: "material", label: "Material", type: "string" }],
+            });
         }) as unknown as typeof fetch;
         const detail = detailElement(sharedLookupWidget());
         detail.setAttribute("data-source-json", "{{ dashboardData | json }}");
@@ -33,6 +36,7 @@ describe("dashboard detail request lifecycle", () => {
             secondaryBrandId: "brand-1",
         }));
         await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("option[value='brand-1']")));
+        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='material']")));
 
         expect(requests).toHaveLength(1);
         expect(requests[0]?.url).toContain("categoryId=category-1");
@@ -145,6 +149,9 @@ function sharedLookupWidget(): unknown {
         { id: "categoryId", label: "Category", path: "categoryId", type: "text" },
         { id: "brandId", label: "Brand", path: "brandId", type: "combobox", lookup },
         { id: "secondaryBrandId", label: "Secondary brand", path: "secondaryBrandId", type: "combobox", lookup },
+        { id: "metadata", label: "Metadata", path: "metadata", type: "schema", schema: {
+            endpoint: "brands", params: { categoryId: "$field.categoryId" }, itemsPath: "fields",
+        } },
     ]);
 }
 

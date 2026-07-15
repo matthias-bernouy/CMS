@@ -10,6 +10,7 @@ import { readFieldControlValue } from "../controls";
 import type { WDetailData } from "../types";
 import { DetailFieldState, parseJson, type DetailWidget } from "./fieldState";
 import { DetailLookups } from "./lookups";
+import { DetailSchemasState } from "./schemas";
 import { addTableRow, removeTableRow, toggleChip, updateDerivedTables } from "./tableValues";
 
 export class DetailEvents {
@@ -20,6 +21,7 @@ export class DetailEvents {
         private readonly root: ShadowRoot,
         private readonly fields: DetailFieldState,
         private readonly lookups: DetailLookups,
+        private readonly schemas: DetailSchemasState,
         private readonly isBound: () => boolean,
         private readonly readData: () => WDetailData,
         private readonly refreshConditionalFields: () => void,
@@ -59,16 +61,21 @@ export class DetailEvents {
         const chip = target?.closest<HTMLButtonElement>(".chip");
         if (chip) toggleChip(chip, this.emitFieldChange);
         const tableAdd = target?.closest<HTMLButtonElement>("[data-table-add]");
-        if (tableAdd) addTableRow(tableAdd, this.fields, this.emitFieldChange);
         const tableRemove = target?.closest<HTMLButtonElement>("[data-table-remove]");
+        const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest<HTMLElement>("[data-field-control]");
+        if (tableAdd) addTableRow(tableAdd, this.fields, this.emitFieldChange);
         if (tableRemove) removeTableRow(tableRemove, this.fields, this.emitFieldChange);
+        if (changedControl) this.afterFieldChange(changedControl.dataset.fieldControl ?? "");
     };
 
     private onInput = (event: Event): void => {
         const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (control && field?.input === "table") updateDerivedTables(field.id, this.fields);
-        if (field && this.isBound()) this.lookups.schedule(field.id);
+        if (field && this.isBound()) {
+            this.lookups.schedule(field.id);
+            this.schemas.schedule(field.id);
+        }
     };
 
     private onChange = (event: Event): void => {
@@ -76,8 +83,7 @@ export class DetailEvents {
         if (!control) return;
         this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
         updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
-        if (this.isBound()) this.lookups.schedule(control.dataset.fieldControl ?? "");
-        this.refreshConditionalFields();
+        this.afterFieldChange(control.dataset.fieldControl ?? "");
     };
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {
@@ -104,6 +110,14 @@ export class DetailEvents {
             ...(created ? { created } : {}),
         });
     };
+
+    private afterFieldChange(fieldId: string): void {
+        if (this.isBound()) {
+            this.lookups.schedule(fieldId);
+            this.schemas.schedule(fieldId);
+        }
+        this.refreshConditionalFields();
+    }
 }
 
 function findActionTarget(event: Event): HTMLElement | undefined {

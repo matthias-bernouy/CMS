@@ -7,7 +7,7 @@ import type {
 import { valueAt } from "../expressions";
 import { mediaValue } from "../media";
 import { nestedLookupKey } from "../lookups/targets";
-import type { DetailOptions } from "./types";
+import type { DetailOptions, DetailSchemas } from "./types";
 
 export function detailField(
     field: DashboardField,
@@ -15,6 +15,7 @@ export function detailField(
     fields: Record<string, unknown>,
     options: DetailOptions,
     sourceId: string,
+    schemas: DetailSchemas = {},
 ): WDetailField {
     const value = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
     const base = {
@@ -48,6 +49,12 @@ export function detailField(
         ...(field.addLabel ? { addLabel: field.addLabel } : {}),
         ...(field.minItems !== undefined ? { minItems: field.minItems } : {}),
         ...(field.maxItems !== undefined ? { maxItems: field.maxItems } : {}) };
+    if (field.type === "schema") {
+        const schema = schemas[field.id];
+        return { ...base, input: "schema", value: recordValue(value),
+            schemaDefinitions: schemaDefinitions(field, fields, schema?.definitions ?? []),
+            schemaStatus: schema?.status ?? "loading" };
+    }
     if (field.type === "media") return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
     if (field.type === "readonly") return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     return { ...base, input: "text", value: textValue(value) };
@@ -109,6 +116,24 @@ function tableValue(value: unknown): Record<string, unknown>[] {
     return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => (
         item !== null && typeof item === "object" && !Array.isArray(item)
     )) : [];
+}
+function recordValue(value: unknown): Record<string, unknown> {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+        ? { ...value as Record<string, unknown> }
+        : {};
+}
+function schemaDefinitions(
+    field: Extract<DashboardField, { type: "schema" }>,
+    fields: Record<string, unknown>,
+    definitions: DetailSchemas[string]["definitions"],
+): DetailSchemas[string]["definitions"] {
+    if (!field.exclude) return definitions;
+    const source = valueAt(fields, field.exclude.from.slice("$field.".length));
+    const excluded = new Set((Array.isArray(source) ? source : [source]).flatMap(item => {
+        const value = valueAt(item, field.exclude!.valuePath);
+        return typeof value === "string" || typeof value === "number" ? [String(value)] : [];
+    }));
+    return definitions.filter(definition => !excluded.has(definition.id));
 }
 function isCreatable(field: Extract<DashboardField, { type: "combobox" | "tokens" }>): boolean {
     return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");

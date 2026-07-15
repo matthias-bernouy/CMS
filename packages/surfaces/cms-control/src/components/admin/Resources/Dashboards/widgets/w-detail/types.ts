@@ -26,6 +26,15 @@ export type WDetailTableDerive = {
 
 export type WDetailTableRow = Record<string, unknown>;
 
+export type WDetailSchemaDefinition = {
+    id: string;
+    label: string;
+    type: "string" | "number" | "boolean";
+    required?: boolean;
+    unit?: string;
+    options?: WDetailOption[];
+};
+
 type WDetailReorderableListFieldBase = {
     id: string;
     label: string;
@@ -40,19 +49,23 @@ export type WDetailReorderableListField = WDetailReorderableListFieldBase & (
     | { type: "combobox"; options: WDetailOption[] }
 );
 
-export type WDetailFieldValue = string | number | boolean | string[] | DashboardMediaItem[] | WDetailTableRow[];
+export type WDetailFieldValue = string | number | boolean | string[] | DashboardMediaItem[]
+    | WDetailTableRow[] | Record<string, unknown>;
 
 export type WDetailField = {
     id: string;
     label: string;
     value: WDetailFieldValue;
-    input: "text" | "number" | "checkbox" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "table" | "reorderable-list" | "readonly" | "badge";
+    input: "text" | "number" | "checkbox" | "textarea" | "select" | "combobox" | "tokens" | "chips"
+        | "media-list" | "table" | "reorderable-list" | "schema" | "readonly" | "badge";
     options?: WDetailOption[];
     columns?: WDetailTableColumn[];
     derive?: WDetailTableDerive;
     itemKey?: string;
     positionPath?: string;
     reorderableFields?: WDetailReorderableListField[];
+    schemaDefinitions?: WDetailSchemaDefinition[];
+    schemaStatus?: "loading" | "ready" | "error";
     addLabel?: string;
     minItems?: number;
     maxItems?: number;

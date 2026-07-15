@@ -90,6 +90,13 @@ function sameSectionFields(current: WDetailSection[], next: WDetailSection[]): b
         const nextSection = next[sectionIndex];
         return nextSection !== undefined
             && section.fields.length === nextSection.fields.length
-            && section.fields.every((field, fieldIndex) => field.id === nextSection.fields[fieldIndex]?.id);
+            && section.fields.every((field, fieldIndex) => sameFieldShape(field, nextSection.fields[fieldIndex]));
     });
+}
+
+function sameFieldShape(current: WDetailField, next: WDetailField | undefined): boolean {
+    if (!next || current.id !== next.id || current.input !== next.input) return false;
+    if (current.input !== "schema" && next.input !== "schema") return true;
+    return current.schemaStatus === next.schemaStatus
+        && JSON.stringify(current.schemaDefinitions) === JSON.stringify(next.schemaDefinitions);
 }

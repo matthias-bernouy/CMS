@@ -8,9 +8,12 @@ import { DetailEvents } from "./runtime/events";
 import { DetailFieldState, parseJson, type DetailWidget } from "./runtime/fieldState";
 import { DetailLookups } from "./runtime/lookups";
 import { DetailRequestCoordinator } from "./runtime/requests";
+import { DetailSchemasState } from "./runtime/schemas";
+import schemaCss from "./runtime/schemas/style.css" with { type: "text" };
 import type { WDetailData, WDetailField, WDetailSection } from "./types";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
+const styles = [css, schemaCss].join("\n") as unknown as string;
 
 export class DashboardWDetail extends Component {
     private value: WDetailData = emptyDetailData();
@@ -18,6 +21,7 @@ export class DashboardWDetail extends Component {
     private readonly view: DetailView;
     private readonly requests: DetailRequestCoordinator;
     private readonly lookups: DetailLookups;
+    private readonly schemas: DetailSchemasState;
     private readonly events: DetailEvents;
     private mode: "bound" | "manual" = "bound";
     private bindingRevision = 0;
@@ -25,7 +29,7 @@ export class DashboardWDetail extends Component {
     private syncScheduled = false;
 
     constructor() {
-        super({ css: css as unknown as string, template: template as unknown as string });
+        super({ css: styles, template: template as unknown as string });
         const root = this.shadowRoot!;
         this.fields = new DetailFieldState(root, this.dataset, () => this.value);
         this.view = new DetailView(root);
@@ -34,16 +38,16 @@ export class DashboardWDetail extends Component {
             setData: value => { this.value = value; },
             render: () => this.render(),
             isConnected: () => this.isConnected,
+            schemas: () => this.schemas.values,
         });
-        this.events = new DetailEvents(
-            this,
-            root,
-            this.fields,
-            this.lookups,
-            () => this.mode === "bound",
-            () => this.value,
-            () => this.refreshConditionalFields(),
-        );
+        this.schemas = new DetailSchemasState(this.dataset, this.fields, this.requests, {
+            setData: value => { this.value = value; },
+            render: () => this.render(),
+            isConnected: () => this.isConnected,
+            options: () => this.lookups.options,
+        });
+        this.events = new DetailEvents(this, root, this.fields, this.lookups, this.schemas,
+            () => this.mode === "bound", () => this.value, () => this.refreshConditionalFields());
     }
 
     set data(value: WDetailData) {
@@ -96,14 +100,7 @@ export class DashboardWDetail extends Component {
         const resource = this.fields.currentResource();
         if (!widget || resource === undefined) return;
         const previous = this.value;
-        const next = detailData(
-            widget,
-            resource,
-            this.value.rowKey,
-            this.fields.currentFields(),
-            this.lookups.options,
-            this.dataset.sourceId ?? "",
-        );
+        const next = this.mapData(widget, resource, this.value.rowKey, this.fields.currentFields());
         this.value = next;
         this.view.refresh(previous, next);
     }
@@ -128,10 +125,19 @@ export class DashboardWDetail extends Component {
         this.requests.syncScope(scopeKey);
         this.fields.syncScope(scopeKey);
         this.lookups.syncScope(scopeKey);
-        this.value = detailData(widget, resource, rowKey, this.fields.draft, this.lookups.options, sourceId);
+        this.schemas.syncScope(scopeKey);
+        this.value = this.mapData(widget, resource, rowKey, this.fields.draft);
         if (this.isConnected) this.render();
         if (!sourceId) return;
-        void this.lookups.load(widget, resource, rowKey, sourceId, fieldValues(widget, resource), { useLatestFields: true });
+        const fields = fieldValues(widget, resource);
+        void this.lookups.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
+        void this.schemas.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
+    }
+
+    private mapData(widget: DetailWidget, resource: unknown, rowKey: string,
+        fields: Record<string, unknown>): WDetailData {
+        return detailData(widget, resource, rowKey, fields, this.lookups.options,
+            this.dataset.sourceId ?? "", this.schemas.values);
     }
 
     private scheduleBoundDataSync(): void {
@@ -149,6 +155,7 @@ export class DashboardWDetail extends Component {
 
     private invalidateRequests(): void {
         this.lookups.clear();
+        this.schemas.clear();
         this.requests.clear();
     }
 

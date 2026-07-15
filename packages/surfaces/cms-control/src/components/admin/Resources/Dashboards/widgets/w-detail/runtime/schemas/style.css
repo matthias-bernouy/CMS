@@ -1,0 +1,25 @@
+.detail-schema {
+    display: grid;
+    gap: 12px;
+}
+
+.detail-schema-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.detail-schema-unit,
+.detail-schema-status {
+    color: #66736f;
+    font-size: 12px;
+}
+
+.detail-schema-unit {
+    padding-bottom: 9px;
+}
+
+.detail-schema-status-error {
+    color: #8a1f12;
+}
