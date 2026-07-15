@@ -1,12 +1,12 @@
 import type { DashboardVisibilityRule } from "../interfaces/Dashboard";
+import { isSafeDashboardExpression } from "./dashboardPaths";
 
 export const DASHBOARD_VISIBILITY_MAX_DEPTH = 10;
 export const DASHBOARD_VISIBILITY_MAX_NODES = 500;
 
-const VISIBILITY_EXPRESSION = /^\$(field|resource)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
-
 export function isDashboardVisibilityExpression(value: unknown): value is string {
-    return typeof value === "string" && VISIBILITY_EXPRESSION.test(value);
+    return typeof value === "string"
+        && isSafeDashboardExpression(value, ["field", "resource"], true);
 }
 
 export function evaluateDashboardVisibility(

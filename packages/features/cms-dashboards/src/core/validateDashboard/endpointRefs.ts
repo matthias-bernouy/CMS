@@ -50,6 +50,7 @@ export function validateEndpointRef(
     }
     validateExpressionMap(ref.params, `${path}.params`, errors);
     validateExpressionMap(ref.body, `${path}.body`, errors);
+    for (const key of Object.keys(ref.body ?? {})) validatePath(key, key, `${path}.body`, errors);
     if (endpoint && ref.params) validateEndpointParams(endpoint, ref.params, `${path}.params`, errors);
     if (endpoint && ref.body && endpoint.input?.body) validateEndpointBody(endpoint, ref.body, `${path}.body`, errors);
 }

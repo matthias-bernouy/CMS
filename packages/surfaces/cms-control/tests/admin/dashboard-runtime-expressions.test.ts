@@ -1,5 +1,7 @@
-import { describe, expect, test } from "bun:test";
-import { resolveBody } from "cms-control/components/admin/Resources/Dashboards/runtime/expressions";
+import { afterEach, describe, expect, test } from "bun:test";
+import { resolveBody, valueAt } from "cms-control/components/admin/Resources/Dashboards/runtime/expressions";
+
+afterEach(() => delete (Object.prototype as Record<string, unknown>).dashboardPolluted);
 
 describe("dashboard runtime expressions", () => {
     test("resolves dotted action body paths into nested objects", () => {
@@ -25,5 +27,19 @@ describe("dashboard runtime expressions", () => {
                 locale: "fr-FR",
             },
         });
+    });
+
+    test("does not read or write through prototype path segments", () => {
+        const prototype = Object.prototype as Record<string, unknown>;
+        delete prototype.dashboardPolluted;
+
+        expect(() => resolveBody({
+            "safe.value": "kept",
+            "__proto__.dashboardPolluted": "blocked",
+        }, {})).toThrow('Unsafe dashboard body path "__proto__.dashboardPolluted"');
+
+        expect(prototype.dashboardPolluted).toBeUndefined();
+        expect(valueAt({}, "__proto__.dashboardPolluted")).toBeUndefined();
+        expect(valueAt({}, "toString")).toBeUndefined();
     });
 });

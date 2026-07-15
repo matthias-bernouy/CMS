@@ -46,5 +46,10 @@ export {
     isDashboardVisibilityExpression,
 } from "../core/dashboardVisibility";
 export {
+    dashboardPathSegments,
+    isSafeDashboardExpression,
+    isSafeDashboardPath,
+} from "../core/dashboardPaths";
+export {
     applyDashboardSourceOverlays,
 } from "../core/sourceOverlayDashboard";

@@ -6,8 +6,8 @@ import type {
 } from "../../interfaces/Dashboard";
 import { validateEndpointRef } from "./endpointRefs";
 import {
-    ACTION_AFTER_EXPR,
     isSafeDownloadFilename,
+    isSafeActionAfterExpression,
     validateRequiredId,
     validateVisibility,
 } from "./shared";
@@ -65,7 +65,7 @@ function validateActionAfter(
 
 function validateActionAfterExpression(path: string, value: string, errors: string[]): void {
     if (!value.startsWith("$")) return;
-    if (!ACTION_AFTER_EXPR.test(value)) errors.push(`${path} has an invalid binding expression`);
+    if (!isSafeActionAfterExpression(value)) errors.push(`${path} has an invalid binding expression`);
 }
 
 function findWidget(widgets: DashboardWidget[], id: string): DashboardWidget | null {

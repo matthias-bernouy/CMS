@@ -4,15 +4,20 @@ import type {
     DashboardVisibilityRule,
 } from "../../interfaces/Dashboard";
 import {
+    isSafeDashboardExpression,
+    isSafeDashboardPath,
+} from "../dashboardPaths";
+import {
     DASHBOARD_VISIBILITY_MAX_DEPTH,
     DASHBOARD_VISIBILITY_MAX_NODES,
     isDashboardVisibilityExpression,
 } from "../dashboardVisibility";
 
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
-const SAFE_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
-const PARAM_EXPR = /^\$(row|resource|field|filter|param|selection|search|value|input|user|media)(\.[A-Za-z_$][\w$]*)*$/;
-export const ACTION_AFTER_EXPR = /^\$(result|selection)(\.[A-Za-z_$][\w$]*)*$/;
+const PARAM_EXPRESSION_ROOTS = [
+    "row", "resource", "field", "filter", "param", "selection",
+    "search", "value", "input", "user", "media",
+];
 
 export function validateRequiredId(path: string, value: string | undefined, errors: string[]): void {
     if (value === undefined || value === "") {
@@ -37,7 +42,7 @@ export function validateRequiredPath(name: string, value: string | undefined, pa
 
 export function validatePath(name: string, value: string | undefined, path: string, errors: string[]): void {
     if (value === undefined) return;
-    if (!SAFE_PATH.test(value)) errors.push(`${path}.${name} must be a dotted data path`);
+    if (!isSafeDashboardPath(value)) errors.push(`${path}.${name} must be a safe dotted data path`);
 }
 
 export function validateExpressionMap(map: Record<string, string> | undefined, path: string, errors: string[]): void {
@@ -54,7 +59,13 @@ export function validateExpressionMap(map: Record<string, string> | undefined, p
 
 function validateExpression(path: string, value: string, errors: string[]): void {
     if (!value.startsWith("$")) return;
-    if (!PARAM_EXPR.test(value)) errors.push(`${path} has an invalid binding expression`);
+    if (!isSafeDashboardExpression(value, PARAM_EXPRESSION_ROOTS)) {
+        errors.push(`${path} has an invalid binding expression`);
+    }
+}
+
+export function isSafeActionAfterExpression(value: string): boolean {
+    return isSafeDashboardExpression(value, ["result", "selection"]);
 }
 
 export function validateBinding(binding: DashboardBinding | undefined, path: string, errors: string[]): void {

@@ -1,4 +1,5 @@
 import { Component } from "@bernouy/components/base";
+import { dashboardPathSegments } from "@bernouy/cms-dashboards";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
@@ -86,7 +87,7 @@ export class DashboardWReorderableList extends Component {
         const row = document.createElement("div");
         row.className = "row";
         row.dataset.index = String(index);
-        row.dataset.itemKey = String(item[this.value.itemKey] ?? index);
+        row.dataset.itemKey = String(valueAt(item, this.value.itemKey) ?? index);
         row.style.setProperty(
             "--reorderable-columns",
             ["24px", ...this.value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "),
@@ -235,16 +236,23 @@ function isRecord(value: unknown): value is ReorderableListItem {
 }
 
 function textAt(value: unknown, path: string): string {
-    const resolved = path.split(".").filter(Boolean).reduce<unknown>((current, part) => isRecord(current) ? current[part] : undefined, value);
+    const resolved = valueAt(value, path);
     return resolved === null || resolved === undefined ? "" : String(resolved);
 }
 
+function valueAt(value: unknown, path: string): unknown {
+    const parts = dashboardPathSegments(path);
+    return parts?.reduce<unknown>((current, part) => (
+        isRecord(current) && Object.hasOwn(current, part) ? current[part] : undefined
+    ), value);
+}
+
 function setAt(target: ReorderableListItem, path: string, value: unknown): void {
-    const parts = path.split(".").filter(Boolean);
-    if (!parts.length) return;
+    const parts = dashboardPathSegments(path);
+    if (!parts) return;
     let current: ReorderableListItem = target;
     for (const part of parts.slice(0, -1)) {
-        const existing = current[part];
+        const existing = Object.hasOwn(current, part) ? current[part] : undefined;
         if (!isRecord(existing)) current[part] = {};
         current = current[part] as ReorderableListItem;
     }

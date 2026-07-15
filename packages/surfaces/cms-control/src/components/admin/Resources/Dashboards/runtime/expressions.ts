@@ -1,4 +1,5 @@
 import {
+    dashboardPathSegments,
     evaluateDashboardVisibility,
     type DashboardVisibilityRule,
 } from "@bernouy/cms-dashboards";
@@ -15,10 +16,13 @@ export type RuntimeVars = {
 
 export function valueAt(value: unknown, path: string | undefined): unknown {
     if (!path) return value;
-    return path.split(".").filter(Boolean).reduce((current, part) => {
+    const segments = dashboardPathSegments(path);
+    if (!segments) return undefined;
+    return segments.reduce((current, part) => {
         if (current === null || current === undefined) return undefined;
         if (Array.isArray(current) && /^\d+$/.test(part)) return current[Number(part)];
         if (typeof current !== "object") return undefined;
+        if (!Object.hasOwn(current, part)) return undefined;
         return (current as Record<string, unknown>)[part];
     }, value);
 }
@@ -79,15 +83,16 @@ export function resolveBody(body: Record<string, string> | undefined, vars: Runt
 }
 
 function setBodyValue(target: Record<string, unknown>, path: string, value: unknown): void {
-    const parts = path.split(".").filter(Boolean);
-    if (parts.length <= 1) {
-        target[path] = value;
+    const parts = dashboardPathSegments(path);
+    if (!parts) throw new Error(`Unsafe dashboard body path "${path}"`);
+    if (parts.length === 1) {
+        target[parts[0]!] = value;
         return;
     }
 
     let current = target;
     for (const part of parts.slice(0, -1)) {
-        const existing = current[part];
+        const existing = Object.hasOwn(current, part) ? current[part] : undefined;
         if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
             current[part] = {};
         }
