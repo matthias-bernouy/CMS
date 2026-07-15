@@ -1,6 +1,6 @@
 import type { TriggerDto } from "@bernouy/cms-triggers";
-import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
-import { isRecord, text } from "../values";
+import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
+import { isRecord, text } from "../../values";
 
 export function parseTriggerTemplate(value: Record<string, unknown>, name: string): TriggerDto {
     const id = text(value.id);

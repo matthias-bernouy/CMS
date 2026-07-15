@@ -1,7 +1,7 @@
 import type { FunctionDto } from "@bernouy/cms-functions";
-import { IntegrationInputError, MissingIntegrationParam } from "../../errors";
-import { isRecord, text } from "../values";
-import { parseAccessTemplate } from "./common";
+import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
+import { isRecord, text } from "../../values";
+import { parseAccessTemplate } from "../common";
 
 export function parseFunctionTemplate(value: Record<string, unknown>, name: string): FunctionDto {
     const id = text(value.id);

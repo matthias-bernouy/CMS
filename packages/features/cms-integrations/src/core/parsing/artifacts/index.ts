@@ -3,14 +3,14 @@ import type { DeclarativeArtifactTemplate } from "../../../interfaces/Integratio
 import { isRecord, text } from "../values";
 import { parseBlocTemplate } from "./bloc";
 import { parseDashboardTemplate } from "./dashboard";
-import { parseFunctionTemplate } from "./function";
+import { parseFunctionTemplate } from "./workflows/function";
 import {
     parseDashboardRelationProjectionTemplate,
     parseRelationTemplate,
-} from "./relation";
+} from "./relations/relation";
 import { parseSourceTemplate } from "./source";
 import { parseSourceOverlayTemplate } from "./sourceOverlay";
-import { parseTriggerTemplate } from "./trigger";
+import { parseTriggerTemplate } from "./workflows/trigger";
 
 export function parseArtifactTemplates(value: unknown): DeclarativeArtifactTemplate[] {
     if (value === undefined || value === null) return [];

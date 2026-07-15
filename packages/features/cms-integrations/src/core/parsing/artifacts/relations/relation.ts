@@ -10,9 +10,9 @@ import type {
     RelationSide,
 } from "@bernouy/cms-relations";
 import { RELATION_CARDINALITIES } from "@bernouy/cms-relations";
-import { IntegrationInputError } from "../../errors";
-import { isRecord, text } from "../values";
-import { parseStringRecord, requiredText } from "./common";
+import { IntegrationInputError } from "../../../errors";
+import { isRecord, text } from "../../values";
+import { parseStringRecord, requiredText } from "../common";
 import { parseRelationDashboardActions } from "./relationDashboardActions";
 
 export function parseRelationTemplate(value: Record<string, unknown>, name: string): CmsRelation {

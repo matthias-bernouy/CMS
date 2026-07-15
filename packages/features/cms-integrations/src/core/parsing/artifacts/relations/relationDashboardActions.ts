@@ -1,7 +1,7 @@
 import type { RelationDashboardAction } from "@bernouy/cms-relations";
-import { IntegrationInputError } from "../../errors";
-import { isRecord, text } from "../values";
-import { parseStringRecord, requiredText } from "./common";
+import { IntegrationInputError } from "../../../errors";
+import { isRecord, text } from "../../values";
+import { parseStringRecord, requiredText } from "../common";
 
 export function parseRelationDashboardActions(value: unknown, name: string): RelationDashboardAction[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
