@@ -1510,10 +1510,10 @@ footer slot[name="footer"]::slotted(button:hover) {
     if (e.target === r)
       t.close();
   };
-  var zr = (t, e) => {
+  var Ir = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var Ir = (t, e) => {
+  var zr = (t, e) => {
     e.preventDefault(), t.close();
   };
   var Fr = (t) => {
@@ -1551,8 +1551,8 @@ footer slot[name="footer"]::slotted(button:hover) {
       }
     }
     _onBackdrop = (t) => Hr(this, t);
-    _onCloseClick = (t) => zr(this, t);
-    _onCancel = (t) => Ir(this, t);
+    _onCloseClick = (t) => Ir(this, t);
+    _onCancel = (t) => zr(this, t);
     _onClose = () => Fr(this);
     get open() {
       return this.hasAttribute("open");
@@ -2019,7 +2019,7 @@ dialog[open]::backdrop { opacity: 1; }
     }
   }
 
-  class Q extends s {
+  class J extends s {
     static formAssociated = true;
     _internals;
     _defaultChecked = false;
@@ -2255,7 +2255,7 @@ input:focus-visible ~ .custom-box {
   };
   var ed = Wr + ti;
 
-  class ni extends Q {
+  class ni extends J {
     _input;
     _labelText;
     _labelSlot;
@@ -2334,7 +2334,7 @@ input:focus-visible ~ .custom-box {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var ut = `:host {
+  var bt = `:host {
     display: block;
 }
 
@@ -2446,7 +2446,7 @@ input:disabled {
     color: var(--text-main, #1e293b);
 }
 `;
-  var pt = `.listbox {
+  var vt = `.listbox {
     position: absolute;
     inset-block-start: calc(100% + 3px);
     inset-inline: 0;
@@ -2546,21 +2546,21 @@ input:disabled {
     transform: rotate(90deg);
 }
 `;
-  function ht(t) {
+  function gt(t) {
     return Array.from(t.querySelectorAll("option")).map((e) => ({ value: e.value, label: e.textContent ?? e.value, disabled: e.disabled }));
   }
-  function mt(t, e) {
+  function ft(t, e) {
     let r = e.toLowerCase();
     return (r ? t.filter((o) => o.label.toLowerCase().includes(r)) : t).slice(0, 8).map((o) => ({ ...o, kind: "option" }));
   }
-  function bt(t, e, r, i, o) {
+  function xt(t, e, r, i, o) {
     let n = document.createElement("div");
     return n.className = `option ${t.kind}`, n.id = `option-${e}`, n.dataset.active = String(e === r), n.dataset.selected = String(t.kind === "option" && t.value === i), n.setAttribute("role", "option"), n.setAttribute("aria-selected", n.dataset.active), n.addEventListener("mousedown", (a) => {
       if (a.preventDefault(), !t.disabled)
         o(t);
     }), n.append(li(), di(t.label)), n;
   }
-  function vt() {
+  function _t() {
     let t = document.createElement("div");
     return t.className = "empty", t.textContent = "No results", t;
   }
@@ -2578,7 +2578,7 @@ input:disabled {
     let e = document.createElement("span");
     return e.className = "option-label", e.textContent = t, e;
   }
-  var nd = ut + pt;
+  var nd = bt + vt;
 
   class ci extends s {
     static formAssociated = true;
@@ -2642,7 +2642,7 @@ input:disabled {
       this.syncDisplay();
     }
     syncOptions = () => {
-      this.options = ht(this), this.value = this.getAttribute("value") ?? this.selectedValue;
+      this.options = gt(this), this.value = this.getAttribute("value") ?? this.selectedValue;
     };
     syncDisplay() {
       if (this.input && document.activeElement !== this.input)
@@ -2655,10 +2655,10 @@ input:disabled {
     renderList(t) {
       if (!this.listbox)
         return;
-      if (this.items = mt(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
+      if (this.items = ft(this.options, t), this.items.length === 0 && t && this.hasAttribute("creatable"))
         this.items = [{ kind: "create", value: t, label: `Add "${t}"`, disabled: false }];
-      if (this.listbox.replaceChildren(...this.items.map((e, r) => bt(e, r, this.activeIndex, this.selectedValue, this.selectItem))), this.items.length === 0)
-        this.listbox.append(vt());
+      if (this.listbox.replaceChildren(...this.items.map((e, r) => xt(e, r, this.activeIndex, this.selectedValue, this.selectItem))), this.items.length === 0)
+        this.listbox.append(_t());
       this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
     }
     selectItem = (t) => {
@@ -3100,14 +3100,14 @@ input:disabled {
       return;
     r.setFormValue(e.value), q(t, e, i, o), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var zi = (t, e, r) => {
+  var Ii = (t, e, r) => {
     if (!e)
       return;
     r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
   var Ld = Ci + Ti + Si;
 
-  class Ii extends s {
+  class zi extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "type", "min", "max", "step", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
@@ -3186,7 +3186,7 @@ input:disabled {
       this._input?.focus();
     }
     _onInput = () => Hi(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => zi(this, this._input, this._internals);
+    _onChange = () => Ii(this, this._input, this._internals);
   }
   var Ri = `:host {
     display: block;
@@ -3698,7 +3698,7 @@ input:disabled {
   pointer-events: none;
 }
 `;
-  var W = (t) => {
+  var tt = (t) => {
     if (!t)
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
@@ -3707,7 +3707,7 @@ input:disabled {
     if (t)
       t.textContent = e;
   };
-  var xt = (t, e, r) => {
+  var kt = (t, e, r) => {
     let i = e.findIndex((o) => o.getAttribute("value") === r);
     if (i === -1)
       return;
@@ -3716,7 +3716,7 @@ input:disabled {
       o.setAttribute("aria-checked", a.toString()), o.setAttribute("tabindex", a ? "0" : "-1");
     });
   };
-  var _t = (t, e) => {
+  var Et = (t, e) => {
     t.forEach((r) => {
       if (r.getAttribute("value") === e)
         r.setAttribute("selected", "");
@@ -3725,7 +3725,7 @@ input:disabled {
     });
   };
   var ne = (t, e) => {
-    let r = W(e);
+    let r = tt(e);
     t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, o) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
         i.setAttribute("tabindex", o === 0 ? "0" : "-1");
@@ -3734,14 +3734,14 @@ input:disabled {
           return;
         t.value = i.getAttribute("value") ?? "", i.focus();
       };
-    }), xt(t, r, t.value), _t(r, t.value);
+    }), kt(t, r, t.value), Et(r, t.value);
   };
   var po = (t, e, r) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let o = W(e);
+    let o = tt(e);
     if (o.length === 0)
       return;
     let n = o.findIndex((d) => d.getAttribute("value") === t.value), a = n === -1 ? 0 : n, l = a;
@@ -3818,8 +3818,8 @@ input:disabled {
       if (this.getAttribute("value") !== t)
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
-      let e = W(this._slot);
-      if (xt(this, e, t), _t(e, t), !this._silentValueChange)
+      let e = tt(this._slot);
+      if (kt(this, e, t), Et(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
     }
     get name() {
@@ -4028,7 +4028,7 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var yt = (t, e) => {
+  var Lt = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -4107,17 +4107,17 @@ p9r-tag:hover {
     return e ? [e.trim()] : [];
   };
   var _ = (t) => t;
-  var tt = (t, e) => {
+  var et = (t, e) => {
     let r = _(t), i = t.getAttribute("mode") || "multiple", o = e.trim();
     if (!o || !r._input)
       return;
     if (i === "multiple") {
       if (!r._tags.includes(o))
-        r._tags.push(o), yt(r._liveRegion, `${o} added`);
+        r._tags.push(o), Lt(r._liveRegion, `${o} added`);
       r._input.value = "";
     } else
-      r._tags = [o], r._input.value = o, yt(r._liveRegion, `${o} selected`);
-    r._activeIndex = -1, wt(t), Et(t);
+      r._tags = [o], r._input.value = o, Lt(r._liveRegion, `${o} selected`);
+    r._activeIndex = -1, At(t), Tt(t);
   };
   var Co = (t, e) => {
     let r = _(t), i = e.trim();
@@ -4129,7 +4129,7 @@ p9r-tag:hover {
     let r = _(t), i = r._tags[e];
     if (i === undefined)
       return;
-    r._tags.splice(e, 1), yt(r._liveRegion, `${i} removed`), wt(t), r._input?.focus();
+    r._tags.splice(e, 1), Lt(r._liveRegion, `${i} removed`), At(t), r._input?.focus();
   };
   var So = (t) => {
     let e = _(t);
@@ -4137,7 +4137,7 @@ p9r-tag:hover {
       return;
     To(t, e._tags.length - 1);
   };
-  var wt = (t) => {
+  var At = (t) => {
     let e = _(t);
     if (le(t), e._internals.setFormValue(e.value), e._silent)
       return;
@@ -4149,13 +4149,13 @@ p9r-tag:hover {
   };
   var de = (t, e) => {
     let r = _(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = Eo(r._allSuggestions, o, e), r._activeIndex = -1, kt(t);
+    r._suggestions = Eo(r._allSuggestions, o, e), r._activeIndex = -1, Ct(t);
   };
-  var kt = (t) => {
+  var Ct = (t) => {
     let e = _(t);
-    ko(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => tt(t, r));
+    ko(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => et(t, r));
   };
-  var Et = (t) => {
+  var Tt = (t) => {
     let e = _(t);
     se(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
@@ -4165,45 +4165,45 @@ p9r-tag:hover {
     de(t, e.value.trim().toLowerCase());
   };
   var Ho = (t) => {
-    setTimeout(() => Et(t), 150);
+    setTimeout(() => Tt(t), 150);
   };
-  var zo = (t, e) => {
+  var Io = (t, e) => {
     if (!e)
       return;
     if (de(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
       Co(t, e.value);
   };
-  var Io = (t, e, r) => {
+  var zo = (t, e, r) => {
     if (!e)
       return;
     let i = t.getAttribute("mode") || "multiple", o = t;
     if (r.key === "ArrowDown") {
       if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), kt(t);
+      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), Ct(t);
     } else if (r.key === "ArrowUp") {
       if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      o._activeIndex = Math.max(o._activeIndex - 1, -1), kt(t);
+      o._activeIndex = Math.max(o._activeIndex - 1, -1), Ct(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
       let n = o._activeIndex >= 0 ? o._suggestions[o._activeIndex] : undefined;
       if (n)
-        tt(t, n.value);
+        et(t, n.value);
       else {
         let a = e.value.trim();
         if (a)
-          tt(t, a);
+          et(t, a);
       }
     } else if (r.key === "Escape")
-      r.preventDefault(), Et(t);
+      r.preventDefault(), Tt(t);
     else if (r.key === "Backspace" && e.value === "" && i === "multiple")
       So(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
       let n = e.value.trim();
       if (n)
-        tt(t, n);
+        et(t, n);
     }
   };
   var Xd = _o + yo;
@@ -4273,8 +4273,8 @@ p9r-tag:hover {
     }
     _onFocus = () => Mo(this, this._input);
     _onBlur = () => Ho(this);
-    _onInput = () => zo(this, this._input);
-    _onKeyDown = (t) => Io(this, this._input, t);
+    _onInput = () => Io(this, this._input);
+    _onKeyDown = (t) => zo(this, this._input, t);
     get value() {
       return Lo(this.getAttribute("mode") || "multiple", this._tags);
     }
@@ -4282,7 +4282,7 @@ p9r-tag:hover {
       let e = this.getAttribute("mode") || "multiple";
       if (this._tags = Ao(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      wt(this);
+      At(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -4461,7 +4461,7 @@ p9r-tag:hover {
     let i = (t.textContent ?? "").length > 0, o = !e.hidden;
     r.hidden = !i && !o;
   };
-  var et = (t, e) => {
+  var rt = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
@@ -4544,7 +4544,7 @@ p9r-tag:hover {
   var qo = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), O(t, e, i, o), et(t, e);
+    r.setFormValue(e.value), O(t, e, i, o), rt(t, e);
   };
   var Bo = (t, e) => {
     if (!t)
@@ -4598,7 +4598,7 @@ p9r-tag:hover {
       else if (t === "max-count")
         pe(this, this._counter, this._max, this._hint, this._meta), O(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
-        et(this, this._textarea);
+        rt(this, this._textarea);
       else
         he(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
     }
@@ -4608,7 +4608,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), O(this, this._textarea, this._counter, this._count), et(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), O(this, this._textarea, this._counter, this._count), rt(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -4781,7 +4781,7 @@ input:hover:not(:disabled) {
     return t.map((r) => e.find((i) => i.value === r) ?? { value: r, label: r, disabled: false });
   }
   function Uo(t, e, r, i) {
-    let o = t.filter((a) => !e.includes(a.value)), n = mt(o, r);
+    let o = t.filter((a) => !e.includes(a.value)), n = ft(o, r);
     if (n.length > 0 || !r || !i || e.includes(r))
       return n;
     return [{ kind: "create", value: r, label: `Add "${r}"`, disabled: false }];
@@ -4812,7 +4812,7 @@ input:hover:not(:disabled) {
     selected = [];
     activeIndex = -1;
     constructor() {
-      super({ css: ut + pt + Oo, template: No });
+      super({ css: bt + vt + Oo, template: No });
       this.internalsRef = this.attachInternals(), this.input = this.shadowRoot?.querySelector("input") ?? null, this.labelEl = this.shadowRoot?.querySelector(".label") ?? null, this.tokensEl = this.shadowRoot?.querySelector("[data-tokens]") ?? null, this.listbox = this.shadowRoot?.querySelector("[role='listbox']") ?? null, this.createButton = this.shadowRoot?.querySelector("[data-create]") ?? null, this.optionSlot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
@@ -4859,7 +4859,7 @@ input:hover:not(:disabled) {
       this.syncDisplay();
     }
     syncOptions = () => {
-      this.options = ht(this), this.value = this.getAttribute("value") ?? this.value;
+      this.options = gt(this), this.value = this.getAttribute("value") ?? this.value;
     };
     syncDisplay() {
       if (this.renderTokens(), this.internalsRef.setFormValue(this.value), this.input)
@@ -4871,13 +4871,13 @@ input:hover:not(:disabled) {
     renderList(t) {
       if (!this.listbox)
         return;
-      if (this.items = Uo(this.options, this.selected, t, this.hasAttribute("creatable")), this.listbox.replaceChildren(...this.items.map((e, r) => bt(e, r, this.activeIndex, "", this.selectItem))), this.items.length === 0)
+      if (this.items = Uo(this.options, this.selected, t, this.hasAttribute("creatable")), this.listbox.replaceChildren(...this.items.map((e, r) => xt(e, r, this.activeIndex, "", this.selectItem))), this.items.length === 0)
         this.listbox.append(this.emptyState());
       this.listbox.hidden = false, this.input?.setAttribute("aria-expanded", "true");
     }
     emptyState() {
       if (!this.hasAttribute("creatable"))
-        return vt();
+        return _t();
       return si("Type to create", () => this.input?.focus());
     }
     selectItem = (t) => {
@@ -6554,7 +6554,7 @@ p {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var Lt = (t, e, r) => {
+  var St = (t, e, r) => {
     if (r) {
       if (!t.hasAttribute("active"))
         t.setAttribute("active", "");
@@ -6565,9 +6565,9 @@ p {
       t.removeAttribute("aria-current"), e?.classList.remove("active");
     }
   };
-  var At = (t, e) => {
+  var Mt = (t, e) => {
     if (t.hasAttribute("active")) {
-      Lt(t, e, true);
+      St(t, e, true);
       return;
     }
     if (!e || !t.hasAttribute("href"))
@@ -6577,7 +6577,7 @@ p {
       return;
     try {
       let i = new URL(r, window.location.href), n = new URL(window.location.href).pathname, a = i.pathname, l = a === "/" ? n === "/" : n === a || n.startsWith(a + "/");
-      Lt(t, e, l);
+      St(t, e, l);
     } catch {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
@@ -6591,13 +6591,13 @@ p {
       return;
     r.preventDefault(), e?.click();
   };
-  var Ic = Sn + Mn;
+  var zc = Sn + Mn;
 
-  class zn extends s {
+  class In extends s {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: Ic, template: Tn });
+      super({ css: zc, template: Tn });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -6610,7 +6610,7 @@ p {
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      me(this._anchor, this.getAttribute("href")), be(this._badgeEl, this.getAttribute("badge")), At(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      me(this._anchor, this.getAttribute("href")), be(this._badgeEl, this.getAttribute("badge")), Mt(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
@@ -6624,9 +6624,9 @@ p {
         be(this._badgeEl, r);
       if (t === "active")
         if (r !== null)
-          Lt(this, this._anchor, true);
+          St(this, this._anchor, true);
         else
-          At(this, this._anchor);
+          Mt(this, this._anchor);
       if (t === "disabled") {
         let i = this.hasAttribute("disabled");
         this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
@@ -6656,7 +6656,7 @@ p {
     set active(t) {
       t ? this.setAttribute("active", "") : this.removeAttribute("active");
     }
-    _onPopstate = () => At(this, this._anchor);
+    _onPopstate = () => Mt(this, this._anchor);
     _onKey = (t) => Hn(this, this._anchor, t);
   }
   var ta = `:host {
@@ -7463,11 +7463,11 @@ p {
     _onClick = (t) => Sa(this, this._tablist, this._slot, t);
     _onKey = (t) => Ma(this, this._tablist, this._slot, t);
   }
-  var za = `<div class="panel" part="panel">
+  var Ia = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-  var Ia = `:host {
+  var za = `:host {
   display: block;
 }
 
@@ -7480,7 +7480,7 @@ p {
 
   class Fa extends s {
     constructor() {
-      super({ css: Ia, template: za });
+      super({ css: za, template: Ia });
     }
   }
   var Ra = `<span class="label" part="label"><slot></slot></span>
@@ -8026,7 +8026,7 @@ p {
     let e = new Date(t);
     return Number.isNaN(e.getTime()) ? t : Su.format(e);
   };
-  function Tt(t, e) {
+  function It(t, e) {
     return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${w(t)}</p>${e ? `<p class="empty-hint">${w(e)}</p>` : ""}</div>`;
   }
   function Ga(t) {
@@ -8201,7 +8201,7 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await $(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = Tt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        t.innerHTML = It(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
       let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? Ja(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
@@ -8293,7 +8293,7 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await $(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = Tt(this.getAttribute("empty") ?? "Aucune donnée");
+        t.innerHTML = It(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
       let o = this.getAttribute("label-field") ?? "key", n = this.getAttribute("value-field") ?? "value", a = i.map((l) => ({ label: String(l[o] ?? ""), value: Number(l[n] ?? 0) }));
@@ -8388,7 +8388,7 @@ p {
     return t instanceof Error ? t.message : String(t);
   }
   var Bu = { found: false, value: undefined };
-  function z(t, e) {
+  function I(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
@@ -8425,9 +8425,9 @@ p {
   }
   var Nu = { urlencode: (t) => encodeURIComponent(t == null ? "" : String(t)) };
   var Ou = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-  function rt(t, e, r = {}) {
+  function it(t, e, r = {}) {
     return t.replace(Ou, (i, o, n) => {
-      let a = z(e, o);
+      let a = I(e, o);
       if (!a.found)
         return "";
       let l = n ? r[n] ?? Nu[n] : undefined, u = l ? l(a.value) : a.value;
@@ -8435,12 +8435,12 @@ p {
     });
   }
   var g = "cms-binding-core";
-  var it = "cms-binding-disabled";
-  var St = "cms-source-state-force";
+  var ot = "cms-binding-disabled";
+  var zt = "cms-source-state-force";
   var h = "cms-source";
   var we = "cms-source-body";
-  var ot = "cms-source-id";
-  var nt = "cms-source-trigger";
+  var nt = "cms-source-id";
+  var at = "cms-source-trigger";
   var gs = "cms-source-method";
   var fs = "cms-source-publish";
   var xs = "cms-source-success-reset";
@@ -8485,7 +8485,7 @@ p {
       return Object.keys(t).length === 0;
     return false;
   }
-  var I = "cms-params:change";
+  var z = "cms-params:change";
   var T = "cms-state:change";
   var Ku = /#\{\s*(\w+)\s*\}/g;
   var Uu = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
@@ -8518,7 +8518,7 @@ p {
   function X(t, e = document) {
     return Ee(e).get(t.trim()) ?? "";
   }
-  function Mt(t, e, r = document) {
+  function Ft(t, e, r = document) {
     let i = t.trim();
     if (!i)
       return;
@@ -8539,21 +8539,21 @@ p {
   function Hs(t, e) {
     return Ms(Ss(t), e);
   }
-  function zs(t, e, r) {
+  function Is(t, e, r) {
     let i = Cs(t), o = Ts(t);
     if (i)
-      e.addEventListener(I, r), e.defaultView?.addEventListener?.("popstate", r);
+      e.addEventListener(z, r), e.defaultView?.addEventListener?.("popstate", r);
     if (o)
       e.addEventListener(T, r);
     return () => {
       if (i)
-        e.removeEventListener(I, r), e.defaultView?.removeEventListener?.("popstate", r);
+        e.removeEventListener(z, r), e.defaultView?.removeEventListener?.("popstate", r);
       if (o)
         e.removeEventListener(T, r);
     };
   }
   var Xu = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function Ht(t) {
+  function Rt(t) {
     return S(t).url;
   }
   function S(t) {
@@ -8562,17 +8562,17 @@ p {
       return { url: t.trim() };
     return { url: e[1].trim(), alias: e[2] };
   }
-  var Is = "cms-reload-on";
+  var zs = "cms-reload-on";
   var Fs = "cms-source:reload";
-  function zt(t) {
-    let e = t.getAttribute(nt);
+  function Pt(t) {
+    let e = t.getAttribute(at);
     return ws(e) ? e : "auto";
   }
   function Rs(t, e) {
     let r = t.ownerDocument, i = [Fs, ...Yu(t)];
     for (let a of i)
       r.addEventListener(a, e.onReload);
-    let o = zt(t);
+    let o = Pt(t);
     if (o === "submit" || o === "change") {
       let a = Zu(t) ?? t.closest("form"), l = o === "submit" ? "submit" : "change", u = o === "submit" ? e.onSubmit : e.onChange;
       return a?.addEventListener(l, u), () => {
@@ -8581,7 +8581,7 @@ p {
         a?.removeEventListener(l, u);
       };
     }
-    let n = zs(Ht(t.getAttribute(h) ?? ""), r, e.onReactiveUrlChange);
+    let n = Is(Rt(t.getAttribute(h) ?? ""), r, e.onReactiveUrlChange);
     return () => {
       for (let a of i)
         r.removeEventListener(a, e.onReload);
@@ -8593,7 +8593,7 @@ p {
     return typeof e === "function" && t instanceof e ? t : null;
   }
   function Yu(t) {
-    return (t.getAttribute(Is) ?? "").split(/\s+/).filter(Boolean);
+    return (t.getAttribute(zs) ?? "").split(/\s+/).filter(Boolean);
   }
   function Ps(t, e) {
     let r = Qu(t);
@@ -8660,20 +8660,20 @@ p {
     if (t.kind === "path")
       return Wu(t.path, e);
     if (t.kind === "not")
-      return !at(E(t.node, e));
+      return !st(E(t.node, e));
     if (t.kind === "and")
-      return at(E(t.left, e)) && at(E(t.right, e));
+      return st(E(t.left, e)) && st(E(t.right, e));
     if (t.kind === "or")
-      return at(E(t.left, e)) || at(E(t.right, e));
+      return st(E(t.left, e)) || st(E(t.right, e));
     if (t.kind === "compare")
       return tp(E(t.left, e), E(t.right, e), t.operator);
     return false;
   }
   function Wu(t, e) {
-    let r = z(e, t.trim());
+    let r = I(e, t.trim());
     return r.found ? r.value : undefined;
   }
-  function at(t) {
+  function st(t) {
     return Boolean(t);
   }
   function tp(t, e, r) {
@@ -8701,7 +8701,7 @@ p {
     }
     return false;
   }
-  function It(t) {
+  function Dt(t) {
     let e = [], r = 0;
     while (r < t.length) {
       let i = t[r];
@@ -8803,7 +8803,7 @@ p {
     return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(t);
   }
   function Bs(t) {
-    return new Vs(It(t)).parse();
+    return new Vs(Dt(t)).parse();
   }
 
   class Vs {
@@ -8876,7 +8876,7 @@ p {
   function Le(t) {
     let e = [];
     try {
-      for (let r of It(t))
+      for (let r of Dt(t))
         if (r.kind === "path")
           e.push(r.value);
     } catch {
@@ -8942,7 +8942,7 @@ p {
         t.unmount?.();
     }
   }
-  function st(t, e) {
+  function lt(t, e) {
     let r = t.nextSibling;
     while (r && r !== e) {
       let i = r.nextSibling;
@@ -9002,7 +9002,7 @@ p {
       this.filters = r;
     }
     update(t) {
-      this.node.nodeValue = rt(this.template, t, this.filters);
+      this.node.nodeValue = it(this.template, t, this.filters);
     }
   }
 
@@ -9018,7 +9018,7 @@ p {
       this.filters = i;
     }
     update(t) {
-      this.el.setAttribute(this.name, rt(this.template, t, this.filters));
+      this.el.setAttribute(this.name, it(this.template, t, this.filters));
     }
   }
 
@@ -9049,7 +9049,7 @@ p {
       this.child = this.template.mount(e, t, this.end);
     }
     unmount() {
-      this.child?.unmount(), this.child = null, st(this.start, this.end);
+      this.child?.unmount(), this.child = null, lt(this.start, this.end);
     }
   }
 
@@ -9069,7 +9069,7 @@ p {
     }
     update(t) {
       this.unmount();
-      let e = z(t, this.spec.path);
+      let e = I(t, this.spec.path);
       if (!Array.isArray(e.value)) {
         if (e.found && e.value != null)
           console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, e.value);
@@ -9088,7 +9088,7 @@ p {
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], st(this.start, this.end);
+      this.regions = [], lt(this.start, this.end);
     }
   }
 
@@ -9102,24 +9102,24 @@ p {
       this.expression = r;
     }
     update(t) {
-      st(this.start, this.end);
+      lt(this.start, this.end);
       let e = this.end.parentNode;
       if (!e)
         return;
-      let r = z(t, this.expression), i = (this.end.ownerDocument ?? document).createElement("template");
+      let r = I(t, this.expression), i = (this.end.ownerDocument ?? document).createElement("template");
       i.innerHTML = r.found && r.value != null ? String(r.value) : "", e.insertBefore(i.content, this.end);
     }
     unmount() {
-      st(this.start, this.end);
+      lt(this.start, this.end);
     }
   }
   function Se(t, e, r = {}) {
     let i = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
     return Array.from(t.childNodes).forEach((o, n) => {
-      ze(o, [n], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, i, e);
+      Ie(o, [n], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, i, e);
     }), i;
   }
-  function ze(t, e, r, i, o) {
+  function Ie(t, e, r, i, o) {
     if (t.nodeType === Node.TEXT_NODE) {
       let l = t.nodeValue ?? "";
       if (Js(l) && !Gs(l, r.submitBoundary))
@@ -9129,7 +9129,7 @@ p {
     if (t.nodeType !== Node.ELEMENT_NODE)
       return;
     let n = t;
-    if (!r.skipRepeat && n.hasAttribute(K) && !Ft(n.getAttribute(K) ?? "", r.submitBoundary)) {
+    if (!r.skipRepeat && n.hasAttribute(K) && !qt(n.getAttribute(K) ?? "", r.submitBoundary)) {
       let l = n.getAttribute(k), u = l ? Ks(l, r.submitBoundary) : false;
       i.repeats.push({ path: e, spec: qs(n.getAttribute(K) ?? ""), template: js(n, o, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !u, submitBoundary: r.submitBoundary }), rootCondition: u || !l ? null : Ae(l) });
       return;
@@ -9140,12 +9140,12 @@ p {
     }
     if (n.hasAttribute(h)) {
       Me(n, e, i, r.submitBoundary);
-      let l = n.getAttribute(nt)?.trim().toLowerCase();
+      let l = n.getAttribute(at)?.trim().toLowerCase();
       if (l !== "submit" && l !== "change")
         return;
       let u = cp(n);
       Array.from(n.childNodes).forEach((d, p) => {
-        ze(d, [...e, p], { skipCondition: false, skipRepeat: false, submitBoundary: u }, i, o);
+        Ie(d, [...e, p], { skipCondition: false, skipRepeat: false, submitBoundary: u }, i, o);
       });
       return;
     }
@@ -9155,16 +9155,16 @@ p {
     }
     let a = dp(n);
     if (a) {
-      if (!Ft(a, r.submitBoundary))
+      if (!qt(a, r.submitBoundary))
         i.rawHtml.push({ path: e, expression: a });
       return;
     }
     Me(n, e, i, r.submitBoundary), Array.from(n.childNodes).forEach((l, u) => {
-      ze(l, [...e, u], { skipCondition: false, skipRepeat: false, submitBoundary: r.submitBoundary }, i, o);
+      Ie(l, [...e, u], { skipCondition: false, skipRepeat: false, submitBoundary: r.submitBoundary }, i, o);
     });
   }
   function Os(t, e, r) {
-    let i = [], o = e.text.map((d) => ({ plan: d, node: lt(t, d.path) })), n = e.attributes.map((d) => ({ plan: d, node: lt(t, d.path) })), a = e.conditions.map((d) => ({ plan: d, node: lt(t, d.path) })), l = e.repeats.map((d) => ({ plan: d, node: lt(t, d.path) })), u = e.rawHtml.map((d) => ({ plan: d, node: lt(t, d.path) }));
+    let i = [], o = e.text.map((d) => ({ plan: d, node: dt(t, d.path) })), n = e.attributes.map((d) => ({ plan: d, node: dt(t, d.path) })), a = e.conditions.map((d) => ({ plan: d, node: dt(t, d.path) })), l = e.repeats.map((d) => ({ plan: d, node: dt(t, d.path) })), u = e.rawHtml.map((d) => ({ plan: d, node: dt(t, d.path) }));
     for (let { plan: d, node: p } of o) {
       if (p.nodeType !== Node.TEXT_NODE)
         throw Error("Compiled text binding no longer points to a text node.");
@@ -9189,7 +9189,7 @@ p {
     }
     return i;
   }
-  function lt(t, e) {
+  function dt(t, e) {
     let r = t;
     for (let i of e) {
       let o = r.childNodes.item(i);
@@ -9240,7 +9240,7 @@ p {
       return false;
     $s.lastIndex = 0;
     for (let r of t.matchAll($s))
-      if (Ft(r[1] ?? "", e))
+      if (qt(r[1] ?? "", e))
         return true;
     return false;
   }
@@ -9248,18 +9248,18 @@ p {
     if (!e)
       return false;
     for (let r of Le(t))
-      if (Ft(r, e))
+      if (qt(r, e))
         return true;
     return false;
   }
-  function Ft(t, e) {
+  function qt(t, e) {
     if (!e)
       return false;
     let r = t.trim().split(".")[0] ?? "";
     return r === "$source" || !!e.alias && r === e.alias;
   }
 
-  class Ie {
+  class ze {
     el;
     captured;
     filters;
@@ -9328,7 +9328,7 @@ p {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
   function pp(t, e) {
-    let r = t.getAttribute(ot)?.trim();
+    let r = t.getAttribute(nt)?.trim();
     return r ? { [r]: e } : {};
   }
 
@@ -9559,7 +9559,7 @@ p {
         this.run({ onlyIfUrlChanged: true });
     };
     onSubmit = (t) => {
-      let e = Rt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
+      let e = Bt(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
       if (!(typeof e?.reportValidity === "function" ? e.reportValidity() : true)) {
         t.preventDefault();
         return;
@@ -9568,7 +9568,7 @@ p {
         this.run();
     };
     onChange = () => {
-      let t = Rt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
+      let t = Bt(this.el, this.el.ownerDocument) ?? this.el.closest("form");
       if ((typeof t?.reportValidity === "function" ? t.reportValidity() : true) && this.el.isConnected)
         this.run();
     };
@@ -9576,12 +9576,12 @@ p {
       this.el = t;
       this.filters = e;
       this.options = r;
-      this.formOwned = Rt(t, t.ownerDocument) !== null && zt(t) !== "auto";
+      this.formOwned = Bt(t, t.ownerDocument) !== null && Pt(t) !== "auto";
       let i = this.formOwned ? Es(t) : ks(t);
-      this.renderer = new Ie(t, i, this.filters, { inPlace: this.formOwned }), this.presenter = new Fe(t, i, this.renderer, this.options);
+      this.renderer = new ze(t, i, this.filters, { inPlace: this.formOwned }), this.presenter = new Fe(t, i, this.renderer, this.options);
     }
     start() {
-      if (this.stopListeners = Rs(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), zt(this.el) === "auto" || this.options.sourceStateForce)
+      if (this.stopListeners = Rs(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), Pt(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
       else {
         let t = S(this.el.getAttribute(h) ?? "");
@@ -9636,7 +9636,7 @@ p {
       return il(this.el.getAttribute(gs), t);
     }
     captureSubmission() {
-      let t = Rt(this.el, this.el.ownerDocument);
+      let t = Bt(this.el, this.el.ownerDocument);
       if (!t)
         return null;
       let e = this.sourceMethod();
@@ -9680,7 +9680,7 @@ p {
       if (!r)
         return "";
       let i = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
-      return rt(r, i, this.filters).trim();
+      return it(r, i, this.filters).trim();
     }
     redirect(t) {
       let e;
@@ -9697,7 +9697,7 @@ p {
       this.options.afterSourceRender?.(this.el);
     }
   }
-  function Rt(t, e) {
+  function Bt(t, e) {
     let r = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof r === "function" && t instanceof r ? t : null;
   }
@@ -9729,10 +9729,10 @@ p {
         console.warn(`${L}: no key — set ${L}="<param>" or a name attribute`, this.el);
         return;
       }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(I, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(z, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
     }
     dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(I, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(z, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
         clearTimeout(this.timer);
       if (this.reflectTimer)
         clearTimeout(this.reflectTimer);
@@ -9865,7 +9865,7 @@ p {
       let t = this.currentValue();
       if (t === this.last)
         return;
-      this.last = t, Mt(this.key, t, this.el.ownerDocument);
+      this.last = t, Ft(this.key, t, this.el.ownerDocument);
     }
   }
   function P(t, e, r, i) {
@@ -9910,7 +9910,7 @@ p {
     for (let n of Tp(t, r)) {
       if (!n.hasAttribute(h))
         continue;
-      let a = n.getAttribute(ot)?.trim();
+      let a = n.getAttribute(nt)?.trim();
       if (!a)
         continue;
       let l = n === r ? i : e.get(n);
@@ -10078,7 +10078,7 @@ p {
       e.dispose(), this.pageStateSyncs.delete(t);
     }
     hasSourceUrl(t) {
-      return Ht(t.getAttribute(h) ?? "").trim() !== "";
+      return Rt(t.getAttribute(h) ?? "").trim() !== "";
     }
     isInScope(t) {
       if (t !== this.root && !this.root.contains(t))
@@ -10105,7 +10105,7 @@ p {
   class cl extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
-      return [it, St];
+      return [ot, zt];
     }
     connectedCallback() {
       ll(this.ownerDocument ?? document), this._syncRuntime();
@@ -10140,15 +10140,15 @@ p {
       this.startRuntime();
     }
     _isRuntimeDisabled() {
-      if (this.hasAttribute(it) || this.closest(`[${x}]`) !== null)
+      if (this.hasAttribute(ot) || this.closest(`[${x}]`) !== null)
         return true;
       for (let t = this.parentElement;t; t = t.parentElement)
-        if (t.localName === g && t.hasAttribute(it))
+        if (t.localName === g && t.hasAttribute(ot))
           return true;
       return false;
     }
     _sourceStateForce() {
-      let t = this.getAttribute(St);
+      let t = this.getAttribute(zt);
       return ys(t) ? t : undefined;
     }
     _revealInertSources() {
@@ -10160,7 +10160,7 @@ p {
   }
 
   // ../../foundation/components/dist/base.js
-  class I2 extends HTMLElement {
+  class U2 extends HTMLElement {
     _rawStyles = "";
     _styles = null;
     constructor(T2) {
@@ -10182,10 +10182,84 @@ p {
     }
     connectedCallback() {}
   }
+  var O2 = "data-p9r-composition";
+  var N = "data-p9r-composition-input";
+  var _2 = "data-p9r-composition-output";
+  function c2(T2) {
+    while (true) {
+      let o = P2(T2);
+      if (o.length === 0)
+        return;
+      for (let n of o.reverse()) {
+        let e = I2(n);
+        if (n.removeAttribute("data-p9r-composition"), e)
+          n.replaceChildren(e.content.cloneNode(true));
+        else
+          n.replaceChildren();
+      }
+    }
+  }
+  function I2(T2) {
+    return Array.from(T2.children).find((n) => n.localName === "template" && n.hasAttribute("data-p9r-composition-input")) ?? null;
+  }
+  function t(T2) {
+    return T2.hasAttribute("data-p9r-composition") && I2(T2) !== null;
+  }
+  function M2(T2) {
+    let o = R2(T2);
+    if (o.querySelector("style[data-p9r-composition-style]"))
+      return;
+    let n = o.nodeType === Node.DOCUMENT_NODE ? o : o.ownerDocument, e = n.createElement("style");
+    e.setAttribute("data-p9r-composition-style", "");
+    let E2 = "[data-p9r-composition]";
+    if (e.textContent = `${E2}{display:contents}${E2}>[data-p9r-composition-output]{display:contents}${E2}>:not([data-p9r-composition-output]):not(template[data-p9r-composition-input]){display:none!important}`, o.nodeType === Node.DOCUMENT_NODE)
+      (n.head ?? n.documentElement).append(e);
+    else
+      o.appendChild(e);
+  }
+  function P2(T2) {
+    let n = Array.from(T2.querySelectorAll("[data-p9r-composition]")).filter(t);
+    if (T2.nodeType === Node.ELEMENT_NODE && t(T2))
+      n.unshift(T2);
+    return n;
+  }
+  function R2(T2) {
+    let o = T2.getRootNode();
+    return o.nodeType === Node.DOCUMENT_NODE ? o : o;
+  }
+
+  class C extends HTMLElement {
+    templateSource;
+    input = null;
+    rendered = false;
+    constructor(T2) {
+      super();
+      this.templateSource = T2.template;
+    }
+    connectedCallback() {
+      if (M2(this), !this.rendered) {
+        let T2 = this.hasAttribute(O2) ? I2(this) : null;
+        if (this.input = T2 ?? this.captureInput(), this.setAttribute(O2, ""), !T2)
+          this.renderTemplate();
+        this.rendered = true;
+      }
+    }
+    captureInput() {
+      let T2 = this.ownerDocument.createElement("template");
+      return T2.setAttribute(N, ""), T2.content.append(...Array.from(this.childNodes)), c2(T2.content), this.append(T2), T2;
+    }
+    renderTemplate() {
+      let T2 = this.ownerDocument.createElement("template");
+      T2.innerHTML = this.templateSource;
+      let o = this.ownerDocument.createElement("p9r-composition-output");
+      o.setAttribute(_2, ""), o.append(T2.content.cloneNode(true)), this.append(o);
+    }
+  }
 
   // src/components/globals.ts
   window.p9r = {
-    Component: I2
+    Component: U2,
+    Composition: C
   };
 
   // src/components/admin/AdminLayout/template.html
@@ -10369,7 +10443,7 @@ p {
   // src/components/admin/AdminLayout/AdminLayout.ts
   var DEFAULT_BRAND_NAME = "CmsCore";
 
-  class FixedAdminLayout extends I2 {
+  class FixedAdminLayout extends U2 {
     _brandRequest = null;
     _titleSlot = null;
     _actionSlot = null;
@@ -10581,8 +10655,8 @@ ${followMessage}`)) {
       if (lines.length)
         lines.push("");
       lines.push("Templates:");
-      for (const t of templates)
-        lines.push(`  • ${t.name || t.identifier}`);
+      for (const t2 of templates)
+        lines.push(`  • ${t2.name || t2.identifier}`);
     }
     return lines.join(`
 `);
@@ -11108,7 +11182,7 @@ ${followMessage}`)) {
 `;
 
   // src/components/admin/EmptyState/EmptyState.ts
-  class EmptyState extends I2 {
+  class EmptyState extends U2 {
     constructor() {
       super({
         css: style_default,
@@ -11774,9 +11848,9 @@ cms-endpoints-input .ep-add:hover {
       }
     };
     typeSelect.addEventListener("change", () => {
-      const t = readControl(typeSelect);
-      typeSelect.setAttribute("value", t);
-      rebuild(t, { type: t });
+      const t2 = readControl(typeSelect);
+      typeSelect.setAttribute("value", t2);
+      rebuild(t2, { type: t2 });
       onChange();
     });
     rebuild(seed.type, seed);
@@ -11951,8 +12025,8 @@ cms-endpoints-input .ep-add:hover {
       o.textContent = label;
     };
     opt("", "Status…");
-    for (const c2 of COMMON)
-      opt(c2, c2);
+    for (const c3 of COMMON)
+      opt(c3, c3);
     opt("default", "default");
     opt(CUSTOM, "Custom…");
     select.setAttribute("value", value);
@@ -12742,7 +12816,7 @@ p9r-action-menu {
     delete: { endpoint: "/api/users", label: "User deleted" }
   };
 
-  class CmsUserActions extends I2 {
+  class CmsUserActions extends U2 {
     static get observedAttributes() {
       return ["password-reset", "email-verification", "mark-verified"];
     }
@@ -13102,7 +13176,7 @@ p9r-action-menu {
   }
 
   // src/components/admin/Secrets/Secrets.ts
-  class CmsSecrets extends I2 {
+  class CmsSecrets extends U2 {
     _list = null;
     _rowTemplate = null;
     _empty = null;
@@ -13255,7 +13329,7 @@ w13c-lateral-menu-item {
   var SETTINGS_SECTIONS = ["general", "email", "secrets", "identity", "connectors"];
   var DEFAULT_SECTION = "general";
 
-  class CmsSettingsNav extends I2 {
+  class CmsSettingsNav extends U2 {
     constructor() {
       super({ css: style_default4, template: template_default5 });
     }
@@ -13562,7 +13636,7 @@ p {
 `;
 
   // src/components/admin/ShellDetail/DetailSection.ts
-  class CmsDetailSection extends I2 {
+  class CmsDetailSection extends U2 {
     heading;
     description;
     actionsSlot;
@@ -13608,7 +13682,7 @@ p {
   }
 
   // src/components/admin/ShellDetail/ShellDetail.ts
-  class CmsShellDetail extends I2 {
+  class CmsShellDetail extends U2 {
     constructor() {
       super({ css: style_default5, template: template_default6 });
     }
@@ -13857,7 +13931,7 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Resources/Dashboards/DashboardNav.ts
-  class DashboardNav extends I2 {
+  class DashboardNav extends U2 {
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
@@ -15693,7 +15767,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts
-  class DashboardWTable extends I2 {
+  class DashboardWTable extends U2 {
     value = { title: "", actions: [], columns: [], rows: [] };
     selectedRow = "";
     constructor() {
@@ -16210,7 +16284,7 @@ button {
   var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField.ts
-  class DashboardWMediaField extends I2 {
+  class DashboardWMediaField extends U2 {
     currentItems = [];
     drag = new MediaDragController(() => this.shadowRoot, (from, to) => this.move(from, to), (value) => {
       this.suppressClick = value;
@@ -16313,7 +16387,7 @@ button {
       if (!item)
         return;
       this.revokeLocalUrl(item.url);
-      this.currentItems = this.currentItems.filter((_2, entryIndex) => entryIndex !== index);
+      this.currentItems = this.currentItems.filter((_3, entryIndex) => entryIndex !== index);
       this.changed("remove", { index, item });
     }
     move(from, to) {
@@ -16926,7 +17000,7 @@ button {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList.ts
-  class DashboardWReorderableList extends I2 {
+  class DashboardWReorderableList extends U2 {
     value = emptyData();
     draggingIndex = null;
     constructor() {
@@ -18406,7 +18480,7 @@ p9r-token-input {
   var styles = [style_default11, style_default10].join(`
 `);
 
-  class DashboardWDetail extends I2 {
+  class DashboardWDetail extends U2 {
     value = emptyDetailData();
     fields;
     view;
@@ -18906,7 +18980,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/DashboardView.ts
-  class DashboardView extends I2 {
+  class DashboardView extends U2 {
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
@@ -19324,11 +19398,11 @@ p9r-token-input {
     const list = document.createElement("dl");
     list.className = "kv";
     for (const [key, value] of rows) {
-      const dt = document.createElement("dt");
+      const dt2 = document.createElement("dt");
       const dd = document.createElement("dd");
-      dt.textContent = key;
+      dt2.textContent = key;
       dd.textContent = value;
-      list.append(dt, dd);
+      list.append(dt2, dd);
     }
     return list;
   }
@@ -31425,8 +31499,9 @@ label {
       this._target = editor.target;
       const doc = editor.target.ownerDocument;
       this._ensureStyle(doc);
+      const targets = this._measurementTargets(editor.target);
       if (options2.scrollIntoView) {
-        editor.target.scrollIntoView({
+        (targets[0] ?? editor.target).scrollIntoView({
           block: "center",
           inline: "nearest",
           behavior: "smooth"
@@ -31436,7 +31511,8 @@ label {
       this._overlay.setAttribute(HIGHLIGHT_ATTR, "");
       doc.body.append(this._overlay);
       this._resizeObserver = new ResizeObserver(() => this.update());
-      this._resizeObserver.observe(editor.target);
+      for (const target of targets)
+        this._resizeObserver.observe(target);
       doc.defaultView?.addEventListener("scroll", this.update, true);
       doc.defaultView?.addEventListener("resize", this.update);
       this.update();
@@ -31462,12 +31538,19 @@ label {
       const win = this._target.ownerDocument.defaultView;
       if (!win)
         return;
-      const rect = this._target.getBoundingClientRect();
+      const rect = unionRect(this._measurementTargets(this._target));
       this._overlay.style.left = `${rect.left + win.scrollX}px`;
       this._overlay.style.top = `${rect.top + win.scrollY}px`;
       this._overlay.style.width = `${rect.width}px`;
       this._overlay.style.height = `${rect.height}px`;
     };
+    _measurementTargets(target) {
+      if (!t(target))
+        return [target];
+      const output = Array.from(target.children).find((element) => element.hasAttribute(_2));
+      const children = output ? Array.from(output.children).flatMap((element) => visibleBoxes(element)) : [];
+      return children.length > 0 ? children : [target];
+    }
     _ensureStyle(doc) {
       if (doc.getElementById(STYLE_ID))
         return;
@@ -31486,6 +31569,56 @@ label {
 `;
       doc.head.append(style);
     }
+  }
+  function visibleBoxes(element) {
+    const rect = element.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0)
+      return [element];
+    return Array.from(element.children).flatMap((child) => visibleBoxes(child));
+  }
+  function unionRect(elements) {
+    const rects = elements.map((element) => element.getBoundingClientRect());
+    const left = Math.min(...rects.map((rect) => rect.left));
+    const top = Math.min(...rects.map((rect) => rect.top));
+    const right = Math.max(...rects.map((rect) => rect.right));
+    const bottom = Math.max(...rects.map((rect) => rect.bottom));
+    return new DOMRect(left, top, right - left, bottom - top);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureDocument.ts
+  function isEmptyDocumentContent(contentRoot) {
+    if (!contentRoot)
+      return true;
+    const meaningfulNodes = Array.from(contentRoot.childNodes).filter((node2) => node2.nodeType !== Node.TEXT_NODE || (node2.textContent ?? "").trim() !== "");
+    if (meaningfulNodes.length === 0)
+      return true;
+    if (meaningfulNodes.length !== 1)
+      return false;
+    const node = meaningfulNodes[0];
+    if (!node)
+      return true;
+    if (node.nodeType !== Node.ELEMENT_NODE)
+      return false;
+    const element = node;
+    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0)
+      return false;
+    return Array.from(element.childNodes).every((child) => {
+      if (child.nodeType === Node.TEXT_NODE)
+        return (child.textContent ?? "").trim() === "";
+      return child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === "br";
+    });
+  }
+  function contentHtml(frameDocument) {
+    const content = frameDocument?.querySelector("[data-cms-content]");
+    return serializableContentHtml(content);
+  }
+  function serializableContentHtml(contentRoot) {
+    const content = contentRoot?.cloneNode(true);
+    if (!content)
+      return "";
+    c2(content);
+    clearBindingRuntimeState(content);
+    return content.innerHTML;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellBindingPreview.ts
@@ -31513,7 +31646,7 @@ label {
     const viewContent = viewDocument?.querySelector("[data-cms-content]");
     if (!editorContent || !viewContent)
       return;
-    viewContent.innerHTML = editorContent.innerHTML;
+    viewContent.innerHTML = serializableContentHtml(editorContent);
     syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
     restartViewBindingRuntime(viewDocument);
   }
@@ -31569,37 +31702,6 @@ label {
       hiddenFor("error")
     ].join(`
 `);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureDocument.ts
-  function isEmptyDocumentContent(contentRoot) {
-    if (!contentRoot)
-      return true;
-    const meaningfulNodes = Array.from(contentRoot.childNodes).filter((node2) => node2.nodeType !== Node.TEXT_NODE || (node2.textContent ?? "").trim() !== "");
-    if (meaningfulNodes.length === 0)
-      return true;
-    if (meaningfulNodes.length !== 1)
-      return false;
-    const node = meaningfulNodes[0];
-    if (!node)
-      return true;
-    if (node.nodeType !== Node.ELEMENT_NODE)
-      return false;
-    const element = node;
-    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0)
-      return false;
-    return Array.from(element.childNodes).every((child) => {
-      if (child.nodeType === Node.TEXT_NODE)
-        return (child.textContent ?? "").trim() === "";
-      return child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === "br";
-    });
-  }
-  function contentHtml(frameDocument) {
-    const content = frameDocument?.querySelector("[data-cms-content]")?.cloneNode(true);
-    if (!content)
-      return "";
-    clearBindingRuntimeState(content);
-    return content.innerHTML;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellFrames.ts
@@ -33419,12 +33521,16 @@ label {
         });
       }
       getContentSlots() {
+        if (t(this.target))
+          return [];
         return [
           ...super.getContentSlots(),
           ...this._addedContentSlots
         ];
       }
       addContentSlots(slots) {
+        if (t(this.target))
+          return;
         const list = Array.isArray(slots) ? slots : [slots];
         this._addedContentSlots.push(...list);
         this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
@@ -33433,9 +33539,13 @@ label {
         });
       }
       getTextCapability() {
+        if (t(this.target))
+          return null;
         return this._textCapabilityOverride !== undefined ? this._textCapabilityOverride : super.getTextCapability();
       }
       setTextCapability(capability) {
+        if (t(this.target))
+          return;
         this._textCapabilityOverride = capability;
         this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
           editor: this,
@@ -33698,10 +33808,18 @@ label {
       return owner && document2.contentRoot.contains(owner.target) ? owner : undefined;
     }
     _walkElements(root) {
-      return [
+      const elements = [
         root,
         ...Array.from(root.querySelectorAll("*"))
       ];
+      return elements.filter((element) => !this._hasCompositionAncestor(element));
+    }
+    _hasCompositionAncestor(element) {
+      for (let parent = element.parentElement;parent; parent = parent.parentElement) {
+        if (t(parent))
+          return true;
+      }
+      return false;
     }
     _assertDocument(document2) {
       if (document2.root !== document2.contentRoot && !document2.root.contains(document2.contentRoot)) {
@@ -35121,7 +35239,7 @@ label {
 `;
 
   // src/components/media/CardMedia/CardMedia.ts
-  class CardMedia extends I2 {
+  class CardMedia extends U2 {
     constructor() {
       super({
         css: style_default33,
@@ -35372,7 +35490,7 @@ label {
 `;
 
   // src/components/media/CropSystem/CropSystem.ts
-  class CropSystem extends I2 {
+  class CropSystem extends U2 {
     constructor() {
       super({
         css: style_default34,
@@ -35665,7 +35783,7 @@ label {
 `;
 
   // src/components/media/DetailMedia/DetailMedia.ts
-  class DetailMedia extends I2 {
+  class DetailMedia extends U2 {
     constructor() {
       super({
         css: style_default35,
@@ -36759,7 +36877,7 @@ label {
   }
 
   // src/components/media/GridMedia/GridMedia.ts
-  class GridMedia extends I2 {
+  class GridMedia extends U2 {
     _folder = null;
     _breadcrumb = [];
     _items = [];
@@ -37371,7 +37489,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/MediaCenter/MediaCenter.ts
-  class MediaCenter extends I2 {
+  class MediaCenter extends U2 {
     _dialog = null;
     _grid = null;
     _btnSelect = null;
@@ -37651,7 +37769,7 @@ dialog::backdrop {
     }
     get _types() {
       const raw = this.getAttribute("types") || "image";
-      return ["folder", ...raw.split(",").map((t) => t.trim()).filter(Boolean)];
+      return ["folder", ...raw.split(",").map((t2) => t2.trim()).filter(Boolean)];
     }
     _build(label2) {
       const shadow = this.attachShadow({ mode: "open" });
@@ -37737,11 +37855,11 @@ dialog::backdrop {
   define("p9r-icon-button", fi);
   define("w13c-lateral-dialog", Rr);
   define("w13c-lateral-menu", Cn);
-  define("w13c-lateral-menu-item", zn);
+  define("w13c-lateral-menu-item", In);
   define("w13c-left-menu-layout", sn);
   define("p9r-modal", Nr);
   define("p9r-open-modal", $r);
-  define("p9r-input", Ii);
+  define("p9r-input", zi);
   define("p9r-select", Ji);
   define("p9r-photo-album", hn);
   define("p9r-segmented-switch", ho);
