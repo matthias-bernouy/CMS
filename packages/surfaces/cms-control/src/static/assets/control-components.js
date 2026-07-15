@@ -10042,7 +10042,9 @@ p {
       if (!t.isConnected || this.sources.has(t) || !this.hasSourceUrl(t))
         return;
       let e = new Be(t, this.filters, { ...this.options, setSourceStatus: (r, i) => this.sourceStatuses.set(r, i), sourceStatusesFor: (r, i) => al(this.root, this.sourceStatuses, r, i), afterSourceRender: (r) => {
-        if (!this.stopped && r.isConnected)
+        if (this.stopped)
+          return;
+        if (this.pruneDetachedBindings(), r.isConnected)
           this.registerWithin(r);
       } });
       this.sources.set(t, e), e.start();
@@ -10052,6 +10054,17 @@ p {
       if (!e)
         return;
       e.dispose(), this.sources.delete(t), this.sourceStatuses.delete(t);
+    }
+    pruneDetachedBindings() {
+      for (let t of this.sources.keys())
+        if (!t.isConnected)
+          this.unregisterSource(t);
+      for (let t of this.paramSyncs.keys())
+        if (!t.isConnected)
+          this.unregisterParamSync(t);
+      for (let t of this.pageStateSyncs.keys())
+        if (!t.isConnected)
+          this.unregisterPageStateSync(t);
     }
     registerParamSync(t) {
       if (!t.isConnected || this.paramSyncs.has(t))
@@ -11787,6 +11800,8 @@ cms-endpoints-input .ep-add:hover {
 
   // src/components/admin/EndpointsInput/bodyNode.ts
   function makeNode(seed, onChange, depth = 0) {
+    const nullable = seed.nullable === true;
+    const preserveNullable = (shape) => nullable ? { ...shape, nullable: true } : shape;
     const typeSelect = makeSelect(SHAPE_TYPES, seed.type);
     typeSelect.dataset.role = "node-type";
     typeSelect.className = "ep-type";
@@ -11880,11 +11895,11 @@ cms-endpoints-input .ep-add:hover {
           out.properties = properties;
         if (required.length)
           out.required = required.filter((n) => Object.hasOwn(properties, n));
-        return out;
+        return preserveNullable(out);
       }
       if (type === "array")
-        return itemsNode ? { type, items: itemsNode.read() } : { type };
-      return { type };
+        return preserveNullable(itemsNode ? { type, items: itemsNode.read() } : { type });
+      return preserveNullable({ type });
     };
     return { typeEl, childrenEl, read };
   }
@@ -33474,21 +33489,19 @@ label {
   var CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT = "cms-editor-text-capability-change";
   var CMS_EDITOR_STATES_CHANGE_EVENT = "cms-editor-states-change";
 
-  // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/createRuntimeEditor.ts
-  function createRuntimeEditor(entry, target, registry2) {
-    const EditorClass = entry.editor;
-
-    class CatalogRuntimeEditor extends EditorClass {
-      catalogEntry = entry;
+  // ../../features/cms-editor-system-v2/src/runtime/RuntimeEditor/createRuntimeEditorClass.ts
+  function createRuntimeEditorClass(EditorClass) {
+    class RuntimeEditorClass extends EditorClass {
+      _registry;
       _addedSettings = [];
       _declaredDataScopes = [];
       _addedContentSlots = [];
       _addedStates = [];
       _textCapabilityOverride;
       _isMounted = false;
-      constructor() {
+      constructor(target, _registry) {
         super(target);
-        registry2.register(this);
+        this._registry = _registry;
       }
       mount() {
         if (this._isMounted)
@@ -33503,28 +33516,20 @@ label {
         this.unmountEditor();
       }
       getSettings() {
-        return [
-          ...super.getSettings(),
-          ...this._addedSettings
-        ];
+        return [...super.getSettings(), ...this._addedSettings];
       }
       addSettings(settings) {
-        const list = Array.isArray(settings) ? settings : [settings];
-        this._addedSettings.push(...list);
+        this._addedSettings.push(...toList(settings));
         this._emit(CMS_EDITOR_SETTINGS_CHANGE_EVENT, {
           editor: this,
           settings: this.getSettings()
         });
       }
       getDataScopes() {
-        return [
-          ...super.getDataScopes(),
-          ...this._declaredDataScopes
-        ];
+        return [...super.getDataScopes(), ...this._declaredDataScopes];
       }
       declareDataScope(scope) {
-        const list = Array.isArray(scope) ? scope : [scope];
-        this._declaredDataScopes.push(...list);
+        this._declaredDataScopes.push(...toList(scope));
         this._emit(CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT, {
           editor: this,
           dataScopes: this.getDataScopes()
@@ -33533,16 +33538,12 @@ label {
       getContentSlots() {
         if (t(this.target))
           return [];
-        return [
-          ...super.getContentSlots(),
-          ...this._addedContentSlots
-        ];
+        return [...super.getContentSlots(), ...this._addedContentSlots];
       }
       addContentSlots(slots) {
         if (t(this.target))
           return;
-        const list = Array.isArray(slots) ? slots : [slots];
-        this._addedContentSlots.push(...list);
+        this._addedContentSlots.push(...toList(slots));
         this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
           editor: this,
           contentSlots: this.getContentSlots()
@@ -33563,25 +33564,21 @@ label {
         });
       }
       getStates() {
-        return [
-          ...super.getStates(),
-          ...this._addedStates
-        ];
+        return [...super.getStates(), ...this._addedStates];
       }
       addStates(states) {
-        const list = Array.isArray(states) ? states : [states];
-        this._addedStates.push(...list);
+        this._addedStates.push(...toList(states));
         this._emit(CMS_EDITOR_STATES_CHANGE_EVENT, {
           editor: this,
           states: this.getStates()
         });
       }
       getChildren() {
-        return registry2.getDirectChildren(this.target);
+        return this._registry.getDirectChildren(this.target);
       }
       dispose() {
         this.unmount();
-        registry2.unregister(this);
+        this._registry.unregister(this);
       }
       _emit(eventName, detail) {
         const CustomEventConstructor = this.target.ownerDocument.defaultView?.CustomEvent ?? CustomEvent;
@@ -33592,7 +33589,173 @@ label {
         }));
       }
     }
-    return new CatalogRuntimeEditor;
+    return RuntimeEditorClass;
+  }
+  function toList(value) {
+    return Array.isArray(value) ? value : [value];
+  }
+
+  // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/createRuntimeEditor.ts
+  function createRuntimeEditor(entry, target, registry2) {
+    const RuntimeEditorClass = createRuntimeEditorClass(entry.editor);
+    const editor = new RuntimeEditorClass(target, registry2);
+    editor.catalogEntry = entry;
+    registry2.register(editor);
+    return editor;
+  }
+
+  // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/dataScopes.ts
+  function declareBindingDataScopes(editor, registry2, dataSources) {
+    declareSourceDataScope(editor, dataSources);
+    declareRepeatDataScope(editor, registry2);
+  }
+  function declareSourceDataScope(editor, dataSources) {
+    const source = parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    if (!source)
+      return;
+    const schemaUrl = source.url.split("?")[0] ?? source.url;
+    const dataSource = dataSources.find((candidate) => candidate.url === schemaUrl);
+    editor.declareDataScope({
+      name: source.alias ?? "data",
+      label: dataSource?.label ?? source.url,
+      source: source.url,
+      fields: dataSource?.fields ?? []
+    });
+  }
+  function parseSourceBinding(value) {
+    const parsed = parseSource(value);
+    if (!parsed)
+      return null;
+    return typeof parsed === "string" ? { url: parsed } : parsed;
+  }
+  function declareRepeatDataScope(editor, registry2) {
+    const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
+    if (!repeat?.alias)
+      return;
+    const field = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
+    editor.declareDataScope({
+      name: repeat.alias,
+      label: repeat.alias,
+      fields: field?.children ?? []
+    });
+  }
+  function findDataField(scopes, path) {
+    for (const scope of scopes) {
+      const field = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
+      const match = field ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
+      if (match)
+        return match;
+    }
+    return;
+  }
+  function findDataFieldInList(fields, path) {
+    for (const field of fields) {
+      if (field.path === path)
+        return field;
+      const child = field.children ? findDataFieldInList(field.children, path) : undefined;
+      if (child)
+        return child;
+    }
+    return;
+  }
+  function stripScopeName(scopeName, path) {
+    const prefix = `${scopeName}.`;
+    return path.startsWith(prefix) ? path.slice(prefix.length) : path;
+  }
+
+  // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/structure.ts
+  function runtimeElements(root) {
+    return [root, ...Array.from(root.querySelectorAll("*"))].filter((element) => !hasCompositionAncestor(element));
+  }
+  function findClosestRuntimeEditor(context, target) {
+    const { document: document2, registry: registry2 } = context;
+    if (!target || !document2.contentRoot.contains(target))
+      return;
+    const closest = registry2.getClosestEditor(target, document2.contentRoot);
+    if (!closest)
+      return;
+    let current = closest.target;
+    while (current && document2.contentRoot.contains(current)) {
+      const editor = registry2.getEditor(current);
+      if (editor?.getStructureMode() === "opaque")
+        return editor;
+      if (current === document2.contentRoot)
+        break;
+      current = current.parentElement;
+    }
+    return findRichTextOwner(context, closest.target) ?? closest;
+  }
+  function buildRuntimeStructure(context) {
+    return structureChildren(context, context.document.contentRoot);
+  }
+  function findRichTextOwner(context, target) {
+    const owner = context.registry.getRichTextOwner(target);
+    return owner && context.document.contentRoot.contains(owner.target) ? owner : undefined;
+  }
+  function structureChildren(context, parent) {
+    const children = [];
+    for (const editor of context.editors) {
+      if (!context.document.contentRoot.contains(editor.target))
+        continue;
+      if (editor.target === parent)
+        continue;
+      if (findRichTextOwner(context, editor.target))
+        continue;
+      if (!parent.contains(editor.target))
+        continue;
+      if (closestStructureParent(context, editor.target, parent) !== parent)
+        continue;
+      const entry = context.entriesByEditor.get(editor);
+      if (!entry)
+        continue;
+      children.push({
+        kind: "editor",
+        editor,
+        target: editor.target,
+        tag: entry.tag,
+        label: entry.label,
+        icon: entry.icon,
+        badges: structureBadges(editor),
+        children: editor.getStructureMode() === "opaque" ? [] : structureChildren(context, editor.target)
+      });
+    }
+    return children;
+  }
+  function structureBadges(editor) {
+    const badges = [];
+    const slot = editor.target.getAttribute("slot");
+    if (slot)
+      badges.push(slot);
+    if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+      badges.push("Source");
+    if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat))
+      badges.push("Repeat");
+    const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
+    const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map((item) => item.state))];
+    if (sourceStatuses.length > 0)
+      badges.push(...sourceStatuses);
+    else if (condition?.trim())
+      badges.push("condition");
+    return badges;
+  }
+  function closestStructureParent(context, target, stopAt) {
+    let current = target.parentElement;
+    while (current && current !== stopAt) {
+      if (context.document.contentRoot.contains(current)) {
+        const editor = context.registry.getEditor(current);
+        if (editor && !findRichTextOwner(context, editor.target))
+          return current;
+      }
+      current = current.parentElement;
+    }
+    return stopAt;
+  }
+  function hasCompositionAncestor(element) {
+    for (let parent = element.parentElement;parent; parent = parent.parentElement) {
+      if (t(parent))
+        return true;
+    }
+    return false;
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/EditorRuntime.ts
@@ -33614,7 +33777,7 @@ label {
       this.dispose();
       this._assertDocument(document2);
       this._document = document2;
-      for (const element of this._walkElements(document2.root)) {
+      for (const element of runtimeElements(document2.root)) {
         const entry = this._catalogByTag.get(element.localName);
         if (!entry)
           continue;
@@ -33624,7 +33787,7 @@ label {
       }
       for (const editor of this._editors) {
         editor.mount();
-        this._declareBindingDataScopes(editor);
+        declareBindingDataScopes(editor, this.registry, this._dataSources);
       }
     }
     dispose() {
@@ -33640,26 +33803,10 @@ label {
       return this.registry.getEditor(target);
     }
     getClosestEditor(target) {
-      const document2 = this._requireDocument();
-      if (!target || !document2.contentRoot.contains(target))
-        return;
-      const closest = this.registry.getClosestEditor(target, document2.contentRoot);
-      if (!closest)
-        return;
-      let current = closest.target;
-      while (current && document2.contentRoot.contains(current)) {
-        const editor = this.registry.getEditor(current);
-        if (editor?.getStructureMode() === "opaque")
-          return editor;
-        if (current === document2.contentRoot)
-          break;
-        current = current.parentElement;
-      }
-      return this._getRichTextOwner(closest.target) ?? closest;
+      return findClosestRuntimeEditor(this._structureContext(), target);
     }
     getStructure() {
-      const document2 = this._requireDocument();
-      return this._getStructureChildren(document2.contentRoot);
+      return buildRuntimeStructure(this._structureContext());
     }
     select(targetOrEditor) {
       if (!targetOrEditor) {
@@ -33667,7 +33814,7 @@ label {
         return null;
       }
       const editor = targetOrEditor instanceof Editor ? targetOrEditor : this.registry.getEditor(targetOrEditor);
-      this._selectedEditor = editor ? this._getRichTextOwner(editor.target) ?? editor : null;
+      this._selectedEditor = editor ? findRichTextOwner(this._structureContext(), editor.target) ?? editor : null;
       return this.getSelection();
     }
     getSelection() {
@@ -33691,145 +33838,13 @@ label {
         includeTarget: !this._selectedEditor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)
       });
     }
-    _declareBindingDataScopes(editor) {
-      this._declareSourceDataScope(editor);
-      this._declareRepeatDataScope(editor);
-    }
-    _declareSourceDataScope(editor) {
-      const source = this._parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-      if (!source)
-        return;
-      const dataSource = this._dataSources.find((candidate) => candidate.url === this._sourceSchemaUrl(source.url));
-      editor.declareDataScope({
-        name: source.alias ?? "data",
-        label: dataSource?.label ?? source.url,
-        source: source.url,
-        fields: dataSource?.fields ?? []
-      });
-    }
-    _parseSourceBinding(value) {
-      const parsed = parseSource(value);
-      if (!parsed)
-        return null;
-      return typeof parsed === "string" ? { url: parsed } : parsed;
-    }
-    _sourceSchemaUrl(url) {
-      return url.split("?")[0] ?? url;
-    }
-    _declareRepeatDataScope(editor) {
-      const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
-      if (!repeat?.alias)
-        return;
-      const field = this._findDataField(this.registry.collectDataScopes(editor.target), repeat.path);
-      editor.declareDataScope({
-        name: repeat.alias,
-        label: repeat.alias,
-        fields: field?.children ?? []
-      });
-    }
-    _findDataField(scopes, path) {
-      for (const scope of scopes) {
-        const field = this._findRootArrayField(scope, path) ?? this._findDataFieldInList(scope.fields, path) ?? this._findDataFieldInList(scope.fields, this._stripScopeName(scope.name, path));
-        if (field)
-          return field;
-      }
-      return;
-    }
-    _findRootArrayField(scope, path) {
-      return path === scope.name ? this._findDataFieldInList(scope.fields, ".") : undefined;
-    }
-    _findDataFieldInList(fields, path) {
-      for (const field of fields) {
-        if (field.path === path)
-          return field;
-        const child = field.children ? this._findDataFieldInList(field.children, path) : undefined;
-        if (child)
-          return child;
-      }
-      return;
-    }
-    _stripScopeName(scopeName, path) {
-      const prefix = `${scopeName}.`;
-      return path.startsWith(prefix) ? path.slice(prefix.length) : path;
-    }
-    _getStructureChildren(parent) {
-      const document2 = this._requireDocument();
-      const children = [];
-      for (const editor of this._editors) {
-        if (!document2.contentRoot.contains(editor.target))
-          continue;
-        if (editor.target === parent)
-          continue;
-        if (this._getRichTextOwner(editor.target))
-          continue;
-        if (!parent.contains(editor.target))
-          continue;
-        if (this._getClosestStructureParent(editor.target, parent) !== parent)
-          continue;
-        const entry = this._entriesByEditor.get(editor);
-        if (!entry)
-          continue;
-        children.push({
-          kind: "editor",
-          editor,
-          target: editor.target,
-          tag: entry.tag,
-          label: entry.label,
-          icon: entry.icon,
-          badges: this._getStructureBadges(editor),
-          children: editor.getStructureMode() === "opaque" ? [] : this._getStructureChildren(editor.target)
-        });
-      }
-      return children;
-    }
-    _getStructureBadges(editor) {
-      const badges = [];
-      const slot = editor.target.getAttribute("slot");
-      if (slot)
-        badges.push(slot);
-      if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
-        badges.push("Source");
-      if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat))
-        badges.push("Repeat");
-      const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
-      const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map((item) => item.state))];
-      if (sourceStatuses.length > 0)
-        badges.push(...sourceStatuses);
-      else if (condition?.trim())
-        badges.push("condition");
-      return badges;
-    }
-    _getClosestStructureParent(target, stopAt) {
-      const document2 = this._requireDocument();
-      let current = target.parentElement;
-      while (current && current !== stopAt) {
-        if (document2.contentRoot.contains(current)) {
-          const editor = this.registry.getEditor(current);
-          if (editor && !this._getRichTextOwner(editor.target))
-            return current;
-        }
-        current = current.parentElement;
-      }
-      return stopAt;
-    }
-    _getRichTextOwner(target) {
-      const document2 = this._requireDocument();
-      const owner = this.registry.getRichTextOwner(target);
-      return owner && document2.contentRoot.contains(owner.target) ? owner : undefined;
-    }
-    _walkElements(root) {
-      const elements = [
-        root,
-        ...Array.from(root.querySelectorAll("*"))
-      ];
-      return elements.filter((element) => !this._hasCompositionAncestor(element));
-    }
-    _hasCompositionAncestor(element) {
-      for (let parent = element.parentElement;parent; parent = parent.parentElement) {
-        if (t(parent))
-          return true;
-      }
-      return false;
+    _structureContext() {
+      return {
+        document: this._requireDocument(),
+        registry: this.registry,
+        editors: this._editors,
+        entriesByEditor: this._entriesByEditor
+      };
     }
     _assertDocument(document2) {
       if (document2.root !== document2.contentRoot && !document2.root.contains(document2.contentRoot)) {
