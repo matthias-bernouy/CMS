@@ -2,7 +2,7 @@ import type { Editor } from "@bernouy/cms-content/editor";
 import {
     COMPOSITION_OUTPUT_ATTRIBUTE,
     isCompositionRuntimeElement,
-} from "@bernouy/components/composition-runtime";
+} from "@bernouy/components/base";
 
 const STYLE_ID = "cms-editor-v2-highlight-style";
 const HIGHLIGHT_ATTR = "data-cms-editor-v2-highlight";

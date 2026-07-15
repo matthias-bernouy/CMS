@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
-import { Composition } from "../src/base/Composition";
-import { BindingCore, BINDING_CORE_TAG } from "../src/binding/bindingCore";
 import {
+    Composition,
     COMPOSITION_INPUT_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
     clearCompositionRuntimeState,
-} from "../src/base/compositionRuntime";
+} from "../src/base";
+import { BindingCore, BINDING_CORE_TAG } from "../src/binding/bindingCore";
 
 class TestComposition extends Composition {
     constructor() {

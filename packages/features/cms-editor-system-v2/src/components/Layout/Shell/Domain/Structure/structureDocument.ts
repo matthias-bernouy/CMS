@@ -1,5 +1,5 @@
 import { clearBindingRuntimeState } from "@bernouy/cms-content/editor";
-import { clearCompositionRuntimeState } from "@bernouy/components/composition-runtime";
+import { clearCompositionRuntimeState } from "@bernouy/components/base";
 
 export function isEmptyDocumentContent(contentRoot: HTMLElement | null | undefined): boolean {
     if (!contentRoot) return true;

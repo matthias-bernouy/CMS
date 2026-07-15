@@ -11,7 +11,7 @@ import {
     parseSourceStatusConditions,
     parseSource,
 } from "@bernouy/cms-content/editor";
-import { isCompositionRuntimeElement } from "@bernouy/components/composition-runtime";
+import { isCompositionRuntimeElement } from "@bernouy/components/base";
 import { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import { createRuntimeEditor } from "./createRuntimeEditor";
 import type { EditorDataSource } from "../dataSources";

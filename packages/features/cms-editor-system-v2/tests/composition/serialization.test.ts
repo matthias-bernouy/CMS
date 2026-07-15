@@ -4,7 +4,7 @@ import {
     COMPOSITION_INPUT_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
-} from "@bernouy/components/composition-runtime";
+} from "@bernouy/components/base";
 import {
     serializableContentHtml,
 } from "../../src/components/Layout/Shell/Domain/Structure/structureDocument";

@@ -7,7 +7,7 @@ import {
     type TextCapability,
 } from "@bernouy/cms-content/editor";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
-import { isCompositionRuntimeElement } from "@bernouy/components/composition-runtime";
+import { isCompositionRuntimeElement } from "@bernouy/components/base";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
