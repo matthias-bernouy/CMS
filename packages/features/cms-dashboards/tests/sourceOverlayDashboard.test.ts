@@ -42,10 +42,7 @@ describe("dashboard source overlay", () => {
                         itemsPath: "accounts",
                         valuePath: "userId",
                         labelPath: "displayName",
-                        selected: {
-                            endpoint: "getAccountByUserId",
-                            params: { userId: "$value" },
-                        },
+                        selected: "$resource.account",
                     },
                 },
             }],
@@ -58,7 +55,7 @@ describe("dashboard source overlay", () => {
             type: "combobox",
             lookup: {
                 endpoint: "listAccounts",
-                selected: { endpoint: "getAccountByUserId" },
+                selected: "$resource.account",
             },
         });
         expect(validateDashboard(enrichedDashboard, { source })).toEqual([]);

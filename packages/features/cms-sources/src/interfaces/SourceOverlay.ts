@@ -84,7 +84,7 @@ export type SourceOverlayDashboardLookupRef = SourceOverlayDashboardDataRef & {
     subtitlePath?: string;
     mediaPath?: string;
     descriptionPaths?: string[];
-    selected?: SourceOverlayDashboardDataRef;
+    selected?: string;
 };
 
 export type SourceOverlayDashboardFieldPatch = {

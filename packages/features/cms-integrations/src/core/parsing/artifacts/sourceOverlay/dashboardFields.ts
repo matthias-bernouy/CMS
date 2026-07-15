@@ -61,9 +61,10 @@ function parseOverlayDashboardLookup(value: unknown, name: string): SourceOverla
     };
 }
 
-function parseOverlayDashboardSelected(value: unknown, name: string): SourceOverlayDashboardDataRef {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    return parseOverlayDashboardDataRef(value, name);
+function parseOverlayDashboardSelected(value: unknown, name: string): string {
+    const expression = text(value);
+    if (!expression) throw new IntegrationInputError(name, "must be a non-empty string");
+    return expression;
 }
 
 function parseOverlayDashboardDataRef(value: Record<string, unknown>, name: string): SourceOverlayDashboardDataRef {

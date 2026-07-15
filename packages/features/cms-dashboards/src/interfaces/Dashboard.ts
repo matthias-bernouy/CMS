@@ -7,6 +7,7 @@ export type {
     DashboardFilter,
     DashboardMeta,
     DashboardOption,
+    DashboardResourceExpression,
     DashboardTableColumn,
     DashboardTableDerive,
     DashboardVisibilityRule,

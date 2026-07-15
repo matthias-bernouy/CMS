@@ -1,5 +1,11 @@
-import type { DashboardDataRef, DashboardField, DashboardOption, DashboardWidget } from "@bernouy/cms-dashboards";
-import { arrayAt, textAt } from "./expressions";
+import {
+    isSafeDashboardExpression,
+    type DashboardField,
+    type DashboardLookupRef,
+    type DashboardOption,
+    type DashboardWidget,
+} from "@bernouy/cms-dashboards";
+import { resolveExpression, textAt, valueAt } from "./expressions";
 import { fetchSourceJson, itemsFrom } from "./source";
 import type { DetailOptions } from "./mapping";
 
@@ -39,43 +45,60 @@ async function lookupOptions(
 ): Promise<DashboardOption[]> {
     const lookup = field.lookup;
     if (!lookup) return [];
-    const data = await fetchSourceJson(sourceId, lookup, { resource, fields });
-    const items = itemsFrom(data, lookup);
-    const selected = [...selectedItems(field, resource, fields), ...await selectedLookupItems(sourceId, field, resource, fields)];
-    return dedupeOptions([...items, ...selected].map(item => ({
-        value: textAt(item, lookup.valuePath),
-        label: textAt(item, lookup.labelPath, textAt(item, lookup.valuePath)),
-        subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
-        media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined,
-    })).filter(option => option.value && option.label));
+    const items = await lookupItems(sourceId, lookup, resource, fields);
+    const selected = selectedOptions(field, lookup, resource, fields);
+    return dedupeOptions([...optionsFromItems(items, lookup), ...selected]);
 }
 
-function selectedItems(field: Extract<DashboardField, { type: "combobox" | "tokens" }>, resource: unknown, fields: Record<string, unknown>): unknown[] {
-    const value = fields[field.id];
-    if (Array.isArray(value)) return value;
-    const pathValue = arrayAt(resource, field.path);
-    return pathValue.length ? pathValue : [];
-}
-
-async function selectedLookupItems(
+async function lookupItems(
     sourceId: string,
-    field: Extract<DashboardField, { type: "combobox" | "tokens" }>,
+    lookup: DashboardLookupRef,
     resource: unknown,
     fields: Record<string, unknown>,
 ): Promise<unknown[]> {
-    const lookup = field.lookup;
-    if (!lookup?.selected) return [];
-    const values = selectedValues(fields[field.id]);
-    const items = await Promise.all(values.map(async value => itemFromSelectedLookup(sourceId, lookup.selected!, resource, fields, value)));
-    return items.filter((item): item is unknown => item !== undefined && item !== null);
+    try {
+        return itemsFrom(await fetchSourceJson(sourceId, lookup, { resource, fields }), lookup);
+    } catch {
+        return [];
+    }
 }
 
-async function itemFromSelectedLookup(sourceId: string, selected: DashboardDataRef, resource: unknown, fields: Record<string, unknown>, value: string): Promise<unknown> {
-    try {
-        return await fetchSourceJson(sourceId, selected, { resource, fields, value });
-    } catch {
-        return null;
-    }
+function optionsFromItems(items: unknown[], lookup: DashboardLookupRef): DashboardOption[] {
+    return items.flatMap(item => {
+        const option = optionFromItem(item, lookup, true);
+        return option ? [option] : [];
+    });
+}
+
+function selectedOptions(
+    field: Extract<DashboardField, { type: "combobox" | "tokens" }>,
+    lookup: DashboardLookupRef,
+    resource: unknown,
+    fields: Record<string, unknown>,
+): DashboardOption[] {
+    const expression: unknown = lookup.selected;
+    if (typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) return [];
+    const currentValue = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
+    const selected = new Set(selectedValues(currentValue));
+    if (!selected.size) return [];
+    const resolved = resolveExpression(expression, { resource, fields });
+    const items = Array.isArray(resolved) ? resolved : [resolved];
+    return dedupeOptions(items.flatMap(item => {
+        const option = optionFromItem(item, lookup, false);
+        return option && selected.has(option.value) ? [option] : [];
+    }));
+}
+
+function optionFromItem(item: unknown, lookup: DashboardLookupRef, fallbackToValue: boolean): DashboardOption | null {
+    const value = textAt(item, lookup.valuePath);
+    const label = textAt(item, lookup.labelPath, fallbackToValue ? value : "");
+    if (!value || !label) return null;
+    return {
+        value,
+        label,
+        subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
+        media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined,
+    };
 }
 
 function selectedValues(value: unknown): string[] {

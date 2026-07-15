@@ -57,6 +57,12 @@ export function validateExpressionMap(map: Record<string, string> | undefined, p
     }
 }
 
+export function validateResourceExpression(value: unknown, path: string, errors: string[]): void {
+    if (typeof value !== "string" || !isSafeDashboardExpression(value, ["resource"], true)) {
+        errors.push(`${path} must be a $resource expression with a safe dotted data path`);
+    }
+}
+
 function validateExpression(path: string, value: string, errors: string[]): void {
     if (!value.startsWith("$")) return;
     if (!isSafeDashboardExpression(value, PARAM_EXPRESSION_ROOTS)) {

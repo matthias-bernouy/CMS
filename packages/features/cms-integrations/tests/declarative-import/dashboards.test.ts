@@ -13,6 +13,22 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(definition.artifacts?.[1]).toEqual(EXPECTED_DELIVERY_DASHBOARD);
     });
 
+    test("parses local selections and rejects legacy lookup hydration refs", () => {
+        const parsed = parseIntegrationDefinition(overlayLookupDefinition("$resource.relayPoint"));
+        expect(parsed.artifacts?.[0]).toMatchObject({
+            type: "sourceOverlay",
+            overlay: { dashboardFields: [{ field: { lookup: { selected: "$resource.relayPoint" } } }] },
+        });
+
+        for (const selected of [" ", { endpoint: "relayPoint" }]) {
+            const dashboard = structuredClone(DELIVERY_DEFINITION) as any;
+            dashboard.artifacts[1].dashboard.views[0].main[0].fields[1].lookup.selected = selected;
+            expect(() => parseIntegrationDefinition(dashboard)).toThrow(/selected.*non-empty string/);
+            expect(() => parseIntegrationDefinition(overlayLookupDefinition(selected)))
+                .toThrow(/selected.*non-empty string/);
+        }
+    });
+
     test("rejects duplicate source urns within one import before writing", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
@@ -107,6 +123,23 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(await dashboards.getDashboard("items-dashboard")).toBeNull();
     });
 });
+
+function overlayLookupDefinition(selected: unknown) {
+    return {
+        kind: "delivery-overlay",
+        label: "Delivery overlay",
+        inputs: [],
+        artifacts: [{ type: "sourceOverlay", overlay: {
+            id: "delivery-fields",
+            sourceId: "delivery",
+            fields: [],
+            dashboardFields: [{ viewId: "shipmentDetail", fieldId: "deliveryRelayNumber", field: {
+                type: "combobox",
+                lookup: { endpoint: "relayPoints", valuePath: "number", labelPath: "name", selected },
+            } }],
+        } }],
+    };
+}
 
 function dashboardArtifact(id: string, source: string) {
     return {

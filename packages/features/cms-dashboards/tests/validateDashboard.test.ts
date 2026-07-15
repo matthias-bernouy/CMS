@@ -26,7 +26,6 @@ const source: Source = {
         endpoint("updateProduct", ["productId"]),
         endpoint("deleteProduct", ["productId"]),
         endpoint("searchBrands", ["q"]),
-        endpoint("getBrand", ["brandId"]),
         endpoint("createBrand"),
         endpoint("uploadProductImage", ["productId"]),
         endpoint("removeProductImage", ["productId", "mediaId"]),
@@ -120,11 +119,7 @@ const validDashboard = (): Dashboard => ({
                                 itemsPath: "items",
                                 valuePath: "id",
                                 labelPath: "name",
-                                selected: {
-                                    endpoint: "getBrand",
-                                    params: { brandId: "$value" },
-                                    itemPath: "item",
-                                },
+                                selected: "$resource.brand",
                                 create: {
                                     mode: "modal",
                                     endpoint: "createBrand",

@@ -2,6 +2,7 @@ import type {
     DashboardEndpointRef,
     DashboardDataRef,
     DashboardOption,
+    DashboardResourceExpression,
     DashboardTableColumn,
     DashboardTableDerive,
     DashboardVisibilityRule,
@@ -27,7 +28,7 @@ export type DashboardLookupRef = DashboardDataRef & {
     subtitlePath?: string;
     mediaPath?: string;
     descriptionPaths?: string[];
-    selected?: DashboardDataRef;
+    selected?: DashboardResourceExpression;
     create?: DashboardLookupCreate;
 };
 

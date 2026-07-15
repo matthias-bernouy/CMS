@@ -5,6 +5,7 @@ import {
     isSafeDashboardPath,
     validateDashboard,
     type Dashboard,
+    type DashboardField,
 } from "@bernouy/cms-dashboards";
 
 describe("dashboard data path security", () => {
@@ -16,6 +17,45 @@ describe("dashboard data path security", () => {
         expect(isSafeDashboardExpression("$field.profile.name", ["field"])).toBe(true);
         expect(isSafeDashboardExpression("$field.__proto__.polluted", ["field"])).toBe(false);
         expect(isDashboardVisibilityExpression("$resource.constructor.name")).toBe(false);
+    });
+
+    test("requires lookup selections to use a safe resource path", () => {
+        const field: Extract<DashboardField, { type: "combobox" }> = {
+            id: "brandId",
+            label: "Brand",
+            path: "brandId",
+            type: "combobox",
+            lookup: {
+                endpoint: "brands",
+                valuePath: "id",
+                labelPath: "name",
+                selected: "$resource.brand",
+            },
+        };
+        const dashboard: Dashboard = {
+            id: "products",
+            source: "products",
+            views: [{
+                widget: "w-detail",
+                id: "productDetail",
+                source: { endpoint: "product" },
+                main: [{ id: "general", title: "General", fields: [field] }],
+            }],
+        };
+
+        expect(validateDashboard(dashboard)).toEqual([]);
+        for (const selected of [
+            "$resource",
+            "$field.brand",
+            "$resource.__proto__.polluted",
+            "",
+            { endpoint: "brand" },
+        ]) {
+            field.lookup!.selected = selected as never;
+            expect(validateDashboard(dashboard)).toContain(
+                "views.0.main.0.fields.0.lookup.selected must be a $resource expression with a safe dotted data path",
+            );
+        }
     });
 
     test("rejects unsafe field and action body paths", () => {

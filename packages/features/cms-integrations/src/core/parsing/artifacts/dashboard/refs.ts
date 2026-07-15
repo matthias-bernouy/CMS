@@ -4,6 +4,7 @@ import type {
     DashboardLookupCreate,
     DashboardLookupRef,
     DashboardOption,
+    DashboardResourceExpression,
 } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import { isRecord, text } from "../../values";
@@ -49,9 +50,10 @@ export function parseOptions(value: unknown, name: string): DashboardOption[] {
     return value.map((entry, index) => parseOption(entry, `${name}.${index}`));
 }
 
-function parseLookupSelected(value: unknown, name: string): DashboardDataRef {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    return parseDataRef(value, name);
+function parseLookupSelected(value: unknown, name: string): DashboardResourceExpression {
+    const expression = text(value);
+    if (!expression) throw new IntegrationInputError(name, "must be a non-empty string");
+    return expression as DashboardResourceExpression;
 }
 
 function parseLookupCreate(value: unknown, name: string): DashboardLookupCreate {

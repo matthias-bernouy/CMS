@@ -19,6 +19,8 @@ export type DashboardDataRef = DashboardEndpointRef & {
     totalPath?: string;
 };
 
+export type DashboardResourceExpression = `$resource.${string}`;
+
 export type DashboardBinding = {
     path: string;
     fallback?: string;

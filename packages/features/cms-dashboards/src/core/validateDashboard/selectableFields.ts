@@ -9,6 +9,7 @@ import { validateDataRef, validateEndpointRef } from "./endpointRefs";
 import {
     validateOptions,
     validatePath,
+    validateResourceExpression,
     validateRequiredPath,
 } from "./shared";
 
@@ -53,7 +54,7 @@ function validateLookup(
     validatePath("subtitlePath", lookup.subtitlePath, path, errors);
     validatePath("mediaPath", lookup.mediaPath, path, errors);
     lookup.descriptionPaths?.forEach((entry, index) => validatePath(`${index}`, entry, `${path}.descriptionPaths`, errors));
-    if (lookup.selected) validateDataRef(dashboard, lookup.selected, `${path}.selected`, source, errors);
+    if (lookup.selected !== undefined) validateResourceExpression(lookup.selected, `${path}.selected`, errors);
     if (lookup.create) validateLookupCreate(lookup.create, `${path}.create`, dashboard, source, errors, validateNestedField);
 }
 

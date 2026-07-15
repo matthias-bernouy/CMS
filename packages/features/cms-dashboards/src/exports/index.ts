@@ -19,6 +19,7 @@ export type {
     DashboardMeta,
     DashboardOption,
     DashboardReorderableListItemField,
+    DashboardResourceExpression,
     DashboardSection,
     DashboardTableColumn,
     DashboardTableDerive,

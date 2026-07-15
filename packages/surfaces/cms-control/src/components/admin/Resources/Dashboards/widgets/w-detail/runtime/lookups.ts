@@ -88,10 +88,7 @@ function lookupDependsOnField(widget: DetailWidget, fieldId: string): boolean {
         .flatMap(section => section.fields)
         .some(field => {
             if ((field.type !== "combobox" && field.type !== "tokens") || !field.lookup) return false;
-            return [
-                ...Object.values(field.lookup.params ?? {}),
-                ...Object.values(field.lookup.selected?.params ?? {}),
-            ].some(expression => expression === `$field.${fieldId}`
-                || (expression as string).startsWith(`$field.${fieldId}.`));
+            return Object.values(field.lookup.params ?? {}).some(expression => expression === `$field.${fieldId}`
+                || expression.startsWith(`$field.${fieldId}.`));
         });
 }
