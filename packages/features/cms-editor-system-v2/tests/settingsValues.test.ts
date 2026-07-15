@@ -1,7 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { Editor, type ContentSlot } from "@bernouy/cms-content/editor";
-import { getTextValue, setTextValue } from "../src/components/Layout/Shell/Domain/Settings/settingsValues";
+import {
+    Editor,
+    type ContentSlot,
+    type SettingSection,
+} from "@bernouy/cms-content/editor";
+import {
+    getTextValue,
+    resolveSettingsValues,
+    setTextValue,
+} from "../src/components/Layout/Shell/Domain/Settings/settingsValues";
 
 function target(markup: string): HTMLElement {
     const { document } = parseHTML(`
@@ -61,5 +69,43 @@ describe("settings text values", () => {
 
         expect(() => getTextValue(editor, "richtext")).toThrow("Editors cannot combine textCapability() with an unnamed content slot.");
         expect(() => setTextValue(editor, "richtext", "Updated")).toThrow("Editors cannot combine textCapability() with an unnamed content slot.");
+    });
+});
+
+describe("settings control values", () => {
+    test("resolves both token and custom color attributes", () => {
+        const editor = new Editor(target(
+            `<demo-card background="custom" background-custom="#123456"></demo-card>`,
+        ));
+        const sections: SettingSection[] = [{
+            kind: "self",
+            label: "Appearance",
+            settings: [{
+                type: "color",
+                label: "Background",
+                attribute: "background",
+                defaultValue: "base",
+                tokens: [
+                    { label: "Base", value: "base" },
+                    { label: "Custom", value: "custom" },
+                ],
+                allowCustom: true,
+                customAttribute: "background-custom",
+                customDefaultValue: "#ffffff",
+            }],
+        }];
+
+        expect(resolveSettingsValues(editor, sections)).toEqual([{
+            ...sections[0],
+            settings: [{
+                ...sections[0]!.settings[0],
+                defaultValue: "custom",
+                customDefaultValue: "#123456",
+            }],
+        }]);
+        expect(sections[0]!.settings[0]).toMatchObject({
+            defaultValue: "base",
+            customDefaultValue: "#ffffff",
+        });
     });
 });
