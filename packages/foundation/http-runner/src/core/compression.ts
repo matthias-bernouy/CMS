@@ -1,7 +1,10 @@
 import { CryptoHasher, gzipSync } from "bun";
 import { brotliCompressSync } from "node:zlib";
 import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
+import { getOrGenerateEntry, getOrGenerateEntryAsync } from "http-runner/core/cacheGeneration";
 import { buildCspContent, type CspExtras } from "./buildCspContent";
+
+export { getOrGenerateEntry, getOrGenerateEntryAsync } from "http-runner/core/cacheGeneration";
 
 /**
  * Static security headers applied to every compressed response.
@@ -151,38 +154,6 @@ export function compress(raw: string | ArrayBuffer | Uint8Array, contentType: st
         contentType,
         hash,
     };
-}
-
-/**
- * Returns the cache entry for `key`, generating it on miss. Shared by
- * `cachedResponse(Async)` (which builds a Response on top) and by renderers
- * that only need the entry's hash to emit content-addressed URLs without
- * actually sending the bytes to the client.
- */
-export function getOrGenerateEntry(
-    key: string,
-    cache: Cache,
-    generate: () => CacheEntry
-): CacheEntry {
-    let entry = cache.get(key);
-    if (!entry) {
-        entry = generate();
-        cache.set(key, entry);
-    }
-    return entry;
-}
-
-export async function getOrGenerateEntryAsync(
-    key: string,
-    cache: Cache,
-    generate: () => Promise<CacheEntry>
-): Promise<CacheEntry> {
-    let entry = cache.get(key);
-    if (!entry) {
-        entry = await generate();
-        cache.set(key, entry);
-    }
-    return entry;
 }
 
 export function cachedResponse(
