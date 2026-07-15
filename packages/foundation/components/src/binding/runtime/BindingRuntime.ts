@@ -167,7 +167,9 @@ export class BindingRuntime {
             setSourceStatus:  (source, status) => this.sourceStatuses.set(source, status),
             sourceStatusesFor: (source, current) => sourceStatusScope(this.root, this.sourceStatuses, source, current),
             afterSourceRender: (source) => {
-                if (!this.stopped && source.isConnected) this.registerWithin(source);
+                if (this.stopped) return;
+                this.pruneDetachedBindings();
+                if (source.isConnected) this.registerWithin(source);
             },
         });
         this.sources.set(el, src);
@@ -180,6 +182,18 @@ export class BindingRuntime {
         src.dispose();
         this.sources.delete(el);
         this.sourceStatuses.delete(el);
+    }
+
+    private pruneDetachedBindings(): void {
+        for (const source of this.sources.keys()) {
+            if (!source.isConnected) this.unregisterSource(source);
+        }
+        for (const sync of this.paramSyncs.keys()) {
+            if (!sync.isConnected) this.unregisterParamSync(sync);
+        }
+        for (const sync of this.pageStateSyncs.keys()) {
+            if (!sync.isConnected) this.unregisterPageStateSync(sync);
+        }
     }
 
     private registerParamSync(el: Element): void {

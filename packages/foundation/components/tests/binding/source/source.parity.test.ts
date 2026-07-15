@@ -215,7 +215,7 @@ describe("Source — parity contract for status/body transitions", () => {
 });
 
 describe("BindingRuntime — parity contract for repeated source boundaries", () => {
-    test("reloading a repeated parent source registers fresh nested sources", async () => {
+    test("reloading a repeated parent source replaces nested registrations without observer delivery", async () => {
         let outerCalls = 0;
         globalThis.fetch = (async (url: RequestInfo | URL) => {
             const href = String(url);
@@ -252,6 +252,8 @@ describe("BindingRuntime — parity contract for repeated source boundaries", ()
         await waitFor(() => text(root.querySelector(".leaf")) === "A");
         expect(runtime.size).toBe(2);
 
+        // Source-owned renders must reconcile immediately even if mutation delivery is delayed or missed.
+        (runtime as unknown as { observer: MutationObserver | null }).observer?.disconnect();
         document.dispatchEvent(new Event("refresh"));
         await waitFor(() => Array.from(root.querySelectorAll(".leaf")).map(text).join(",") === "B,C");
         await settle();
