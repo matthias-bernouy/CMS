@@ -1,5 +1,5 @@
-import type { WDetailData } from "./types";
-import { actionIcon } from "./icons";
+import type { WDetailData } from "../types";
+import { actionIcon } from "../icons";
 
 type DetailAction = WDetailData["actions"][number];
 
