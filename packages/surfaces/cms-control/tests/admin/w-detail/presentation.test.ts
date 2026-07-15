@@ -76,7 +76,7 @@ describe("dashboard detail widget actions", () => {
                             editable: true,
                             columns: [
                                 { id: "label", label: "Label", path: "label", editable: true },
-                                { id: "values", label: "Values", path: "values", editable: true, value: "list" },
+                                { id: "values", label: "Values", path: "values", editable: true, type: "tokens" },
                             ],
                         },
                         {

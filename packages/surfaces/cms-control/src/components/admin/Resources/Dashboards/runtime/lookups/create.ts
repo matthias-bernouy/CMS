@@ -1,16 +1,13 @@
 import type { DashboardDto, DashboardField, DashboardOption, DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DashboardSourceGroup } from "../types";
-import type { DetailSelection } from "../domain";
-import { valueAt } from "./expressions";
-import { fetchSourceJson, itemFrom, sendSourceJson } from "./source";
-import { fieldValues } from "./mapping";
+import type { DetailSelection } from "../../domain";
+import type { DashboardSourceGroup } from "../../types";
+import { valueAt } from "../expressions";
+import { fieldValues } from "../mapping";
+import { fetchSourceJson, itemFrom, sendSourceJson } from "../source";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
-export type LookupCreateResult = {
-    value: unknown;
-    option: DashboardOption;
-};
+export type LookupCreateResult = { value: unknown; option: DashboardOption };
 
 export async function executeLookupCreate(
     group: DashboardSourceGroup,
@@ -43,10 +40,7 @@ export async function executeLookupCreate(
     const id = String(createdId);
     return {
         value: replaceCreatedValue(nextValue, createdValue, id),
-        option: {
-            value: id,
-            label: textValue(valueAt(created, create.labelPath)) || createdValue,
-        },
+        option: { value: id, label: textValue(valueAt(created, create.labelPath)) || createdValue },
     };
 }
 

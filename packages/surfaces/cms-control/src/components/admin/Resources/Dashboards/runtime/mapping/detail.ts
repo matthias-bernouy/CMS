@@ -1,0 +1,70 @@
+import type { DashboardAction, DashboardField, DashboardWidget } from "@bernouy/cms-dashboards";
+import type { WDetailData, WDetailSection } from "../../widgets/w-detail/types";
+import { matchesDashboardVisibility, textAt, valueAt } from "../expressions";
+import { detailField } from "./fields";
+import type { DetailOptions } from "./types";
+
+type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
+
+export function detailData(
+    widget: DetailWidget,
+    resource: unknown,
+    rowKey: string,
+    draft: Record<string, unknown> = {},
+    options: DetailOptions = {},
+    sourceId = "",
+): WDetailData {
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    const scope = { ...record(resource), ...fields };
+    return {
+        rowKey,
+        eyebrow: widget.id,
+        title: textAt(scope, widget.title?.path, widget.title?.fallback ?? widget.id),
+        status: widget.status ? textAt(scope, widget.status.path, widget.status.fallback) : undefined,
+        actions: (widget.actions ?? [])
+            .filter(action => matchesDashboardVisibility(action.visibleWhen, { fields, resource }))
+            .map(actionData),
+        main: sections(widget.main, resource, fields, options, sourceId),
+        aside: sections(widget.aside ?? [], resource, fields, options, sourceId),
+    };
+}
+
+export function fieldValues(widget: DetailWidget, resource: unknown): Record<string, unknown> {
+    const all = [...widget.main, ...(widget.aside ?? [])].flatMap(section => section.fields);
+    return Object.fromEntries(all.map(field => [field.id, valueAt(resource, field.path)]));
+}
+
+function sections(
+    sections: DetailWidget["main"],
+    resource: unknown,
+    fields: Record<string, unknown>,
+    options: DetailOptions,
+    sourceId: string,
+): WDetailSection[] {
+    return sections.map(section => ({
+        title: section.title,
+        ...(section.description ? { description: section.description } : {}),
+        fields: section.fields
+            .filter(field => matchesDashboardVisibility(field.visibleWhen, { fields, resource }))
+            .map(field => detailField(field, resource, fields, options, sourceId)),
+    }));
+}
+
+function actionData(action: DashboardAction): WDetailData["actions"][number] {
+    return {
+        label: action.label,
+        action: action.id,
+        tone: action.tone,
+        placement: action.placement,
+        section: action.section,
+        icon: isActionIcon(action.icon) ? action.icon : undefined,
+    };
+}
+
+function isActionIcon(value: string | undefined): value is "archive" | "download" | "link" | "trash" {
+    return value === "archive" || value === "download" || value === "link" || value === "trash";
+}
+
+function record(value: unknown): Record<string, unknown> {
+    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { P9rInput, Button, Combobox, P9rSelect } from "@bernouy/components";
+import { P9rInput, Button, Combobox, P9rSelect, TokenInput } from "@bernouy/components";
 import "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
 import {
     createFieldControl,
@@ -12,6 +12,7 @@ if (!customElements.get("p9r-input")) customElements.define("p9r-input", P9rInpu
 if (!customElements.get("p9r-button")) customElements.define("p9r-button", Button);
 if (!customElements.get("p9r-combobox")) customElements.define("p9r-combobox", Combobox);
 if (!customElements.get("p9r-select")) customElements.define("p9r-select", P9rSelect);
+if (!customElements.get("p9r-token-input")) customElements.define("p9r-token-input", TokenInput);
 
 const realFetch = globalThis.fetch;
 
@@ -49,7 +50,7 @@ describe("dashboard detail widget actions", () => {
                             editable: true,
                             columns: [
                                 { id: "label", label: "Label", path: "details.label", editable: true },
-                                { id: "values", label: "Values", path: "details.values", editable: true, value: "list" },
+                                { id: "values", label: "Values", path: "details.values", editable: true, type: "tokens" },
                             ],
                         },
                     ],
@@ -74,9 +75,10 @@ describe("dashboard detail widget actions", () => {
         await Promise.resolve();
 
         detail.shadowRoot!.querySelector<HTMLButtonElement>("[data-table-remove]")!.click();
-        const inputs = Array.from(detail.shadowRoot!.querySelectorAll("p9r-input")) as Array<HTMLElement & { value: string }>;
-        inputs[0]!.value = "Weight updated";
-        inputs[1]!.value = "285, 300";
+        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & { value: string };
+        const tokens = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & { value: string };
+        input.value = "Weight updated";
+        tokens.value = "285,300";
 
         const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
         save.shadowRoot.querySelector("button")!.click();
@@ -126,7 +128,7 @@ describe("dashboard detail widget actions", () => {
                             editable: true,
                             columns: [
                                 { id: "label", label: "Label", path: "label", editable: true },
-                                { id: "values", label: "Values", path: "values", editable: true, value: "list" },
+                                { id: "values", label: "Values", path: "values", editable: true, type: "tokens" },
                             ],
                         },
                         {
@@ -160,9 +162,9 @@ describe("dashboard detail widget actions", () => {
         document.body.append(detail);
         await Promise.resolve();
 
-        const inputs = Array.from(detail.shadowRoot!.querySelectorAll("p9r-input")) as Array<HTMLElement & { value: string }>;
-        inputs[1]!.value = "L1, L2";
-        inputs[1]!.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        const tokens = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & { value: string };
+        tokens.value = "L1,L2";
+        tokens.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 
         const matrix = detail.shadowRoot!.querySelectorAll("[data-field-control]")[1] as HTMLElement;
         const rows = Array.from(matrix.querySelectorAll("[data-table-row]"));

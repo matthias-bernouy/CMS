@@ -104,6 +104,7 @@ describe("typed dashboard detail fields", () => {
             { id: "table", label: "Table", path: "table", type: "table", editable: true, columns: [
                 { id: "check", label: "Check", path: "check", editable: true, type: "checkbox" },
                 { id: "text", label: "Text", path: "text", type: "text" },
+                { id: "legacy", label: "Legacy", path: "legacy", editable: true, value: "list" },
             ] },
             { id: "items", label: "Items", path: "items", type: "reorderable-list", itemKey: "id", fields: [
                 { id: "token", label: "Token", path: "token", type: "tokens" },
@@ -124,6 +125,7 @@ describe("typed dashboard detail fields", () => {
         expect(errors.join("\n")).toContain("cannot configure editing unless the table is editable");
         expect(errors.join("\n")).toContain("columns.0.type is not supported");
         expect(errors.join("\n")).toContain("cannot configure an editor unless the column is editable");
+        expect(errors.join("\n")).toContain("columns.2.value is not supported; use type");
         expect(errors.join("\n")).toContain("fields.0.type is not supported");
         expect(errors.join("\n")).toContain("lookup is only supported for combobox editors");
         expect(errors.join("\n")).toContain("lookup.create is not supported");

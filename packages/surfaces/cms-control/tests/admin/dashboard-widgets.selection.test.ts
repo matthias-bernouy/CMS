@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { widgetsForSelection } from "cms-control/components/admin/Resources/Dashboards/domain";
-import { relationDetailSectionElement } from "cms-control/components/admin/Resources/Dashboards/runtime/mountRelations";
+import { relationDetailSectionElement } from "cms-control/components/admin/Resources/Dashboards/runtime/mount/relations";
 
 describe("dashboard widget selection", () => {
     test("returns the selected detail widget without list wrappers", () => {

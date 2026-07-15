@@ -12,7 +12,7 @@ const css = baseCss + variantCss + responsiveCss;
 export class P9rInput extends Component {
     static formAssociated = true;
     static get observedAttributes() {
-        return ['value', 'label', 'placeholder', 'type', 'hint', 'hint-level', 'max-count', 'invalid', 'disabled', 'required'];
+        return ['value', 'label', 'placeholder', 'type', 'min', 'max', 'step', 'hint', 'hint-level', 'max-count', 'invalid', 'disabled', 'required'];
     }
 
     private _internals: ElementInternals;

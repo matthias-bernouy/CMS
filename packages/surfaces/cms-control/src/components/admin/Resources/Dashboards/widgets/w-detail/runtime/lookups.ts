@@ -1,5 +1,9 @@
 import { detailData, type DetailOptions } from "../../../runtime/mapping";
-import { isLookupField, loadDetailLookupOptions } from "../../../runtime/lookups";
+import {
+    allLookupTargetKeys,
+    loadDetailLookupOptions,
+    lookupTargetKeysDependingOn,
+} from "../../../runtime/lookups";
 import type { WDetailData } from "../types";
 import { DetailFieldState, parseJson, type DetailWidget } from "./fieldState";
 import { DetailRequestCoordinator, type DetailRequestConsumer } from "./requests";
@@ -9,9 +13,9 @@ type LookupCallbacks = {
     render(): void;
     isConnected(): boolean;
 };
-type FieldLoad = {
+type TargetLoad = {
     failed: boolean;
-    fieldId: string;
+    key: string;
     generation: number;
     options: DetailOptions[string];
 };
@@ -20,9 +24,9 @@ export class DetailLookups {
     private scopeKey = "";
     private scopeGeneration = 0;
     private reloadTimer: ReturnType<typeof setTimeout> | null = null;
-    private readonly pendingFieldIds = new Set<string>();
+    private readonly pendingTargetKeys = new Set<string>();
     private readonly consumers = new Map<string, DetailRequestConsumer>();
-    private readonly fieldGenerations = new Map<string, number>();
+    private readonly targetGenerations = new Map<string, number>();
 
     constructor(
         private readonly dataset: DOMStringMap,
@@ -47,22 +51,22 @@ export class DetailLookups {
         rowKey: string,
         sourceId: string,
         fields: Record<string, unknown>,
-        loadOptions: { fieldIds?: ReadonlySet<string>; useLatestFields?: boolean } = {},
+        loadOptions: { targetKeys?: ReadonlySet<string>; useLatestFields?: boolean } = {},
     ): Promise<void> {
-        if (!loadOptions.fieldIds) this.clearPendingRefresh();
-        const fieldIds = loadOptions.fieldIds ?? allLookupFieldIds(widget);
+        if (!loadOptions.targetKeys) this.clearPendingRefresh();
+        const targetKeys = loadOptions.targetKeys ?? allLookupTargetKeys(widget);
         const scopeGeneration = this.scopeGeneration;
-        const results = await Promise.all([...fieldIds].map(fieldId => (
-            this.loadField(widget, resource, sourceId, fields, fieldId)
+        const results = await Promise.all([...targetKeys].map(key => (
+            this.loadTarget(widget, resource, sourceId, fields, key)
         )));
         if (this.scopeGeneration !== scopeGeneration) return;
 
         const next = { ...this.currentOptions };
         let accepted = false;
         for (const result of results) {
-            if (this.fieldGenerations.get(result.fieldId) !== result.generation) continue;
-            if (result.failed && Object.hasOwn(this.currentOptions, result.fieldId)) continue;
-            next[result.fieldId] = result.options;
+            if (this.targetGenerations.get(result.key) !== result.generation) continue;
+            if (result.failed && Object.hasOwn(this.currentOptions, result.key)) continue;
+            next[result.key] = result.options;
             accepted = true;
         }
         if (!accepted) return;
@@ -76,22 +80,22 @@ export class DetailLookups {
     schedule(changedFieldId: string): void {
         const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
         if (!widget || widget.widget !== "w-detail") return;
-        const fieldIds = lookupFieldIdsDependingOn(widget, changedFieldId);
-        if (fieldIds.size === 0) return;
-        for (const fieldId of fieldIds) {
-            this.pendingFieldIds.add(fieldId);
-            this.invalidateField(fieldId);
+        const targetKeys = lookupTargetKeysDependingOn(widget, changedFieldId);
+        if (targetKeys.size === 0) return;
+        for (const key of targetKeys) {
+            this.pendingTargetKeys.add(key);
+            this.invalidateTarget(key);
         }
         this.cancelReloadTimer();
         this.reloadTimer = setTimeout(() => {
             this.reloadTimer = null;
-            const targetedFieldIds = new Set(this.pendingFieldIds);
-            this.pendingFieldIds.clear();
+            const targetedKeys = new Set(this.pendingTargetKeys);
+            this.pendingTargetKeys.clear();
             const resource = this.fields.currentResource();
             const sourceId = this.dataset.sourceId ?? "";
             if (!sourceId || resource === undefined) return;
             void this.load(widget, resource, this.dataset.rowKey ?? "", sourceId, this.fields.currentFields(), {
-                fieldIds: targetedFieldIds,
+                targetKeys: targetedKeys,
                 useLatestFields: true,
             });
         }, 250);
@@ -101,54 +105,54 @@ export class DetailLookups {
         this.scopeGeneration += 1;
         for (const consumer of this.consumers.values()) this.requests.cancel(consumer);
         this.consumers.clear();
-        this.fieldGenerations.clear();
+        this.targetGenerations.clear();
         this.clearPendingRefresh();
         this.currentOptions = {};
     }
 
-    private async loadField(
+    private async loadTarget(
         widget: DetailWidget,
         resource: unknown,
         sourceId: string,
         fields: Record<string, unknown>,
-        fieldId: string,
-    ): Promise<FieldLoad> {
-        const consumer = this.consumer(fieldId);
-        const generation = this.invalidateField(fieldId);
+        key: string,
+    ): Promise<TargetLoad> {
+        const consumer = this.consumer(key);
+        const generation = this.invalidateTarget(key);
         try {
             const result = await loadDetailLookupOptions(sourceId, widget, resource, fields, {
-                fieldIds: new Set([fieldId]),
+                targetKeys: new Set([key]),
                 loadData: (targetSourceId, ref, vars) => this.requests.load(consumer, targetSourceId, ref, vars),
             });
             return {
-                failed: result.failedFieldIds.has(fieldId),
-                fieldId,
+                failed: result.failedTargetKeys.has(key),
+                key,
                 generation,
-                options: result.options[fieldId] ?? [],
+                options: result.options[key] ?? [],
             };
         } catch {
-            return { failed: true, fieldId, generation, options: [] };
+            return { failed: true, key, generation, options: [] };
         }
     }
 
-    private consumer(fieldId: string): DetailRequestConsumer {
-        const existing = this.consumers.get(fieldId);
+    private consumer(key: string): DetailRequestConsumer {
+        const existing = this.consumers.get(key);
         if (existing) return existing;
         const consumer = this.requests.createConsumer();
-        this.consumers.set(fieldId, consumer);
+        this.consumers.set(key, consumer);
         return consumer;
     }
 
-    private invalidateField(fieldId: string): number {
-        const generation = (this.fieldGenerations.get(fieldId) ?? 0) + 1;
-        this.fieldGenerations.set(fieldId, generation);
-        const consumer = this.consumers.get(fieldId);
+    private invalidateTarget(key: string): number {
+        const generation = (this.targetGenerations.get(key) ?? 0) + 1;
+        this.targetGenerations.set(key, generation);
+        const consumer = this.consumers.get(key);
         if (consumer) this.requests.cancel(consumer);
         return generation;
     }
 
     private clearPendingRefresh(): void {
-        this.pendingFieldIds.clear();
+        this.pendingTargetKeys.clear();
         this.cancelReloadTimer();
     }
 
@@ -156,25 +160,4 @@ export class DetailLookups {
         if (this.reloadTimer) clearTimeout(this.reloadTimer);
         this.reloadTimer = null;
     }
-}
-
-function lookupFields(widget: DetailWidget) {
-    return [...widget.main, ...(widget.aside ?? [])].flatMap(section => section.fields)
-        .filter(isLookupField);
-}
-
-function allLookupFieldIds(widget: DetailWidget): Set<string> {
-    return new Set(lookupFields(widget).map(field => field.id));
-}
-
-function lookupFieldIdsDependingOn(widget: DetailWidget, changedFieldId: string): Set<string> {
-    const fieldIds = new Set<string>();
-    if (!changedFieldId) return fieldIds;
-    for (const field of lookupFields(widget)) {
-        const depends = Object.values(field.lookup?.params ?? {}).some(expression => (
-            expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`)
-        ));
-        if (depends) fieldIds.add(field.id);
-    }
-    return fieldIds;
 }

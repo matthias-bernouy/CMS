@@ -1,9 +1,8 @@
+import { createItemControl } from "./controls";
 import {
     itemKeyAt,
-    itemTextAt,
     type ReorderableListData,
     type ReorderableListItem,
-    type ReorderableListItemField,
 } from "./state";
 
 export function renderList(root: ShadowRoot, value: ReorderableListData): void {
@@ -47,7 +46,12 @@ function renderRow(value: ReorderableListData, item: ReorderableListItem, index:
     handle.textContent = "⠿";
     row.append(handle);
 
-    for (const field of value.fields) row.append(renderField(item, index, field));
+    for (const field of value.fields) {
+        const root = document.createElement("div");
+        root.className = "field";
+        root.append(createItemControl(item, index, field));
+        row.append(root);
+    }
 
     const remove = document.createElement("button");
     remove.className = "remove";
@@ -59,21 +63,6 @@ function renderRow(value: ReorderableListData, item: ReorderableListItem, index:
     remove.textContent = "×";
     row.append(remove);
     return row;
-}
-
-function renderField(item: ReorderableListItem, index: number, field: ReorderableListItemField): HTMLElement {
-    const root = document.createElement("div");
-    root.className = "field";
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = itemTextAt(item, field.path);
-    input.dataset.itemIndex = String(index);
-    input.dataset.itemPath = field.path;
-    input.setAttribute("aria-label", field.label);
-    if (field.required) input.required = true;
-    if (field.placeholder) input.placeholder = field.placeholder;
-    root.append(input);
-    return root;
 }
 
 function columns(value: ReorderableListData): string {

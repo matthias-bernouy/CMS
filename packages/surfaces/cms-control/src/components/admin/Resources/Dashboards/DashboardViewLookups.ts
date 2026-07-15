@@ -1,6 +1,6 @@
 import { showToast } from "@bernouy/components";
 import { detailKey } from "./domain";
-import { executeLookupCreate } from "./runtime/lookupCreate";
+import { executeLookupCreate } from "./runtime/lookups/create";
 import type { DashboardViewActionContext } from "./DashboardViewActions";
 import type { WidgetFieldChangeDetail } from "./widgets/shared";
 

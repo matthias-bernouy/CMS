@@ -2,6 +2,4 @@ export function detailReloadEvent(sourceId: string, dashboardId: string, collect
     return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
 }
 
-function encodePart(value: string): string {
-    return encodeURIComponent(value);
-}
+function encodePart(value: string): string { return encodeURIComponent(value); }

@@ -36,9 +36,7 @@ export function validateTableField(
         }
         if (!column.label) errors.push(`${columnPath}.label is required`);
         validateRequiredPath("path", column.path, columnPath, errors);
-        if (column.value !== undefined && !["text", "list"].includes(column.value)) {
-            errors.push(`${columnPath}.value is not supported`);
-        }
+        if (Object.hasOwn(column, "value")) errors.push(`${columnPath}.value is not supported; use type`);
         validateTableColumnEditing(field, column, columnPath, dashboard, source, errors);
     });
     if (field.derive) {
@@ -98,20 +96,15 @@ function validateTableColumnEditing(
 ): void {
     const hasEditingConfig = column.editable === true || column.type !== undefined
         || column.options !== undefined
-        || column.lookup !== undefined
-        || column.value !== undefined;
+        || column.lookup !== undefined;
     if (hasEditingConfig && table.editable !== true) {
         errors.push(`${path} cannot configure editing unless the table is editable`);
         return;
     }
     if (column.editable !== true) {
-        if (column.type !== undefined || column.options !== undefined || column.lookup !== undefined || column.value !== undefined) {
+        if (column.type !== undefined || column.options !== undefined || column.lookup !== undefined) {
             errors.push(`${path} cannot configure an editor unless the column is editable`);
         }
-        return;
-    }
-    if (column.value !== undefined && column.type !== undefined) {
-        errors.push(`${path} cannot combine legacy value with type`);
         return;
     }
     validateNestedEditor(column, path, ["text", "select", "combobox", "tokens"], dashboard, source, errors);

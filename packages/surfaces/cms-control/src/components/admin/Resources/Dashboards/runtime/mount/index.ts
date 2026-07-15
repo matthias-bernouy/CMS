@@ -1,11 +1,11 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DashboardRuntimeWidget, DetailSelection, RenderContext, RuntimeDetailWidget } from "../domain";
-import "./../widgets/w-section/WSection";
-import "./../widgets/w-table/WTable";
-import "./../widgets/w-detail/WDetail";
+import type { DashboardRuntimeWidget, DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
+import "../../widgets/w-section/WSection";
+import "../../widgets/w-table/WTable";
+import "../../widgets/w-detail/WDetail";
 import { detailReloadEvent } from "./reload";
-import { relationDetailSectionElement } from "./mountRelations";
-import { jsonAttr, sourceWrapper, tableRowsTemplate } from "./mountSource";
+import { relationDetailSectionElement } from "./relations";
+import { jsonAttr, sourceWrapper, tableRowsTemplate } from "./source";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -85,9 +85,7 @@ function detailElement(widget: RuntimeDetailWidget, context: RenderContext, deta
     element.setAttribute("data-source-json", "{{ dashboardData | json }}");
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    for (const relationWidget of widget.relationWidgets ?? []) {
-        element.append(relationDetailSectionElement(relationWidget));
-    }
+    for (const relationWidget of widget.relationWidgets ?? []) element.append(relationDetailSectionElement(relationWidget));
     wrapper.append(element);
     return wrapper;
 }

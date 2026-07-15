@@ -52,8 +52,10 @@
 .remove:hover { background: #fff0f0; color: #bd2533; }
 
 .field { display: grid; min-width: 0; }
-.field input { border: 1px solid var(--border-default); border-radius: 6px; box-sizing: border-box; font: inherit; min-width: 0; padding: 7px 8px; width: 100%; }
+.field input:not([type="checkbox"]) { border: 1px solid var(--border-default); border-radius: 6px; box-sizing: border-box; font: inherit; min-width: 0; padding: 7px 8px; width: 100%; }
 .field input:focus { border-color: #0f6b53; box-shadow: 0 0 0 2px rgb(15 107 83 / 12%); outline: none; }
+.field input[type="checkbox"] { height: 18px; margin: 7px 0; width: 18px; }
+.field p9r-select, .field p9r-combobox { display: block; min-width: 0; width: 100%; }
 
 .add { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
 

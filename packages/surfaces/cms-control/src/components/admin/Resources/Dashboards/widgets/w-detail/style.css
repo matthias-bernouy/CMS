@@ -85,6 +85,12 @@ dd {
     min-width: 0;
 }
 
+.detail-checkbox {
+    height: 18px;
+    margin: 7px 0;
+    width: 18px;
+}
+
 .readonly,
 .detail-table-row > span {
     overflow-wrap: anywhere;
@@ -146,7 +152,11 @@ p9r-token-input {
     min-width: 0;
 }
 
-.detail-table-row > p9r-input {
+.detail-table-row > span > p9r-input,
+.detail-table-row > span > p9r-select,
+.detail-table-row > span > p9r-combobox,
+.detail-table-row > span > p9r-token-input {
+    display: block;
     min-width: 0;
 }
 
@@ -155,7 +165,10 @@ p9r-token-input {
     font-size: 13px;
 }
 
-.detail-table p9r-input {
+.detail-table p9r-input,
+.detail-table p9r-select,
+.detail-table p9r-combobox,
+.detail-table p9r-token-input {
     --_field-min-height: 34px;
     --_field-padding-y: 5px;
     --_field-padding-x: 9px;

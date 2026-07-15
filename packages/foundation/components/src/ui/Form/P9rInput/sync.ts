@@ -19,6 +19,15 @@ export const syncType = (host: HTMLElement, input: HTMLInputElement | null) => {
     input.setAttribute('type', host.getAttribute('type') ?? 'text');
 };
 
+export const syncNumericConstraints = (host: HTMLElement, input: HTMLInputElement | null) => {
+    if (!input) return;
+    for (const name of ['min', 'max', 'step'] as const) {
+        const value = host.getAttribute(name);
+        if (value === null) input.removeAttribute(name);
+        else input.setAttribute(name, value);
+    }
+};
+
 export const syncDisabled = (host: HTMLElement, input: HTMLInputElement | null) => {
     if (input) input.disabled = host.hasAttribute('disabled');
 };
@@ -71,6 +80,7 @@ export const syncAll = (
     syncLabel(host, label);
     syncPlaceholder(host, input);
     syncType(host, input);
+    syncNumericConstraints(host, input);
     syncDisabled(host, input);
     syncRequired(host, input);
     syncHint(host, hint, counter, meta);

@@ -71,16 +71,15 @@ export type DashboardColumn = {
     format?: "text" | "badge" | "date" | "money";
 };
 
-type DashboardEditableTableColumn = {
-    editable?: boolean;
-    value?: "text" | "list";
-};
-
-export type DashboardTableColumn = DashboardColumn & DashboardEditableTableColumn & (
+type DashboardTableColumnEditor =
     | { type?: "text"; options?: never; lookup?: never }
     | { type: "select"; options: DashboardOption[]; lookup?: never }
     | { type: "combobox"; options?: DashboardOption[]; lookup?: DashboardEmbeddedLookupRef }
-    | { type: "tokens"; options?: never; lookup?: never }
+    | { type: "tokens"; options?: never; lookup?: never };
+
+export type DashboardTableColumn = DashboardColumn & (
+    | { editable?: false; type?: never; options?: never; lookup?: never }
+    | ({ editable: true } & DashboardTableColumnEditor)
 );
 
 export type DashboardTableDerive = {

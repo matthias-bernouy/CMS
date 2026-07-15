@@ -64,25 +64,21 @@ function parseTableColumns(value: unknown, name: string, tableEditable: boolean)
         const column = parseColumn(entry, path);
         rejectDuplicateId(column.id, ids, `${path}.id`);
         const editable = optionalBoolean(entry.editable, `${path}.editable`);
-        const hasEditor = ["type", "options", "lookup", "value"].some(key => Object.hasOwn(entry, key));
+        if (Object.hasOwn(entry, "value")) {
+            throw new IntegrationInputError(`${path}.value`, "is not supported; use type");
+        }
+        const hasEditor = ["type", "options", "lookup"].some(key => Object.hasOwn(entry, key));
         if ((editable === true || hasEditor) && !tableEditable) {
             throw new IntegrationInputError(path, "cannot configure editing unless the table is editable");
         }
         if (hasEditor && editable !== true) {
             throw new IntegrationInputError(path, "cannot configure an editor unless the column is editable");
         }
-        const legacyValue = parseLegacyValue(entry, path);
-        if (legacyValue !== undefined && Object.hasOwn(entry, "type")) {
-            throw new IntegrationInputError(path, "cannot combine legacy value with type");
-        }
-        const editor = editable === true && legacyValue === undefined
-            ? parseEditor(entry, path, ["text", "select", "combobox", "tokens"])
-            : {};
+        if (editable !== true) return column as DashboardTableColumn;
         return {
             ...column,
-            ...(editable ? { editable } : {}),
-            ...(legacyValue ? { value: legacyValue } : {}),
-            ...editor,
+            editable: true,
+            ...parseEditor(entry, path, ["text", "select", "combobox", "tokens"]),
         } as DashboardTableColumn;
     });
 }
@@ -140,14 +136,6 @@ function parseEditor(value: Record<string, unknown>, name: string, allowed: read
         ...(options ? { options } : {}),
         ...(lookup ? { lookup } : {}),
     };
-}
-
-function parseLegacyValue(value: Record<string, unknown>, name: string): "text" | "list" | undefined {
-    if (!Object.hasOwn(value, "value")) return undefined;
-    if (value.value !== "text" && value.value !== "list") {
-        throw new IntegrationInputError(`${name}.value`, "must be text or list");
-    }
-    return value.value;
 }
 
 function parseTableDerive(value: unknown, name: string): DashboardTableDerive {

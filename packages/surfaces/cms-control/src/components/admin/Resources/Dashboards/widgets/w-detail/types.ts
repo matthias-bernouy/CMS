@@ -1,14 +1,21 @@
 import type { WidgetAction } from "../shared";
 import type { DashboardMediaItem } from "../w-media-field/types";
 
-export type WDetailTableColumn = {
+type WDetailOption = { label: string; value: string };
+
+type WDetailNestedFieldBase = {
     key: string;
     label: string;
     path: string;
     width?: string;
-    editable?: boolean;
-    value?: "text" | "list";
 };
+
+export type WDetailTableColumn = WDetailNestedFieldBase & (
+    | { editable?: false; type?: never; options?: never }
+    | { editable: true; type: "text" | "tokens"; options?: never }
+    | { editable: true; type: "select"; options: WDetailOption[] }
+    | { editable: true; type: "combobox"; options: WDetailOption[] }
+);
 
 export type WDetailTableDerive = {
     type: "cartesian";
@@ -19,7 +26,7 @@ export type WDetailTableDerive = {
 
 export type WDetailTableRow = Record<string, unknown>;
 
-export type WDetailReorderableListField = {
+type WDetailReorderableListFieldBase = {
     id: string;
     label: string;
     path: string;
@@ -27,14 +34,20 @@ export type WDetailReorderableListField = {
     placeholder?: string;
 };
 
-export type WDetailFieldValue = string | string[] | DashboardMediaItem[] | WDetailTableRow[];
+export type WDetailReorderableListField = WDetailReorderableListFieldBase & (
+    | { type: "text" | "checkbox"; options?: never }
+    | { type: "select"; options: WDetailOption[] }
+    | { type: "combobox"; options: WDetailOption[] }
+);
+
+export type WDetailFieldValue = string | number | boolean | string[] | DashboardMediaItem[] | WDetailTableRow[];
 
 export type WDetailField = {
     id: string;
     label: string;
     value: WDetailFieldValue;
-    input: "text" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "table" | "reorderable-list" | "readonly" | "badge";
-    options?: Array<{ label: string; value: string }>;
+    input: "text" | "number" | "checkbox" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "table" | "reorderable-list" | "readonly" | "badge";
+    options?: WDetailOption[];
     columns?: WDetailTableColumn[];
     derive?: WDetailTableDerive;
     itemKey?: string;
@@ -44,7 +57,12 @@ export type WDetailField = {
     minItems?: number;
     maxItems?: number;
     editable?: boolean;
+    required?: boolean;
     placeholder?: string;
+    rows?: number;
+    min?: number;
+    max?: number;
+    step?: number;
     creatable?: boolean;
     accept?: string;
 };

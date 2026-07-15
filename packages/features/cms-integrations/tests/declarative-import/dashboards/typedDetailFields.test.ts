@@ -13,8 +13,7 @@ describe("typed dashboard field parsing", () => {
                 { ...column("select"), editable: true, type: "select", options: ["one"] },
                 { ...column("combo"), editable: true, type: "combobox", lookup: lookup() },
                 { ...column("tokens"), editable: true, type: "tokens" },
-                { ...column("legacy"), editable: true, value: "list" },
-                ...columns(DASHBOARD_MAX_NESTED_FIELDS - 5, 5),
+                ...columns(DASHBOARD_MAX_NESTED_FIELDS - 4, 4),
             ] },
             { ...base("axis", "reorderable-list"), itemKey: "id", fields: [
                 { ...base("text", "text") },
@@ -31,7 +30,7 @@ describe("typed dashboard field parsing", () => {
         expect(fields[1]).toMatchObject({ type: "checkbox" });
         expect((fields[2] as any).options).toHaveLength(DASHBOARD_MAX_OPTIONS);
         expect((fields[3] as any).columns).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
-        expect((fields[3] as any).columns[4]).toMatchObject({ editable: true, value: "list" });
+        expect((fields[3] as any).columns[3]).toMatchObject({ editable: true, type: "tokens" });
         expect((fields[4] as any).fields).toHaveLength(DASHBOARD_MAX_NESTED_FIELDS);
         expect(fields[5]).toMatchObject({ type: "schema", exclude: { from: "$field.axis", valuePath: "fieldKey" } });
     });
@@ -71,7 +70,7 @@ describe("typed dashboard field parsing", () => {
             [{ ...base("table", "table"), columns: [column("same"), column("same")] }, /id.*duplicated/],
             [table({ ...column("value"), editable: true, type: "checkbox" }), /type.*must be text, select, combobox, tokens/],
             [table({ ...column("value"), editable: true, type: "tokens", options: ["one"] }), /options.*not supported/],
-            [table({ ...column("value"), editable: true, type: "text", value: "list" }), /combine legacy value with type/],
+            [table({ ...column("value"), editable: true, value: "list" }), /value.*not supported/],
             [list({ ...base("value", "tokens") }), /type.*must be text, checkbox, select, combobox/],
             [list({ ...base("value", "text"), options: ["one"] }), /options.*not supported/],
             [list({ ...base("value", "select") }), /options.*required/],

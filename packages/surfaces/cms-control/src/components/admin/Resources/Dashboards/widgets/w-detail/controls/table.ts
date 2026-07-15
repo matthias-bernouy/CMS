@@ -4,7 +4,8 @@ import {
     type ReorderableListData,
 } from "../../w-reorderable-list/WReorderableList";
 import type { WDetailField, WDetailFieldValue } from "../types";
-import { bindFieldControl, type ValueControl } from "./shared";
+import { createTableEditor, readTableEditor } from "./editors";
+import { bindFieldControl } from "./shared";
 
 const tableRowSources = new WeakMap<HTMLElement, Record<string, unknown>>();
 
@@ -32,7 +33,7 @@ export function createTableControl(field: WDetailField): HTMLElement {
         add.type = "button";
         add.className = "detail-table-add";
         add.dataset.tableAdd = "true";
-        add.textContent = "Add row";
+        add.textContent = field.addLabel ?? "Add row";
         root.append(add);
     }
     return root;
@@ -61,13 +62,8 @@ export function tableRow(field: WDetailField, row: Record<string, unknown>): HTM
     tableRowSources.set(element, structuredClone(row));
     for (const column of field.columns ?? []) {
         const cell = document.createElement("span");
-        if (field.editable && column.editable) {
-            const input = document.createElement("p9r-input") as ValueControl;
-            const value = tableCellInputValue(valueAt(row, column.path), column.value);
-            input.setAttribute("value", value);
-            input.value = value;
-            input.dataset.tableColumn = column.key;
-            cell.append(input);
+        if (field.editable && column.editable === true) {
+            cell.append(createTableEditor(column, valueAt(row, column.path)));
         } else {
             cell.textContent = tableCellDisplayValue(valueAt(row, column.path));
         }
@@ -98,9 +94,9 @@ export function isReorderableListControl(control: HTMLElement): control is Dashb
 function readTableRow(field: WDetailField, row: HTMLElement): Record<string, unknown> {
     const value = structuredClone(tableRowSources.get(row) ?? {});
     for (const column of field.columns ?? []) {
-        const input = row.querySelector<ValueControl>(`[data-table-column="${cssEscape(column.key)}"]`);
+        const input = row.querySelector<HTMLElement>(`[data-table-column="${cssEscape(column.key)}"]`);
         if (!input) continue;
-        setValueAt(value, column.path, column.value === "list" ? listValue(input.value) : input.value);
+        setValueAt(value, column.path, readTableEditor(column, input));
     }
     return value;
 }
@@ -122,18 +118,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function tableCellInputValue(value: unknown, kind: "text" | "list" | undefined): string {
-    if (kind === "list" && Array.isArray(value)) return value.map(item => String(item)).join(", ");
-    return value === null || value === undefined ? "" : String(value);
-}
-
 function tableCellDisplayValue(value: unknown): string {
     if (Array.isArray(value)) return value.map(item => String(item)).join(", ");
     return value === null || value === undefined ? "" : String(value);
-}
-
-function listValue(value: string): string[] {
-    return value.split(",").map(item => item.trim()).filter(Boolean);
 }
 
 function tableColumns(columns: WDetailField["columns"], editable: boolean): string {

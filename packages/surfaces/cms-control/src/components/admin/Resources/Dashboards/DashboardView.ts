@@ -9,7 +9,7 @@ import { detailKey, type DetailSelection } from "./domain";
 import { isDashboardExampleMode } from "./mode";
 import { renderDashboardShell, renderExampleShell } from "./rendering";
 import { configureDashboardBindingFilters } from "./runtime/bindingFilters";
-import { detailReloadEvent } from "./runtime/reload";
+import { detailReloadEvent } from "./runtime/mount/reload";
 import type { DashboardSourceGroup } from "./types";
 import { updateDashboardWidgetExampleField } from "./widgets/example";
 import { WIDGET_ACTION_EVENT, WIDGET_BACK_EVENT, WIDGET_FIELD_CHANGE_EVENT, WIDGET_MEDIA_ACTION_EVENT, WIDGET_ROW_SELECT_EVENT, type WidgetActionDetail, type WidgetFieldChangeDetail, type WidgetMediaActionDetail, type WidgetRowSelectDetail } from "./widgets/shared";

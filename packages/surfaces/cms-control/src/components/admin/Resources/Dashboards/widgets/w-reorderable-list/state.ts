@@ -2,13 +2,20 @@ import { setValueAt, valueAt } from "../../runtime/expressions";
 
 export type ReorderableListItem = Record<string, unknown>;
 
-export type ReorderableListItemField = {
+type ReorderableListItemFieldBase = {
     id: string;
     label: string;
     path: string;
     required?: boolean;
     placeholder?: string;
 };
+
+export type ReorderableListItemField = ReorderableListItemFieldBase & (
+    | { type?: "text"; options?: never }
+    | { type: "checkbox"; options?: never }
+    | { type: "select"; options: Array<{ label: string; value: string }> }
+    | { type: "combobox"; options: Array<{ label: string; value: string }> }
+);
 
 export type ReorderableListData = {
     items: ReorderableListItem[];

@@ -1,6 +1,6 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import { route } from "../api";
-import { resolveParams, type RuntimeVars } from "./expressions";
+import { route } from "../../api";
+import { resolveParams, type RuntimeVars } from "../expressions";
 
 export function sourceWrapper(
     sourceId: string,
@@ -17,9 +17,7 @@ export function urlSourceWrapper(url: string, alias: string): HTMLElement {
     return wrapper;
 }
 
-export function jsonAttr(value: unknown): string {
-    return JSON.stringify(value);
-}
+export function jsonAttr(value: unknown): string { return JSON.stringify(value); }
 
 export function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" }>): HTMLElement {
     const row = document.createElement("cms-dashboard-w-row");
@@ -49,10 +47,5 @@ function sourceUrl(
     return `${url.pathname}${url.search}`;
 }
 
-function repeatPath(alias: string, path: string | undefined): string {
-    return path ? `${alias}.${path}` : alias;
-}
-
-function bindingPath(alias: string, path: string): string {
-    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
-}
+function repeatPath(alias: string, path: string | undefined): string { return path ? `${alias}.${path}` : alias; }
+function bindingPath(alias: string, path: string): string { return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`; }

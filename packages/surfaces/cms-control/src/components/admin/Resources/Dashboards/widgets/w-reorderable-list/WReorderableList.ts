@@ -15,6 +15,7 @@ import {
     type ReorderableListItem,
 } from "./state";
 import { renderList, renderedRows } from "./view";
+import { readItemControl } from "./controls";
 
 export type { ReorderableListData, ReorderableListItem, ReorderableListItemField } from "./state";
 
@@ -29,6 +30,7 @@ export class DashboardWReorderableList extends Component {
     override connectedCallback(): void {
         this.shadowRoot!.addEventListener("click", this.onClick);
         this.shadowRoot!.addEventListener("input", this.onInput);
+        this.shadowRoot!.addEventListener("change", this.onChange);
         this.shadowRoot!.addEventListener("dragstart", this.onDragStart as EventListener);
         this.shadowRoot!.addEventListener("dragover", this.onDragOver as EventListener);
         this.shadowRoot!.addEventListener("drop", this.onDrop as EventListener);
@@ -39,14 +41,17 @@ export class DashboardWReorderableList extends Component {
     disconnectedCallback(): void {
         this.shadowRoot?.removeEventListener("click", this.onClick);
         this.shadowRoot?.removeEventListener("input", this.onInput);
+        this.shadowRoot?.removeEventListener("change", this.onChange);
         this.shadowRoot?.removeEventListener("dragstart", this.onDragStart as EventListener);
         this.shadowRoot?.removeEventListener("dragover", this.onDragOver as EventListener);
         this.shadowRoot?.removeEventListener("drop", this.onDrop as EventListener);
         this.shadowRoot?.removeEventListener("dragend", this.onDragEnd);
+        this.clearDragState();
     }
 
     get data(): ReorderableListData { return cloneData(this.value); }
     set data(value: ReorderableListData) {
+        this.clearDragState();
         this.value = normalizeData(value);
         if (this.isConnected) this.render();
     }
@@ -65,11 +70,21 @@ export class DashboardWReorderableList extends Component {
     };
 
     private onInput = (event: Event): void => {
-        const input = (event.target as Element | null)?.closest<HTMLInputElement>("[data-item-index][data-item-path]");
-        if (!input) return;
-        if (updateItem(this.value, Number(input.dataset.itemIndex), input.dataset.itemPath ?? "", input.value)) {
-            this.commit(false);
-        }
+        const control = this.itemControl(event);
+        if (!control) return;
+        event.stopPropagation();
+        const field = this.itemField(control);
+        if (!field || (field.type ?? "text") !== "text") return;
+        this.updateControl(control, field);
+    };
+
+    private onChange = (event: Event): void => {
+        const control = this.itemControl(event);
+        if (!control) return;
+        event.stopPropagation();
+        const field = this.itemField(control);
+        if (!field || (field.type ?? "text") === "text") return;
+        this.updateControl(control, field);
     };
 
     private onDragStart = (event: DragEvent): void => {
@@ -123,6 +138,19 @@ export class DashboardWReorderableList extends Component {
     }
 
     private rows(): HTMLElement[] { return renderedRows(this.shadowRoot!); }
+
+    private itemControl(event: Event): HTMLElement | null {
+        return (event.target as Element | null)?.closest<HTMLElement>("[data-item-index][data-item-path]") ?? null;
+    }
+
+    private itemField(control: HTMLElement): ReorderableListData["fields"][number] | undefined {
+        return this.value.fields.find(field => field.id === control.dataset.itemField);
+    }
+
+    private updateControl(control: HTMLElement, field: ReorderableListData["fields"][number]): void {
+        if (updateItem(this.value, Number(control.dataset.itemIndex), control.dataset.itemPath ?? "",
+            readItemControl(field, control))) this.commit(false);
+    }
 }
 
 if (!customElements.get("cms-dashboard-w-reorderable-list")) {
