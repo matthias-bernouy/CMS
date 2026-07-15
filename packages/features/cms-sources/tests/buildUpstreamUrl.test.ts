@@ -13,6 +13,18 @@ describe("buildUpstreamUrl", () => {
         expect(r).toEqual({ ok: true, url: "https://api.example.com/v1/items", headers: {} });
     });
 
+    test("rejects credentialed targets without exposing the credential", () => {
+        const r = buildUpstreamUrl(ep({
+            targetUrl: "https://user:super-secret@api.example.com/private",
+        }), q(""));
+        expect(r.ok).toBe(false);
+        if (!r.ok) {
+            expect(r.status).toBe(500);
+            expect(r.message).not.toContain("user");
+            expect(r.message).not.toContain("super-secret");
+        }
+    });
+
     test("only DECLARED query params are forwarded", () => {
         const e = ep({ input: { params: [{ name: "lat", in: "query", required: true, schema: { type: "number" } }] } });
         const r = buildUpstreamUrl(e, q("lat=48.8&evil=x"));

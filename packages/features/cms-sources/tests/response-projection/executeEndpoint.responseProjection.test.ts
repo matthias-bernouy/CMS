@@ -20,7 +20,7 @@ describe("executeEndpoint response projection integration", () => {
             throw new Error("observer failure must be neutral");
         });
         const response = await executeEndpoint(ep({
-            targetUrl: "https://user:password@api.example.com/private?token=secret",
+            targetUrl: "https://api.example.com/private?token=secret",
             headers: [{ name: "Authorization", source: { from: "static", value: "Bearer secret" } }],
         }), new Request("http://local.test/source?private=value", {
             headers: { cookie: "session=secret" },

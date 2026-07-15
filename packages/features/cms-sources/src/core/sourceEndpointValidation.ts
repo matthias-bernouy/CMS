@@ -16,7 +16,7 @@ export function validateEndpoint(endpoint: SourceEndpoint, errors: string[]): vo
     }
     validateAccess(endpoint, errors);
     const target = validateSourceTargetUrl(endpoint.targetUrl);
-    if (!target.ok) errors.push(`invalid targetUrl for "${endpoint.urn}": "${endpoint.targetUrl}" (${target.reason})`);
+    if (!target.ok) errors.push(`invalid targetUrl for "${endpoint.urn}": ${target.reason}`);
     validateParams(endpoint, errors);
     validateResponseKind(endpoint, errors);
     validateHeaders(endpoint, errors);

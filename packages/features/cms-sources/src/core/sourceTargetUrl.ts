@@ -5,6 +5,8 @@ export type SourceTargetUrlValidationOptions = {
 
 type TargetUrlVerdict = { ok: true } | { ok: false; reason: string };
 
+export const URL_CREDENTIALS_ERROR = "targetUrl must not contain credentials";
+
 export function validateSourceTargetUrl(value: string, opts: SourceTargetUrlValidationOptions = {}): TargetUrlVerdict {
     let url: URL;
     try {
@@ -14,6 +16,9 @@ export function validateSourceTargetUrl(value: string, opts: SourceTargetUrlVali
     }
     if (url.protocol !== "http:" && url.protocol !== "https:") {
         return { ok: false, reason: "targetUrl must use http or https" };
+    }
+    if (hasUrlCredentials(url)) {
+        return { ok: false, reason: URL_CREDENTIALS_ERROR };
     }
 
     const hostname = normalizeHostname(url.hostname);
@@ -33,6 +38,10 @@ export function validateSourceTargetUrl(value: string, opts: SourceTargetUrlVali
 
 export function isAllowedSourceTargetUrl(value: string, opts?: SourceTargetUrlValidationOptions): boolean {
     return validateSourceTargetUrl(value, opts).ok;
+}
+
+export function hasUrlCredentials(url: URL): boolean {
+    return url.username !== "" || url.password !== "";
 }
 
 function normalizeHostname(value: string): string {

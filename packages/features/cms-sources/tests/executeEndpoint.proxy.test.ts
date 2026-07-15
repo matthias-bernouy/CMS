@@ -39,6 +39,16 @@ describe("executeEndpoint proxy", () => {
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
+    test("credentialed target returns a safe error without fetch", async () => {
+        const fetchImpl = okFetch();
+        const response = await executeEndpoint(ep({
+            targetUrl: "https://user:super-secret@api.example.com/private",
+        }), new Request("http://local/x"), { fetchImpl });
+        expect(response.status).toBe(500);
+        expect(await response.text()).toBe("targetUrl must not contain credentials");
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
     test("upstream body and failures are proxied", async () => {
         const bodyFetch = mock(async () => new Response("hello"));
         const response = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl: bodyFetch });

@@ -1,4 +1,5 @@
 import type { SourceEndpoint, EndpointParam } from "../interfaces/Source";
+import { hasUrlCredentials, URL_CREDENTIALS_ERROR } from "./sourceTargetUrl";
 
 export type BuildUpstream =
     | { ok: true;  url: string; headers: Record<string, string> }
@@ -63,27 +64,38 @@ export function buildUpstreamUrl(
         else                       headers[p.name] = value;   // in: "header"
     }
 
+    let declaredTarget: URL;
+    try {
+        declaredTarget = new URL(endpoint.targetUrl.replace(/\{[^}]+\}/g, "_"));
+    } catch {
+        return { ok: false, status: 500, message: "invalid targetUrl" };
+    }
+    if (hasUrlCredentials(declaredTarget)) {
+        return { ok: false, status: 500, message: URL_CREDENTIALS_ERROR };
+    }
+
     let path = endpoint.targetUrl;
     for (const [name, value] of pathValues) {
         path = path.replaceAll(`{${name}}`, encodeURIComponent(value));
     }
     if (/\{[^}]+\}/.test(path)) {
-        return { ok: false, status: 500, message: `unfilled placeholder in targetUrl: "${endpoint.targetUrl}"` };
+        return { ok: false, status: 500, message: "unfilled placeholder in targetUrl" };
     }
 
     let target: URL;
-    let baseOrigin: string;
     try {
-        target     = new URL(path);
-        baseOrigin = new URL(endpoint.targetUrl.replace(/\{[^}]+\}/g, "_")).origin;
+        target = new URL(path);
     } catch {
-        return { ok: false, status: 500, message: `invalid targetUrl: "${endpoint.targetUrl}"` };
+        return { ok: false, status: 500, message: "invalid targetUrl" };
+    }
+    if (hasUrlCredentials(target)) {
+        return { ok: false, status: 500, message: URL_CREDENTIALS_ERROR };
     }
 
     for (const [name, value] of queryParams) target.searchParams.append(name, value);
 
-    if (target.origin !== baseOrigin) {
-        return { ok: false, status: 502, message: `target escaped declared origin (${baseOrigin})` };
+    if (target.origin !== declaredTarget.origin) {
+        return { ok: false, status: 502, message: `target escaped declared origin (${declaredTarget.origin})` };
     }
 
     return { ok: true, url: target.toString(), headers };
