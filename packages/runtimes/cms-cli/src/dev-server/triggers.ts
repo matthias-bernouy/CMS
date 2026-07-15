@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
     DuplicateTriggerError,
+    matchesEndpointTriggerScope,
     type TriggerLastRun,
     type TriggerRecord,
     type TriggerRepository,
@@ -51,6 +52,12 @@ export class LocalFsTriggerRepository implements TriggerRepository {
 
     async getAllTriggers(): Promise<TriggerRecord[]> {
         return (await this.readAll()).map(trigger => structuredClone(trigger));
+    }
+
+    async findEndpointTriggers(source: string, endpoint: string): Promise<TriggerRecord[]> {
+        return (await this.readAll())
+            .filter(trigger => matchesEndpointTriggerScope(trigger, source, endpoint))
+            .map(trigger => structuredClone(trigger));
     }
 
     async setEnabled(id: string, enabled: boolean): Promise<TriggerRecord | null> {

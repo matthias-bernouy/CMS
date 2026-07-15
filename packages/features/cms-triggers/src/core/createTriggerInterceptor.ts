@@ -2,7 +2,7 @@ import type { FunctionUserContext } from "@bernouy/cms-functions";
 import type { ExecutorDeps, SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
 import type { FunctionRepository } from "@bernouy/cms-functions";
 import { readJsonBodyUnderLimit, DEFAULT_TRIGGER_BODY_LIMIT_BYTES } from "./bodyBuffer";
-import { matchingTriggers } from "./matchTrigger";
+import { endpointMatch, matchingTriggers } from "./matchTrigger";
 import { anyTriggerReadsRequestBody, anyTriggerReadsResponseBody } from "./triggerRefs";
 import { runTriggers } from "./runTriggers";
 import type { TriggerRecord } from "../interfaces/TriggerDefinition";
@@ -25,7 +25,11 @@ export type CreateTriggerInterceptorOptions = {
 
 export function createTriggerInterceptor(options: CreateTriggerInterceptorOptions): TriggerInterceptor {
     return async (endpoint, request, next) => {
-        const installed = await options.triggers.getAllTriggers();
+        const match = endpointMatch(endpoint);
+        if (!match) return next(request);
+        const installed = options.triggers.findEndpointTriggers
+            ? await options.triggers.findEndpointTriggers(match.source, match.endpoint)
+            : await options.triggers.getAllTriggers();
         const requestTriggers = matchingTriggers(installed, endpoint, "request");
         const responseTriggers = matchingTriggers(installed, endpoint, "response");
         if (!requestTriggers.length && !responseTriggers.length) return next(request);

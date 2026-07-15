@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+    InMemoryTriggerRepository,
     matchingTriggers,
     readJsonBodyUnderLimit,
     triggerReadsRequestBody,
@@ -9,10 +10,11 @@ import {
 import { endpoint, trigger } from "./helpers/triggerFixtures";
 
 describe("cms-triggers matching", () => {
-    test("matches enabled endpoint triggers by exact, source-only and wildcard scope", () => {
+    test("matches enabled endpoint triggers with independent source and endpoint wildcards", () => {
         const records: TriggerRecord[] = [
             trigger({ id: "exact", event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" } }),
             trigger({ id: "source", event: { kind: "endpoint", source: "orders", phase: "response" } }),
+            trigger({ id: "endpoint", event: { kind: "endpoint", endpoint: "createOrder", phase: "response" } }),
             trigger({ id: "wildcard", event: { kind: "endpoint", phase: "response" } }),
             trigger({ id: "phase", event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "request" } }),
             trigger({ id: "disabled", enabled: false, event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" } }),
@@ -22,7 +24,27 @@ describe("cms-triggers matching", () => {
         expect(matchingTriggers(records, endpoint, "response").map(item => item.id)).toEqual([
             "exact",
             "source",
+            "endpoint",
             "wildcard",
+        ]);
+    });
+
+    test("repository queries return both endpoint phases in one bounded snapshot", async () => {
+        const repository = new InMemoryTriggerRepository();
+        for (const record of [
+            trigger({ id: "request", event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "request" } }),
+            trigger({ id: "response", event: { kind: "endpoint", endpoint: "createOrder", phase: "response" } }),
+            trigger({ id: "other", event: { kind: "endpoint", source: "customers", phase: "response" } }),
+            trigger({ id: "disabled", enabled: false }),
+        ]) await repository.createTrigger(record);
+        await Promise.all(Array.from({ length: 2_000 }, (_, index) => repository.createTrigger(trigger({
+            id: `unrelated-${index}`,
+            event: { kind: "endpoint", source: "customers", endpoint: `read-${index}`, phase: "response" },
+        }))));
+
+        expect((await repository.findEndpointTriggers("orders", "createOrder")).map(item => item.id)).toEqual([
+            "request",
+            "response",
         ]);
     });
 

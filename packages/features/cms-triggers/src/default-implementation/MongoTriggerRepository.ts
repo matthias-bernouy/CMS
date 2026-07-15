@@ -9,6 +9,13 @@ export type MongoTriggerRepositoryConfig = {
 
 type TriggerDoc = Omit<TriggerRecord, "id"> & { _id: string };
 
+const ENDPOINT_TRIGGER_INDEX = {
+    "event.source": 1,
+    "event.endpoint": 1,
+    "event.phase": 1,
+    enabled: 1,
+} as const;
+
 export class MongoTriggerRepository implements TriggerRepository {
     private readonly prefix: string;
 
@@ -20,7 +27,7 @@ export class MongoTriggerRepository implements TriggerRepository {
     }
 
     async init(): Promise<void> {
-        await this.triggers.createIndex({ "event.source": 1, "event.endpoint": 1, "event.phase": 1, enabled: 1 });
+        await this.triggers.createIndex(ENDPOINT_TRIGGER_INDEX);
     }
 
     private get triggers(): Collection<TriggerDoc> {
@@ -58,6 +65,21 @@ export class MongoTriggerRepository implements TriggerRepository {
 
     async getAllTriggers(): Promise<TriggerRecord[]> {
         const docs = await this.triggers.find().toArray();
+        return docs.map(doc => fromDoc(doc)!);
+    }
+
+    async findEndpointTriggers(source: string, endpoint: string): Promise<TriggerRecord[]> {
+        const docs = await this.triggers.find({
+            enabled: true,
+            "event.kind": "endpoint",
+            "event.phase": { $in: ["request", "response"] },
+            $or: [
+                { "event.source": source, "event.endpoint": endpoint },
+                { "event.source": source, "event.endpoint": { $exists: false } },
+                { "event.source": { $exists: false }, "event.endpoint": endpoint },
+                { "event.source": { $exists: false }, "event.endpoint": { $exists: false } },
+            ],
+        }, { hint: ENDPOINT_TRIGGER_INDEX }).toArray();
         return docs.map(doc => fromDoc(doc)!);
     }
 

@@ -20,6 +20,7 @@ export { InMemoryTriggerRepository } from "../default-implementation/InMemoryTri
 export { DuplicateTriggerError } from "../core/errors";
 export {
     endpointMatch,
+    matchesEndpointTriggerScope,
     matchesTriggerEndpoint,
     matchingTriggers,
     type TriggerEndpointMatch,

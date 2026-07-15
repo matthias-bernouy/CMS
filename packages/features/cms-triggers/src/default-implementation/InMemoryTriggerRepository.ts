@@ -1,4 +1,5 @@
 import { DuplicateTriggerError } from "../core/errors";
+import { matchesEndpointTriggerScope } from "../core/matchTrigger";
 import type { TriggerLastRun, TriggerRecord } from "../interfaces/TriggerDefinition";
 import type { TriggerRepository } from "../interfaces/TriggerRepository";
 
@@ -28,6 +29,12 @@ export class InMemoryTriggerRepository implements TriggerRepository {
 
     async getAllTriggers(): Promise<TriggerRecord[]> {
         return Array.from(this.triggers.values(), trigger => structuredClone(trigger));
+    }
+
+    async findEndpointTriggers(source: string, endpoint: string): Promise<TriggerRecord[]> {
+        return Array.from(this.triggers.values())
+            .filter(trigger => matchesEndpointTriggerScope(trigger, source, endpoint))
+            .map(trigger => structuredClone(trigger));
     }
 
     async setEnabled(id: string, enabled: boolean): Promise<TriggerRecord | null> {

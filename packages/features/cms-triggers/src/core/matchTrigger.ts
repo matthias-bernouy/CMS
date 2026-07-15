@@ -13,14 +13,20 @@ export function endpointMatch(endpoint: SourceEndpoint): TriggerEndpointMatch | 
 }
 
 export function matchesTriggerEndpoint(trigger: TriggerRecord, endpoint: SourceEndpoint, phase: TriggerEventPhase): boolean {
-    if (!trigger.enabled) return false;
-    if (trigger.event.kind !== "endpoint") return false;
     if (trigger.event.phase !== phase) return false;
     const match = endpointMatch(endpoint);
     if (!match) return false;
-    if (trigger.event.source !== undefined && trigger.event.source !== match.source) return false;
-    if (trigger.event.endpoint !== undefined && trigger.event.endpoint !== match.endpoint) return false;
-    return true;
+    return matchesEndpointTriggerScope(trigger, match.source, match.endpoint);
+}
+
+export function matchesEndpointTriggerScope(
+    trigger: TriggerRecord,
+    source: string,
+    endpoint: string,
+): boolean {
+    if (!trigger.enabled || trigger.event.kind !== "endpoint") return false;
+    if (trigger.event.source !== undefined && trigger.event.source !== source) return false;
+    return trigger.event.endpoint === undefined || trigger.event.endpoint === endpoint;
 }
 
 export function matchingTriggers(

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, spyOn, test } from "bun:test";
 import { createTriggerInterceptor } from "@bernouy/cms-triggers";
 import {
     endpoint,
@@ -9,6 +9,31 @@ import {
 } from "./helpers/triggerFixtures";
 
 describe("cms-triggers runtime", () => {
+    test("loads matching request and response triggers with one repository query", async () => {
+        const { triggers, functions, sources } = await fixture();
+        const matchingQuery = spyOn(triggers, "findEndpointTriggers");
+        const fullQuery = spyOn(triggers, "getAllTriggers");
+        const interceptEndpoint = createTriggerInterceptor({ triggers, functions, sources });
+
+        const response = await interceptEndpoint(endpoint, jsonRequest({ ok: true }), async () => Response.json({ ok: true }));
+
+        expect(response.status).toBe(200);
+        expect(matchingQuery).toHaveBeenCalledTimes(1);
+        expect(matchingQuery).toHaveBeenCalledWith("orders", "createOrder");
+        expect(fullQuery).not.toHaveBeenCalled();
+    });
+
+    test("keeps legacy repositories working with one full fallback read", async () => {
+        const { triggers, functions, sources } = await fixture();
+        const fullQuery = spyOn(triggers, "getAllTriggers");
+        Object.defineProperty(triggers, "findEndpointTriggers", { value: undefined });
+        const interceptEndpoint = createTriggerInterceptor({ triggers, functions, sources });
+
+        await interceptEndpoint(endpoint, jsonRequest({ ok: true }), async () => Response.json({ ok: true }));
+
+        expect(fullQuery).toHaveBeenCalledTimes(1);
+    });
+
     test("resolves request, response, endpoint and ctx refs when calling a function", async () => {
         const { triggers, functions, sources, calls } = await fixture();
         await triggers.createTrigger(trigger({
