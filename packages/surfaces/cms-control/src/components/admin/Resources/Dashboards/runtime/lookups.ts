@@ -1,15 +1,31 @@
 import {
     isSafeDashboardExpression,
+    type DashboardDataRef,
     type DashboardField,
     type DashboardLookupRef,
     type DashboardOption,
     type DashboardWidget,
 } from "@bernouy/cms-dashboards";
-import { resolveExpression, textAt, valueAt } from "./expressions";
+import { resolveExpression, textAt, valueAt, type RuntimeVars } from "./expressions";
 import { fetchSourceJson, itemsFrom } from "./source";
 import type { DetailOptions } from "./mapping";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
+export type DetailDataLoader = (
+    sourceId: string,
+    ref: DashboardDataRef,
+    vars: RuntimeVars,
+) => Promise<unknown>;
+
+type DetailLookupRequestOptions = {
+    fieldIds?: ReadonlySet<string>;
+    loadData?: DetailDataLoader;
+};
+
+export type DetailLookupResult = {
+    failedFieldIds: Set<string>;
+    options: DetailOptions;
+};
 
 export async function detailLookupOptions(
     sourceId: string,
@@ -17,37 +33,55 @@ export async function detailLookupOptions(
     resource: unknown,
     fields: Record<string, unknown>,
 ): Promise<DetailOptions> {
+    return (await loadDetailLookupOptions(sourceId, widget, resource, fields)).options;
+}
+
+export async function loadDetailLookupOptions(
+    sourceId: string,
+    widget: DetailWidget,
+    resource: unknown,
+    fields: Record<string, unknown>,
+    requestOptions: DetailLookupRequestOptions = {},
+): Promise<DetailLookupResult> {
+    const loadData = requestOptions.loadData ?? fetchSourceJson;
     const entries = await Promise.all(detailFields(widget)
         .filter(isLookupField)
-        .map(async field => {
-            try {
-                return [field.id, await lookupOptions(sourceId, field, resource, fields)] as const;
-            } catch {
-                return [field.id, []] as const;
-            }
-        }));
-    return Object.fromEntries(entries);
+        .filter(field => !requestOptions.fieldIds || requestOptions.fieldIds.has(field.id))
+        .map(field => lookupEntry(sourceId, field, resource, fields, loadData)));
+    return {
+        failedFieldIds: new Set(entries.filter(entry => entry.failed).map(entry => entry.fieldId)),
+        options: Object.fromEntries(entries.map(entry => [entry.fieldId, entry.options])),
+    };
 }
 
 function detailFields(widget: DetailWidget): DashboardField[] {
     return [...widget.main, ...(widget.aside ?? [])].flatMap(section => section.fields);
 }
 
-function isLookupField(field: DashboardField): field is Extract<DashboardField, { type: "combobox" | "tokens" }> {
+export function isLookupField(field: DashboardField): field is Extract<DashboardField, { type: "combobox" | "tokens" }> {
     return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
 }
 
-async function lookupOptions(
+async function lookupEntry(
     sourceId: string,
     field: Extract<DashboardField, { type: "combobox" | "tokens" }>,
     resource: unknown,
     fields: Record<string, unknown>,
-): Promise<DashboardOption[]> {
+    loadData: DetailDataLoader,
+): Promise<{ failed: boolean; fieldId: string; options: DashboardOption[] }> {
     const lookup = field.lookup;
-    if (!lookup) return [];
-    const items = await lookupItems(sourceId, lookup, resource, fields);
+    if (!lookup) return { failed: false, fieldId: field.id, options: [] };
     const selected = selectedOptions(field, lookup, resource, fields);
-    return dedupeOptions([...optionsFromItems(items, lookup), ...selected]);
+    try {
+        const items = await lookupItems(sourceId, lookup, resource, fields, loadData);
+        return {
+            failed: false,
+            fieldId: field.id,
+            options: dedupeOptions([...optionsFromItems(items, lookup), ...selected]),
+        };
+    } catch {
+        return { failed: true, fieldId: field.id, options: selected };
+    }
 }
 
 async function lookupItems(
@@ -55,12 +89,11 @@ async function lookupItems(
     lookup: DashboardLookupRef,
     resource: unknown,
     fields: Record<string, unknown>,
+    loadData: DetailDataLoader,
 ): Promise<unknown[]> {
-    try {
-        return itemsFrom(await fetchSourceJson(sourceId, lookup, { resource, fields }), lookup);
-    } catch {
-        return [];
-    }
+    const vars = { resource, fields };
+    if (!lookupDependenciesResolved(lookup, vars)) return [];
+    return itemsFrom(await loadData(sourceId, lookup, vars), lookup);
 }
 
 function optionsFromItems(items: unknown[], lookup: DashboardLookupRef): DashboardOption[] {
@@ -105,6 +138,14 @@ function selectedValues(value: unknown): string[] {
     if (Array.isArray(value)) return value.map(item => String(item)).filter(Boolean);
     if (value === null || value === undefined || value === "") return [];
     return [String(value)];
+}
+
+function lookupDependenciesResolved(lookup: DashboardLookupRef, vars: RuntimeVars): boolean {
+    return Object.values(lookup.params ?? {}).every(expression => {
+        if (expression === "$search" || !expression.startsWith("$")) return true;
+        const value = resolveExpression(expression, vars);
+        return value !== undefined && value !== null && value !== "";
+    });
 }
 
 function dedupeOptions(options: DashboardOption[]): DashboardOption[] {

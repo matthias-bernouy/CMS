@@ -7,23 +7,29 @@ import { applyLookupOption, DetailView } from "./runtime/detailView";
 import { DetailEvents } from "./runtime/events";
 import { DetailFieldState, parseJson, type DetailWidget } from "./runtime/fieldState";
 import { DetailLookups } from "./runtime/lookups";
+import { DetailRequestCoordinator } from "./runtime/requests";
 import type { WDetailData, WDetailField, WDetailSection } from "./types";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 export class DashboardWDetail extends Component {
-    private value: WDetailData = { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
+    private value: WDetailData = emptyDetailData();
     private readonly fields: DetailFieldState;
     private readonly view: DetailView;
+    private readonly requests: DetailRequestCoordinator;
     private readonly lookups: DetailLookups;
     private readonly events: DetailEvents;
+    private bindingRevision = 0;
+    private connectionRevision = 0;
+    private syncScheduled = false;
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
         const root = this.shadowRoot!;
         this.fields = new DetailFieldState(root, this.dataset, () => this.value);
         this.view = new DetailView(root);
-        this.lookups = new DetailLookups(this.dataset, this.fields, {
+        this.requests = new DetailRequestCoordinator();
+        this.lookups = new DetailLookups(this.dataset, this.fields, this.requests, {
             setData: value => { this.value = value; },
             render: () => this.render(),
             isConnected: () => this.isConnected,
@@ -54,18 +60,22 @@ export class DashboardWDetail extends Component {
     }
 
     attributeChangedCallback(): void {
-        this.syncBoundData();
+        this.bindingRevision += 1;
+        this.scheduleBoundDataSync();
     }
 
     override connectedCallback(): void {
+        this.connectionRevision += 1;
+        this.syncScheduled = false;
         this.events.bind();
         this.syncBoundData();
-        this.render();
     }
 
     disconnectedCallback(): void {
+        this.connectionRevision += 1;
+        this.syncScheduled = false;
         this.events.unbind();
-        this.lookups.clear();
+        this.resetInvalidState();
     }
 
     private render(): void {
@@ -90,23 +100,63 @@ export class DashboardWDetail extends Component {
     }
 
     private syncBoundData(): void {
-        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
-        if (!widget || widget.widget !== "w-detail") return;
+        const configJson = this.dataset.configJson ?? "";
+        const widget = parseJson<DetailWidget>(configJson);
         const sourceJson = this.dataset.sourceJson ?? "";
-        const sourceData = parseJson<unknown>(sourceJson) ?? {};
+        const sourceData = parseJson<unknown>(sourceJson);
+        if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
+            this.resetInvalidState();
+            return;
+        }
         const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+        if (resource === undefined) {
+            this.resetInvalidState();
+            return;
+        }
         const rowKey = this.dataset.rowKey ?? "";
         const sourceId = this.dataset.sourceId ?? "";
-        const scopeKey = `${sourceId}:${widget.id}:${rowKey}`;
-        this.fields.syncScope(`${scopeKey}:${sourceJson}`);
+        const scopeKey = JSON.stringify([sourceId, widget.id, rowKey, this.bindingRevision]);
+        this.requests.syncScope(scopeKey);
+        this.fields.syncScope(scopeKey);
         this.lookups.syncScope(scopeKey);
         this.value = detailData(widget, resource, rowKey, this.fields.draft, this.lookups.options, sourceId);
         if (this.isConnected) this.render();
-        if (!sourceJson || !sourceId) return;
+        if (!sourceId) return;
         void this.lookups.load(widget, resource, rowKey, sourceId, fieldValues(widget, resource), { useLatestFields: true });
+    }
+
+    private scheduleBoundDataSync(): void {
+        if (!this.isConnected) return;
+        this.invalidateRequests();
+        if (this.syncScheduled) return;
+        this.syncScheduled = true;
+        const connectionRevision = this.connectionRevision;
+        queueMicrotask(() => {
+            if (this.connectionRevision !== connectionRevision) return;
+            this.syncScheduled = false;
+            if (this.isConnected) this.syncBoundData();
+        });
+    }
+
+    private invalidateRequests(): void {
+        this.lookups.clear();
+        this.requests.clear();
+    }
+
+    private resetInvalidState(): void {
+        this.invalidateRequests();
+        this.requests.syncScope("");
+        this.fields.syncScope("");
+        this.lookups.syncScope("");
+        this.value = emptyDetailData();
+        if (this.isConnected) this.render();
     }
 }
 
 if (!customElements.get("cms-dashboard-w-detail")) customElements.define("cms-dashboard-w-detail", DashboardWDetail);
 
 export type { WDetailData, WDetailField, WDetailSection };
+
+function emptyDetailData(): WDetailData {
+    return { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
+}

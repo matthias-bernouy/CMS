@@ -2,9 +2,23 @@ import type { DashboardDataRef, DashboardEndpointRef } from "@bernouy/cms-dashbo
 import { route } from "../api";
 import { arrayAt, resolveBody, resolveParams, valueAt, type RuntimeVars } from "./expressions";
 
-export async function fetchSourceJson(sourceId: string, ref: DashboardDataRef, vars: RuntimeVars): Promise<unknown> {
-    const response = await fetch(sourceUrl(sourceId, ref, vars), { headers: { Accept: "application/json" } });
+export async function fetchSourceJson(
+    sourceId: string,
+    ref: DashboardDataRef,
+    vars: RuntimeVars,
+    options: { signal?: AbortSignal } = {},
+): Promise<unknown> {
+    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+        headers: { Accept: "application/json" },
+        signal: options.signal,
+    });
     return responseJson(response);
+}
+
+export function sourceRequestKey(sourceId: string, ref: DashboardDataRef, vars: RuntimeVars): string {
+    const url = sourceUrl(sourceId, ref, vars);
+    url.searchParams.sort();
+    return url.href;
 }
 
 export async function sendSourceJson(sourceId: string, ref: DashboardEndpointRef, method: string, vars: RuntimeVars): Promise<unknown> {
