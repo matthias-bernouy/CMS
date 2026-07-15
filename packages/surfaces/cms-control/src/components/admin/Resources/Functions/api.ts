@@ -1,9 +1,4 @@
-export type DataShape = {
-    type: "string" | "number" | "boolean" | "object" | "array";
-    properties?: Record<string, DataShape>;
-    items?: DataShape;
-    required?: string[];
-};
+import type { DataShape } from "@bernouy/cms-sources";
 
 export type FunctionUiValue =
     | null

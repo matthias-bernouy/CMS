@@ -1,4 +1,6 @@
 import { describe, test, expect } from "bun:test";
+import type { DataShape } from "@bernouy/cms-sources";
+import { makeNode } from "cms-control/components/admin/EndpointsInput/bodyNode";
 import { parseShapeField } from "cms-control/core/validation/gateway/parseShapeField";
 
 describe("parseShapeField", () => {
@@ -29,5 +31,23 @@ describe("parseShapeField", () => {
             expect((err as Error).name).toBe("SourceValidationError");
             expect((err as { status?: number }).status).toBe(400);
         }
+    });
+});
+
+describe("endpoint DataShape editor", () => {
+    test("preserves nullable modifiers while reconstructing a seeded shape", () => {
+        const shape: DataShape = {
+            type: "object",
+            nullable: true,
+            properties: {
+                email: { type: "string", nullable: true },
+                rows: {
+                    type: "array",
+                    items: { type: "number", nullable: true },
+                },
+            },
+        };
+
+        expect(makeNode(shape, () => undefined).read()).toEqual(shape);
     });
 });

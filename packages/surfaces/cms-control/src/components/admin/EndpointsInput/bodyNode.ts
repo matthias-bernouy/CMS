@@ -17,6 +17,8 @@ export type NodeHandle = {
  *  fires after each edit so the section re-serialises. Detached-build safe: the
  *  initial render uses the seed; `read()` (live `.value`) runs only after connect. */
 export function makeNode(seed: DataShape, onChange: () => void, depth = 0): NodeHandle {
+    const nullable = seed.nullable === true;
+    const preserveNullable = (shape: DataShape): DataShape => nullable ? { ...shape, nullable: true } : shape;
     const typeSelect = makeSelect(SHAPE_TYPES, seed.type);
     typeSelect.dataset.role = 'node-type';
     typeSelect.className = 'ep-type';
@@ -106,10 +108,10 @@ export function makeNode(seed: DataShape, onChange: () => void, depth = 0): Node
             const out: DataShape = { type };
             if (Object.keys(properties).length) out.properties = properties;
             if (required.length) out.required = required.filter(n => Object.hasOwn(properties, n));
-            return out;
+            return preserveNullable(out);
         }
-        if (type === 'array') return itemsNode ? { type, items: itemsNode.read() } : { type };
-        return { type };
+        if (type === 'array') return preserveNullable(itemsNode ? { type, items: itemsNode.read() } : { type });
+        return preserveNullable({ type });
     };
 
     return { typeEl, childrenEl, read };
