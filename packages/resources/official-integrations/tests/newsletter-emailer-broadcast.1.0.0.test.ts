@@ -161,7 +161,13 @@ function newsletterSource(): Source {
                     properties: {
                         subscriptions: {
                             type: "array",
-                            items: { type: "object", properties: { email: { type: "string" } } },
+                            items: {
+                                type: "object",
+                                properties: {
+                                    email: { type: "string" },
+                                    subscribed: { type: "boolean" },
+                                },
+                            },
                         },
                         total: { type: "number" },
                     },
