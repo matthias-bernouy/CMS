@@ -115,19 +115,33 @@ describe("OidcAuthentication", () => {
         expect(user?.displayName).toBe("Alice");
     });
 
-    test("token exchange failure redirects to the login error", async () => {
+    test("token exchange failure redirects without logging the provider body", async () => {
         const { auth, codec } = await setup();
+        const warnings: string[] = [];
+        const originalWarn = console.warn;
+        console.warn = (...args: unknown[]) => {
+            const message = args.join(" ");
+            if (message.startsWith("[oidc:sso]")) warnings.push(message);
+            else originalWarn(...args);
+        };
         mockFetch(async (url) => {
             if (url === `${ISSUER}/.well-known/openid-configuration`) return discovery();
-            if (url === `${ISSUER}/token`) return new Response("bad grant", { status: 400 });
+            if (url === `${ISSUER}/token`) return new Response("provider-secret-detail", { status: 400 });
             return new Response("unexpected", { status: 500 });
         });
         const cookie = await flightCookie(codec, { state: "state", nonce: "nonce" });
 
-        const res = await auth.callback(req(`${ISSUER_PATH}/callback?state=state&code=code`, cookie));
+        let res: Response;
+        try {
+            res = await auth.callback(req(`${ISSUER_PATH}/callback?state=state&code=code`, cookie));
+        } finally {
+            console.warn = originalWarn;
+        }
 
         expect(res.status).toBe(302);
         expect(res.headers.get("location")).toBe("/login?error=oidc");
+        expect(warnings).toEqual(["[oidc:sso] login failed: token_exchange_400"]);
+        expect(warnings.join(" ")).not.toContain("provider-secret-detail");
     });
 });
 

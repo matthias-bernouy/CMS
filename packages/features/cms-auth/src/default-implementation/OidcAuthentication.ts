@@ -171,8 +171,8 @@ export class OidcAuthentication<Role extends string = string> {
             body: form,
         });
         if (!tokenRes.ok) {
-            const body = await tokenRes.text().catch(() => "");
-            return this._fail(p.id, `token_exchange ${tokenRes.status}: ${body.slice(0, 200)}`);
+            await tokenRes.body?.cancel().catch(() => undefined);
+            return this._fail(p.id, `token_exchange_${tokenRes.status}`);
         }
         const tokens = await tokenRes.json() as { id_token?: string };
         if (!tokens.id_token) return this._fail(p.id, "no_id_token");
@@ -182,8 +182,8 @@ export class OidcAuthentication<Role extends string = string> {
             ({ payload: claims } = await jwtVerify(tokens.id_token, this._getJwks(meta.jwks_uri), {
                 issuer: p.issuer, audience: p.clientId, algorithms: ["RS256", "ES256", "PS256"],
             }));
-        } catch (e) {
-            return this._fail(p.id, `id_token_verify: ${e instanceof Error ? e.message : String(e)}`);
+        } catch {
+            return this._fail(p.id, "id_token_verify");
         }
         if (claims.nonce !== flight.nonce) return this._fail(p.id, "nonce_mismatch");
 
