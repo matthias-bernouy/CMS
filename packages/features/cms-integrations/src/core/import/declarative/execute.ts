@@ -79,7 +79,18 @@ export async function executeDeclarativeIntegration<T>(
         const accessGrants = buildIntegrationAccessGrants(sourceArtifacts, functionArtifacts);
         const triggerArtifacts = buildTriggerArtifacts(definition, context);
         const dashboardArtifacts = buildDashboardArtifacts(definition, context);
-        const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
+        const dependencySourceIds = new Set(
+            Object.values(dependencies)
+                .map(dependency => dependency.sourceId)
+                .filter((sourceId): sourceId is string => typeof sourceId === "string"),
+        );
+        const dashboardWrites = await buildDashboardWrites(
+            deps,
+            dashboardArtifacts,
+            sourceArtifacts,
+            dependencySourceIds,
+            options,
+        );
         const sourceOverlayArtifacts = buildSourceOverlayArtifacts(definition, context);
         const sourceOverlayWrites = await buildSourceOverlayWrites(deps, sourceOverlayArtifacts);
         const relationArtifacts = buildRelationArtifacts(definition, context);

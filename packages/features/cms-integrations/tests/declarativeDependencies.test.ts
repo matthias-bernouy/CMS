@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import {
     importIntegration,
     InMemoryIntegrationInstallationRepository,
@@ -8,7 +9,7 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { resolveDependencyContext } from "cms-integrations/core/import/dependencies";
 import { resolveTemplate, type TemplateContext } from "cms-integrations/core/templates";
-import { sourceArtifact } from "./helpers";
+import { BAN_DEFINITION, BAN_SOURCE, sourceArtifact } from "./helpers";
 
 describe("@bernouy/cms-integrations dependencies", () => {
     test("rejects missing required dependencies before writing secrets", async () => {
@@ -133,5 +134,42 @@ describe("@bernouy/cms-integrations dependencies", () => {
                 context,
             )).toThrow(/dependency secrets are not accessible/);
         }
+    });
+
+    test("imports dashboards backed by installed dependency endpoints", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const dashboards = new InMemoryDashboardRepository();
+        const installations = new InMemoryIntegrationInstallationRepository();
+        await sources.createSource(BAN_SOURCE);
+        await installations.create({
+            id: "ban",
+            label: "BAN",
+            definitionVersion: "1.0.0",
+            status: "success",
+            answersSnapshot: {},
+            secretRefs: {},
+            secretInputs: [],
+            artifacts: [{ type: "source", id: "urn:ban", action: "created" }],
+            runs: [],
+        });
+        const definition: IntegrationDefinition = {
+            ...structuredClone(BAN_DEFINITION),
+            kind: "ban-dashboard",
+            label: "BAN dashboard",
+            dependencies: [{ name: "ban", kind: "ban" }],
+            artifacts: BAN_DEFINITION.artifacts?.filter(artifact => artifact.type === "dashboard"),
+        };
+
+        const result = await importIntegration(
+            { sources, secrets, dashboards, installations },
+            { kind: "ban-dashboard", answers: {}, options: {} },
+            [definition],
+        );
+
+        expect(result.artifacts).toEqual([
+            { type: "dashboard", id: "ban-addresses", action: "created" },
+        ]);
+        expect(await dashboards.getDashboard("ban-addresses")).not.toBeNull();
     });
 });

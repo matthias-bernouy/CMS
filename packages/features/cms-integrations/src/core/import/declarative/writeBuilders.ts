@@ -1,6 +1,6 @@
 import { DuplicateDashboardError, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
 import { DuplicateFunctionError, validateFunction, type CmsFunction } from "@bernouy/cms-functions";
-import { DuplicateSourceError, parseUrn, validateSource, type Source } from "@bernouy/cms-sources";
+import { DuplicateSourceError, makeSourceUrn, parseUrn, validateSource, type Source } from "@bernouy/cms-sources";
 import { IntegrationInputError, IntegrationRuntimeError } from "../../errors";
 import type { IntegrationDashboardWrite } from "../dashboardWrites";
 import type { IntegrationFunctionWrite } from "../functionWrites";
@@ -58,18 +58,29 @@ export async function buildDashboardWrites(
     deps: IntegrationImportDeps,
     dashboardArtifacts: Dashboard[],
     sourceArtifacts: Source[],
+    dependencySourceIds: ReadonlySet<string>,
     options: IntegrationImportOptions,
 ): Promise<IntegrationDashboardWrite[]> {
     if (!dashboardArtifacts.length) return [];
     if (!deps.dashboards) throw new IntegrationRuntimeError("dashboard repository not configured");
 
     const sourceById = new Map(sourceArtifacts.map(source => [sourceId(source), source]));
+    const dependencySourceCache = new Map<string, Source | null>();
     const dashboardWrites: IntegrationDashboardWrite[] = [];
     const seen = new Set<string>();
     for (const dashboard of dashboardArtifacts) {
         if (seen.has(dashboard.id)) throw new DuplicateDashboardError(dashboard.id);
         seen.add(dashboard.id);
-        const source = sourceById.get(dashboard.source);
+        let source = sourceById.get(dashboard.source);
+        if (!source && dependencySourceIds.has(dashboard.source)) {
+            if (!dependencySourceCache.has(dashboard.source)) {
+                dependencySourceCache.set(
+                    dashboard.source,
+                    await deps.sources.getSource(makeSourceUrn(dashboard.source)),
+                );
+            }
+            source = dependencySourceCache.get(dashboard.source) ?? undefined;
+        }
         if (!source) {
             throw new IntegrationInputError("artifacts", `dashboard "${dashboard.id}" references source "${dashboard.source}" not declared by this integration`);
         }
