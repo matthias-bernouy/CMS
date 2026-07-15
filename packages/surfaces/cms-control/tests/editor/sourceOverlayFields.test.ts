@@ -25,6 +25,7 @@ describe("GET /api/editor/sources source overlays", () => {
             endpoints: [{
                 urn: "urn:user-account:getAccount",
                 method: "GET",
+                access: { mode: "auth" },
                 targetUrl: "https://api.example.com/account",
                 output: [{
                     status: "200",

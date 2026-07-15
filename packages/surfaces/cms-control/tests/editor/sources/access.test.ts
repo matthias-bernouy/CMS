@@ -31,6 +31,7 @@ describe("GET /api/editor/sources access", () => {
 
         const body = await listEditorSources(sources);
 
+        expect(SYSTEM_AUTH_SOURCE.endpoints.every(endpoint => endpoint.access?.mode === "public")).toBe(true);
         expect(body.map(source => source.endpointUrn)).toEqual(
             SYSTEM_AUTH_SOURCE.endpoints.map(endpoint => endpoint.urn),
         );
