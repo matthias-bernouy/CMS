@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import type { IntegrationAsset } from "../../interfaces/IntegrationDefinitionRepository";
-import { isNodeError, safeJoinWithin } from "./repositorySupport";
+import { isNodeError, resolveExistingPathWithin } from "./repositorySupport";
 
 const CONTENT_TYPES: Record<string, string> = {
     ".svg": "image/svg+xml; charset=utf-8",
@@ -15,10 +15,12 @@ export async function readIntegrationAsset(versionRoot: string, path: string): P
     if (!path.startsWith("assets/")) return null;
     const contentType = CONTENT_TYPES[extname(path).toLowerCase()];
     if (!contentType) return null;
+    const relativePath = path.slice("assets/".length);
 
     try {
+        const assetRoot = await resolveExistingPathWithin(versionRoot, "asset", "assets");
         return {
-            bytes: await readFile(safeJoinWithin(versionRoot, "asset", path)),
+            bytes: await readFile(await resolveExistingPathWithin(assetRoot, "asset", relativePath)),
             contentType,
         };
     } catch (error) {

@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { readdir, readFile } from "node:fs/promises";
 import { relative, sep } from "node:path";
 import type { DeclarativeArtifactTemplate, IntegrationDefinition } from "../../interfaces/Integration";
-import { isNodeError, safeJoin } from "./repositorySupport";
+import { isNodeError, resolveExistingPathWithin } from "./repositorySupport";
 
 export async function hydrateVersionAssets(
     definition: IntegrationDefinition,
@@ -19,8 +19,12 @@ async function hydrateBloc(
 ): Promise<DeclarativeArtifactTemplate> {
     if (artifact.type !== "bloc" || artifact.bloc.viewJS) return artifact;
     if (!artifact.bloc.path) throw new Error(`Bloc artifact "${artifact.bloc.tag}" requires path or viewJS`);
-    const blocRoot = safeJoin(versionRoot, artifact.bloc.path);
-    const viewJS = await readFile(safeJoin(blocRoot, artifact.bloc.view ?? "Bloc.ts"), "utf-8");
+    const blocRoot = await resolveExistingPathWithin(versionRoot, "bloc", artifact.bloc.path);
+    const viewJS = await readFile(await resolveExistingPathWithin(
+        blocRoot,
+        "bloc",
+        artifact.bloc.view ?? "Bloc.ts",
+    ), "utf-8");
     const editorJS = await readOptionalEditor(blocRoot, artifact.bloc.editor);
     return {
         ...artifact,
@@ -36,7 +40,7 @@ async function hydrateBloc(
 async function readOptionalEditor(root: string, editor: string | null | undefined): Promise<string | null | undefined> {
     if (editor === null) return null;
     try {
-        return await readFile(safeJoin(root, editor ?? "BlocEditor.ts"), "utf-8");
+        return await readFile(await resolveExistingPathWithin(root, "bloc", editor ?? "BlocEditor.ts"), "utf-8");
     } catch (error) {
         if (editor === undefined && isNodeError(error) && error.code === "ENOENT") return undefined;
         throw error;
@@ -52,9 +56,10 @@ async function readSourceBundle(root: string): Promise<Record<string, string>> {
 async function readSourceDirectory(root: string, dir: string, out: Record<string, string>): Promise<void> {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
-        const absolutePath = safeJoin(dir, entry.name);
+        if (!entry.isDirectory() && !entry.isFile()) continue;
+        const absolutePath = await resolveExistingPathWithin(dir, "bloc", entry.name);
         if (entry.isDirectory()) await readSourceDirectory(root, absolutePath, out);
-        else if (entry.isFile()) {
+        else {
             const key = relative(root, absolutePath).split(sep).join("/");
             out[key] = Buffer.from(await readFile(absolutePath)).toString("base64");
         }

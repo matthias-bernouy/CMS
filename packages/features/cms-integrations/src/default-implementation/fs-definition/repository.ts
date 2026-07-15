@@ -10,10 +10,11 @@ import type {
 } from "../../interfaces/IntegrationDefinitionRepository";
 import { readIntegrationAsset } from "./assets";
 import {
+    assertPathWithin,
     isNodeError,
     parseIntegrationDefinitionIndex,
+    resolveExistingPathWithin,
     resolveVersion,
-    safeJoin,
 } from "./repositorySupport";
 import { hydrateVersionAssets } from "./versionAssets";
 
@@ -62,7 +63,10 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         const entry = resolveVersion(index, version, this.defaultChannel);
         if (!entry) return null;
 
-        const definitionPath = safeJoin(this.root, index.kind, entry.definition);
+        const kindRoot = await this.resolveKindRoot(index.kind);
+        const versionRoot = await resolveExistingPathWithin(kindRoot, "version", entry.path);
+        const definitionPath = await resolveExistingPathWithin(kindRoot, "definition", entry.definition);
+        assertPathWithin(versionRoot, definitionPath, "version", entry.definition);
         const parsed = JSON.parse(await readFile(definitionPath, "utf-8"));
         const definition = parseIntegrationDefinition(parsed);
         if (definition.kind !== index.kind) {
@@ -71,14 +75,20 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         if (definition.version !== entry.version) {
             throw new Error(`${definitionPath}: definition version "${definition.version ?? ""}" does not match index version "${entry.version}"`);
         }
-        return await hydrateVersionAssets(definition, safeJoin(this.root, index.kind, entry.path));
+        return await hydrateVersionAssets(definition, versionRoot);
     }
 
     async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
         const index = await this.readIndexOrNull(kind);
         if (!index) return null;
         const entry = resolveVersion(index, version, this.defaultChannel);
-        return entry ? readIntegrationAsset(safeJoin(this.root, index.kind, entry.path), path) : null;
+        if (!entry) return null;
+        const versionRoot = await resolveExistingPathWithin(
+            await this.resolveKindRoot(index.kind),
+            "version",
+            entry.path,
+        );
+        return await readIntegrationAsset(versionRoot, path);
     }
 
     private async readIndexes(): Promise<IntegrationDefinitionIndex[]> {
@@ -99,12 +109,20 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
     }
 
     private async readIndex(kind: string): Promise<IntegrationDefinitionIndex> {
-        const indexPath = safeJoin(this.root, kind, "integration.json");
+        const indexPath = await resolveExistingPathWithin(
+            await this.resolveKindRoot(kind),
+            "repository",
+            "integration.json",
+        );
         const parsed = JSON.parse(await readFile(indexPath, "utf-8"));
         const index = parseIntegrationDefinitionIndex(parsed, indexPath);
         if (index.kind !== kind) {
             throw new Error(`${indexPath}: index kind "${index.kind}" does not match directory "${kind}"`);
         }
         return index;
+    }
+
+    private async resolveKindRoot(kind: string): Promise<string> {
+        return await resolveExistingPathWithin(this.root, "repository", kind);
     }
 }

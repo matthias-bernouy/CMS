@@ -1,3 +1,4 @@
+import { realpath } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseIntegrationIcon } from "../../core/parsing/icon";
 import type {
@@ -51,6 +52,24 @@ export function safeJoinWithin(root: string, boundary: string, ...parts: string[
         throw new Error(`Path escapes integration ${boundary} root: ${parts.join("/")}`);
     }
     return target;
+}
+
+export async function resolveExistingPathWithin(
+    root: string,
+    boundary: string,
+    ...parts: string[]
+): Promise<string> {
+    const canonicalRoot = await realpath(root);
+    const target = await realpath(safeJoinWithin(canonicalRoot, boundary, ...parts));
+    assertPathWithin(canonicalRoot, target, boundary, parts.join("/"));
+    return target;
+}
+
+export function assertPathWithin(root: string, target: string, boundary: string, source: string): void {
+    const rel = relative(root, target);
+    if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+        throw new Error(`Path escapes integration ${boundary} root: ${source}`);
+    }
 }
 
 export function isNodeError(value: unknown): value is NodeJS.ErrnoException {
