@@ -11,6 +11,7 @@
         { "path": "packages/features/cms-permissions" },
         { "path": "packages/features/cms-content" },
         { "path": "packages/features/cms-bloc-compile" },
+        { "path": "packages/features/cms-identities" },
         { "path": "packages/features/cms-sources" },
         { "path": "packages/features/cms-functions" },
         { "path": "packages/features/cms-triggers" },

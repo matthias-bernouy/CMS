@@ -1,0 +1,14 @@
+{
+    "name": "@bernouy/cms-identities",
+    "version": "0.1.0",
+    "description": "Authority-scoped opaque identity aliases for CmsCore integrations.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}
