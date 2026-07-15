@@ -10,7 +10,7 @@ export type ResponseProjectionEvent = {
     kind: "legacy_response_contract";
     endpointUrn: string;
     upstreamStatus: number;
-    reason: "missing_output" | "empty_output";
+    reason: "missing_output" | "empty_output" | "unmatched_status";
     correlationId: string;
 };
 
@@ -47,6 +47,11 @@ export async function projectEndpointResponse(
     const declared = output.find(candidate => candidate.status === String(upstream.status))
         ?? output.find(candidate => candidate.status === "default");
     if (!declared) {
+        if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
+            reportLegacyContract(endpoint, upstream, "unmatched_status", options);
+            if (request.method === "HEAD") return discardBody(upstream);
+            return passthrough(upstream);
+        }
         await cancelBody(upstream.body);
         return projectionFailure(request.method === "HEAD");
     }

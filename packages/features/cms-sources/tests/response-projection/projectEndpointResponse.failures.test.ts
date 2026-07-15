@@ -27,6 +27,7 @@ describe("projectEndpointResponse failures", () => {
                 source,
                 new Request("http://local.test/source"),
                 upstream,
+                name === "status" ? { responseProjectionMode: "strict" } : undefined,
             );
             await expectGenericFailure(response, name);
         }

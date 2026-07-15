@@ -69,6 +69,28 @@ describe("executeEndpoint response projection integration", () => {
         expect(event?.reason).toBe("empty_output");
     });
 
+    test("preserves an unmatched status in compatibility mode and reports it", async () => {
+        let event: ResponseProjectionEvent | undefined;
+        const response = await executeEndpoint(ep({
+            output: [{ status: "200", body: { type: "object" } }],
+        }), new Request("http://local.test/source"), {
+            fetchImpl: mock(async () => new Response(JSON.stringify({ error: "invalid input" }), {
+                status: 400,
+                headers: { "content-type": "application/json" },
+            })),
+            reportResponseProjectionEvent: (reported) => { event = reported; },
+        });
+
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ error: "invalid input" });
+        expect(event).toMatchObject({
+            kind: "legacy_response_contract",
+            endpointUrn: "urn:x:e",
+            upstreamStatus: 400,
+            reason: "unmatched_status",
+        });
+    });
+
     test("strict mode rejects a missing contract, cancels upstream, and correlates the generic error", async () => {
         let cancelled = false;
         const fetchImpl = mock(async () => new Response(new ReadableStream<Uint8Array>({
