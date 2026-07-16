@@ -5,19 +5,44 @@ import {
 } from "@bernouy/cms-sources";
 import type { DashboardField } from "../../interfaces/Dashboard";
 
-export function dashboardField(field: SourceOverlayField): DashboardField {
-    return {
-        id: overlayFieldId(field),
+export function dashboardField(
+    field: SourceOverlayField,
+    options: { pathPrefix?: string; readonly?: boolean } = {},
+): DashboardField {
+    const pathPrefix = normalizedTargetPath(options.pathPrefix);
+    const base = {
+        id: overlayFieldId(field, pathPrefix),
         label: field.label,
-        path: sourceOverlayFieldPath(field),
-        type: field.type === "number" ? "number" : field.type === "boolean" ? "checkbox" : "text",
+        path: joinedPath(pathPrefix, sourceOverlayFieldPath(field)),
         ...(field.required ? { required: true } : {}),
     };
+    if (options.readonly) return { ...base, type: "readonly" };
+    if (field.type === "boolean" && !field.multiple) return { ...base, type: "checkbox" };
+    if (field.multiple) {
+        return field.options === undefined
+            ? { ...base, type: "tokens" }
+            : { ...base, type: "tokens", options: field.options.map(option => ({ ...option })) };
+    }
+    return field.options === undefined
+        ? { ...base, type: "text" }
+        : { ...base, type: "select", options: field.options.map(option => ({ ...option })) };
 }
 
-export function overlayFieldId(field: SourceOverlayField): string {
-    const normalized = field.id.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^[-_]+/, "");
+export function overlayFieldId(field: SourceOverlayField, pathPrefix = ""): string {
+    const raw = joinedPath(normalizedTargetPath(pathPrefix), field.id);
+    const normalized = raw.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^[-_]+/, "");
     return normalized || "field";
+}
+
+export function normalizedTargetPath(path: string | undefined): string {
+    return (path ?? "").split(".")
+        .map(part => part.trim().replace(/\[\]$/, ""))
+        .filter(Boolean)
+        .join(".");
+}
+
+export function joinedPath(prefix: string, path: string): string {
+    return [prefix, path].filter(Boolean).join(".");
 }
 
 export function editableFields(

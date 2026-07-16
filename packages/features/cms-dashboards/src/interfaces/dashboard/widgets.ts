@@ -54,6 +54,22 @@ export type DashboardWidget =
         aside?: DashboardSection[];
     }
     | {
+        widget: "w-navigation-list";
+        id: string;
+        title?: string;
+        source: DashboardDataRef;
+        rowKey: string;
+        item: {
+            title: DashboardBinding;
+            subtitle?: DashboardBinding;
+            icon?: string;
+            badge?: DashboardBinding;
+        };
+        selection?: { opens?: string };
+        reorderable?: { action: string };
+        actions?: DashboardAction[];
+    }
+    | {
         widget: "w-section";
         id: string;
         title: string;

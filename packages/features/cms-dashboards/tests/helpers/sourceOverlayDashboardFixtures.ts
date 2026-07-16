@@ -12,8 +12,7 @@ export const sourceOverlay: SourceOverlay = {
     sections: [{ id: "accountFields", label: "Personal information" }],
     fields: [
         { id: "company", label: "Company", type: "string", section: "accountFields", showInDashboardTable: true },
-        { id: "score", label: "Score", type: "number", section: "accountFields" },
-        { id: "optIn", label: "Opt-in", type: "boolean", section: "accountFields" },
+        { id: "optIn", label: "Opt-in", type: "boolean", adminEditable: false },
     ],
 };
 

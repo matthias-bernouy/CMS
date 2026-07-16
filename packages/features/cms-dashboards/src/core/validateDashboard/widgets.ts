@@ -3,7 +3,7 @@ import type {
     DashboardDto,
     DashboardWidget,
 } from "../../interfaces/Dashboard";
-import { validateDetailWidget, validateTableWidget } from "./tableDetailWidgets";
+import { validateDetailWidget, validateNavigationListWidget, validateTableWidget } from "./tableDetailWidgets";
 import { validateRequiredId } from "./shared";
 
 export function collectWidgetIds(
@@ -42,6 +42,9 @@ export function validateWidget(
             break;
         case "w-detail":
             validateDetailWidget(widget as Extract<DashboardWidget, { widget: "w-detail" }>, path, dashboard, source, errors);
+            break;
+        case "w-navigation-list":
+            validateNavigationListWidget(widget as Extract<DashboardWidget, { widget: "w-navigation-list" }>, path, dashboard, source, widgetIds, errors);
             break;
         case "w-section":
             validateSectionWidget(widget as Extract<DashboardWidget, { widget: "w-section" }>, path, dashboard, source, widgetIds, errors);

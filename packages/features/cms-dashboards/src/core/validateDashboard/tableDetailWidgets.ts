@@ -82,6 +82,30 @@ function detailFieldIds(widget: Extract<DashboardWidget, { widget: "w-detail" }>
         .filter(Boolean));
 }
 
+export function validateNavigationListWidget(
+    widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
+    path: string,
+    dashboard: DashboardDto,
+    source: Source | null,
+    widgetIds: Set<string>,
+    errors: string[],
+): void {
+    validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
+    validateRequiredPath("rowKey", widget.rowKey, path, errors);
+    validateBinding(widget.item.title, `${path}.item.title`, errors);
+    validateBinding(widget.item.subtitle, `${path}.item.subtitle`, errors);
+    validateBinding(widget.item.badge, `${path}.item.badge`, errors);
+    if (widget.selection?.opens && !widgetIds.has(widget.selection.opens)) {
+        errors.push(`${path}.selection.opens references unknown widget "${widget.selection.opens}"`);
+    }
+    widget.actions?.forEach((action, index) => validateAction(action, `${path}.actions.${index}`, dashboard, source, errors));
+    if (widget.reorderable) {
+        const action = widget.actions?.find(item => item.id === widget.reorderable!.action);
+        if (!action) errors.push(`${path}.reorderable.action references unknown action "${widget.reorderable.action}"`);
+        else if (!action.endpoint) errors.push(`${path}.reorderable.action must declare an endpoint`);
+    }
+}
+
 function validateColumn(column: DashboardColumn, path: string, errors: string[]): void {
     validateRequiredId(`${path}.id`, column.id, errors);
     if (!column.label) errors.push(`${path}.label is required`);

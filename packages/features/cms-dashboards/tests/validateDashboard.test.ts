@@ -202,6 +202,29 @@ describe("validateDashboard", () => {
         expect(validateDashboard(validDashboard(), { source })).toEqual([]);
     });
 
+    test("validates bounded number fields", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+        detail.main[0]!.fields.push({
+            id: "refundAmount",
+            label: "Refund amount",
+            path: "refundAmount",
+            type: "number",
+            min: 1,
+            max: 10_000,
+            step: 1,
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+        const amount = detail.main[0]!.fields.at(-1)! as Extract<typeof detail.main[0]["fields"][number], { type: "number" }>;
+        amount.step = 0;
+        amount.max = 0;
+        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
+            "views.1.main.0.fields.4.step must be greater than zero",
+            "views.1.main.0.fields.4.max must be greater than or equal to min",
+        ]));
+    });
+
     test("rejects legacy widgets", () => {
         const dashboard = validDashboard();
         dashboard.views.push({ widget: "w-create", id: "createProduct", collection: "products" } as never);
