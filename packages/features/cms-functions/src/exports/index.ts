@@ -38,6 +38,8 @@ export {
 } from "../core/validateFunction";
 export {
     executeFunction,
+    type FunctionExecutionFailure,
+    type FunctionFailureReporter,
     type ExecuteFunctionOptions,
     type FunctionUserContext,
 } from "../core/executeFunction";
@@ -45,6 +47,17 @@ export {
     executeFunctionSystemSourceEndpoint,
     type FunctionSystemExecutorOptions,
 } from "../core/systemExecutor";
+export {
+    runScheduledSystemFunctionOnce,
+    startScheduledSystemFunctions,
+    type ScheduledFunctionLogger,
+    type ScheduledFunctionRunContext,
+    type ScheduledFunctionRunResult,
+    type ScheduledFunctionTimer,
+    type ScheduledSystemFunctionJob,
+    type ScheduledSystemFunctionRunner,
+    type ScheduledSystemFunctionRunnerOptions,
+} from "../core/ScheduledFunctionRunner";
 export {
     collectReferences,
     resolveFunctionValue,

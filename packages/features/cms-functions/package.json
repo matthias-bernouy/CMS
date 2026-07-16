@@ -10,6 +10,7 @@
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
+        "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-sources": "workspace:*"
     },
     "peerDependencies": {

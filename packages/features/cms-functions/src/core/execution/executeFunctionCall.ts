@@ -4,11 +4,17 @@ import {
     systemSourceUrnOf,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
-import type { FunctionCall, FunctionValue } from "../../interfaces/FunctionDefinition";
+import type { CmsFunction, FunctionCall } from "../../interfaces/FunctionDefinition";
 import type { ExecuteFunctionOptions } from "../executeFunction";
-import { FunctionExecutionError } from "../errors";
-import { resolveFunctionValue, type FunctionRuntimeVars } from "../expressions";
+import {
+    FunctionExecutionError,
+    UnexpectedFunctionExecutionError,
+    withFunctionExecutionErrorContext,
+    type FunctionExecutionErrorContext,
+} from "../errors";
+import type { FunctionRuntimeVars } from "../expressions";
 import { MAX_FUNCTION_CALL_ERROR_BYTES, MAX_FUNCTION_RESPONSE_BYTES } from "./limits";
+import { resolveCallMappings } from "./identityResolution";
 
 export class RecoverableFunctionCallError extends FunctionExecutionError {}
 
@@ -16,35 +22,52 @@ export async function executeFunctionCall(
     call: FunctionCall,
     vars: FunctionRuntimeVars,
     options: ExecuteFunctionOptions,
+    definition: CmsFunction,
+    stepId: string,
 ): Promise<unknown> {
-    const endpoint = await options.sources.getEndpoint(makeEndpointUrn(call.source, call.endpoint));
-    if (!endpoint) throw new FunctionExecutionError(`Function call endpoint not found: ${call.source}.${call.endpoint}`);
-    if (systemSourceUrnOf(endpoint.urn)) throw new FunctionExecutionError(`Function call cannot target system endpoint: ${endpoint.urn}`);
-    if (endpoint.responseKind && endpoint.responseKind !== "json") throw new FunctionExecutionError(`Function call target is not JSON: ${endpoint.urn}`);
-
-    const response = await executeEndpoint(endpoint, callRequest(endpoint, call, vars), options.deps);
-    if (!response.ok) throw await callFailureError(call.endpoint, response, options);
-
-    const { text, truncated } = await readLimitedText(
-        response,
-        options.maxResponseBytes ?? MAX_FUNCTION_RESPONSE_BYTES,
-    );
-    if (truncated) {
-        throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" response is too large`);
-    }
-    if (!text) return null;
+    const context: FunctionExecutionErrorContext = {
+        stepId,
+        source: call.source,
+        endpoint: call.endpoint,
+    };
     try {
-        return JSON.parse(text) as unknown;
-    } catch {
-        throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" returned invalid JSON`);
+        const endpoint = await options.sources.getEndpoint(makeEndpointUrn(call.source, call.endpoint));
+        if (!endpoint) throw new FunctionExecutionError(`Function call endpoint not found: ${call.source}.${call.endpoint}`);
+        if (systemSourceUrnOf(endpoint.urn)) throw new FunctionExecutionError(`Function call cannot target system endpoint: ${endpoint.urn}`);
+        if (endpoint.responseKind && endpoint.responseKind !== "json") throw new FunctionExecutionError(`Function call target is not JSON: ${endpoint.urn}`);
+
+        const mappings = await resolveCallMappings(definition, call, endpoint, vars, options);
+        const response = await executeEndpoint(endpoint, callRequest(endpoint, mappings), options.deps);
+        if (!response.ok) throw await callFailureError(call.endpoint, response, options);
+
+        const { text, truncated } = await readLimitedText(
+            response,
+            options.maxResponseBytes ?? MAX_FUNCTION_RESPONSE_BYTES,
+        );
+        if (truncated) {
+            throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" response is too large`);
+        }
+        if (!text) return null;
+        try {
+            return JSON.parse(text) as unknown;
+        } catch {
+            throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" returned invalid JSON`);
+        }
+    } catch (error) {
+        if (error instanceof FunctionExecutionError) {
+            throw contextualizeFunctionError(error, context);
+        }
+        throw new UnexpectedFunctionExecutionError(context, { cause: error });
     }
 }
 
 async function callFailureError(endpoint: string, response: Response, options: ExecuteFunctionOptions): Promise<RecoverableFunctionCallError> {
     const message = `Function call "${endpoint}" failed with status ${response.status}`;
+    const correlationId = response.headers.get("x-correlation-id") ?? undefined;
+    const context: FunctionExecutionErrorContext = { callStatus: response.status };
     if (!options.includeCallErrorDetails) {
         if (response.body) await response.body.cancel().catch(() => undefined);
-        return new RecoverableFunctionCallError(message, 502);
+        return new RecoverableFunctionCallError(message, 502, undefined, correlationId, context);
     }
 
     const contentType = response.headers.get("content-type") ?? "";
@@ -56,7 +79,22 @@ async function callFailureError(endpoint: string, response: Response, options: E
         body: parseErrorBody(text, contentType),
     };
     if (truncated) detail.truncated = true;
-    return new RecoverableFunctionCallError(message, 502, detail);
+    return new RecoverableFunctionCallError(message, 502, detail, correlationId, context);
+}
+
+function contextualizeFunctionError(
+    error: FunctionExecutionError,
+    context: FunctionExecutionErrorContext,
+): FunctionExecutionError {
+    const contextual = withFunctionExecutionErrorContext(error, context);
+    if (!(error instanceof RecoverableFunctionCallError)) return contextual;
+    return new RecoverableFunctionCallError(
+        contextual.message,
+        contextual.status,
+        contextual.details,
+        contextual.correlationId,
+        contextual.context,
+    );
 }
 
 async function readLimitedText(response: Response, maxBytes: number): Promise<{ text: string; truncated: boolean }> {
@@ -97,19 +135,18 @@ function parseErrorBody(text: string, contentType: string): unknown {
     }
 }
 
-function callRequest(endpoint: SourceEndpoint, call: FunctionCall, vars: FunctionRuntimeVars): Request {
+function callRequest(
+    endpoint: SourceEndpoint,
+    mappings: { params: Record<string, unknown>; body: unknown },
+): Request {
     const url = new URL("https://cms.function/internal");
-    for (const [key, value] of Object.entries(resolveObject(call.params, vars))) {
+    for (const [key, value] of Object.entries(mappings.params)) {
         if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
     }
-    const body = resolveFunctionValue(call.body, vars);
+    const body = mappings.body;
     return new Request(url, {
         method: endpoint.method,
         headers: body === undefined ? undefined : { "content-type": "application/json" },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
-}
-
-function resolveObject(value: Record<string, FunctionValue> | undefined, vars: FunctionRuntimeVars): Record<string, unknown> {
-    return Object.fromEntries(Object.entries(value ?? {}).map(([key, item]) => [key, resolveFunctionValue(item, vars)]));
 }

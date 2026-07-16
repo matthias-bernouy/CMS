@@ -24,6 +24,7 @@ export async function executeFunctionSystemSourceEndpoint(
     return executeFunction(fn, request, {
         sources: options.sources,
         deps: options.deps,
+        identities: options.deps?.identities,
         user: await options.resolveUser?.(request) ?? {},
     });
 }

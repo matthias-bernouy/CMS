@@ -25,6 +25,9 @@ export function resolveFunctionValue<Vars = FunctionRuntimeVars>(
 ): unknown {
     if (typeof value === "string" && value.startsWith("$")) return resolver(value, vars);
     if (Array.isArray(value)) return value.map(item => resolveFunctionValue(item, vars, resolver));
+    if (isConcatExpression(value)) {
+        return value.$concat.map(item => resolveFunctionValue(item, vars, resolver) ?? "").join("");
+    }
     if (isRecord(value)) {
         return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveFunctionValue(item, vars, resolver)]));
     }
@@ -78,4 +81,8 @@ function visit(value: unknown, refs: string[]): void {
 
 function isRecord(value: unknown): value is Record<string, FunctionValue> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isConcatExpression(value: unknown): value is { $concat: FunctionValue[] } {
+    return isRecord(value) && Object.keys(value).length === 1 && Array.isArray(value.$concat);
 }

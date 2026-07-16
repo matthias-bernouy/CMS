@@ -55,6 +55,7 @@ function functionOptions(options: RunTriggersOptions): ExecuteFunctionOptions {
     return {
         sources: options.sources,
         deps: options.deps,
+        identities: options.deps?.identities,
         user: options.user,
     };
 }

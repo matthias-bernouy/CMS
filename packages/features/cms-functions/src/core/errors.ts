@@ -9,7 +9,38 @@ export class FunctionExecutionError extends Error {
         message: string,
         readonly status = 500,
         readonly details?: unknown,
+        readonly correlationId?: string,
+        readonly context: FunctionExecutionErrorContext = {},
     ) {
         super(message);
     }
+}
+
+export type FunctionExecutionErrorContext = {
+    stepId?: string;
+    source?: string;
+    endpoint?: string;
+    callStatus?: number;
+};
+
+export class UnexpectedFunctionExecutionError extends Error {
+    constructor(
+        readonly context: FunctionExecutionErrorContext,
+        options?: ErrorOptions,
+    ) {
+        super("Unexpected function execution error", options);
+    }
+}
+
+export function withFunctionExecutionErrorContext(
+    error: FunctionExecutionError,
+    context: FunctionExecutionErrorContext,
+): FunctionExecutionError {
+    return new FunctionExecutionError(
+        error.message,
+        error.status,
+        error.details,
+        error.correlationId,
+        { ...context, ...error.context },
+    );
 }

@@ -3,6 +3,7 @@ import {
     executeFunction,
     functionAsEndpoint,
     InMemoryFunctionRepository,
+    resolveFunctionValue,
     validateFunction,
 } from "@bernouy/cms-functions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
@@ -79,12 +80,31 @@ describe("cms functions", () => {
 
     test("projects function access onto the system source endpoint", () => {
         const fn = updateMyProductFunction();
-        fn.access = { mode: "auth" };
+        fn.access = { mode: "admin", roles: ["finance"] };
 
-        expect(functionAsEndpoint(fn).access).toEqual({ mode: "auth" });
+        expect(functionAsEndpoint(fn).access).toEqual({ mode: "admin", roles: ["finance"] });
     });
 
-    test("only includes source error body when explicitly requested", async () => {
+    test("validates explicit function access roles", async () => {
+        const wrongMode = updateMyProductFunction();
+        wrongMode.access = { mode: "auth", roles: ["finance"] };
+        expect(await validateFunction(wrongMode)).toContain("function.access.roles requires admin mode");
+
+        const duplicates = updateMyProductFunction();
+        duplicates.access = { mode: "admin", roles: ["finance", "finance"] };
+        expect(await validateFunction(duplicates)).toContain("function.access.roles contains duplicate role finance");
+    });
+
+    test("resolves concat expressions", () => {
+        expect(resolveFunctionValue({
+            $concat: ["campaign-", "$input.body.id", ":", "$item.email"],
+        }, {
+            input: { body: { id: "weekly" } },
+            item: { email: "ada@example.test" },
+        })).toBe("campaign-weekly:ada@example.test");
+    });
+
+    test("does not expose source error details without a declared function output", async () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource(productsSource());
         const fetchImpl = async () => json({ error: "template key is missing" }, 400);
@@ -96,7 +116,8 @@ describe("cms functions", () => {
         });
         expect(hidden.status).toBe(502);
         expect(await hidden.json()).toEqual({
-            error: 'Function call "getProduct" failed with status 400',
+            error: "Function execution failed",
+            correlationId: hidden.headers.get("x-correlation-id"),
         });
 
         const detailed = await executeFunction(updateMyProductFunction(), updateRequest(), {
@@ -107,13 +128,8 @@ describe("cms functions", () => {
         });
         expect(detailed.status).toBe(502);
         expect(await detailed.json()).toEqual({
-            error: 'Function call "getProduct" failed with status 400',
-            details: {
-                call: "getProduct",
-                status: 400,
-                contentType: "application/json",
-                body: { error: "template key is missing" },
-            },
+            error: "Function execution failed",
+            correlationId: detailed.headers.get("x-correlation-id"),
         });
     });
 });

@@ -54,6 +54,9 @@ describe("cms functions foreach", () => {
             .toContain("function.steps.0.forEach.steps.0.forEach must not be nested");
         expect(await validateFunction(tooManyCalls(), { sources }))
             .toContain("function call budget exceeds max (51, max 50)");
+        expect(await validateFunction(continuingLoop(16), { sources })).toEqual([]);
+        expect(await validateFunction(continuingLoop(17), { sources }))
+            .toContain("function call budget exceeds max (51, max 50)");
     });
 
     test("fails fast when runtime items exceed max", async () => {
@@ -66,6 +69,43 @@ describe("cms functions foreach", () => {
 
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: 'forEach "loop" exceeds max items' });
+    });
+
+    test("does not swallow programming errors when continueOnError is enabled", async () => {
+        const sources = new InMemorySourceRepository();
+        await sources.createSource(productsSource());
+        const originalGetEndpoint = sources.getEndpoint.bind(sources);
+        let endpointLookups = 0;
+        let fetchCalls = 0;
+        sources.getEndpoint = async urn => {
+            endpointLookups += 1;
+            if (endpointLookups === 1) throw new Error("repository programming bug");
+            return await originalGetEndpoint(urn);
+        };
+        const fn: CmsFunction = {
+            id: "strictLoopErrors",
+            method: "GET",
+            steps: [{
+                id: "loop",
+                forEach: {
+                    items: [{ id: "p1" }],
+                    max: 1,
+                    continueOnError: true,
+                    steps: [{ id: "product", call: productCall() }],
+                    onError: [{ id: "markFailure", call: productCall() }],
+                },
+            }],
+            return: { body: "$steps.loop" },
+        };
+
+        const response = await executeFunction(fn, new Request("https://cms.test/function"), {
+            sources,
+            deps: { fetchImpl: async () => { fetchCalls += 1; return json({}); } },
+        });
+
+        expect(response.status).toBe(500);
+        expect(endpointLookups).toBe(1);
+        expect(fetchCalls).toBe(0);
     });
 });
 
@@ -126,6 +166,27 @@ function limitedFunction(): CmsFunction {
     fn.id = "limited";
     (fn.steps[1] as Extract<CmsFunction["steps"][number], { forEach: unknown }>).forEach.max = 1;
     return fn;
+}
+
+function continuingLoop(max: number): CmsFunction {
+    return {
+        id: `continuingLoop${max}`,
+        method: "GET",
+        steps: [{
+            id: "loop",
+            forEach: {
+                items: [{ id: "p1" }],
+                max,
+                continueOnError: true,
+                steps: [
+                    { id: "firstCall", call: productCall() },
+                    { id: "lastCall", call: productCall() },
+                ],
+                onError: [{ id: "markFailure", call: productCall() }],
+            },
+        }],
+        return: { body: "$steps.loop" },
+    };
 }
 
 function productCall() {

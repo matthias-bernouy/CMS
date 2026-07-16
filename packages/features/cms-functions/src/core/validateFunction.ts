@@ -16,7 +16,7 @@ export async function validateFunction(
     const maxCalls = options.maxCalls ?? MAX_FUNCTION_CALLS;
     if (!isId(fn.id)) errors.push("function.id must be a simple id");
     if (!["GET", "POST", "PUT", "DELETE", "PATCH"].includes(fn.method)) errors.push("function.method is not supported");
-    if (fn.access !== undefined && !isSourceEndpointAccessMode(fn.access.mode)) errors.push("function.access.mode is not supported");
+    validateAccess(fn, errors);
     if (!Array.isArray(fn.steps)) errors.push("function.steps must be an array");
     if (!fn.return) errors.push("function.return is required");
 
@@ -39,4 +39,26 @@ export async function validateFunction(
         }
     }
     return errors;
+}
+
+function validateAccess(fn: CmsFunction, errors: string[]): void {
+    if (fn.access === undefined) return;
+    if (!isSourceEndpointAccessMode(fn.access.mode)) errors.push("function.access.mode is not supported");
+    const roles = (fn.access as { roles?: unknown }).roles;
+    if (roles === undefined) return;
+    if (fn.access.mode !== "admin") errors.push("function.access.roles requires admin mode");
+    if (!Array.isArray(roles)) {
+        errors.push("function.access.roles must be an array");
+        return;
+    }
+    const seen = new Set<string>();
+    for (const role of roles) {
+        if (typeof role !== "string" || !role.trim()) {
+            errors.push("function.access.roles must contain non-empty role ids");
+            continue;
+        }
+        const roleId = role.trim();
+        if (seen.has(roleId)) errors.push(`function.access.roles contains duplicate role ${roleId}`);
+        seen.add(roleId);
+    }
 }

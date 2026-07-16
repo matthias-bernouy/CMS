@@ -1,3 +1,4 @@
+import { expect } from "bun:test";
 import {
     executeFunctionSystemSourceEndpoint,
     InMemoryFunctionRepository,
@@ -128,10 +129,27 @@ function endpoint(id: string, method: "GET" | "POST", targetUrl: string, options
                     title: { type: "string" },
                 },
             },
+        }, {
+            status: "default",
+            body: {
+                type: "object",
+                properties: { error: { type: "string" } },
+            },
         }],
     };
 }
 
 export function json(value: unknown, status = 200): Response {
     return new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
+}
+
+export async function expectCorrelatedFunctionFailure(response: Response, status = 500): Promise<string> {
+    expect(response.status).toBe(status);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    const correlationId = response.headers.get("x-correlation-id");
+    expect(correlationId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await response.json()).toEqual({ error: "Function execution failed", correlationId });
+    return correlationId!;
 }

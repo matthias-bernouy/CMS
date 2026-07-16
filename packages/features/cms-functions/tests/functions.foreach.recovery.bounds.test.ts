@@ -7,7 +7,7 @@ import {
     recoveryLoop,
     requestProductId,
 } from "./helpers/foreachRecoveryFixtures";
-import { json } from "./helpers/functionFixtures";
+import { expectCorrelatedFunctionFailure, json } from "./helpers/functionFixtures";
 
 describe("cms functions foreach recovery bounds", () => {
     test("rejects an oversized loop even when validation was bypassed", async () => {
@@ -110,8 +110,7 @@ describe("cms functions foreach recovery bounds", () => {
             } },
         });
 
-        expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ error: 'Function forEach "loop" result is too large' });
+        await expectCorrelatedFunctionFailure(response);
         expect(requests).toEqual(["p1", "r1", "p2", "r2"]);
     });
 

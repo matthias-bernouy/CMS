@@ -9,7 +9,7 @@ import {
     recoveryLoop,
     requestProductId,
 } from "./helpers/foreachRecoveryFixtures";
-import { json } from "./helpers/functionFixtures";
+import { expectCorrelatedFunctionFailure, json } from "./helpers/functionFixtures";
 
 describe("cms functions foreach recovery", () => {
     test("recovers one item without exposing its provider failure", async () => {
@@ -125,8 +125,7 @@ describe("cms functions foreach recovery", () => {
             deps: { fetchImpl: async () => { calls += 1; return json({}); } },
         });
 
-        expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ error: "Function execution failed" });
+        await expectCorrelatedFunctionFailure(response);
         expect(lookups).toBe(1);
         expect(calls).toBe(0);
     });
@@ -141,10 +140,7 @@ describe("cms functions foreach recovery", () => {
             sources: new InMemorySourceRepository(),
         });
 
-        expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({
-            error: "Function call endpoint not found: products.getProduct",
-        });
+        await expectCorrelatedFunctionFailure(response);
     });
 
     test("does not recover the global call budget", async () => {
@@ -169,8 +165,7 @@ describe("cms functions foreach recovery", () => {
             } },
         });
 
-        expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ error: "Function exceeded its call budget" });
+        await expectCorrelatedFunctionFailure(response);
         expect(calls).toBe(50);
     });
 });
