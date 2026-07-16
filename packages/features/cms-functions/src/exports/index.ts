@@ -57,7 +57,7 @@ export {
     type ScheduledSystemFunctionJob,
     type ScheduledSystemFunctionRunner,
     type ScheduledSystemFunctionRunnerOptions,
-} from "../core/ScheduledFunctionRunner";
+} from "../core/scheduled/index";
 export {
     collectReferences,
     resolveFunctionValue,

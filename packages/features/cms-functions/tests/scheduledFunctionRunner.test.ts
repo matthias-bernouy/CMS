@@ -140,4 +140,41 @@ describe("scheduled system function runner", () => {
         expect((await first).status).toBe("succeeded");
         await runner.stop();
     });
+
+    test("validates every job before scheduling the first timer", () => {
+        const timer = fakeTimer();
+
+        expect(() => startScheduledSystemFunctions({
+            functions: new InMemoryFunctionRepository(),
+            sources: new InMemorySourceRepository(),
+            jobs: [
+                { functionId: "valid", intervalMs: 1_000, body: () => ({}) },
+                { functionId: "invalid", intervalMs: 999, body: () => ({}) },
+            ],
+            timer,
+        })).toThrow("interval must be at least 1000ms");
+        expect(timer.callbacks).toHaveLength(0);
+    });
+
+    test("turns repository failures into bounded failed runs", async () => {
+        class FailingFunctionRepository extends InMemoryFunctionRepository {
+            override async getFunction(): Promise<CmsFunction | null> {
+                throw new Error("database connection details");
+            }
+        }
+        const logs = logger();
+        const runner = startScheduledSystemFunctions({
+            functions: new FailingFunctionRepository(),
+            sources: new InMemorySourceRepository(),
+            jobs: [{ functionId: "worker", intervalMs: 1_000, body: () => ({}) }],
+            timer: fakeTimer(),
+            logger: logs,
+            randomUUID: () => "failed-run",
+        });
+
+        expect(await runner.runNow("worker")).toMatchObject({ status: "failed", runId: "failed-run" });
+        expect(logs.messages).toEqual([expect.stringContaining("worker failed")]);
+        expect(logs.messages.join(" ")).not.toContain("database connection details");
+        await runner.stop();
+    });
 });
