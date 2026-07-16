@@ -16,6 +16,7 @@ export async function executeLookupCreate(
     fieldId: string,
     previousDraft: Record<string, unknown>,
     nextDraft: Record<string, unknown>,
+    groups: DashboardSourceGroup[] = [group],
 ): Promise<LookupCreateResult | undefined> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
@@ -30,7 +31,7 @@ export async function executeLookupCreate(
     const createdValue = createdInput(previousValue, nextValue);
     if (!createdValue) return undefined;
 
-    const created = await sendSourceJson(group.source.id, create, endpointMethod(group, create.endpoint), {
+    const created = await sendSourceJson(group.source.id, create, endpointMethod(group, groups, create), {
         resource,
         fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
         value: createdValue,
@@ -74,8 +75,16 @@ function lookupField(widget: DetailWidget, fieldId: string): LookupField | null 
     ) ?? null;
 }
 
-function endpointMethod(group: DashboardSourceGroup, endpointId: string): string {
-    return group.endpoints.find(endpoint => endpoint.endpointId === endpointId)?.method ?? "POST";
+function endpointMethod(
+    group: DashboardSourceGroup,
+    groups: DashboardSourceGroup[],
+    ref: { sourceId?: string; endpoint: string },
+): string {
+    const sourceId = ref.sourceId ?? group.source.id;
+    const endpoint = groups.find(candidate => candidate.source.id === sourceId)
+        ?.endpoints.find(candidate => candidate.endpointId === ref.endpoint);
+    if (!endpoint) throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    return endpoint.method;
 }
 
 function findDetailWidget(widgets: DashboardWidget[], id: string): DetailWidget | null {
