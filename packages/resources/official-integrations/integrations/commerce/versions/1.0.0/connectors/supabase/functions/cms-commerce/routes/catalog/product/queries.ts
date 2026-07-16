@@ -1,10 +1,11 @@
-import { HttpError } from "../../core/errors.ts";
-import { json } from "../../core/http.ts";
-import { camelize, integer, isRecord, publicMetadata, readJsonObject, text } from "../../core/records.ts";
-import { listRows, one, restJson, rpc } from "../../core/rest.ts";
-import type { JsonRecord } from "../../core/types.ts";
-import { productData } from "./product-data.ts";
-import { withVariantMatrix } from "./variant-matrix.ts";
+import { HttpError } from "../../../core/errors.ts";
+import { json } from "../../../core/http.ts";
+import { camelize, integer, publicMetadata, readJsonObject, text } from "../../../core/records.ts";
+import { listRows, restJson } from "../../../core/rest.ts";
+import type { JsonRecord } from "../../../core/types.ts";
+import { productData } from "./data.ts";
+import { getProductReadModel, upsertProductReadModel } from "./read-model.ts";
+import { withVariantMatrix } from "../variant-matrix.ts";
 
 const productSelect = "id,slug,title,description,brand_id,status,visibility,metadata,version,created_at,updated_at";
 
@@ -29,34 +30,26 @@ export async function listProducts(request: Request, admin: boolean): Promise<Re
 export async function getProduct(request: Request, admin: boolean): Promise<Response> {
     const url = new URL(request.url);
     if (admin && url.searchParams.get("id") === "__new__") return json(newProduct());
-    const row = await rowByIdOrSlug(url);
-    if (!row || (!admin && (row.status !== "active" || row.visibility !== "public"))) {
-        throw new HttpError(404, "product not found");
-    }
-    const visible = admin ? row : (await redactMetadata([row], "product"))[0]!;
-    return json(await productData(request, visible));
+    const selector = productSelector(url);
+    const bundle = await getProductReadModel(admin ? "admin" : "public", selector.id, selector.slug);
+    if (!bundle) throw new HttpError(404, "product not found");
+    return json(productData(bundle, !admin));
 }
 
 export async function upsertProduct(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const body = withVariantMatrix(await readJsonObject(request));
     const productId = optionalId(url.searchParams.get("id"));
-    const result = await rpc("upsert_product", {
-        p_product_id: productId,
-        p_payload: body,
-        p_expected_version: integer(body.expectedVersion, "expectedVersion", productId !== null),
-    });
-    if (!isRecord(result)) throw new HttpError(502, "upsert_product returned an invalid response");
-    return json(await productData(request, result));
+    const expectedVersion = integer(body.expectedVersion, "expectedVersion", productId !== null);
+    const bundle = await upsertProductReadModel(productId, body, expectedVersion);
+    return json(productData(bundle, false));
 }
 
-async function rowByIdOrSlug(url: URL): Promise<JsonRecord | null> {
+function productSelector(url: URL): { id: number | null; slug: string | null } {
     const id = optionalId(url.searchParams.get("id"));
-    const slug = text(url.searchParams.get("slug"));
+    const slug = text(url.searchParams.get("slug")) ?? null;
     if (id === null && !slug) throw new HttpError(400, "id or slug is required");
-    return id !== null
-        ? await one("products", { id }, productSelect)
-        : await one("products", { slug: slug! }, productSelect);
+    return { id, slug: id === null ? slug : null };
 }
 
 async function redactMetadata(rows: JsonRecord[], entityType: string): Promise<JsonRecord[]> {

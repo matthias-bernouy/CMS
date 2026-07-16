@@ -12,8 +12,10 @@ installCommerceTestEnvironment();
 
 describe("commerce product writes", () => {
     test("derives the variant matrix from axes and rejects arbitrary variants", async () => {
-        setRestResponder(request => request.url.endsWith("/rpc/upsert_product")
+        setRestResponder(request => request.url.endsWith("/rpc/upsert_product_read_model")
             ? jsonResponse({
+                state: "ok",
+                product: {
                 id: 42,
                 slug: "racket",
                 title: "Racket",
@@ -21,6 +23,9 @@ describe("commerce product writes", () => {
                 visibility: "public",
                 metadata: {},
                 version: 5,
+                },
+                public_metadata_keys: [], axes: [], values: [], variants: [], selections: [],
+                media: [], brand: null, categories: [],
             })
             : jsonResponse([]));
 
@@ -38,7 +43,7 @@ describe("commerce product writes", () => {
             },
         });
 
-        const call = expectRpc("upsert_product");
+        const call = expectRpc("upsert_product_read_model");
         const payload = call.body.p_payload as JsonRecord;
         const matrix = payload.variantMatrix as JsonRecord[];
 

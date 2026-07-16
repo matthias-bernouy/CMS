@@ -12,29 +12,29 @@ describe("commerce product aggregate", () => {
     test("returns images, axes, and generated variants from one Product endpoint", async () => {
         setRestResponder(request => {
             const path = new URL(request.url).pathname;
-            if (path.endsWith("/products")) return jsonResponse([{
-                id: 42, slug: "racket", title: "Racket", status: "active",
-                visibility: "public", metadata: { weight: 300, finish: "matte" }, version: 3,
-            }]);
-            if (path.endsWith("/product_variant_axes")) {
-                return jsonResponse([{ id: 10, key: "grip", field_key: "grip", label: "Grip", position: 0 }]);
-            }
-            if (path.endsWith("/product_variant_axis_values")) {
-                return jsonResponse([{ id: 11, axis_id: 10, key: "l1", label: "L1", value: "L1", position: 0 }]);
-            }
-            if (path.endsWith("/product_variants")) return jsonResponse([{
-                id: 12, product_id: 42, sku: null, title: "Grip: L1", status: "active",
-                position: 0, combination_key: "grip:l1", generated_from_axes: true,
-                metadata: { finish: "glossy" }, version: 1,
-            }]);
-            if (path.endsWith("/product_variant_selections")) {
-                return jsonResponse([{ variant_id: 12, axis_id: 10, value_id: 11 }]);
-            }
-            if (path.endsWith("/product_media")) return jsonResponse([{
-                id: 14, media_id: 13, sort_order: 0, is_main: true,
-                media: { id: 13, mime_type: "image/webp", alt: "Racket" },
-            }]);
-            return jsonResponse([]);
+            if (!path.endsWith("/rpc/get_product_read_model")) return jsonResponse([]);
+            return jsonResponse({
+                state: "ok",
+                product: {
+                    id: 42, slug: "racket", title: "Racket", status: "active",
+                    visibility: "public", metadata: { weight: 300, finish: "matte" }, version: 3,
+                },
+                public_metadata_keys: [],
+                axes: [{ id: 10, key: "grip", field_key: "grip", label: "Grip", position: 0 }],
+                values: [{ id: 11, axis_id: 10, key: "l1", label: "L1", value: "L1", position: 0 }],
+                variants: [{
+                    id: 12, product_id: 42, sku: null, title: "Grip: L1", status: "active",
+                    position: 0, combination_key: "grip:l1", generated_from_axes: true,
+                    metadata: { finish: "glossy" }, version: 1,
+                }],
+                selections: [{ variant_id: 12, axis_id: 10, value_id: 11 }],
+                media: [{
+                    id: 14, media_id: 13, sort_order: 0, is_main: true,
+                    media: { id: 13, mime_type: "image/webp", alt: "Racket" },
+                }],
+                brand: null,
+                categories: [],
+            });
         });
 
         const response = await requestCommerce("/admin/product?id=42");

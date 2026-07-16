@@ -70,11 +70,10 @@ describe("commerce product detail boundaries", () => {
         useProductResponder();
 
         const response = await requestCommerce("/admin/product?id=42&slug=ignored");
-        const query = new URL(capturedFetches()[0]!.url).searchParams;
+        const call = capturedFetches()[0]!;
 
         expect(response.status).toBe(200);
-        expect(query.get("id")).toBe("eq.42");
-        expect(query.get("slug")).toBeNull();
+        expect(call.body).toEqual({ p_scope: "admin", p_product_id: 42, p_slug: null });
     });
 
     test("rejects an invalid CMS key before templates, selectors, or reads", async () => {
@@ -88,7 +87,7 @@ describe("commerce product detail boundaries", () => {
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("preserves PostgREST product-read failures", async () => {
+    test("preserves database product-read failures", async () => {
         setRestResponder(() => jsonResponse({ message: "database unavailable" }, 503));
 
         const response = await requestCommerce("/product?id=42");
@@ -96,5 +95,27 @@ describe("commerce product detail boundaries", () => {
         expect(response.status).toBe(502);
         expect(await response.json()).toEqual({ error: "database unavailable" });
         expect(capturedFetches()).toHaveLength(1);
+    });
+
+    test("fails closed when the private read model contains malformed relation rows", async () => {
+        setRestResponder(() => jsonResponse({
+            state: "ok",
+            product: productRow,
+            public_metadata_keys: [],
+            axes: [null],
+            values: [],
+            variants: [],
+            selections: [],
+            media: [],
+            brand: null,
+            categories: [],
+        }));
+
+        const response = await requestCommerce("/product?id=42");
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+            error: "get_product_read_model returned an invalid response",
+        });
     });
 });

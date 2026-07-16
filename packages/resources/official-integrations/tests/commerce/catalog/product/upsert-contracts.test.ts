@@ -13,7 +13,7 @@ import { useProductResponder } from "./fixtures";
 installCommerceTestEnvironment();
 
 describe("commerce product upsert contracts", () => {
-    test("preserves the complete response and eight-call budget after an update", async () => {
+    test("preserves the complete response in one database call after an update", async () => {
         useProductResponder();
 
         const response = await requestCommerce("/admin/product?id=42", {
@@ -31,18 +31,8 @@ describe("commerce product upsert contracts", () => {
 
         expect(response.status).toBe(200);
         expect(body).toEqual(adminProduct);
-        expect(calls).toHaveLength(8);
-        expect(calls.map(call => new URL(call.url).pathname.split("/").at(-1))).toEqual([
-            "upsert_product",
-            "product_variant_axes",
-            "product_variant_axis_values",
-            "product_variants",
-            "product_variant_selections",
-            "product_media",
-            "brands",
-            "product_categories",
-        ]);
-        expect(expectRpc("upsert_product").body).toEqual({
+        expect(calls).toHaveLength(1);
+        expect(expectRpc("upsert_product_read_model").body).toEqual({
             p_product_id: 42,
             p_payload: {
                 expectedVersion: 2,
@@ -61,13 +51,13 @@ describe("commerce product upsert contracts", () => {
         });
 
         expect(response.status).toBe(200);
-        const rpc = expectRpc("upsert_product");
+        const rpc = expectRpc("upsert_product_read_model");
         expect(rpc.body).toEqual({
             p_product_id: null,
             p_payload: { slug: "racket-pro", title: "Racket Pro" },
         });
         expect(rpc.body).not.toHaveProperty("p_expected_version");
-        expect(capturedFetches()).toHaveLength(7);
+        expect(capturedFetches()).toHaveLength(1);
     });
 
     test("rejects a missing update version before mutating", async () => {
