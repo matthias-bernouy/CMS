@@ -1,0 +1,11 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Theme</span>
+
+    <cms-theme-nav slot="secondary-lateral-nav"></cms-theme-nav>
+
+    <div cms-source="{{BASE_PATH}}/api/system/settings as settings">
+        <template>
+            <cms-theme-editor site-name="{{ settings.site.name }}"></cms-theme-editor>
+        </template>
+    </div>
+</w13c-fixed-admin-layout>

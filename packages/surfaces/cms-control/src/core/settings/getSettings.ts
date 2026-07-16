@@ -5,6 +5,7 @@ import type { TSystem } from "@bernouy/cms-content";
 export type SettingsResponse = {
     site:     TSystem["site"];
     editor:   TSystem["editor"];
+    theme:    TSystem["theme"];
     security: TSystem["security"];
     email:    TSystem["email"];
     pages:    PageLink[];
@@ -28,6 +29,7 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
     return {
         site:     system.site,
         editor:   system.editor,
+        theme:    system.theme,
         security: system.security,
         email:    system.email,
         pages,

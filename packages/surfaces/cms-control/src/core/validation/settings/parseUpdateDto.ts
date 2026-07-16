@@ -33,6 +33,14 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
         dto.editor = editor as TSystem["editor"];
     }
 
+    if ("theme" in body) {
+        const value = body.theme;
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+            throw new InvalidParam("theme", "expected an object.");
+        }
+        dto.theme = value as TSystem["theme"];
+    }
+
     if (hasSectionKey(body, "security")) {
         const sec: Partial<TSystem["security"]> = {};
         if ("security.connectExtras" in body) {

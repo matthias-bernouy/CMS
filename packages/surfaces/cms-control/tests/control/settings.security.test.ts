@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseSettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import { defaultSystem } from "@bernouy/cms-content";
 
 describe("parseSettingsUpdateDto — system pages", () => {
     test("coerces all system page paths to page references", () => {
@@ -29,6 +30,13 @@ describe("parseSettingsUpdateDto — system pages", () => {
         expect(dto.site?.forbidden).toBeNull();
         expect(dto.site?.serverError).toBeNull();
         expect(dto.site?.login).toBeNull();
+    });
+});
+
+describe("parseSettingsUpdateDto — theme", () => {
+    test("accepts the structured theme document", () => {
+        const theme = defaultSystem().theme;
+        expect(parseSettingsUpdateDto({ theme })).toEqual({ theme });
     });
 });
 

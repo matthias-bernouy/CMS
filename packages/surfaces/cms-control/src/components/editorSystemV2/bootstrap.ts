@@ -48,6 +48,15 @@ type EditorSettingsResponse = {
     editor?: {
         layoutCategory?: string;
     };
+    theme?: {
+        sources?: Array<{
+            label: string;
+            categories: Array<{
+                label: string;
+                tokens: Array<{ label: string; variable: string; type: "color" | "value" }>;
+            }>;
+        }>;
+    };
 };
 
 type TemplateListItem = {
@@ -100,6 +109,15 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
     shell.setDefaultTemplateSelection({
         category: settings.editor?.layoutCategory || undefined,
     });
+    const themeTokens = (settings.theme?.sources ?? []).flatMap((source) => source.categories.flatMap((category) =>
+        category.tokens
+            .filter((token) => token.type === "color")
+            .map((token) => ({ label: token.label, variable: token.variable, category: `${source.label} · ${category.label}` })),
+    ));
+    const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view") as
+        | (HTMLElement & { setThemeTokens(tokens: typeof themeTokens): void })
+        | null;
+    settingsView?.setThemeTokens(themeTokens);
 
     const documentId = currentPageIdentifier();
     const resource = shellResource(shell);

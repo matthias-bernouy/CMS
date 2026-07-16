@@ -1,0 +1,22 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+w13c-lateral-menu {
+    width: 100%;
+    height: 100%;
+    --menu-brand-mark-display: none;
+    --menu-header-font-size: .875rem;
+    --menu-item-font-size: .875rem;
+    --menu-section-font-size: .6875rem;
+}
+
+w13c-lateral-menu-item[data-generated] {
+    --item-font-size: .875rem;
+}
+
+w13c-lateral-menu-item.category-item {
+    margin-left: 18px;
+    --item-font-size: .8125rem;
+}
