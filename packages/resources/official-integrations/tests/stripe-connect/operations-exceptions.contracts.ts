@@ -3,6 +3,7 @@ import {
     clearProviderRequests,
     newerAt,
     olderAt,
+    postgrestBody,
     postgrestQuery,
     postgrestTables,
     refreshedAt,
@@ -15,7 +16,7 @@ export function registerOperationAndExceptionDashboardContracts(
     createHarness: CreateDashboardReadHarness,
 ): void {
     describe("stripe-connect operation dashboard read contracts", () => {
-        test("keeps exact ordered payloads and the current 1+N PostgREST budget", async () => {
+        test("keeps exact ordered payloads with one PostgREST read", async () => {
             const harness = await createHarness();
             const firstPaymentId = harness.rest.seedDashboardPayment("order-operation-new");
             const secondPaymentId = harness.rest.seedDashboardPayment("order-operation-old");
@@ -43,8 +44,11 @@ export function registerOperationAndExceptionDashboardContracts(
                 ],
                 total: 2,
             });
-            expect(postgrestTables(harness)).toEqual(["financial_operations", "payments", "payments"]);
-            expect(postgrestQuery(harness, 0)).toMatchObject({ order: "created_at.desc", limit: "2" });
+            expect(postgrestTables(harness)).toEqual(["rpc/list_dashboard_financial_operations"]);
+            expect(postgrestBody(harness, 0)).toEqual({
+                p_actor_id: "admin-1", p_actor_kind: "admin", p_limit: 2,
+                p_search: null, p_status: null,
+            });
             expect(harness.rest.stripeRequests).toEqual([]);
         });
     });
@@ -116,7 +120,9 @@ export function registerOperationAndExceptionDashboardContracts(
                 expect(response.status).toBe(404);
                 expect(await responseBody(response)).toEqual({ error: message });
             }
-            expect(postgrestTables(harness)).toEqual(["refunds", "stripe_disputes", "provider_exceptions"]);
+            expect(postgrestTables(harness)).toEqual([
+                "refunds", "rpc/read_dashboard_disputes", "provider_exceptions",
+            ]);
             expect(harness.rest.stripeRequests).toEqual([]);
         });
     });

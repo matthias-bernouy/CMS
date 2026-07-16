@@ -3,7 +3,7 @@ import {
     clearProviderRequests,
     newerAt,
     olderAt,
-    postgrestQuery,
+    postgrestBody,
     postgrestTables,
     refreshedAt,
     responseBody,
@@ -15,7 +15,7 @@ export function registerRefundAndDisputeDashboardContracts(
     createHarness: CreateDashboardReadHarness,
 ): void {
     describe("stripe-connect refund dashboard read contracts", () => {
-        test("keeps exact list/detail payloads and the current 1+N PostgREST budget", async () => {
+        test("keeps exact list/detail payloads with one PostgREST list read", async () => {
             const harness = await createHarness();
             const firstPaymentId = harness.rest.seedDashboardPayment("order-refund-new");
             const secondPaymentId = harness.rest.seedDashboardPayment("order-refund-old");
@@ -40,8 +40,11 @@ export function registerRefundAndDisputeDashboardContracts(
                 ],
                 total: 2,
             });
-            expect(postgrestTables(harness)).toEqual(["refunds", "payments", "payments"]);
-            expect(postgrestQuery(harness, 0)).toMatchObject({ order: "created_at.desc", limit: "2" });
+            expect(postgrestTables(harness)).toEqual(["rpc/list_dashboard_refunds"]);
+            expect(postgrestBody(harness, 0)).toEqual({
+                p_actor_id: "admin-1", p_actor_kind: "admin", p_limit: 2,
+                p_search: null, p_status: null,
+            });
             expect(harness.rest.stripeRequests).toEqual([]);
 
             harness.rest.patchDashboardRow("refunds", Number(first.id), {
@@ -61,7 +64,7 @@ export function registerRefundAndDisputeDashboardContracts(
     });
 
     describe("stripe-connect dispute dashboard read contracts", () => {
-        test("keeps exact fresh list/detail payloads and the current 1+3N budget", async () => {
+        test("keeps exact fresh list/detail payloads with one PostgREST read each", async () => {
             const harness = await createHarness();
             const first = seedDispute(harness, "dp_new", "order-dispute-new", newerAt);
             const second = seedDispute(harness, "dp_old", "order-dispute-old", olderAt);
@@ -74,12 +77,11 @@ export function registerRefundAndDisputeDashboardContracts(
                 disputes: [publicDispute(first), publicDispute(second)],
                 total: 2,
             });
-            expect(postgrestTables(harness)).toEqual([
-                "stripe_disputes",
-                "payments", "stripe_dispute_evidence", "irreversible_dispute_action_approvals",
-                "payments", "stripe_dispute_evidence", "irreversible_dispute_action_approvals",
-            ]);
-            expect(postgrestQuery(harness, 0)).toMatchObject({ order: "created_at.desc", limit: "2" });
+            expect(postgrestTables(harness)).toEqual(["rpc/read_dashboard_disputes"]);
+            expect(postgrestBody(harness, 0)).toEqual({
+                p_actor_id: "admin-1", p_actor_kind: "admin", p_limit: 2,
+                p_search: null, p_status: null, p_dispute_id: null,
+            });
             expect(harness.rest.stripeRequests).toEqual([]);
 
             harness.rest.patchDashboardRow("stripe_disputes", Number(first.row.id), {
@@ -94,10 +96,11 @@ export function registerRefundAndDisputeDashboardContracts(
                 ...first,
                 row: { ...first.row, status: "won", funds_withdrawn: true, updated_at: refreshedAt },
             }));
-            expect(postgrestTables(harness)).toEqual([
-                "stripe_disputes", "payments", "stripe_dispute_evidence",
-                "irreversible_dispute_action_approvals",
-            ]);
+            expect(postgrestTables(harness)).toEqual(["rpc/read_dashboard_disputes"]);
+            expect(postgrestBody(harness, 0)).toEqual({
+                p_actor_id: "admin-1", p_actor_kind: "admin", p_limit: 1,
+                p_search: null, p_status: null, p_dispute_id: "dp_new",
+            });
             expect(harness.rest.stripeRequests).toEqual([]);
         });
     });

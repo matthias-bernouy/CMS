@@ -4,6 +4,7 @@ export type PostgrestRequestRecord = {
     method: string;
     table: string;
     searchParams: Array<[string, string]>;
+    body: JsonRecord | null;
 };
 
 export type DashboardTable =
@@ -56,4 +57,11 @@ export function postgrestQuery(
     index: number,
 ): Record<string, string> {
     return Object.fromEntries(harness.rest.postgrestRequests[index]?.searchParams ?? []);
+}
+
+export function postgrestBody(
+    harness: DashboardReadHarness,
+    index: number,
+): JsonRecord {
+    return harness.rest.postgrestRequests[index]?.body ?? {};
 }

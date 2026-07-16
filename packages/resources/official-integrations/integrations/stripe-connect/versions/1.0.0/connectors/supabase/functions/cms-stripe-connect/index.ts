@@ -22,6 +22,13 @@ import {
     restError,
     updateRow,
 } from "./db/postgrest.ts";
+import {
+    readDisputeDashboardDetail,
+    readDisputeDashboardPage,
+    readFinancialOperationDashboardPage,
+    readRefundDashboardPage,
+    type DisputeDashboardRead,
+} from "./db/dashboard-reads.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
     assertAllowedKeys,
@@ -2012,13 +2019,12 @@ async function executeRefund(
 }
 
 async function listProviderRefunds(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    const listed = await listTable(request, "refunds", refundSelect, "refund_request_id,stripe_refund_id", "refunds");
-    const rows = listed.refunds as RefundRow[];
-    const refunds = await Promise.all(rows.map(async row => ({
-        ...publicRefund(row),
-        clientReferenceId: (await requiredPayment(row.payment_id)).client_reference_id,
-    })));
+    const actor = requireDashboardAdmin(request);
+    const rows = await readRefundDashboardPage(request, actor);
+    const refunds = rows.map(row => ({
+        ...publicRefund(row.refund as unknown as RefundRow),
+        clientReferenceId: row.client_reference_id,
+    }));
     return json({ refunds, total: refunds.length });
 }
 
@@ -2031,19 +2037,18 @@ async function getProviderRefund(request: Request): Promise<Response> {
 }
 
 async function listStripeDisputes(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    const listed = await listTable(request, "stripe_disputes", disputeSelect, "stripe_dispute_id,stripe_charge_id,reason", "disputes");
-    const rows = listed.disputes as StripeDisputeRow[];
-    const disputes = await Promise.all(rows.map(publicDisputeWithContext));
+    const actor = requireDashboardAdmin(request);
+    const rows = await readDisputeDashboardPage(request, actor);
+    const disputes = rows.map(publicDisputeFromDashboardRead);
     return json({ disputes, total: disputes.length });
 }
 
 async function getStripeDispute(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
+    const actor = requireDashboardAdmin(request);
     const disputeId = requiredQueryText(request, "disputeId", 200);
-    const row = await getRowByField<StripeDisputeRow>("stripe_disputes", "stripe_dispute_id", disputeId, disputeSelect);
+    const row = await readDisputeDashboardDetail(disputeId, actor);
     if (!row) throw new HttpError(404, "Stripe dispute not found");
-    return json(await publicDisputeWithContext(row));
+    return json(publicDisputeFromDashboardRead(row));
 }
 
 async function uploadStripeDisputeFile(request: Request): Promise<Response> {
@@ -2326,13 +2331,15 @@ async function requeueCommerceProjection(request: Request): Promise<Response> {
 }
 
 async function listFinancialOperations(request: Request): Promise<Response> {
-    requireDashboardAdmin(request);
-    const listed = await listTable(request, "financial_operations", operationSelect, "business_key,stripe_object_id,last_error", "operations");
-    const rows = listed.operations as FinancialOperationRow[];
-    const operations = await Promise.all(rows.map(async row => {
-        const payment = row.payment_id ? await requiredPayment(row.payment_id) : null;
-        return publicFinancialOperation(row, payment);
-    }));
+    const actor = requireDashboardAdmin(request);
+    const rows = await readFinancialOperationDashboardPage(request, actor);
+    const operations = rows.map(row => publicFinancialOperation(
+        row.operation as unknown as FinancialOperationRow,
+        row.client_reference_id === null ? null : {
+            client_reference_id: row.client_reference_id,
+            currency: row.payment_currency ?? "",
+        },
+    ));
     return json({ operations, total: operations.length });
 }
 
@@ -4656,22 +4663,48 @@ async function publicDisputeWithContext(row: StripeDisputeRow): Promise<JsonReco
     ]);
     const staged = evidenceRows[0] ?? null;
     const pendingApproval = approvalRows.find(approval => approval.status === "pending_second_approval") ?? null;
+    return projectPublicDisputeWithContext(row, {
+        clientReferenceId: payment.client_reference_id,
+        staged,
+        evidenceSubmissionCount: evidenceRows.filter(evidence => evidence.submitted_at).length,
+        pendingApproval,
+    });
+}
+
+function publicDisputeFromDashboardRead(read: DisputeDashboardRead): JsonRecord {
+    return projectPublicDisputeWithContext(read.dispute as unknown as StripeDisputeRow, {
+        clientReferenceId: read.client_reference_id,
+        staged: read.staged_evidence,
+        evidenceSubmissionCount: read.evidence_submission_count,
+        pendingApproval: read.pending_approval,
+    });
+}
+
+function projectPublicDisputeWithContext(
+    row: StripeDisputeRow,
+    context: {
+        clientReferenceId: string;
+        staged: JsonRecord | null;
+        evidenceSubmissionCount: number;
+        pendingApproval: JsonRecord | null;
+    },
+): JsonRecord {
     return {
         ...publicDispute(row),
         providerPaymentId: row.payment_id,
-        clientReferenceId: payment.client_reference_id,
-        stagedEvidenceOperationId: staged?.evidence_operation_id ?? null,
-        stagedEvidenceAt: staged?.staged_at ?? null,
-        evidenceSubmissionCount: evidenceRows.filter(evidence => evidence.submitted_at).length,
-        pendingApprovalAction: pendingApproval?.action_type ?? null,
-        firstApprovedBy: pendingApproval?.first_actor_id ?? null,
-        firstApprovedAt: pendingApproval?.first_approved_at ?? null,
+        clientReferenceId: context.clientReferenceId,
+        stagedEvidenceOperationId: context.staged?.evidence_operation_id ?? null,
+        stagedEvidenceAt: context.staged?.staged_at ?? null,
+        evidenceSubmissionCount: context.evidenceSubmissionCount,
+        pendingApprovalAction: context.pendingApproval?.action_type ?? null,
+        firstApprovedBy: context.pendingApproval?.first_actor_id ?? null,
+        firstApprovedAt: context.pendingApproval?.first_approved_at ?? null,
     };
 }
 
 function publicFinancialOperation(
     row: FinancialOperationRow,
-    payment: ConnectPaymentRow | null,
+    payment: Pick<ConnectPaymentRow, "client_reference_id" | "currency"> | null,
 ): JsonRecord {
     return {
         providerOperationId: row.id,

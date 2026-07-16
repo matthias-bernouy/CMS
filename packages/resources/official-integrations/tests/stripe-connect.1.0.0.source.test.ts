@@ -5243,7 +5243,54 @@ class StripeConnectMock {
             method,
             table,
             searchParams: Array.from(url.searchParams.entries()),
+            body: method === "POST"
+                ? await request.clone().json().catch(() => null) as JsonRecord | null
+                : null,
         });
+        if (table === "rpc/list_dashboard_refunds" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const rows = this.dashboardPage("refunds", body, ["refund_request_id", "stripe_refund_id"]);
+            return jsonResponse(rows.map(refund => ({
+                refund,
+                client_reference_id: this.requiredDashboardPayment(refund.payment_id).client_reference_id,
+            })));
+        }
+        if (table === "rpc/read_dashboard_disputes" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const rows = this.dashboardPage(
+                "stripe_disputes", body, ["stripe_dispute_id", "stripe_charge_id", "reason"],
+                "stripe_dispute_id",
+            );
+            return jsonResponse(rows.map(dispute => {
+                const evidence = this.tables.stripe_dispute_evidence
+                    .filter(row => same(row.dispute_id, dispute.id));
+                const pendingApproval = this.tables.irreversible_dispute_action_approvals
+                    .find(row => same(row.dispute_id, dispute.id) && row.status === "pending_second_approval");
+                return {
+                    dispute,
+                    client_reference_id: this.requiredDashboardPayment(dispute.payment_id).client_reference_id,
+                    staged_evidence: evidence[0] ?? null,
+                    evidence_submission_count: evidence.filter(row => row.submitted_at).length,
+                    pending_approval: pendingApproval ?? null,
+                };
+            }));
+        }
+        if (table === "rpc/list_dashboard_financial_operations" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const rows = this.dashboardPage(
+                "financial_operations", body, ["business_key", "stripe_object_id", "last_error"],
+            );
+            return jsonResponse(rows.map(operation => {
+                const payment = operation.payment_id
+                    ? this.requiredDashboardPayment(operation.payment_id)
+                    : null;
+                return {
+                    operation,
+                    client_reference_id: payment?.client_reference_id ?? null,
+                    payment_currency: payment?.currency ?? null,
+                };
+            }));
+        }
         if (table === "rpc/reserve_protected_payment" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const payment = asRecord(body.p_payment);
@@ -6686,6 +6733,37 @@ class StripeConnectMock {
             return jsonResponse(refund);
         }
         throw new Error(`unexpected Stripe fetch: ${method} ${url}`);
+    }
+
+    private dashboardPage(
+        table: DashboardTable,
+        body: JsonRecord,
+        searchFields: string[],
+        idField?: string,
+    ): JsonRecord[] {
+        let rows = this.tables[table]!;
+        if (idField && typeof body.p_dispute_id === "string") {
+            rows = rows.filter(row => same(row[idField], body.p_dispute_id));
+        } else {
+            if (typeof body.p_status === "string") {
+                rows = rows.filter(row => row.status === body.p_status);
+            }
+            if (typeof body.p_search === "string") {
+                const pattern = new RegExp(body.p_search.split("*")
+                    .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+                    .join(".*"), "i");
+                rows = rows.filter(row => searchFields.some(field => pattern.test(String(row[field] ?? ""))));
+            }
+        }
+        const limit = Number(body.p_limit);
+        return rows.slice(0, Number.isSafeInteger(limit) && limit >= 0 ? limit : rows.length)
+            .map(row => ({ ...row }));
+    }
+
+    private requiredDashboardPayment(paymentId: unknown): JsonRecord {
+        const payment = this.tables.payments.find(row => same(row.id, paymentId));
+        if (!payment) throw new Error(`unknown dashboard payment ${String(paymentId)}`);
+        return payment;
     }
 
     private select(table: string, url: URL): JsonRecord[] {
