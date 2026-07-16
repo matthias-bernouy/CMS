@@ -9,7 +9,7 @@ import { loadPushConfig } from "./push/shared/config";
  * registry (it rebuilds from disk). Run before pushing, then commit the
  * registry — committed ids never change for a given path+content.
  *
- * Do NOT run this while `p9r dev` is up: both processes would write the same
+ * Do NOT run this while `p9r dev` or `p9r preview` is up: both processes would write the same
  * registry and the second writer would clobber the first's in-memory state.
  */
 export default async function CLI_filesReindex(args: string[]): Promise<void> {

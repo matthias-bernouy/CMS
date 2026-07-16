@@ -16,17 +16,16 @@ export async function createDevAuth() {
     const devAdmin = await createLocalUser({ credentials, users }, {
         email: "dev@example.com",
         password: DEV_PASSWORD,
-        displayName: "p9r dev",
         role: "admin",
     });
 
-    await users.upsert({ sub: "demo-user", displayName: "Demo User", email: "demo@example.com" }, "user");
+    await users.upsert({ sub: "demo-user", email: "demo@example.com" }, "user");
 
     const identityProviders = new InMemoryIdentityProviderRepository();
     const auth = new InMemoryAuthentication({
         role: "admin",
         identifier: devAdmin.sub,
-        displayName: "p9r dev",
+        email: "dev@example.com",
     });
     const pats = new InMemoryPatRepository();
 

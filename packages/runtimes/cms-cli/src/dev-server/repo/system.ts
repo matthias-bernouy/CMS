@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TSystem } from "@bernouy/cms-content";
-import { coercePageRef, defaultSystem, mergeSystemUpdate } from "@bernouy/cms-content";
+import { coercePageRef, defaultSystem, mergeSystemUpdate, organizeThemeSettings, themeSettingsFromCss } from "@bernouy/cms-content";
 
 const SYSTEM_FILE = "system.json";
 const THEME_FILE  = "theme.css";
@@ -37,6 +37,9 @@ export class SystemStore {
             editor: {
                 layoutCategory: typeof json.editor?.layoutCategory === "string" ? json.editor.layoutCategory : base.editor.layoutCategory,
             },
+            theme: json.theme && typeof json.theme === "object"
+                ? organizeThemeSettings(json.theme)
+                : themeSettingsFromCss(theme, base.theme),
             security: {
                 connectExtras: Array.isArray(json.security?.connectExtras) ? json.security.connectExtras : base.security.connectExtras,
                 mediaExtras:   Array.isArray(json.security?.mediaExtras)   ? json.security.mediaExtras   : base.security.mediaExtras,
@@ -70,7 +73,7 @@ export class SystemStore {
         return merged;
     }
 
-    private async _readJson(): Promise<{ initializationStep?: any; site?: any; editor?: any; security?: any; email?: any }> {
+    private async _readJson(): Promise<{ initializationStep?: any; site?: any; editor?: any; theme?: any; security?: any; email?: any }> {
         const file = join(this.siteDir, SYSTEM_FILE);
         if (!existsSync(file)) return {};
         try { return JSON.parse(await readFile(file, "utf-8")); }
@@ -86,7 +89,7 @@ export class SystemStore {
     private async _writeJson(system: TSystem): Promise<void> {
         await mkdir(this.siteDir, { recursive: true });
         const { theme: _, ...site } = system.site;
-        const body = JSON.stringify({ site, editor: system.editor, security: system.security, email: system.email }, null, 4) + "\n";
+        const body = JSON.stringify({ site, editor: system.editor, theme: system.theme, security: system.security, email: system.email }, null, 4) + "\n";
         await writeFile(join(this.siteDir, SYSTEM_FILE), body, "utf-8");
     }
 

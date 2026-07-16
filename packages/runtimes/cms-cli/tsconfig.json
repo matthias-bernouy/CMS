@@ -18,6 +18,7 @@
         { "path": "../../features/cms-bloc-compile" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
+        { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-sources" },

@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { isValidSecretKey } from "@bernouy/cms-secrets";
@@ -84,6 +84,7 @@ export class LocalFsEnvSecretStore implements SecretStore {
     private async writeLines(lines: string[]): Promise<void> {
         await mkdir(dirname(this.envPath), { recursive: true });
         await writeFile(this.envPath, lines.length ? `${lines.join("\n")}\n` : "", { encoding: "utf-8", mode: 0o600 });
+        await chmod(this.envPath, 0o600);
     }
 }
 

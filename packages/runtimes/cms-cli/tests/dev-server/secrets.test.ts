@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { chmod, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalFsEnvSecretStore } from "cms-cli/dev-server/secrets";
@@ -55,5 +55,17 @@ describe("LocalFsEnvSecretStore", () => {
 
         expect(existsSync(envPath)).toBe(true);
         expect(await store.list()).toEqual([{ key: "API_KEY", value: "x" }]);
+    });
+
+    test("restricts an existing site/.env to the owner after every write", async () => {
+        const siteDir = mkdtempSync(join(tmpdir(), "p9r-secrets-"));
+        const envPath = join(siteDir, ".env");
+        await writeFile(envPath, "EXISTING=value\n", "utf-8");
+        await chmod(envPath, 0o644);
+        const store = LocalFsEnvSecretStore.forSite(siteDir);
+
+        await store.set("SUPABASE_CONNECTOR_ACCESS_TOKEN", "sensitive-token");
+
+        expect((await stat(envPath)).mode & 0o777).toBe(0o600);
     });
 });

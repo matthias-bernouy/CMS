@@ -1,19 +1,14 @@
 import { describe, expect, test } from "bun:test";
-
-const modeBeforeImport = process.env.MODE;
-const { parseDevFlags } = await import("../src/CLI_dev");
+import { LOCAL_RUNTIME_PROFILES, parseDevFlags } from "../src/CLI_dev";
 
 describe("parseDevFlags", () => {
-    test("importing the parser does not change the runtime mode", () => {
-        expect(process.env.MODE).toBe(modeBeforeImport);
-    });
-
     test("defaults to the editor port and derived public port", () => {
         expect(parseDevFlags([])).toMatchObject({
             port:         5000,
             deliveryPort: 5001,
             host:         "localhost",
             publicHost:   "localhost",
+            workers:      false,
         });
     });
 
@@ -27,6 +22,20 @@ describe("parseDevFlags", () => {
         expect(parseDevFlags(["--host=0.0.0.0", "--port=6000"])).toMatchObject({
             host:       "0.0.0.0",
             publicHost: "localhost",
+        });
+    });
+
+    test("enables protected-commerce workers only when explicitly requested", () => {
+        expect(parseDevFlags(["--workers"]).workers).toBe(true);
+        expect(parseDevFlags([]).workers).toBe(false);
+    });
+});
+
+describe("local runtime profiles", () => {
+    test("maps dev and preview to explicit runtime modes", () => {
+        expect(LOCAL_RUNTIME_PROFILES).toEqual({
+            dev:     { command: "dev", mode: "DEV" },
+            preview: { command: "preview", mode: "PROD" },
         });
     });
 });

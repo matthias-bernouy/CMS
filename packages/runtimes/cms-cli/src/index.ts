@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 import CLI_push from "./CLI_push";
 import CLI_pull from "./CLI_pull";
-import CLI_dev from "./CLI_dev";
 import CLI_secrets from "./CLI_secrets";
 import CLI_filesReindex from "./CLI_filesReindex";
 
@@ -11,9 +10,15 @@ function printHelp() {
     console.log(`p9r — Cms CLI
 
 Usage:
-  p9r dev [--port=N --host=H]      Run the editor 100% locally against site/.
+  p9r dev [--port=N --host=H --workers]
+                                    Run the editor locally; --workers enables installed system jobs.
                                    No remote calls, no auth. Run \`p9r pull\`
                                    first to bootstrap site/ from a tenant.
+  p9r preview [--port=N --host=H --workers]
+                                   Run the same local CMS with production
+                                   caching, minification, and security headers.
+                                   Uses local adapters and development auth;
+                                   never expose it as a production deployment.
   p9r push [flags]                 Push system/integrations/files/blocs/
                                    templates/pages in that order to the remote
                                    CMS.
@@ -30,7 +35,8 @@ Usage:
                                    renamed in your IDE (by content hash), mint
                                    ids for new files. Commit
                                    .cms-files-registry.json afterward. Run
-                                   before pushing; do not run while \`dev\` is up.
+                                   before pushing; do not run while \`dev\` or
+                                   \`preview\` is up.
   p9r secrets <sub>                Operate on the remote's secret store.
       template [--output=<path>] [--force]
                                    Write an .env.example with the remote's
@@ -50,7 +56,12 @@ Env (loaded from .env or the environment):
 try {
     switch (command) {
         case "dev":
-            await CLI_dev(rest);
+            process.env.MODE = "DEV";
+            await (await import("./CLI_dev")).default(rest);
+            break;
+        case "preview":
+            process.env.MODE = "PROD";
+            await (await import("./CLI_preview")).default(rest);
             break;
         case "push":
             await CLI_push(rest);
