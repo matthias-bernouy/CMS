@@ -1,5 +1,5 @@
 # Build context exclusions — applies to every `docker build .` invocation
-# at repo root (cms-control-mt). Keeps the context
+# at the CmsCore repository root. Keeps the context
 # small and avoids accidentally shipping host secrets / dev caches.
 
 # Heavy / regenerable
@@ -20,6 +20,14 @@ node_modules
 .gitignore
 .idea
 .vscode
+.claude
+.codex
+.agents
+.playwright-mcp
+**/.claude
+**/.codex
+**/.agents
+**/.playwright-mcp
 *.swp
 
 # Local dev artifacts

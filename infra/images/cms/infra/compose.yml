@@ -5,30 +5,32 @@
 #                      every container that publishes `VIRTUAL_HOST` (and
 #                      `VIRTUAL_PORT` / `VIRTUAL_HOST_MULTIPORTS`) is added
 #                      to the nginx config automatically, no reload script.
-#   - acme-companion:  obtains + renews Let's Encrypt certs for every
-#                      container that declares `LETSENCRYPT_HOST`. Runs in
+#   - acme-companion:  obtains + renews certificates for every container
+#                      that declares `ACME_HOST`. Runs in
 #                      a background loop, hooks `nginx -s reload` on cert
 #                      change. Email comes from `DEFAULT_EMAIL` (set via
 #                      `.env`).
-#   - mongo:           single MongoDB cluster, shared across all CMS
-#                      instances. Each instance uses its own database
-#                      (e.g. `cms_clientX`). No auth — only reachable on
-#                      the `cms_net` docker network, no port published to
-#                      host.
+#   - mongo:           one authenticated MongoDB server shared by all CMS
+#                      instances. A root administrator and one application
+#                      account are created when a fresh data volume starts.
 #
 # Usage:
-#   cd images/cms/infra
+#   cd infra/images/cms/infra
 #   cat > .env <<'EOF'
 #   LETSENCRYPT_EMAIL=ops@yourdomain.com
+#   MONGO_ROOT_USERNAME=cms_root
+#   MONGO_ROOT_PASSWORD=<64-character-hex-secret>
+#   MONGO_APP_USERNAME=cms_runtime
+#   MONGO_APP_PASSWORD=<64-character-hex-secret>
 #   EOF
 #   docker compose up -d
 #
-# The `cms_net` network is created with a stable name so per-instance
-# compose files (see ../compose.yml) can join it with `external: true`.
+# The `cms_proxy` and `cms_mongo` networks have stable names so per-instance
+# compose files (see ../compose.yml) can join them with `external: true`.
 
 services:
     nginx-proxy:
-        image: nginxproxy/nginx-proxy:latest
+        image: nginxproxy/nginx-proxy:1.11.5@sha256:e06db5fb9586234e9c2bdef707c8b8d784caa4fb49fbe7285eb3730a501c3eaa
         container_name: nginx-proxy
         restart: unless-stopped
         ports:
@@ -45,14 +47,21 @@ services:
             - nginx_html:/usr/share/nginx/html
             - nginx_acme:/etc/acme.sh
         networks:
-            - cms_net
+            - cms_proxy
+        healthcheck:
+            test: ["CMD", "nginx", "-t"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
 
     acme-companion:
-        image: nginxproxy/acme-companion:latest
+        image: nginxproxy/acme-companion:2.8.1@sha256:ccfceb9798b9f6586d47eeeadbb8e185c8897b34e011a2739a9b82d5e92a8b6c
         container_name: acme-companion
         restart: unless-stopped
         depends_on:
-            - nginx-proxy
+            nginx-proxy:
+                condition: service_healthy
         volumes_from:
             - nginx-proxy
         volumes:
@@ -61,20 +70,46 @@ services:
         environment:
             DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL:?LETSENCRYPT_EMAIL must be set (used for renewal alerts)}
         networks:
-            - cms_net
+            - cms_proxy
 
     mongo:
-        image: mongo:7
-        container_name: mongo
+        image: mongo:7.0.37@sha256:d5b3ca8c3f3cdce78d44870dc0871b76d5235e9b2ad4ea6bea5d1fbff8027703
         restart: unless-stopped
+        entrypoint: ["/bin/sh", "/opt/cms-mongo/validate-env.sh"]
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?MONGO_ROOT_USERNAME must be set}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD must be a 64-character hexadecimal secret}
+            MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:?MONGO_APP_USERNAME must be set}
+            MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD must be a 64-character hexadecimal secret}
         volumes:
             - mongo_data:/data/db
+            - ./mongo/validate-env.sh:/opt/cms-mongo/validate-env.sh:ro
+            - ./mongo/01-bootstrap-shared-users.js:/docker-entrypoint-initdb.d/01-bootstrap-shared-users.js:ro
         networks:
-            - cms_net
+            cms_mongo:
+                aliases:
+                    - mongo
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - >-
+                    mongosh --quiet --host 127.0.0.1
+                    --username "$${MONGO_INITDB_ROOT_USERNAME}"
+                    --password "$${MONGO_INITDB_ROOT_PASSWORD}"
+                    --authenticationDatabase admin
+                    --eval 'quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)'
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        stop_grace_period: 30s
 
 networks:
-    cms_net:
-        name: cms_net
+    cms_proxy:
+        name: cms_proxy
+    cms_mongo:
+        name: cms_mongo
+        internal: true
 
 volumes:
     nginx_certs:
