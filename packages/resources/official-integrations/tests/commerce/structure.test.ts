@@ -12,6 +12,8 @@ const exceptionalFiles = new Set([
     "versions/1.0.0/blocs/commerce-offer-price-form/Bloc.ts",
 ]);
 const exceptionalDirectories = new Set([
+    "versions/1.0.0/connectors/supabase/functions/cms-commerce/routes",
+    "versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/catalog",
     "versions/1.0.0/connectors/supabase/functions/cms-commerce/routes/order",
 ]);
 const exceptionalTestFiles = new Set([
@@ -29,6 +31,7 @@ const exceptionalTestFiles = new Set([
     "blocs/sales-blocs.test.ts",
 ]);
 const exceptionalTestDirectories = new Set([
+    ".",
     "protected",
 ]);
 
@@ -61,12 +64,12 @@ async function visit(
     violations: string[],
 ): Promise<void> {
     const entries = await readdir(directory, { withFileTypes: true });
-    const files = entries.filter(entry => entry.isFile());
     const label = relative(root, directory) || ".";
-    if (files.length > 8 && !directoryExceptions.has(label)) {
-        violations.push(`${label}: ${files.length} files`);
+    if (entries.length > 8 && !directoryExceptions.has(label)) {
+        violations.push(`${label}: ${entries.length} entries`);
     }
 
+    const files = entries.filter(entry => entry.isFile());
     for (const file of files) {
         const path = resolve(directory, file.name);
         const relativePath = relative(root, path);
