@@ -43,6 +43,14 @@ export function setRestResponder(responder: typeof restResponder): void {
     restResponder = responder;
 }
 
+export function capturedFetches(): CapturedFetch[] {
+    return fetches.map(fetch => ({
+        ...fetch,
+        headers: new Headers(fetch.headers),
+        body: structuredClone(fetch.body),
+    }));
+}
+
 export async function requestCommerce(path: string, options: {
     method?: string;
     authenticated?: boolean;

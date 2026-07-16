@@ -47,14 +47,42 @@ describe("commerce offer requests", () => {
         const offer = await response.json();
 
         expect(response.status).toBe(200);
-        expect(offer).not.toHaveProperty("seller");
-        expect(offer).not.toHaveProperty("sellerId");
-        expect(offer.product.metadata).toEqual({ brand: "Canon" });
-        expect(offer.mainImageMediaId).toBe("12");
-        expect(offer.media).toEqual([expect.objectContaining({
-            id: 8, mediaId: 12, isMain: true,
-            media: expect.objectContaining({ id: 12, alt: "Front", url: "" }),
-        })]);
+        expect(offer).toEqual({
+            id: 91,
+            productId: 42,
+            variantId: null,
+            slug: "camera-offer",
+            publicationStatus: "active",
+            metadata: {},
+            product: {
+                id: 42,
+                slug: "camera",
+                title: "Camera",
+                status: "active",
+                visibility: "public",
+                metadata: { brand: "Canon" },
+                brand: null,
+                primaryCategoryId: null,
+                primaryCategory: null,
+            },
+            variant: null,
+            priceRule: null,
+            priceProposals: [],
+            media: [{
+                id: 8,
+                mediaId: 12,
+                sortOrder: 0,
+                isMain: true,
+                media: {
+                    id: 12,
+                    storageBucket: "commerce-media",
+                    storagePath: "offers/91/photo.jpg",
+                    alt: "Front",
+                    url: "",
+                },
+            }],
+            mainImageMediaId: "12",
+        });
     });
 
     test("hides an active offer whose seller is not verified when verification is required", async () => {

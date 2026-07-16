@@ -59,13 +59,62 @@ describe("commerce public offer listing", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body.total).toBe(2);
-        expect(body.items[0]).toMatchObject({
-            slug: "blade",
-            product: { primaryCategoryId: 8, metadata: { brand: "Wilson", weight: 305, grip: "L1" } },
-            variant: { effectiveMetadata: { brand: "Wilson", weight: 305, grip: "L1" } },
+        expect(body).toEqual({
+            items: [
+                {
+                    id: 1,
+                    productId: 41,
+                    variantId: 51,
+                    slug: "blade",
+                    title: "Blade",
+                    publicationStatus: "active",
+                    acceptedPriceAmount: 15000,
+                    metadata: {},
+                    product: {
+                        id: 41,
+                        title: "Blade",
+                        metadata: { brand: "Wilson", sport: "tennis", weight: 305, grip: "L1" },
+                        brand: null,
+                        primaryCategoryId: 8,
+                        primaryCategory: { id: 8, fullSlug: "rackets/tennis", label: "Tennis" },
+                        effectiveMetadata: { brand: "Wilson", sport: "tennis", weight: 305, grip: "L1" },
+                    },
+                    variant: {
+                        id: 51,
+                        productId: 41,
+                        title: "Grip: L1",
+                        metadata: {},
+                        effectiveMetadata: { brand: "Wilson", sport: "tennis", weight: 305, grip: "L1" },
+                    },
+                    media: [],
+                    mainImageMediaId: null,
+                },
+                {
+                    id: 2,
+                    productId: 42,
+                    slug: "speed",
+                    title: "Speed",
+                    publicationStatus: "active",
+                    acceptedPriceAmount: 17500,
+                    metadata: {},
+                    product: {
+                        id: 42,
+                        title: "Speed",
+                        metadata: { brand: "Head", sport: "tennis", grip: "L3", weight: 300 },
+                        brand: null,
+                        primaryCategoryId: null,
+                        primaryCategory: null,
+                        effectiveMetadata: { brand: "Head", sport: "tennis", grip: "L3", weight: 300 },
+                    },
+                    variant: null,
+                    media: [],
+                    mainImageMediaId: null,
+                },
+            ],
+            total: 2,
+            limit: 50,
+            offset: 0,
         });
-        expect(body.items[1]).toMatchObject({ slug: "speed", product: { metadata: { brand: "Head" } } });
         expect(productQueries).toBe(1);
         expect(offersQuery).toContain("accepted_price_amount=lte.20000");
         expect(offersQuery).toContain("order=accepted_price_amount.asc.nullslast");
