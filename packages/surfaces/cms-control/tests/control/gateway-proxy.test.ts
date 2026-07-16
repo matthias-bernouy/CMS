@@ -12,6 +12,7 @@ const SECURED: Source = {
     endpoints: [{
         urn: "urn:secured:get", method: "GET", targetUrl: "https://api.example.com/data",
         headers: [{ name: "authorization", source: { from: "secret", ref: "API_KEY" } }],
+        output: [{ status: "200" }],
     }],
 };
 
@@ -26,6 +27,7 @@ const PUBLIC_SEARCH: Source = {
                 { name: "q", in: "query", required: true, schema: { type: "string" } },
             ],
         },
+        output: [{ status: "200", body: { type: "object" } }],
     }],
 };
 

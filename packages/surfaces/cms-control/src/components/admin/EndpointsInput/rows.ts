@@ -3,7 +3,7 @@ import { makeInput, makeMethodSelect, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
 import { makeOutPanel } from "./outPanel";
 import { makeHeadersPanel } from "./headersPanel";
-import { readControl, methodColor, type EndpointSeed } from "./shared";
+import { jsonField, readControl, methodColor, type EndpointSeed } from "./shared";
 
 /** Build one endpoint as a collapsible `<p9r-accordion-item>`: a live-synced
  *  collapsed-header summary (method tag + id + path), a header-actions delete
@@ -50,7 +50,17 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: stri
     const idInput = makeInput(`endpoints.${idx}.endpointId`, 'SourceEndpoint id', 'getUser', seed.endpointId);
     const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, 'Target URL', 'https://api.example.com/path', seed.targetUrl);
-    infosBody.append(idInput, methodSelect, urlInput, hiddenScalar(`endpoints.${idx}.responseKind`, seed.responseKind), hiddenScalar(`endpoints.${idx}.mediaType`, seed.mediaType));
+    const access = jsonField(`endpoints.${idx}.access`, "endpoint-access");
+    access.sync(() => seed.access);
+    infosBody.append(
+        idInput,
+        methodSelect,
+        urlInput,
+        access,
+        hiddenScalar(`endpoints.${idx}.timeoutMs`, seed.timeoutMs),
+        hiddenScalar(`endpoints.${idx}.responseKind`, seed.responseKind),
+        hiddenScalar(`endpoints.${idx}.mediaType`, seed.mediaType),
+    );
     infos.appendChild(infosBody);
 
     tabs.append(
@@ -66,11 +76,11 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: stri
     return item;
 }
 
-function hiddenScalar(name: string, value: string | undefined): HTMLInputElement {
+function hiddenScalar(name: string, value: string | number | undefined): HTMLInputElement {
     const input = document.createElement('input');
     input.type = 'hidden';
     input.name = name;
-    input.value = value ?? '';
+    input.value = value === undefined ? '' : String(value);
     return input;
 }
 

@@ -29,6 +29,17 @@ describe("parseSourceDto", () => {
         expect(parseSourceDto(validBody()).endpoints[0]!.params).toEqual([]);   // no params declared
     });
 
+    test("round-trips a bounded endpoint timeout override", () => {
+        const dto = parseSourceDto(validBody({ "endpoints.0.timeoutMs": "60000" }));
+        expect(dto.endpoints[0]!.timeoutMs).toBe(60_000);
+        expect(sourceDtoToSource(dto).endpoints[0]!.timeoutMs).toBe(60_000);
+
+        for (const timeoutMs of ["0", "1.5", "120001"]) {
+            expect(() => parseSourceDto(validBody({ "endpoints.0.timeoutMs": timeoutMs })))
+                .toThrow(/timeoutMs.*integer between 1 and 120000/);
+        }
+    });
+
     test("params JSON blob → endpoint.params", () => {
         const dto = parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([
@@ -50,6 +61,17 @@ describe("parseSourceDto", () => {
         }));
         expect(dto.endpoints[0]!.params).toEqual([
             { name: "user_id", in: "query", type: "string", required: true, source: { from: "computed", ref: "userID" } },
+        ]);
+    });
+
+    test("params JSON blob preserves computed userRole source", () => {
+        const dto = parseSourceDto(validBody({
+            "endpoints.0.params": JSON.stringify([
+                { name: "operator_role", in: "query", type: "string", required: true, source: { from: "computed", ref: "userRole" } },
+            ]),
+        }));
+        expect(dto.endpoints[0]!.params).toEqual([
+            { name: "operator_role", in: "query", type: "string", required: true, source: { from: "computed", ref: "userRole" } },
         ]);
     });
 
@@ -181,6 +203,25 @@ describe("parseSourceDto", () => {
     test("bad targetUrl → InvalidParam scoped to the row", () => {
         expect(() => parseSourceDto(validBody({ "endpoints.0.targetUrl": "not a url" })))
             .toThrow(/Invalid param endpoints\.0\.targetUrl/);
+    });
+
+    test("round-trips explicit endpoint access roles", () => {
+        const access = { mode: "admin" as const, roles: ["finance", "support"] };
+        const dto = parseSourceDto(validBody({ "endpoints.0.access": JSON.stringify(access) }));
+        expect(dto.endpoints[0]!.access).toEqual(access);
+        expect(sourceDtoToSource(dto).endpoints[0]!.access).toEqual(access);
+    });
+
+    test("rejects malformed explicit endpoint access roles", () => {
+        expect(() => parseSourceDto(validBody({
+            "endpoints.0.access": JSON.stringify({ mode: "auth", roles: ["support"] }),
+        }))).toThrow(/only supported for admin access/);
+        expect(() => parseSourceDto(validBody({
+            "endpoints.0.access": JSON.stringify({ mode: "admin", roles: ["support", "support"] }),
+        }))).toThrow(/must be unique/);
+        expect(() => parseSourceDto(validBody({
+            "endpoints.0.access": JSON.stringify({ mode: "admin", roles: [""] }),
+        }))).toThrow(/non-empty role id/);
     });
 
     test("duplicate endpointId across rows → InvalidParam", () => {
@@ -405,5 +446,11 @@ describe("parseSourceDto", () => {
         const provider = sourceDtoToSource(dto);
         expect(provider.endpoints[0]!.headers).toEqual(h as any);
         expect((provider.endpoints[0] as any).rules).toBeUndefined();
+    });
+
+    test("round-trips endpoint schema invalidation effects through the source DTO", () => {
+        const dto = parseSourceDto(validBody({ "endpoints.0.effects": JSON.stringify({ invalidatesSchema: true }) }));
+        const provider = sourceDtoToSource(dto);
+        expect(provider.endpoints[0]!.effects).toEqual({ invalidatesSchema: true });
     });
 });

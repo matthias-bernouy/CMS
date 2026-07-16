@@ -89,5 +89,6 @@ export const ADDRESS_PROVIDER: Source = {
         targetUrl: "https://api.example.com/reverse",
         access: { mode: "public" },
         meta: { name: "Reverse geocoding" },
+        output: [{ status: "200", body: { type: "object" } }],
     }],
 };

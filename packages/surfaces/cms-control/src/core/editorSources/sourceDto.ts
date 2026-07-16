@@ -70,6 +70,7 @@ function bodyFieldFromShape(path: string, shape: DataShape, required: boolean): 
     const children = bodyChildren(shape);
     return {
         path,
+        ...(shape.title ? { label: shape.title } : {}),
         type: fieldType(shape),
         ...(required ? { required: true } : {}),
         ...(children.length ? { children } : {}),
@@ -97,6 +98,7 @@ function fieldsFromShape(shape: DataShape): DataField[] {
 function fieldFromShape(path: string, shape: DataShape): DataField {
     return {
         path,
+        ...(shape.title ? { label: shape.title } : {}),
         type: fieldType(shape),
         children: fieldChildren(shape),
     };

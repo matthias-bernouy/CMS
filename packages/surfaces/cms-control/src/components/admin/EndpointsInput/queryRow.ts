@@ -1,6 +1,6 @@
 import { makeInput, makeSelect, makeRequiredCheckbox, makeIconButton, ICON_X } from "./controls";
 import { PARAM_TYPES, readControl, type ParamSeed } from "./shared";
-import type { ParamValueSource } from "@bernouy/cms-sources/browser";
+import { COMPUTED_PARAM_REFS, type ComputedParamRef, type ParamValueSource } from "@bernouy/cms-sources/browser";
 
 /** A query param as it appears in the `endpoints.<i>.params` JSON blob. */
 export type QueryParam = {
@@ -36,7 +36,7 @@ export function makeQueryParamRow(seed: ParamSeed, onChange: () => void): HTMLEl
 
     const req = makeRequiredCheckbox(!!seed.required, onChange);
 
-    const computed = makeSelect(["userID"], seed.source?.from === "computed" ? seed.source.ref : "userID");
+    const computed = makeSelect([...COMPUTED_PARAM_REFS], seed.source?.from === "computed" ? seed.source.ref : "userID");
     computed.className = 'ep-computed';
     computed.dataset.role = 'param-computed';
     const syncComputedVisibility = () => {
@@ -69,5 +69,13 @@ export function readQueryParamRow(row: HTMLElement): QueryParam | null {
 }
 
 function readComputedSource(row: HTMLElement): { source?: ParamValueSource } {
-    return { source: { from: "computed", ref: "userID" } };
+    const ref = readControl(row.querySelector('[data-role="param-computed"]')!);
+    return {
+        source: {
+            from: "computed",
+            ref: (COMPUTED_PARAM_REFS as readonly string[]).includes(ref)
+                ? ref as ComputedParamRef
+                : "userID",
+        },
+    };
 }

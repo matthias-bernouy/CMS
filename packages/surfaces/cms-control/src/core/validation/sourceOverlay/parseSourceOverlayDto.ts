@@ -12,6 +12,7 @@ import {
 } from "@bernouy/cms-sources";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import MissingParam from "cms-control/errors/Http/MissingParam";
+import { parseSourceOverlayOptions } from "./parseSourceOverlayOptions";
 
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const SAFE_PATH = /^[A-Za-z_$][\w$]*(\[\])?(\.[A-Za-z_$][\w$]*(\[\])?)*$/;
@@ -38,9 +39,19 @@ function parseFieldSource(value: unknown): SourceOverlayFieldSource {
     if (!isRecord(value)) throw new InvalidParam("fieldSource", "must be an object.");
     return {
         endpointId: requiredId(value.endpointId, "fieldSource.endpointId"),
+        ...(value.params !== undefined ? { params: parseStringParams(value.params, "fieldSource.params") } : {}),
         ...(value.path !== undefined ? { path: targetPath(value.path, "fieldSource.path") } : {}),
         ...(value.map !== undefined ? { map: parseFieldSourceMap(value.map) } : {}),
     };
+}
+
+function parseStringParams(value: unknown, name: string): Record<string, string> {
+    if (!isRecord(value)) throw new InvalidParam(name, "must be an object.");
+    return Object.fromEntries(Object.entries(value).map(([key, raw]) => {
+        if (!SIMPLE_ID.test(key)) throw new InvalidParam(`${name}.${key}`, "must use a simple parameter name.");
+        if (typeof raw !== "string") throw new InvalidParam(`${name}.${key}`, "must be a string.");
+        return [key, raw];
+    }));
 }
 
 function parseFieldSourceMap(value: unknown): SourceOverlayFieldSourceMap {
@@ -69,6 +80,9 @@ function parseFields(value: unknown): SourceOverlayField[] {
             ...(entry.adminEditable === false ? { adminEditable: false } : {}),
             ...(entry.showInDashboardTable === true ? { showInDashboardTable: true } : {}),
             ...(entry.exposeToEditorSources === false ? { exposeToEditorSources: false } : {}),
+            ...(entry.options !== undefined
+                ? { options: parseSourceOverlayOptions(entry.options, `fields.${index}.options`) }
+                : {}),
         };
     });
 }

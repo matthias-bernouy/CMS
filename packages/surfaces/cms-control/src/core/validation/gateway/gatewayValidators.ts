@@ -71,7 +71,7 @@ function parseParamSource(raw: unknown, path: string): ParamValueSource {
     if (source.from === "request") return { from: "request" };
     if (source.from !== "computed") throw new InvalidParam(`${path}.from`, "must be request|computed.");
     if (!(COMPUTED_PARAM_REFS as readonly unknown[]).includes(source.ref)) {
-        throw new InvalidParam(`${path}.ref`, "must be userID.");
+        throw new InvalidParam(`${path}.ref`, `must be ${COMPUTED_PARAM_REFS.join("|")}.`);
     }
     return { from: "computed", ref: source.ref as ComputedParamRef };
 }

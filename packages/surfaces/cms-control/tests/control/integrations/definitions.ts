@@ -22,6 +22,7 @@ export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {
                 method: "GET",
                 targetUrl: "https://api.example.com/items",
                 params: [],
+                output: [{ status: "200", body: { type: "object" } }],
                 headers: [{
                     name: "authorization",
                     source: { from: "secret", ref: "{{secrets.apiKey}}", prefix: "Bearer " },
@@ -49,6 +50,7 @@ export function manualSourceDefinition(): IntegrationDefinition {
                     method: "GET",
                     targetUrl: "{{answers.targetUrl}}",
                     params: [],
+                    output: [{ status: "200", body: { type: "object" } }],
                 }],
             },
         }],

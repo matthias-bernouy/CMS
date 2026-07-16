@@ -16,7 +16,13 @@ describe("source overlays API", () => {
                 sourceId: "user-account",
                 input: [{ endpointId: "updateAccount", editable: "self" }],
                 output: [{ endpointId: "getAccount" }],
-                fields: [{ id: "company", label: "Company", type: "string" }],
+                fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                fields: [{
+                    id: "company",
+                    label: "Company",
+                    type: "string",
+                    options: [{ value: "acme", label: "Acme" }],
+                }],
             }),
         }), cms);
         const listed = await getOverlays(new Request("http://localhost/cms/api/source-overlays/overlays?sourceId=user-account"), cms);
@@ -26,7 +32,12 @@ describe("source overlays API", () => {
         expect(await listed.json()).toEqual([
             expect.objectContaining({
                 id: "user-account-extra-fields",
-                fields: [expect.objectContaining({ id: "company", label: "Company" })],
+                fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                fields: [expect.objectContaining({
+                    id: "company",
+                    label: "Company",
+                    options: [{ value: "acme", label: "Acme" }],
+                })],
             }),
         ]);
     });

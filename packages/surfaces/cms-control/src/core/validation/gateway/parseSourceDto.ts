@@ -1,6 +1,6 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, RESPONSE_KINDS, isAllowedSourceTargetUrl, isSystemSourceId, SYSTEM_SOURCE_ID_PREFIX, type HTTPMethod, type ResponseKind, type SourceDto } from "@bernouy/cms-sources";
+import { HTTP_METHODS, MAX_SOURCE_ENDPOINT_TIMEOUT_MS, RESPONSE_KINDS, isAllowedSourceTargetUrl, isSourceEndpointAccessMode, isSystemSourceId, SYSTEM_SOURCE_ID_PREFIX, type HTTPMethod, type ResponseKind, type SourceDto, type SourceEndpointAccess, type SourceEndpointEffects } from "@bernouy/cms-sources";
 import { slugify } from "cms-control/core/validation/slugify";
 import { parseShapeField } from "./parseShapeField";
 import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta } from "./gatewayValidators";
@@ -8,11 +8,11 @@ import { parseResponsesBlob, parseHeadersBlob } from "./blobParsers";
 export type { SourceDto };
 
 /** Matches the flat indexed endpoint scalar keys, e.g. `endpoints.0.targetUrl`. */
-const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl|responseKind|mediaType)$/;
+const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl|timeoutMs|responseKind|mediaType)$/;
 /** Matches the per-endpoint JSON blobs, e.g. `endpoints.0.params`. Every structured field
- *  (params/body/output/meta/headers) is posted as one JSON blob — the parser validates it. */
-const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta|headers)$/;
-type BlobFields = Partial<Record<"params" | "body" | "output" | "meta" | "headers", unknown>>;
+ *  (params/body/output/meta/headers/effects) is posted as one JSON blob — the parser validates it. */
+const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta|headers|access|effects)$/;
+type BlobFields = Partial<Record<"params" | "body" | "output" | "meta" | "headers" | "access" | "effects", unknown>>;
 
 /**
  * Validates a FLAT body (as emitted by a native form's `Object.fromEntries(FormData)`)
@@ -30,7 +30,7 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
     if (isSystemSourceId(id)) throw new InvalidParam("id", `reserved prefix "${SYSTEM_SOURCE_ID_PREFIX}"`);
 
     // Group flat scalar keys by row index; collect per-endpoint JSON blobs separately.
-    const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl" | "responseKind" | "mediaType", string>>>();
+    const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl" | "timeoutMs" | "responseKind" | "mediaType", string>>>();
     const blobRows = new Map<number, BlobFields>();
     for (const [key, value] of Object.entries(body)) {
         const sm = BLOB_KEY.exec(key);
@@ -45,7 +45,7 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
         if (!m) continue;
         if (typeof value !== "string") throw new InvalidParam(key, "expected a string.");
         const idx = Number(m[1]);
-        const field = m[2] as "endpointId" | "method" | "targetUrl" | "responseKind" | "mediaType";
+        const field = m[2] as "endpointId" | "method" | "targetUrl" | "timeoutMs" | "responseKind" | "mediaType";
         const row = rows.get(idx) ?? {};
         row[field] = value;
         rows.set(idx, row);
@@ -69,6 +69,7 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
         if (row.responseKind && !(RESPONSE_KINDS as readonly string[]).includes(row.responseKind)) {
             throw new InvalidParam(`endpoints.${idx}.responseKind`, `must be ${RESPONSE_KINDS.join("|")}`);
         }
+        const timeoutMs = parseTimeoutMs(row.timeoutMs, `endpoints.${idx}.timeoutMs`);
         const mediaType = row.mediaType?.trim();
         if (seenIds.has(endpointId)) {
             throw new InvalidParam(`endpoints.${idx}.endpointId`, "duplicate within provider");
@@ -84,8 +85,12 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
         const output = parseResponsesBlob(typeof blobs?.output === "string" ? blobs.output : undefined, `endpoints.${idx}.output`);
         const meta = parseMetaField(blobs?.meta);
         const headers = parseHeadersBlob(blobs?.headers, `endpoints.${idx}.headers`);
+        const access = parseAccessBlob(blobs?.access, `endpoints.${idx}.access`);
+        const effects = parseEffectsBlob(blobs?.effects, `endpoints.${idx}.effects`);
         endpoints.push({
             endpointId, method: method as HTTPMethod, targetUrl,
+            ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+            ...(access ? { access } : {}),
             ...(row.responseKind ? { responseKind: row.responseKind as ResponseKind } : {}),
             ...(mediaType ? { mediaType } : {}),
             params: [...pathParams, ...queryParams],
@@ -93,6 +98,7 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
             ...(output ? { output } : {}),
             ...(meta ? { meta } : {}),
             ...(headers ? { headers } : {}),
+            ...(effects ? { effects } : {}),
         });
     }
 
@@ -101,7 +107,70 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
     return { id, meta: buildMeta(body, id), endpoints };
 }
 
+function parseTimeoutMs(raw: string | undefined, name: string): number | undefined {
+    if (raw === undefined || raw === "") return undefined;
+    if (!/^\d+$/.test(raw)) {
+        throw new InvalidParam(name, `must be an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`);
+    }
+    const timeoutMs = Number(raw);
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS) {
+        throw new InvalidParam(name, `must be an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`);
+    }
+    return timeoutMs;
+}
+
 function required(value: string | undefined, name: string): string {
     if (!value) throw new MissingParam(name);
     return value;
+}
+
+function parseAccessBlob(raw: unknown, name: string): SourceEndpointAccess | undefined {
+    if (raw === undefined || raw === "") return undefined;
+    if (typeof raw !== "string") throw new InvalidParam(name, "expected a JSON string.");
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        throw new InvalidParam(name, "must be valid JSON.");
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new InvalidParam(name, "must be an object.");
+    }
+    const value = parsed as Record<string, unknown>;
+    if (!isSourceEndpointAccessMode(value.mode)) {
+        throw new InvalidParam(`${name}.mode`, "must be public|auth|admin|system.");
+    }
+    if (value.roles === undefined) return { mode: value.mode };
+    if (value.mode !== "admin") {
+        throw new InvalidParam(`${name}.roles`, "is only supported for admin access.");
+    }
+    if (!Array.isArray(value.roles)) throw new InvalidParam(`${name}.roles`, "must be an array.");
+    const roles: string[] = [];
+    const seen = new Set<string>();
+    for (const [index, rawRole] of value.roles.entries()) {
+        const role = typeof rawRole === "string" ? rawRole.trim() : "";
+        if (!role) throw new InvalidParam(`${name}.roles.${index}`, "must be a non-empty role id.");
+        if (seen.has(role)) throw new InvalidParam(`${name}.roles.${index}`, "must be unique.");
+        seen.add(role);
+        roles.push(role);
+    }
+    return { mode: "admin", roles };
+}
+
+function parseEffectsBlob(raw: unknown, name: string): SourceEndpointEffects | undefined {
+    if (raw === undefined || raw === "") return undefined;
+    if (typeof raw !== "string") throw new InvalidParam(name, "expected a JSON string.");
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        throw new InvalidParam(name, "must be valid JSON.");
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new InvalidParam(name, "must be an object.");
+    }
+    const invalidatesSchema = (parsed as Record<string, unknown>).invalidatesSchema;
+    if (invalidatesSchema === undefined) return undefined;
+    if (invalidatesSchema !== true) throw new InvalidParam(`${name}.invalidatesSchema`, "must be true.");
+    return { invalidatesSchema: true };
 }

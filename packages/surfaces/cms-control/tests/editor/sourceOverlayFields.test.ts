@@ -11,6 +11,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 type EditorSourceDto = {
     fields?: Array<{
         path: string;
+        label?: string;
         type: string;
         children: EditorSourceDto["fields"];
     }>;
@@ -49,7 +50,7 @@ describe("GET /api/editor/sources source overlays", () => {
         expect(body[0]?.fields).toContainEqual({
             path: "metadata",
             type: "object",
-            children: [{ path: "company", type: "string", children: [] }],
+            children: [{ path: "company", label: "Company", type: "string", children: [] }],
         });
     });
 });

@@ -107,6 +107,7 @@ function endpoint(id: string, mode?: SourceEndpointAccessMode): Source["endpoint
         urn: `urn:access:${id}`,
         method: "GET",
         targetUrl: `https://api.example.com/${id}`,
+        output: [{ status: "200", body: { type: "object" } }],
         ...(mode ? { access: { mode } } : {}),
     };
 }

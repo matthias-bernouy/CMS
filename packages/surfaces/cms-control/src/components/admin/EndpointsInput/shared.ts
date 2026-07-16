@@ -1,4 +1,4 @@
-import type { DataShape, SourceMeta, EndpointResponse, EndpointHeader, ParamValueSource } from "@bernouy/cms-sources";
+import type { DataShape, SourceMeta, EndpointResponse, EndpointHeader, ParamValueSource, SourceEndpointAccess } from "@bernouy/cms-sources";
 
 /** Edit-mode prefill seeds, decoded from the `value` attribute JSON. */
 export type ParamSeed = {
@@ -14,8 +14,11 @@ export type EndpointSeed = {
     endpointId?: string;
     method?: string;
     targetUrl?: string;
+    timeoutMs?: number;
     responseKind?: string;
     mediaType?: string;
+    /** Endpoint authorization policy, preserved when editing a source. */
+    access?: SourceEndpointAccess;
     params?: ParamSeed[];
     /** Request-body shape (recursive) — drives the Body tree editor. */
     body?: DataShape;
