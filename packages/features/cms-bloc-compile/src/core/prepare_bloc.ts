@@ -38,6 +38,7 @@ export async function prepare_bloc(
             entrypoints: [entry],
             target: "browser" as const,
             format: "iife" as const,
+            minify: true,
             plugins: [p9rExternalsPlugin],
         });
 
@@ -50,7 +51,7 @@ export async function prepare_bloc(
 
         const [viewJSRaw, editorJSRaw] = await Promise.all([
             options.native
-                ? fileView.text()
+                ? ""
                 : runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
             runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
         ]);
@@ -69,6 +70,9 @@ export async function prepare_bloc(
             .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", jsStringLiteralContent(description))
             .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral);
 
+        assertValidJavaScriptArtifact(viewJS, `view bundle for ${blocId}`);
+        assertValidJavaScriptArtifact(editorJS, `editor bundle for ${blocId}`);
+
         return {
             id: blocId,
             editorJS: editorJS,
@@ -80,6 +84,26 @@ export async function prepare_bloc(
         };
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
+    }
+}
+
+/**
+ * Validates the final JavaScript after all manifest placeholders have been
+ * replaced. Bun validates source files while building, but replacements happen
+ * afterwards and therefore need their own syntax check before an artifact can
+ * be returned to an importer for persistence.
+ */
+export function assertValidJavaScriptArtifact(source: string, label: string): void {
+    try {
+        // The generated bundles use the IIFE format and must be valid as classic
+        // browser scripts. Constructing a function parses without executing it.
+        new Function(source);
+    } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(
+            `Invalid generated JavaScript (${label}): ${detail}. ` +
+            "Check the bloc source and manifest metadata; the artifact was not persisted.",
+        );
     }
 }
 

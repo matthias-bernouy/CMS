@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { declaredBlocViewSources } from "../../helpers/blocArtifactSource";
 import {
     formatMoney as formatListMoney,
     saleDetailUrl,
@@ -67,13 +68,13 @@ describe("Commerce seller blocs", () => {
 
     test("compiles an authenticated sales list from the expected Commerce endpoint", async () => {
         const compiled = await compile("commerce-account-sales");
-        expect(compiled.viewJS).toContain('|| "mySales"');
+        expect(compiled.viewSource).toContain('getAttribute("sales-endpoint") || "mySales"');
         expect(compiled.viewJS).toContain("basic-pagination:change");
         expect(compiled.viewJS).toContain("history.replaceState");
         expect(compiled.viewJS).toContain("<basic-card");
         expect(compiled.viewJS).toContain("<basic-select");
-        expect(compiled.editorJS).toContain('attribute: "sales-endpoint"');
-        expect(compiled.editorJS).toContain('attribute: "detail-url"');
+        expect(compiled.editorSource).toContain('attribute: "sales-endpoint"');
+        expect(compiled.editorSource).toContain('attribute: "detail-url"');
     });
 
     test("renders the server-snapshotted seller proceeds instead of the buyer total", () => {
@@ -141,23 +142,23 @@ describe("Commerce seller blocs", () => {
 
     test("keeps sale detail Commerce-only and exposes a fulfillment slot", async () => {
         const compiled = await compile("commerce-sale-detail");
-        expect(compiled.viewJS).toContain('|| "mySale"');
+        expect(compiled.viewSource).toContain('getAttribute("sale-endpoint") || "mySale"');
         expect(compiled.viewJS).toContain('slot name="fulfillment"');
         expect(compiled.viewJS).toContain("offerSnapshot");
-        expect(compiled.viewJS).toContain("sellerCommissionAmount(order)");
-        expect(compiled.viewJS).toContain("sellerShippingShareAmount(order)");
-        expect(compiled.viewJS).toContain("sellerProceedsAmount(order)");
-        expect(compiled.viewJS).toContain("salePresentationStatus(order)");
+        expect(compiled.viewSource).toContain("sellerCommissionAmount(order)");
+        expect(compiled.viewSource).toContain("sellerShippingShareAmount(order)");
+        expect(compiled.viewSource).toContain("sellerProceedsAmount(order)");
+        expect(compiled.viewSource).toContain("salePresentationStatus(order)");
         expect(compiled.viewJS).toContain("commerce-fulfillment:updated");
-        expect(compiled.viewJS).not.toContain('formatMoney(order.totalAmount, order.currency');
+        expect(compiled.viewSource).not.toContain('formatMoney(order.totalAmount, order.currency');
         expect(compiled.viewJS).toContain("Montant net à recevoir");
         expect(compiled.viewJS).toContain("Commission Courtside");
         expect(compiled.viewJS).toContain("Prise en charge par Courtside");
         expect(compiled.viewJS).not.toContain("data-back action=\"link\"");
-        expect(compiled.viewJS).not.toContain("getShipmentForMySale");
-        expect(compiled.viewJS).not.toContain("createShipmentForMySale");
-        expect(compiled.editorJS).toContain('slot: "fulfillment"');
-        expect(compiled.editorJS).toContain('attribute: "sale-endpoint"');
+        expect(compiled.viewSource).not.toContain("getShipmentForMySale");
+        expect(compiled.viewSource).not.toContain("createShipmentForMySale");
+        expect(compiled.editorSource).toContain('slot: "fulfillment"');
+        expect(compiled.editorSource).toContain('attribute: "sale-endpoint"');
     });
 });
 
@@ -168,9 +169,10 @@ async function compile(tag: string) {
     const editor = await readFile(resolve(directory, "BlocEditor.ts"), "utf8");
     const source: Record<string, string> = {};
     for (const file of files.filter(name => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
-        source[file] = Buffer.from(await readFile(resolve(directory, file))).toString("base64");
+        const content = await readFile(resolve(directory, file));
+        source[file] = Buffer.from(content).toString("base64");
     }
-    return prepare_bloc(
+    const compiled = await prepare_bloc(
         new File([view], "Bloc.ts", { type: "text/typescript" }),
         new File([editor], "BlocEditor.ts", { type: "text/typescript" }),
         tag,
@@ -179,4 +181,9 @@ async function compile(tag: string) {
         tag,
         source,
     );
+    return {
+        ...compiled,
+        viewSource: declaredBlocViewSources({ viewJS: view, source }),
+        editorSource: editor,
+    };
 }

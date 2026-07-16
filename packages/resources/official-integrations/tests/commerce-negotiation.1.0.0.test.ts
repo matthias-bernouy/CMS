@@ -15,6 +15,7 @@ import { InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-funct
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository, validateSource, type Source } from "@bernouy/cms-sources";
+import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 describe("commerce negotiation 1.0.0", () => {
     test("installs a Commerce-backed source, connector, and administration dashboards", async () => {
@@ -154,6 +155,12 @@ describe("commerce negotiation 1.0.0", () => {
 
         const form = compiled.get("commerce-negotiation-form");
         const list = compiled.get("commerce-negotiation-list");
+        const formArtifact = artifacts.find(artifact => artifact.bloc.tag === "commerce-negotiation-form");
+        const listArtifact = artifacts.find(artifact => artifact.bloc.tag === "commerce-negotiation-list");
+        const formViewSource = formArtifact ? declaredBlocViewSources(formArtifact.bloc) : "";
+        const listViewSource = listArtifact ? declaredBlocViewSources(listArtifact.bloc) : "";
+        const formEditorSource = formArtifact?.bloc.editorJS ?? "";
+        const listEditorSource = listArtifact?.bloc.editorJS ?? "";
         expect(form).toBeTruthy();
         expect(list).toBeTruthy();
         expect(definition.dependencies).toEqual([
@@ -166,11 +173,11 @@ describe("commerce negotiation 1.0.0", () => {
         expect(form?.viewJS).toContain("existing-message");
         expect(form?.viewJS).toContain("createMyProposal");
         expect(form?.viewJS).toContain("system-functions");
-        expect(form?.viewJS).toContain('style.setProperty("display", "none", "important")');
+        expect(formViewSource).toContain('style.setProperty("display", "none", "important")');
         expect(form?.viewJS).toContain("<basic-input");
         expect(form?.viewJS).toContain("<basic-textarea");
         expect(form?.viewJS).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
-        expect(form?.editorJS).toContain('"card-background-color"');
+        expect(formEditorSource).toContain('"card-background-color"');
         expect(list?.viewJS).toContain("window.p9r.Composition");
         expect(list?.viewJS).toContain("myProposals");
         expect(list?.viewJS).toContain("respondToProposal");
@@ -178,12 +185,12 @@ describe("commerce negotiation 1.0.0", () => {
         expect(list?.viewJS).toContain("basic-pagination:change");
         expect(list?.viewJS).toContain('justify-content="space-between"');
         expect(list?.viewJS).toContain("data-empty-state");
-        expect(list?.viewJS).toContain("this.total <= positiveInteger");
+        expect(listViewSource).toContain("this.total <= positiveInteger");
         expect(list?.viewJS).toContain("history.replaceState");
-        expect(list?.viewJS).toContain('style.setProperty("display", "none", "important")');
-        expect(list?.viewJS).toContain('toggleAttribute("selected", this.role === "buyer")');
+        expect(listViewSource).toContain('style.setProperty("display", "none", "important")');
+        expect(listViewSource).toContain('toggleAttribute("selected", this.role === "buyer")');
         expect(list?.viewJS).not.toContain("location.reload");
-        expect(list?.editorJS).toContain('attribute: "initial-role"');
+        expect(listEditorSource).toContain('attribute: "initial-role"');
 
         const available = [
             "basic-button", "basic-card", "basic-chip", "basic-chip-group", "basic-grid", "basic-input",

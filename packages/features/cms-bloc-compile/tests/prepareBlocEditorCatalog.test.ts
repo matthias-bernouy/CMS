@@ -1,8 +1,67 @@
 import { describe, expect, test } from "bun:test";
-import { runBuild } from "../src/core/prepare_bloc";
+import { assertValidJavaScriptArtifact, runBuild } from "../src/core/prepare_bloc";
 import { prepare_bloc } from "../src/exports";
 
 describe("prepare_bloc editor catalog output", () => {
+    test("keeps native source while omitting its browser view script", async () => {
+        const view = new File([
+            "// Native image behavior is provided directly by the browser.",
+        ], "Bloc.ts", { type: "text/typescript" });
+        const source = {
+            "Bloc.ts": Buffer.from("// Native source retained for authoring.").toString("base64"),
+        };
+
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            "Image",
+            "Basic",
+            "",
+            "img",
+            source,
+            undefined,
+            { native: true },
+        );
+
+        expect(bloc.viewJS).toBe("");
+        expect(bloc.source).toEqual(source);
+        expect(() => new Function(bloc.editorJS)).not.toThrow();
+    });
+
+    test("minifies view and editor browser bundles", async () => {
+        const view = new File([
+            "// VIEW_COMMENT_TO_REMOVE",
+            "customElements.define('demo-minified', class extends HTMLElement {});",
+        ], "DemoMinified.ts", { type: "text/typescript" });
+        const editor = new File([
+            "// EDITOR_COMMENT_TO_REMOVE",
+            "import { Editor, registerEditor } from '@bernouy/cms-content/editor';",
+            "class DemoMinifiedEditor extends Editor {}",
+            "registerEditor({ editor: DemoMinifiedEditor });",
+        ], "DemoMinifiedEditor.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            editor,
+            "Minified demo",
+            "Content",
+            "",
+            "demo-minified",
+        );
+
+        expect(bloc.viewJS).not.toContain("VIEW_COMMENT_TO_REMOVE");
+        expect(bloc.editorJS).not.toContain("EDITOR_COMMENT_TO_REMOVE");
+        expect(() => new Function(bloc.viewJS)).not.toThrow();
+        expect(() => new Function(bloc.editorJS)).not.toThrow();
+    });
+
+    test("rejects invalid final JavaScript with an actionable artifact label", () => {
+        expect(() => assertValidJavaScriptArtifact("try {", "view bundle for broken-card"))
+            .toThrow(
+                /Invalid generated JavaScript \(view bundle for broken-card\):.*Check the bloc source and manifest metadata; the artifact was not persisted\./,
+            );
+    });
+
     test("materializes bundled source files used by view imports", async () => {
         const view = new File([
             `import template from "./template.html" with { type: "text" };`,
@@ -79,10 +138,10 @@ describe("prepare_bloc editor catalog output", () => {
 
         expect(bloc.editorJS).toContain("window.p9rEditor.Editor");
         expect(bloc.editorJS).toContain("window.p9rEditor.registerEditor");
-        expect(bloc.editorJS).toContain('props?.tag ?? "demo-card"');
-        expect(bloc.editorJS).toContain('props?.label ?? "Demo card"');
-        expect(bloc.editorJS).toContain('props?.category ?? "Content"');
-        expect(bloc.editorJS).toContain("props?.editor ?? props?.cl");
+        expect(bloc.editorJS).toContain('??"demo-card"');
+        expect(bloc.editorJS).toContain('??"Demo card"');
+        expect(bloc.editorJS).toContain('??"Content"');
+        expect(bloc.editorJS).toMatch(/editor:\w\?\.editor\?\?\w\?\.cl/);
         expect(bloc.viewJS).toContain("customElements.define");
     });
 
@@ -105,9 +164,8 @@ describe("prepare_bloc editor catalog output", () => {
         );
 
         expect(bloc.editorJS).toContain("window.p9rEditor.Editor");
-        expect(bloc.editorJS).toContain("registerEditor_opaque");
         expect(bloc.editorJS).toContain("getStructureMode()");
-        expect(bloc.editorJS).toContain('return "opaque";');
+        expect(bloc.editorJS).toContain('return"opaque"');
     });
 
     test("exposes binding constants to bloc editor bundles", async () => {
@@ -129,7 +187,6 @@ describe("prepare_bloc editor catalog output", () => {
             "demo-form",
         );
 
-        expect(bloc.editorJS).toContain("CMS_BINDING_ATTRIBUTES");
         expect(bloc.editorJS).toContain("cms-source");
     });
 
@@ -152,7 +209,6 @@ describe("prepare_bloc editor catalog output", () => {
             "demo-control-form",
         );
 
-        expect(bloc.editorJS).toContain("CMS_BINDING_ATTRIBUTES");
         expect(bloc.editorJS).toContain("cms-source");
     });
 
@@ -172,7 +228,7 @@ describe("prepare_bloc editor catalog output", () => {
             `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
         );
 
-        expect(bloc.editorJS).toContain('defaultContent: props?.defaultContent ?? "<demo-card variant=\\"featured\\"><p slot=\\"header\\">Title</p><p>Body</p></demo-card>"');
+        expect(bloc.editorJS).toContain('??"<demo-card variant=\\"featured\\"><p slot=\\"header\\">Title</p><p>Body</p></demo-card>"');
     });
 
     test("escapes metadata in editor catalog registrations", async () => {
@@ -190,7 +246,7 @@ describe("prepare_bloc editor catalog output", () => {
         );
 
         expect(() => new Function(bloc.editorJS)).not.toThrow();
-        expect(bloc.editorJS).toContain(`description: props?.description ?? "Children can use bleed=\\"wide|full\\"."`);
+        expect(bloc.editorJS).toContain(`??"Children can use bleed=\\"wide|full\\"."`);
     });
 
     test("reports Bun build failures instead of returning an empty view bundle", async () => {

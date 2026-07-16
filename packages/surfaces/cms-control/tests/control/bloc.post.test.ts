@@ -227,7 +227,7 @@ describe("bloc.post", () => {
         expect(res.status).toBe(200);
         expect(createBlocCalls).toHaveLength(1);
         expect(createBlocCalls[0]?.bloc.id).toBe("p");
-        expect(createBlocCalls[0]?.bloc.viewJS).toBe("/*view*/");
+        expect(createBlocCalls[0]?.bloc.viewJS).toBe("");
         expect(createBlocCalls[0]?.bloc.editorJS).toContain(`<p>Text</p>`);
     });
 });

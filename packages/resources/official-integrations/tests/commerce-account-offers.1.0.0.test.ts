@@ -5,6 +5,7 @@ import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { syncRenderedOffers } from "../integrations/commerce/versions/1.0.0/blocs/commerce-account-offers/presentation";
+import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 describe("commerce account offers 1.0.0", () => {
     test("waits for a resolved positive media id before loading a seller image", () => {
@@ -68,28 +69,32 @@ describe("commerce account offers 1.0.0", () => {
         const previewStyles = previewArtifact?.type === "bloc"
             ? Buffer.from(previewArtifact.bloc.source?.["style.css"] ?? "", "base64").toString("utf-8")
             : "";
-        expect(list?.viewJS).toContain('this.setAttribute("cms-source", source)');
-        expect(list?.viewJS).toContain('host.querySelectorAll("[cms-param-sync], [data-commerce-param][data-url-param]")');
+        const listViewSource = listArtifact?.type === "bloc" ? declaredBlocViewSources(listArtifact.bloc) : "";
+        const listEditorSource = listArtifact?.type === "bloc" ? listArtifact.bloc.editorJS ?? "" : "";
+        const previewViewSource = previewArtifact?.type === "bloc" ? declaredBlocViewSources(previewArtifact.bloc) : "";
+        const previewEditorSource = previewArtifact?.type === "bloc" ? previewArtifact.bloc.editorJS ?? "" : "";
+        expect(listViewSource).toContain('this.setAttribute("cms-source", source)');
+        expect(listViewSource).toContain('host.querySelectorAll("[cms-param-sync], [data-commerce-param][data-url-param]")');
         expect(list?.viewJS).toContain("basic-pagination:change");
-        expect(list?.viewJS).toContain('host.getAttribute("grid-min") || "md"');
-        expect(list?.viewJS).toContain('host.getAttribute("grid-max") || "xl"');
-        expect(list?.viewJS).toContain('card.toggleAttribute("stretch", stretch)');
+        expect(listViewSource).toContain('host.getAttribute("grid-min") || "md"');
+        expect(listViewSource).toContain('host.getAttribute("grid-max") || "xl"');
+        expect(listViewSource).toContain('card.toggleAttribute("stretch", stretch)');
         expect(listDefault).toContain('cms-repeat="data.items as offer"');
         expect(listDefault).toContain('<img slot="media"');
         expect(listDefault).toContain('grid-min="md" grid-max="xl"');
         expect(listDefault.match(/data-offers-grid/g)).toHaveLength(2);
         expect(listDefault).toContain("stretch data-offer-card");
-        expect(list?.editorJS).toContain('attribute: "page-size"');
-        expect(list?.editorJS).toContain('attribute: "grid-min"');
-        expect(list?.editorJS).toContain('attribute: "grid-max"');
-        expect(list?.editorJS).toContain('attribute: "card-stretch"');
-        expect(list?.editorJS).toContain('label: "Catalogue content"');
-        expect(preview?.viewJS).toContain("new Intl.NumberFormat");
+        expect(listEditorSource).toContain('attribute: "page-size"');
+        expect(listEditorSource).toContain('attribute: "grid-min"');
+        expect(listEditorSource).toContain('attribute: "grid-max"');
+        expect(listEditorSource).toContain('attribute: "card-stretch"');
+        expect(listEditorSource).toContain('label: "Catalogue content"');
+        expect(previewViewSource).toContain("new Intl.NumberFormat");
         expect(preview?.viewJS).toContain('slot name="media"');
         expect(preview?.viewJS).toContain('slot name="price"');
         expect(preview?.viewJS).not.toContain("@media");
-        expect(preview?.editorJS).toContain('color("Price", "price-color")');
-        expect(preview?.editorJS).toContain('attribute: "stretch"');
+        expect(previewEditorSource).toContain('color("Price", "price-color")');
+        expect(previewEditorSource).toContain('attribute: "stretch"');
         expect(previewStyles).toContain(':host([stretch]:not([stretch="false"]))');
 
         const source = definition.artifacts?.find(item => item.type === "source");
@@ -149,6 +154,8 @@ describe("commerce account offers 1.0.0", () => {
             ].map(id => ({ id })),
             { getBlocViewJS: async tag => tag === "commerce-account-offers" ? compiled.viewJS : null },
         );
+        const viewSource = declaredBlocViewSources(artifact.bloc);
+        const editorSource = artifact.bloc.editorJS;
 
         expect(definition.dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs" }]);
         expect(compiled.viewJS).toContain("window.p9r.Composition");
@@ -156,13 +163,13 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS).toContain('<img slot="media"');
         expect(compiled.viewJS).toContain("/listMyOffers?status=");
         expect(compiled.viewJS).toContain("basic-pagination:change");
-        expect(compiled.viewJS).toContain('host.getAttribute("grid-packing") || "fit"');
-        expect(compiled.viewJS).toContain('host.getAttribute("image-fit") || "cover"');
-        expect(compiled.viewJS).toContain('host.getAttribute("image-height") || "12rem"');
-        expect(compiled.viewJS).toContain('card.toggleAttribute("stretch"');
+        expect(viewSource).toContain('host.getAttribute("grid-packing") || "fit"');
+        expect(viewSource).toContain('host.getAttribute("image-fit") || "cover"');
+        expect(viewSource).toContain('host.getAttribute("image-height") || "12rem"');
+        expect(viewSource).toContain('card.toggleAttribute("stretch"');
         expect(compiled.viewJS).toContain("history.replaceState");
-        expect(compiled.viewJS).toContain('attributeFilter: ["data-media-id"]');
-        expect(compiled.viewJS).toContain('positiveIdentifier(image?.getAttribute("data-media-id"))');
+        expect(viewSource).toContain('attributeFilter: ["data-media-id"]');
+        expect(viewSource).toContain('positiveIdentifier(image?.getAttribute("data-media-id"))');
         expect(compiled.viewJS).toContain('data-offer-slug="{{ offer.slug }}"');
         expect(compiled.viewJS).toContain('data-display-amount="{{ offer.sellerDisplayPriceAmount }}"');
         expect(compiled.viewJS).not.toContain('data-amount="{{ offer.acceptedPriceAmount }}"');
@@ -173,11 +180,11 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS).toContain('cms-condition="total > limit"');
         expect(compiled.viewJS).not.toContain("<cms-binding-core");
         expect(compiled.viewJS).not.toContain("<style>");
-        expect(compiled.editorJS).toContain('attribute: "page-size"');
-        expect(compiled.editorJS).toContain('attribute: "grid-packing"');
-        expect(compiled.editorJS).toContain('attribute: "image-fit"');
-        expect(compiled.editorJS).toContain('attribute: "label-action-required"');
-        expect(compiled.editorJS).toContain('color("Card background", "card-background-color")');
+        expect(editorSource).toContain('attribute: "page-size"');
+        expect(editorSource).toContain('attribute: "grid-packing"');
+        expect(editorSource).toContain('attribute: "image-fit"');
+        expect(editorSource).toContain('attribute: "label-action-required"');
+        expect(editorSource).toContain('color("Card background", "card-background-color")');
         expect(await resolveUsage("<commerce-account-offers></commerce-account-offers>"))
             .toEqual([
                 "basic-button", "basic-card", "basic-grid", "basic-option", "basic-pagination",
@@ -246,36 +253,38 @@ describe("commerce account offers 1.0.0", () => {
             ].map(id => ({ id })),
             { getBlocViewJS: async tag => tag === "commerce-offer-price-form" ? compiled.viewJS : null },
         );
+        const viewSource = declaredBlocViewSources(artifact.bloc);
+        const editorSource = artifact.bloc.editorJS;
 
         expect(compiled.viewJS).toContain("window.p9r.Composition");
         expect(compiled.viewJS).toContain("myOffer?id=");
         expect(compiled.viewJS).toContain("getSellerSaleEnrollment");
         expect(compiled.viewJS).toContain("submitSellerOfferPrice");
-        expect(compiled.viewJS).toContain('workflowState !== "awaiting_seller_price"');
-        expect(compiled.viewJS).toContain("majorToMinor");
-        expect(compiled.viewJS).toContain("marketplaceTermsCurrentVersionAccepted");
-        expect(compiled.viewJS).toContain('accountStatus === "active"');
-        expect(compiled.viewJS).toContain('stripeAccountApiVersion === "v2"');
-        expect(compiled.viewJS).toContain("applicationControlledRecipient === true");
-        expect(compiled.viewJS).toContain('stripeTermsStatus === "accepted"');
+        expect(viewSource).toContain('workflowState !== "awaiting_seller_price"');
+        expect(viewSource).toContain("majorToMinor");
+        expect(viewSource).toContain("marketplaceTermsCurrentVersionAccepted");
+        expect(viewSource).toContain('accountStatus === "active"');
+        expect(viewSource).toContain('stripeAccountApiVersion === "v2"');
+        expect(viewSource).toContain("applicationControlledRecipient === true");
+        expect(viewSource).toContain('stripeTermsStatus === "accepted"');
         expect(compiled.viewJS).toContain("getConnectClientConfig");
-        expect(compiled.viewJS).toContain('STRIPE_V2_API = "https://api.stripe.com/v2"');
+        expect(viewSource).toContain('STRIPE_V2_API = "https://api.stripe.com/v2"');
         expect(compiled.viewJS).toContain("/core/account_tokens");
-        expect(compiled.viewJS).toContain('"stripe-version": STRIPE_V2_VERSION');
-        expect(compiled.viewJS).not.toContain("country: profile.countryCode.toLowerCase()");
-        expect(compiled.viewJS).toContain('this.requestSource(this.accountSourceId, "updateAccount"');
-        expect(compiled.viewJS).toContain("payload.accountToken");
-        expect(compiled.viewJS).toContain("payload.sellerTermsAccepted = true");
+        expect(viewSource).toContain('"stripe-version": STRIPE_V2_VERSION');
+        expect(viewSource).not.toContain("country: profile.countryCode.toLowerCase()");
+        expect(viewSource).toContain('this.requestSource(this.accountSourceId, "updateAccount"');
+        expect(viewSource).toContain("payload.accountToken");
+        expect(viewSource).toContain("payload.sellerTermsAccepted = true");
         expect(compiled.viewJS).toContain('data-profile-control="givenName"');
         expect(compiled.viewJS).toContain('data-profile-control="birthDate"');
         expect(compiled.viewJS).toContain('data-profile-control="countryCode"');
         expect(compiled.viewJS).toContain('name="email" type="email" autocomplete="email" readonly required');
-        expect(compiled.viewJS).toContain("profile.email = textValue(this.profile?.email)");
-        expect(compiled.viewJS).toContain("control.hidden = profileFieldReady");
+        expect(viewSource).toContain("profile.email = textValue(this.profile?.email)");
+        expect(viewSource).toContain("control.hidden = profileFieldReady");
         expect(compiled.viewJS).toContain('href="/mon-espace/profil"');
         expect(compiled.viewJS).toContain('name="sellerTermsAccepted" type="checkbox"');
-        expect(compiled.viewJS).toContain("this.stripeConsentFragment.hidden = !this.enrollmentRequired");
-        expect(compiled.viewJS).toContain("if (!this.templateReady)");
+        expect(viewSource).toContain("this.stripeConsentFragment.hidden = !this.enrollmentRequired");
+        expect(viewSource).toContain("if (!this.templateReady)");
         expect(compiled.viewJS).toContain("conditions vendeur Courtside");
         expect(compiled.viewJS).toContain("Les informations renseignées sont traitées");
         expect(compiled.viewJS).toContain("Consulter l’avis de confidentialité");
@@ -297,18 +306,18 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS.toLowerCase()).not.toContain("iban");
         expect(compiled.viewJS).not.toContain("synchronizeSellerPayoutEligibility");
         expect(compiled.viewJS).toContain("commerce-offer-price:submitted");
-        expect(compiled.editorJS).toContain('attribute: "success-url"');
-        expect(compiled.editorJS).toContain('attribute: "range-message"');
-        expect(compiled.editorJS).toContain('attribute: "enrollment-function-id"');
-        expect(compiled.editorJS).toContain('attribute: "stripe-source-id"');
-        expect(compiled.editorJS).toContain('attribute: "seller-terms-url"');
-        expect(compiled.editorJS).toContain('attribute: "privacy-url"');
-        expect(compiled.editorJS).toContain('attribute: "privacy-notice"');
-        expect(compiled.editorJS).toContain('attribute: "privacy-link-label"');
-        expect(compiled.editorJS).toContain('attribute: "first-enrollment-consent-required-message"');
-        expect(compiled.editorJS).toContain('attribute: "seller-terms-consent-required-message"');
-        expect(compiled.editorJS).not.toContain('attribute: "privacy-label"');
-        expect(compiled.editorJS).not.toContain('attribute: "consent-required-message"');
+        expect(editorSource).toContain('attribute: "success-url"');
+        expect(editorSource).toContain('attribute: "range-message"');
+        expect(editorSource).toContain('attribute: "enrollment-function-id"');
+        expect(editorSource).toContain('attribute: "stripe-source-id"');
+        expect(editorSource).toContain('attribute: "seller-terms-url"');
+        expect(editorSource).toContain('attribute: "privacy-url"');
+        expect(editorSource).toContain('attribute: "privacy-notice"');
+        expect(editorSource).toContain('attribute: "privacy-link-label"');
+        expect(editorSource).toContain('attribute: "first-enrollment-consent-required-message"');
+        expect(editorSource).toContain('attribute: "seller-terms-consent-required-message"');
+        expect(editorSource).not.toContain('attribute: "privacy-label"');
+        expect(editorSource).not.toContain('attribute: "consent-required-message"');
         expect(defaultContent).toContain('enrollment-function-id="getSellerSaleEnrollment"');
         expect(defaultContent).toContain('submit-function-id="submitSellerOfferPrice"');
         expect(defaultContent).toContain('seller-terms-url="/cgu-cgv"');

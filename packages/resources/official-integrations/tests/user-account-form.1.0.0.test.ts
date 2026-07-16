@@ -3,6 +3,7 @@ import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 describe("user-account form 1.0.0", () => {
     test("compiles as a Light DOM composition and exposes its Basic Blocs dependencies", async () => {
@@ -48,6 +49,8 @@ describe("user-account form 1.0.0", () => {
             ],
             { getBlocViewJS: async tag => tag === "user-account-form" ? compiled.viewJS : tag === "user-account-avatar" ? compiledAvatar.viewJS : null },
         );
+        const viewSource = declaredBlocViewSources(artifact.bloc);
+        const editorSource = artifact.bloc.editorJS;
 
         expect(definition.dependencies).toEqual([{ name: "basicBlocs", kind: "basic-blocs" }]);
         expect(compiled.viewJS).toContain("window.p9r.Composition");
@@ -76,17 +79,17 @@ describe("user-account form 1.0.0", () => {
         expect(compiled.viewJS).toContain('value="{{ subject.email }}" disabled');
         expect(compiled.viewJS).not.toContain('name="email"');
         expect(compiled.viewJS).toContain("system-auth/me");
-        expect(compiled.viewJS).toContain("element.hidden = !visible");
-        expect(compiled.viewJS).toContain('control?.toggleAttribute("disabled", !visible)');
-        expect(compiled.editorJS).toContain("show-address-line-3");
-        expect(compiled.editorJS).toContain("field-background-color");
-        expect(compiled.editorJS).toContain("button-background-color");
-        expect(compiled.editorJS).toContain("avatar-border-color");
-        expect(compiled.editorJS).toContain("skeleton-base-color");
-        expect(compiled.editorJS).toContain("success-toast-background-color");
-        expect(compiled.editorJS).toContain("error-toast-background-color");
-        expect(compiled.editorJS).toContain("toast-position");
-        expect(compiled.viewJS).toContain('this.setOptionalAttribute(input, "background-color"');
+        expect(viewSource).toContain("element.hidden = !visible");
+        expect(viewSource).toContain('control?.toggleAttribute("disabled", !visible)');
+        expect(editorSource).toContain("show-address-line-3");
+        expect(editorSource).toContain("field-background-color");
+        expect(editorSource).toContain("button-background-color");
+        expect(editorSource).toContain("avatar-border-color");
+        expect(editorSource).toContain("skeleton-base-color");
+        expect(editorSource).toContain("success-toast-background-color");
+        expect(editorSource).toContain("error-toast-background-color");
+        expect(editorSource).toContain("toast-position");
+        expect(viewSource).toContain('this.setOptionalAttribute(input, "background-color"');
         expect(await resolveUsage("<user-account-form></user-account-form>"))
             .toEqual(["basic-button", "basic-grid", "basic-input", "basic-skeleton", "basic-stack", "basic-toast", "user-account-avatar", "user-account-form"]);
     });
