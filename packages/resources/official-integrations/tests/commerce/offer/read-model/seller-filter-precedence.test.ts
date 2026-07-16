@@ -66,6 +66,44 @@ describe("commerce seller offer filter precedence", () => {
         });
         expect(query.or).not.toContain("archived");
     });
+
+    test("ignores sellerId and keeps the authenticated seller ownership filter", async () => {
+        useSellerResponder();
+
+        const response = await requestCommerce("/me/offers?sellerId=999", {
+            userId: "seller-user-123",
+        });
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ items: [], total: 0, limit: 50, offset: 0 });
+        expect(offersQuery().seller_id).toBe("eq.7");
+    });
+
+    test("surfaces the product bigint cast error before the variant cast error", async () => {
+        const message = 'invalid input syntax for type bigint: "not-an-integer"';
+        setRestResponder(request => {
+            const resource = resourceName(request);
+            if (resource === "sellers") return jsonResponse([{ id: 7 }]);
+            if (resource === "offer_workflow_states") return jsonResponse(workflowStates);
+            if (resource === "offers") {
+                const url = new URL(request.url);
+                expect(url.searchParams.get("product_id")).toBe("eq.not-an-integer");
+                expect(url.searchParams.get("variant_id")).toBe("eq.also-not-an-integer");
+                expect(url.search.indexOf("product_id=")).toBeLessThan(url.search.indexOf("variant_id="));
+                return jsonResponse({ message }, 400);
+            }
+            throw new Error(`Unexpected seller offer request: ${request.url}`);
+        });
+
+        const response = await requestCommerce(
+            "/me/offers?status=all&productId=not-an-integer&variantId=also-not-an-integer",
+            { userId: "seller-user-123" },
+        );
+
+        expect(response.status).toBe(422);
+        expect(await response.json()).toEqual({ error: message });
+        expect(resources()).toEqual(["sellers", "offer_workflow_states", "offers"]);
+    });
 });
 
 function useSellerResponder(): void {
