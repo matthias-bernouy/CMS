@@ -6,3 +6,7 @@ export {
     MongoIntegrationInstallationRepository,
     type MongoIntegrationInstallationRepositoryConfig,
 } from "../default-implementation/MongoIntegrationInstallationRepository";
+export {
+    MongoIntegrationConnectorProviderRepository,
+    type MongoIntegrationConnectorProviderRepositoryConfig,
+} from "../default-implementation/MongoIntegrationConnectorProviderRepository";

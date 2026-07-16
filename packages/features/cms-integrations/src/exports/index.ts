@@ -38,6 +38,11 @@ export type {
     IntegrationConnectorResourceResult,
     IntegrationConnectorSchemaDeployment,
 } from "../interfaces/IntegrationConnectorDeployer";
+export {
+    SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
+    type IntegrationConnectorProvider,
+    type IntegrationConnectorProviderRepository,
+} from "../interfaces/IntegrationConnectorProvider";
 export type {
     IntegrationArtifactAction,
     IntegrationArtifactResult,
@@ -110,3 +115,6 @@ export {
 export {
     InMemoryIntegrationInstallationRepository,
 } from "../default-implementation/InMemoryIntegrationInstallationRepository";
+export {
+    InMemoryIntegrationConnectorProviderRepository,
+} from "../default-implementation/InMemoryIntegrationConnectorProviderRepository";
