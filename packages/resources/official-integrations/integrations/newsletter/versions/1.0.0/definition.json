@@ -202,6 +202,14 @@
                                         "subscribed"
                                     ]
                                 }
+                            },
+                            {
+                                "status": "400",
+                                "body": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } },
+                                    "required": ["error"]
+                                }
                             }
                         ]
                     },
@@ -231,6 +239,12 @@
                                 "in": "query",
                                 "type": "number",
                                 "description": "Maximum number of subscriptions to return."
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number",
+                                "description": "Number of subscriptions to skip."
                             }
                         ],
                         "headers": [
@@ -318,11 +332,13 @@
                                     "prefix": "Bearer "
                                 }
                             }
-                        ]
+                        ],
+                        "output": [{ "status": "200" }, { "status": "206" }]
                     },
                     {
                         "endpointId": "getSubscription",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
                         "meta": {
                             "name": "Get subscription",

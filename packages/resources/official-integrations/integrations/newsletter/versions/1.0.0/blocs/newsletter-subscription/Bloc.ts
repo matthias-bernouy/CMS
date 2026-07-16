@@ -14,9 +14,9 @@ class NewsletterSubscription extends HTMLElement {
 
     render() {
         const title = this.getAttribute("title") || "Newsletter";
-        const copy = this.getAttribute("copy") || "Receive updates by email.";
-        const emailLabel = this.getAttribute("email-label") || "Email";
-        const buttonLabel = this.getAttribute("button-label") || "Subscribe";
+        const copy = this.getAttribute("copy") || "Recevez nos actualités par e-mail.";
+        const emailLabel = this.getAttribute("email-label") || "Adresse e-mail";
+        const buttonLabel = this.getAttribute("button-label") || "S’inscrire";
 
         this.root.innerHTML = `
             <style>
@@ -86,7 +86,7 @@ class NewsletterSubscription extends HTMLElement {
         if (!email) return;
 
         this.button.disabled = true;
-        this.setStatus(this.getAttribute("loading-label") || "Saving...", "idle");
+        this.setStatus(this.getAttribute("loading-label") || "Enregistrement…", "idle");
         try {
             const result = await this.requestSource("setSubscription", {
                 method: "POST",
@@ -104,8 +104,8 @@ class NewsletterSubscription extends HTMLElement {
     }
 
     successLabel(result) {
-        if (result.subscribed === false) return this.getAttribute("unsubscribed-label") || "You are unsubscribed.";
-        return this.getAttribute("subscribed-label") || "You are subscribed.";
+        if (result.subscribed === false) return this.getAttribute("unsubscribed-label") || "Vous êtes désinscrit(e).";
+        return this.getAttribute("subscribed-label") || "Votre inscription est confirmée.";
     }
 
     async requestSource(endpoint, init = {}) {
@@ -120,7 +120,7 @@ class NewsletterSubscription extends HTMLElement {
         });
         const body = await response.json().catch(() => null);
         if (!response.ok) throw new Error(errorMessageFromBody(body, response));
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid source response.");
+        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Réponse invalide du service.");
         return body;
     }
 
@@ -158,7 +158,8 @@ function headersObject(headers) {
 }
 
 function errorMessage(error) {
-    return error instanceof Error ? error.message : "Unable to update subscription.";
+    console.error(error);
+    return "Impossible de mettre à jour votre inscription.";
 }
 
 function errorMessageFromBody(body, response) {

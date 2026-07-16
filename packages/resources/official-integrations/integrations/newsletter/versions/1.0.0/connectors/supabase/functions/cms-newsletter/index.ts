@@ -66,11 +66,13 @@ async function listSubscriptions(request: Request): Promise<Response> {
     const q = optionalSearch(url.searchParams.get("q"));
     const subscribed = optionalBoolean(url.searchParams.get("subscribed"), "subscribed");
     const limit = boundedLimit(url.searchParams.get("limit"));
+    const offset = boundedOffset(url.searchParams.get("offset"));
 
     const query = new URLSearchParams();
     query.set("select", subscriptionSelect);
     query.set("order", "updated_at.desc");
     query.set("limit", String(limit));
+    query.set("offset", String(offset));
     if (q) query.set("email", `ilike.*${q}*`);
     if (subscribed !== null) query.set("subscribed", `eq.${subscribed}`);
 
@@ -358,6 +360,13 @@ function boundedLimit(value: string | null): number {
     const parsed = Number(value);
     if (!Number.isInteger(parsed) || parsed < 1) throw new HttpError(400, "limit must be a positive integer");
     return Math.min(parsed, 200);
+}
+
+function boundedOffset(value: string | null): number {
+    if (!value) return 0;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0) throw new HttpError(400, "offset must be a non-negative integer");
+    return Math.min(parsed, 1000000);
 }
 
 function countFromContentRange(value: string | null): number | null {
