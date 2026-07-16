@@ -35,11 +35,11 @@ class BasicInput extends HTMLElement {
         this.dayFirstDate = false;
         this.root.innerHTML = `
             <style>
-                :host { display: block; font: inherit; color: inherit; }
+                :host { display: block; box-sizing: border-box; min-width: 0; max-width: 100%; font: inherit; color: inherit; }
                 :host([hidden]) { display: none !important; }
-                .field { display: grid; gap: var(--cms-field-gap, .375rem); }
+                .field { display: grid; min-width: 0; gap: var(--cms-field-gap, .375rem); }
                 label { font: inherit; font-weight: var(--cms-label-weight, 650); }
-                input { box-sizing: border-box; width: 100%; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, color-mix(in srgb, currentColor 25%, transparent))); border-radius: var(--cms-input-radius, .5rem); background: var(--cms-input-background, Canvas); color: var(--cms-input-color, inherit); font: inherit; }
+                input { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; min-height: var(--cms-input-height, 2.75rem); padding: var(--cms-input-padding, .65rem .75rem); border: var(--cms-input-border, 1px solid var(--cms-input-border-color, color-mix(in srgb, currentColor 25%, transparent))); border-radius: var(--cms-input-radius, .5rem); background: var(--cms-input-background, Canvas); color: var(--cms-input-color, inherit); font: inherit; }
                 input:focus-visible { outline: 2px solid var(--cms-focus-color, var(--primary-base, currentColor)); outline-offset: 2px; }
                 :host([disabled]) { opacity: .6; }
                 .hint { color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent)); }
