@@ -8,6 +8,7 @@ import type { CmsFunction, FunctionCall } from "../../interfaces/FunctionDefinit
 import type { ExecuteFunctionOptions } from "../executeFunction";
 import {
     FunctionExecutionError,
+    RecoverableFunctionCallError,
     UnexpectedFunctionExecutionError,
     withFunctionExecutionErrorContext,
     type FunctionExecutionErrorContext,
@@ -15,8 +16,6 @@ import {
 import type { FunctionRuntimeVars } from "../expressions";
 import { MAX_FUNCTION_CALL_ERROR_BYTES, MAX_FUNCTION_RESPONSE_BYTES } from "./limits";
 import { resolveCallMappings } from "./identityResolution";
-
-export class RecoverableFunctionCallError extends FunctionExecutionError {}
 
 export async function executeFunctionCall(
     call: FunctionCall,

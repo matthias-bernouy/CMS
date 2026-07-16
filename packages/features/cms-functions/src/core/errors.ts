@@ -16,6 +16,8 @@ export class FunctionExecutionError extends Error {
     }
 }
 
+export class RecoverableFunctionCallError extends FunctionExecutionError {}
+
 export type FunctionExecutionErrorContext = {
     stepId?: string;
     source?: string;

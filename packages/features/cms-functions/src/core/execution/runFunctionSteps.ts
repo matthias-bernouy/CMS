@@ -7,9 +7,9 @@ import type {
 } from "../../interfaces/FunctionDefinition";
 import { evaluateCondition } from "../conditions";
 import type { ExecuteFunctionOptions } from "../executeFunction";
-import { FunctionExecutionError } from "../errors";
+import { FunctionExecutionError, RecoverableFunctionCallError } from "../errors";
 import { resolveFunctionValue, type FunctionRuntimeVars } from "../expressions";
-import { executeFunctionCall, RecoverableFunctionCallError } from "./executeFunctionCall";
+import { executeFunctionCall } from "./executeFunctionCall";
 import { MAX_FUNCTION_CALLS, MAX_FUNCTION_LOOP_ITEMS, MAX_FUNCTION_RESPONSE_BYTES, utf8ByteLength } from "./limits";
 import { json } from "./response";
 
