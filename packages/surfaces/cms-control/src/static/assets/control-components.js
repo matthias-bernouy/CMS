@@ -11592,6 +11592,23 @@ cms-endpoints-input .ep-add:hover {
     return makeSourceUrn(parsed.source);
   }
 
+  // ../../features/cms-sources/src/core/errors.ts
+  class SourceValidationError extends Error {
+    status = 400;
+    constructor(field, message) {
+      super(`Invalid ${field}: ${message}`);
+      this.name = "SourceValidationError";
+    }
+  }
+
+  class DuplicateSourceError extends Error {
+    status = 409;
+    constructor(urn) {
+      super(`Source with urn "${urn}" already exists`);
+      this.name = "DuplicateSourceError";
+    }
+  }
+
   // ../../features/cms-sources/src/core/sourceEndpointValidation.ts
   var RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
   function isValidResponseStatus(status) {
@@ -15374,23 +15391,6 @@ p {
       return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
     }
   }
-  // ../../features/cms-sources/src/core/errors.ts
-  class SourceValidationError extends Error {
-    status = 400;
-    constructor(field, message) {
-      super(`Invalid ${field}: ${message}`);
-      this.name = "SourceValidationError";
-    }
-  }
-
-  class DuplicateSourceError extends Error {
-    status = 409;
-    constructor(urn) {
-      super(`Source with urn "${urn}" already exists`);
-      this.name = "DuplicateSourceError";
-    }
-  }
-
   // ../../features/cms-sources/src/default-implementation/InMemorySourceRepository.ts
   class InMemorySourceRepository {
     _sources = new Map;
@@ -15511,7 +15511,7 @@ p {
   // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
   var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
 
-  // ../../features/cms-sources/src/core/executeEndpoint.ts
+  // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
   var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
   // ../../features/cms-dashboards/src/core/dashboardPaths.ts
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
@@ -16320,7 +16320,7 @@ p {
     Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/lookupCreate.ts
+  // src/components/admin/Resources/Dashboards/runtime/lookups/create.ts
   async function executeLookupCreate(group, dashboard, detail, fieldId, previousDraft, nextDraft, groups = [group]) {
     const widget = findDetailWidget2(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
@@ -16346,10 +16346,7 @@ p {
     const id = String(createdId2);
     return {
       value: replaceCreatedValue(nextValue, createdValue, id),
-      option: {
-        value: id,
-        label: textValue2(valueAt(created, create.labelPath)) || createdValue
-      }
+      option: { value: id, label: textValue2(valueAt(created, create.labelPath)) || createdValue }
     };
   }
   function textValue2(value) {
@@ -17777,6 +17774,172 @@ button {
     return value === null || value === undefined ? "" : String(value);
   }
 
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/controls.ts
+  function createItemControl(item, index, field) {
+    const input = fieldControl(field, textAt2(item, field.path));
+    if (input instanceof HTMLInputElement && field.type === "checkbox") {
+      input.checked = booleanAt(item, field.path);
+    }
+    input.dataset.itemIndex = String(index);
+    input.dataset.itemPath = field.path;
+    input.setAttribute("aria-label", field.label);
+    if (field.required)
+      input.setAttribute("required", "");
+    if (field.placeholder)
+      input.setAttribute("placeholder", field.placeholder);
+    return input;
+  }
+  function readItemControl(control) {
+    if (control instanceof HTMLInputElement && control.type === "checkbox")
+      return control.checked;
+    return "value" in control ? String(control.value ?? "") : "";
+  }
+  function fieldControl(field, value) {
+    if (field.type === "select" || field.type === "combobox") {
+      const control = document.createElement(field.type === "select" ? "p9r-select" : "p9r-combobox");
+      control.setAttribute("aria-label", field.label);
+      control.setAttribute("value", value);
+      control.replaceChildren(...(field.options ?? []).map((option) => {
+        const element = document.createElement("option");
+        element.value = option.value;
+        element.textContent = option.label;
+        element.selected = option.value === value;
+        return element;
+      }));
+      control.value = value;
+      return control;
+    }
+    const input = document.createElement("input");
+    input.type = field.type ?? "text";
+    input.value = value;
+    return input;
+  }
+  function textAt2(value, path) {
+    const resolved = valueAt(value, path);
+    return resolved === null || resolved === undefined ? "" : String(resolved);
+  }
+  function booleanAt(value, path) {
+    const resolved = valueAt(value, path);
+    return resolved === true || resolved === "true" || resolved === 1;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/state.ts
+  function emptyData() {
+    return { items: [], itemKey: "id", fields: [] };
+  }
+  function normalizeData(value) {
+    const clone = structuredClone(value);
+    return {
+      ...clone,
+      items: Array.isArray(clone.items) ? clone.items.filter(isRecord4) : [],
+      fields: Array.isArray(clone.fields) ? clone.fields : []
+    };
+  }
+  function cloneData(value) {
+    return structuredClone(value);
+  }
+  function cloneItems(value) {
+    return structuredClone(value.items);
+  }
+  function addItem(value) {
+    if (value.maxItems !== undefined && value.items.length >= value.maxItems)
+      return false;
+    value.items.push({});
+    return true;
+  }
+  function removeItem(value, index) {
+    if (!Number.isInteger(index))
+      return false;
+    if (value.minItems !== undefined && value.items.length <= value.minItems)
+      return false;
+    value.items.splice(index, 1);
+    return true;
+  }
+  function moveItem(value, from, to) {
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || to < 0 || to >= value.items.length) {
+      return false;
+    }
+    const [item] = value.items.splice(from, 1);
+    if (!item)
+      return false;
+    value.items.splice(to, 0, item);
+    return true;
+  }
+  function updateItem(value, index, path, fieldValue) {
+    const item = value.items[index];
+    if (!item)
+      return false;
+    setValueAt(item, path, fieldValue);
+    return true;
+  }
+  function persistPositions(value) {
+    const positionPath = value.positionPath ?? "position";
+    value.items.forEach((item, index) => setValueAt(item, positionPath, index));
+  }
+  function isRecord4(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
+  function renderList2(root, value) {
+    query(root, "[data-rows]").replaceChildren(...value.items.map((item, index) => renderRow(value, item, index)));
+    renderHeader(root, value);
+    const add = query(root, "[data-add]");
+    add.textContent = value.addLabel ?? "Add item";
+    add.disabled = value.maxItems !== undefined && value.items.length >= value.maxItems;
+  }
+  function renderedRows(root) {
+    return Array.from(root.querySelectorAll(".row"));
+  }
+  function renderHeader(root, value) {
+    const header = query(root, "[data-header]");
+    header.style.setProperty("--reorderable-columns", columns(value));
+    const cells = [document.createElement("span")];
+    for (const field of value.fields) {
+      const cell = document.createElement("span");
+      cell.textContent = field.label;
+      cells.push(cell);
+    }
+    cells.push(document.createElement("span"));
+    header.replaceChildren(...cells);
+  }
+  function renderRow(value, item, index) {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.dataset.index = String(index);
+    row.dataset.itemKey = String(valueAt(item, value.itemKey) ?? index);
+    row.style.setProperty("--reorderable-columns", columns(value));
+    const handle = document.createElement("span");
+    handle.className = "handle";
+    handle.title = "Drag to reorder";
+    handle.setAttribute("aria-label", "Drag to reorder");
+    handle.draggable = true;
+    handle.textContent = "⠿";
+    row.append(handle);
+    for (const field of value.fields) {
+      const fieldRoot = document.createElement("div");
+      fieldRoot.className = "field";
+      fieldRoot.append(createItemControl(item, index, field));
+      row.append(fieldRoot);
+    }
+    const remove = document.createElement("button");
+    remove.className = "remove";
+    remove.type = "button";
+    remove.dataset.remove = String(index);
+    remove.disabled = value.minItems !== undefined && value.items.length <= value.minItems;
+    remove.setAttribute("aria-label", "Remove item");
+    remove.title = "Remove item";
+    remove.textContent = "×";
+    row.append(remove);
+    return row;
+  }
+  function columns(value) {
+    return ["24px", ...value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
+  }
+  function query(root, selector) {
+    return root.querySelector(selector);
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/style.css
   var style_default9 = `:host { display: block; }
 
@@ -17856,7 +18019,7 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList.ts
   class DashboardWReorderableList extends U2 {
-    value = { items: [], itemKey: "id", fields: [] };
+    value = emptyData();
     draggingIndex = null;
     constructor() {
       super({ css: style_default9, template: template_default10 });
@@ -17889,69 +18052,10 @@ button {
         this.render();
     }
     get items() {
-      return structuredClone(this.value.items);
+      return cloneItems(this.value);
     }
     render() {
-      const rows = this.query("[data-rows]");
-      rows.replaceChildren(...this.value.items.map((item, index) => this.renderRow(item, index)));
-      this.renderHeader();
-      const add = this.query("[data-add]");
-      add.textContent = this.value.addLabel ?? "Add item";
-      add.disabled = this.value.maxItems !== undefined && this.value.items.length >= this.value.maxItems;
-    }
-    renderHeader() {
-      const header = this.query("[data-header]");
-      header.style.setProperty("--reorderable-columns", ["24px", ...this.value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "));
-      const cells = [document.createElement("span")];
-      for (const field of this.value.fields) {
-        const cell = document.createElement("span");
-        cell.textContent = field.label;
-        cells.push(cell);
-      }
-      cells.push(document.createElement("span"));
-      header.replaceChildren(...cells);
-    }
-    renderRow(item, index) {
-      const row = document.createElement("div");
-      row.className = "row";
-      row.dataset.index = String(index);
-      row.dataset.itemKey = String(valueAt(item, this.value.itemKey) ?? index);
-      row.style.setProperty("--reorderable-columns", ["24px", ...this.value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "));
-      const handle = document.createElement("span");
-      handle.className = "handle";
-      handle.title = "Drag to reorder";
-      handle.setAttribute("aria-label", "Drag to reorder");
-      handle.draggable = true;
-      handle.textContent = "⠿";
-      row.append(handle);
-      for (const field of this.value.fields)
-        row.append(this.renderField(item, index, field));
-      const remove = document.createElement("button");
-      remove.className = "remove";
-      remove.type = "button";
-      remove.dataset.remove = String(index);
-      remove.disabled = this.value.minItems !== undefined && this.value.items.length <= this.value.minItems;
-      remove.setAttribute("aria-label", "Remove item");
-      remove.title = "Remove item";
-      remove.textContent = "×";
-      row.append(remove);
-      return row;
-    }
-    renderField(item, index, field) {
-      const root = document.createElement("div");
-      root.className = "field";
-      const input = fieldControl(field, textAt2(item, field.path));
-      if (input instanceof HTMLInputElement && field.type === "checkbox")
-        input.checked = booleanAt(item, field.path);
-      input.dataset.itemIndex = String(index);
-      input.dataset.itemPath = field.path;
-      input.setAttribute("aria-label", field.label);
-      if (field.required)
-        input.setAttribute("required", "");
-      if (field.placeholder)
-        input.setAttribute("placeholder", field.placeholder);
-      root.append(input);
-      return root;
+      renderList2(this.shadowRoot, this.value);
     }
     onClick = (event) => {
       const target = event.target;
@@ -17966,11 +18070,9 @@ button {
       if (!input)
         return;
       const index = Number(input.dataset.itemIndex);
-      const item = this.value.items[index];
-      if (!item)
-        return;
-      setValueAt(item, input.dataset.itemPath ?? "", controlValue(input));
-      this.commit(false);
+      if (updateItem(this.value, index, input.dataset.itemPath ?? "", readItemControl(input))) {
+        this.commit(false);
+      }
     };
     onDragStart = (event) => {
       const handle = event.target?.closest(".handle");
@@ -17997,35 +18099,21 @@ button {
       if (!row || this.draggingIndex === null)
         return;
       event.preventDefault();
-      const targetIndex = Number(row.dataset.index);
-      this.moveItem(this.draggingIndex, targetIndex);
+      if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index)))
+        this.commit();
       this.clearDragState();
     };
     onDragEnd = () => this.clearDragState();
     addItem() {
-      if (this.value.maxItems !== undefined && this.value.items.length >= this.value.maxItems)
-        return;
-      this.value.items.push({});
-      this.commit();
+      if (addItem(this.value))
+        this.commit();
     }
     removeItem(index) {
-      if (!Number.isInteger(index) || this.value.minItems !== undefined && this.value.items.length <= this.value.minItems)
-        return;
-      this.value.items.splice(index, 1);
-      this.commit();
-    }
-    moveItem(from, to) {
-      if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || to < 0 || to >= this.value.items.length)
-        return;
-      const [item] = this.value.items.splice(from, 1);
-      if (!item)
-        return;
-      this.value.items.splice(to, 0, item);
-      this.commit();
+      if (removeItem(this.value, index))
+        this.commit();
     }
     commit(render = true) {
-      const positionPath = this.value.positionPath ?? "position";
-      this.value.items.forEach((item, index) => setValueAt(item, positionPath, index));
+      persistPositions(this.value);
       if (render)
         this.render();
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
@@ -18038,61 +18126,11 @@ button {
       });
     }
     rows() {
-      return Array.from(this.shadowRoot.querySelectorAll(".row"));
-    }
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
+      return renderedRows(this.shadowRoot);
     }
   }
   if (!customElements.get("cms-dashboard-w-reorderable-list")) {
     customElements.define("cms-dashboard-w-reorderable-list", DashboardWReorderableList);
-  }
-  function normalizeData(value) {
-    const clone = structuredClone(value);
-    return {
-      ...clone,
-      items: Array.isArray(clone.items) ? clone.items.filter(isRecord4) : [],
-      fields: Array.isArray(clone.fields) ? clone.fields : []
-    };
-  }
-  function cloneData(value) {
-    return structuredClone(value);
-  }
-  function isRecord4(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
-  }
-  function textAt2(value, path) {
-    const resolved = valueAt(value, path);
-    return resolved === null || resolved === undefined ? "" : String(resolved);
-  }
-  function booleanAt(value, path) {
-    const resolved = valueAt(value, path);
-    return resolved === true || resolved === "true" || resolved === 1;
-  }
-  function fieldControl(field, value) {
-    if (field.type === "select" || field.type === "combobox") {
-      const control = document.createElement(field.type === "select" ? "p9r-select" : "p9r-combobox");
-      control.setAttribute("aria-label", field.label);
-      control.setAttribute("value", value);
-      control.replaceChildren(...(field.options ?? []).map((option) => {
-        const element = document.createElement("option");
-        element.value = option.value;
-        element.textContent = option.label;
-        element.selected = option.value === value;
-        return element;
-      }));
-      control.value = value;
-      return control;
-    }
-    const input = document.createElement("input");
-    input.type = field.type ?? "text";
-    input.value = value;
-    return input;
-  }
-  function controlValue(control) {
-    if (control instanceof HTMLInputElement && control.type === "checkbox")
-      return control.checked;
-    return "value" in control ? String(control.value ?? "") : "";
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
@@ -18149,11 +18187,11 @@ button {
     root.className = "detail-table";
     bindFieldControl(root, field);
     root.dataset.tableEditable = String(field.editable === true);
-    const columns = field.columns ?? [];
-    root.style.setProperty("--detail-table-columns", tableColumns2(columns, field.editable === true));
+    const columns2 = field.columns ?? [];
+    root.style.setProperty("--detail-table-columns", tableColumns2(columns2, field.editable === true));
     const header = document.createElement("div");
     header.className = "detail-table-row detail-table-head";
-    for (const column of columns) {
+    for (const column of columns2) {
       const cell = document.createElement("span");
       cell.textContent = column.label;
       header.append(cell);
@@ -18250,9 +18288,9 @@ button {
       return value.map((item) => String(item)).join(", ");
     return value === null || value === undefined ? "" : String(value);
   }
-  function tableColumns2(columns, editable) {
+  function tableColumns2(columns2, editable) {
     return [
-      ...(columns ?? []).map((column) => column.width ?? "minmax(8rem, 1fr)"),
+      ...(columns2 ?? []).map((column) => column.width ?? "minmax(8rem, 1fr)"),
       ...editable ? ["72px"] : []
     ].join(" ");
   }
@@ -18413,13 +18451,7 @@ button {
       return [...data.main, ...data.aside].flatMap((section) => section.fields);
     }
     currentResource() {
-      const widget = parseJson2(this.dataset.configJson ?? "");
-      if (!widget || widget.widget !== "w-detail")
-        return;
-      const sourceData = parseJson2(this.dataset.sourceJson ?? "");
-      if (sourceData === null)
-        return;
-      return widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+      return readDetailBinding(this.dataset)?.resource;
     }
     currentFields() {
       const fields = { ...this.values };
@@ -18434,6 +18466,22 @@ button {
     control(fieldId) {
       return Array.from(this.root.querySelectorAll("[data-field-control]")).find((control) => control.dataset.fieldControl === fieldId) ?? null;
     }
+  }
+  function readDetailBinding(dataset) {
+    const widget = parseJson2(dataset.configJson ?? "");
+    const sourceJson = dataset.sourceJson ?? "";
+    const sourceData = parseJson2(sourceJson);
+    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null)
+      return null;
+    const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+    if (resource === undefined)
+      return null;
+    return {
+      widget,
+      resource,
+      rowKey: dataset.rowKey ?? "",
+      sourceId: dataset.sourceId ?? ""
+    };
   }
   function parseJson2(value) {
     if (!value)
@@ -18732,140 +18780,6 @@ button {
       return true;
     });
   }
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/lookups.ts
-  class DetailLookups {
-    dataset;
-    fields;
-    requests;
-    callbacks;
-    currentOptions = {};
-    scopeKey = "";
-    scopeGeneration = 0;
-    reloadTimer = null;
-    pendingTargetKeys = new Set;
-    consumers = new Map;
-    targetGenerations = new Map;
-    constructor(dataset, fields, requests, callbacks) {
-      this.dataset = dataset;
-      this.fields = fields;
-      this.requests = requests;
-      this.callbacks = callbacks;
-    }
-    get options() {
-      return this.currentOptions;
-    }
-    syncScope(scopeKey) {
-      if (this.scopeKey === scopeKey)
-        return;
-      this.clear();
-      this.scopeKey = scopeKey;
-    }
-    async load(widget, resource, rowKey, sourceId, fields, loadOptions = {}) {
-      if (!loadOptions.targetKeys)
-        this.clearPendingRefresh();
-      const targetKeys = loadOptions.targetKeys ?? allLookupTargetKeys(widget);
-      const scopeGeneration = this.scopeGeneration;
-      const results = await Promise.all([...targetKeys].map((key) => this.loadTarget(widget, resource, sourceId, fields, key)));
-      if (this.scopeGeneration !== scopeGeneration)
-        return;
-      const next = { ...this.currentOptions };
-      let accepted = false;
-      for (const result of results) {
-        if (this.targetGenerations.get(result.key) !== result.generation)
-          continue;
-        if (result.failed && Object.hasOwn(this.currentOptions, result.key))
-          continue;
-        next[result.key] = result.options;
-        accepted = true;
-      }
-      if (!accepted)
-        return;
-      const renderFields = loadOptions.useLatestFields ? this.fields.currentFields() : fields;
-      this.currentOptions = next;
-      this.callbacks.setData(detailData(widget, resource, rowKey, renderFields, next, sourceId, this.callbacks.schemas()));
-      if (this.callbacks.isConnected())
-        this.callbacks.render();
-    }
-    schedule(changedFieldId) {
-      const widget = parseJson2(this.dataset.configJson ?? "");
-      if (!widget || widget.widget !== "w-detail")
-        return;
-      const targetKeys = lookupTargetKeysDependingOn(widget, changedFieldId);
-      if (targetKeys.size === 0)
-        return;
-      for (const key of targetKeys) {
-        this.pendingTargetKeys.add(key);
-        this.invalidateTarget(key);
-      }
-      this.cancelReloadTimer();
-      this.reloadTimer = setTimeout(() => {
-        this.reloadTimer = null;
-        const targetedKeys = new Set(this.pendingTargetKeys);
-        this.pendingTargetKeys.clear();
-        const resource = this.fields.currentResource();
-        const sourceId = this.dataset.sourceId ?? "";
-        if (!sourceId || resource === undefined)
-          return;
-        this.load(widget, resource, this.dataset.rowKey ?? "", sourceId, this.fields.currentFields(), {
-          targetKeys: targetedKeys,
-          useLatestFields: true
-        });
-      }, 250);
-    }
-    clear() {
-      this.scopeGeneration += 1;
-      for (const consumer of this.consumers.values())
-        this.requests.cancel(consumer);
-      this.consumers.clear();
-      this.targetGenerations.clear();
-      this.clearPendingRefresh();
-      this.currentOptions = {};
-    }
-    async loadTarget(widget, resource, sourceId, fields, key) {
-      const consumer = this.consumer(key);
-      const generation = this.invalidateTarget(key);
-      try {
-        const result = await loadDetailLookupOptions(sourceId, widget, resource, fields, {
-          targetKeys: new Set([key]),
-          loadData: (targetSourceId, ref, vars) => this.requests.load(consumer, targetSourceId, ref, vars)
-        });
-        return {
-          failed: result.failedTargetKeys.has(key),
-          key,
-          generation,
-          options: result.options[key] ?? []
-        };
-      } catch {
-        return { failed: true, key, generation, options: [] };
-      }
-    }
-    consumer(key) {
-      const existing = this.consumers.get(key);
-      if (existing)
-        return existing;
-      const consumer = this.requests.createConsumer();
-      this.consumers.set(key, consumer);
-      return consumer;
-    }
-    invalidateTarget(key) {
-      const generation = (this.targetGenerations.get(key) ?? 0) + 1;
-      this.targetGenerations.set(key, generation);
-      const consumer = this.consumers.get(key);
-      if (consumer)
-        this.requests.cancel(consumer);
-      return generation;
-    }
-    clearPendingRefresh() {
-      this.pendingTargetKeys.clear();
-      this.cancelReloadTimer();
-    }
-    cancelReloadTimer() {
-      if (this.reloadTimer)
-        clearTimeout(this.reloadTimer);
-      this.reloadTimer = null;
-    }
-  }
-
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/requests.ts
   var MAX_IN_FLIGHT_REQUESTS = 64;
 
@@ -18940,6 +18854,157 @@ button {
         if (keys?.size === 0)
           this.consumerKeys.delete(consumer);
       }
+    }
+  }
+
+  class DetailRequestTargets {
+    requests;
+    consumers = new Map;
+    generations = new Map;
+    constructor(requests) {
+      this.requests = requests;
+    }
+    consumer(key) {
+      const existing = this.consumers.get(key);
+      if (existing)
+        return existing;
+      const consumer = this.requests.createConsumer();
+      this.consumers.set(key, consumer);
+      return consumer;
+    }
+    invalidate(key) {
+      const generation = (this.generations.get(key) ?? 0) + 1;
+      this.generations.set(key, generation);
+      const consumer = this.consumers.get(key);
+      if (consumer)
+        this.requests.cancel(consumer);
+      return generation;
+    }
+    isCurrent(key, generation) {
+      return this.generations.get(key) === generation;
+    }
+    clear() {
+      for (const consumer of this.consumers.values())
+        this.requests.cancel(consumer);
+      this.consumers.clear();
+      this.generations.clear();
+    }
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/lookups.ts
+  class DetailLookups {
+    dataset;
+    fields;
+    requests;
+    callbacks;
+    currentOptions = {};
+    scopeKey = "";
+    scopeGeneration = 0;
+    reloadTimer = null;
+    pendingTargetKeys = new Set;
+    targets;
+    constructor(dataset, fields, requests, callbacks) {
+      this.dataset = dataset;
+      this.fields = fields;
+      this.requests = requests;
+      this.callbacks = callbacks;
+      this.targets = new DetailRequestTargets(requests);
+    }
+    get options() {
+      return this.currentOptions;
+    }
+    syncScope(scopeKey) {
+      if (this.scopeKey === scopeKey)
+        return;
+      this.clear();
+      this.scopeKey = scopeKey;
+    }
+    async load(widget, resource, rowKey, sourceId, fields, loadOptions = {}) {
+      if (!loadOptions.targetKeys)
+        this.clearPendingRefresh();
+      const targetKeys = loadOptions.targetKeys ?? allLookupTargetKeys(widget);
+      const scopeGeneration = this.scopeGeneration;
+      const results = await Promise.all([...targetKeys].map((key) => this.loadTarget(widget, resource, sourceId, fields, key)));
+      if (this.scopeGeneration !== scopeGeneration)
+        return;
+      const next = { ...this.currentOptions };
+      let accepted = false;
+      for (const result of results) {
+        if (!this.targets.isCurrent(result.key, result.generation))
+          continue;
+        if (result.failed && Object.hasOwn(this.currentOptions, result.key))
+          continue;
+        next[result.key] = result.options;
+        accepted = true;
+      }
+      if (!accepted)
+        return;
+      const renderFields = loadOptions.useLatestFields ? this.fields.currentFields() : fields;
+      this.currentOptions = next;
+      this.callbacks.setData(detailData(widget, resource, rowKey, renderFields, next, sourceId, this.callbacks.schemas()));
+      if (this.callbacks.isConnected())
+        this.callbacks.render();
+    }
+    schedule(changedFieldId) {
+      const binding = readDetailBinding(this.dataset);
+      if (!binding)
+        return;
+      const targetKeys = lookupTargetKeysDependingOn(binding.widget, changedFieldId);
+      if (targetKeys.size === 0)
+        return;
+      for (const key of targetKeys) {
+        this.pendingTargetKeys.add(key);
+        this.invalidateTarget(key);
+      }
+      this.cancelReloadTimer();
+      this.reloadTimer = setTimeout(() => {
+        this.reloadTimer = null;
+        const targetedKeys = new Set(this.pendingTargetKeys);
+        this.pendingTargetKeys.clear();
+        const latest = readDetailBinding(this.dataset);
+        if (!latest?.sourceId)
+          return;
+        this.load(latest.widget, latest.resource, latest.rowKey, latest.sourceId, this.fields.currentFields(), {
+          targetKeys: targetedKeys,
+          useLatestFields: true
+        });
+      }, 250);
+    }
+    clear() {
+      this.scopeGeneration += 1;
+      this.targets.clear();
+      this.clearPendingRefresh();
+      this.currentOptions = {};
+    }
+    async loadTarget(widget, resource, sourceId, fields, key) {
+      const consumer = this.targets.consumer(key);
+      const generation = this.targets.invalidate(key);
+      try {
+        const result = await loadDetailLookupOptions(sourceId, widget, resource, fields, {
+          targetKeys: new Set([key]),
+          loadData: (targetSourceId, ref, vars) => this.requests.load(consumer, targetSourceId, ref, vars)
+        });
+        return {
+          failed: result.failedTargetKeys.has(key),
+          key,
+          generation,
+          options: result.options[key] ?? []
+        };
+      } catch {
+        return { failed: true, key, generation, options: [] };
+      }
+    }
+    invalidateTarget(key) {
+      return this.targets.invalidate(key);
+    }
+    clearPendingRefresh() {
+      this.pendingTargetKeys.clear();
+      this.cancelReloadTimer();
+    }
+    cancelReloadTimer() {
+      if (this.reloadTimer)
+        clearTimeout(this.reloadTimer);
+      this.reloadTimer = null;
     }
   }
 
@@ -19031,13 +19096,13 @@ button {
     scopeKey = "";
     reloadTimer = null;
     pendingKeys = new Set;
-    consumers = new Map;
-    generations = new Map;
+    targets;
     constructor(dataset, fields, requests, callbacks) {
       this.dataset = dataset;
       this.fields = fields;
       this.requests = requests;
       this.callbacks = callbacks;
+      this.targets = new DetailRequestTargets(requests);
     }
     get values() {
       return this.current;
@@ -19056,7 +19121,7 @@ button {
         return;
       const next = { ...this.current };
       for (const result of results) {
-        if (this.generations.get(result.key) !== result.generation)
+        if (!this.targets.isCurrent(result.key, result.generation))
           continue;
         next[result.key] = result.failed ? { definitions: this.current[result.key]?.definitions ?? [], status: "error" } : { definitions: result.definitions, status: "ready" };
       }
@@ -19069,15 +19134,14 @@ button {
         this.callbacks.render();
     }
     schedule(changedFieldId) {
-      const widget = parseJson2(this.dataset.configJson ?? "");
-      if (!widget || widget.widget !== "w-detail")
+      const binding = readDetailBinding(this.dataset);
+      if (!binding)
         return;
+      const { widget, resource, rowKey, sourceId } = binding;
       const keys = schemaKeysDependingOn(widget, changedFieldId);
       if (keys.size === 0)
         return;
-      const resource = this.fields.currentResource();
-      const sourceId = this.dataset.sourceId ?? "";
-      if (!sourceId || resource === undefined)
+      if (!sourceId)
         return;
       for (const key of keys) {
         this.pendingKeys.add(key);
@@ -19088,7 +19152,7 @@ button {
         key,
         keys.has(key) ? { ...schema, status: "loading" } : schema
       ]));
-      this.callbacks.setData(detailData(widget, resource, this.dataset.rowKey ?? "", fields, this.callbacks.options(), sourceId, this.current));
+      this.callbacks.setData(detailData(widget, resource, rowKey, fields, this.callbacks.options(), sourceId, this.current));
       this.cancelTimer();
       this.reloadTimer = setTimeout(() => {
         this.reloadTimer = null;
@@ -19096,7 +19160,10 @@ button {
         this.pendingKeys.clear();
         if (this.callbacks.isConnected())
           this.callbacks.render();
-        this.load(widget, resource, this.dataset.rowKey ?? "", sourceId, this.fields.currentFields(), {
+        const latest = readDetailBinding(this.dataset);
+        if (!latest?.sourceId)
+          return;
+        this.load(latest.widget, latest.resource, latest.rowKey, latest.sourceId, this.fields.currentFields(), {
           keys: pending,
           useLatestFields: true
         });
@@ -19104,17 +19171,14 @@ button {
     }
     clear() {
       this.scopeGeneration += 1;
-      for (const consumer of this.consumers.values())
-        this.requests.cancel(consumer);
-      this.consumers.clear();
-      this.generations.clear();
+      this.targets.clear();
       this.pendingKeys.clear();
       this.cancelTimer();
       this.current = {};
     }
     async loadField(field, resource, sourceId, fields) {
-      const consumer = this.consumer(field.id);
-      const generation = this.invalidate(field.id);
+      const consumer = this.targets.consumer(field.id);
+      const generation = this.targets.invalidate(field.id);
       try {
         const data = await this.requests.load(consumer, sourceId, field.schema, { resource, fields });
         return { definitions: definitionsAt(data, field.schema.itemsPath), failed: false, generation, key: field.id };
@@ -19122,21 +19186,8 @@ button {
         return { definitions: [], failed: true, generation, key: field.id };
       }
     }
-    consumer(key) {
-      const existing = this.consumers.get(key);
-      if (existing)
-        return existing;
-      const consumer = this.requests.createConsumer();
-      this.consumers.set(key, consumer);
-      return consumer;
-    }
     invalidate(key) {
-      const generation = (this.generations.get(key) ?? 0) + 1;
-      this.generations.set(key, generation);
-      const consumer = this.consumers.get(key);
-      if (consumer)
-        this.requests.cancel(consumer);
-      return generation;
+      return this.targets.invalidate(key);
     }
     cancelTimer() {
       if (this.reloadTimer)
@@ -19559,31 +19610,21 @@ p9r-token-input {
     refreshConditionalFields() {
       if (this.mode !== "bound")
         return;
-      const widget = parseJson2(this.dataset.configJson ?? "");
-      const resource = this.fields.currentResource();
-      if (!widget || resource === undefined)
+      const binding = readDetailBinding(this.dataset);
+      if (!binding)
         return;
       const previous = this.value;
-      const next = this.mapData(widget, resource, this.value.rowKey, this.fields.currentFields());
+      const next = this.mapData(binding.widget, binding.resource, this.value.rowKey, this.fields.currentFields());
       this.value = next;
       this.view.refresh(previous, next);
     }
     syncBoundData() {
-      const configJson = this.dataset.configJson ?? "";
-      const widget = parseJson2(configJson);
-      const sourceJson = this.dataset.sourceJson ?? "";
-      const sourceData = parseJson2(sourceJson);
-      if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
+      const binding = readDetailBinding(this.dataset);
+      if (!binding) {
         this.resetState();
         return;
       }
-      const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
-      if (resource === undefined) {
-        this.resetState();
-        return;
-      }
-      const rowKey = this.dataset.rowKey ?? "";
-      const sourceId = this.dataset.sourceId ?? "";
+      const { widget, resource, rowKey, sourceId } = binding;
       const scopeKey = JSON.stringify([sourceId, widget.id, rowKey, this.bindingRevision]);
       this.requests.syncScope(scopeKey);
       this.fields.syncScope(scopeKey);
@@ -20314,32 +20355,32 @@ slot { display: contents; }
 
   // src/components/admin/Resources/Dashboards/rendering.ts
   function renderDashboardShell(root, group, dashboard, detail, tabState, drafts) {
-    query(root, "[data-empty]").hidden = Boolean(group);
-    query(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
-    query(root, "[data-dashboard-head]").hidden = !dashboard;
-    query(root, "[data-detail-toolbar]").hidden = true;
-    query(root, "[data-widgets]").hidden = !dashboard;
+    query2(root, "[data-empty]").hidden = Boolean(group);
+    query2(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
+    query2(root, "[data-dashboard-head]").hidden = !dashboard;
+    query2(root, "[data-detail-toolbar]").hidden = true;
+    query2(root, "[data-widgets]").hidden = !dashboard;
     if (!group || !dashboard)
       return;
-    query(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
-    renderIcon(query(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+    query2(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
+    renderIcon(query2(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map;
     if (detail)
       selectedRows.set(detail.collection, detail.row);
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
+    mountDashboardWidgets(query2(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
-    query(root, "[data-empty]").hidden = true;
-    query(root, "[data-source-empty]").hidden = true;
-    query(root, "[data-detail-toolbar]").hidden = true;
-    query(root, "[data-dashboard-head]").hidden = false;
-    query(root, "[data-widgets]").hidden = false;
-    query(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
-    renderIcon(query(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    mountDashboardWidgetExample(query(root, "[data-widgets]"), selectedRow);
+    query2(root, "[data-empty]").hidden = true;
+    query2(root, "[data-source-empty]").hidden = true;
+    query2(root, "[data-detail-toolbar]").hidden = true;
+    query2(root, "[data-dashboard-head]").hidden = false;
+    query2(root, "[data-widgets]").hidden = false;
+    query2(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
+    renderIcon(query2(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
+    mountDashboardWidgetExample(query2(root, "[data-widgets]"), selectedRow);
   }
-  function query(root, selector) {
+  function query2(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -25884,11 +25925,11 @@ button:hover {
       return {};
     if (binding.params)
       return binding.params;
-    const query2 = bindingQuery(source.url, binding.url);
-    if (!query2)
+    const query3 = bindingQuery(source.url, binding.url);
+    if (!query3)
       return {};
     const params = {};
-    for (const [name, value2] of new URLSearchParams(query2).entries()) {
+    for (const [name, value2] of new URLSearchParams(query3).entries()) {
       params[name] = paramValue(value2);
     }
     return params;
@@ -25959,8 +26000,8 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query2) {
-    const normalized = query2.trim().toLowerCase();
+  function filteredSources(sources, query3) {
+    const normalized = query3.trim().toLowerCase();
     if (!normalized)
       return sources;
     return sources.filter((source) => [
@@ -26076,11 +26117,11 @@ button:hover {
       children: field2.children ? cloneBodyFields(field2.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query2) {
-    return providerGroups(filteredSources(sources, query2))[0]?.key ?? "";
+  function firstProviderKey(sources, query3) {
+    return providerGroups(filteredSources(sources, query3))[0]?.key ?? "";
   }
-  function visibleSources(sources, query2, activeProvider) {
-    return filteredSources(sources, query2).filter((source) => (source.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query3, activeProvider) {
+    return filteredSources(sources, query3).filter((source) => (source.provider ?? "default") === activeProvider);
   }
   function initialAlias(binding) {
     return binding?.alias ?? "data";
@@ -28130,8 +28171,8 @@ dd {
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option5, query2) {
-    if (!query2)
+  function blockPickerOptionMatches(option5, query3) {
+    if (!query3)
       return true;
     const item = blockPickerOptionItem(option5);
     return [
@@ -28141,7 +28182,7 @@ dd {
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
       option5.slotLabel
-    ].some((value2) => value2?.toLowerCase().includes(query2));
+    ].some((value2) => value2?.toLowerCase().includes(query3));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
@@ -28199,9 +28240,9 @@ dd {
       this._renderEntries();
     };
     _renderEntries() {
-      const query2 = this.search.value.trim().toLowerCase();
+      const query3 = this.search.value.trim().toLowerCase();
       const group = this._activeGroup();
-      const options2 = group?.options.filter((option5) => this._isVisibleOption(option5, query2)) ?? [];
+      const options2 = group?.options.filter((option5) => this._isVisibleOption(option5, query3)) ?? [];
       this.results.replaceChildren();
       if (group?.disabledReason) {
         const empty4 = document.createElement("div");
@@ -28387,13 +28428,13 @@ dd {
       }));
       this.close();
     }
-    _isVisibleOption(option5, query2) {
+    _isVisibleOption(option5, query3) {
       const item = blockPickerOptionItem(option5);
       if (item.kind !== this._activeSource)
         return false;
       if (this._activeCategory && blockPickerCategoryLabel(option5) !== this._activeCategory)
         return false;
-      return blockPickerOptionMatches(option5, query2);
+      return blockPickerOptionMatches(option5, query3);
     }
     _sourceCount(source) {
       return this._activeGroup()?.options.filter((option5) => blockPickerOptionItem(option5).kind === source).length ?? 0;
@@ -30718,8 +30759,8 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query2) {
-    const normalized = query2.trim().toLowerCase();
+  function matchingDynamicDataOptions(options2, query3) {
+    const normalized = query3.trim().toLowerCase();
     return normalized ? options2.filter((option5) => `${option5.label} ${option5.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
@@ -32898,13 +32939,13 @@ input {
     }
     _renderItems() {
       this.grid.replaceChildren();
-      const query2 = this.searchInput.value.trim().toLowerCase();
+      const query3 = this.searchInput.value.trim().toLowerCase();
       const items = this._items.filter((item) => {
         if (item.type === "file" && !matchesFileAccept(item, this._fileAccept))
           return false;
-        if (!query2)
+        if (!query3)
           return true;
-        return item.name.toLowerCase().includes(query2);
+        return item.name.toLowerCase().includes(query3);
       });
       this.empty.hidden = items.length > 0;
       for (const item of items) {
@@ -33271,11 +33312,11 @@ input {
     _renderPages() {
       this.pageList.replaceChildren();
       this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
-      const query2 = this.searchInput.value.trim().toLowerCase();
+      const query3 = this.searchInput.value.trim().toLowerCase();
       const pages = this._pages.filter((page) => {
-        if (!query2)
+        if (!query3)
           return true;
-        return page.title.toLowerCase().includes(query2) || page.path.toLowerCase().includes(query2);
+        return page.title.toLowerCase().includes(query3) || page.path.toLowerCase().includes(query3);
       });
       this.empty.hidden = !this._pickerOpen || pages.length > 0;
       for (const page of pages) {
@@ -33459,6 +33500,618 @@ input {
   }
   if (!customElements.get("cms-editor-v2-page-link")) {
     customElements.define("cms-editor-v2-page-link", PageLink);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/endpointBinding.ts
+  function endpointOptions(setting, dataSources) {
+    const methods = new Set(setting.methods ?? []);
+    return dataSources.filter((source) => methods.size === 0 || methods.has(endpointMethod3(source)));
+  }
+  function selectedEndpoint(setting, dataSources) {
+    if (!setting.defaultValue)
+      return null;
+    const binding = initialEndpointBinding(setting);
+    return endpointOptions(setting, dataSources).find((source) => {
+      if (usesSourceBinding(setting) && binding) {
+        return binding.url === source.url || binding.url.startsWith(`${source.url}?`) || source.url.includes("?") && binding.url.startsWith(`${source.url}&`);
+      }
+      return source.url === setting.defaultValue;
+    }) ?? null;
+  }
+  function initialEndpointBinding(setting) {
+    if (!setting.defaultValue)
+      return null;
+    if (!usesSourceBinding(setting))
+      return { url: setting.defaultValue };
+    const source = parseSource(setting.defaultValue);
+    const body = parseSourceBody(setting.defaultBody);
+    return source ? {
+      url: source.url,
+      ...source.alias ? { alias: source.alias } : {},
+      ...setting.defaultMethod ? { method: setting.defaultMethod } : {},
+      ...body ? { body } : {}
+    } : null;
+  }
+  function endpointValue(setting, detail) {
+    return usesSourceBinding(setting) ? asSource(detail.binding) : detail.source.url;
+  }
+  function endpointAttributes(setting, detail, value2) {
+    const attributes = { [setting.attribute]: value2 };
+    if (setting.methodAttribute) {
+      attributes[setting.methodAttribute] = detail.binding.method ?? endpointMethod3(detail.source);
+    }
+    if (usesSourceBinding(setting)) {
+      const body = detail.binding.body ? asSourceBody(detail.binding.body) : "";
+      attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = body || null;
+      attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" || detail.binding.trigger === "change" ? detail.binding.trigger : null;
+    }
+    return attributes;
+  }
+  function removedEndpointAttributes(setting) {
+    const attributes = { [setting.attribute]: null };
+    if (setting.methodAttribute)
+      attributes[setting.methodAttribute] = null;
+    if (usesSourceBinding(setting)) {
+      attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = null;
+      attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
+    }
+    return attributes;
+  }
+  function endpointMethod3(source) {
+    return source.method ?? "GET";
+  }
+  function usesSourceBinding(setting) {
+    return setting.attribute === CMS_BINDING_ATTRIBUTES.source;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/endpointSetting.ts
+  class EndpointSettingController {
+    root;
+    renderFieldLabel;
+    emitSettingChange;
+    dataSources = [];
+    picker = null;
+    disconnectPickerEvents = null;
+    constructor(root, renderFieldLabel, emitSettingChange) {
+      this.root = root;
+      this.renderFieldLabel = renderFieldLabel;
+      this.emitSettingChange = emitSettingChange;
+    }
+    setDataSources(dataSources) {
+      this.dataSources = dataSources;
+    }
+    render(setting) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "field endpoint-field";
+      const label2 = this.renderFieldLabel(setting.label, setting.labelDisplay);
+      const button2 = document.createElement("button");
+      button2.className = "endpoint-button";
+      button2.type = "button";
+      button2.ariaLabel = setting.ariaLabel ?? setting.label;
+      button2.disabled = setting.disabled === true;
+      this.syncButton(button2, setting);
+      if (!setting.disabled)
+        button2.addEventListener("click", () => this.open(setting, button2));
+      if (label2)
+        wrapper.append(label2);
+      wrapper.append(button2);
+      if (setting.help) {
+        const help = document.createElement("div");
+        help.className = "field-help";
+        help.textContent = setting.help;
+        wrapper.append(help);
+      }
+      return wrapper;
+    }
+    syncButton(button2, setting, selected = selectedEndpoint(setting, this.dataSources), fallbackValue = setting.defaultValue) {
+      button2.replaceChildren();
+      const method = selected?.method ?? setting.defaultMethod;
+      if (method) {
+        const badge3 = document.createElement("span");
+        badge3.className = "endpoint-method";
+        badge3.textContent = method;
+        button2.append(badge3);
+      }
+      const value2 = document.createElement("span");
+      value2.className = selected ? "endpoint-value" : "endpoint-placeholder";
+      value2.textContent = selected?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
+      button2.append(value2);
+    }
+    open(setting, button2) {
+      const picker = this.ensurePicker();
+      this.disconnectPickerEvents?.();
+      const onSelect = (event) => {
+        this.disconnectPickerEvents?.();
+        const detail = event.detail;
+        const value2 = endpointValue(setting, detail);
+        this.syncButton(button2, setting, detail.source, value2);
+        this.emitSettingChange(setting, value2, endpointAttributes(setting, detail, value2));
+      };
+      const onRemove = () => {
+        this.disconnectPickerEvents?.();
+        this.syncButton(button2, setting, null, "");
+        this.emitSettingChange(setting, "", removedEndpointAttributes(setting));
+      };
+      const cleanup = () => {
+        picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
+        picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
+        if (this.disconnectPickerEvents === cleanup)
+          this.disconnectPickerEvents = null;
+      };
+      this.disconnectPickerEvents = cleanup;
+      picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
+      picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
+      picker.open(endpointOptions(setting, this.dataSources), setting.label, {
+        canRemove: setting.required !== true && Boolean(setting.defaultValue),
+        initialBinding: initialEndpointBinding(setting)
+      });
+    }
+    ensurePicker() {
+      if (this.picker)
+        return this.picker;
+      this.picker = new DataSourcePicker;
+      this.root.append(this.picker);
+      return this.picker;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/colorSetting.ts
+  function renderColorSetting(setting, themeTokens, renderFieldLabel, emitColorChange) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "field color-field";
+    const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
+    if (label2)
+      wrapper.append(label2);
+    const controls = document.createElement("div");
+    controls.className = "color-custom";
+    const picker = createColorPicker(setting);
+    const input2 = createColorInput(setting);
+    wireColorInputs(setting, picker, input2, emitColorChange);
+    if (themeTokens.length) {
+      wrapper.append(createTokenSelect(setting, themeTokens, picker, input2, emitColorChange));
+    }
+    const apply = document.createElement("button");
+    apply.className = "color-custom-apply";
+    apply.type = "button";
+    apply.textContent = "Apply";
+    apply.disabled = setting.disabled === true;
+    apply.addEventListener("click", () => {
+      if (!setting.disabled)
+        emitColorChange(input2.value.trim());
+    });
+    controls.append(picker, input2, apply);
+    wrapper.append(controls);
+    if (setting.help) {
+      const help = document.createElement("div");
+      help.className = "field-help";
+      help.textContent = setting.help;
+      wrapper.append(help);
+    }
+    return wrapper;
+  }
+  function createTokenSelect(setting, tokens, picker, input2, emitColorChange) {
+    const select4 = document.createElement("select");
+    select4.className = "color-token-select";
+    select4.ariaLabel = `${setting.label} theme token`;
+    select4.disabled = setting.disabled === true;
+    const custom = document.createElement("option");
+    custom.value = "";
+    custom.textContent = "Custom color";
+    select4.append(custom);
+    const groups = new Map;
+    for (const token of tokens) {
+      const option5 = document.createElement("option");
+      option5.value = `var(--${token.variable})`;
+      option5.textContent = token.label;
+      const category = token.category?.trim();
+      if (!category) {
+        select4.append(option5);
+        continue;
+      }
+      let group = groups.get(category);
+      if (!group) {
+        group = document.createElement("optgroup");
+        group.label = category;
+        groups.set(category, group);
+        select4.append(group);
+      }
+      group.append(option5);
+    }
+    const selected = Array.from(select4.querySelectorAll("option")).find((option5) => option5.value === (setting.defaultValue ?? ""));
+    if (selected)
+      selected.selected = true;
+    select4.addEventListener("change", () => {
+      if (setting.disabled || !select4.value)
+        return;
+      input2.value = select4.value;
+      picker.value = colorPickerValue(select4.value);
+      emitColorChange(select4.value);
+    });
+    return select4;
+  }
+  function createColorPicker(setting) {
+    const picker = document.createElement("input");
+    picker.className = "color-custom-picker";
+    picker.type = "color";
+    picker.ariaLabel = `${setting.label} picker`;
+    picker.value = colorPickerValue(setting.defaultValue);
+    picker.disabled = setting.disabled === true;
+    return picker;
+  }
+  function createColorInput(setting) {
+    const input2 = document.createElement("input");
+    input2.className = "color-custom-input";
+    input2.type = "text";
+    input2.placeholder = setting.placeholder ?? "#f6f7f8";
+    input2.value = setting.defaultValue ?? "";
+    input2.disabled = setting.disabled === true;
+    return input2;
+  }
+  function wireColorInputs(setting, picker, input2, emitColorChange) {
+    picker.addEventListener("input", () => {
+      if (setting.disabled)
+        return;
+      input2.value = picker.value;
+      emitColorChange(picker.value);
+    });
+    input2.addEventListener("change", () => {
+      if (setting.disabled)
+        return;
+      picker.value = colorPickerValue(input2.value);
+      emitColorChange(input2.value.trim());
+    });
+  }
+  function colorPickerValue(value2) {
+    const normalized = value2?.trim() ?? "";
+    if (/^#[\da-f]{6}$/i.test(normalized))
+      return normalized;
+    if (/^#[\da-f]{3}$/i.test(normalized)) {
+      return `#${normalized.slice(1).split("").map((character) => character.repeat(2)).join("")}`;
+    }
+    return "#000000";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/controlWiring.ts
+  function wireTextControl(control3, selector, setting, emitValue) {
+    whenDefined(control3, () => {
+      const input2 = control3.shadowRoot?.querySelector(selector);
+      if (!input2)
+        return;
+      input2.disabled = setting.disabled === true;
+      if (setting.disabled)
+        return;
+      input2.addEventListener("input", () => emitValue(input2.value));
+      input2.addEventListener("change", () => emitValue(input2.value));
+    });
+  }
+  function wireContentControl(control3, selector, emitValue) {
+    whenDefined(control3, () => {
+      const input2 = control3.shadowRoot?.querySelector(selector);
+      if (!input2)
+        return;
+      input2.addEventListener("input", () => emitValue(input2.value));
+      input2.addEventListener("change", () => emitValue(input2.value));
+    });
+  }
+  function wireRichTextControl(control3, emitValue) {
+    whenDefined(control3, () => {
+      control3.addEventListener("input", (event) => {
+        const value2 = event.detail?.value;
+        if (typeof value2 === "string")
+          emitValue(value2);
+      });
+    });
+  }
+  function wirePageLinkControl(control3, setting, emitValue) {
+    whenDefined(control3, () => {
+      if (setting.disabled)
+        return;
+      control3.addEventListener("input", (event) => {
+        const value2 = event.detail?.value;
+        if (typeof value2 === "string")
+          emitValue(value2);
+      });
+    });
+  }
+  function wireToggleControl(control3, setting, emitValue) {
+    whenDefined(control3, () => {
+      const button2 = control3.shadowRoot?.querySelector("button");
+      if (!button2)
+        return;
+      button2.disabled = setting.disabled === true;
+      if (setting.disabled)
+        return;
+      button2.addEventListener("click", () => {
+        const checked = button2.ariaPressed !== "true";
+        button2.ariaPressed = String(checked);
+        control3.toggleAttribute("checked", checked);
+        emitValue(checked);
+      });
+    });
+  }
+  function applyDisabled(control3, setting) {
+    control3.toggleAttribute("disabled", setting.disabled === true);
+    if (setting.disabled)
+      control3.setAttribute("aria-disabled", "true");
+    else
+      control3.removeAttribute("aria-disabled");
+  }
+  function setDataScopes(control3, dataScopes) {
+    control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
+  }
+  function whenDefined(control3, callback) {
+    if (customElements.get(control3.localName))
+      callback();
+    else
+      customElements.whenDefined(control3.localName).then(callback);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/icons.ts
+  var SETTING_ICON_PATHS = {
+    "layout-none": `<rect x="8" y="8" width="8" height="8" rx="1.5"></rect>`,
+    "layout-column": `<path d="M8 4h8M8 12h8M8 20h8"></path>`,
+    "layout-row": `<path d="M4 8v8M12 8v8M20 8v8"></path>`,
+    "layout-grid": `<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"></path>`,
+    "align-start": `<path d="M5 4v16M9 8h10M9 16h7"></path>`,
+    "align-center": `<path d="M12 4v16M6 8h12M8 16h8"></path>`,
+    "align-end": `<path d="M19 4v16M5 8h10M8 16h7"></path>`,
+    "align-stretch": `<path d="M5 5h14M5 12h14M5 19h14"></path>`,
+    "justify-start": `<path d="M4 6h16M8 10v8M16 10v5"></path>`,
+    "justify-center": `<path d="M4 12h16M8 6v12M16 8v8"></path>`,
+    "justify-end": `<path d="M4 18h16M8 6v8M16 9v5"></path>`,
+    "justify-between": `<path d="M4 5h16M8 8v3M16 13v3M4 19h16"></path>`,
+    "side-top": `<path d="M5 6h14M8 10h8v8H8z"></path>`,
+    "side-right": `<path d="M18 5v14M6 8h8v8H6z"></path>`,
+    "side-bottom": `<path d="M5 18h14M8 6h8v8H8z"></path>`,
+    "side-left": `<path d="M6 5v14M10 8h8v8h-8z"></path>`,
+    "axis-x": `<path d="M4 12h16M7 9l-3 3 3 3M17 9l3 3-3 3"></path>`,
+    "axis-y": `<path d="M12 4v16M9 7l3-3 3 3M9 17l3 3 3-3"></path>`,
+    radius: `<path d="M6 18V9a3 3 0 0 1 3-3h9"></path>`,
+    color: `<path d="M12 3s6 6.1 6 11a6 6 0 0 1-12 0c0-4.9 6-11 6-11z"></path>`,
+    visibility: `<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle>`,
+    remove: `<path d="M5 12h14"></path>`,
+    add: `<path d="M12 5v14M5 12h14"></path>`,
+    more: `<path d="M5 12h.01M12 12h.01M19 12h.01"></path>`
+  };
+  function settingIcon(name) {
+    const path = SETTING_ICON_PATHS[name];
+    if (!path)
+      return null;
+    const svg2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg2.setAttribute("viewBox", "0 0 24 24");
+    svg2.setAttribute("aria-hidden", "true");
+    svg2.innerHTML = path;
+    return svg2;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/settingControls.ts
+  class SettingControlRenderer {
+    endpointSettings;
+    dataScopes;
+    themeTokens;
+    emitSettingChange;
+    constructor(endpointSettings, dataScopes, themeTokens, emitSettingChange) {
+      this.endpointSettings = endpointSettings;
+      this.dataScopes = dataScopes;
+      this.themeTokens = themeTokens;
+      this.emitSettingChange = emitSettingChange;
+    }
+    render(setting) {
+      return setting.type === "row" ? this.renderRow(setting) : this.renderControl(setting);
+    }
+    renderRow(setting) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "setting-row";
+      const label2 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label2) {
+        label2.classList.add("setting-row-label");
+        wrapper.classList.add("setting-row-labeled");
+        wrapper.append(label2);
+      }
+      const controls = document.createElement("div");
+      controls.className = "setting-row-controls";
+      controls.style.setProperty("--setting-row-count", String(Math.max(1, setting.settings.length)));
+      for (const child of setting.settings) {
+        const element = this.renderControl(child);
+        element.classList.add("setting-row-control");
+        controls.append(element);
+      }
+      wrapper.append(controls);
+      return wrapper;
+    }
+    renderControl(setting) {
+      const emit = (value2) => this.emitSettingChange(setting, value2);
+      if (setting.type === "textarea" || setting.type === "select") {
+        const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
+        const selector = setting.type === "textarea" ? "textarea" : "select";
+        const control4 = createSettingControl(tag, setting);
+        if (setting.type === "textarea")
+          setDataScopes(control4, this.dataScopes());
+        else
+          control4.setAttribute("options", JSON.stringify(setting.options));
+        wireTextControl(control4, selector, setting, emit);
+        return control4;
+      }
+      if (setting.type === "segmented")
+        return this.renderSegmented(setting);
+      if (setting.type === "toggle") {
+        const control4 = createSettingControl("cms-editor-v2-toggle", setting);
+        if (setting.defaultValue)
+          control4.setAttribute("checked", "");
+        wireToggleControl(control4, setting, emit);
+        return control4;
+      }
+      if (setting.type === "page-link") {
+        const control4 = createSettingControl("cms-editor-v2-page-link", setting);
+        control4.setAttribute("allow-page", String(setting.allowPage !== false));
+        control4.setAttribute("allow-external", String(setting.allowExternal !== false));
+        control4.setAttribute("allow-media", String(setting.allowMedia !== false));
+        wirePageLinkControl(control4, setting, emit);
+        return control4;
+      }
+      if (setting.type === "endpoint-picker")
+        return this.endpointSettings.render(setting);
+      if (setting.type === "color") {
+        return renderColorSetting(setting, this.themeTokens(), renderFieldLabel, emit);
+      }
+      const control3 = createSettingControl("cms-editor-v2-text-input", setting);
+      setDataScopes(control3, this.dataScopes());
+      wireTextControl(control3, "input", setting, emit);
+      return control3;
+    }
+    renderSegmented(setting) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "field";
+      const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
+      const control3 = document.createElement("cms-editor-v2-segmented-control");
+      control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+      for (const option5 of setting.options) {
+        const button2 = document.createElement("button");
+        button2.type = "button";
+        button2.value = option5.value;
+        button2.disabled = setting.disabled === true;
+        button2.title = option5.ariaLabel ?? option5.label;
+        button2.ariaLabel = option5.ariaLabel ?? option5.label;
+        button2.ariaPressed = String(option5.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option5.display, option5.icon ?? setting.icon, option5.label));
+        button2.addEventListener("click", () => {
+          if (setting.disabled)
+            return;
+          for (const item of Array.from(control3.querySelectorAll("button"))) {
+            item.ariaPressed = String(item === button2);
+          }
+          this.emitSettingChange(setting, option5.value);
+        });
+        control3.append(button2);
+      }
+      if (label2)
+        wrapper.append(label2);
+      wrapper.append(control3);
+      return wrapper;
+    }
+  }
+  function createSettingControl(tag, setting) {
+    const control3 = document.createElement(tag);
+    control3.setAttribute("label", setting.label);
+    control3.setAttribute("value", String(setting.defaultValue ?? ""));
+    control3.setAttribute("label-display", setting.labelDisplay ?? "visible");
+    if (setting.ariaLabel || setting.labelDisplay && setting.labelDisplay !== "visible") {
+      control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+    }
+    if (setting.help)
+      control3.setAttribute("hint", setting.help);
+    if (setting.placeholder)
+      control3.setAttribute("placeholder", setting.placeholder);
+    applyDisabled(control3, setting);
+    return control3;
+  }
+  function renderFieldLabel(label2, display) {
+    if (display === "hidden")
+      return null;
+    const element = document.createElement("div");
+    element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
+    element.textContent = label2;
+    return element;
+  }
+  function renderOptionContent(settingDisplay, optionDisplay, iconName, label2) {
+    const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
+    const icon = iconName ? settingIcon(iconName) : null;
+    const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
+    if (display !== "icon" || !icon) {
+      const text3 = document.createElement("span");
+      text3.textContent = label2;
+      nodes.push(text3);
+    }
+    return nodes;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/settingState.ts
+  function visibleSettings(settings) {
+    const values = collectSettingValues(settings);
+    return settings.flatMap((setting) => {
+      if (!isSettingVisible(setting.visibleWhen, values))
+        return [];
+      if (setting.type !== "row")
+        return [setting];
+      const visibleChildren = setting.settings.filter((child) => isSettingVisible(child.visibleWhen, values));
+      return visibleChildren.length > 0 ? [{ ...setting, settings: visibleChildren }] : [];
+    });
+  }
+  function attributesForSettingValue(setting, value2) {
+    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value2, rule.value)) ?? [];
+    if (matchingRules.length === 0)
+      return;
+    const attributes = { [setting.attribute]: value2 };
+    for (const rule of matchingRules)
+      Object.assign(attributes, rule.attributes);
+    return attributes;
+  }
+  function collectSettingValues(settings) {
+    const values = new Map;
+    for (const setting of settings) {
+      if (setting.type === "row") {
+        for (const child of setting.settings)
+          values.set(child.attribute, child.defaultValue);
+      } else {
+        values.set(setting.attribute, setting.defaultValue);
+      }
+    }
+    return values;
+  }
+  function isSettingVisible(visibleWhen, values) {
+    if (!visibleWhen)
+      return true;
+    const rules = Array.isArray(visibleWhen) ? visibleWhen : [visibleWhen];
+    return rules.every((rule) => matchesVisibilityRule(rule, values.get(rule.attribute)));
+  }
+  function matchesVisibilityRule(rule, actual) {
+    if (rule.equals !== undefined && !visibilityValueMatches(actual, rule.equals))
+      return false;
+    if (rule.notEquals !== undefined && visibilityValueMatches(actual, rule.notEquals))
+      return false;
+    return true;
+  }
+  function visibilityValueMatches(actual, expected) {
+    const expectedValues = Array.isArray(expected) ? expected : [expected];
+    return expectedValues.some((value2) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value2));
+  }
+  function normalizeVisibilityValue(value2) {
+    return typeof value2 === "boolean" ? value2 : String(value2 ?? "");
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/textCapability.ts
+  function renderTextCapability(capability, value2, dataScopes, emitContentChange) {
+    const section = document.createElement("cms-editor-v2-section");
+    section.setAttribute("label", "Content");
+    const setting = {
+      type: "text",
+      label: capability.format === "richtext" ? "Rich text" : "Text",
+      attribute: "__text",
+      defaultValue: value2,
+      help: capability.format === "richtext" ? undefined : formatTextCapability(capability)
+    };
+    const control3 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
+    if (capability.format === "richtext") {
+      control3.setAttribute("capability", JSON.stringify(capability));
+      control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
+      wireRichTextControl(control3, (content) => emitContentChange(content, "html"));
+    } else {
+      if (capability.dynamic)
+        setDataScopes(control3, dataScopes);
+      wireContentControl(control3, "input", (content) => emitContentChange(content, "text"));
+    }
+    section.append(control3);
+    return section;
+  }
+  function formatTextCapability(capability) {
+    const options2 = [
+      capability.bold ? "bold" : null,
+      capability.italic ? "italic" : null,
+      capability.link ? "link" : null,
+      capability.code ? "code" : null,
+      capability.dynamic ? "dynamic" : null
+    ].filter((option5) => Boolean(option5));
+    return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
@@ -33742,48 +34395,24 @@ cms-editor-v2-segmented-control button svg:only-child {
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
-  var SETTING_ICON_PATHS = {
-    "layout-none": `<rect x="8" y="8" width="8" height="8" rx="1.5"></rect>`,
-    "layout-column": `<path d="M8 4h8M8 12h8M8 20h8"></path>`,
-    "layout-row": `<path d="M4 8v8M12 8v8M20 8v8"></path>`,
-    "layout-grid": `<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"></path>`,
-    "align-start": `<path d="M5 4v16M9 8h10M9 16h7"></path>`,
-    "align-center": `<path d="M12 4v16M6 8h12M8 16h8"></path>`,
-    "align-end": `<path d="M19 4v16M5 8h10M8 16h7"></path>`,
-    "align-stretch": `<path d="M5 5h14M5 12h14M5 19h14"></path>`,
-    "justify-start": `<path d="M4 6h16M8 10v8M16 10v5"></path>`,
-    "justify-center": `<path d="M4 12h16M8 6v12M16 8v8"></path>`,
-    "justify-end": `<path d="M4 18h16M8 6v8M16 9v5"></path>`,
-    "justify-between": `<path d="M4 5h16M8 8v3M16 13v3M4 19h16"></path>`,
-    "side-top": `<path d="M5 6h14M8 10h8v8H8z"></path>`,
-    "side-right": `<path d="M18 5v14M6 8h8v8H6z"></path>`,
-    "side-bottom": `<path d="M5 18h14M8 6h8v8H8z"></path>`,
-    "side-left": `<path d="M6 5v14M10 8h8v8h-8z"></path>`,
-    "axis-x": `<path d="M4 12h16M7 9l-3 3 3 3M17 9l3 3-3 3"></path>`,
-    "axis-y": `<path d="M12 4v16M9 7l3-3 3 3M9 17l3 3 3-3"></path>`,
-    radius: `<path d="M6 18V9a3 3 0 0 1 3-3h9"></path>`,
-    color: `<path d="M12 3s6 6.1 6 11a6 6 0 0 1-12 0c0-4.9 6-11 6-11z"></path>`,
-    visibility: `<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle>`,
-    remove: `<path d="M5 12h14"></path>`,
-    add: `<path d="M12 5v14M5 12h14"></path>`,
-    more: `<path d="M5 12h.01M12 12h.01M19 12h.01"></path>`
-  };
 
   class SettingsView extends HTMLElement {
-    _dataSources = [];
     _dataScopes = [];
-    _endpointPicker = null;
-    _disconnectEndpointPickerEvents = null;
+    _endpointSettings;
+    _settingControls;
     _themeTokens = [];
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template20.content.cloneNode(true));
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template20.content.cloneNode(true));
+      this._endpointSettings = new EndpointSettingController(shadowRoot, renderFieldLabel, (setting, value2, attributes) => this._emitSettingChange(setting, value2, attributes));
+      this._settingControls = new SettingControlRenderer(this._endpointSettings, () => this._dataScopes, () => this._themeTokens, (setting, value2) => this._emitSettingChange(setting, value2));
     }
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
     setSettings(sections2, textCapability = null, textValue6 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
-      this._dataSources = dataSources;
+      this._endpointSettings.setDataSources(dataSources);
       this._dataScopes = dataScopes;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
@@ -33798,7 +34427,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(this._renderTextCapability(textCapability, textValue6, dataScopes));
+        view.append(renderTextCapability(textCapability, textValue6, dataScopes, (value2, format) => this._emitContentChange(value2, format)));
       }
       if (shouldRenderStates) {
         view.append(this._renderStates(states));
@@ -33845,494 +34474,9 @@ cms-editor-v2-segmented-control button svg:only-child {
         return element;
       }
       for (const setting of settings) {
-        element.append(this._renderSetting(setting));
+        element.append(this._settingControls.render(setting));
       }
       return element;
-    }
-    _renderSetting(setting) {
-      if (setting.type === "row") {
-        return this._renderSettingRow(setting);
-      }
-      return this._renderSettingControl(setting);
-    }
-    _renderSettingRow(setting) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "setting-row";
-      const label2 = setting.label ? this._renderFieldLabel(setting.label, setting.labelDisplay) : null;
-      if (label2) {
-        label2.classList.add("setting-row-label");
-        wrapper.classList.add("setting-row-labeled");
-        wrapper.append(label2);
-      }
-      const controls = document.createElement("div");
-      controls.className = "setting-row-controls";
-      controls.style.setProperty("--setting-row-count", String(Math.max(1, setting.settings.length)));
-      for (const child of setting.settings) {
-        const element = this._renderSettingControl(child);
-        element.classList.add("setting-row-control");
-        controls.append(element);
-      }
-      wrapper.append(controls);
-      return wrapper;
-    }
-    _renderSettingControl(setting) {
-      if (setting.type === "textarea") {
-        const control4 = this._control("cms-editor-v2-textarea", setting);
-        this._setDataScopes(control4);
-        this._wireTextControl(control4, "textarea", setting);
-        return control4;
-      }
-      if (setting.type === "select") {
-        const control4 = this._control("cms-editor-v2-select", setting);
-        control4.setAttribute("options", JSON.stringify(setting.options));
-        this._wireTextControl(control4, "select", setting);
-        return control4;
-      }
-      if (setting.type === "segmented") {
-        const wrapper = document.createElement("div");
-        wrapper.className = "field";
-        const label2 = this._renderFieldLabel(setting.label, setting.labelDisplay);
-        const control4 = document.createElement("cms-editor-v2-segmented-control");
-        control4.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-        for (const option5 of setting.options) {
-          const button2 = document.createElement("button");
-          button2.type = "button";
-          button2.value = option5.value;
-          button2.disabled = setting.disabled === true;
-          button2.title = option5.ariaLabel ?? option5.label;
-          button2.ariaLabel = option5.ariaLabel ?? option5.label;
-          button2.ariaPressed = String(option5.value === setting.defaultValue);
-          button2.append(...this._renderOptionContent(setting.display, option5.display, option5.icon ?? setting.icon, option5.label));
-          button2.addEventListener("click", () => {
-            if (setting.disabled)
-              return;
-            for (const item of Array.from(control4.querySelectorAll("button"))) {
-              item.ariaPressed = String(item === button2);
-            }
-            this._emitSettingChange(setting, option5.value);
-          });
-          control4.append(button2);
-        }
-        if (label2)
-          wrapper.append(label2);
-        wrapper.append(control4);
-        return wrapper;
-      }
-      if (setting.type === "toggle") {
-        const control4 = this._control("cms-editor-v2-toggle", setting);
-        if (setting.defaultValue)
-          control4.setAttribute("checked", "");
-        this._wireToggleControl(control4, setting);
-        return control4;
-      }
-      if (setting.type === "page-link") {
-        const control4 = this._control("cms-editor-v2-page-link", setting);
-        control4.setAttribute("allow-page", String(setting.allowPage !== false));
-        control4.setAttribute("allow-external", String(setting.allowExternal !== false));
-        control4.setAttribute("allow-media", String(setting.allowMedia !== false));
-        this._applyDisabled(control4, setting);
-        this._wirePageLinkControl(control4, setting);
-        return control4;
-      }
-      if (setting.type === "endpoint-picker") {
-        return this._renderEndpointPickerSetting(setting);
-      }
-      if (setting.type === "color") {
-        return this._renderColorSetting(setting);
-      }
-      const control3 = this._control("cms-editor-v2-text-input", setting);
-      this._setDataScopes(control3);
-      this._wireTextControl(control3, "input", setting);
-      return control3;
-    }
-    _renderColorSetting(setting) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "field color-field";
-      const label2 = this._renderFieldLabel(setting.label, setting.labelDisplay);
-      if (label2)
-        wrapper.append(label2);
-      const controls = document.createElement("div");
-      controls.className = "color-custom";
-      if (this._themeTokens.length) {
-        const select4 = document.createElement("select");
-        select4.className = "color-token-select";
-        select4.ariaLabel = `${setting.label} theme token`;
-        select4.disabled = setting.disabled === true;
-        const custom = document.createElement("option");
-        custom.value = "";
-        custom.textContent = "Custom color";
-        select4.append(custom);
-        const groups = new Map;
-        for (const token of this._themeTokens) {
-          const option5 = document.createElement("option");
-          option5.value = `var(--${token.variable})`;
-          option5.textContent = token.label;
-          const category = token.category?.trim();
-          if (category) {
-            let group = groups.get(category);
-            if (!group) {
-              group = document.createElement("optgroup");
-              group.label = category;
-              groups.set(category, group);
-              select4.append(group);
-            }
-            group.append(option5);
-          } else {
-            select4.append(option5);
-          }
-        }
-        const selected = Array.from(select4.querySelectorAll("option")).find((option5) => option5.value === (setting.defaultValue ?? ""));
-        if (selected)
-          selected.selected = true;
-        select4.addEventListener("change", () => {
-          if (setting.disabled || !select4.value)
-            return;
-          input2.value = select4.value;
-          picker.value = colorPickerValue(select4.value);
-          this._emitSettingChange(setting, select4.value);
-        });
-        wrapper.append(select4);
-      }
-      const picker = document.createElement("input");
-      picker.className = "color-custom-picker";
-      picker.type = "color";
-      picker.ariaLabel = `${setting.label} picker`;
-      picker.value = colorPickerValue(setting.defaultValue);
-      picker.disabled = setting.disabled === true;
-      const input2 = document.createElement("input");
-      input2.className = "color-custom-input";
-      input2.type = "text";
-      input2.placeholder = setting.placeholder ?? "#f6f7f8";
-      input2.value = setting.defaultValue ?? "";
-      input2.disabled = setting.disabled === true;
-      const apply = document.createElement("button");
-      apply.className = "color-custom-apply";
-      apply.type = "button";
-      apply.textContent = "Apply";
-      apply.disabled = setting.disabled === true;
-      picker.addEventListener("input", () => {
-        if (setting.disabled)
-          return;
-        input2.value = picker.value;
-        this._emitSettingChange(setting, picker.value);
-      });
-      input2.addEventListener("change", () => {
-        if (setting.disabled)
-          return;
-        picker.value = colorPickerValue(input2.value);
-        this._emitSettingChange(setting, input2.value.trim());
-      });
-      apply.addEventListener("click", () => {
-        if (setting.disabled)
-          return;
-        this._emitSettingChange(setting, input2.value.trim());
-      });
-      controls.append(picker, input2, apply);
-      wrapper.append(controls);
-      if (setting.help) {
-        const help = document.createElement("div");
-        help.className = "field-help";
-        help.textContent = setting.help;
-        wrapper.append(help);
-      }
-      return wrapper;
-    }
-    _renderOptionContent(settingDisplay, optionDisplay, iconName, label2) {
-      const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
-      const nodes = [];
-      const icon = iconName ? settingIcon(iconName) : null;
-      if (icon && (display === "icon" || display === "icon-label")) {
-        nodes.push(icon);
-      }
-      if (display !== "icon" || !icon) {
-        const text3 = document.createElement("span");
-        text3.textContent = label2;
-        nodes.push(text3);
-      }
-      return nodes;
-    }
-    _control(tag, setting) {
-      const control3 = document.createElement(tag);
-      control3.setAttribute("label", setting.label);
-      control3.setAttribute("value", String(setting.defaultValue ?? ""));
-      control3.setAttribute("label-display", setting.labelDisplay ?? "visible");
-      if (setting.ariaLabel) {
-        control3.setAttribute("aria-label", setting.ariaLabel);
-      } else if (setting.labelDisplay && setting.labelDisplay !== "visible") {
-        control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      }
-      if (setting.help)
-        control3.setAttribute("hint", setting.help);
-      if (setting.placeholder)
-        control3.setAttribute("placeholder", setting.placeholder);
-      this._applyDisabled(control3, setting);
-      return control3;
-    }
-    _renderFieldLabel(label2, display) {
-      if (display === "hidden")
-        return null;
-      const element = document.createElement("div");
-      element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-      element.textContent = label2;
-      return element;
-    }
-    _renderEndpointPickerSetting(setting) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "field endpoint-field";
-      const label2 = this._renderFieldLabel(setting.label, setting.labelDisplay);
-      const button2 = document.createElement("button");
-      button2.className = "endpoint-button";
-      button2.type = "button";
-      button2.ariaLabel = setting.ariaLabel ?? setting.label;
-      button2.disabled = setting.disabled === true;
-      this._syncEndpointButton(button2, setting);
-      if (!setting.disabled) {
-        button2.addEventListener("click", () => this._openEndpointPicker(setting, button2));
-      }
-      if (label2)
-        wrapper.append(label2);
-      wrapper.append(button2);
-      if (setting.help) {
-        const help = document.createElement("div");
-        help.className = "field-help";
-        help.textContent = setting.help;
-        wrapper.append(help);
-      }
-      return wrapper;
-    }
-    _syncEndpointButton(button2, setting, selected = this._selectedEndpoint(setting), fallbackValue = setting.defaultValue) {
-      button2.replaceChildren();
-      const method = selected?.method ?? setting.defaultMethod;
-      if (method) {
-        const methodBadge = document.createElement("span");
-        methodBadge.className = "endpoint-method";
-        methodBadge.textContent = method;
-        button2.append(methodBadge);
-      }
-      const value2 = document.createElement("span");
-      value2.className = selected ? "endpoint-value" : "endpoint-placeholder";
-      value2.textContent = selected?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
-      button2.append(value2);
-    }
-    _openEndpointPicker(setting, button2) {
-      const picker = this._ensureEndpointPicker();
-      this._disconnectEndpointPickerEvents?.();
-      const onSelect = (event) => {
-        this._disconnectEndpointPickerEvents?.();
-        const detail = event.detail;
-        const value2 = this._endpointValue(setting, detail);
-        this._syncEndpointButton(button2, setting, detail.source, value2);
-        this._emitSettingChange(setting, value2, this._endpointAttributes(setting, detail, value2));
-      };
-      const onRemove = () => {
-        this._disconnectEndpointPickerEvents?.();
-        const attributes = { [setting.attribute]: null };
-        if (setting.methodAttribute)
-          attributes[setting.methodAttribute] = null;
-        if (this._usesSourceBinding(setting)) {
-          attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = null;
-          attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
-        }
-        this._syncEndpointButton(button2, setting, null, "");
-        this._emitSettingChange(setting, "", attributes);
-      };
-      const cleanup = () => {
-        picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
-        picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
-        if (this._disconnectEndpointPickerEvents === cleanup)
-          this._disconnectEndpointPickerEvents = null;
-      };
-      this._disconnectEndpointPickerEvents = cleanup;
-      picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
-      picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
-      picker.open(this._endpointOptions(setting), setting.label, {
-        canRemove: setting.required !== true && Boolean(setting.defaultValue),
-        initialBinding: this._initialEndpointBinding(setting)
-      });
-    }
-    _ensureEndpointPicker() {
-      if (this._endpointPicker)
-        return this._endpointPicker;
-      const picker = new DataSourcePicker;
-      this.shadowRoot.append(picker);
-      this._endpointPicker = picker;
-      return picker;
-    }
-    _endpointOptions(setting) {
-      const methods = new Set(setting.methods ?? []);
-      return this._dataSources.filter((source) => {
-        const method = this._endpointMethod(source);
-        if (methods.size > 0 && !methods.has(method))
-          return false;
-        return true;
-      });
-    }
-    _selectedEndpoint(setting) {
-      const value2 = setting.defaultValue;
-      if (!value2)
-        return null;
-      const binding = this._initialEndpointBinding(setting);
-      return this._endpointOptions(setting).find((source) => {
-        if (this._usesSourceBinding(setting) && binding) {
-          return binding.url === source.url || binding.url.startsWith(`${source.url}?`) || source.url.includes("?") && binding.url.startsWith(`${source.url}&`);
-        }
-        return source.url === value2;
-      }) ?? null;
-    }
-    _initialEndpointBinding(setting) {
-      const value2 = setting.defaultValue;
-      if (!value2)
-        return null;
-      if (this._usesSourceBinding(setting)) {
-        const source = parseSource(value2);
-        const body = parseSourceBody(setting.defaultBody);
-        return source ? {
-          url: source.url,
-          ...source.alias ? { alias: source.alias } : {},
-          ...setting.defaultMethod ? { method: setting.defaultMethod } : {},
-          ...body ? { body } : {}
-        } : null;
-      }
-      return { url: value2 };
-    }
-    _endpointValue(setting, detail) {
-      if (this._usesSourceBinding(setting)) {
-        return asSource(detail.binding);
-      }
-      return detail.source.url;
-    }
-    _endpointAttributes(setting, detail, value2) {
-      const attributes = { [setting.attribute]: value2 };
-      if (setting.methodAttribute)
-        attributes[setting.methodAttribute] = detail.binding.method ?? this._endpointMethod(detail.source);
-      if (this._usesSourceBinding(setting)) {
-        const body = detail.binding.body ? asSourceBody(detail.binding.body) : "";
-        attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = body || null;
-        attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" || detail.binding.trigger === "change" ? detail.binding.trigger : null;
-      }
-      return attributes;
-    }
-    _endpointMethod(source) {
-      return source.method ?? "GET";
-    }
-    _usesSourceBinding(setting) {
-      return setting.attribute === CMS_BINDING_ATTRIBUTES.source;
-    }
-    _renderTextCapability(capability, value2, dataScopes) {
-      const section = document.createElement("cms-editor-v2-section");
-      section.setAttribute("label", "Content");
-      const setting = {
-        type: "text",
-        label: capability.format === "richtext" ? "Rich text" : "Text",
-        attribute: "__text",
-        defaultValue: value2,
-        help: capability.format === "richtext" ? undefined : this._formatTextCapability(capability)
-      };
-      const control3 = this._control(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
-      if (capability.format === "richtext") {
-        control3.setAttribute("capability", JSON.stringify(capability));
-        control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
-        this._wireRichTextControl(control3);
-      } else {
-        if (capability.dynamic)
-          this._setDataScopes(control3, dataScopes);
-        this._wireContentControl(control3, "input");
-      }
-      section.append(control3);
-      return section;
-    }
-    _formatTextCapability(capability) {
-      const options2 = [
-        capability.bold ? "bold" : null,
-        capability.italic ? "italic" : null,
-        capability.link ? "link" : null,
-        capability.code ? "code" : null,
-        capability.dynamic ? "dynamic" : null
-      ].filter((option5) => Boolean(option5));
-      return options2.length > 0 ? options2.join(", ") : "Plain text";
-    }
-    _wireTextControl(control3, selector, setting) {
-      const wire = () => {
-        const input2 = control3.shadowRoot?.querySelector(selector);
-        if (!input2)
-          return;
-        input2.disabled = setting.disabled === true;
-        if (setting.disabled)
-          return;
-        input2.addEventListener("input", () => this._emitSettingChange(setting, input2.value));
-        input2.addEventListener("change", () => this._emitSettingChange(setting, input2.value));
-      };
-      this._whenDefined(control3, wire);
-    }
-    _wireContentControl(control3, selector) {
-      const wire = () => {
-        const input2 = control3.shadowRoot?.querySelector(selector);
-        if (!input2)
-          return;
-        input2.addEventListener("input", () => this._emitContentChange(input2.value, "text"));
-        input2.addEventListener("change", () => this._emitContentChange(input2.value, "text"));
-      };
-      this._whenDefined(control3, wire);
-    }
-    _wireRichTextControl(control3) {
-      const wire = () => {
-        control3.addEventListener("input", (event) => {
-          const value2 = event.detail?.value;
-          if (typeof value2 !== "string")
-            return;
-          this._emitContentChange(value2, "html");
-        });
-      };
-      this._whenDefined(control3, wire);
-    }
-    _wirePageLinkControl(control3, setting) {
-      const wire = () => {
-        if (setting.disabled)
-          return;
-        control3.addEventListener("input", (event) => {
-          const value2 = event.detail?.value;
-          if (typeof value2 !== "string")
-            return;
-          this._emitSettingChange(setting, value2);
-        });
-      };
-      this._whenDefined(control3, wire);
-    }
-    _wireToggleControl(control3, setting) {
-      const wire = () => {
-        const button2 = control3.shadowRoot?.querySelector("button");
-        if (!button2)
-          return;
-        button2.disabled = setting.disabled === true;
-        if (setting.disabled)
-          return;
-        button2.addEventListener("click", () => {
-          const checked = button2.ariaPressed !== "true";
-          button2.ariaPressed = String(checked);
-          control3.toggleAttribute("checked", checked);
-          this._emitSettingChange(setting, checked);
-        });
-      };
-      this._whenDefined(control3, wire);
-    }
-    _applyDisabled(control3, setting) {
-      if (setting.disabled) {
-        control3.setAttribute("disabled", "");
-        control3.setAttribute("aria-disabled", "true");
-      } else {
-        control3.removeAttribute("disabled");
-        control3.removeAttribute("aria-disabled");
-      }
-    }
-    _setDataScopes(control3, dataScopes = this._dataScopes) {
-      control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
-    }
-    _whenDefined(control3, callback) {
-      if (customElements.get(control3.localName)) {
-        callback();
-        return;
-      }
-      customElements.whenDefined(control3.localName).then(callback);
     }
     _emitSettingChange(setting, value2, attributes) {
       const changes = attributes ?? attributesForSettingValue(setting, value2);
@@ -34349,78 +34493,6 @@ cms-editor-v2-segmented-control button svg:only-child {
         detail: { value: value2, format }
       }));
     }
-  }
-  function visibleSettings(settings) {
-    const values = collectSettingValues(settings);
-    return settings.flatMap((setting) => {
-      if (!isSettingVisible(setting.visibleWhen, values))
-        return [];
-      if (setting.type !== "row")
-        return [setting];
-      const visibleChildren = setting.settings.filter((child) => isSettingVisible(child.visibleWhen, values));
-      return visibleChildren.length > 0 ? [{ ...setting, settings: visibleChildren }] : [];
-    });
-  }
-  function collectSettingValues(settings) {
-    const values = new Map;
-    for (const setting of settings) {
-      if (setting.type === "row") {
-        for (const child of setting.settings)
-          values.set(child.attribute, child.defaultValue);
-      } else {
-        values.set(setting.attribute, setting.defaultValue);
-      }
-    }
-    return values;
-  }
-  function attributesForSettingValue(setting, value2) {
-    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value2, rule.value)) ?? [];
-    if (matchingRules.length === 0)
-      return;
-    const attributes = { [setting.attribute]: value2 };
-    for (const rule of matchingRules) {
-      Object.assign(attributes, rule.attributes);
-    }
-    return attributes;
-  }
-  function isSettingVisible(visibleWhen, values) {
-    if (!visibleWhen)
-      return true;
-    const rules = Array.isArray(visibleWhen) ? visibleWhen : [visibleWhen];
-    return rules.every((rule) => matchesVisibilityRule(rule, values.get(rule.attribute)));
-  }
-  function matchesVisibilityRule(rule, actual) {
-    if (rule.equals !== undefined && !visibilityValueMatches(actual, rule.equals))
-      return false;
-    if (rule.notEquals !== undefined && visibilityValueMatches(actual, rule.notEquals))
-      return false;
-    return true;
-  }
-  function visibilityValueMatches(actual, expected) {
-    const expectedValues = Array.isArray(expected) ? expected : [expected];
-    return expectedValues.some((value2) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value2));
-  }
-  function normalizeVisibilityValue(value2) {
-    return typeof value2 === "boolean" ? value2 : String(value2 ?? "");
-  }
-  function colorPickerValue(value2) {
-    const normalized = value2?.trim() ?? "";
-    if (/^#[\da-f]{6}$/i.test(normalized))
-      return normalized;
-    if (/^#[\da-f]{3}$/i.test(normalized)) {
-      return `#${normalized.slice(1).split("").map((character) => character.repeat(2)).join("")}`;
-    }
-    return "#000000";
-  }
-  function settingIcon(name) {
-    const path = SETTING_ICON_PATHS[name];
-    if (!path)
-      return null;
-    const svg2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg2.setAttribute("viewBox", "0 0 24 24");
-    svg2.setAttribute("aria-hidden", "true");
-    svg2.innerHTML = path;
-    return svg2;
   }
   if (!customElements.get("cms-editor-v2-settings-view")) {
     customElements.define("cms-editor-v2-settings-view", SettingsView);
@@ -34772,8 +34844,8 @@ label {
       }];
     });
   }
-  function visibleRepeatOptions(options2, query2) {
-    const normalizedQuery = query2.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query3) {
+    const normalizedQuery = query3.trim().toLowerCase();
     if (!normalizedQuery)
       return options2;
     return options2.filter((option5) => [
