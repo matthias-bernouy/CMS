@@ -162,6 +162,7 @@ export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {
                         method: "GET",
                         targetUrl: "https://api.example.com/items",
                         params: [],
+                        output: [{ status: "200", body: { type: "object" } }],
                         headers: [
                             {
                                 name: "authorization",
@@ -192,6 +193,7 @@ export function sourceArtifact(id: string, targetUrl = "https://api.example.com/
                 method: "GET" as const,
                 targetUrl,
                 params: [],
+                output: [{ status: "200" as const, body: { type: "object" as const } }],
             }],
         },
     };

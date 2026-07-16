@@ -49,6 +49,21 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             ...(value.aside !== undefined ? { aside: parseSections(value.aside, `${name}.aside`) } : {}),
         };
     }
+    if (widget === "w-navigation-list") {
+        if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
+        if (!isRecord(value.item)) throw new IntegrationInputError(`${name}.item`, "must be an object");
+        return {
+            widget,
+            id: requiredText(value.id, `${name}.id`),
+            ...(text(value.title) ? { title: text(value.title)! } : {}),
+            source: parseDataRef(value.source, `${name}.source`),
+            rowKey: requiredText(value.rowKey, `${name}.rowKey`),
+            item: parseNavigationItem(value.item, `${name}.item`),
+            ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
+            ...(isRecord(value.reorderable) ? { reorderable: { action: requiredText(value.reorderable.action, `${name}.reorderable.action`) } } : {}),
+            ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
+        };
+    }
     throw new IntegrationInputError(`${name}.widget`, "must be a supported dashboard widget");
 }
 
@@ -70,5 +85,15 @@ function parseBinding(value: Record<string, unknown>, name: string) {
     return {
         path: requiredText(value.path, `${name}.path`),
         ...(text(value.fallback) ? { fallback: text(value.fallback)! } : {}),
+    };
+}
+
+function parseNavigationItem(value: Record<string, unknown>, name: string) {
+    if (!isRecord(value.title)) throw new IntegrationInputError(`${name}.title`, "must be an object");
+    return {
+        title: parseBinding(value.title, `${name}.title`),
+        ...(isRecord(value.subtitle) ? { subtitle: parseBinding(value.subtitle, `${name}.subtitle`) } : {}),
+        ...(text(value.icon) ? { icon: text(value.icon)! } : {}),
+        ...(isRecord(value.badge) ? { badge: parseBinding(value.badge, `${name}.badge`) } : {}),
     };
 }

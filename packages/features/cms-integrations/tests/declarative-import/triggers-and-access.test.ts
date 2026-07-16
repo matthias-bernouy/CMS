@@ -27,6 +27,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                             method: "POST",
                             targetUrl: "https://example.com/orders",
                             params: [],
+                            output: [{ status: "200", body: { type: "object" } }],
                         }],
                     },
                 },
@@ -104,6 +105,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                 access: "public",
                                 targetUrl: "https://example.com/catalog",
                                 params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
                             },
                             {
                                 endpointId: "myOrders",
@@ -111,6 +113,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                 access: { mode: "auth" },
                                 targetUrl: "https://example.com/orders/me",
                                 params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
                             },
                             {
                                 endpointId: "adminOrders",
@@ -118,6 +121,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                 access: "admin",
                                 targetUrl: "https://example.com/orders",
                                 params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
                             },
                             {
                                 endpointId: "createOrder",
@@ -125,6 +129,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                 access: "system",
                                 targetUrl: "https://example.com/orders",
                                 params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
                             },
                         ],
                     },

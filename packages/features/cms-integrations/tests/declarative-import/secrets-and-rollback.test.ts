@@ -24,6 +24,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                         method: "GET",
                         targetUrl: "https://api.example.com/items",
                         params: [],
+                        output: [{ status: "200", body: { type: "object" } }],
                         headers: [{ name: "authorization", source: { from: "static", value: "{{answers.apiKey}}" } }],
                     }],
                 },

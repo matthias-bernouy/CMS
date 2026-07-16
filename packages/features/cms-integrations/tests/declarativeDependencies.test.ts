@@ -65,6 +65,7 @@ describe("@bernouy/cms-integrations dependencies", () => {
                         method: "GET",
                         targetUrl: "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
                         params: [],
+                        output: [{ status: "200", body: { type: "object" } }],
                     }],
                 },
             }],

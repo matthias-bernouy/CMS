@@ -14,8 +14,8 @@ import {
 } from "@bernouy/cms-sources";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../values";
-import { requiredText } from "../common";
-import { parseOverlayDashboardFields } from "./dashboardFields";
+import { parseStringMap, requiredText } from "../common";
+import { parseOverlayDashboardFields, parseOverlayDashboardOptions } from "./dashboardFields";
 
 export function parseSourceOverlayTemplate(value: Record<string, unknown>, name: string): SourceOverlay {
     return {
@@ -35,6 +35,7 @@ function parseOverlayFieldSource(value: unknown, name: string): SourceOverlayFie
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
     return {
         endpointId: requiredText(value.endpointId, `${name}.endpointId`),
+        ...(value.params !== undefined ? { params: parseStringMap(value.params, `${name}.params`) } : {}),
         ...(text(value.path) ? { path: text(value.path)! } : {}),
         ...(value.map !== undefined ? { map: parseOverlayFieldSourceMap(value.map, `${name}.map`) } : {}),
     };
@@ -87,10 +88,12 @@ function parseOverlayFields(value: unknown, name: string): SourceOverlayField[] 
             ...(text(entry.path) ? { path: text(entry.path)! } : {}),
             ...(text(entry.section) ? { section: text(entry.section)! } : {}),
             ...(entry.required === true ? { required: true } : {}),
+            ...(entry.multiple === true ? { multiple: true } : {}),
             ...(entry.selfEditable === false ? { selfEditable: false } : {}),
             ...(entry.adminEditable === false ? { adminEditable: false } : {}),
             ...(entry.showInDashboardTable === true ? { showInDashboardTable: true } : {}),
             ...(entry.exposeToEditorSources === false ? { exposeToEditorSources: false } : {}),
+            ...(entry.options !== undefined ? { options: parseOverlayDashboardOptions(entry.options, `${name}.${index}.options`) } : {}),
         };
     });
 }

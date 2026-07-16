@@ -34,6 +34,7 @@ export function connectorBackedDefinition(): IntegrationDefinition {
                     method: "GET",
                     targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-connector/health",
                     params: [],
+                    output: [{ status: "200", body: { type: "object" } }],
                     headers: [{
                         name: "authorization",
                         source: { from: "secret", ref: "{{secrets.cmsApiKey}}", prefix: "Bearer " },
@@ -77,6 +78,7 @@ export function connectorSecretBackedDefinition(): IntegrationDefinition {
                     method: "GET",
                     targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-connector/health",
                     params: [],
+                    output: [{ status: "200", body: { type: "object" } }],
                     headers: [{
                         name: "authorization",
                         source: { from: "secret", ref: "{{secrets.privateKey}}", prefix: "Bearer " },

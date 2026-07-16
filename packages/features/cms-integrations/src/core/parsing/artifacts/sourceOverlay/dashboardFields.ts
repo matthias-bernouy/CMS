@@ -35,7 +35,7 @@ function parseOverlayDashboardFieldPatch(value: unknown, name: string): SourceOv
     };
 }
 
-function parseOverlayDashboardOptions(value: unknown, name: string): SourceOverlayDashboardOption[] {
+export function parseOverlayDashboardOptions(value: unknown, name: string): SourceOverlayDashboardOption[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
     return value.map((entry, index) => {
         if (!isRecord(entry)) throw new IntegrationInputError(`${name}.${index}`, "must be an object");

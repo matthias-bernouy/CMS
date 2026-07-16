@@ -54,13 +54,24 @@ export function parseStringRecord(value: unknown, name: string): Record<string, 
 }
 
 export function parseAccessTemplate(value: unknown, name: string): SourceEndpointAccess {
+    const record = isRecord(value) ? value : undefined;
     const mode = typeof value === "string"
         ? value
-        : isRecord(value)
-            ? text(value.mode)
+        : record
+            ? text(record.mode)
             : undefined;
     if (!isSourceEndpointAccessMode(mode)) {
         throw new IntegrationInputError(name, "must be public, auth, admin, or system");
     }
-    return { mode: mode as SourceEndpointAccessMode };
+    if (!record || record.roles === undefined) return { mode: mode as SourceEndpointAccessMode };
+    if (mode !== "admin") {
+        throw new IntegrationInputError(`${name}.roles`, "is only supported for admin access");
+    }
+    const roles = parseStringList(record.roles, `${name}.roles`);
+    const seen = new Set<string>();
+    for (const [index, role] of roles.entries()) {
+        if (seen.has(role)) throw new IntegrationInputError(`${name}.roles.${index}`, `duplicates role ${role}`);
+        seen.add(role);
+    }
+    return { mode: "admin", roles };
 }

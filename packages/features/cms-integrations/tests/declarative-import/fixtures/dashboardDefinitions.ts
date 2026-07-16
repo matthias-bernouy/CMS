@@ -14,6 +14,7 @@ export const DELIVERY_DEFINITION = {
                         method: "POST",
                         targetUrl: "https://example.com/shipments",
                         params: [],
+                        output: [{ status: "200", body: { type: "object" } }],
                     },
                     {
                         endpointId: "relayPoints",
@@ -25,6 +26,7 @@ export const DELIVERY_DEFINITION = {
                             { name: "city", in: "query", type: "string" },
                             { name: "limit", in: "query", type: "number" },
                         ],
+                        output: [{ status: "200", body: { type: "object" } }],
                     },
                 ],
             },

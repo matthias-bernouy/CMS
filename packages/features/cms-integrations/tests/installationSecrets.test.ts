@@ -148,6 +148,7 @@ function generatedSecretDefinition(): IntegrationDefinition {
                     method: "GET",
                     targetUrl: "{{connectors.supabase.functionsBaseUrl}}/health",
                     params: [],
+                    output: [{ status: "200", body: { type: "object" } }],
                     headers: [{
                         name: "authorization",
                         source: { from: "secret", ref: "{{secrets.cmsApiKey}}", prefix: "Bearer " },

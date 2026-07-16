@@ -63,6 +63,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                         method: "GET",
                         targetUrl: "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
                         params: [],
+                        output: [{ status: "200", body: { type: "object" } }],
                     }],
                 },
             }],

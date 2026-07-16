@@ -8,6 +8,7 @@ import {
 import { parseIntegrationImportDto } from "../parsing/parseIntegrationImportDto";
 import { isSensitiveInput } from "../shared/inputSensitivity";
 import { hasAnswer } from "./ids";
+import { withObsoleteArtifactCleanup } from "./artifactCleanup";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "./secretRefs";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
@@ -83,9 +84,18 @@ async function commitSuccessfulRerun(
         definitionVersion: definition.version ?? installation.definitionVersion,
         definitionSnapshot: sanitizeDefinitionSnapshot(definition),
     });
-    const saved = await request.installations.replace(next);
-    await deleteObsoleteSecretRefs(request.deps.secrets, installation.secretRefs, saved.secretRefs);
-    return { installation: saved, run };
+    return withObsoleteArtifactCleanup({
+        deps: request.deps,
+        installations: request.installations,
+        installationId: installation.id,
+        previousArtifacts: installation.artifacts,
+        nextArtifacts: result.artifacts,
+        operation: async () => {
+            const saved = await request.installations.replace(next);
+            await deleteObsoleteSecretRefs(request.deps.secrets, installation.secretRefs, saved.secretRefs);
+            return { installation: saved, run };
+        },
+    });
 }
 
 async function buildRerunDto(

@@ -23,7 +23,19 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
                         id: "product-offers-fields",
                         sourceId: "products",
                         output: [{ endpointId: "product" }],
-                        fields: [{ id: "offerCount", label: "Offer count", type: "number" }],
+                        fieldSource: {
+                            endpointId: "offerFields",
+                            map: { options: "choices" },
+                        },
+                        fields: [{
+                            id: "offerStatus",
+                            label: "Offer status",
+                            type: "string",
+                            options: [
+                                { value: "pending", label: "Pending" },
+                                { value: "active", label: "Active" },
+                            ],
+                        }],
                     },
                 },
                 {
@@ -58,6 +70,19 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
             "relation",
             "dashboardRelation",
         ]);
+        expect(definition.artifacts?.find(artifact => artifact.type === "sourceOverlay")).toMatchObject({
+            type: "sourceOverlay",
+            overlay: {
+                fieldSource: { endpointId: "offerFields", map: { options: "choices" } },
+                fields: [{
+                    id: "offerStatus",
+                    options: [
+                        { value: "pending", label: "Pending" },
+                        { value: "active", label: "Active" },
+                    ],
+                }],
+            },
+        });
     });
 
     test("parses recursive dashboard visibility with field and resource expressions", () => {

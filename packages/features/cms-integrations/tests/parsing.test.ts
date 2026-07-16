@@ -33,6 +33,7 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                             endpointId: "getImage",
                             method: "GET",
                             targetUrl: "https://api.example.com/images/{fileId}",
+                            timeoutMs: 60_000,
                             responseKind: "file",
                             mediaType: "image/*",
                             params: [{ name: "fileId", in: "path", required: true, type: "string" }],
@@ -52,12 +53,38 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                     endpointId: "getImage",
                     method: "GET",
                     targetUrl: "https://api.example.com/images/{fileId}",
+                    timeoutMs: 60_000,
                     responseKind: "file",
                     mediaType: "image/*",
                     params: [{ name: "fileId", in: "path", required: true, type: "string" }],
                 }],
             },
         });
+    });
+
+    test("rejects source endpoint timeout overrides outside the runtime bound", () => {
+        expect(() => parseIntegrationImportRequest({
+            definition: {
+                kind: "source-timeout",
+                label: "Source timeout",
+                inputs: [],
+                artifacts: [{
+                    type: "source",
+                    source: {
+                        id: "items",
+                        meta: { name: "Items" },
+                        endpoints: [{
+                            endpointId: "list",
+                            method: "GET",
+                            targetUrl: "https://api.example.com/items",
+                            timeoutMs: 120_001,
+                            params: [],
+                        }],
+                    },
+                }],
+            },
+            answers: {},
+        })).toThrow(/timeoutMs.*integer between 1 and 120000/);
     });
 
     test("parses manual dashboard artifacts before import execution", () => {

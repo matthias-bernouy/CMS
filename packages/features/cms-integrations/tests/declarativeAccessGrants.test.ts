@@ -28,6 +28,7 @@ describe("@bernouy/cms-integrations access grants", () => {
                             endpoint("catalog", "public"),
                             endpoint("myOrders", { mode: "auth" }),
                             endpoint("adminOrders", "admin"),
+                            endpoint("financeOperations", { mode: "admin", roles: ["finance", "support"] }),
                             endpoint("createOrder", "system"),
                         ],
                     },
@@ -63,15 +64,40 @@ describe("@bernouy/cms-integrations access grants", () => {
         expect((await roles.get(USER_ROLE))?.grants.map(grant => grant.permission)).toEqual([
             "urn:shop:myOrders",
         ]);
+        expect((await sources.getEndpoint("urn:shop:financeOperations"))?.access).toEqual({
+            mode: "admin",
+            roles: ["finance", "support"],
+        });
+    });
+
+    test("rejects malformed explicit endpoint roles", () => {
+        const definition = (access: unknown) => ({
+            kind: "shop",
+            label: "Shop",
+            inputs: [],
+            artifacts: [{
+                type: "source",
+                source: {
+                    id: "shop",
+                    meta: { name: "Shop" },
+                    endpoints: [endpoint("financeOperations", access as any)],
+                },
+            }],
+        });
+
+        expect(() => parseIntegrationDefinition(definition({ mode: "auth", roles: ["finance"] }))).toThrow(/only supported for admin access/);
+        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["finance", "finance"] }))).toThrow(/duplicates role finance/);
+        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["finance", " "] }))).toThrow(/roles\.1/);
     });
 });
 
-function endpoint(endpointId: string, access: string | { mode: string }) {
+function endpoint(endpointId: string, access: string | { mode: string; roles?: string[] }) {
     return {
         endpointId,
         method: "GET",
         access,
         targetUrl: `https://example.com/${endpointId}`,
         params: [],
+        output: [{ status: "200", body: { type: "object" } }],
     };
 }

@@ -18,7 +18,10 @@ export function buildSourceArtifacts(definition: IntegrationDefinition, context:
     try {
         return (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "source")
-            .map(artifact => sourceDtoToSource(resolveTemplates(artifact.source, context)));
+            .map(artifact => sourceDtoToSource({
+                ...resolveTemplates(artifact.source, context),
+                identityAuthority: definition.kind,
+            }));
     } catch (error) {
         if (error instanceof IntegrationInputError) throw error;
         throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid source artifact");

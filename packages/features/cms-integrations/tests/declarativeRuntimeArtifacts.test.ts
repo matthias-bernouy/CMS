@@ -100,6 +100,7 @@ function sourceArtifact(id: string, name: string, endpoints: Endpoint[]): Artifa
                 method: "GET",
                 targetUrl: `https://api.example.com/${id}/${endpoint.endpointId}`,
                 params: endpoint.params.map(param => ({ ...param, in: "query" })),
+                output: [{ status: "200", body: { type: "object" } }],
             })),
         },
     };
