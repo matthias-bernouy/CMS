@@ -1,26 +1,32 @@
 import { Component } from "@bernouy/components/base";
+import { setValueAt, valueAt } from "../../runtime/expressions";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
-import {
-    addItem,
-    cloneData,
-    cloneItems,
-    emptyData,
-    moveItem,
-    normalizeData,
-    persistPositions,
-    removeItem,
-    updateItem,
-    type ReorderableListData,
-    type ReorderableListItem,
-} from "./state";
-import { renderList, renderedRows } from "./view";
-import { readItemControl } from "./controls";
 
-export type { ReorderableListData, ReorderableListItem, ReorderableListItemField } from "./state";
+export type ReorderableListItem = Record<string, unknown>;
+
+export type ReorderableListItemField = {
+    id: string;
+    label: string;
+    path: string;
+    type?: "text" | "checkbox" | "select" | "combobox";
+    options?: Array<{ label: string; value: string }>;
+    required?: boolean;
+    placeholder?: string;
+};
+
+export type ReorderableListData = {
+    items: ReorderableListItem[];
+    itemKey: string;
+    positionPath?: string;
+    fields: ReorderableListItemField[];
+    addLabel?: string;
+    minItems?: number;
+    maxItems?: number;
+};
 
 export class DashboardWReorderableList extends Component {
-    private value: ReorderableListData = emptyData();
+    private value: ReorderableListData = { items: [], itemKey: "id", fields: [] };
     private draggingIndex: number | null = null;
 
     constructor() {
@@ -30,7 +36,7 @@ export class DashboardWReorderableList extends Component {
     override connectedCallback(): void {
         this.shadowRoot!.addEventListener("click", this.onClick);
         this.shadowRoot!.addEventListener("input", this.onInput);
-        this.shadowRoot!.addEventListener("change", this.onChange);
+        this.shadowRoot!.addEventListener("change", this.onInput);
         this.shadowRoot!.addEventListener("dragstart", this.onDragStart as EventListener);
         this.shadowRoot!.addEventListener("dragover", this.onDragOver as EventListener);
         this.shadowRoot!.addEventListener("drop", this.onDrop as EventListener);
@@ -41,25 +47,90 @@ export class DashboardWReorderableList extends Component {
     disconnectedCallback(): void {
         this.shadowRoot?.removeEventListener("click", this.onClick);
         this.shadowRoot?.removeEventListener("input", this.onInput);
-        this.shadowRoot?.removeEventListener("change", this.onChange);
+        this.shadowRoot?.removeEventListener("change", this.onInput);
         this.shadowRoot?.removeEventListener("dragstart", this.onDragStart as EventListener);
         this.shadowRoot?.removeEventListener("dragover", this.onDragOver as EventListener);
         this.shadowRoot?.removeEventListener("drop", this.onDrop as EventListener);
         this.shadowRoot?.removeEventListener("dragend", this.onDragEnd);
-        this.clearDragState();
     }
 
     get data(): ReorderableListData { return cloneData(this.value); }
     set data(value: ReorderableListData) {
-        this.clearDragState();
         this.value = normalizeData(value);
         if (this.isConnected) this.render();
     }
 
-    get items(): ReorderableListItem[] { return cloneItems(this.value); }
+    get items(): ReorderableListItem[] { return structuredClone(this.value.items); }
 
     private render(): void {
-        renderList(this.shadowRoot!, this.value);
+        const rows = this.query<HTMLElement>("[data-rows]");
+        rows.replaceChildren(...this.value.items.map((item, index) => this.renderRow(item, index)));
+        this.renderHeader();
+        const add = this.query<HTMLButtonElement>("[data-add]");
+        add.textContent = this.value.addLabel ?? "Add item";
+        add.disabled = this.value.maxItems !== undefined && this.value.items.length >= this.value.maxItems;
+    }
+
+    private renderHeader(): void {
+        const header = this.query<HTMLElement>("[data-header]");
+        header.style.setProperty(
+            "--reorderable-columns",
+            ["24px", ...this.value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "),
+        );
+        const cells = [document.createElement("span")];
+        for (const field of this.value.fields) {
+            const cell = document.createElement("span");
+            cell.textContent = field.label;
+            cells.push(cell);
+        }
+        cells.push(document.createElement("span"));
+        header.replaceChildren(...cells);
+    }
+
+    private renderRow(item: ReorderableListItem, index: number): HTMLElement {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.dataset.index = String(index);
+        row.dataset.itemKey = String(valueAt(item, this.value.itemKey) ?? index);
+        row.style.setProperty(
+            "--reorderable-columns",
+            ["24px", ...this.value.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "),
+        );
+
+        const handle = document.createElement("span");
+        handle.className = "handle";
+        handle.title = "Drag to reorder";
+        handle.setAttribute("aria-label", "Drag to reorder");
+        handle.draggable = true;
+        handle.textContent = "⠿";
+        row.append(handle);
+
+        for (const field of this.value.fields) row.append(this.renderField(item, index, field));
+
+        const remove = document.createElement("button");
+        remove.className = "remove";
+        remove.type = "button";
+        remove.dataset.remove = String(index);
+        remove.disabled = this.value.minItems !== undefined && this.value.items.length <= this.value.minItems;
+        remove.setAttribute("aria-label", "Remove item");
+        remove.title = "Remove item";
+        remove.textContent = "×";
+        row.append(remove);
+        return row;
+    }
+
+    private renderField(item: ReorderableListItem, index: number, field: ReorderableListItemField): HTMLElement {
+        const root = document.createElement("div");
+        root.className = "field";
+        const input = fieldControl(field, textAt(item, field.path));
+        if (input instanceof HTMLInputElement && field.type === "checkbox") input.checked = booleanAt(item, field.path);
+        input.dataset.itemIndex = String(index);
+        input.dataset.itemPath = field.path;
+        input.setAttribute("aria-label", field.label);
+        if (field.required) input.setAttribute("required", "");
+        if (field.placeholder) input.setAttribute("placeholder", field.placeholder);
+        root.append(input);
+        return root;
     }
 
     private onClick = (event: Event): void => {
@@ -70,21 +141,13 @@ export class DashboardWReorderableList extends Component {
     };
 
     private onInput = (event: Event): void => {
-        const control = this.itemControl(event);
-        if (!control) return;
-        event.stopPropagation();
-        const field = this.itemField(control);
-        if (!field || (field.type ?? "text") !== "text") return;
-        this.updateControl(control, field);
-    };
-
-    private onChange = (event: Event): void => {
-        const control = this.itemControl(event);
-        if (!control) return;
-        event.stopPropagation();
-        const field = this.itemField(control);
-        if (!field || (field.type ?? "text") === "text") return;
-        this.updateControl(control, field);
+        const input = (event.target as Element | null)?.closest<HTMLElement>("[data-item-index][data-item-path]");
+        if (!input) return;
+        const index = Number(input.dataset.itemIndex);
+        const item = this.value.items[index];
+        if (!item) return;
+        setValueAt(item, input.dataset.itemPath ?? "", controlValue(input));
+        this.commit(false);
     };
 
     private onDragStart = (event: DragEvent): void => {
@@ -109,22 +172,36 @@ export class DashboardWReorderableList extends Component {
         const row = (event.target as Element | null)?.closest<HTMLElement>(".row[data-index]");
         if (!row || this.draggingIndex === null) return;
         event.preventDefault();
-        if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index))) this.commit();
+        const targetIndex = Number(row.dataset.index);
+        this.moveItem(this.draggingIndex, targetIndex);
         this.clearDragState();
     };
 
     private onDragEnd = (): void => this.clearDragState();
 
     private addItem(): void {
-        if (addItem(this.value)) this.commit();
+        if (this.value.maxItems !== undefined && this.value.items.length >= this.value.maxItems) return;
+        this.value.items.push({});
+        this.commit();
     }
 
     private removeItem(index: number): void {
-        if (removeItem(this.value, index)) this.commit();
+        if (!Number.isInteger(index) || (this.value.minItems !== undefined && this.value.items.length <= this.value.minItems)) return;
+        this.value.items.splice(index, 1);
+        this.commit();
+    }
+
+    private moveItem(from: number, to: number): void {
+        if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || to < 0 || to >= this.value.items.length) return;
+        const [item] = this.value.items.splice(from, 1);
+        if (!item) return;
+        this.value.items.splice(to, 0, item);
+        this.commit();
     }
 
     private commit(render = true): void {
-        persistPositions(this.value);
+        const positionPath = this.value.positionPath ?? "position";
+        this.value.items.forEach((item, index) => setValueAt(item, positionPath, index));
         if (render) this.render();
         this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     }
@@ -137,22 +214,63 @@ export class DashboardWReorderableList extends Component {
         });
     }
 
-    private rows(): HTMLElement[] { return renderedRows(this.shadowRoot!); }
-
-    private itemControl(event: Event): HTMLElement | null {
-        return (event.target as Element | null)?.closest<HTMLElement>("[data-item-index][data-item-path]") ?? null;
-    }
-
-    private itemField(control: HTMLElement): ReorderableListData["fields"][number] | undefined {
-        return this.value.fields.find(field => field.id === control.dataset.itemField);
-    }
-
-    private updateControl(control: HTMLElement, field: ReorderableListData["fields"][number]): void {
-        if (updateItem(this.value, Number(control.dataset.itemIndex), control.dataset.itemPath ?? "",
-            readItemControl(field, control))) this.commit(false);
-    }
+    private rows(): HTMLElement[] { return Array.from(this.shadowRoot!.querySelectorAll<HTMLElement>(".row")); }
+    private query<T extends Element>(selector: string): T { return this.shadowRoot!.querySelector(selector) as T; }
 }
 
 if (!customElements.get("cms-dashboard-w-reorderable-list")) {
     customElements.define("cms-dashboard-w-reorderable-list", DashboardWReorderableList);
+}
+
+function normalizeData(value: ReorderableListData): ReorderableListData {
+    const clone = structuredClone(value);
+    return {
+        ...clone,
+        items: Array.isArray(clone.items) ? clone.items.filter(isRecord) : [],
+        fields: Array.isArray(clone.fields) ? clone.fields : [],
+    };
+}
+
+function cloneData(value: ReorderableListData): ReorderableListData {
+    return structuredClone(value);
+}
+
+function isRecord(value: unknown): value is ReorderableListItem {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function textAt(value: unknown, path: string): string {
+    const resolved = valueAt(value, path);
+    return resolved === null || resolved === undefined ? "" : String(resolved);
+}
+
+function booleanAt(value: unknown, path: string): boolean {
+    const resolved = valueAt(value, path);
+    return resolved === true || resolved === "true" || resolved === 1;
+}
+
+function fieldControl(field: ReorderableListItemField, value: string): HTMLElement {
+    if (field.type === "select" || field.type === "combobox") {
+        const control = document.createElement(field.type === "select" ? "p9r-select" : "p9r-combobox") as HTMLElement & { value: string };
+        control.setAttribute("aria-label", field.label);
+        control.setAttribute("value", value);
+        control.replaceChildren(...(field.options ?? []).map(option => {
+            const element = document.createElement("option");
+            element.value = option.value;
+            element.textContent = option.label;
+            element.selected = option.value === value;
+            return element;
+        }));
+        control.value = value;
+        return control;
+    }
+    const input = document.createElement("input");
+    input.type = field.type ?? "text";
+    input.value = value;
+    return input;
+}
+
+function controlValue(control: HTMLElement): string | boolean {
+    if (control instanceof HTMLInputElement && control.type === "checkbox") return control.checked;
+    return "value" in control ? String((control as HTMLElement & { value: unknown }).value ?? "") : "";
 }

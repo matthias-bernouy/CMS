@@ -12,6 +12,7 @@ export function tableData(widget: TableWidget, items: unknown[]): WTableData {
             action: action.id,
             ...(action.selection?.opens ? { target: action.selection.opens } : {}),
             tone: action.tone,
+            ...(action.confirm ? { confirm: action.confirm } : {}),
         })),
         columns: widget.columns.map(column => ({
             key: column.id,

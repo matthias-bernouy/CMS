@@ -69,6 +69,7 @@ export class DashboardWTable extends Component {
             button.dataset.action = action.action;
             if (action.widget) button.dataset.widget = action.widget;
             if (action.target) button.dataset.target = action.target;
+            if (action.confirm) button.dataset.confirm = action.confirm;
             button.setAttribute("tone", action.tone ?? "primary");
             button.textContent = action.label;
             return button;
@@ -100,6 +101,7 @@ export class DashboardWTable extends Component {
                 widget: widget.id,
                 ...(action.selection?.opens ? { target: action.selection.opens } : {}),
                 tone: action.tone,
+                ...(action.confirm ? { confirm: action.confirm } : {}),
             })),
             columns: widget.columns.map(column => ({
                 key: column.id,
@@ -145,6 +147,7 @@ export class DashboardWTable extends Component {
 
     private onActionClick = (event: Event): void => {
         const action = (event.target as Element | null)?.closest<HTMLElement>("[data-action]");
+        if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) return;
         if (action?.dataset.action) emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
             action: action.dataset.action,
             widget: action.dataset.widget,

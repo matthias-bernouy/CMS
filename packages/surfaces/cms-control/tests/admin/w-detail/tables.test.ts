@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe("dashboard detail widget actions", () => {
-    test("preserves the right row and nested values after deletion", async () => {
+    test("preserves the right row and serializes nested paths after deletion", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
         detail.setAttribute("data-config-json", JSON.stringify({
             widget: "w-detail",
@@ -48,6 +48,7 @@ describe("dashboard detail widget actions", () => {
                             path: "variantAxes",
                             type: "table",
                             editable: true,
+                            addLabel: "Add axis",
                             columns: [
                                 { id: "label", label: "Label", path: "details.label", editable: true },
                                 { id: "values", label: "Values", path: "details.values", editable: true, type: "tokens" },
@@ -75,10 +76,11 @@ describe("dashboard detail widget actions", () => {
         await Promise.resolve();
 
         detail.shadowRoot!.querySelector<HTMLButtonElement>("[data-table-remove]")!.click();
-        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & { value: string };
-        const tokens = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & { value: string };
-        input.value = "Weight updated";
-        tokens.value = "285,300";
+        const labelInput = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & { value: string };
+        const valuesInput = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & { value: string };
+        labelInput.value = "Weight updated";
+        valuesInput.value = "285, 300";
+        expect(detail.shadowRoot!.querySelector("[data-table-add]")?.textContent).toBe("Add axis");
 
         const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
         save.shadowRoot.querySelector("button")!.click();
@@ -107,6 +109,7 @@ describe("dashboard detail widget actions", () => {
 
         expect(source).toEqual([{ id: "axis", details: { label: "Size" } }]);
     });
+
 
     test("updates derived table fields from editable table input", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");

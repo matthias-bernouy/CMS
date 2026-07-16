@@ -6,7 +6,7 @@ export const WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
 export const WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
 export const WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
 
-export type WidgetFieldValue = string | string[] | DashboardMediaItem[];
+export type WidgetFieldValue = string | boolean | string[] | DashboardMediaItem[];
 
 export type WidgetAction = {
     label: string;
@@ -15,6 +15,7 @@ export type WidgetAction = {
     action?: string;
     section?: string;
     icon?: "archive" | "download" | "link" | "trash";
+    confirm?: string;
 };
 
 export type WidgetRowSelectDetail = {
@@ -30,6 +31,7 @@ export type WidgetActionDetail = {
     target?: string;
     resource?: unknown;
     fields?: Record<string, unknown>;
+    value?: unknown;
 };
 
 export type WidgetFieldChangeDetail = {

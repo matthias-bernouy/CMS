@@ -57,7 +57,7 @@ export type WDetailField = {
     label: string;
     value: WDetailFieldValue;
     input: "text" | "number" | "checkbox" | "textarea" | "select" | "combobox" | "tokens" | "chips"
-        | "media-list" | "table" | "reorderable-list" | "schema" | "readonly" | "badge";
+        | "media-list" | "table" | "reorderable-list" | "schema" | "image" | "readonly" | "badge";
     options?: WDetailOption[];
     columns?: WDetailTableColumn[];
     derive?: WDetailTableDerive;

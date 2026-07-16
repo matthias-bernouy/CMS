@@ -64,7 +64,7 @@ function detailTargetsFor(widgets: DashboardWidget[]): Set<string> {
 }
 
 function collectDetailTargets(widget: DashboardWidget, targets: Set<string>): void {
-    if (widget.widget === "w-table") {
+    if (widget.widget === "w-table" || widget.widget === "w-navigation-list") {
         if (widget.selection?.opens) targets.add(widget.selection.opens);
         for (const action of widget.actions ?? []) {
             if (action.selection?.opens) targets.add(action.selection.opens);

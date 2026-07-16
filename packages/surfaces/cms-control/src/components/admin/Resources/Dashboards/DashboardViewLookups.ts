@@ -1,6 +1,6 @@
 import { showToast } from "@bernouy/components";
 import { detailKey } from "./domain";
-import { executeLookupCreate } from "./runtime/lookups/create";
+import { executeLookupCreate } from "./runtime/lookupCreate";
 import type { DashboardViewActionContext } from "./DashboardViewActions";
 import type { WidgetFieldChangeDetail } from "./widgets/shared";
 
@@ -19,7 +19,7 @@ export async function runDashboardLookupCreate(
     const key = detailKey(detail.collection, change.rowKey);
     const nextDraft = context.drafts.get(key) ?? {};
     try {
-        const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft);
+        const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft, context.groups ?? [group]);
         if (result === undefined) return;
         context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
         applyLookupCreate(target, change.field, result.value, result.option);

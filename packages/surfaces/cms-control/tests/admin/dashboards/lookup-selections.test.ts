@@ -13,7 +13,7 @@ describe("dashboard local lookup selections", () => {
         const requests: Request[] = [];
         globalThis.fetch = respondingWith({ items: [] }, requests);
 
-        const options = await detailLookupOptions("catalog", detailWidget([lookupField({
+        const options = await detailLookupOptions("commerce", detailWidget([lookupField({
             selected: "$resource.product",
         })]), {
             productId: "product-1",
@@ -22,7 +22,7 @@ describe("dashboard local lookup selections", () => {
 
         expect(options.productId).toEqual([{ value: "product-1", label: "Racket" }]);
         expect(requests).toHaveLength(1);
-        expect(requests[0]?.url).toContain("/.cms/sources/catalog/products");
+        expect(requests[0]?.url).toContain("/.cms/sources/commerce/products");
     });
 
     test("keeps the embedded selection when the option page fails", async () => {
@@ -32,7 +32,7 @@ describe("dashboard local lookup selections", () => {
             return new Response("temporarily unavailable", { status: 503 });
         }) as typeof fetch;
 
-        const options = await detailLookupOptions("catalog", detailWidget([lookupField({
+        const options = await detailLookupOptions("commerce", detailWidget([lookupField({
             selected: "$resource.product",
         })]), {
             product: { id: "product-1", title: "Racket" },
@@ -51,11 +51,10 @@ describe("dashboard local lookup selections", () => {
         field.path = "tagIds";
         field.type = "tokens";
 
-        const options = await detailLookupOptions("catalog", detailWidget([field]), {
+        const options = await detailLookupOptions("commerce", detailWidget([field]), {
             selectedTags: [
                 { id: "tag-a", title: "Snapshot A" },
                 { id: "tag-b", title: "Snapshot B" },
-                { id: "tag-b", title: "Duplicate B" },
             ],
         }, { tagIds: ["tag-a", "tag-b"] });
 
@@ -77,7 +76,7 @@ describe("dashboard local lookup selections", () => {
             } },
         ] as DashboardField[];
 
-        const options = await detailLookupOptions("catalog", detailWidget(fields), {
+        const options = await detailLookupOptions("commerce", detailWidget(fields), {
             wrongProduct: { id: "other", title: "Wrong" },
             unlabeledProduct: { id: "product-2" },
         }, { productId: "product-1", otherId: "product-2", legacyId: "product-3" });

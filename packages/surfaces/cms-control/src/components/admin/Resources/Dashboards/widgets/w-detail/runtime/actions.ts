@@ -20,6 +20,7 @@ function renderButton(action: DetailAction): HTMLElement {
         button.setAttribute("variant", "ghost");
     } else button.setAttribute("variant", "outlined");
     button.dataset.action = action.action ?? action.label;
+    if (action.confirm) button.dataset.confirm = action.confirm;
     button.textContent = action.label;
     return button;
 }
@@ -40,6 +41,7 @@ function renderMenuItem(action: DetailAction): HTMLElement {
     const item = document.createElement("p9r-action-menu-item");
     if (action.tone === "danger") item.setAttribute("color", "danger");
     item.dataset.action = action.action ?? action.label;
+    if (action.confirm) item.dataset.confirm = action.confirm;
     const icon = actionIcon(action.icon);
     if (icon) item.append(icon);
     item.append(document.createTextNode(action.label));

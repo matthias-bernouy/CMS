@@ -1,7 +1,7 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import { route } from "../../api";
-import type { RelationTableWidget } from "../../domain";
-import { jsonAttr, tableRowsTemplate, urlSourceWrapper } from "./source";
+import type { RelationTableWidget } from "../domain";
+import { route } from "../api";
+import { appendSourceContent, jsonAttr, tableRowsTemplate, urlSourceWrapper } from "./mountSource";
 
 export function relationDetailSectionElement(widget: RelationTableWidget): HTMLElement {
     const section = document.createElement("cms-detail-section");
@@ -14,9 +14,14 @@ export function relationDetailSectionElement(widget: RelationTableWidget): HTMLE
 
 function relationTableElement(widget: RelationTableWidget): HTMLElement {
     const tableWidget: Extract<DashboardWidget, { widget: "w-table" }> = {
-        widget: "w-table", id: widget.id,
-        source: { endpoint: widget.relationId, itemsPath: "items" },
-        rowKey: widget.rowKey, columns: widget.columns,
+        widget: "w-table",
+        id: widget.id,
+        source: {
+            endpoint: widget.relationId,
+            itemsPath: "items",
+        },
+        rowKey: widget.rowKey,
+        columns: widget.columns,
         ...(widget.pageSize ? { pageSize: widget.pageSize } : {}),
         ...(widget.actions?.length ? { actions: widget.actions.map(tableAction) } : {}),
     };
@@ -25,14 +30,18 @@ function relationTableElement(widget: RelationTableWidget): HTMLElement {
     element.setAttribute("data-config-json", jsonAttr(tableWidget));
     element.toggleAttribute("embedded", true);
     element.append(tableRowsTemplate(tableWidget));
-    wrapper.append(element);
+    appendSourceContent(wrapper, element);
     return wrapper;
 }
 
 function tableAction(action: NonNullable<RelationTableWidget["actions"]>[number]) {
-    return { id: action.id, label: action.label,
-        ...(action.icon ? { icon: action.icon } : {}), ...(action.tone ? { tone: action.tone } : {}),
-        ...(action.placement ? { placement: action.placement } : {}) };
+    return {
+        id: action.id,
+        label: action.label,
+        ...(action.icon ? { icon: action.icon } : {}),
+        ...(action.tone ? { tone: action.tone } : {}),
+        ...(action.placement ? { placement: action.placement } : {}),
+    };
 }
 
 function relationPageUrl(widget: RelationTableWidget): string {

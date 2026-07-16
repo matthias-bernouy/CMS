@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardWDetail } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
 import type { WDetailData } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/types";
-import { changeDetailInput, waitForDetail } from "./detailTestHelpers";
+import { changeDetailInput, waitForDetail } from "../dashboards/detailTestHelpers";
 
 const realFetch = globalThis.fetch;
 
@@ -119,7 +119,6 @@ function boundDetail(resource: Record<string, unknown>): DashboardWDetail {
     detail.setAttribute("data-source-json", JSON.stringify(resource));
     return detail;
 }
-
 function manualData(title: string): WDetailData {
     return {
         rowKey: "manual",

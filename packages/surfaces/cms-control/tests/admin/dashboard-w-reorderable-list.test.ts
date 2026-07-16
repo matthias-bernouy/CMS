@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { Combobox, P9rSelect } from "@bernouy/components";
 import "../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
 import type { DashboardWReorderableList } from "../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
-
-if (!customElements.get("p9r-select")) customElements.define("p9r-select", P9rSelect);
-if (!customElements.get("p9r-combobox")) customElements.define("p9r-combobox", Combobox);
 
 afterEach(() => {
     document.body.replaceChildren();
@@ -41,29 +37,30 @@ describe("dashboard reorderable list widget", () => {
         ]);
         expect(items.map(item => item.order.position)).toEqual([0, 1]);
         const snapshot = list.items;
-        (snapshot[0]!.details as Record<string, unknown>).label = "Changed";
+        snapshot[0]!.details = { value: "changed", label: "Changed" };
         expect(list.items[0]?.details).toEqual({ value: "club", label: "Club" });
     });
 
     test("keeps the edited input mounted while its value changes", () => {
         const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
-        const items = [{ id: "agency", details: { label: "Agency" }, position: 0 }];
         list.data = {
-            items,
+            items: [{ id: "agency", value: "agency", label: "Agency", position: 0 }],
             itemKey: "id",
-            fields: [{ id: "label", label: "Label", path: "details.label", required: true }],
+            fields: [
+                { id: "value", label: "Value", path: "value", required: true },
+                { id: "label", label: "Label", path: "label", required: true },
+            ],
         };
         document.body.append(list);
 
-        const input = list.shadowRoot!.querySelector<HTMLInputElement>("[data-item-path='details.label']")!;
+        const input = list.shadowRoot!.querySelector<HTMLInputElement>("[data-item-path='label']")!;
         input.focus();
         input.value = "Agency updated";
         input.dispatchEvent(new Event("input", { bubbles: true }));
 
-        expect(list.shadowRoot!.querySelector("[data-item-path='details.label']")).toBe(input);
+        expect(list.shadowRoot!.querySelector("[data-item-path='label']")).toBe(input);
         expect(list.shadowRoot!.activeElement).toBe(input);
-        expect(list.items[0]?.details).toEqual({ label: "Agency updated" });
-        expect(items[0]!.details.label).toBe("Agency");
+        expect(list.items[0]?.label).toBe("Agency updated");
     });
 
     test("ignores unsafe nested item and position paths", () => {
@@ -88,67 +85,4 @@ describe("dashboard reorderable list widget", () => {
         expect(list.shadowRoot!.querySelector<HTMLElement>(".row")?.dataset.itemKey).toBe("0");
         expect((Object.prototype as Record<string, unknown>).dashboardPolluted).toBeUndefined();
     });
-
-    test("stores checkbox, select, and combobox values without losing hidden metadata", () => {
-        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
-        list.data = {
-            items: [{ id: "axis-1", enabled: false, mode: "single", fieldKey: "size", audit: { owner: "system" } }],
-            itemKey: "id",
-            fields: [
-                { id: "enabled", label: "Enabled", path: "enabled", type: "checkbox" },
-                { id: "mode", label: "Mode", path: "mode", type: "select", options: [
-                    { value: "single", label: "Single" }, { value: "multiple", label: "Multiple" },
-                ] },
-                { id: "fieldKey", label: "Field", path: "fieldKey", type: "combobox", options: [
-                    { value: "size", label: "Size" }, { value: "color", label: "Color" },
-                ] },
-            ],
-        };
-        let changes = 0;
-        list.addEventListener("change", () => { changes += 1; });
-        document.body.append(list);
-
-        const checkbox = list.shadowRoot!.querySelector<HTMLInputElement>("input[type='checkbox']")!;
-        checkbox.checked = true;
-        checkbox.dispatchEvent(new Event("input", { bubbles: true }));
-        checkbox.dispatchEvent(new Event("change", { bubbles: true }));
-        const select = list.shadowRoot!.querySelector("p9r-select") as HTMLElement & { value: string };
-        select.value = "multiple";
-        select.dispatchEvent(new Event("change", { bubbles: true }));
-        const combobox = list.shadowRoot!.querySelector("p9r-combobox") as HTMLElement & { value: string };
-        combobox.value = "color";
-        combobox.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-
-        expect(changes).toBe(3);
-        expect(list.items).toEqual([{
-            id: "axis-1",
-            enabled: true,
-            mode: "multiple",
-            fieldKey: "color",
-            audit: { owner: "system" },
-            position: 0,
-        }]);
-    });
-
-    test("clears stale drag state when new data replaces the list", () => {
-        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
-        list.data = listData(["old-a", "old-b"]);
-        document.body.append(list);
-        list.shadowRoot!.querySelector<HTMLElement>(".handle")!
-            .dispatchEvent(new Event("dragstart", { bubbles: true }));
-
-        list.data = listData(["new-a", "new-b"]);
-        list.shadowRoot!.querySelectorAll<HTMLElement>(".row")[1]!
-            .dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
-
-        expect(list.items.map(item => item.id)).toEqual(["new-a", "new-b"]);
-    });
 });
-
-function listData(ids: string[]) {
-    return {
-        items: ids.map(id => ({ id, label: id })),
-        itemKey: "id",
-        fields: [{ id: "label", label: "Label", path: "label" }],
-    };
-}

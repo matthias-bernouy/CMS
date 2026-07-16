@@ -60,6 +60,7 @@ function actionData(action: DashboardAction): WDetailData["actions"][number] {
         placement: action.placement,
         section: action.section,
         icon: isActionIcon(action.icon) ? action.icon : undefined,
+        confirm: action.confirm,
     };
 }
 

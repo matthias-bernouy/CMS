@@ -8,10 +8,12 @@ import type { WidgetActionDetail, WidgetMediaActionDetail } from "./widgets/shar
 
 export type DashboardViewActionContext = {
     group: DashboardSourceGroup | null;
+    groups?: DashboardSourceGroup[];
     dashboard: DashboardDto | null | undefined;
     detail: DetailSelection | null;
     drafts: Map<string, Record<string, unknown>>;
     render: () => void;
+    reloadDefinitions?: () => Promise<void>;
     reload: (collection: string, row: string) => void;
     clearDetail: () => void;
     openDetail: (collection: string, row: string) => void;
@@ -27,9 +29,16 @@ export async function runDashboardWidgetAction(context: DashboardViewActionConte
             ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
                 ...(context.drafts.get(key) ?? {}),
                 ...(action.fields ?? {}),
-            }, action.resource)
-            : await executeDashboardTableAction(group, dashboard, action.action, action.widget);
+            }, action.resource, context.groups ?? [group])
+            : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group]);
         if (actionDetail) context.drafts.delete(key);
+        if (result.invalidatesSchema && context.reloadDefinitions) {
+            try {
+                await context.reloadDefinitions();
+            } catch {
+                showToast(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
+            }
+        }
         if (result.kind === "download") {
             downloadBlob(result.blob, result.filename);
             showToast(`${action.action} downloaded`, { type: "success" });
@@ -96,7 +105,7 @@ export async function runDashboardMediaAction(context: DashboardViewActionContex
     if (!group || !dashboard || !detail) return;
     const key = detailKey(detail.collection, detail.row);
     try {
-        await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {});
+        await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {}, context.groups ?? [group]);
         removeDraftField(context.drafts, key, media.field);
         showToast(`Media ${media.action} completed`, { type: "success" });
         context.reload(detail.collection, detail.row);

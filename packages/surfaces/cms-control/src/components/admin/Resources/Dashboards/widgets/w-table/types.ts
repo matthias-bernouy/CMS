@@ -26,6 +26,7 @@ export type WTableData = {
         widget?: string;
         target?: string;
         tone?: "primary" | "secondary" | "danger";
+        confirm?: string;
     }>;
     columns: WTableColumn[];
     rows: WTableRow[];

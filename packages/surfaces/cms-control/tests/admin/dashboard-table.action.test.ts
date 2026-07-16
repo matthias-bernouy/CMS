@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../src/components/admin/Resources/Dashboards/types";
 import { runDashboardWidgetAction } from "../../src/components/admin/Resources/Dashboards/DashboardViewActions";
-import { executeDashboardTableAction } from "../../src/components/admin/Resources/Dashboards/runtime/actions";
+import { executeDashboardAction, executeDashboardTableAction } from "../../src/components/admin/Resources/Dashboards/runtime/actions";
 
 const realFetch = globalThis.fetch;
 
@@ -146,6 +146,80 @@ describe("dashboard table actions", () => {
         expect(await requests[0]!.json()).toEqual({ smtpHost: "smtp.saved.test" });
         expect(renderCount).toBe(1);
     });
+
+    test("reloads CMS definitions after an endpoint invalidates the schema", async () => {
+        globalThis.fetch = (async () => new Response(JSON.stringify({ id: "shipment-1" }), {
+            status: 201,
+            headers: { "content-type": "application/json" },
+        })) as unknown as typeof fetch;
+        let reloadDefinitions = 0;
+
+        await runDashboardWidgetAction({
+            group: schemaInvalidatingDeliveryGroup(),
+            dashboard: deliveryDashboard(),
+            detail: { collection: "createShipmentForm", row: "__new__" },
+            drafts: new Map(),
+            render() { throw new Error("render should not run"); },
+            async reloadDefinitions() { reloadDefinitions++; },
+            reload() { throw new Error("reload should not run"); },
+            clearDetail() { throw new Error("clearDetail should not run"); },
+            openDetail() {},
+        }, {
+            action: "createShipment",
+            resource: { modeCollection: "CCC" },
+            fields: { recipientName: "Ada Lovelace" },
+        });
+
+        expect(reloadDefinitions).toBe(1);
+    });
+
+    test("uses the declared method for a cross-source action", async () => {
+        const requests: Request[] = [];
+        globalThis.fetch = (async (input, init) => {
+            const request = new Request(input, init);
+            requests.push(request);
+            return Response.json({ status: "staged" });
+        }) as typeof fetch;
+        const commerce = tableActionGroup();
+        const stripe: DashboardSourceGroup = {
+            source: { urn: "urn:stripe-connect", id: "stripe-connect", name: "Stripe", endpointCount: 1, dashboardCount: 0, readonly: false },
+            endpoints: [{ endpointId: "stageStripeDisputeEvidence", method: "POST", targetUrl: "https://stripe.test/disputes/evidence", params: [] }],
+            dashboards: [],
+        };
+        const composed: DashboardDto = {
+            id: "payments-disputes",
+            source: "newsletter",
+            views: [{
+                widget: "w-detail",
+                id: "disputeDetail",
+                source: { sourceId: "stripe-connect", endpoint: "getStripeDispute" },
+                actions: [{
+                    id: "stageEvidence",
+                    label: "Stage evidence",
+                    endpoint: {
+                        sourceId: "stripe-connect",
+                        endpoint: "stageStripeDisputeEvidence",
+                        body: { disputeId: "$resource.id" },
+                    },
+                }],
+                main: [{ id: "state", title: "State", fields: [] }],
+            }],
+        };
+
+        await executeDashboardAction(
+            commerce,
+            composed,
+            { collection: "disputeDetail", row: "dp_123" },
+            "stageEvidence",
+            {},
+            { id: "dp_123" },
+            [commerce, stripe],
+        );
+
+        expect(requests[0]?.method).toBe("POST");
+        expect(requests[0]?.url).toBe("http://localhost:4999/.cms/sources/stripe-connect/stageStripeDisputeEvidence");
+        expect(await requests[0]?.json()).toEqual({ disputeId: "dp_123" });
+    });
 });
 
 function group(): DashboardSourceGroup {
@@ -216,6 +290,12 @@ function deliveryGroup(): DashboardSourceGroup {
         ],
         dashboards: [],
     };
+}
+
+function schemaInvalidatingDeliveryGroup(): DashboardSourceGroup {
+    const group = deliveryGroup();
+    group.endpoints[0]!.effects = { invalidatesSchema: true };
+    return group;
 }
 
 function deliveryDashboard(): DashboardDto {

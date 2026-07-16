@@ -1,5 +1,5 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
-import { badge, readonlyValue } from "./display";
+import { badge, image, readonlyValue } from "./display";
 import {
     bindFieldControl,
     isTokenControl,
@@ -18,6 +18,7 @@ export function createBasicControl(field: WDetailField): HTMLElement {
     if (field.input === "tokens") return tokenInput(field);
     if (field.input === "chips") return chips(field);
     if (field.input === "badge") return badge(String(field.value));
+    if (field.input === "image") return image(field);
     if (field.input === "readonly") return readonlyValue(field.value);
     return textInput(field);
 }

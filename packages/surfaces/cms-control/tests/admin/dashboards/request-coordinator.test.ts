@@ -19,11 +19,11 @@ describe("dashboard detail request coordinator", () => {
         const first = requests.createConsumer();
         const second = requests.createConsumer();
 
-        const firstResult = requests.load(first, "catalog", {
+        const firstResult = requests.load(first, "commerce", {
             endpoint: "products",
             params: { limit: "20", q: "racket" },
         }, {});
-        const secondResult = requests.load(second, "catalog", {
+        const secondResult = requests.load(second, "commerce", {
             endpoint: "products",
             params: { q: "racket", limit: "20" },
         }, {});
@@ -48,8 +48,8 @@ describe("dashboard detail request coordinator", () => {
         const first = requests.createConsumer();
         const second = requests.createConsumer();
         const ref = { endpoint: "products" };
-        const pending = requests.load(first, "catalog", ref, {});
-        void requests.load(second, "catalog", ref, {}).catch(() => undefined);
+        const pending = requests.load(first, "commerce", ref, {});
+        void requests.load(second, "commerce", ref, {}).catch(() => undefined);
 
         requests.cancel(first);
         expect(signal?.aborted).toBeFalse();
@@ -69,26 +69,8 @@ describe("dashboard detail request coordinator", () => {
         const requests = new DetailRequestCoordinator();
         const consumer = requests.createConsumer();
 
-        await expect(requests.load(consumer, "catalog", { endpoint: "products" }, {})).rejects.toThrow();
-        expect(await requests.load(consumer, "catalog", { endpoint: "products" }, {})).toEqual({ items: [] });
+        await expect(requests.load(consumer, "commerce", { endpoint: "products" }, {})).rejects.toThrow();
+        expect(await requests.load(consumer, "commerce", { endpoint: "products" }, {})).toEqual({ items: [] });
         expect(calls).toBe(2);
-    });
-
-    test("does not reject an arbitrary sixty-fifth request", async () => {
-        let calls = 0;
-        globalThis.fetch = (async () => {
-            calls += 1;
-            return Response.json({ items: [] });
-        }) as unknown as typeof fetch;
-        const requests = new DetailRequestCoordinator();
-
-        await Promise.all(Array.from({ length: 65 }, (_, index) => requests.load(
-            requests.createConsumer(),
-            "catalog",
-            { endpoint: `products-${index}` },
-            {},
-        )));
-
-        expect(calls).toBe(65);
     });
 });

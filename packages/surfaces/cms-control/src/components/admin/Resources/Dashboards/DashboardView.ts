@@ -2,14 +2,14 @@ import { showToast } from "@bernouy/components";
 import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
-import { currentSelection, DASHBOARD_SELECTION_EVENT, pushSelectionUrl, replaceSelectionUrl, route, type DashboardSelection } from "./api";
+import { currentSelection, DASHBOARD_SELECTION_EVENT, defaultDashboardSource, fetchDashboards, pushSelectionUrl, replaceSelectionUrl, route, type DashboardSelection } from "./api";
 import { runDashboardMediaAction, runDashboardWidgetAction } from "./DashboardViewActions";
 import { runDashboardLookupCreate } from "./DashboardViewLookups";
 import { detailKey, type DetailSelection } from "./domain";
 import { isDashboardExampleMode } from "./mode";
 import { renderDashboardShell, renderExampleShell } from "./rendering";
 import { configureDashboardBindingFilters } from "./runtime/bindingFilters";
-import { detailReloadEvent } from "./runtime/mount/reload";
+import { detailReloadEvent } from "./runtime/reload";
 import type { DashboardSourceGroup } from "./types";
 import { updateDashboardWidgetExampleField } from "./widgets/example";
 import { WIDGET_ACTION_EVENT, WIDGET_BACK_EVENT, WIDGET_FIELD_CHANGE_EVENT, WIDGET_MEDIA_ACTION_EVENT, WIDGET_ROW_SELECT_EVENT, type WidgetActionDetail, type WidgetFieldChangeDetail, type WidgetMediaActionDetail, type WidgetRowSelectDetail } from "./widgets/shared";
@@ -68,7 +68,7 @@ export class DashboardView extends Component {
         const next = parseGroups(target?.dataset.dashboardGroupsJson ?? "");
         if (!next) return;
         this.groups = next;
-        this.selectedSource ||= this.groups[0]?.source.id ?? "";
+        this.selectedSource ||= defaultDashboardSource(this.groups);
         this.ensureDashboardSelection();
         this.render();
     }
@@ -166,10 +166,12 @@ export class DashboardView extends Component {
     private actionContext() {
         return {
             group: this.activeGroup(),
+            groups: this.groups,
             dashboard: this.activeDashboard(),
             detail: this.detailSelection,
             drafts: this.drafts,
             render: () => this.render(),
+            reloadDefinitions: () => this.reloadDefinitions(),
             reload: (collection: string, row: string) => this.reloadDetail(collection, row),
             clearDetail: () => this.clearDetail(),
             openDetail: (collection: string, row: string) => this.openDetail(collection, row),
@@ -194,6 +196,13 @@ export class DashboardView extends Component {
         document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
 
+    private async reloadDefinitions(): Promise<void> {
+        this.groups = await fetchDashboards();
+        this.selectedSource ||= defaultDashboardSource(this.groups);
+        this.ensureDashboardSelection();
+        this.render();
+    }
+
 }
 
 if (!customElements.get("cms-dashboards-admin")) customElements.define("cms-dashboards-admin", DashboardView);
@@ -202,8 +211,8 @@ function parseGroups(value: string): DashboardSourceGroup[] | null {
     if (!value) return null;
     try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : [];
+        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : null;
     } catch {
-        return [];
+        return null;
     }
 }

@@ -1,9 +1,20 @@
-import type { WDetailFieldValue } from "../types";
+import type { WDetailField, WDetailFieldValue } from "../types";
 
 export function badge(value: string): HTMLElement {
     const element = document.createElement("span");
     element.className = "badge";
     element.textContent = value;
+    return element;
+}
+
+export function image(field: Pick<WDetailField, "label" | "value">): HTMLElement {
+    const value = String(field.value ?? "").trim();
+    if (!value) return readonlyValue("No image");
+    const element = document.createElement("img");
+    element.className = "detail-image";
+    element.src = value;
+    element.alt = field.label;
+    element.loading = "lazy";
     return element;
 }
 

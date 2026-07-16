@@ -3,8 +3,8 @@
 }
 
 cms-shell-detail {
-    --w-detail-main-width: 600px;
-    --w-detail-aside-width: 285px;
+    --w-detail-main-width: 720px;
+    --w-detail-aside-width: 300px;
     --w-detail-gap: 16px;
 }
 
@@ -85,16 +85,20 @@ dd {
     min-width: 0;
 }
 
-.detail-checkbox {
-    height: 18px;
-    margin: 7px 0;
-    width: 18px;
-}
-
 .readonly,
 .detail-table-row > span {
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.detail-image {
+    aspect-ratio: 1;
+    background: #f4f1ec;
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    display: block;
+    object-fit: cover;
+    width: 100%;
 }
 
 .readonly-list {
@@ -120,6 +124,44 @@ p9r-textarea,
 p9r-combobox,
 p9r-token-input {
     width: 100%;
+}
+
+.detail-schema {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+}
+
+.detail-schema-field {
+    min-width: 0;
+}
+
+.detail-schema-field[data-has-unit="true"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.detail-schema-unit {
+    align-items: center;
+    background: #f3f7f5;
+    border: 1px solid #cfd8d4;
+    border-radius: 7px;
+    color: #52615c;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 750;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 44px;
+    padding: 0 10px;
+}
+
+@media (max-width: 720px) {
+    .detail-schema {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .detail-table {
@@ -152,11 +194,7 @@ p9r-token-input {
     min-width: 0;
 }
 
-.detail-table-row > span > p9r-input,
-.detail-table-row > span > p9r-select,
-.detail-table-row > span > p9r-combobox,
-.detail-table-row > span > p9r-token-input {
-    display: block;
+.detail-table-row > p9r-input {
     min-width: 0;
 }
 
@@ -165,10 +203,7 @@ p9r-token-input {
     font-size: 13px;
 }
 
-.detail-table p9r-input,
-.detail-table p9r-select,
-.detail-table p9r-combobox,
-.detail-table p9r-token-input {
+.detail-table p9r-input {
     --_field-min-height: 34px;
     --_field-padding-y: 5px;
     --_field-padding-x: 9px;

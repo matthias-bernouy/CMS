@@ -1,11 +1,12 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DashboardRuntimeWidget, DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
-import "../../widgets/w-section/WSection";
-import "../../widgets/w-table/WTable";
-import "../../widgets/w-detail/WDetail";
+import type { DashboardRuntimeWidget, DetailSelection, RenderContext, RuntimeDetailWidget } from "../domain";
+import "./../widgets/w-section/WSection";
+import "./../widgets/w-table/WTable";
+import "./../widgets/w-navigation-list/WNavigationList";
+import "./../widgets/w-detail/WDetail";
 import { detailReloadEvent } from "./reload";
-import { relationDetailSectionElement } from "./relations";
-import { jsonAttr, sourceWrapper, tableRowsTemplate } from "./source";
+import { relationDetailSectionElement } from "./mountRelations";
+import { appendSourceContent, jsonAttr, navigationItemsTemplate, sourceWrapper, tableRowsTemplate } from "./mountSource";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -27,6 +28,7 @@ function widgetElement(widget: DashboardRuntimeWidget, context: RenderContext, k
     if (widget.widget === "w-section") return sectionElement(widget, context, key, tabState, detail);
     if (widget.widget === "w-tabs") return tabsElement(widget, context, key, tabState, detail);
     if (widget.widget === "w-table") return tableElement(widget, context);
+    if (widget.widget === "w-navigation-list") return navigationListElement(widget, context);
     if (widget.widget === "w-detail") return detailElement(widget, context, detail);
     return document.createElement("span");
 }
@@ -72,7 +74,16 @@ function tableElement(widget: Extract<DashboardWidget, { widget: "w-table" }>, c
     element.setAttribute("data-config-json", jsonAttr(widget));
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
     element.append(tableRowsTemplate(widget));
-    wrapper.append(element);
+    appendSourceContent(wrapper, element);
+    return wrapper;
+}
+
+function navigationListElement(widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>, context: RenderContext): HTMLElement {
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, {}, "dashboardData");
+    const element = document.createElement("cms-dashboard-w-navigation-list");
+    element.setAttribute("data-config-json", jsonAttr(widget));
+    element.append(navigationItemsTemplate(widget));
+    appendSourceContent(wrapper, element);
     return wrapper;
 }
 
@@ -85,7 +96,9 @@ function detailElement(widget: RuntimeDetailWidget, context: RenderContext, deta
     element.setAttribute("data-source-json", "{{ dashboardData | json }}");
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    for (const relationWidget of widget.relationWidgets ?? []) element.append(relationDetailSectionElement(relationWidget));
-    wrapper.append(element);
+    for (const relationWidget of widget.relationWidgets ?? []) {
+        element.append(relationDetailSectionElement(relationWidget));
+    }
+    appendSourceContent(wrapper, element);
     return wrapper;
 }

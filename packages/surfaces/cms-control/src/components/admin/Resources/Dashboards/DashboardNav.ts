@@ -2,6 +2,7 @@ import { Component } from "@bernouy/components/base";
 import {
     currentSelection,
     DASHBOARD_SELECTION_EVENT,
+    defaultDashboardSource,
     dispatchDashboardSelection,
     route,
     replaceSelectionUrl,
@@ -58,7 +59,7 @@ export class DashboardNav extends Component {
         const next = parseGroups(target?.dataset.navGroupsJson ?? "");
         if (!next) return;
         this.groups = next;
-        this.selectedSource ||= this.groups[0]?.source.id ?? "";
+        this.selectedSource ||= defaultDashboardSource(this.groups);
         this.ensureDashboardSelection();
         this.render();
     }
@@ -195,8 +196,8 @@ function parseGroups(value: string): DashboardSourceGroup[] | null {
     if (!value) return null;
     try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : [];
+        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : null;
     } catch {
-        return [];
+        return null;
     }
 }

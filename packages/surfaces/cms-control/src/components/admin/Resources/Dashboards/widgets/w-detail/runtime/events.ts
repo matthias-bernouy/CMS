@@ -50,6 +50,7 @@ export class DetailEvents {
         const action = findActionTarget(event);
         const widget = this.isBound() ? parseJson<DetailWidget>(this.host.dataset.configJson ?? "") : null;
         const data = this.readData();
+        if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) return;
         if (action?.dataset.action) emitWidgetEvent(this.host, WIDGET_ACTION_EVENT, {
             action: action.dataset.action,
             detail: true,

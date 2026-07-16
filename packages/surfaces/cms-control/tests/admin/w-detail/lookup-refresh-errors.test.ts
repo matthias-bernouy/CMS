@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { changeDetailInput, waitForDetail } from "./detailTestHelpers";
+import { changeDetailInput, waitForDetail } from "../dashboards/detailTestHelpers";
 
 const realFetch = globalThis.fetch;
 

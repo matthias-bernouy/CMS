@@ -56,7 +56,10 @@ export function detailField(
             schemaStatus: schema?.status ?? "loading" };
     }
     if (field.type === "media") return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
-    if (field.type === "readonly") return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
+    if (field.type === "readonly") {
+        if (field.format === "image") return { ...base, input: "image", value: textValue(value) };
+        return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
+    }
     return { ...base, input: "text", value: textValue(value) };
 }
 

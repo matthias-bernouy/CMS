@@ -4,6 +4,7 @@ import {
     createFieldControl,
     readFieldControlValue,
 } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
+import { detailData } from "../../../src/components/admin/Resources/Dashboards/runtime/mapping";
 import type { WDetailField } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/types";
 
 if (!customElements.get("p9r-input")) customElements.define("p9r-input", P9rInput);
@@ -21,8 +22,8 @@ describe("typed dashboard detail controls", () => {
         document.body.append(number, checkbox);
 
         expect({ type: number.getAttribute("type"), min: number.getAttribute("min"),
-            max: number.getAttribute("max"), step: number.getAttribute("step") })
-            .toEqual({ type: "number", min: "0", max: "10", step: "0.5" });
+            max: number.getAttribute("max"), step: number.getAttribute("step"), required: number.hasAttribute("required") })
+            .toEqual({ type: "number", min: "0", max: "10", step: "0.5", required: true });
         (number as HTMLElement & { value: string }).value = "3.5";
         (checkbox as HTMLInputElement).checked = true;
         expect(readFieldControlValue(numberField(), number)).toBe(3.5);
@@ -30,6 +31,29 @@ describe("typed dashboard detail controls", () => {
 
         (number as HTMLElement & { value: string }).value = "";
         expect(readFieldControlValue(numberField(), number)).toBe("");
+    });
+
+    test("maps readonly image fields to lazy previews", () => {
+        const data = detailData({
+            widget: "w-detail",
+            id: "userDetail",
+            source: { endpoint: "user" },
+            main: [{
+                id: "avatar",
+                title: "Avatar",
+                fields: [{ id: "avatarPreview", label: "Avatar", path: "avatarUrl", type: "readonly", format: "image" }],
+            }],
+        } as never, { avatarUrl: "https://cdn.example.test/avatar.jpg" }, "user-1");
+        const field = data.main[0]!.fields[0]!;
+        const control = createFieldControl(field) as HTMLImageElement;
+
+        expect(field.input).toBe("image");
+        expect({ tag: control.tagName, src: control.src, alt: control.alt, loading: control.loading }).toEqual({
+            tag: "IMG",
+            src: "https://cdn.example.test/avatar.jpg",
+            alt: "Avatar",
+            loading: "lazy",
+        });
     });
 
     test("uses declared table editors and preserves hidden row metadata", () => {

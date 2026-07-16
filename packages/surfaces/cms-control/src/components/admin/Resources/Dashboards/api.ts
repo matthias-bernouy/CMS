@@ -51,6 +51,12 @@ export function currentSelection(): DashboardSelection {
     };
 }
 
+export function defaultDashboardSource(groups: DashboardListResponse): string {
+    return groups.find(group => group.dashboards.length > 0)?.source.id
+        ?? groups[0]?.source.id
+        ?? "";
+}
+
 export function replaceSelectionUrl(selection: DashboardSelection): void {
     history.replaceState(null, "", selectionUrl(selection));
 }
