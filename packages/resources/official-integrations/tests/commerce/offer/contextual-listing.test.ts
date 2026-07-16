@@ -14,8 +14,16 @@ describe("commerce contextual offer listing", () => {
         setRestResponder(request => {
             const url = new URL(request.url);
             const table = url.pathname.split("/").at(-1);
-            if (table === "search_public_offers") return jsonResponse({
-                items: [{ id: 91, seller_id: 7, product_id: 42, slug: "blade", title: "Blade", publication_status: "active", metadata: {} }],
+            if (table === "search_public_offers_read_model") return jsonResponse({
+                items: [{
+                    id: 91, product_id: 42, slug: "blade", title: "Blade",
+                    publication_status: "active", metadata: {},
+                    product: {
+                        id: 42, brand: { slug: "wilson" }, primary_category_id: 8,
+                        primary_category: { full_slug: "rackets/tennis" },
+                    },
+                    variant: null, media: [], main_image_media_id: null,
+                }],
                 total: 1,
                 limit: 12,
                 offset: 0,
@@ -35,7 +43,7 @@ describe("commerce contextual offer listing", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(expectRpc("search_public_offers").body).toMatchObject({
+        expect(expectRpc("search_public_offers_read_model").body).toMatchObject({
             p_category_full_slug: "rackets/tennis",
             p_brand_slug: "wilson",
             p_filters: { weight: { gte: 300, lte: 320 } },
@@ -55,20 +63,20 @@ describe("commerce contextual offer listing", () => {
     test("ignores empty filter placeholders emitted by optional controls", async () => {
         setRestResponder(request => {
             const table = new URL(request.url).pathname.split("/").at(-1);
-            if (table === "search_public_offers") return jsonResponse({ items: [], total: 0 });
+            if (table === "search_public_offers_read_model") return jsonResponse({ items: [], total: 0 });
             return jsonResponse([]);
         });
         const filters = encodeURIComponent(JSON.stringify({ weight: { gte: "", lte: "320" }, grip: { eq: "" } }));
         const response = await requestCommerce(`/offers?category=rackets/tennis&filters=${filters}`);
 
         expect(response.status).toBe(200);
-        expect(expectRpc("search_public_offers").body.p_filters).toEqual({ weight: { lte: "320" } });
+        expect(expectRpc("search_public_offers_read_model").body.p_filters).toEqual({ weight: { lte: "320" } });
     });
 
     test("normalizes entirely empty optional filters before calling PostgreSQL", async () => {
         setRestResponder(request => {
             const table = new URL(request.url).pathname.split("/").at(-1);
-            if (table === "search_public_offers") return jsonResponse({ items: [], total: 0 });
+            if (table === "search_public_offers_read_model") return jsonResponse({ items: [], total: 0 });
             return jsonResponse([]);
         });
         const filters = encodeURIComponent(JSON.stringify({ weight: { gte: "", lte: "" }, grip: { eq: "" } }));
@@ -77,12 +85,12 @@ describe("commerce contextual offer listing", () => {
         );
 
         expect(response.status).toBe(200);
-        expect(expectRpc("search_public_offers").body).toMatchObject({
+        expect(expectRpc("search_public_offers_read_model").body).toMatchObject({
             p_filters: {},
             p_price_min: null,
             p_price_max: null,
         });
-        expect(expectRpc("search_public_offers").body.p_category_full_slug).toBeUndefined();
-        expect(expectRpc("search_public_offers").body.p_brand_slug).toBeUndefined();
+        expect(expectRpc("search_public_offers_read_model").body.p_category_full_slug).toBeUndefined();
+        expect(expectRpc("search_public_offers_read_model").body.p_brand_slug).toBeUndefined();
     });
 });

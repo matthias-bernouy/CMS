@@ -3,7 +3,6 @@ import { json } from "../../core/http.ts";
 import { camelize, integer, isRecord, text } from "../../core/records.ts";
 import { rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
-import { enrichPublicOffers } from "./public-enrichment.ts";
 
 export function hasContextualFilters(url: URL): boolean {
     return ["category", "brand", "filters"].some(name => url.searchParams.has(name));
@@ -12,7 +11,7 @@ export function hasContextualFilters(url: URL): boolean {
 export async function listContextualOffers(url: URL): Promise<Response> {
     const limit = Math.min(Math.max(integer(url.searchParams.get("limit"), "limit") ?? 50, 1), 100);
     const offset = Math.max(integer(url.searchParams.get("offset"), "offset") ?? 0, 0);
-    const result = await rpc("search_public_offers", {
+    const result = await rpc("search_public_offers_read_model", {
         p_category_full_slug: text(url.searchParams.get("category")),
         p_brand_slug: text(url.searchParams.get("brand")),
         p_filters: parseFilters(url.searchParams.get("filters")),
@@ -29,7 +28,7 @@ export async function listContextualOffers(url: URL): Promise<Response> {
     }
     const rows = result.items.filter(isRecord);
     return json({
-        items: camelize(await enrichPublicOffers(rows)),
+        items: camelize(rows),
         total: Number(result.total) || 0,
         limit,
         offset,
