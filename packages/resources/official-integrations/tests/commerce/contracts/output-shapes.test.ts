@@ -200,6 +200,9 @@ describe("commerce response contracts", () => {
     test("returns the paging values declared by every paginated list", async () => {
         setRestResponder(request => {
             const table = new URL(request.url).pathname.split("/").at(-1)!;
+            if (table === "list_public_offers_read_model") {
+                return jsonResponse({ settings_available: true, items: [], total: 0 });
+            }
             const rows: Record<string, unknown[]> = {
                 settings: [{ require_verified_seller: false }],
                 products: [{ id: 1, metadata: {} }],

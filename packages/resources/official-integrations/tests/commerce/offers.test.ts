@@ -6,40 +6,15 @@ import {
     requestCommerce,
     setRestResponder,
 } from "./harness";
+import { publicOfferDetailReadModel } from "./offer/publicReadModelFixtures";
 installCommerceTestEnvironment();
 
 describe("commerce offer requests", () => {
     test("includes only public product custom fields in public offer details", async () => {
         setRestResponder(request => {
-            const url = new URL(request.url);
-            const table = url.pathname.split("/").at(-1);
-            if (table === "settings") return jsonResponse([{ require_verified_seller: true }]);
-            if (table === "offers") return jsonResponse([{
-                id: 91,
-                seller_id: 7,
-                product_id: 42,
-                variant_id: null,
-                slug: "camera-offer",
-                publication_status: "active",
-                metadata: {},
-            }]);
-            if (table === "products") return jsonResponse([{
-                id: 42,
-                slug: "camera",
-                title: "Camera",
-                status: "active",
-                visibility: "public",
-                metadata: { brand: "Canon", internalCode: "secret" },
-            }]);
-            if (table === "custom_field_definitions") {
-                const entity = url.searchParams.get("entity_type");
-                return jsonResponse(entity === "eq.product" ? [{ key: "brand" }] : []);
+            if (new URL(request.url).pathname.endsWith("/rpc/get_public_offer_read_model")) {
+                return jsonResponse(publicOfferDetailReadModel());
             }
-            if (table === "offer_media") return jsonResponse([{
-                id: 8, media_id: 12, sort_order: 0, is_main: true,
-                media: { id: 12, storage_bucket: "commerce-media", storage_path: "offers/91/photo.jpg", alt: "Front" },
-            }]);
-            if (table === "sellers") return jsonResponse([{ id: 7, verification_status: "verified" }]);
             return jsonResponse([]);
         });
 
@@ -83,17 +58,14 @@ describe("commerce offer requests", () => {
             }],
             mainImageMediaId: "12",
         });
+        expect(expectSingleRpc("get_public_offer_read_model").body).toEqual({ p_offer_id: 91 });
     });
 
     test("hides an active offer whose seller is not verified when verification is required", async () => {
         setRestResponder(request => {
-            const url = new URL(request.url);
-            const table = url.pathname.split("/").at(-1);
-            if (table === "offers") return jsonResponse([{
-                id: 91, seller_id: 7, product_id: 42, slug: "hidden-offer", publication_status: "active",
-            }]);
-            if (table === "settings") return jsonResponse([{ require_verified_seller: true }]);
-            if (table === "sellers") return jsonResponse([{ verification_status: "pending" }]);
+            if (new URL(request.url).pathname.endsWith("/rpc/get_public_offer_read_model")) {
+                return jsonResponse({ candidate_exists: true, settings_available: true, offer: null });
+            }
             return jsonResponse([]);
         });
 
@@ -101,6 +73,7 @@ describe("commerce offer requests", () => {
 
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ error: "offer not found" });
+        expect(expectSingleRpc("get_public_offer_read_model").body).toEqual({ p_offer_id: 91 });
     });
 
     test("rejects missing and invalid CMS bearer credentials before calling PostgREST", async () => {

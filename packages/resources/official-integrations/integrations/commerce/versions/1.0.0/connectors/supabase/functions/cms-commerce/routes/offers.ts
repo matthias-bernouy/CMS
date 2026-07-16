@@ -4,9 +4,9 @@ import { json } from "../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../core/records.ts";
 import { one, rpc } from "../core/rest.ts";
 import {
-    enrichOffer, optionalId, redactOfferMetadata, requireOwnedOffer, sellerOfferPayload,
+    enrichOffer, optionalId, requireOwnedOffer, sellerOfferPayload,
 } from "./offer-helpers.ts";
-import { requirePublicSeller } from "./offer/public-seller.ts";
+import { getPublicOfferReadModel } from "./offer/public-read-model.ts";
 const offerSelect = "id,seller_id,product_id,variant_id,slug,title,description,condition_code,publication_status,workflow_state,accepted_price_amount,currency,availability,quantity_available,metadata,version,created_at,updated_at";
 export { listOffers } from "./offer/list.ts";
 
@@ -36,15 +36,13 @@ export async function getOffer(request: Request, scope: "public" | "admin" | "se
     const id = optionalId(url.searchParams.get("id"));
     const slug = text(url.searchParams.get("slug"));
     if (id === null && !slug) throw new HttpError(400, "id or slug is required");
+    if (scope === "public") return await getPublicOfferReadModel(id, slug);
     const row = id !== null
         ? await one("offers", { id }, offerSelect)
         : await one("offers", { slug: slug! }, offerSelect);
     if (!row) throw new HttpError(404, "offer not found");
-    if (scope === "public" && row.publication_status !== "active") throw new HttpError(404, "offer not found");
-    if (scope === "public") await requirePublicSeller(String(row.seller_id));
     if (scope === "self") await requireOwnedOffer(request, row);
-    const value = scope === "public" ? (await redactOfferMetadata([row]))[0]! : row;
-    return json(camelize(await enrichOffer(value, scope)));
+    return json(camelize(await enrichOffer(row, scope)));
 }
 
 export async function createMyOffer(request: Request): Promise<Response> {

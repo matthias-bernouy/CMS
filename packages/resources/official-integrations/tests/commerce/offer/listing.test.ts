@@ -1,57 +1,21 @@
 import { describe, expect, test } from "bun:test";
-import { installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
+import {
+    expectSingleRpc,
+    installCommerceTestEnvironment,
+    jsonResponse,
+    requestCommerce,
+    setRestResponder,
+} from "../harness";
+import { publicOfferListReadModel } from "./publicReadModelFixtures";
 
 installCommerceTestEnvironment();
 
 describe("commerce public offer listing", () => {
     test("enriches cards and applies public price and sort filters", async () => {
-        let offersQuery = "";
-        let productQueries = 0;
         setRestResponder(request => {
-            const url = new URL(request.url);
-            const table = url.pathname.split("/").at(-1);
-            if (table === "settings") return jsonResponse([{ require_verified_seller: true }]);
-            if (table === "offers") {
-                offersQuery = url.search;
-                return jsonResponse([
-                    { id: 1, seller_id: 7, product_id: 41, variant_id: 51, slug: "blade", title: "Blade", publication_status: "active", accepted_price_amount: 15000, metadata: {} },
-                    { id: 2, seller_id: 8, product_id: 42, slug: "speed", title: "Speed", publication_status: "active", accepted_price_amount: 17500, metadata: {} },
-                ], 200, { "content-range": "0-1/2" });
+            if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
+                return jsonResponse(publicOfferListReadModel());
             }
-            if (table === "custom_field_definitions") {
-                return jsonResponse(url.searchParams.get("entity_type") === "eq.product"
-                    ? ["brand", "sport", "grip", "weight"].map(key => ({ key })) : []);
-            }
-            if (table === "products") {
-                productQueries += 1;
-                expect(url.searchParams.get("id")).toBe("in.(41,42)");
-                return jsonResponse([
-                    { id: 41, title: "Blade", metadata: { brand: "Wilson", sport: "tennis", weight: 305 } },
-                    { id: 42, title: "Speed", metadata: { brand: "Head", sport: "tennis", grip: "L3", weight: 300 } },
-                ]);
-            }
-            if (table === "product_variants") return jsonResponse([
-                { id: 51, product_id: 41, title: "Grip: L1", metadata: {} },
-            ]);
-            if (table === "product_categories") return jsonResponse([{
-                product_id: 41,
-                category_id: 8,
-                is_primary: true,
-                category: { id: 8, full_slug: "rackets/tennis", label: "Tennis" },
-            }]);
-            if (table === "product_variant_axes") return jsonResponse([
-                { id: 61, product_id: 41, field_key: "grip" },
-            ]);
-            if (table === "product_variant_axis_values") return jsonResponse([
-                { id: 71, product_id: 41, axis_id: 61, value: "L1" },
-            ]);
-            if (table === "product_variant_selections") return jsonResponse([
-                { product_id: 41, variant_id: 51, axis_id: 61, value_id: 71 },
-            ]);
-            if (table === "sellers") return jsonResponse([
-                { id: 7, display_name: "Seller one" },
-                { id: 8, display_name: "Seller two" },
-            ]);
             return jsonResponse([]);
         });
 
@@ -115,12 +79,12 @@ describe("commerce public offer listing", () => {
             limit: 50,
             offset: 0,
         });
-        expect(productQueries).toBe(1);
-        expect(offersQuery).toContain("accepted_price_amount=lte.20000");
-        expect(offersQuery).toContain("order=accepted_price_amount.asc.nullslast");
-        expect(offersQuery).toContain("availability=eq.available");
-        expect(offersQuery).toContain("seller.verification_status=eq.verified");
-        expect(offersQuery).toContain("seller%3Asellers%21inner%28verification_status%29");
+        expect(expectSingleRpc("list_public_offers_read_model").body).toEqual({
+            p_price_max: 20000,
+            p_sort: "price-asc",
+            p_limit: 50,
+            p_offset: 0,
+        });
     });
 
     test("does not expose media belonging to an unpublished offer", async () => {
@@ -137,14 +101,9 @@ describe("commerce public offer listing", () => {
     });
 
     test("allows pending sellers in public listings when verification is optional", async () => {
-        let offersQuery = "";
         setRestResponder(request => {
-            const url = new URL(request.url);
-            const table = url.pathname.split("/").at(-1);
-            if (table === "settings") return jsonResponse([{ require_verified_seller: false }]);
-            if (table === "offers") {
-                offersQuery = url.search;
-                return jsonResponse([], 200, { "content-range": "0-0/0" });
+            if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
+                return jsonResponse({ settings_available: true, items: [], total: 0 });
             }
             return jsonResponse([]);
         });
@@ -152,7 +111,28 @@ describe("commerce public offer listing", () => {
         const response = await requestCommerce("/offers");
 
         expect(response.status).toBe(200);
-        expect(offersQuery).toContain("availability=eq.available");
-        expect(offersQuery).toContain("seller.verification_status=in.%28pending%2Cverified%29");
+        expect(await response.json()).toEqual({ items: [], total: 0, limit: 50, offset: 0 });
+        expect(expectSingleRpc("list_public_offers_read_model").body).toEqual({
+            p_limit: 50,
+            p_offset: 0,
+        });
+    });
+
+    test("preserves an unrecognized padded sort as the default ordering", async () => {
+        setRestResponder(request => {
+            if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
+                return jsonResponse({ settings_available: true, items: [], total: 0 });
+            }
+            return jsonResponse([]);
+        });
+
+        const response = await requestCommerce("/offers?sort=%20price-asc%20");
+
+        expect(response.status).toBe(200);
+        expect(expectSingleRpc("list_public_offers_read_model").body).toEqual({
+            p_sort: " price-asc ",
+            p_limit: 50,
+            p_offset: 0,
+        });
     });
 });

@@ -1,12 +1,6 @@
 import { HttpError } from "../../core/errors.ts";
 import { one } from "../../core/rest.ts";
 
-export async function publicSellerStatusFilter(): Promise<string> {
-    const settings = await one("settings", { id: "default" }, "require_verified_seller");
-    if (!settings) throw new HttpError(502, "commerce settings are unavailable");
-    return settings.require_verified_seller === true ? "eq.verified" : "in.(pending,verified)";
-}
-
 export async function requirePublicSeller(sellerId: string): Promise<void> {
     const [settings, seller] = await Promise.all([
         one("settings", { id: "default" }, "require_verified_seller"),

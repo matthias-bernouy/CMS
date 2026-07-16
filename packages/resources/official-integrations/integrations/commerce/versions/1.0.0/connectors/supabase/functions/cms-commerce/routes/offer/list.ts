@@ -5,10 +5,8 @@ import { listRows, one, restJson } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import { addFilter } from "../offer-helpers.ts";
 import { cmsUserId } from "../../core/auth.ts";
-import { addAmountFilter, offerOrder } from "./listing.ts";
-import { enrichPublicOffers } from "./public-enrichment.ts";
 import { hasContextualFilters, listContextualOffers } from "./contextual-list.ts";
-import { publicSellerStatusFilter } from "./public-seller.ts";
+import { listPublicOfferReadModel } from "./public-read-model.ts";
 
 const offerSelect = "id,seller_id,product_id,variant_id,slug,title,description,condition_code,publication_status,workflow_state,accepted_price_amount,currency,availability,quantity_available,metadata,version,created_at,updated_at";
 
@@ -17,31 +15,21 @@ export async function listOffers(request: Request, scope: "public" | "admin" | "
     if (scope === "public" && hasContextualFilters(url)) return await listContextualOffers(url);
     const limit = Math.min(Math.max(integer(url.searchParams.get("limit"), "limit") ?? 50, 1), 100);
     const offset = Math.max(integer(url.searchParams.get("offset"), "offset") ?? 0, 0);
+    if (scope === "public") return await listPublicOfferReadModel(url, limit, offset);
     const params = new URLSearchParams({ select: offerSelect, order: "updated_at.desc,id.desc", limit: String(limit), offset: String(offset) });
-    if (scope === "public") {
-        params.set("select", `${offerSelect},seller:sellers!inner(verification_status)`);
-        params.set("publication_status", "eq.active");
-        params.set("availability", "eq.available");
-        params.set("seller.verification_status", await publicSellerStatusFilter());
-    }
     if (scope === "self") {
         const seller = await one("sellers", { cms_user_id: cmsUserId(request) }, "id");
         if (!seller) return json({ items: [], total: 0, limit, offset });
         params.set("seller_id", `eq.${String(seller.id)}`);
     }
     const workflowStates = scope === "self" ? await listWorkflowStates() : [];
-    addFilter(params, "publication_status", url.searchParams.get("publicationStatus"), scope !== "public");
+    addFilter(params, "publication_status", url.searchParams.get("publicationStatus"), true);
     addFilter(params, "workflow_state", url.searchParams.get("workflowState"), true);
     if (scope === "self") applySellerStatusFilter(params, url.searchParams.get("status"), workflowStates);
     addFilter(params, "condition_code", url.searchParams.get("conditionCode"), true);
     addFilter(params, "product_id", url.searchParams.get("productId"), true);
     addFilter(params, "variant_id", url.searchParams.get("variantId"), true);
     addFilter(params, "seller_id", url.searchParams.get("sellerId"), scope !== "self");
-    if (scope === "public") {
-        addAmountFilter(params, "gte", url.searchParams.get("priceMin"));
-        addAmountFilter(params, "lte", url.searchParams.get("priceMax"));
-        params.set("order", offerOrder(url.searchParams.get("sort")));
-    }
     const query = text(url.searchParams.get("q"))?.replace(/[,*()]/g, " ");
     if (query) params.set("or", `(title.ilike.*${query}*,slug.ilike.*${query}*)`);
     const { rows, total } = await listRows(`offers?${params.toString()}`);
@@ -49,9 +37,7 @@ export async function listOffers(request: Request, scope: "public" | "admin" | "
         const items = await decorateSellerOffers(rows, workflowStates);
         return json({ items: camelize(items), total, limit, offset });
     }
-    if (scope === "admin") return json({ items: camelize(rows), total, limit, offset });
-    const enriched = await enrichPublicOffers(rows);
-    return json({ items: camelize(enriched), total, limit, offset });
+    return json({ items: camelize(rows), total, limit, offset });
 }
 
 async function listWorkflowStates(): Promise<JsonRecord[]> {

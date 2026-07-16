@@ -152,6 +152,48 @@ from (select commerce.review_offer(
 ) as result) approved \gset
 
 do $$
+declare
+    v_list jsonb;
+    v_detail jsonb;
+begin
+    v_list := commerce.list_public_offers_read_model(
+        p_query => 'Smoke offer',
+        p_limit => 10,
+        p_offset => 0
+    );
+    if v_list->>'settings_available' <> 'true'
+        or (v_list->>'total')::integer <> 1
+        or v_list->'items'->0->>'slug' <> 'smoke-offer'
+        or v_list->'items'->0 ? 'seller_id'
+        or v_list->'items'->0->'metadata'->>'racketCondition' <> 'used' then
+        raise exception 'smoke: public offer list read model changed its contract';
+    end if;
+
+    v_detail := commerce.get_public_offer_read_model(p_slug => 'smoke-offer');
+    if v_detail->>'candidate_exists' <> 'true'
+        or v_detail->>'settings_available' <> 'true'
+        or v_detail->'offer'->>'slug' <> 'smoke-offer'
+        or v_detail->'offer' ? 'seller_id'
+        or v_detail->'offer'->'metadata'->>'racketCondition' <> 'used' then
+        raise exception 'smoke: public offer detail read model changed its contract';
+    end if;
+
+    if exists (
+        select 1
+        from pg_proc procedure
+        join pg_namespace namespace on namespace.oid = procedure.pronamespace
+        where namespace.nspname = 'commerce'
+          and procedure.proname in ('list_public_offers_read_model', 'get_public_offer_read_model')
+          and (has_function_privilege('anon', procedure.oid, 'execute')
+            or has_function_privilege('authenticated', procedure.oid, 'execute')
+            or not has_function_privilege('service_role', procedure.oid, 'execute'))
+    ) then
+        raise exception 'smoke: public offer read models have unsafe privileges';
+    end if;
+end;
+$$;
+
+do $$
 begin
     begin
         perform commerce.create_order_from_offers(
