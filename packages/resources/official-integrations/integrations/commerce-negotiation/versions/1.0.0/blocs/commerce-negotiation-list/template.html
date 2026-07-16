@@ -1,0 +1,64 @@
+<basic-stack gap="lg" data-layout>
+    <basic-stack gap="xs" data-header>
+        <h2 data-title>Mes offres de prix</h2>
+        <p data-copy>Retrouve les propositions reçues et celles que tu as envoyées.</p>
+    </basic-stack>
+
+    <basic-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm" data-toolbar>
+        <basic-select data-status-filter accessible-label="Filtrer par statut" value="all">
+            <basic-option value="all">Toutes</basic-option>
+            <basic-option value="pending">En attente</basic-option>
+            <basic-option value="accepted">Acceptées</basic-option>
+            <basic-option value="rejected">Refusées</basic-option>
+            <basic-option value="withdrawn">Retirées</basic-option>
+            <basic-option value="expired">Expirées</basic-option>
+            <basic-option value="superseded">Remplacées</basic-option>
+            <basic-option value="canceled">Annulées</basic-option>
+        </basic-select>
+        <basic-chip-group data-role-filter accessible-label="Type d’offres" value="seller">
+            <basic-chip value="seller" selected data-received-chip>Offres reçues</basic-chip>
+            <basic-chip value="buyer" data-sent-chip>Offres envoyées</basic-chip>
+        </basic-chip-group>
+    </basic-stack>
+
+    <basic-grid min="md" max="xl" gap="md" data-loading>
+        <basic-skeleton height="20rem" animation="wave" label="Chargement des propositions"></basic-skeleton>
+        <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+    </basic-grid>
+
+    <basic-card appearance="outlined" density="regular" data-empty-state hidden>
+        <strong slot="title" data-empty-title>Aucune offre reçue pour le moment</strong>
+        <span slot="description" data-empty-message>Les propositions envoyées par les acheteurs apparaîtront ici.</span>
+    </basic-card>
+    <basic-grid min="md" max="xl" gap="md" data-items hidden></basic-grid>
+    <basic-pagination data-pagination page="1" page-size="12" total="0" hidden></basic-pagination>
+    <div data-toast-region aria-live="polite"></div>
+    <template data-toast-template>
+        <basic-toast duration="5000"></basic-toast>
+    </template>
+
+    <template data-item-template>
+        <basic-card appearance="outlined" density="compact" data-proposal-card>
+            <strong slot="title" data-offer-title></strong>
+            <span slot="description" data-status></span>
+            <basic-stack gap="sm">
+                <basic-grid min="xs" max="none" gap="sm">
+                    <basic-stack gap="xs" data-proposed-group>
+                        <small data-proposed-label>Prix proposé</small>
+                        <strong data-proposed-amount></strong>
+                    </basic-stack>
+                    <basic-stack gap="xs" data-reference-group>
+                        <small data-reference-label>Prix initial</small>
+                        <span data-reference-amount></span>
+                    </basic-stack>
+                </basic-grid>
+                <p data-message hidden></p>
+                <small data-expiration></small>
+            </basic-stack>
+            <basic-button slot="actions" size="sm" data-action="accept">Accepter</basic-button>
+            <basic-button slot="actions" size="sm" appearance="outlined" data-action="reject">Refuser</basic-button>
+            <basic-button slot="actions" size="sm" appearance="outlined" data-action="withdraw">Retirer</basic-button>
+        </basic-card>
+    </template>
+</basic-stack>

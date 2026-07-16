@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "commerce-negotiation",
+    "label": "Commerce negotiation",
+    "category": "Commerce",
+    "description": "Let marketplace buyers propose bounded prices to Commerce sellers.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}
