@@ -43,6 +43,7 @@ describe("executeEndpoint strict JSON responses", () => {
     ])("maps %s to a generic upstream failure", async (_name, upstream) => {
         const response = await executeEndpoint(structuredEndpoint(), new Request("http://local/x"), {
             fetchImpl: mock(async () => upstream),
+            reportResponseProjectionEvent: () => undefined,
         });
 
         await expectGenericUpstreamFailure(response);
@@ -96,6 +97,7 @@ describe("executeEndpoint strict JSON responses", () => {
                 apiKey: "provider-secret",
             }, { status: 500 })),
             reportFailure: failure => failures.push(failure),
+            reportResponseProjectionEvent: () => undefined,
         });
 
         expect(response.status).toBe(502);
@@ -135,6 +137,7 @@ describe("executeEndpoint strict JSON responses", () => {
                 },
             }), { status: 500, headers: { "content-type": "text/plain" } })),
             reportFailure: () => undefined,
+            reportResponseProjectionEvent: () => undefined,
         });
 
         expect(response.status).toBe(502);
@@ -152,6 +155,7 @@ describe("executeEndpoint strict JSON responses", () => {
         }, new Request("http://local/x"), {
             fetchImpl: mock(async () => new Response("partial file", { status: 206 })),
             reportFailure: () => undefined,
+            reportResponseProjectionEvent: () => undefined,
         });
 
         expect(response.status).toBe(502);
@@ -165,6 +169,7 @@ describe("executeEndpoint strict JSON responses", () => {
         const response = await executeEndpoint(structuredEndpoint(), new Request("http://local/x"), {
             fetchImpl: mock(async () => Response.json({ apiKey: "provider-secret" }, { status: 500 })),
             reportFailure,
+            reportResponseProjectionEvent: () => undefined,
         });
 
         expect(response.status).toBe(502);
@@ -195,6 +200,7 @@ describe("executeEndpoint strict JSON responses", () => {
             },
             new Request("http://local/x"),
             Response.json({ value: "x".repeat(MAX_PROJECTED_JSON_BYTES) }),
+            { reportResponseProjectionEvent: () => undefined },
         );
 
         await expectGenericUpstreamFailure(response);

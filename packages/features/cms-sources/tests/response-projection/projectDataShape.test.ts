@@ -53,7 +53,13 @@ describe("projectDataShape", () => {
     });
 
     test("rejects scalar and nested type mismatches", () => {
-        expect(projectDataShape("1", { type: "number" })).toEqual({ ok: false, reason: "type_mismatch" });
+        expect(projectDataShape("1", { type: "number" })).toEqual({
+            ok: false,
+            reason: "type_mismatch",
+            path: "$",
+            expectedType: "number",
+            actualType: "string",
+        });
         expect(projectDataShape({ rows: [{ value: "1" }] }, {
             type: "object",
             properties: {
@@ -65,16 +71,34 @@ describe("projectDataShape", () => {
                     },
                 },
             },
-        })).toEqual({ ok: false, reason: "type_mismatch" });
+        })).toEqual({
+            ok: false,
+            reason: "type_mismatch",
+            path: "$.rows[].value",
+            expectedType: "number",
+            actualType: "string",
+        });
     });
 
     test("accepts JSON null only when the shape declares it nullable", () => {
         expect(projectDataShape(null, { type: "string", nullable: true }))
             .toEqual({ ok: true, value: null });
         expect(projectDataShape(null, { type: "string" }))
-            .toEqual({ ok: false, reason: "type_mismatch" });
+            .toEqual({
+                ok: false,
+                reason: "type_mismatch",
+                path: "$",
+                expectedType: "string",
+                actualType: "null",
+            });
         expect(projectDataShape(null, { type: "string", nullable: false }))
-            .toEqual({ ok: false, reason: "type_mismatch" });
+            .toEqual({
+                ok: false,
+                reason: "type_mismatch",
+                path: "$",
+                expectedType: "string",
+                actualType: "null",
+            });
         expect(projectDataShape({ email: null }, {
             type: "object",
             properties: { email: { type: "string", nullable: true } },
@@ -90,5 +114,18 @@ describe("projectDataShape", () => {
                 own: { type: "string" },
             },
         })).toEqual({ ok: true, value: { own: "visible" } });
+    });
+
+    test("redacts non-identifier property names from diagnostic paths", () => {
+        expect(projectDataShape({ "private@example.test": 42 }, {
+            type: "object",
+            properties: { "private@example.test": { type: "string" } },
+        })).toEqual({
+            ok: false,
+            reason: "type_mismatch",
+            path: "$.*",
+            expectedType: "string",
+            actualType: "number",
+        });
     });
 });

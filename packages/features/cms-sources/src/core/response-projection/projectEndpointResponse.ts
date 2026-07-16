@@ -1,28 +1,23 @@
 import type { SourceEndpoint } from "../../interfaces/Source";
 import { responseHeaders } from "../endpointHeaders";
-import { safeUpstreamFailureResponse } from "../upstreamFailure";
 import { projectDataShape } from "./projectDataShape";
 import { readBoundedJson } from "./readBoundedJson";
+import {
+    projectionFailure,
+    reportResponseProjectionEvent,
+    type LegacyResponseContractReason,
+    type ResponseProjectionOptions,
+} from "./responseProjectionEvents";
 
-export const RESPONSE_PROJECTION_MODES = ["compatibility", "strict"] as const;
-export type ResponseProjectionMode = typeof RESPONSE_PROJECTION_MODES[number];
-
-export type ResponseProjectionEvent = {
-    kind: "legacy_response_contract";
-    endpointUrn: string;
-    upstreamStatus: number;
-    reason: "missing_output" | "empty_output" | "unmatched_status";
-    correlationId: string;
-};
-
-export type ResponseProjectionReporter = (
-    event: ResponseProjectionEvent,
-) => void | Promise<void>;
-
-export type ResponseProjectionOptions = {
-    responseProjectionMode?: ResponseProjectionMode;
-    reportResponseProjectionEvent?: ResponseProjectionReporter;
-};
+export {
+    RESPONSE_PROJECTION_MODES,
+    type LegacyResponseContractReason,
+    type ResponseProjectionEvent,
+    type ResponseProjectionFailureReason,
+    type ResponseProjectionMode,
+    type ResponseProjectionOptions,
+    type ResponseProjectionReporter,
+} from "./responseProjectionEvents";
 
 export const MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
 
@@ -42,7 +37,13 @@ export async function projectEndpointResponse(
         }
 
         await cancelBody(upstream.body);
-        return projectionFailure(request.method === "HEAD");
+        return projectionFailure(
+            endpoint.urn,
+            upstream.status,
+            request.method === "HEAD",
+            output === undefined ? "missing_output" : "empty_output",
+            options,
+        );
     }
 
     const declared = output.find(candidate => candidate.status === String(upstream.status))
@@ -54,7 +55,13 @@ export async function projectEndpointResponse(
             return passthrough(upstream);
         }
         await cancelBody(upstream.body);
-        return projectionFailure(request.method === "HEAD");
+        return projectionFailure(
+            endpoint.urn,
+            upstream.status,
+            request.method === "HEAD",
+            "unmatched_status",
+            options,
+        );
     }
 
     if (request.method === "HEAD") return discardBody(upstream);
@@ -66,14 +73,28 @@ export async function projectEndpointResponse(
 
     if (!isJsonMediaType(upstream.headers.get("content-type"))) {
         await cancelBody(upstream.body);
-        return projectionFailure(false);
+        return projectionFailure(endpoint.urn, upstream.status, false, "unsupported_media_type", options, {
+            path: "$",
+            expectedType: declared.body.type,
+        });
     }
 
     const parsed = await readBoundedJson(upstream.body, MAX_PROJECTED_JSON_BYTES);
-    if (!parsed.ok) return projectionFailure(false);
+    if (!parsed.ok) {
+        return projectionFailure(endpoint.urn, upstream.status, false, parsed.reason, options, {
+            path: "$",
+            expectedType: declared.body.type,
+        });
+    }
 
     const projected = projectDataShape(parsed.value, declared.body);
-    if (!projected.ok) return projectionFailure(false);
+    if (!projected.ok) {
+        return projectionFailure(endpoint.urn, upstream.status, false, projected.reason, options, {
+            path: projected.path,
+            expectedType: projected.expectedType,
+            actualType: projected.actualType,
+        });
+    }
 
     return projectedJsonResponse(upstream, projected.value);
 }
@@ -114,29 +135,19 @@ function projectedJsonResponse(upstream: Response, value: unknown): Response {
     });
 }
 
-function projectionFailure(head: boolean): Response {
-    return safeUpstreamFailureResponse(crypto.randomUUID(), { omitBody: head });
-}
-
 function reportLegacyContract(
     endpoint: SourceEndpoint,
     upstream: Response,
-    reason: ResponseProjectionEvent["reason"],
+    reason: LegacyResponseContractReason,
     options: ResponseProjectionOptions,
 ): void {
-    if (!options.reportResponseProjectionEvent) return;
-    const event: ResponseProjectionEvent = {
+    reportResponseProjectionEvent(options, {
         kind: "legacy_response_contract",
         endpointUrn: endpoint.urn,
         upstreamStatus: upstream.status,
         reason,
         correlationId: crypto.randomUUID(),
-    };
-    try {
-        void Promise.resolve(options.reportResponseProjectionEvent(event)).catch(() => undefined);
-    } catch {
-        // Observability must not change source response behaviour.
-    }
+    });
 }
 
 function isJsonMediaType(contentType: string | null): boolean {

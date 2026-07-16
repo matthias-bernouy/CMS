@@ -27,7 +27,10 @@ describe("projectEndpointResponse failures", () => {
                 source,
                 new Request("http://local.test/source"),
                 upstream,
-                name === "status" ? { responseProjectionMode: "strict" } : undefined,
+                {
+                    reportResponseProjectionEvent: () => undefined,
+                    ...(name === "status" ? { responseProjectionMode: "strict" as const } : {}),
+                },
             );
             await expectGenericFailure(response, name);
         }
@@ -50,6 +53,7 @@ describe("projectEndpointResponse failures", () => {
             endpoint({ output: [{ status: "200", body: { type: "string" } }] }),
             new Request("http://local.test/source"),
             new Response(overLimit, { headers: { "content-type": "application/json" } }),
+            { reportResponseProjectionEvent: () => undefined },
         );
         await expectGenericFailure(rejected, "size");
     });

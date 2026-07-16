@@ -92,8 +92,9 @@ describe("executeEndpoint response projection integration", () => {
         });
     });
 
-    test("strict mode rejects a missing contract, cancels upstream, and correlates the generic error", async () => {
+    test("reports a media mismatch, cancels upstream, and correlates the generic error", async () => {
         let cancelled = false;
+        let event: ResponseProjectionEvent | undefined;
         const fetchImpl = mock(async () => new Response(new ReadableStream<Uint8Array>({
             start(controller) {
                 controller.enqueue(new TextEncoder().encode("sensitive upstream payload"));
@@ -102,7 +103,9 @@ describe("executeEndpoint response projection integration", () => {
                 cancelled = true;
             },
         }), { headers: { "content-type": "text/plain" } }));
-        const reportResponseProjectionEvent = mock(() => undefined);
+        const reportResponseProjectionEvent = mock((reported: ResponseProjectionEvent) => {
+            event = reported;
+        });
         const response = await executeEndpoint(ep(), new Request("http://local.test/source"), {
             fetchImpl,
             responseProjectionMode: "strict",
@@ -110,13 +113,22 @@ describe("executeEndpoint response projection integration", () => {
         });
 
         expect(cancelled).toBe(true);
-        expect(reportResponseProjectionEvent).not.toHaveBeenCalled();
+        expect(reportResponseProjectionEvent).toHaveBeenCalledTimes(1);
         expect(response.status).toBe(502);
         expect(response.headers.get("cache-control")).toBe("no-store");
         expect(response.headers.get("content-type")).toBe("application/json; charset=utf-8");
         expect(response.headers.get("x-content-type-options")).toBe("nosniff");
         const correlationId = response.headers.get("x-correlation-id");
         expect(await response.json()).toEqual({ error: "Upstream request failed", correlationId });
+        expect(event).toEqual({
+            kind: "response_projection_failure",
+            endpointUrn: "urn:x:e",
+            upstreamStatus: 200,
+            reason: "unsupported_media_type",
+            correlationId,
+            path: "$",
+            expectedType: "object",
+        });
     });
 
     test("projects declared JSON through the executor", async () => {
