@@ -132,6 +132,52 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
             expect(() => parseIntegrationDefinition(visibilityDefinition(rule))).toThrow();
         }
     });
+
+    test("rejects unsupported source overlay dashboard field types", () => {
+        expect(() => parseIntegrationDefinition({
+            kind: "invalid-overlay-field",
+            label: "Invalid overlay field",
+            inputs: [],
+            artifacts: [{
+                type: "sourceOverlay",
+                overlay: {
+                    id: "invalid-overlay-field",
+                    sourceId: "products",
+                    fields: [],
+                    dashboardFields: [{
+                        viewId: "productDetail",
+                        fieldId: "title",
+                        field: { type: "script" },
+                    }],
+                },
+            }],
+        })).toThrow(/field\.type.*must be text\|number\|checkbox/);
+    });
+
+    test("normalizes supported source overlay dashboard field types", () => {
+        const definition = parseIntegrationDefinition({
+            kind: "normalized-overlay-field",
+            label: "Normalized overlay field",
+            inputs: [],
+            artifacts: [{
+                type: "sourceOverlay",
+                overlay: {
+                    id: "normalized-overlay-field",
+                    sourceId: "products",
+                    fields: [],
+                    dashboardFields: [{
+                        viewId: "productDetail",
+                        fieldId: "price",
+                        field: { type: " number " },
+                    }],
+                },
+            }],
+        });
+
+        expect(definition.artifacts?.[0]).toMatchObject({
+            overlay: { dashboardFields: [{ field: { type: "number" } }] },
+        });
+    });
 });
 
 function visibilityDefinition(visibleWhen: unknown) {

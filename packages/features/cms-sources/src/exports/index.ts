@@ -33,6 +33,7 @@ export type {
     SourceOverlayDashboardEndpointRef,
     SourceOverlayDashboardField,
     SourceOverlayDashboardFieldPatch,
+    SourceOverlayDashboardFieldType,
     SourceOverlayDashboardLookupRef,
     SourceOverlayDashboardOption,
     SourceOverlayEditableScope,
@@ -45,6 +46,7 @@ export type {
     SourceOverlaySection,
 } from "../interfaces/SourceOverlay";
 export {
+    SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES,
     SOURCE_OVERLAY_EDITABLE_SCOPES,
     SOURCE_OVERLAY_FIELD_TYPES,
     sourceOverlayFieldShape,

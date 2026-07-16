@@ -6,6 +6,18 @@ export type SourceOverlayFieldType = typeof SOURCE_OVERLAY_FIELD_TYPES[number];
 export const SOURCE_OVERLAY_EDITABLE_SCOPES = ["self", "admin", "all"] as const;
 export type SourceOverlayEditableScope = typeof SOURCE_OVERLAY_EDITABLE_SCOPES[number];
 
+export const SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES = [
+    "text",
+    "number",
+    "checkbox",
+    "textarea",
+    "select",
+    "combobox",
+    "tokens",
+    "readonly",
+] as const;
+export type SourceOverlayDashboardFieldType = typeof SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES[number];
+
 export type SourceOverlayDashboardOption = {
     value: string;
     label: string;
@@ -95,7 +107,7 @@ export type SourceOverlayDashboardLookupRef = SourceOverlayDashboardDataRef & {
 
 export type SourceOverlayDashboardFieldPatch = {
     label?: string;
-    type?: "text" | "textarea" | "select" | "combobox" | "tokens" | "readonly";
+    type?: SourceOverlayDashboardFieldType;
     required?: boolean;
     options?: SourceOverlayDashboardOption[];
     lookup?: SourceOverlayDashboardLookupRef;

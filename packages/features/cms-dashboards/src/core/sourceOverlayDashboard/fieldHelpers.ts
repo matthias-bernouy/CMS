@@ -18,6 +18,7 @@ export function dashboardField(
     };
     if (options.readonly) return { ...base, type: "readonly" };
     if (field.type === "boolean" && !field.multiple) return { ...base, type: "checkbox" };
+    if (field.type === "number" && !field.multiple) return { ...base, type: "number" };
     if (field.multiple) {
         return field.options === undefined
             ? { ...base, type: "tokens" }

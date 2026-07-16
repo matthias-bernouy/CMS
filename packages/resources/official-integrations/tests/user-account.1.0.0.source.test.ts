@@ -255,7 +255,7 @@ describe("user-account 1.0.0 source", () => {
                         { value: "agency", label: "Agency" },
                     ],
                 }),
-                expect.objectContaining({ id: "employeeCount", type: "text" }),
+                expect.objectContaining({ id: "employeeCount", type: "number" }),
             ]),
         });
         expect((accountDetail?.aside as JsonRecord[]).find(section => section.id === "avatar")).toMatchObject({

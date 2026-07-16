@@ -101,6 +101,26 @@ describe("dashboard source overlay", () => {
         expect(validateDashboard(enrichedDashboard, { source: enrichedSource })).toEqual([]);
     });
 
+    test("preserves numeric overlay fields as numeric dashboard inputs", () => {
+        const enriched = applyDashboardSourceOverlays(dashboard, [{
+            ...sourceOverlay,
+            fields: [{
+                id: "employeeCount",
+                label: "Employee count",
+                type: "number",
+                section: "accountFields",
+            }],
+        }]);
+        const detail = enriched.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+
+        expect(detail.main[0]?.fields).toContainEqual({
+            id: "employeeCount",
+            label: "Employee count",
+            path: "metadata.employeeCount",
+            type: "number",
+        });
+    });
+
     test("does not attach fields to widgets backed by unrelated endpoints", () => {
         const unrelatedDashboard: Dashboard = {
             ...dashboard,

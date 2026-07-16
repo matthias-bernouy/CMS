@@ -5,6 +5,7 @@ import type {
     SourceOverlayDashboardLookupRef,
     SourceOverlayDashboardOption,
 } from "@bernouy/cms-sources";
+import { SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES } from "@bernouy/cms-sources";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../values";
 import { parseStringList, parseStringMap, requiredText } from "../common";
@@ -25,14 +26,27 @@ export function parseOverlayDashboardFields(value: unknown, name: string): Sourc
 
 function parseOverlayDashboardFieldPatch(value: unknown, name: string): SourceOverlayDashboardFieldPatch {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const type = parseOverlayDashboardFieldType(value.type, `${name}.type`);
     return {
         ...(text(value.label) ? { label: text(value.label)! } : {}),
-        ...(text(value.type) ? { type: text(value.type)! as SourceOverlayDashboardFieldPatch["type"] } : {}),
+        ...(type ? { type } : {}),
         ...(value.required === true ? { required: true } : {}),
         ...(value.options !== undefined ? { options: parseOverlayDashboardOptions(value.options, `${name}.options`) } : {}),
         ...(value.lookup !== undefined ? { lookup: parseOverlayDashboardLookup(value.lookup, `${name}.lookup`) } : {}),
         ...(value.allowCustom === true ? { allowCustom: true } : {}),
     };
+}
+
+function parseOverlayDashboardFieldType(
+    value: unknown,
+    name: string,
+): SourceOverlayDashboardFieldPatch["type"] | undefined {
+    if (value === undefined) return undefined;
+    const normalized = text(value);
+    if (normalized && (SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES as readonly string[]).includes(normalized)) {
+        return normalized as SourceOverlayDashboardFieldPatch["type"];
+    }
+    throw new IntegrationInputError(name, `must be ${SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES.join("|")}`);
 }
 
 export function parseOverlayDashboardOptions(value: unknown, name: string): SourceOverlayDashboardOption[] {
