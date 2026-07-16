@@ -304,16 +304,19 @@
                                                         "type": "string"
                                                     },
                                                     "externalOrderId": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "expeditionNumber": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "status": {
                                                         "type": "string"
                                                     },
                                                     "lastError": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "recipientName": {
                                                         "type": "string"
@@ -325,10 +328,12 @@
                                                         "type": "string"
                                                     },
                                                     "trackingUrl": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "latestEventLabel": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "createdAt": {
                                                         "type": "string"
@@ -400,10 +405,12 @@
                                             "type": "string"
                                         },
                                         "externalOrderId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "expeditionNumber": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "status": {
                                             "type": "string"
@@ -412,25 +419,31 @@
                                             "type": "string"
                                         },
                                         "lastError": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "trackingUrl": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "recipientName": {
                                             "type": "string"
                                         },
                                         "recipientEmail": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "recipientPhone": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "recipientAddressLine1": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "recipientAddressLine2": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "recipientPostalCode": {
                                             "type": "string"
@@ -448,43 +461,52 @@
                                             "type": "number"
                                         },
                                         "latestEventLabel": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "latestEventAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "carrierAcceptedAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "arrivedAtPickupPointAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "availableForPickupAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "recipientHandoffAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "pickupExpiredAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "returningToSenderAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "returnedToSenderAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "incidentAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "lostAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "sellerHandoffDeclaredAt": {
-                                            "type": "string"
-                                        },
-                                        "createdAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "events": {
                                             "type": "array",
@@ -495,22 +517,24 @@
                                                         "type": "string"
                                                     },
                                                     "eventDate": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "eventTime": {
-                                                        "type": "string"
-                                                    },
-                                                    "providerEventKey": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "normalizedStatus": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "occurredAt": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "location": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     }
                                                 }
                                             }
@@ -689,7 +713,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            { "status": "200", "body": {"type":"object","properties":{"externalOrderId":{"type":"string"},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"latitude":{"type":"number"},"longitude":{"type":"number"},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"},"selectedAt":{"type":"string"}},"required":["externalOrderId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency"]} }
+                            { "status": "200", "body": {"type":"object","properties":{"externalOrderId":{"type":"string"},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"latitude":{"type":"number","nullable":true},"longitude":{"type":"number","nullable":true},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"},"selectedAt":{"type":"string"}},"required":["externalOrderId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency"]} }
                         ]
                     },
                     {
@@ -737,7 +761,7 @@
                             "required": ["requestKey", "externalOrderId", "orderVersion", "selectedForCmsUserId", "relayLocation", "country", "postalCode", "currency", "merchandiseSubtotalMinorAmount", "recipientSnapshot", "sellerFulfillmentSnapshot"]
                         },
                         "output": [
-                            { "status": "200", "body": {"type":"object","properties":{"quoteId":{"type":"string"},"externalOrderId":{"type":"string"},"orderVersion":{"type":"number"},"revision":{"type":"number"},"selectedForCmsUserId":{"type":"string","semantic":{"kind":"user-id","authority":"cms"}},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"latitude":{"type":"number"},"longitude":{"type":"number"},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"},"merchandiseSubtotalMinorAmount":{"type":"number"},"quotedAt":{"type":"string"},"expiresAt":{"type":"string"}},"required":["quoteId","externalOrderId","orderVersion","revision","selectedForCmsUserId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency","merchandiseSubtotalMinorAmount","quotedAt","expiresAt"]} },
+                            { "status": "200", "body": {"type":"object","properties":{"quoteId":{"type":"string"},"externalOrderId":{"type":"string"},"orderVersion":{"type":"number"},"revision":{"type":"number"},"selectedForCmsUserId":{"type":"string","semantic":{"kind":"user-id","authority":"cms"}},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"latitude":{"type":"number","nullable":true},"longitude":{"type":"number","nullable":true},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"},"merchandiseSubtotalMinorAmount":{"type":"number"},"quotedAt":{"type":"string"},"expiresAt":{"type":"string"}},"required":["quoteId","externalOrderId","orderVersion","revision","selectedForCmsUserId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency","merchandiseSubtotalMinorAmount","quotedAt","expiresAt"]} },
                             { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
                         ]
                     },
@@ -978,8 +1002,8 @@
                                     "properties": {
                                         "ok": { "type": "boolean" },
                                         "id": { "type": "string" },
-                                        "expeditionNumber": { "type": "string" },
-                                        "trackingUrl": { "type": "string" },
+                                        "expeditionNumber": { "type": "string", "nullable": true },
+                                        "trackingUrl": { "type": "string", "nullable": true },
                                         "status": { "type": "string" },
                                         "createdAt": { "type": "string" },
                                         "idempotentReplay": { "type": "boolean" }
@@ -1485,7 +1509,7 @@
                         ],
                         "body": { "type": "object", "properties": { "externalOrderId": { "type": "string" } }, "required": ["externalOrderId"] },
                         "output": [
-                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" }, "status": { "type": "string" }, "sellerHandoffDeclaredAt": { "type": "string" } }, "required": ["id", "externalOrderId", "status", "sellerHandoffDeclaredAt"] } }
+                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string", "nullable": true }, "status": { "type": "string" }, "sellerHandoffDeclaredAt": { "type": "string" } }, "required": ["id", "externalOrderId", "status", "sellerHandoffDeclaredAt"] } }
                         ]
                     },
                     {
@@ -1499,7 +1523,7 @@
                         ],
                         "body": { "type": "object", "properties": { "externalOrderId": { "type": "string" }, "trackingUntil": { "type": "string" } }, "required": ["externalOrderId", "trackingUntil"] },
                         "output": [
-                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" }, "status": { "type": "string" } }, "required": ["id", "externalOrderId", "status"] } },
+                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string", "nullable": true }, "status": { "type": "string" } }, "required": ["id", "externalOrderId", "status"] } },
                             { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
                         ]
                     },
@@ -1553,7 +1577,7 @@
                                     "properties": {
                                         "processed": { "type": "number" },
                                         "staleCreations": { "type": "array", "items": { "type": "object", "properties": {
-                                            "id": { "type": "string" }, "externalOrderId": { "type": "string" },
+                                            "id": { "type": "string" }, "externalOrderId": { "type": "string", "nullable": true },
                                             "status": { "type": "string" }, "manualReviewAt": { "type": "string" }
                                         } } },
                                         "shipments": {
@@ -1562,7 +1586,7 @@
                                                 "type": "object",
                                                 "properties": {
                                                     "id": { "type": "string" },
-                                                    "externalOrderId": { "type": "string" },
+                                                    "externalOrderId": { "type": "string", "nullable": true },
                                                     "expeditionNumber": { "type": "string" },
                                                     "status": { "type": "string" },
                                                     "checkedAt": { "type": "string" },
@@ -1579,7 +1603,7 @@
                                                     "claimToken": { "type": "string" },
                                                     "projectionAttempts": { "type": "number" },
                                                     "orderPublicId": { "type": "string" },
-                                                    "providerEventId": { "type": "string" },
+                                                    "providerEventId": { "type": "string", "nullable": true },
                                                     "normalizedStatus": { "type": "string" },
                                                     "occurredAt": { "type": "string" },
                                                     "providerReference": { "type": "string" },
@@ -1599,9 +1623,9 @@
                                                     "projectionAttempts": { "type": "number" },
                                                     "claimId": { "type": "number" },
                                                     "externalOrderId": { "type": "string" },
-                                                    "providerEventId": { "type": "string" },
+                                                    "providerEventId": { "type": "string", "nullable": true },
                                                     "normalizedStatus": { "type": "string" },
-                                                    "occurredAt": { "type": "string" },
+                                                    "occurredAt": { "type": "string", "nullable": true },
                                                     "providerReference": { "type": "string" },
                                                     "providerEvidence": { "type": "object" }
                                                 },
@@ -1630,9 +1654,9 @@
                             "trackingErrorCount": { "type": "number" },
                             "orders": { "type": "array", "items": { "type": "object", "properties": {
                                 "externalOrderId": { "type": "string" }, "shipmentId": { "type": "string" },
-                                "providerReference": { "type": "string" }, "shipmentStatus": { "type": "string" },
+                                "providerReference": { "type": "string", "nullable": true }, "shipmentStatus": { "type": "string" },
                                 "pendingProjectionCount": { "type": "number" }, "manualReviewCount": { "type": "number" },
-                                "trackingErrorCount": { "type": "number" }, "trackingCheckedAt": { "type": "string" }
+                                "trackingErrorCount": { "type": "number" }, "trackingCheckedAt": { "type": "string", "nullable": true }
                             }, "required": ["externalOrderId", "shipmentId", "shipmentStatus", "pendingProjectionCount", "manualReviewCount", "trackingErrorCount"] } }
                         }, "required": ["checkedAt", "pendingProjectionCount", "manualReviewCount", "trackingErrorCount", "orders"] } }]
                     },
@@ -1698,10 +1722,10 @@
                             "items": { "type": "array", "items": { "type": "object", "properties": {
                                 "id": { "type": "number" }, "shipmentId": { "type": "string" },
                                 "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" },
-                                "providerEventId": { "type": "string" }, "normalizedStatus": { "type": "string" },
-                                "occurredAt": { "type": "string" }, "projectionStatus": { "type": "string" },
+                                "providerEventId": { "type": "string", "nullable": true }, "normalizedStatus": { "type": "string", "nullable": true },
+                                "occurredAt": { "type": "string", "nullable": true }, "projectionStatus": { "type": "string" },
                                 "projectionAttempts": { "type": "number" }, "projectionNextAttemptAt": { "type": "string" },
-                                "projectionLastError": { "type": "string" }, "projectionManualReviewAt": { "type": "string" },
+                                "projectionLastError": { "type": "string", "nullable": true }, "projectionManualReviewAt": { "type": "string", "nullable": true },
                                 "createdAt": { "type": "string" }
                             } } }, "limit": { "type": "number" }, "offset": { "type": "number" }
                         }, "required": ["items", "limit", "offset"] } }]
@@ -1815,22 +1839,24 @@
                                                         "type": "string"
                                                     },
                                                     "eventDate": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "eventTime": {
-                                                        "type": "string"
-                                                    },
-                                                    "providerEventKey": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "normalizedStatus": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "occurredAt": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "location": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     }
                                                 }
                                             }

@@ -153,7 +153,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -169,7 +169,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"variantAxes":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"position":{"type":"number"},"values":{"type":"array","items":{"type":"string"}}}}},"variants":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}},"variantMatrix":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"variantAxes":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"position":{"type":"number"},"values":{"type":"array","items":{"type":"string"}}}}},"variants":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}},"variantMatrix":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}}}}}
                         ]
                     },
                     {
@@ -186,7 +186,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -202,7 +202,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -220,7 +220,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -236,7 +236,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"parent":{"type":"object"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"parent":{"type":"object","nullable":true}}}}
                         ]
                     },
                     {
@@ -251,7 +251,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"category":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"}}},"fields":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"unit":{"type":"string"},"operators":{"type":"array","items":{"type":"string"}},"options":{"type":"array","items":{"type":"string"}}}}},"brands":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"category":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"}}},"fields":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"unit":{"type":"string","nullable":true},"operators":{"type":"array","items":{"type":"string"}},"options":{"type":"array","items":{"type":"string"}}}}},"brands":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"}}}}}}}
                         ]
                     },
                     {
@@ -278,7 +278,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"}}}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}},
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"}},"nullable":true}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}},
                             {"status":"400","body":{"type":"object","properties":{"error":{"type":"string"}},"required":["error"]}}
                         ]
                     },
@@ -295,7 +295,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"}}},"priceRule":{"type":"object","properties":{"offerId":{"type":"number"},"minimumAmount":{"type":"number"},"maximumAmount":{"type":"number"},"currency":{"type":"string"},"configuredBy":{"type":"string"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}},"priceProposals":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string"},"decisionReason":{"type":"string"},"decidedAt":{"type":"string"},"createdAt":{"type":"string"}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"}},"nullable":true},"priceRule":{"type":"object","properties":{"offerId":{"type":"number"},"minimumAmount":{"type":"number"},"maximumAmount":{"type":"number"},"currency":{"type":"string"},"configuredBy":{"type":"string"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}},"nullable":true},"priceProposals":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string"},"decisionReason":{"type":"string"},"decidedAt":{"type":"string"},"createdAt":{"type":"string"}}}}}}}
                         ]
                     },
                     {
@@ -321,7 +321,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -353,7 +353,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string"},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string","nullable":true},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -372,7 +372,7 @@
                             "properties": { "displayName": { "type": "string" } }
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string"},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string","nullable":true},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -396,7 +396,7 @@
                             "required": ["expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string"},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string","nullable":true},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -457,7 +457,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"workflowStateInfo":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"phase":{"type":"string"},"terminal":{"type":"boolean"}}},"displayStatus":{"type":"string"},"mainImageMediaId":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"sellerDisplayPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"workflowStateInfo":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"phase":{"type":"string"},"terminal":{"type":"boolean"}}},"displayStatus":{"type":"string"},"mainImageMediaId":{"type":"string","nullable":true},"acceptedPriceAmount":{"type":"number","nullable":true},"sellerDisplayPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -473,7 +473,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"seller":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"}}},"priceRule":{"type":"object","properties":{"offerId":{"type":"number"},"minimumAmount":{"type":"number"},"maximumAmount":{"type":"number"},"currency":{"type":"string"},"configuredBy":{"type":"string"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}},"priceProposals":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string"},"decisionReason":{"type":"string"},"decidedAt":{"type":"string"},"createdAt":{"type":"string"}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number","nullable":true},"sellerId":{"type":"number"},"productId":{"type":"number","nullable":true},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"seller":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"}},"nullable":true},"priceRule":{"type":"object","properties":{"offerId":{"type":"number"},"minimumAmount":{"type":"number"},"maximumAmount":{"type":"number"},"currency":{"type":"string"},"configuredBy":{"type":"string"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}},"nullable":true},"priceProposals":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"decisionReason":{"type":"string","nullable":true},"decidedAt":{"type":"string","nullable":true},"createdAt":{"type":"string"}}}}}}}
                         ]
                     },
                     {
@@ -503,7 +503,7 @@
                             "required": ["slug", "productId", "conditionCode"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -534,7 +534,7 @@
                             "required": ["expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -557,7 +557,7 @@
                             "required": ["expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -581,7 +581,7 @@
                             "required": ["amount", "expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"offer":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}},"proposal":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string"},"decisionReason":{"type":"string"},"decidedAt":{"type":"string"},"createdAt":{"type":"string"}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"offer":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}},"proposal":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string","nullable":true},"decisionReason":{"type":"string","nullable":true},"decidedAt":{"type":"string","nullable":true},"createdAt":{"type":"string"}}}}}}
                         ]
                     },
                     {
@@ -595,7 +595,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"}}}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string","nullable":true},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"}},"nullable":true}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -618,7 +618,7 @@
                             "required": ["offerId", "quantity"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"}}}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"}},"nullable":true}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -635,7 +635,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"}}}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string","nullable":true},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"}},"nullable":true}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -656,7 +656,7 @@
                             "required": ["expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"}}}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"exists":{"type":"boolean"},"id":{"type":"number"},"publicId":{"type":"string"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string","nullable":true},"version":{"type":"number"},"subtotalAmount":{"type":"number"},"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"quantity":{"type":"number"},"unitAmountAtAdd":{"type":"number"},"offerVersionAtAdd":{"type":"number"},"currentUnitAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"title":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"}},"nullable":true}}}},"sellerGroups":{"type":"array","items":{"type":"object","properties":{"seller":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"itemIds":{"type":"array","items":{"type":"number"}},"issues":{"type":"array","items":{"type":"string"}}}}},"issues":{"type":"array","items":{"type":"string"}},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -700,7 +700,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"sellerId":{"type":"number"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"totalAmount":{"type":"number"},"shippingAddress":{"type":"object"},"billingAddress":{"type":"object"},"metadata":{"type":"object"},"metadataEntries":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"value":{"type":"string"},"unit":{"type":"string"}},"required":["key","label","type","value"]}},"idempotencyKey":{"type":"string"},"idempotentReplay":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"operation":{"type":"object","properties":{"orderId":{"type":"number"},"paymentStatus":{"type":"string"},"fulfillmentStatus":{"type":"string"},"settlementStatus":{"type":"string"},"claimStatus":{"type":"string"},"totalRefundRequestedAmount":{"type":"number"},"updatedAt":{"type":"string"}}}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"sellerId":{"type":"number"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"totalAmount":{"type":"number"},"shippingAddress":{"type":"object"},"billingAddress":{"type":"object"},"metadata":{"type":"object"},"metadataEntries":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"value":{"type":"string"},"unit":{"type":"string"}},"required":["key","label","type","value"]}},"idempotencyKey":{"type":"string"},"idempotentReplay":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"operation":{"type":"object","properties":{"orderId":{"type":"number"},"paymentStatus":{"type":"string"},"fulfillmentStatus":{"type":"string"},"settlementStatus":{"type":"string"},"claimStatus":{"type":"string","nullable":true},"totalRefundRequestedAmount":{"type":"number"},"updatedAt":{"type":"string"}},"nullable":true}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -717,7 +717,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"sellerId":{"type":"number","semantic":"user-id"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"shippingAmount":{"type":"number"},"deliveryQuotedAt":{"type":"string"},"totalAmount":{"type":"number"},"shippingAddress":{"type":"object"},"billingAddress":{"type":"object"},"metadata":{"type":"object"},"metadataEntries":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"value":{"type":"string"},"unit":{"type":"string"}},"required":["key","label","type","value"]}},"idempotencyKey":{"type":"string"},"idempotentReplay":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"lines":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"offerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"acceptedProposalId":{"type":"number"},"title":{"type":"string"},"sku":{"type":"string"},"quantity":{"type":"number"},"unitAmount":{"type":"number"},"totalAmount":{"type":"number"},"productSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variantSnapshot":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"combinationKey":{"type":"string"},"options":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}},"offerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"conditionCode":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"}}},"sellerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"createdAt":{"type":"string"}}}},"events":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"eventType":{"type":"string"},"actorKind":{"type":"string"},"actorId":{"type":"string"},"previousStatus":{"type":"string"},"nextStatus":{"type":"string"},"message":{"type":"string"},"data":{"type":"object"},"createdAt":{"type":"string"}}}},"seller":{"type":"object","properties":{"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"financialTerms":{"type":"object","properties":{"deliveryQuoteId":{"type":"string"},"merchandiseSubtotalAmount":{"type":"number"},"shippingAmount":{"type":"number"},"buyerProtectionFeeAmount":{"type":"number"},"buyerTotalAmount":{"type":"number"},"currency":{"type":"string"}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"sellerId":{"type":"number","semantic":"user-id"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"shippingAmount":{"type":"number"},"deliveryQuotedAt":{"type":"string","nullable":true},"totalAmount":{"type":"number"},"shippingAddress":{"type":"object"},"billingAddress":{"type":"object"},"metadata":{"type":"object"},"metadataEntries":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"value":{"type":"string"},"unit":{"type":"string"}},"required":["key","label","type","value"]}},"idempotencyKey":{"type":"string"},"idempotentReplay":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"lines":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"offerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"acceptedProposalId":{"type":"number","nullable":true},"title":{"type":"string"},"sku":{"type":"string","nullable":true},"quantity":{"type":"number"},"unitAmount":{"type":"number"},"totalAmount":{"type":"number"},"productSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variantSnapshot":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"combinationKey":{"type":"string","nullable":true},"options":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}},"nullable":true},"offerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"conditionCode":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"}}},"sellerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"createdAt":{"type":"string"}}}},"events":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"eventType":{"type":"string"},"actorKind":{"type":"string"},"actorId":{"type":"string"},"previousStatus":{"type":"string","nullable":true},"nextStatus":{"type":"string","nullable":true},"data":{"type":"object"},"createdAt":{"type":"string"}}}},"seller":{"type":"object","properties":{"id":{"type":"number","semantic":"user-id"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"financialTerms":{"type":"object","properties":{"deliveryQuoteId":{"type":"string"},"merchandiseSubtotalAmount":{"type":"number"},"shippingAmount":{"type":"number"},"buyerProtectionFeeAmount":{"type":"number"},"buyerTotalAmount":{"type":"number"},"currency":{"type":"string"}},"nullable":true}}}}
                         ]
                     },
                     {
@@ -735,7 +735,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"shippingAmount":{"type":"number"},"deliveryQuotedAt":{"type":"string"},"totalAmount":{"type":"number"},"metadata":{"type":"object"},"metadataEntries":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"value":{"type":"string"},"unit":{"type":"string"}},"required":["key","label","type","value"]}},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"shippingAmount":{"type":"number"},"deliveryQuotedAt":{"type":"string","nullable":true},"totalAmount":{"type":"number"},"metadata":{"type":"object"},"metadataEntries":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"value":{"type":"string"},"unit":{"type":"string"}},"required":["key","label","type","value"]}},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -765,7 +765,7 @@
                                         "currency": { "type": "string" },
                                         "subtotalAmount": { "type": "number" },
                                         "shippingAmount": { "type": "number" },
-                                        "deliveryQuotedAt": { "type": "string" },
+                                        "deliveryQuotedAt": { "type": "string", "nullable": true },
                                         "totalAmount": { "type": "number" },
                                         "metadata": { "type": "object" },
                                         "metadataEntries": {
@@ -794,10 +794,10 @@
                                                     "orderId": { "type": "number" },
                                                     "offerId": { "type": "number" },
                                                     "productId": { "type": "number" },
-                                                    "variantId": { "type": "number" },
-                                                    "acceptedProposalId": { "type": "number" },
+                                                    "variantId": { "type": "number", "nullable": true },
+                                                    "acceptedProposalId": { "type": "number", "nullable": true },
                                                     "title": { "type": "string" },
-                                                    "sku": { "type": "string" },
+                                                    "sku": { "type": "string", "nullable": true },
                                                     "quantity": { "type": "number" },
                                                     "unitAmount": { "type": "number" },
                                                     "totalAmount": { "type": "number" },
@@ -813,9 +813,9 @@
                                                         "type": "object",
                                                         "properties": {
                                                             "id": { "type": "number" },
-                                                            "sku": { "type": "string" },
+                                                            "sku": { "type": "string", "nullable": true },
                                                             "title": { "type": "string" },
-                                                            "combinationKey": { "type": "string" },
+                                                            "combinationKey": { "type": "string", "nullable": true },
                                                             "options": {
                                                                 "type": "array",
                                                                 "items": {
@@ -828,7 +828,8 @@
                                                                     }
                                                                 }
                                                             }
-                                                        }
+                                                        },
+                                                        "nullable": true
                                                     },
                                                     "offerSnapshot": {
                                                         "type": "object",
@@ -853,8 +854,8 @@
                                                     "id": { "type": "number" },
                                                     "orderId": { "type": "number" },
                                                     "eventType": { "type": "string" },
-                                                    "previousStatus": { "type": "string" },
-                                                    "nextStatus": { "type": "string" },
+                                                    "previousStatus": { "type": "string", "nullable": true },
+                                                    "nextStatus": { "type": "string", "nullable": true },
                                                     "createdAt": { "type": "string" }
                                                 }
                                             }
@@ -875,7 +876,8 @@
                                                 "pricingLockedAt": { "type": "string" },
                                                 "payByAt": { "type": "string" },
                                                 "financialRevision": { "type": "number" }
-                                            }
+                                            },
+                                            "nullable": true
                                         }
                                     }
                                 }
@@ -929,7 +931,7 @@
                             { "name": "offset", "in": "query", "type": "number" }
                         ],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}]
                     },
                     {
                         "endpointId": "manageBrand",
@@ -937,7 +939,7 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/brand",
                         "params": [{ "name": "id", "in": "query", "type": "string" }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number","nullable":true},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"}}}}]
                     },
                     {
                         "endpointId": "upsertBrand",
@@ -946,7 +948,7 @@
                         "params": [{ "name": "id", "in": "query", "type": "string" }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
                         "body": {"type":"object","properties":{"expectedVersion":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"metadata":{"type":"object"}}},
-                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
                     },
                     {
                         "endpointId": "deleteBrand",
@@ -978,7 +980,7 @@
                             { "name": "offset", "in": "query", "type": "number" }
                         ],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}]
                     },
                     {
                         "endpointId": "manageCategory",
@@ -986,7 +988,7 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category",
                         "params": [{ "name": "id", "in": "query", "type": "string" }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"parent":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"status":{"type":"string"}}},"categoryFields":{"type":"array","items":{"type":"object","properties":{"fieldKey":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"definition":{"type":"object","properties":{"label":{"type":"string"},"fieldType":{"type":"string"},"unit":{"type":"string"}}}}}},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number","nullable":true},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"parent":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"status":{"type":"string"}},"nullable":true},"categoryFields":{"type":"array","items":{"type":"object","properties":{"fieldKey":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"definition":{"type":"object","properties":{"label":{"type":"string"},"fieldType":{"type":"string"},"unit":{"type":"string","nullable":true}}}}}},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
                     },
                     {
                         "endpointId": "upsertCategory",
@@ -995,7 +997,7 @@
                         "params": [{ "name": "id", "in": "query", "type": "string" }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
                         "body": {"type":"object","properties":{"expectedVersion":{"type":"number"},"parentId":{"type":"string"},"slug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"categoryFields":{"type":"array","items":{"type":"object"}}}},
-                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"categoryFields":{"type":"array","items":{"type":"object","properties":{"fieldKey":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"}}}},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"position":{"type":"number"},"metadata":{"type":"object"},"categoryFields":{"type":"array","items":{"type":"object","properties":{"fieldKey":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"}}}},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
                     },
                     {
                         "endpointId": "deleteCategory",
@@ -1021,7 +1023,7 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category-product-fields",
                         "params": [{ "name": "categoryId", "in": "query", "type": "number", "required": true }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"fields":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"fieldKey":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"fieldType":{"type":"string"},"path":{"type":"string"},"section":{"type":"string"},"options":{"type":"array","items":{"type":"object","properties":{"value":{"type":"string"},"label":{"type":"string"}}}},"required":{"type":"boolean"},"adminEditable":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"unit":{"type":"string"},"operators":{"type":"array","items":{"type":"string"}},"inherited":{"type":"boolean"},"definedByCategoryId":{"type":"number"}}}}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"fields":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"fieldKey":{"type":"string"},"label":{"type":"string"},"type":{"type":"string"},"fieldType":{"type":"string"},"path":{"type":"string"},"section":{"type":"string"},"options":{"type":"array","items":{"type":"object","properties":{"value":{"type":"string"},"label":{"type":"string"}}}},"required":{"type":"boolean"},"adminEditable":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"unit":{"type":"string","nullable":true},"operators":{"type":"array","items":{"type":"string"}},"inherited":{"type":"boolean"},"definedByCategoryId":{"type":"number"}}}}}}}]
                     },
                     {
                         "endpointId": "categoryFields",
@@ -1029,7 +1031,7 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/category-fields",
                         "params": [{ "name": "categoryId", "in": "query", "type": "number", "required": true }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"categoryId":{"type":"number"},"fieldKey":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"definition":{"type":"object","properties":{"label":{"type":"string"},"fieldType":{"type":"string"},"options":{"type":"array","items":{"type":"string"}},"unit":{"type":"string"},"publicReadable":{"type":"boolean"},"enabled":{"type":"boolean"}}}}}},"total":{"type":"number"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"categoryId":{"type":"number"},"fieldKey":{"type":"string"},"required":{"type":"boolean"},"filterable":{"type":"boolean"},"position":{"type":"number"},"definition":{"type":"object","properties":{"label":{"type":"string"},"fieldType":{"type":"string"},"options":{"type":"array","items":{"type":"string"}},"unit":{"type":"string","nullable":true},"publicReadable":{"type":"boolean"},"enabled":{"type":"boolean"}}}}}},"total":{"type":"number"}}}}]
                     },
                     {
                         "endpointId": "upsertCategoryField",
@@ -1056,7 +1058,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -1070,7 +1072,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"brandId":{"type":"number"},"brand":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"status":{"type":"string"}}},"primaryCategoryId":{"type":"number"},"primaryCategory":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number"},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"}}},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"variantAxes":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"position":{"type":"number"},"values":{"type":"array","items":{"type":"string"}}}}},"variants":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}},"variantMatrix":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"brandId":{"type":"number","nullable":true},"brand":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"status":{"type":"string"}},"nullable":true},"primaryCategoryId":{"type":"number","nullable":true},"primaryCategory":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"}},"nullable":true},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"variantAxes":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"fieldKey":{"type":"string","nullable":true},"label":{"type":"string"},"position":{"type":"number"},"values":{"type":"array","items":{"type":"string"}}}}},"variants":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}},"variantMatrix":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}}}}}
                         ]
                     },
                     {
@@ -1100,7 +1102,7 @@
                             }
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"variantAxes":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"},"position":{"type":"number"},"values":{"type":"array","items":{"type":"string"}}}}},"variants":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}},"variantMatrix":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"brandId":{"type":"number","nullable":true},"brand":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"name":{"type":"string"},"status":{"type":"string"}},"nullable":true},"primaryCategoryId":{"type":"number","nullable":true},"primaryCategory":{"type":"object","properties":{"id":{"type":"number"},"parentId":{"type":"number","nullable":true},"slug":{"type":"string"},"fullSlug":{"type":"string"},"label":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"}},"nullable":true},"status":{"type":"string"},"visibility":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"variantAxes":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"fieldKey":{"type":"string","nullable":true},"label":{"type":"string"},"position":{"type":"number"},"values":{"type":"array","items":{"type":"string"}}}}},"variants":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}},"variantMatrix":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"key":{"type":"string"},"variantId":{"type":"string"},"options":{"type":"string"},"choices":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}}}}}}
                         ]
                     },
                     {
@@ -1118,7 +1120,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -1132,7 +1134,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"productId":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"},"position":{"type":"number"},"combinationKey":{"type":"string"},"generatedFromAxes":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1164,7 +1166,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"productMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"productMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1180,7 +1182,7 @@
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"productMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"productMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1236,7 +1238,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string"},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"cmsUserId":{"type":"string","nullable":true},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string","nullable":true},"verifiedBy":{"type":"string","nullable":true},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -1250,7 +1252,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string"},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"cmsUserId":{"type":"string","nullable":true},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string","nullable":true},"verifiedBy":{"type":"string","nullable":true},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1274,7 +1276,7 @@
                             "required": ["status", "expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"cmsUserId":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string"},"verifiedBy":{"type":"string"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"cmsUserId":{"type":"string","nullable":true},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"},"verifiedAt":{"type":"string","nullable":true},"verifiedBy":{"type":"string","nullable":true},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1295,7 +1297,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"items":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}},"total":{"type":"number"},"limit":{"type":"number"},"offset":{"type":"number"}}}}
                         ]
                     },
                     {
@@ -1309,7 +1311,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string"},"seller":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"}}},"priceRule":{"type":"object","properties":{"offerId":{"type":"number"},"minimumAmount":{"type":"number"},"maximumAmount":{"type":"number"},"currency":{"type":"string"},"configuredBy":{"type":"string"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}},"priceProposals":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string"},"decisionReason":{"type":"string"},"decidedAt":{"type":"string"},"createdAt":{"type":"string"}}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number","nullable":true},"sellerId":{"type":"number"},"productId":{"type":"number","nullable":true},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"media":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"media":{"type":"object","properties":{"id":{"type":"number"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"url":{"type":"string"}}}}}},"mainImageMediaId":{"type":"string","nullable":true},"seller":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"},"verificationStatus":{"type":"string"}}},"product":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"status":{"type":"string"},"visibility":{"type":"string"}}},"variant":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"status":{"type":"string"}},"nullable":true},"priceRule":{"type":"object","properties":{"offerId":{"type":"number"},"minimumAmount":{"type":"number"},"maximumAmount":{"type":"number"},"currency":{"type":"string"},"configuredBy":{"type":"string"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}},"nullable":true},"priceProposals":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"offerId":{"type":"number"},"amount":{"type":"number"},"currency":{"type":"string"},"status":{"type":"string"},"proposedBy":{"type":"string"},"decidedBy":{"type":"string","nullable":true},"decisionReason":{"type":"string","nullable":true},"decidedAt":{"type":"string","nullable":true},"createdAt":{"type":"string"}}}}}}}
                         ]
                     },
                     {
@@ -1344,7 +1346,7 @@
                             }
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1370,7 +1372,7 @@
                             "required": ["action", "expectedVersion"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number"},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"sellerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"slug":{"type":"string"},"title":{"type":"string"},"description":{"type":"string","nullable":true},"conditionCode":{"type":"string"},"publicationStatus":{"type":"string"},"workflowState":{"type":"string"},"acceptedPriceAmount":{"type":"number","nullable":true},"currency":{"type":"string"},"availability":{"type":"string"},"quantityAvailable":{"type":"number","nullable":true},"inventoryRevision":{"type":"number"},"metadata":{"type":"object"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -1383,13 +1385,13 @@
                         "endpointId": "uploadOfferImage", "method": "POST", "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image",
                         "params": [{ "name": "offerId", "in": "query", "type": "string" }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }, { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"offerMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"offerMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
                     },
                     {
                         "endpointId": "replaceOfferImage", "method": "POST", "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image/replace",
                         "params": [{ "name": "offerId", "in": "query", "type": "string" }, { "name": "mediaId", "in": "query", "type": "string" }],
                         "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }, { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }],
-                        "output": [{"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"offerMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
+                        "output": [{"status":"200","body":{"type":"object","properties":{"ok":{"type":"boolean"},"id":{"type":"number"},"offerMediaId":{"type":"number"},"mediaId":{"type":"number"},"sortOrder":{"type":"number"},"isMain":{"type":"boolean"},"storageBucket":{"type":"string"},"storagePath":{"type":"string"},"mimeType":{"type":"string"},"fileSize":{"type":"number"},"originalFilename":{"type":"string"},"alt":{"type":"string","nullable":true},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}]
                     },
                     {
                         "endpointId": "removeOfferImage", "method": "DELETE", "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/image",
@@ -1464,7 +1466,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"sellerId":{"type":"number"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"totalAmount":{"type":"number"},"shippingAddress":{"type":"object","properties":{"recipient":{"type":"string"},"givenName":{"type":"string"},"surname":{"type":"string"},"email":{"type":"string"},"phone":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"addressLine3":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"countryCode":{"type":"string"}}},"billingAddress":{"type":"object"},"metadata":{"type":"object"},"idempotencyKey":{"type":"string"},"idempotentReplay":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"lines":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"offerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number"},"acceptedProposalId":{"type":"number"},"title":{"type":"string"},"sku":{"type":"string"},"quantity":{"type":"number"},"unitAmount":{"type":"number"},"totalAmount":{"type":"number"},"productSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variantSnapshot":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string"},"title":{"type":"string"},"combinationKey":{"type":"string"},"options":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}}},"offerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"conditionCode":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"}}},"sellerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"createdAt":{"type":"string"}}}},"events":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"eventType":{"type":"string"},"actorKind":{"type":"string"},"actorId":{"type":"string"},"previousStatus":{"type":"string"},"nextStatus":{"type":"string"},"message":{"type":"string"},"data":{"type":"object"},"createdAt":{"type":"string"}}}},"seller":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"number"},"publicId":{"type":"string"},"orderNumber":{"type":"string"},"checkoutGroupId":{"type":"string"},"sellerId":{"type":"number"},"buyerCmsUserId":{"type":"string"},"status":{"type":"string"},"currency":{"type":"string"},"subtotalAmount":{"type":"number"},"totalAmount":{"type":"number"},"shippingAddress":{"type":"object","properties":{"recipient":{"type":"string"},"givenName":{"type":"string"},"surname":{"type":"string"},"email":{"type":"string"},"phone":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string","nullable":true},"addressLine3":{"type":"string","nullable":true},"postalCode":{"type":"string"},"city":{"type":"string"},"countryCode":{"type":"string"}}},"billingAddress":{"type":"object"},"metadata":{"type":"object"},"idempotencyKey":{"type":"string"},"idempotentReplay":{"type":"boolean"},"version":{"type":"number"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"lines":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"offerId":{"type":"number"},"productId":{"type":"number"},"variantId":{"type":"number","nullable":true},"acceptedProposalId":{"type":"number","nullable":true},"title":{"type":"string"},"sku":{"type":"string","nullable":true},"quantity":{"type":"number"},"unitAmount":{"type":"number"},"totalAmount":{"type":"number"},"productSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"}}},"variantSnapshot":{"type":"object","properties":{"id":{"type":"number"},"sku":{"type":"string","nullable":true},"title":{"type":"string"},"combinationKey":{"type":"string","nullable":true},"options":{"type":"array","items":{"type":"object","properties":{"axisKey":{"type":"string"},"axisLabel":{"type":"string"},"valueKey":{"type":"string"},"valueLabel":{"type":"string"}}}}},"nullable":true},"offerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"slug":{"type":"string"},"title":{"type":"string"},"conditionCode":{"type":"string"},"acceptedPriceAmount":{"type":"number"},"currency":{"type":"string"}}},"sellerSnapshot":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}},"createdAt":{"type":"string"}}}},"events":{"type":"array","items":{"type":"object","properties":{"id":{"type":"number"},"orderId":{"type":"number"},"eventType":{"type":"string"},"actorKind":{"type":"string"},"actorId":{"type":"string"},"previousStatus":{"type":"string","nullable":true},"nextStatus":{"type":"string","nullable":true},"message":{"type":"string","nullable":true},"data":{"type":"object"},"createdAt":{"type":"string"}}}},"seller":{"type":"object","properties":{"id":{"type":"number"},"kind":{"type":"string"},"slug":{"type":"string"},"displayName":{"type":"string"}}}}}}
                         ]
                     },
                     {
@@ -1580,8 +1582,8 @@
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
                             "liabilityRevision": { "type": "number" }, "requiredMinimumAmount": { "type": "number" },
                             "lastProviderAppliedRevision": { "type": "number" }, "lastProviderAppliedAmount": { "type": "number" },
-                            "changeDirection": { "type": "string" }, "decreaseAuthorizationId": { "type": "string" },
-                            "decreaseAuthorizedAt": { "type": "string" }, "calculatedAt": { "type": "string" }
+                            "changeDirection": { "type": "string" }, "decreaseAuthorizationId": { "type": "string", "nullable": true },
+                            "decreaseAuthorizedAt": { "type": "string", "nullable": true }, "calculatedAt": { "type": "string" }
                         } } }]
                     },
                     {
@@ -1733,7 +1735,7 @@
                         "output": [{ "status": "201", "body": { "type": "object", "properties": {
                             "id": { "type": "number" }, "orderId": { "type": "number" }, "actorKind": { "type": "string" },
                             "status": { "type": "string" }, "reason": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object" }, "paymentCancellationAuthorization": { "type": "object" }
+                            "refundAuthorization": { "type": "object", "nullable": true }, "paymentCancellationAuthorization": { "type": "object", "nullable": true }
                         } } }]
                     },
                     {
@@ -1747,7 +1749,7 @@
                         "output": [{ "status": "201", "body": { "type": "object", "properties": {
                             "id": { "type": "number" }, "orderId": { "type": "number" }, "actorKind": { "type": "string" },
                             "status": { "type": "string" }, "reason": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object" }, "paymentCancellationAuthorization": { "type": "object" }
+                            "refundAuthorization": { "type": "object", "nullable": true }, "paymentCancellationAuthorization": { "type": "object", "nullable": true }
                         } } }]
                     },
                     {
@@ -1802,7 +1804,7 @@
                         }, "required": ["orderPublicId", "providerEventId", "occurredAt"] },
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
                             "id": { "type": "number" }, "orderId": { "type": "number" }, "providerPaymentId": { "type": "number" },
-                            "providerPaymentIntentId": { "type": "string" }, "providerChargeId": { "type": "string" },
+                            "providerPaymentIntentId": { "type": "string", "nullable": true }, "providerChargeId": { "type": "string", "nullable": true },
                             "status": { "type": "string" }, "amount": { "type": "number" }, "currency": { "type": "string" },
                             "financialTermsHash": { "type": "string" }, "idempotentReplay": { "type": "boolean" },
                             "ignoredStaleEvent": { "type": "boolean" }, "accepted": { "type": "boolean" },
@@ -1821,11 +1823,11 @@
                         }, "required": ["orderPublicId", "providerEventId", "normalizedStatus", "occurredAt"] },
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
                             "orderId": { "type": "number" }, "orderPublicId": { "type": "string" }, "status": { "type": "string" },
-                            "providerReference": { "type": "string" }, "carrierAcceptedAt": { "type": "string" },
-                            "sellerHandoffDeclaredAt": { "type": "string" }, "recipientHandoffAt": { "type": "string" },
-                            "recipientHandoffFirstObservedAt": { "type": "string" }, "claimWindowStartedAt": { "type": "string" },
-                            "claimByAt": { "type": "string" }, "releaseEligibleAt": { "type": "string" },
-                            "blockingReason": { "type": "string" }, "version": { "type": "number" }
+                            "providerReference": { "type": "string", "nullable": true }, "carrierAcceptedAt": { "type": "string", "nullable": true },
+                            "sellerHandoffDeclaredAt": { "type": "string", "nullable": true }, "recipientHandoffAt": { "type": "string", "nullable": true },
+                            "recipientHandoffFirstObservedAt": { "type": "string", "nullable": true }, "claimWindowStartedAt": { "type": "string", "nullable": true },
+                            "claimByAt": { "type": "string", "nullable": true }, "releaseEligibleAt": { "type": "string", "nullable": true },
+                            "blockingReason": { "type": "string", "nullable": true }, "version": { "type": "number" }
                         } } }]
                     },
                     {
@@ -1937,7 +1939,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
                             { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
-                        "output": [{ "status": "200", "body": { "type": "object", "properties": { "allowed": { "type": "boolean" }, "orderId": { "type": "number" }, "orderPublicId": { "type": "string" }, "sellerCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } }, "fulfillmentStatus": { "type": "string" }, "providerReference": { "type": "string" } }, "required": ["allowed", "orderId", "orderPublicId", "sellerCmsUserId", "fulfillmentStatus"] } }]
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": { "allowed": { "type": "boolean" }, "orderId": { "type": "number" }, "orderPublicId": { "type": "string" }, "sellerCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } }, "fulfillmentStatus": { "type": "string" }, "providerReference": { "type": "string", "nullable": true } }, "required": ["allowed", "orderId", "orderPublicId", "sellerCmsUserId", "fulfillmentStatus"] } }]
                     },
                     {
                         "endpointId": "claimPendingShipmentCancellations", "method": "POST", "access": "system",
@@ -1949,7 +1951,7 @@
                                 "operationId": { "type": "number" }, "claimToken": { "type": "string" },
                                 "businessKey": { "type": "string" }, "status": { "type": "string" },
                                 "orderId": { "type": "number" }, "orderPublicId": { "type": "string" },
-                                "providerReference": { "type": "string" }, "trackingUntil": { "type": "string" },
+                                "providerReference": { "type": "string", "nullable": true }, "trackingUntil": { "type": "string" },
                                 "cancellationRequestId": { "type": "number" }
                             }, "required": ["operationId", "claimToken", "orderPublicId", "trackingUntil", "cancellationRequestId"] } }
                         }, "required": ["items"] } }]
@@ -2025,7 +2027,7 @@
                             "allowed": { "type": "boolean" }, "reason": { "type": "string" },
                             "claimId": { "type": "number" }, "claimPublicId": { "type": "string" },
                             "claimStatus": { "type": "string" }, "claimVersion": { "type": "number" },
-                            "returnShipByAt": { "type": "string" }, "returnDeliveryStatus": { "type": "string" },
+                            "returnShipByAt": { "type": "string", "nullable": true }, "returnDeliveryStatus": { "type": "string", "nullable": true },
                             "orderId": { "type": "number" }, "orderPublicId": { "type": "string" },
                             "orderNumber": { "type": "string" }, "buyerCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
                             "sellerId": { "type": "number" },
@@ -2046,8 +2048,8 @@
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
                             "id": { "type": "number" }, "publicId": { "type": "string" }, "orderId": { "type": "number" },
                             "status": { "type": "string" }, "returnDeliveryStatus": { "type": "string" },
-                            "returnProviderReference": { "type": "string" }, "returnCarrierAcceptedAt": { "type": "string" },
-                            "returnRecipientHandoffAt": { "type": "string" }, "idempotentReplay": { "type": "boolean" },
+                            "returnProviderReference": { "type": "string" }, "returnCarrierAcceptedAt": { "type": "string", "nullable": true },
+                            "returnRecipientHandoffAt": { "type": "string", "nullable": true }, "idempotentReplay": { "type": "boolean" },
                             "version": { "type": "number" }
                         }, "required": ["id", "status", "returnDeliveryStatus", "idempotentReplay", "version"] } }]
                     },
@@ -2087,8 +2089,8 @@
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
                             "id": { "type": "number" }, "orderId": { "type": "number" },
                             "providerDisputeId": { "type": "string" }, "status": { "type": "string" },
-                            "reason": { "type": "string" }, "amount": { "type": "number" }, "currency": { "type": "string" },
-                            "evidenceDueBy": { "type": "string" }, "idempotentReplay": { "type": "boolean" }
+                            "reason": { "type": "string", "nullable": true }, "amount": { "type": "number" }, "currency": { "type": "string" },
+                            "evidenceDueBy": { "type": "string", "nullable": true }, "idempotentReplay": { "type": "boolean" }
                         } } }]
                     },
                     {
@@ -2137,7 +2139,7 @@
                             "runKey": { "type": "string" },
                             "authorizations": { "type": "array", "items": { "type": "object", "properties": {
                                 "status": { "type": "string" }, "orderId": { "type": "number" },
-                                "orderPublicId": { "type": "string" }, "providerPaymentId": { "type": "number" },
+                                "orderPublicId": { "type": "string" }, "providerPaymentId": { "type": "number", "nullable": true },
                                 "refundRequestId": { "type": "string" }, "commerceRefundRequestId": { "type": "number" },
                                 "businessKey": { "type": "string" }, "amount": { "type": "number" },
                                 "authorizedSellerAmount": { "type": "number" }, "sellerEntitlementReductionAmount": { "type": "number" },
@@ -2161,7 +2163,7 @@
                                 "status": { "type": "string" }, "paymentCancellationRequestId": { "type": "number" },
                                 "cancellationRequestId": { "type": "string" }, "orderId": { "type": "number" },
                                 "orderPublicId": { "type": "string" }, "clientReferenceId": { "type": "string" },
-                                "providerPaymentId": { "type": "number" }, "providerPaymentIntentId": { "type": "string" },
+                                "providerPaymentId": { "type": "number", "nullable": true }, "providerPaymentIntentId": { "type": "string", "nullable": true },
                                 "targetOrderStatus": { "type": "string" }, "reason": { "type": "string" },
                                 "amount": { "type": "number" }, "currency": { "type": "string" },
                                 "financialTermsHash": { "type": "string" }
@@ -2193,19 +2195,19 @@
                                     "shippingBeneficiary": { "type": "string" }, "estimatedStripeCostAmount": { "type": "number" },
                                     "estimatedCarrierCostAmount": { "type": "number" }, "platformRiskReserveContributionAmount": { "type": "number" },
                                     "configuredMinimumMarginAmount": { "type": "number" }, "costEstimatesConfigured": { "type": "boolean" },
-                                    "subsidyOverride": { "type": "boolean" }, "subsidyReason": { "type": "string" },
+                                    "subsidyOverride": { "type": "boolean" }, "subsidyReason": { "type": "string", "nullable": true },
                                     "publishedAt": { "type": "string" }, "createdBy": { "type": "string" }, "createdAt": { "type": "string" }
                                 } },
                                 "buyerProtection": { "type": "object", "properties": {
                                     "id": { "type": "number" }, "componentKey": { "type": "string" }, "payer": { "type": "string" },
                                     "basis": { "type": "string" }, "rateBps": { "type": "number" }, "fixedAmount": { "type": "number" },
-                                    "minimumAmount": { "type": "number" }, "maximumAmount": { "type": "number" },
+                                    "minimumAmount": { "type": "number", "nullable": true }, "maximumAmount": { "type": "number", "nullable": true },
                                     "roundingMode": { "type": "string" }, "refundPolicy": { "type": "string" }
                                 } },
                                 "sellerCommission": { "type": "object", "properties": {
                                     "id": { "type": "number" }, "componentKey": { "type": "string" }, "payer": { "type": "string" },
                                     "basis": { "type": "string" }, "rateBps": { "type": "number" }, "fixedAmount": { "type": "number" },
-                                    "minimumAmount": { "type": "number" }, "maximumAmount": { "type": "number" },
+                                    "minimumAmount": { "type": "number", "nullable": true }, "maximumAmount": { "type": "number", "nullable": true },
                                     "roundingMode": { "type": "string" }, "refundPolicy": { "type": "string" }
                                 } },
                                 "protection": { "type": "object", "properties": {
@@ -2229,7 +2231,7 @@
                                 "subsidy": { "type": "object", "properties": {
                                     "id": { "type": "number" }, "maximumDeficitAmount": { "type": "number" },
                                     "reason": { "type": "string" }, "approvedBy": { "type": "string" }, "createdAt": { "type": "string" }
-                                } }
+                                }, "nullable": true }
                             }, "required": ["id", "policyKey", "version", "name", "status", "currency", "fee", "buyerProtection", "sellerCommission", "protection", "sellerRisk"] },
                             "feePolicy": { "type": "object", "properties": {
                                 "id": { "type": "number" }, "revision": { "type": "number" }, "status": { "type": "string" },
@@ -2324,10 +2326,10 @@
                                 "buyerTotalAmount": { "type": "number" }, "sellerProceedsAmount": { "type": "number" },
                                 "platformRetainedAmount": { "type": "number" }, "financialTermsHash": { "type": "string" },
                                 "paymentStatus": { "type": "string" }, "fulfillmentStatus": { "type": "string" },
-                                "settlementStatus": { "type": "string" }, "claimStatus": { "type": "string" },
-                                "totalRefundRequestedAmount": { "type": "number" }, "recipientHandoffAt": { "type": "string" },
-                                "recipientHandoffFirstObservedAt": { "type": "string" }, "claimWindowStartedAt": { "type": "string" },
-                                "claimByAt": { "type": "string" }, "releaseEligibleAt": { "type": "string" },
+                                "settlementStatus": { "type": "string" }, "claimStatus": { "type": "string", "nullable": true },
+                                "totalRefundRequestedAmount": { "type": "number" }, "recipientHandoffAt": { "type": "string", "nullable": true },
+                                "recipientHandoffFirstObservedAt": { "type": "string", "nullable": true }, "claimWindowStartedAt": { "type": "string", "nullable": true },
+                                "claimByAt": { "type": "string", "nullable": true }, "releaseEligibleAt": { "type": "string", "nullable": true },
                                 "updatedAt": { "type": "string" }
                             } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" }
                         } } }]
@@ -2347,10 +2349,10 @@
                             "buyerTotalAmount": { "type": "number" }, "sellerProceedsAmount": { "type": "number" },
                             "platformRetainedAmount": { "type": "number" }, "financialTermsHash": { "type": "string" },
                             "paymentStatus": { "type": "string" }, "fulfillmentStatus": { "type": "string" },
-                            "settlementStatus": { "type": "string" }, "claimStatus": { "type": "string" },
+                            "settlementStatus": { "type": "string" }, "claimStatus": { "type": "string", "nullable": true },
                             "financialTerms": { "type": "object" }, "fulfillment": { "type": "object" }, "settlement": { "type": "object" },
                             "paymentAttempts": { "type": "array", "items": { "type": "object", "properties": {
-                                "id": { "type": "number" }, "providerPaymentId": { "type": "number" }, "status": { "type": "string" }
+                                "id": { "type": "number" }, "providerPaymentId": { "type": "number", "nullable": true }, "status": { "type": "string" }
                             } } },
                             "claims": { "type": "array", "items": { "type": "object", "properties": {
                                 "id": { "type": "number" }, "status": { "type": "string" }, "reason": { "type": "string" }
@@ -2377,9 +2379,9 @@
                         ],
                         "output": [{ "status": "200", "body": { "type": "object", "properties": { "items": { "type": "array", "items": { "type": "object", "properties": {
                             "id": { "type": "number" }, "publicId": { "type": "string" }, "orderId": { "type": "number" },
-                            "reason": { "type": "string" }, "status": { "type": "string" }, "buyerRequestedAmount": { "type": "number" },
-                            "sellerResponseByAt": { "type": "string" }, "returnDeliveryStatus": { "type": "string" },
-                            "returnProviderReference": { "type": "string" }, "returnRecipientHandoffAt": { "type": "string" },
+                            "reason": { "type": "string" }, "status": { "type": "string" }, "buyerRequestedAmount": { "type": "number", "nullable": true },
+                            "sellerResponseByAt": { "type": "string" }, "returnDeliveryStatus": { "type": "string", "nullable": true },
+                            "returnProviderReference": { "type": "string", "nullable": true }, "returnRecipientHandoffAt": { "type": "string", "nullable": true },
                             "version": { "type": "number" }, "createdAt": { "type": "string" }
                         } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" } } } }]
                     },
@@ -2395,20 +2397,20 @@
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
                             "id": { "type": "number" }, "publicId": { "type": "string" }, "orderId": { "type": "number" },
                             "reason": { "type": "string" }, "status": { "type": "string" }, "description": { "type": "string" },
-                            "buyerRequestedAmount": { "type": "number" }, "resolutionOutcome": { "type": "string" },
-                            "returnShipByAt": { "type": "string" }, "returnDeliveryStatus": { "type": "string" },
-                            "returnProviderReference": { "type": "string" }, "returnCarrierAcceptedAt": { "type": "string" },
-                            "returnRecipientHandoffAt": { "type": "string" },
+                            "buyerRequestedAmount": { "type": "number", "nullable": true }, "resolutionOutcome": { "type": "string", "nullable": true },
+                            "returnShipByAt": { "type": "string", "nullable": true }, "returnDeliveryStatus": { "type": "string", "nullable": true },
+                            "returnProviderReference": { "type": "string", "nullable": true }, "returnCarrierAcceptedAt": { "type": "string", "nullable": true },
+                            "returnRecipientHandoffAt": { "type": "string", "nullable": true },
                             "version": { "type": "number" },
                             "events": { "type": "array", "items": { "type": "object", "properties": {
                                 "id": { "type": "number" }, "eventType": { "type": "string" }, "actorKind": { "type": "string" },
-                                "message": { "type": "string" }, "createdAt": { "type": "string" }
+                                "message": { "type": "string", "nullable": true }, "createdAt": { "type": "string" }
                             } } },
                             "evidence": { "type": "array", "items": { "type": "object", "properties": {
                                 "id": { "type": "number" }, "submittedByKind": { "type": "string" },
                                 "mimeType": { "type": "string" }, "fileSize": { "type": "number" },
                                 "originalFilename": { "type": "string" }, "sha256": { "type": "string" },
-                                "description": { "type": "string" }, "metadata": { "type": "object" },
+                                "description": { "type": "string", "nullable": true }, "metadata": { "type": "object" },
                                 "createdAt": { "type": "string" }
                             } } },
                             "returnEvents": { "type": "array", "items": { "type": "object", "properties": {
@@ -2450,7 +2452,7 @@
                                 "id": { "type": "number" }, "claimId": { "type": "number" },
                                 "submittedByKind": { "type": "string" }, "mimeType": { "type": "string" },
                                 "fileSize": { "type": "number" }, "originalFilename": { "type": "string" },
-                                "sha256": { "type": "string" }, "description": { "type": "string" },
+                                "sha256": { "type": "string" }, "description": { "type": "string", "nullable": true },
                                 "createdAt": { "type": "string" }
                             } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" }
                         }, "required": ["items", "total", "limit", "offset"] } }]
@@ -2468,7 +2470,7 @@
                             "id": { "type": "number" }, "claimId": { "type": "number" },
                             "submittedByKind": { "type": "string" }, "mimeType": { "type": "string" },
                             "fileSize": { "type": "number" }, "originalFilename": { "type": "string" },
-                            "sha256": { "type": "string" }, "description": { "type": "string" },
+                            "sha256": { "type": "string" }, "description": { "type": "string", "nullable": true },
                             "metadata": { "type": "object" }, "createdAt": { "type": "string" }
                         }, "required": ["id", "claimId", "submittedByKind", "mimeType", "fileSize", "sha256", "createdAt"] } }]
                     },
@@ -2491,7 +2493,7 @@
                             "status": { "type": "string" }, "resolutionOutcome": { "type": "string" },
                             "resolutionBuyerRefundAmount": { "type": "number" }, "resolutionSellerTransferAmount": { "type": "number" },
                             "decisionReason": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object" }, "paymentCancellationAuthorization": { "type": "object" }
+                            "refundAuthorization": { "type": "object", "nullable": true }, "paymentCancellationAuthorization": { "type": "object", "nullable": true }
                         } } }]
                     },
                     {
@@ -2504,11 +2506,11 @@
                             { "name": "x-cms-user-role", "source": { "from": "computed", "ref": "userRole" } }
                         ],
                         "output": [{ "status": "200", "body": { "type": "object", "properties": { "items": { "type": "array", "items": { "type": "object", "properties": {
-                            "id": { "type": "number" }, "orderId": { "type": "number" }, "claimId": { "type": "number" },
+                            "id": { "type": "number" }, "orderId": { "type": "number" }, "claimId": { "type": "number", "nullable": true },
                             "businessKey": { "type": "string" }, "reason": { "type": "string" }, "status": { "type": "string" },
                             "requestedAmount": { "type": "number" }, "protectionFeeRefundAmount": { "type": "number" },
                             "sellerRecoveryAmount": { "type": "number" }, "requiresFinanceApproval": { "type": "boolean" },
-                            "dualApprovalRequired": { "type": "boolean" }, "firstApprovedBy": { "type": "string" },
+                            "dualApprovalRequired": { "type": "boolean" }, "firstApprovedBy": { "type": "string", "nullable": true },
                             "version": { "type": "number" }, "createdAt": { "type": "string" }
                         } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" } } } }]
                     },
@@ -2522,13 +2524,13 @@
                             { "name": "x-cms-user-role", "source": { "from": "computed", "ref": "userRole" } }
                         ],
                         "output": [{ "status": "200", "body": { "type": "object", "properties": {
-                            "id": { "type": "number" }, "orderId": { "type": "number" }, "claimId": { "type": "number" },
+                            "id": { "type": "number" }, "orderId": { "type": "number" }, "claimId": { "type": "number", "nullable": true },
                             "businessKey": { "type": "string" }, "reason": { "type": "string" }, "status": { "type": "string" },
                             "requestedAmount": { "type": "number" }, "protectionFeeRefundAmount": { "type": "number" },
                             "sellerRecoveryAmount": { "type": "number" }, "requiresFinanceApproval": { "type": "boolean" },
-                            "dualApprovalRequired": { "type": "boolean" }, "firstApprovedBy": { "type": "string" },
-                            "secondApprovedBy": { "type": "string" },
-                            "requestedByKind": { "type": "string" }, "decisionReason": { "type": "string" },
+                            "dualApprovalRequired": { "type": "boolean" }, "firstApprovedBy": { "type": "string", "nullable": true },
+                            "secondApprovedBy": { "type": "string", "nullable": true },
+                            "requestedByKind": { "type": "string" }, "decisionReason": { "type": "string", "nullable": true },
                             "version": { "type": "number" }, "createdAt": { "type": "string" }
                         } } }]
                     },
@@ -2547,7 +2549,7 @@
                             "id": { "type": "number" }, "orderId": { "type": "number" }, "businessKey": { "type": "string" },
                             "status": { "type": "string" }, "requestedAmount": { "type": "number" },
                             "requiresFinanceApproval": { "type": "boolean" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object" }
+                            "refundAuthorization": { "type": "object", "nullable": true }
                         } } }]
                     },
                     {
@@ -2566,7 +2568,7 @@
                             "id": { "type": "number" }, "orderId": { "type": "number" }, "businessKey": { "type": "string" },
                             "status": { "type": "string" }, "requestedAmount": { "type": "number" },
                             "decisionReason": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object" }
+                            "refundAuthorization": { "type": "object", "nullable": true }
                         } } }]
                     },
                     {
@@ -2608,7 +2610,7 @@
                             "id": { "type": "number" }, "orderId": { "type": "number" }, "actorKind": { "type": "string" },
                             "status": { "type": "string" }, "reason": { "type": "string" }, "decisionReason": { "type": "string" },
                             "reviewedAt": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object" }
+                            "refundAuthorization": { "type": "object", "nullable": true }
                         } } }]
                     },
                     {
@@ -2621,9 +2623,9 @@
                             { "name": "x-cms-user-role", "source": { "from": "computed", "ref": "userRole" } }
                         ],
                         "output": [{ "status": "200", "body": { "type": "object", "properties": { "items": { "type": "array", "items": { "type": "object", "properties": {
-                            "id": { "type": "number" }, "orderId": { "type": "number" }, "kind": { "type": "string" },
+                            "id": { "type": "number" }, "orderId": { "type": "number", "nullable": true }, "kind": { "type": "string" },
                             "severity": { "type": "string" }, "status": { "type": "string" }, "reason": { "type": "string" },
-                            "detectedAt": { "type": "string" }, "resolvedAt": { "type": "string" }
+                            "detectedAt": { "type": "string" }, "resolvedAt": { "type": "string", "nullable": true }
                         } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" } } } }]
                     },
                     {
@@ -2740,7 +2742,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -2764,7 +2766,7 @@
                             "required": ["code", "label"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"description":{"type":"string"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"code":{"type":"string"},"label":{"type":"string"},"description":{"type":"string","nullable":true},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -2820,7 +2822,7 @@
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
                         ],
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"string"},"entityType":{"type":"string"},"key":{"type":"string"},"label":{"type":"string"},"fieldType":{"type":"string"},"options":{"type":"array","items":{"type":"string"}},"unit":{"type":"string"},"required":{"type":"boolean"},"selfEditable":{"type":"boolean"},"adminEditable":{"type":"boolean"},"publicReadable":{"type":"boolean"},"showInDashboardTable":{"type":"boolean"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"string"},"entityType":{"type":"string"},"key":{"type":"string"},"label":{"type":"string"},"fieldType":{"type":"string"},"options":{"type":"array","items":{"type":"string"}},"unit":{"type":"string","nullable":true},"required":{"type":"boolean"},"selfEditable":{"type":"boolean"},"adminEditable":{"type":"boolean"},"publicReadable":{"type":"boolean"},"showInDashboardTable":{"type":"boolean"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
@@ -2853,7 +2855,7 @@
                             "required": ["entityType", "key", "label", "fieldType"]
                         },
                         "output": [
-                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"string"},"entityType":{"type":"string"},"key":{"type":"string"},"label":{"type":"string"},"fieldType":{"type":"string"},"options":{"type":"array","items":{"type":"string"}},"unit":{"type":"string"},"required":{"type":"boolean"},"selfEditable":{"type":"boolean"},"adminEditable":{"type":"boolean"},"publicReadable":{"type":"boolean"},"showInDashboardTable":{"type":"boolean"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
+                            {"status":"200","body":{"type":"object","properties":{"id":{"type":"string"},"entityType":{"type":"string"},"key":{"type":"string"},"label":{"type":"string"},"fieldType":{"type":"string"},"options":{"type":"array","items":{"type":"string"}},"unit":{"type":"string","nullable":true},"required":{"type":"boolean"},"selfEditable":{"type":"boolean"},"adminEditable":{"type":"boolean"},"publicReadable":{"type":"boolean"},"showInDashboardTable":{"type":"boolean"},"position":{"type":"number"},"enabled":{"type":"boolean"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"}}}}
                         ]
                     },
                     {
