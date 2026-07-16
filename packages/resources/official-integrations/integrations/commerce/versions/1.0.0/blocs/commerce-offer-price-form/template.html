@@ -1,0 +1,102 @@
+<basic-stack gap="lg" data-layout>
+    <div data-loading>
+        <basic-grid min="none" max="none" gap="md">
+            <basic-skeleton height="8rem" animation="wave" label="Chargement de l’annonce"></basic-skeleton>
+            <basic-skeleton height="22rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        </basic-grid>
+    </div>
+
+    <basic-toast data-error role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="0" hidden></basic-toast>
+
+    <div data-card hidden>
+        <basic-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-title>Définir mon prix</strong>
+            <span slot="description" data-description>Choisis ton prix de vente dans la plage proposée.</span>
+
+            <basic-stack gap="lg">
+                <basic-stack gap="xs">
+                    <small data-offer-label>Annonce</small>
+                    <strong data-offer-title></strong>
+                </basic-stack>
+
+                <basic-stack gap="xs" data-range-section>
+                    <small data-range-label>Plage de prix proposée</small>
+                    <strong data-range></strong>
+                    <span data-range-message>Ton prix doit être compris dans cette plage.</span>
+                </basic-stack>
+
+                <form data-form novalidate>
+                    <basic-stack gap="lg">
+                        <basic-stack gap="xs">
+                            <basic-input data-amount name="amount" type="number" step="0.01" required label="Ton prix" hint="Montant en euros"></basic-input>
+                            <small data-validation role="alert" aria-live="polite"></small>
+                        </basic-stack>
+
+                        <basic-card data-activation-panel data-card-surface appearance="outlined" density="compact" hidden>
+                            <strong slot="title" data-activation-title>Active ton compte vendeur</strong>
+                            <span slot="description" data-activation-copy>Ces informations sont nécessaires pour publier ton annonce et recevoir le produit de tes ventes plus tard. Aucun compte bancaire n’est demandé ici.</span>
+
+                            <basic-stack gap="md">
+                                <section data-profile-panel aria-label="Informations vendeur">
+                                    <basic-stack gap="md">
+                                        <p data-profile-summary>Seules les informations manquantes sont demandées ici. Les autres sont reprises depuis ton profil.</p>
+                                        <basic-grid min="14rem" max="1fr" gap="md">
+                                            <basic-input data-profile-control="givenName" name="givenName" type="text" autocomplete="given-name" required label="Prénom"></basic-input>
+                                            <basic-input data-profile-control="surname" name="surname" type="text" autocomplete="family-name" required label="Nom"></basic-input>
+                                            <basic-input data-profile-control="birthDate" name="birthDate" type="date" date-format="day-month-year" invalid-date-message="Indique une date au format JJ/MM/AAAA." autocomplete="bday" required label="Date de naissance"></basic-input>
+                                            <basic-input data-profile-control="email" name="email" type="email" autocomplete="email" readonly required label="Adresse e-mail"></basic-input>
+                                            <basic-input data-profile-control="phone" name="phone" type="tel" autocomplete="tel" required label="Téléphone"></basic-input>
+                                            <basic-input data-profile-control="addressLine1" name="addressLine1" type="text" autocomplete="address-line1" required label="Adresse"></basic-input>
+                                            <basic-input data-profile-control="postalCode" name="postalCode" type="text" autocomplete="postal-code" required label="Code postal"></basic-input>
+                                            <basic-input data-profile-control="city" name="city" type="text" autocomplete="address-level2" required label="Ville"></basic-input>
+                                            <basic-input data-profile-control="countryCode" name="countryCode" type="text" autocomplete="country" value="FR" maxlength="2" readonly required label="Pays"></basic-input>
+                                        </basic-grid>
+                                        <small data-profile-validation role="alert" aria-live="polite"></small>
+                                        <basic-button data-profile-link type="button" action="link" href="/mon-espace/profil" appearance="outlined">Modifier mes informations</basic-button>
+                                    </basic-stack>
+                                </section>
+
+                                <section data-consent-panel>
+                                    <basic-stack gap="xs">
+                                        <label>
+                                            <input data-consent name="sellerTermsAccepted" type="checkbox">
+                                            <span><span data-consent-prefix>J’accepte les</span> <a data-seller-terms-link href="/cgu-cgv" target="_blank" rel="noopener">conditions vendeur Courtside</a><span data-stripe-consent-fragment> <span data-stripe-consent-prefix>et l’</span><a data-stripe-terms-link href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener">accord de compte connecté Stripe</a></span>.</span>
+                                        </label>
+                                        <small data-consent-validation role="alert" aria-live="polite"></small>
+                                        <p><span data-privacy-notice>Les informations renseignées sont traitées pour activer ton compte vendeur et sécuriser les paiements.</span> <a data-privacy-link href="/mentions-legales" target="_blank" rel="noopener">Consulter l’avis de confidentialité</a>.</p>
+                                    </basic-stack>
+                                </section>
+                            </basic-stack>
+                        </basic-card>
+
+                        <basic-button data-submit type="submit">Envoyer mon prix</basic-button>
+                    </basic-stack>
+                </form>
+            </basic-stack>
+        </basic-card>
+    </div>
+
+    <div data-unavailable hidden>
+        <basic-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-unavailable-title>Cette action n’est pas disponible</strong>
+            <span slot="description" data-unavailable-message>Cette annonce ne nécessite plus de proposition de prix.</span>
+            <basic-button slot="actions" data-back action="link" href="/mon-espace/mes-annonces" appearance="outlined">Retour à mes annonces</basic-button>
+        </basic-card>
+    </div>
+
+    <div data-technical hidden>
+        <basic-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-technical-title>Impossible de charger le prix</strong>
+            <span slot="description" data-technical-message>Impossible de charger cette annonce pour le moment. Réessaie dans quelques instants.</span>
+            <basic-button slot="actions" data-technical-retry type="button" data-retry>Réessayer</basic-button>
+        </basic-card>
+    </div>
+
+    <div data-success hidden>
+        <basic-card data-card-surface appearance="outlined" density="regular">
+            <strong slot="title" data-success-title>Prix envoyé</strong>
+            <span slot="description" data-success-message>Ta proposition a bien été transmise et va maintenant être vérifiée.</span>
+            <basic-button slot="actions" data-success-link action="link" href="/mon-espace/mes-annonces">Retour à mes annonces</basic-button>
+        </basic-card>
+    </div>
+</basic-stack>

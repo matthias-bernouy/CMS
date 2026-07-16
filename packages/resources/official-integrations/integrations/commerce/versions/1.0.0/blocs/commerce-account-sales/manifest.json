@@ -1,0 +1,10 @@
+{
+    "default-tag": "commerce-account-sales",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Account sales",
+        "description": "Authenticated seller sales list with status filters, compact cards, and pagination."
+    }
+}

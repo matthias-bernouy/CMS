@@ -1,0 +1,47 @@
+<basic-stack gap="lg" data-offers-layout>
+    <basic-stack direction="row" justify-content="space-between" align-items="end" wrap="true" gap="sm" data-offers-toolbar>
+        <basic-select data-status-filter accessible-label="Filtrer par statut" value="all">
+            <basic-option value="all">Toutes</basic-option>
+            <basic-option value="draft">Brouillons</basic-option>
+            <basic-option value="action_required">Action requise</basic-option>
+            <basic-option value="under_review">En validation</basic-option>
+            <basic-option value="online">En ligne</basic-option>
+            <basic-option value="paused">En pause</basic-option>
+            <basic-option value="rejected">Refusées</basic-option>
+            <basic-option value="archived">Archivées</basic-option>
+        </basic-select>
+        <basic-button data-create-button action="link">Déposer une annonce</basic-button>
+    </basic-stack>
+
+    <section data-offers-source>
+        <basic-grid min="md" max="xl" gap="md" cms-condition="$source.loading">
+            <basic-skeleton height="20rem" animation="wave" label="Chargement de vos annonces"></basic-skeleton>
+            <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+            <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        </basic-grid>
+
+        <basic-toast data-error-toast role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Impossible de charger vos annonces.</basic-toast>
+
+        <basic-stack gap="lg" cms-condition="$source.loaded">
+            <basic-card appearance="outlined" density="regular" data-empty-state cms-condition="total == 0">
+                <strong slot="title" data-empty-title>Aucune annonce pour le moment</strong>
+                <span slot="description" data-empty-message>Créez votre première annonce pour commencer à vendre.</span>
+            </basic-card>
+
+            <basic-grid min="md" max="xl" gap="md" data-offers-grid cms-condition="total > 0">
+                <basic-card appearance="outlined" density="compact" data-offer-card cms-repeat="items as offer">
+                    <img slot="media" data-offer-image data-media-id="{{ offer.mainImageMediaId }}" alt="{{ offer.title }}" loading="lazy" decoding="async">
+                    <strong slot="title">{{ offer.title }}</strong>
+                    <span slot="description" data-offer-status="{{ offer.displayStatus }}"></span>
+                    <basic-stack gap="xs">
+                        <strong data-offer-price data-display-amount="{{ offer.sellerDisplayPriceAmount }}" data-currency="{{ offer.currency }}"></strong>
+                        <small data-offer-updated data-date="{{ offer.updatedAt }}"></small>
+                    </basic-stack>
+                    <basic-button slot="actions" data-edit-button data-offer-id="{{ offer.id }}" data-offer-slug="{{ offer.slug }}" data-workflow-state="{{ offer.workflowState }}" action="link" appearance="outlined" size="sm">Voir</basic-button>
+                </basic-card>
+            </basic-grid>
+
+            <basic-pagination data-pagination page="1" page-size="12" total="{{ total }}" cms-condition="total > limit"></basic-pagination>
+        </basic-stack>
+    </section>
+</basic-stack>

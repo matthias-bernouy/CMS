@@ -1,0 +1,45 @@
+<section>
+    <div data-loading>
+        <basic-grid min="md" gap="md">
+            <basic-skeleton height="20rem" animation="wave" label="Chargement de la vente"></basic-skeleton>
+            <basic-skeleton height="20rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        </basic-grid>
+    </div>
+
+    <basic-card data-error hidden appearance="outlined" density="compact" role="alert">
+        <strong slot="title" data-error-title>Vente introuvable</strong>
+        <span slot="description" data-error-message></span>
+        <basic-button slot="actions" data-error-back action="link" appearance="outlined">Retour aux ventes</basic-button>
+    </basic-card>
+
+    <div data-content hidden class="content">
+        <header>
+            <div class="heading">
+                <span class="eyebrow" data-eyebrow>VENTE</span>
+                <h2 data-order-number></h2>
+                <span class="muted" data-order-date></span>
+            </div>
+            <span class="status" data-order-status></span>
+        </header>
+
+        <div class="layout">
+            <main>
+                <basic-card data-articles-card appearance="outlined" density="compact">
+                    <strong slot="title" data-articles-title>Articles vendus</strong>
+                    <div class="lines" data-lines></div>
+                </basic-card>
+                <div data-fulfillment hidden><slot name="fulfillment"></slot></div>
+            </main>
+
+            <aside>
+                <basic-card data-summary-card appearance="outlined" density="compact">
+                    <strong slot="title" data-summary-title>Récapitulatif</strong>
+                    <div class="summary-row"><span data-subtotal-label>Prix de vente</span><strong data-subtotal></strong></div>
+                    <div class="summary-row"><span data-commission-label>Commission Courtside</span><strong data-commission></strong></div>
+                    <div class="summary-row"><span data-shipping-label>Livraison</span><strong data-shipping></strong></div>
+                    <div class="summary-row total"><span data-total-label>Montant net à recevoir</span><strong data-total></strong></div>
+                </basic-card>
+            </aside>
+        </div>
+    </div>
+</section>

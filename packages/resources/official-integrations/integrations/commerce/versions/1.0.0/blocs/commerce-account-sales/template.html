@@ -1,0 +1,30 @@
+<section>
+    <basic-stack gap="lg">
+        <basic-select data-status-filter accessible-label="Filtrer les ventes par statut" value="all">
+            <basic-option value="all">Toutes</basic-option>
+            <basic-option value="placed">À traiter</basic-option>
+            <basic-option value="completed">Terminées</basic-option>
+            <basic-option value="cancelled">Annulées</basic-option>
+            <basic-option value="archived">Archivées</basic-option>
+        </basic-select>
+
+        <basic-stack data-loading gap="sm">
+            <basic-skeleton height="7rem" animation="wave" label="Chargement des ventes"></basic-skeleton>
+            <basic-skeleton height="7rem" animation="wave" aria-hidden="true"></basic-skeleton>
+            <basic-skeleton height="7rem" animation="wave" aria-hidden="true"></basic-skeleton>
+        </basic-stack>
+
+        <basic-card data-empty hidden appearance="outlined" density="compact">
+            <strong slot="title" data-empty-title>Aucune vente pour le moment</strong>
+            <span slot="description" data-empty-message>Les commandes de vos acheteurs apparaîtront ici.</span>
+        </basic-card>
+
+        <basic-card data-error hidden appearance="outlined" density="compact" role="alert">
+            <strong slot="title">Impossible de charger les ventes</strong>
+            <span slot="description" data-error-message></span>
+        </basic-card>
+
+        <basic-stack data-list hidden gap="sm"></basic-stack>
+        <basic-pagination data-pagination hidden page="1" page-size="10" total="0"></basic-pagination>
+    </basic-stack>
+</section>
