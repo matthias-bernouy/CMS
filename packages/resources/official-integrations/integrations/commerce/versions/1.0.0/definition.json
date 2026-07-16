@@ -1733,10 +1733,27 @@
                         ],
                         "body": { "type": "object", "properties": { "orderId": { "type": "number" }, "reason": { "type": "string" } }, "required": ["orderId", "reason"] },
                         "output": [{ "status": "201", "body": { "type": "object", "properties": {
-                            "id": { "type": "number" }, "orderId": { "type": "number" }, "actorKind": { "type": "string" },
-                            "status": { "type": "string" }, "reason": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object", "nullable": true }, "paymentCancellationAuthorization": { "type": "object", "nullable": true }
-                        } } }]
+                            "id": { "type": "number" }, "orderId": { "type": "number" },
+                            "status": { "type": "string" }, "reason": { "type": "string" }
+                        } }, "triggerBody": { "type": "object", "properties": {
+                            "refundAuthorization": { "type": "object", "nullable": true, "properties": {
+                                "status": { "type": "string" }, "orderId": { "type": "number" }, "orderPublicId": { "type": "string" },
+                                "providerPaymentId": { "type": "number" }, "refundRequestId": { "type": "string" },
+                                "commerceRefundRequestId": { "type": "number" }, "businessKey": { "type": "string" },
+                                "amount": { "type": "number" }, "authorizedSellerAmount": { "type": "number" },
+                                "sellerEntitlementReductionAmount": { "type": "number" }, "sellerRecoveryAmount": { "type": "number" },
+                                "protectionFeeRefundAmount": { "type": "number" }, "currency": { "type": "string" },
+                                "financialTermsHash": { "type": "string" }, "requiresFinanceApproval": { "type": "boolean" }
+                            }, "required": ["status", "orderId", "orderPublicId", "providerPaymentId", "refundRequestId", "commerceRefundRequestId", "businessKey", "amount", "authorizedSellerAmount", "sellerEntitlementReductionAmount", "sellerRecoveryAmount", "protectionFeeRefundAmount", "currency", "financialTermsHash", "requiresFinanceApproval"] },
+                            "paymentCancellationAuthorization": { "type": "object", "nullable": true, "properties": {
+                                "status": { "type": "string" }, "paymentCancellationRequestId": { "type": "number" },
+                                "cancellationRequestId": { "type": "string" }, "orderId": { "type": "number" },
+                                "orderPublicId": { "type": "string" }, "clientReferenceId": { "type": "string" },
+                                "targetOrderStatus": { "type": "string" }, "reason": { "type": "string" },
+                                "amount": { "type": "number" }, "currency": { "type": "string" },
+                                "financialTermsHash": { "type": "string" }
+                            }, "required": ["status", "paymentCancellationRequestId", "cancellationRequestId", "orderId", "orderPublicId", "clientReferenceId", "targetOrderStatus", "reason", "amount", "currency", "financialTermsHash"] }
+                        }, "required": ["refundAuthorization", "paymentCancellationAuthorization"] } }]
                     },
                     {
                         "endpointId": "cancelMySale", "method": "POST", "access": "auth",
@@ -1747,10 +1764,27 @@
                         ],
                         "body": { "type": "object", "properties": { "orderId": { "type": "number" }, "reason": { "type": "string" } }, "required": ["orderId", "reason"] },
                         "output": [{ "status": "201", "body": { "type": "object", "properties": {
-                            "id": { "type": "number" }, "orderId": { "type": "number" }, "actorKind": { "type": "string" },
-                            "status": { "type": "string" }, "reason": { "type": "string" }, "version": { "type": "number" },
-                            "refundAuthorization": { "type": "object", "nullable": true }, "paymentCancellationAuthorization": { "type": "object", "nullable": true }
-                        } } }]
+                            "id": { "type": "number" }, "orderId": { "type": "number" },
+                            "status": { "type": "string" }, "reason": { "type": "string" }
+                        } }, "triggerBody": { "type": "object", "properties": {
+                            "refundAuthorization": { "type": "object", "nullable": true, "properties": {
+                                "status": { "type": "string" }, "orderId": { "type": "number" }, "orderPublicId": { "type": "string" },
+                                "providerPaymentId": { "type": "number" }, "refundRequestId": { "type": "string" },
+                                "commerceRefundRequestId": { "type": "number" }, "businessKey": { "type": "string" },
+                                "amount": { "type": "number" }, "authorizedSellerAmount": { "type": "number" },
+                                "sellerEntitlementReductionAmount": { "type": "number" }, "sellerRecoveryAmount": { "type": "number" },
+                                "protectionFeeRefundAmount": { "type": "number" }, "currency": { "type": "string" },
+                                "financialTermsHash": { "type": "string" }, "requiresFinanceApproval": { "type": "boolean" }
+                            }, "required": ["status", "orderId", "orderPublicId", "providerPaymentId", "refundRequestId", "commerceRefundRequestId", "businessKey", "amount", "authorizedSellerAmount", "sellerEntitlementReductionAmount", "sellerRecoveryAmount", "protectionFeeRefundAmount", "currency", "financialTermsHash", "requiresFinanceApproval"] },
+                            "paymentCancellationAuthorization": { "type": "object", "nullable": true, "properties": {
+                                "status": { "type": "string" }, "paymentCancellationRequestId": { "type": "number" },
+                                "cancellationRequestId": { "type": "string" }, "orderId": { "type": "number" },
+                                "orderPublicId": { "type": "string" }, "clientReferenceId": { "type": "string" },
+                                "targetOrderStatus": { "type": "string" }, "reason": { "type": "string" },
+                                "amount": { "type": "number" }, "currency": { "type": "string" },
+                                "financialTermsHash": { "type": "string" }
+                            }, "required": ["status", "paymentCancellationRequestId", "cancellationRequestId", "orderId", "orderPublicId", "clientReferenceId", "targetOrderStatus", "reason", "amount", "currency", "financialTermsHash"] }
+                        }, "required": ["refundAuthorization", "paymentCancellationAuthorization"] } }]
                     },
                     {
                         "endpointId": "getOrderDeliveryQuoteAuthorization", "method": "GET", "access": "system",

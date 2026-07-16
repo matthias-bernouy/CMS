@@ -3,7 +3,7 @@ import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape }> };
+type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: DataShape; triggerBody?: DataShape }> };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
 const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
@@ -171,7 +171,8 @@ function commerceEndpoints(): Promise<Endpoint[]> {
 function expectProjections(endpoints: Endpoint[], cases: Array<[string, unknown, string?]>): void {
     for (const [endpointId, value, status = "200"] of cases) {
         const endpoint = endpoints.find(candidate => candidate.endpointId === endpointId);
-        const shape = endpoint?.output?.find(response => response.status === status)?.body;
+        const response = endpoint?.output?.find(candidate => candidate.status === status);
+        const shape = response?.triggerBody ?? response?.body;
         if (!shape) throw new Error(`Missing ${status} response body for ${endpointId}`);
 
         expect(projectStrictDataShape(value, shape, "response", { enforceRequired: false })).toEqual(value);
