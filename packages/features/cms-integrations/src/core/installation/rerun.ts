@@ -8,7 +8,7 @@ import {
 import { parseIntegrationImportDto } from "../parsing/parseIntegrationImportDto";
 import { isSensitiveInput } from "../shared/inputSensitivity";
 import { hasAnswer } from "./ids";
-import { withObsoleteArtifactCleanup } from "./artifactCleanup";
+import { withObsoleteArtifactCleanup } from "./artifactCleanup/index";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "./secretRefs";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
