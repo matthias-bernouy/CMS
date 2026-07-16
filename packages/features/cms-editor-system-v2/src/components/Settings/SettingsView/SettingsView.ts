@@ -65,6 +65,11 @@ export const SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
 export const SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
 export const SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
 export type SettingsViewMode = "settings" | "overrides";
+export type SettingsViewThemeToken = {
+    label: string;
+    variable: string;
+    category?: string;
+};
 
 const SETTING_ICON_PATHS: Partial<Record<SettingIconName, string>> = {
     "layout-none":    `<rect x="8" y="8" width="8" height="8" rx="1.5"></rect>`,
@@ -93,29 +98,20 @@ const SETTING_ICON_PATHS: Partial<Record<SettingIconName, string>> = {
     "more":           `<path d="M5 12h.01M12 12h.01M19 12h.01"></path>`,
 };
 
-const COLOR_TOKEN_SWATCHES: Record<string, string> = {
-    auto:      "linear-gradient(135deg, #ffffff 0 45%, #e7ecea 45% 55%, #ffffff 55%)",
-    base:      "#ffffff",
-    surface:   "#f8faf9",
-    muted:     "#eef5f2",
-    primary:   "var(--editor-v2-accent)",
-    secondary: "#315ce9",
-    success:   "var(--editor-v2-success)",
-    warning:   "#f1c232",
-    danger:    "#c74436",
-    info:      "#315ce9",
-    custom:    "linear-gradient(135deg, #165f4b, #315ce9, #f1c232)",
-};
-
 export class SettingsView extends HTMLElement {
     private _dataSources: EditorDataSource[] = [];
     private _dataScopes: DataScope[] = [];
     private _endpointPicker: DataSourcePicker | null = null;
     private _disconnectEndpointPickerEvents: (() => void) | null = null;
+    private _themeTokens: SettingsViewThemeToken[] = [];
 
     constructor() {
         super();
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+    }
+
+    setThemeTokens(tokens: SettingsViewThemeToken[]): void {
+        this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
 
     setSettings(
@@ -332,68 +328,86 @@ export class SettingsView extends HTMLElement {
         const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
         if (label) wrapper.append(label);
 
-        const tokens = setting.tokens ?? [];
-        if (tokens.length > 0) {
-            const swatches = document.createElement("div");
-            swatches.className = "color-swatches";
-            for (const option of tokens) {
-                const button = document.createElement("button");
-                button.type = "button";
-                button.className = "color-swatch-button";
-                button.disabled = setting.disabled === true;
-                button.title = option.ariaLabel ?? option.label;
-                button.ariaLabel = option.ariaLabel ?? option.label;
-                button.ariaPressed = String(option.value === setting.defaultValue);
-                button.style.setProperty("--color-swatch", colorSwatchValue(option.value));
+        const controls = document.createElement("div");
+        controls.className = "color-custom";
 
-                const swatch = document.createElement("span");
-                swatch.className = "color-swatch";
-                button.append(swatch);
-                button.addEventListener("click", () => {
-                    if (setting.disabled) return;
-                    const customInput = wrapper.querySelector<HTMLInputElement>(".color-custom-input");
-                    const customValue = customInput?.value.trim() ?? setting.customDefaultValue ?? "";
-                    for (const item of Array.from(swatches.querySelectorAll("button"))) {
-                        item.ariaPressed = String(item === button);
+        if (this._themeTokens.length) {
+            const select = document.createElement("select");
+            select.className = "color-token-select";
+            select.ariaLabel = `${setting.label} theme token`;
+            select.disabled = setting.disabled === true;
+            const custom = document.createElement("option");
+            custom.value = "";
+            custom.textContent = "Custom color";
+            select.append(custom);
+            const groups = new Map<string, HTMLOptGroupElement>();
+            for (const token of this._themeTokens) {
+                const option = document.createElement("option");
+                option.value = `var(--${token.variable})`;
+                option.textContent = token.label;
+                const category = token.category?.trim();
+                if (category) {
+                    let group = groups.get(category);
+                    if (!group) {
+                        group = document.createElement("optgroup");
+                        group.label = category;
+                        groups.set(category, group);
+                        select.append(group);
                     }
-                    const custom = wrapper.querySelector<HTMLElement>(".color-custom");
-                    if (custom) custom.hidden = option.value !== "custom" || setting.allowCustom !== true;
-                    wrapper.toggleAttribute("data-custom-open", option.value === "custom" && setting.allowCustom === true);
-                    this._emitSettingChange(setting, option.value, colorAttributes(setting, option.value, customValue));
-                });
-                swatches.append(button);
+                    group.append(option);
+                } else {
+                    select.append(option);
+                }
             }
-            wrapper.append(swatches);
+            const selected = Array.from(select.querySelectorAll("option"))
+                .find((option) => option.value === (setting.defaultValue ?? ""));
+            if (selected) selected.selected = true;
+            select.addEventListener("change", () => {
+                if (setting.disabled || !select.value) return;
+                input.value = select.value;
+                picker.value = colorPickerValue(select.value);
+                this._emitSettingChange(setting, select.value);
+            });
+            wrapper.append(select);
         }
 
-        if (setting.allowCustom) {
-            const custom = document.createElement("div");
-            custom.className = "color-custom";
-            custom.hidden = setting.defaultValue !== "custom";
+        const picker = document.createElement("input");
+        picker.className = "color-custom-picker";
+        picker.type = "color";
+        picker.ariaLabel = `${setting.label} picker`;
+        picker.value = colorPickerValue(setting.defaultValue);
+        picker.disabled = setting.disabled === true;
 
-            const input = document.createElement("input");
-            input.className = "color-custom-input";
-            input.type = "text";
-            input.placeholder = setting.placeholder ?? "#f6f7f8";
-            input.value = setting.customDefaultValue ?? "";
-            input.disabled = setting.disabled === true;
+        const input = document.createElement("input");
+        input.className = "color-custom-input";
+        input.type = "text";
+        input.placeholder = setting.placeholder ?? "#f6f7f8";
+        input.value = setting.defaultValue ?? "";
+        input.disabled = setting.disabled === true;
 
-            const apply = document.createElement("button");
-            apply.className = "color-custom-apply";
-            apply.type = "button";
-            apply.textContent = "Apply";
-            apply.disabled = setting.disabled === true;
-            apply.addEventListener("click", () => {
-                if (setting.disabled) return;
-                this._emitSettingChange(setting, "custom", colorAttributes(setting, "custom", input.value.trim()));
-            });
-            input.addEventListener("change", () => {
-                if (setting.disabled) return;
-                this._emitSettingChange(setting, "custom", colorAttributes(setting, "custom", input.value.trim()));
-            });
-            custom.append(input, apply);
-            wrapper.append(custom);
-        }
+        const apply = document.createElement("button");
+        apply.className = "color-custom-apply";
+        apply.type = "button";
+        apply.textContent = "Apply";
+        apply.disabled = setting.disabled === true;
+
+        picker.addEventListener("input", () => {
+            if (setting.disabled) return;
+            input.value = picker.value;
+            this._emitSettingChange(setting, picker.value);
+        });
+        input.addEventListener("change", () => {
+            if (setting.disabled) return;
+            picker.value = colorPickerValue(input.value);
+            this._emitSettingChange(setting, input.value.trim());
+        });
+        apply.addEventListener("click", () => {
+            if (setting.disabled) return;
+            this._emitSettingChange(setting, input.value.trim());
+        });
+
+        controls.append(picker, input, apply);
+        wrapper.append(controls);
 
         if (setting.help) {
             const help = document.createElement("div");
@@ -833,18 +847,13 @@ function normalizeVisibilityValue(value: SettingControl["defaultValue"] | Settin
     return typeof value === "boolean" ? value : String(value ?? "");
 }
 
-function colorAttributes(setting: ColorSetting, value: string, customValue: string): SettingsViewAttributeChanges {
-    const base = attributesForSettingValue(setting, value) ?? { [setting.attribute]: value };
-    if (!setting.customAttribute) return base;
-    return {
-        ...base,
-        [setting.customAttribute]: value === "custom" ? customValue || null : null,
-    };
-}
-
-function colorSwatchValue(value: string): string {
-    if (value.startsWith("#") || value.startsWith("rgb") || value.startsWith("hsl") || value.startsWith("var(")) return value;
-    return COLOR_TOKEN_SWATCHES[value] ?? "linear-gradient(135deg, #eef2f1, #d9d9d9)";
+function colorPickerValue(value: string | undefined): string {
+    const normalized = value?.trim() ?? "";
+    if (/^#[\da-f]{6}$/i.test(normalized)) return normalized;
+    if (/^#[\da-f]{3}$/i.test(normalized)) {
+        return `#${normalized.slice(1).split("").map(character => character.repeat(2)).join("")}`;
+    }
+    return "#000000";
 }
 
 function settingIcon(name: SettingIconName): SVGSVGElement | null {

@@ -2755,7 +2755,7 @@ describe("Shell", () => {
         expect(emitted).toBe(false);
     });
 
-    test("settings view emits color setting attributes for tokens and custom values", async () => {
+    test("settings view emits raw color values through the configured attribute", async () => {
         installDom();
 
         const {
@@ -2779,6 +2779,12 @@ describe("Shell", () => {
             });
         });
 
+        view.setThemeTokens([{
+            label: "Primary",
+            variable: "primary-base",
+            category: "Colors · Brand",
+        }]);
+
         view.setSettings([{
             kind: "self",
             label: "Appearance",
@@ -2786,45 +2792,32 @@ describe("Shell", () => {
                 type: "color",
                 label: "Background",
                 attribute: "background",
-                defaultValue: "base",
-                tokens: [
-                    { label: "Base", value: "base" },
-                    { label: "Custom", value: "custom" },
-                ],
-                allowCustom: true,
-                customAttribute: "background-custom",
-                customDefaultValue: "#eef5d8",
+                defaultValue: "#eef5d8",
             }],
         }]);
 
-        const buttons = Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>(".color-swatch-button"));
-        buttons[1]!.click();
+        const picker = view.shadowRoot!.querySelector<HTMLInputElement>(".color-custom-picker")!;
+        picker.value = "#123456";
+        picker.dispatchEvent(new Event("input", { bubbles: true }));
         expect(events.at(-1)).toEqual({
-            value:      "custom",
-            attributes: {
-                background:          "custom",
-                "background-custom": "#eef5d8",
-            },
+            value: "#123456",
+            attributes: undefined,
         });
 
         const input = view.shadowRoot!.querySelector<HTMLInputElement>(".color-custom-input")!;
-        input.value = "#123456";
+        input.value = "var(--theme-accent)";
         input.dispatchEvent(new Event("change", { bubbles: true }));
         expect(events.at(-1)).toEqual({
-            value:      "custom",
-            attributes: {
-                background:          "custom",
-                "background-custom": "#123456",
-            },
+            value: "var(--theme-accent)",
+            attributes: undefined,
         });
 
-        buttons[0]!.click();
+        const token = view.shadowRoot!.querySelector<HTMLSelectElement>(".color-token-select")!;
+        token.querySelector<HTMLOptionElement>('option[value="var(--primary-base)"]')!.selected = true;
+        token.dispatchEvent(new Event("change", { bubbles: true }));
         expect(events.at(-1)).toEqual({
-            value:      "base",
-            attributes: {
-                background:          "base",
-                "background-custom": null,
-            },
+            value: "var(--primary-base)",
+            attributes: undefined,
         });
     });
 

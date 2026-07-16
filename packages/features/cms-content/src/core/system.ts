@@ -1,4 +1,5 @@
 import type { TSystem } from "cms-content/interfaces/settings";
+import { defaultThemeSettings } from "cms-content/core/theme";
 
 export function defaultSystem(): TSystem {
     return {
@@ -16,6 +17,7 @@ export function defaultSystem(): TSystem {
             login:       null,
         },
         editor:   { layoutCategory: "" },
+        theme:    defaultThemeSettings(),
         security: { connectExtras: [], mediaExtras: [] },
         email:    {
             enabled:   false,

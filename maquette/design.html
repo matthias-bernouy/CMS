@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Theme workspace mockup</title>
+    <style>
+        :root {
+            --canvas: #f5f6f5;
+            --panel: #ffffff;
+            --panel-muted: #f8faf9;
+            --text: #1d2521;
+            --muted: #69756e;
+            --line: #dbe2de;
+            --line-strong: #c5d0c9;
+            --brand: #16634d;
+            --brand-soft: #e3f0ea;
+            --blue: #315ee8;
+            --amber: #ae7000;
+            --shadow: 0 12px 32px rgb(17 41 31 / .08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--canvas);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        button, input { font: inherit; }
+        button { border: 0; }
+
+        .app {
+            display: grid;
+            grid-template-columns: 244px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .settings-sidebar {
+            grid-row: 1 / span 2;
+            padding: 16px 11px;
+            border-right: 1px solid var(--line);
+            background: #ffffff;
+        }
+
+        .settings-sidebar h2 { margin: 0 0 10px 16px; font-size: 12px; }
+        .settings-links { display: grid; gap: 2px; }
+        .settings-link { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 12px; border-radius: 6px; color: #3e4c45; font-size: 12px; text-decoration: none; }
+        .settings-link span { width: 17px; color: #52635a; font-size: 15px; text-align: center; }
+        .settings-link.active { border-left: 2px solid var(--brand); background: var(--brand-soft); color: #0d583f; font-weight: 750; }
+        .settings-link.active span { color: var(--brand); }
+
+        .topbar {
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 92px;
+            padding: 16px 26px 12px;
+            background: var(--canvas);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .page-title h1 { margin: 0; font-size: 26px; line-height: 1.2; letter-spacing: -.02em; }
+
+        .topbar-actions, .inline-actions, .mode-toggle, .section-actions { display: flex; align-items: center; gap: 8px; }
+
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 36px;
+            padding: 0 7px 0 9px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel-muted);
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .theme-switcher select {
+            min-width: 150px;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .button {
+            min-height: 38px;
+            padding: 0 13px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .button:hover { border-color: var(--line-strong); background: #fbfcfb; }
+        .button.primary { border-color: var(--brand); background: var(--brand); color: white; }
+        .button.primary:hover { background: #0f513d; }
+        .button.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+        .button.ghost:hover { background: #edf2ef; color: var(--text); }
+        .button.small { min-height: 32px; padding: 0 10px; font-size: 12px; }
+        .button.icon { width: 32px; padding: 0; font-size: 17px; }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(440px, 540px) 260px;
+            align-items: start;
+            gap: 14px;
+            padding: 8px 26px 32px;
+        }
+
+        .section-title { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 0 0 2px; }
+        .section-title .section-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; background: var(--brand-soft); color: var(--brand); font-size: 16px; }
+        .section-title h2 { margin: 0; font-size: 17px; }
+
+        .panel {
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: 0 1px 2px rgb(17 41 31 / .04);
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 57px;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel-heading h2, .panel-heading h3 { margin: 0; font-size: 14px; line-height: 1.2; }
+        .panel-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+        .settings-aside { display: grid; gap: 14px; align-self: start; }
+        .theme-panel-body { display: grid; gap: 12px; padding: 14px; }
+        .theme-panel-body label { display: grid; gap: 6px; color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+        .theme-panel-body select { width: 100%; min-height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--text); }
+        .theme-current { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; padding: 11px; border-radius: 7px; background: var(--panel-muted); }
+        .theme-current strong { font-size: 12px; }
+        .theme-current p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 11px; }
+        .theme-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 21px;
+            padding: 0 7px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .025em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .pill.active { background: #cfe9dc; color: #0d573e; }
+        .pill.draft { background: #e7ecff; color: #344db3; }
+        .pill.archived { background: #edf0ee; color: #65706a; }
+        .pill.mode { background: #edf2ef; color: #506058; }
+
+        .categories-panel { overflow: hidden; }
+
+        .category-nav { display: grid; gap: 4px; padding: 9px; }
+
+        .category-group { display: grid; gap: 3px; }
+
+        .category-button {
+            display: flex;
+            gap: 7px;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            min-height: 35px;
+            padding: 0 10px;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .category-button:hover { background: #eaf1ed; color: var(--text); }
+        .category-button.active { background: var(--brand-soft); color: var(--brand); font-weight: 720; }
+        .category-button .counter { color: inherit; opacity: .72; font-size: 11px; }
+
+        .subcategory-list { display: grid; gap: 2px; margin: 0 0 5px 16px; padding-left: 8px; border-left: 1px solid var(--line); }
+        .subcategory-button { min-height: 30px; padding: 0 8px; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; text-align: left; font-size: 12px; }
+        .subcategory-button:hover { background: #f1f5f3; color: var(--text); }
+        .subcategory-button.active { background: #edf5f0; color: var(--brand); font-weight: 700; }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            padding: 16px 15px 13px;
+        }
+
+        .content-header h2 { margin: 0; font-size: 16px; }
+        .content-header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+        .mode-toggle {
+            padding: 3px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel-muted);
+        }
+
+        .mode-toggle button {
+            min-height: 30px;
+            padding: 0 10px;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .mode-toggle button.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgb(24 47 37 / .12); font-weight: 700; }
+
+        .element-list { border-top: 1px solid var(--line); }
+        .element-head, .element-row {
+            display: grid;
+            grid-template-columns: 42px minmax(150px, 1.1fr) minmax(130px, 1fr) minmax(135px, .9fr) 35px;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 15px;
+        }
+
+        .element-head {
+            min-height: 36px;
+            background: var(--panel-muted);
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .element-row { min-height: 67px; border-top: 1px solid var(--line); }
+        .element-row:hover { background: #fbfdfc; }
+        .element-row.selected { background: #f0f8f4; box-shadow: inset 3px 0 0 var(--brand); }
+        .element-row.dragging { opacity: .45; }
+
+        .drag-handle { color: #a0aca5; cursor: grab; font-size: 18px; text-align: center; }
+        .element-name { min-width: 0; }
+        .element-name strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+        .use-case { color: var(--muted); font-size: 12px; }
+
+        .value-field {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+            padding: 4px 7px 4px 5px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--panel-muted);
+        }
+
+        .value-field input[type="color"] { width: 26px; height: 26px; padding: 0; border: 0; border-radius: 5px; background: transparent; cursor: pointer; }
+        .value-field input[type="text"] { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+        .row-menu { width: 30px; min-height: 30px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 18px; }
+        .row-menu:hover { background: #e8efeb; color: var(--text); }
+
+        .category-empty { padding: 42px 22px; color: var(--muted); text-align: center; }
+        .category-empty strong { display: block; margin-bottom: 4px; color: var(--text); }
+
+        .toast { position: fixed; right: 22px; bottom: 22px; z-index: 20; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; background: white; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(10px); transition: .16s ease; }
+        .toast.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 1180px) {
+            .workspace { grid-template-columns: minmax(360px, 1fr) 250px; }
+        }
+
+        @media (max-width: 760px) {
+            .app { display: block; }
+            .settings-sidebar { display: none; }
+            .topbar { align-items: flex-start; flex-direction: column; padding: 13px 15px; }
+            .workspace { grid-template-columns: 1fr; padding: 14px; }
+            .settings-aside { grid-row: auto; }
+            .element-head { display: none; }
+            .element-row { grid-template-columns: 24px minmax(120px, 1fr) minmax(125px, .9fr) 30px; gap: 8px; }
+            .element-row .use-case { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="settings-sidebar" aria-label="Settings navigation">
+            <h2>Settings</h2>
+            <nav class="settings-links">
+                <a class="settings-link" href="#general"><span>☷</span>General</a>
+                <a class="settings-link" href="#email"><span>✉</span>Email</a>
+                <a class="settings-link" href="#secrets"><span>⚿</span>Secrets</a>
+                <a class="settings-link" href="#identity"><span>♧</span>Identity</a>
+                <a class="settings-link" href="#providers"><span>↔</span>Connector providers</a>
+                <a class="settings-link active" href="#theme"><span>◐</span>Theme</a>
+            </nav>
+        </aside>
+        <header class="topbar">
+            <div class="page-title"><h1>Settings</h1></div>
+            <div class="topbar-actions">
+                <button class="button primary" id="saveTheme" type="button">Save</button>
+            </div>
+        </header>
+
+        <main class="workspace">
+            <div class="section-title"><span class="section-icon">◐</span><h2>Theme</h2></div>
+
+            <section class="panel categories-panel" aria-label="Theme configuration">
+                <div class="content-header">
+                    <div><h2 id="categoryTitle">Colors</h2><p id="categoryDescription">Semantic values used across the site.</p></div>
+                    <div class="section-actions"><div id="modeToggle" class="mode-toggle" aria-label="Color mode"></div><button class="button small" id="addElement" type="button">+ Add element</button></div>
+                </div>
+                <div id="elementList" class="element-list"></div>
+            </section>
+
+            <aside class="settings-aside" aria-label="Theme options">
+                <section class="panel">
+                    <div class="panel-heading"><div><h2>Theme</h2><p>Choose the working theme.</p></div><button class="button ghost icon" id="themeMenu" type="button" aria-label="Theme management">•••</button></div>
+                    <div class="theme-panel-body">
+                        <label>Current theme<select id="themeSelect" aria-label="Select theme"></select></label>
+                        <div class="theme-current"><strong id="themeTitle">Theme</strong><span id="themeStatus" class="pill draft">Draft</span><p id="themeMeta">Theme configuration</p></div>
+                        <div class="theme-actions"><span class="pill mode">One theme is live</span><button id="activateTheme" class="button small primary" type="button">Make active</button></div>
+                    </div>
+                </section>
+                <section class="panel navigation-panel" aria-label="Theme categories">
+                    <div class="panel-heading"><div><h2>Categories</h2><p>Organize the site style.</p></div></div>
+                    <nav class="category-nav" id="categoryNav" aria-label="Theme categories"></nav>
+                </section>
+            </aside>
+        </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        const categories = [
+            { id: "colors", label: "Colors", description: "Semantic values used across the site.", supportsModes: true, subcategories: [{ id: "brand", label: "Brand" }, { id: "surfaces", label: "Surfaces" }, { id: "text", label: "Text" }, { id: "feedback", label: "Feedback" }] },
+            { id: "typography", label: "Typography", description: "Font families, sizes and text styles.", supportsModes: false, subcategories: [{ id: "families", label: "Font families" }, { id: "scale", label: "Text scale" }] },
+            { id: "spacing", label: "Spacing", description: "The shared rhythm used by layouts and blocks.", supportsModes: false, subcategories: [{ id: "scale", label: "Spacing scale" }, { id: "layout", label: "Layout" }] },
+            { id: "shape", label: "Shape & effects", description: "Corners, borders and elevations.", supportsModes: false, subcategories: [{ id: "corners", label: "Corners" }, { id: "elevation", label: "Elevation" }] }
+        ];
+
+        const themes = [
+            {
+                id: "atelier", name: "Atelier North", status: "active", updated: "Live · updated today", colors: ["#16634d", "#f9f7f1", "#26261f"],
+                values: {
+                    colors: {
+                        light: [
+                            ["Page background", "--cms-color-background", "#f9f7f1", "Main canvas"],
+                            ["Surface", "--cms-color-surface", "#ffffff", "Cards and panels"],
+                            ["Text", "--cms-color-text", "#26261f", "Primary copy"],
+                            ["Muted text", "--cms-color-text-muted", "#6d6b63", "Secondary copy"],
+                            ["Border", "--cms-color-border", "#dfddd4", "Dividers and inputs"],
+                            ["Primary", "--cms-color-primary", "#16634d", "Buttons and links"],
+                            ["Primary contrast", "--cms-color-primary-contrast", "#ffffff", "Text on primary"]
+                        ],
+                        dark: [
+                            ["Page background", "--cms-color-background", "#17201c", "Main canvas"],
+                            ["Surface", "--cms-color-surface", "#202b26", "Cards and panels"],
+                            ["Text", "--cms-color-text", "#f3f5f0", "Primary copy"],
+                            ["Muted text", "--cms-color-text-muted", "#b6c0b9", "Secondary copy"],
+                            ["Border", "--cms-color-border", "#35443c", "Dividers and inputs"],
+                            ["Primary", "--cms-color-primary", "#85c5a5", "Buttons and links"],
+                            ["Primary contrast", "--cms-color-primary-contrast", "#112118", "Text on primary"]
+                        ]
+                    },
+                    typography: [
+                        ["Heading font", "--cms-font-heading", "Cormorant Garamond, Georgia, serif", "Headings and display text", "font"],
+                        ["Body font", "--cms-font-body", "Inter, system-ui, sans-serif", "Paragraphs and controls", "font"],
+                        ["Body size", "--cms-text-md", "1rem", "Default copy size", "text"],
+                        ["Display size", "--cms-text-x4", "3.5rem", "Large page titles", "text"]
+                    ],
+                    spacing: [
+                        ["Compact", "--cms-space-sm", ".5rem", "Inline gaps", "text"],
+                        ["Default", "--cms-space-md", "1rem", "Default block gap", "text"],
+                        ["Generous", "--cms-space-xl", "3rem", "Section spacing", "text"]
+                    ],
+                    shape: [
+                        ["Control radius", "--cms-radius-sm", ".25rem", "Inputs and buttons", "text"],
+                        ["Card radius", "--cms-radius-md", ".5rem", "Panels and cards", "text"],
+                        ["Soft shadow", "--cms-shadow-sm", "0 2px 10px rgb(18 30 24 / .08)", "Subtle elevation", "text"]
+                    ]
+                }
+            },
+            {
+                id: "summer", name: "Summer campaign", status: "draft", updated: "Draft · updated 12 min ago", colors: ["#d85b35", "#fff2d9", "#243645"],
+                values: {
+                    colors: {
+                        light: [["Page background", "--cms-color-background", "#fff7e9", "Main canvas"], ["Surface", "--cms-color-surface", "#ffffff", "Cards and panels"], ["Text", "--cms-color-text", "#243645", "Primary copy"], ["Muted text", "--cms-color-text-muted", "#68737c", "Secondary copy"], ["Border", "--cms-color-border", "#eadfce", "Dividers and inputs"], ["Primary", "--cms-color-primary", "#d85b35", "Buttons and links"], ["Primary contrast", "--cms-color-primary-contrast", "#ffffff", "Text on primary"], ["Success", "--cms-color-success", "#31815c", "Confirmation messages"], ["Error", "--cms-color-danger", "#c84e42", "Error messages"]],
+                        dark: [["Page background", "--cms-color-background", "#1e292d", "Main canvas"], ["Surface", "--cms-color-surface", "#29373c", "Cards and panels"], ["Text", "--cms-color-text", "#fff6e7", "Primary copy"], ["Muted text", "--cms-color-text-muted", "#c3cbc8", "Secondary copy"], ["Border", "--cms-color-border", "#435258", "Dividers and inputs"], ["Primary", "--cms-color-primary", "#ff9d73", "Buttons and links"], ["Primary contrast", "--cms-color-primary-contrast", "#372016", "Text on primary"], ["Success", "--cms-color-success", "#69c995", "Confirmation messages"], ["Error", "--cms-color-danger", "#ff9187", "Error messages"]]
+                    },
+                    typography: [["Heading font", "--cms-font-heading", "Fraunces, Georgia, serif", "Headings and display text", "font"], ["Body font", "--cms-font-body", "Inter, system-ui, sans-serif", "Paragraphs and controls", "font"], ["Body size", "--cms-text-md", "1rem", "Default copy size", "text"], ["Display size", "--cms-text-x4", "3.75rem", "Large page titles", "text"]],
+                    spacing: [["Compact", "--cms-space-sm", ".5rem", "Inline gaps", "text"], ["Default", "--cms-space-md", "1rem", "Default block gap", "text"], ["Generous", "--cms-space-xl", "3.5rem", "Section spacing", "text"]],
+                    shape: [["Control radius", "--cms-radius-sm", "999px", "Inputs and buttons", "text"], ["Card radius", "--cms-radius-md", "1.25rem", "Panels and cards", "text"], ["Soft shadow", "--cms-shadow-sm", "0 5px 18px rgb(103 55 20 / .12)", "Subtle elevation", "text"]]
+                }
+            },
+            {
+                id: "winter", name: "Winter archive", status: "archived", updated: "Archived · 18 Dec 2025", colors: ["#355a84", "#e9eef4", "#1e2b3a"],
+                values: { colors: { light: [["Page background", "--cms-color-background", "#f4f6f8", "Main canvas"], ["Surface", "--cms-color-surface", "#ffffff", "Cards and panels"], ["Text", "--cms-color-text", "#1e2b3a", "Primary copy"], ["Muted text", "--cms-color-text-muted", "#687687", "Secondary copy"], ["Border", "--cms-color-border", "#dce3eb", "Dividers and inputs"], ["Primary", "--cms-color-primary", "#355a84", "Buttons and links"], ["Primary contrast", "--cms-color-primary-contrast", "#ffffff", "Text on primary"]], dark: [["Page background", "--cms-color-background", "#15202b", "Main canvas"], ["Surface", "--cms-color-surface", "#1e2b38", "Cards and panels"], ["Text", "--cms-color-text", "#f4f7fa", "Primary copy"], ["Muted text", "--cms-color-text-muted", "#bbc6d1", "Secondary copy"], ["Border", "--cms-color-border", "#334352", "Dividers and inputs"], ["Primary", "--cms-color-primary", "#8bb3dc", "Buttons and links"], ["Primary contrast", "--cms-color-primary-contrast", "#102032", "Text on primary"]] }, typography: [["Heading font", "--cms-font-heading", "Georgia, serif", "Headings and display text", "font"], ["Body font", "--cms-font-body", "Inter, system-ui, sans-serif", "Paragraphs and controls", "font"]], spacing: [["Default", "--cms-space-md", "1rem", "Default block gap", "text"]], shape: [["Card radius", "--cms-radius-md", ".5rem", "Panels and cards", "text"]] }
+            }
+        ];
+
+        const state = { themeId: "summer", category: "colors", subcategory: "brand", mode: "light", selectedIndex: 0 };
+        const themeSelect = document.getElementById("themeSelect");
+        const categoryNav = document.getElementById("categoryNav");
+        const elementList = document.getElementById("elementList");
+        const toast = document.getElementById("toast");
+
+        themeSelect.addEventListener("change", () => { state.themeId = themeSelect.value; state.selectedIndex = 0; render(); });
+        document.getElementById("themeMenu").addEventListener("click", () => showToast("Theme management is kept in this compact menu."));
+        document.getElementById("saveTheme").addEventListener("click", () => showToast("Changes saved to this theme."));
+        document.getElementById("activateTheme").addEventListener("click", activateTheme);
+        document.getElementById("addElement").addEventListener("click", addElement);
+        render();
+
+        function currentTheme() { return themes.find((theme) => theme.id === state.themeId); }
+        function currentCategory() { return categories.find((category) => category.id === state.category); }
+        function rawItems() {
+            const values = currentTheme().values[state.category];
+            return state.category === "colors" ? values[state.mode] : values;
+        }
+
+        function currentItems() {
+            return rawItems().filter((item) => (item[5] || subcategoryFor(state.category, item[1])) === state.subcategory);
+        }
+
+        function render() {
+            const theme = currentTheme();
+            const category = currentCategory();
+            document.getElementById("themeTitle").textContent = theme.name;
+            document.getElementById("themeMeta").textContent = theme.updated;
+            const status = document.getElementById("themeStatus");
+            status.className = `pill ${theme.status}`;
+            status.textContent = theme.status;
+            const activate = document.getElementById("activateTheme");
+            activate.hidden = theme.status === "active";
+            const subcategory = category.subcategories.find((item) => item.id === state.subcategory);
+            document.getElementById("categoryTitle").textContent = `${category.label} · ${subcategory.label}`;
+            document.getElementById("categoryDescription").textContent = category.description;
+            document.getElementById("modeToggle").hidden = !category.supportsModes;
+            renderThemeSelect();
+            renderCategories();
+            renderModes();
+            renderElements();
+        }
+
+        function renderThemeSelect() {
+            themeSelect.replaceChildren(...themes.map((theme) => {
+                const option = document.createElement("option");
+                option.value = theme.id;
+                option.selected = theme.id === state.themeId;
+                option.textContent = `${theme.name}${theme.status === "active" ? " · active" : ""}`;
+                return option;
+            }));
+        }
+
+        function renderCategories() {
+            categoryNav.replaceChildren(...categories.map((category) => {
+                const group = document.createElement("div");
+                group.className = "category-group";
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `category-button${category.id === state.category ? " active" : ""}`;
+                const values = currentTheme().values[category.id];
+                const count = category.supportsModes ? values.light.length : values.length;
+                button.innerHTML = `<span>${category.label}</span><span class="counter">${count}</span>`;
+                button.addEventListener("click", () => { state.category = category.id; state.subcategory = category.subcategories[0].id; state.selectedIndex = 0; render(); });
+                group.append(button);
+                if (category.id === state.category) {
+                    const list = document.createElement("div");
+                    list.className = "subcategory-list";
+                    category.subcategories.forEach((subcategory) => {
+                        const item = document.createElement("button");
+                        item.type = "button";
+                        item.className = `subcategory-button${subcategory.id === state.subcategory ? " active" : ""}`;
+                        item.textContent = subcategory.label;
+                        item.addEventListener("click", () => { state.subcategory = subcategory.id; state.selectedIndex = 0; render(); });
+                        list.append(item);
+                    });
+                    group.append(list);
+                }
+                return group;
+            }));
+        }
+
+        function renderModes() {
+            const container = document.getElementById("modeToggle");
+            container.replaceChildren();
+            if (state.category !== "colors") return;
+            ["light", "dark"].forEach((mode) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = state.mode === mode ? "active" : "";
+                button.textContent = `${mode === "light" ? "☀" : "☾"} ${mode}`;
+                button.addEventListener("click", () => { state.mode = mode; state.selectedIndex = 0; render(); });
+                container.append(button);
+            });
+        }
+
+        function renderElements() {
+            const items = currentItems();
+            if (state.selectedIndex >= items.length) state.selectedIndex = 0;
+            const head = document.createElement("div");
+            head.className = "element-head";
+            head.innerHTML = "<span></span><span>Element</span><span>Value</span><span>Used for</span><span></span>";
+            elementList.replaceChildren(head, ...items.map((item, index) => createElementRow(item, index)));
+        }
+
+        function createElementRow(item, index) {
+            const row = document.createElement("div");
+            row.className = `element-row${state.selectedIndex === index ? " selected" : ""}`;
+            row.draggable = true;
+            row.innerHTML = `<span class="drag-handle" title="Drag to reorder">⠿</span><span class="element-name"><strong></strong></span><span class="value-field"></span><span class="use-case"></span><button class="row-menu" type="button" aria-label="More options">⋯</button>`;
+            row.querySelector("strong").textContent = item[0];
+            row.querySelector(".use-case").textContent = item[3];
+            const value = row.querySelector(".value-field");
+            const isColor = state.category === "colors";
+            if (isColor) {
+                const picker = document.createElement("input");
+                picker.type = "color";
+                picker.value = validHex(item[2]) ? item[2] : "#000000";
+                picker.addEventListener("input", () => updateValue(index, picker.value));
+                value.append(picker);
+            }
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = item[2];
+            input.setAttribute("aria-label", `${item[0]} value`);
+            input.addEventListener("input", () => updateValue(index, input.value, false));
+            input.addEventListener("change", () => render());
+            value.append(input);
+            row.addEventListener("click", (event) => { if (!event.target.matches("input")) { state.selectedIndex = index; render(); } });
+            row.addEventListener("dragstart", () => row.classList.add("dragging"));
+            row.addEventListener("dragend", () => row.classList.remove("dragging"));
+            return row;
+        }
+
+        function updateValue(index, value, redraw = true) {
+            currentItems()[index][2] = value;
+            if (redraw) renderElements();
+        }
+
+        function activateTheme() {
+            themes.forEach((theme) => { if (theme.status === "active") { theme.status = "draft"; theme.updated = "Draft · replaced today"; } });
+            const theme = currentTheme();
+            theme.status = "active";
+            theme.updated = "Live · activated just now";
+            render();
+            showToast(`${theme.name} is now the active theme.`);
+        }
+
+
+        function addElement() {
+            const items = rawItems();
+            const number = items.filter((item) => (item[5] || subcategoryFor(state.category, item[1])) === state.subcategory).length + 1;
+            const item = state.category === "colors"
+                ? [`Custom color ${number}`, `--cms-color-${state.subcategory}-custom-${number}`, "#8b9690", "Custom use", "color", state.subcategory]
+                : [`Custom value ${number}`, `--cms-${state.category}-${state.subcategory}-custom-${number}`, "1rem", "Custom use", "text", state.subcategory];
+            items.push(item);
+            state.selectedIndex = number - 1;
+            render();
+            showToast("Element added to this category.");
+        }
+
+        function subcategoryFor(category, key) {
+            if (category === "colors") {
+                if (key.includes("primary")) return "brand";
+                if (key.includes("background") || key.includes("surface") || key.includes("border")) return "surfaces";
+                if (key.includes("text")) return "text";
+                return "feedback";
+            }
+            if (category === "typography") return key.includes("font") ? "families" : "scale";
+            if (category === "spacing") return key.includes("layout") ? "layout" : "scale";
+            return key.includes("shadow") ? "elevation" : "corners";
+        }
+
+        function validHex(value) { return /^#[0-9a-f]{6}$/i.test(value); }
+        function showToast(message) { toast.textContent = message; toast.classList.add("visible"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("visible"), 1900); }
+    </script>
+</body>
+</html>

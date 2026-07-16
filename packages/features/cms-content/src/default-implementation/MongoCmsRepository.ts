@@ -4,6 +4,7 @@ import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuer
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
+import { organizeThemeSettings, themeSettingsFromCss } from "cms-content/core/theme";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 import { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
@@ -254,6 +255,9 @@ export class MongoCmsRepository implements CmsRepository {
         const doc = await this.system.findOne({ _id: SYSTEM_ID });
         if (doc) {
             const { _id, ...rest } = doc;
+            const legacy = rest as Partial<TSystem>;
+            if (!legacy.theme) legacy.theme = themeSettingsFromCss(legacy.site?.theme ?? "");
+            else legacy.theme = organizeThemeSettings(legacy.theme);
             return mergeSystemUpdate(defaultSystem(), rest);
         }
         // Lazy creation on first access — keeps the contract synchronous-feeling

@@ -1,6 +1,7 @@
 import type { TSystem } from "cms-content/interfaces/settings";
 import { ContentValidationError } from "cms-content/core/errors";
 import { defaultSystem } from "cms-content/core/system";
+import { validateThemeSettings } from "cms-content/core/theme";
 
 const SECRET_REF_PATTERN = /^\$\{[A-Z][A-Z0-9_]*\}$/;
 type SettingsPatch = Omit<Partial<TSystem>, "email"> & {
@@ -46,6 +47,8 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     if (patch.email) {
         normalized.email = validateEmailSettings(patch.email);
     }
+
+    if (patch.theme) normalized.theme = validateThemeSettings(patch.theme);
 
     return normalized;
 }

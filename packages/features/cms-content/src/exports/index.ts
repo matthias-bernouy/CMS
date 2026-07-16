@@ -13,6 +13,9 @@ export type { TBloc }            from "cms-content/interfaces/blocs";
 export type { TPage, TPageRef }  from "cms-content/interfaces/pages";
 export type { TTemplate }        from "cms-content/interfaces/templates";
 export type { TSystem }          from "cms-content/interfaces/settings";
+export type {
+    ThemeCategory, ThemeDefinition, ThemeMode, ThemeSettings, ThemeSource, ThemeToken, ThemeTokenType,
+} from "cms-content/interfaces/theme";
 export { wrapBindingCore } from "cms-content/interfaces/settings";
 
 // ── Repository seam ────────────────────────────────────────────────────
@@ -23,6 +26,7 @@ export type {
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
 export { filterAndSortPages }    from "cms-content/core/pagesQuery";
 export { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
+export { allTokens, defaultThemeSettings, generateThemeCss, organizeThemeSettings, themeSettingsFromCss, validateThemeSettings } from "cms-content/core/theme";
 export { countValues, normalizeTags } from "cms-content/core/counts";
 export { isPublishedPage } from "cms-content/core/publication";
 export { ContentValidationError, ContentConflictError, DuplicateBlocTagError } from "cms-content/core/errors";

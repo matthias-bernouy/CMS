@@ -1,4 +1,5 @@
 import type { TPageRef } from "cms-content/interfaces/pages";
+import type { ThemeSettings } from "cms-content/interfaces/theme";
 
 export type TEmailTemplate = {
     subject: string;
@@ -45,6 +46,9 @@ export type TSystem = {
          */
         layoutCategory: string;
     },
+
+    /** Structured design tokens. `site.theme` remains the free-form CSS layer. */
+    theme: ThemeSettings;
 
     /**
      * Page-level Content-Security-Policy whitelist extras. Origins listed

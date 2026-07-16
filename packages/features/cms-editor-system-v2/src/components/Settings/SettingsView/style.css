@@ -109,49 +109,31 @@ cms-editor-v2-segmented-control button svg:only-child {
     gap: 4px;
 }
 
-.color-swatches {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(19px, 1fr));
-    gap: 3px;
-}
-
-.color-swatch-button {
-    display: grid;
-    place-items: center;
-    min-height: 22px;
-    border: 0;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--editor-v2-surface-muted) 64%, transparent);
+.color-token-select {
+    width: 100%;
+    min-height: 27px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 5px;
+    background: var(--editor-v2-surface);
     color: var(--editor-v2-text);
-    padding: 0;
-    cursor: pointer;
-}
-
-.color-swatch-button[aria-pressed="true"] {
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-v2-accent) 46%, var(--editor-v2-border)), 0 0 0 1px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
-}
-
-.color-swatch-button:disabled {
-    cursor: not-allowed;
-    opacity: .58;
-}
-
-.color-swatch {
-    width: 12px;
-    height: 12px;
-    border: 1px solid rgba(16, 24, 21, .12);
-    border-radius: 3px;
-    background: var(--color-swatch);
+    font: inherit;
+    font-size: 11px;
 }
 
 .color-custom {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 27px minmax(0, 1fr) auto;
     gap: 5px;
 }
 
-.color-custom[hidden] {
-    display: none;
+.color-custom-picker {
+    width: 27px;
+    height: 27px;
+    padding: 2px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
+    cursor: pointer;
 }
 
 .color-custom-input {
