@@ -1,9 +1,19 @@
 import { Composition } from "@bernouy/components/base";
 
 import template from "./template.html" with { type: "text" };
+import { formatMoney, majorToMinor, minorToMajor } from "./money.ts";
+import {
+    comparableProfileValue,
+    parseDate,
+    profileFieldReady,
+    profileFields,
+    PublicError,
+    stripeEnrollmentComplete,
+    textValue,
+    validEmail,
+} from "./profile.ts";
+import { createAccountToken } from "./stripe-account-token.ts";
 
-const STRIPE_V2_API = "https://api.stripe.com/v2";
-const STRIPE_V2_VERSION = "2026-06-24.dahlia";
 const colorGroups = ["card", "field", "button"];
 let formInstance = 0;
 
@@ -359,40 +369,7 @@ export class CommerceOfferPriceForm extends Composition {
     }
 
     async createAccountToken(publishableKey, profile) {
-        const response = await fetch(`${STRIPE_V2_API}/core/account_tokens`, {
-            method: "POST",
-            headers: {
-                authorization: `Bearer ${publishableKey}`,
-                "content-type": "application/json",
-                "stripe-version": STRIPE_V2_VERSION,
-            },
-            body: JSON.stringify({
-                contact_email: profile.email,
-                display_name: `${profile.givenName} ${profile.surname}`,
-                identity: {
-                    entity_type: "individual",
-                    individual: {
-                        given_name: profile.givenName,
-                        surname: profile.surname,
-                        email: profile.email,
-                        phone: profile.phone,
-                        date_of_birth: parseDate(profile.birthDate),
-                        address: {
-                            country: "fr",
-                            line1: profile.addressLine1,
-                            postal_code: profile.postalCode,
-                            city: profile.city,
-                        },
-                    },
-                    attestations: { terms_of_service: { account: { shown_and_accepted: true } } },
-                },
-            }),
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok || typeof body?.id !== "string") {
-            throw new PublicError("Ces informations n’ont pas pu être vérifiées. Vérifie-les puis réessaie.");
-        }
-        return body.id;
+        return createAccountToken(publishableKey, profile);
     }
 
     async clientConfig() {
@@ -650,69 +627,6 @@ export class CommerceOfferPriceForm extends Composition {
     get successLink() { return this.querySelector("[data-success-link]"); }
 }
 
-const profileFields = [
-    "givenName",
-    "surname",
-    "birthDate",
-    "email",
-    "phone",
-    "addressLine1",
-    "postalCode",
-    "city",
-    "countryCode",
-];
-
-class PublicError extends Error {}
-
-function stripeEnrollmentComplete(connect) {
-    return connect?.accountStatus === "active"
-        && connect?.stripeAccountApiVersion === "v2"
-        && connect?.applicationControlledRecipient === true
-        && connect?.stripeTermsStatus === "accepted";
-}
-
-function comparableProfileValue(field, value) {
-    const normalized = textValue(value);
-    return field === "countryCode" ? normalized.toUpperCase() : normalized;
-}
-
-function validEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function profileFieldReady(field, value) {
-    const normalized = textValue(value);
-    if (!normalized) return false;
-    if (field === "email") return validEmail(normalized);
-    if (field === "countryCode") return normalized.toUpperCase() === "FR";
-    if (field === "birthDate") {
-        try {
-            parseDate(normalized);
-            return true;
-        } catch {
-            return false;
-        }
-    }
-    return true;
-}
-
-function parseDate(value) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (!match) throw new PublicError("La date de naissance doit respecter le format AAAA-MM-JJ.");
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-        throw new PublicError("Indique une date de naissance valide.");
-    }
-    return { year, month, day };
-}
-
-function textValue(value) {
-    return typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
-}
-
 function headersObject(headers) {
     return headers ? Object.fromEntries(new Headers(headers).entries()) : {};
 }
@@ -723,26 +637,6 @@ function copyColors(source, target, prefix) {
         const value = source.getAttribute(`${prefix}-${name}`)?.trim();
         if (value) target.setAttribute(name, value);
         else target.removeAttribute(name);
-    }
-}
-
-function majorToMinor(value) {
-    const normalized = String(value).trim().replace(",", ".");
-    if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return NaN;
-    const [units, decimals = ""] = normalized.split(".");
-    const amount = Number(units) * 100 + Number(decimals.padEnd(2, "0"));
-    return Number.isSafeInteger(amount) ? amount : NaN;
-}
-
-function minorToMajor(value) {
-    return (Number(value) / 100).toFixed(2);
-}
-
-function formatMoney(amount, currency, locale) {
-    try {
-        return new Intl.NumberFormat(locale, { style: "currency", currency: String(currency || "EUR").toUpperCase() }).format(Number(amount) / 100);
-    } catch {
-        return `${minorToMajor(amount)} ${String(currency || "EUR").toUpperCase()}`;
     }
 }
 
