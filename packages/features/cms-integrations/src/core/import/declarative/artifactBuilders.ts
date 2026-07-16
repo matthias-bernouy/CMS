@@ -15,91 +15,70 @@ import type {
 import type { IntegrationBlocArtifact } from "../../../interfaces/IntegrationImport";
 
 export function buildSourceArtifacts(definition: IntegrationDefinition, context: TemplateContext): Source[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("source", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "source")
             .map(artifact => sourceDtoToSource({
                 ...resolveTemplates(artifact.source, context),
                 identityAuthority: definition.kind,
-            }));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid source artifact");
-    }
+            }))
+    );
 }
 
 export function buildFunctionArtifacts(definition: IntegrationDefinition, context: TemplateContext): CmsFunction[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("function", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "function")
-            .map(artifact => resolveTemplates(artifact.function, context));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid function artifact");
-    }
+            .map(artifact => resolveTemplates(artifact.function, context))
+    );
 }
 
 export function buildTriggerArtifacts(definition: IntegrationDefinition, context: TemplateContext): TriggerDefinition[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("trigger", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "trigger")
-            .map(artifact => resolveTemplates(artifact.trigger, context));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid trigger artifact");
-    }
+            .map(artifact => resolveTemplates(artifact.trigger, context))
+    );
 }
 
 export function buildDashboardArtifacts(definition: IntegrationDefinition, context: TemplateContext): Dashboard[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("dashboard", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "dashboard")
-            .map(artifact => resolveTemplates(artifact.dashboard, context));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid dashboard artifact");
-    }
+            .map(artifact => resolveTemplates(artifact.dashboard, context))
+    );
 }
 
 export function buildSourceOverlayArtifacts(definition: IntegrationDefinition, context: TemplateContext): SourceOverlay[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("source overlay", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "sourceOverlay")
-            .map(artifact => resolveTemplates(artifact.overlay, context));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid source overlay artifact");
-    }
+            .map(artifact => resolveTemplates(artifact.overlay, context))
+    );
 }
 
 export function buildRelationArtifacts(definition: IntegrationDefinition, context: TemplateContext): CmsRelation[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("relation", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "relation")
-            .map(artifact => resolveTemplates(artifact.relation, context));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid relation artifact");
-    }
+            .map(artifact => resolveTemplates(artifact.relation, context))
+    );
 }
 
 export function buildDashboardRelationProjectionArtifacts(
     definition: IntegrationDefinition,
     context: TemplateContext,
 ): DashboardRelationProjection[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("dashboard relation projection", () =>
+        (definition.artifacts ?? [])
             .filter(artifact => artifact.type === "dashboardRelation")
-            .map(artifact => resolveTemplates(artifact.projection, context));
-    } catch (error) {
-        if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid dashboard relation projection artifact");
-    }
+            .map(artifact => resolveTemplates(artifact.projection, context))
+    );
 }
 
 export function buildBlocArtifacts(definition: IntegrationDefinition, context: TemplateContext): IntegrationBlocArtifact[] {
-    try {
-        return (definition.artifacts ?? [])
+    return buildArtifacts("bloc", () =>
+        (definition.artifacts ?? [])
             .filter((artifact): artifact is DeclarativeBlocArtifactTemplate => artifact.type === "bloc")
             .map(artifact => {
                 const tag = resolveTemplate(artifact.bloc.tag, context);
@@ -116,9 +95,18 @@ export function buildBlocArtifacts(definition: IntegrationDefinition, context: T
                     ...(artifact.bloc.editorJS !== undefined ? { editorJS: artifact.bloc.editorJS } : {}),
                     ...(artifact.bloc.source ? { source: artifact.bloc.source } : {}),
                 };
-            });
+            })
+    );
+}
+
+function buildArtifacts<T>(kind: string, build: () => T[]): T[] {
+    try {
+        return build();
     } catch (error) {
         if (error instanceof IntegrationInputError) throw error;
-        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid bloc artifact");
+        throw new IntegrationInputError(
+            "artifacts",
+            error instanceof Error ? error.message : `invalid ${kind} artifact`,
+        );
     }
 }
