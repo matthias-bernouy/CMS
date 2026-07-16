@@ -16,12 +16,8 @@ export interface Subject<Role extends string = DefaultRole> {
     identifier: string;
     /** Role assigned to this user. */
     role: Role;
-    /**
-     * Human-friendly name for display in UIs (header, dropdowns). Optional
-     * because the identifier is the only thing the contract guarantees; some
-     * providers expose nothing else.
-     */
-    displayName?: string;
+    /** Authentication email when the provider exposes one. */
+    email?: string;
 }
 
 /**

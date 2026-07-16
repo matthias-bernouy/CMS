@@ -2,7 +2,7 @@ import type { AuthEmailComposer } from "cms-auth/interfaces/AuthEmailComposer";
 import type { AuthTokenStore } from "cms-auth/interfaces/AuthTokenStore";
 import type { Emailer } from "cms-auth/interfaces/Emailer";
 import type { LocalCredentialStore } from "cms-auth/interfaces/LocalCredentialStore";
-import type { TUser, UsersRepository } from "cms-auth/interfaces/UsersRepository";
+import type { UsersRepository } from "cms-auth/interfaces/UsersRepository";
 import { internalUserId } from "cms-auth/core/SubjectResolver";
 import { AuthValidationError, validatePassword } from "cms-auth/core/validation";
 import { DefaultAuthEmailComposer } from "cms-auth/default-implementation/DefaultAuthEmailComposer";
@@ -41,9 +41,8 @@ export type PublicAuthFlowConfig<Role extends string = string> = {
 };
 
 export type SignupLocalUserInput = {
-    email:        string;
-    password:     string;
-    displayName?: string;
+    email:    string;
+    password: string;
 };
 
 export type PublicAuthSendResult = {
@@ -75,10 +74,9 @@ export async function signupLocalUser<Role extends string>(
     const identity = await cfg.credentials.create({
         email,
         password: input.password,
-        displayName: input.displayName,
         emailVerified: !emailDeliveryEnabled,
     });
-    const user = await cfg.users.upsert(
+    await cfg.users.upsert(
         { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
         cfg.defaultRole,
     );
@@ -86,7 +84,7 @@ export async function signupLocalUser<Role extends string>(
 
     return {
         created: true,
-        sent: await sendVerificationForCredential(cfg, { sub: identity.sub, email, emailVerifiedAt: null }, user),
+        sent: await sendVerificationForCredential(cfg, { sub: identity.sub, email, emailVerifiedAt: null }),
     };
 }
 
@@ -133,11 +131,10 @@ export async function requestPasswordReset<Role extends string>(
     await cfg.tokens.deleteForSub(credential.sub, "password_reset");
     const expiresAt = expiresIn(cfg.passwordResetTtlSeconds ?? DEFAULT_PASSWORD_RESET_TTL_SECONDS);
     const { token } = await cfg.tokens.create({ purpose: "password_reset", sub: credential.sub, expiresAt });
-    const user = await readLocalUser(cfg.users, credential.sub);
     const actionUrl = cfg.buildPasswordResetUrl?.(token) ?? buildTokenUrl(cfg.passwordResetUrl, token);
     const sent = await sendAuthEmail(cfg, await emailComposer(cfg).compose({
         kind: "password_reset",
-        to: { email: credential.email, displayName: user?.displayName },
+        to: { email: credential.email },
         actionUrl,
         token,
         expiresAt,
@@ -167,7 +164,6 @@ export async function confirmPasswordReset<Role extends string>(
 async function sendVerificationForCredential<Role extends string>(
     cfg: PublicAuthFlowConfig<Role>,
     credential: VerificationTarget,
-    knownUser?: TUser<Role>,
 ): Promise<boolean> {
     if (credential.emailVerifiedAt) return false;
     if (await inEmailCooldown(cfg, "email_verification", credential.sub)) return false;
@@ -175,11 +171,10 @@ async function sendVerificationForCredential<Role extends string>(
     await cfg.tokens.deleteForSub(credential.sub, "email_verification");
     const expiresAt = expiresIn(cfg.emailVerificationTtlSeconds ?? DEFAULT_EMAIL_VERIFICATION_TTL_SECONDS);
     const { token } = await cfg.tokens.create({ purpose: "email_verification", sub: credential.sub, expiresAt });
-    const user = knownUser ?? await readLocalUser(cfg.users, credential.sub);
     const actionUrl = cfg.buildEmailVerificationUrl?.(token) ?? buildTokenUrl(cfg.emailVerificationUrl, token);
     const sent = await sendAuthEmail(cfg, await emailComposer(cfg).compose({
         kind: "email_verification",
-        to: { email: credential.email, displayName: user?.displayName },
+        to: { email: credential.email },
         actionUrl,
         token,
         expiresAt,
@@ -223,10 +218,6 @@ async function inEmailCooldown<Role extends string>(
 
 function emailComposer<Role extends string>(cfg: PublicAuthFlowConfig<Role>): AuthEmailComposer {
     return cfg.emailComposer ?? DEFAULT_EMAIL_COMPOSER;
-}
-
-async function readLocalUser<Role extends string>(users: UsersRepository<Role>, credentialSub: string): Promise<TUser<Role> | null> {
-    return users.getBySub(internalUserId("local", credentialSub));
 }
 
 function buildTokenUrl(pageUrl: string, token: string): string {

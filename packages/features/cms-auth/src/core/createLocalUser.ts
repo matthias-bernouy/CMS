@@ -11,7 +11,6 @@ export type CreateLocalUserStores<Role extends string = string> = {
 export type CreateLocalUserInput<Role extends string = string> = {
     email:          string;
     password:       string;
-    displayName?:   string;
     role:           Role;
     emailVerified?: boolean;
 };
@@ -24,7 +23,6 @@ export async function createLocalUser<Role extends string>(
     const identity = await stores.credentials.create({
         email:          input.email,
         password:       input.password,
-        displayName:    input.displayName,
         emailVerified:  input.emailVerified ?? true,
     });
     return stores.users.upsert(

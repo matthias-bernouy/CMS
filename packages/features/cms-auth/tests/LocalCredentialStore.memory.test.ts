@@ -26,12 +26,12 @@ describe("InMemoryLocalCredentialStore.create", () => {
 });
 
 describe("InMemoryLocalCredentialStore.verify", () => {
-    test("good password → identity WITHOUT a fabricated displayName", async () => {
+    test("good password returns the credential identity", async () => {
         const s = store();
-        await s.create({ email: "a@x.com", password: "pw", displayName: "Bob" });
+        await s.create({ email: "a@x.com", password: "pw" });
         const id = await s.verify("A@X.COM", "pw");
         expect(id?.email).toBe("a@x.com");
-        expect(id?.displayName).toBeUndefined(); // must not clobber the stored displayName on login
+        expect(id).not.toHaveProperty("displayName");
     });
 
     test("wrong password → null", async () => {

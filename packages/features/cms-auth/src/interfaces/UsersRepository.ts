@@ -20,7 +20,6 @@
 /** Authn output: identity only, never a role. Shared with the auth backends. */
 export type Identity = {
     sub:          string;            // stable, opaque; primary key
-    displayName?: string;
     email?:       string;
     /** Which provider authenticated this identity (e.g. "local", "google").
      *  Provenance only — NOT authz. Set by the auth backend. */
@@ -35,8 +34,8 @@ export type TUser<Role extends string = string> = Identity & {
 
 export type UsersListOptions = {
     /** Exact, case-insensitive email match. PII is encrypted at rest (only a
-     *  blind index exists), so substring search and sorting on email /
-     *  displayName are NOT possible — both impls honor this. */
+     *  blind index exists), so substring search and email sorting are not
+     *  possible — both implementations honor this. */
     search?:     string;
     /** Exact role filter. */
     role?:       string;
@@ -65,11 +64,6 @@ export interface UsersRepository<Role extends string = string> {
 
     /** The explicit, server-side role grant/revoke. `null` when `sub` is unknown. */
     setRole(sub: string, role: Role): Promise<TUser<Role> | null>;
-
-    /** Update mutable profile fields (admin self-service profile edit). Only
-     *  touches the fields present in `patch`; leaves role and `lastSeenAt`
-     *  alone (it is NOT a login). `null` when `sub` is unknown. */
-    setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null>;
 
     /** Remove a user from the CMS membership (authz). Does NOT touch any auth
      *  backend / credential store. `false` when `sub` is unknown. */

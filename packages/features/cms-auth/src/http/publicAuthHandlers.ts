@@ -39,7 +39,6 @@ export function registerPublicAuthRoutes<Role extends string>(
             await signupLocalUser(cfg, {
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
-                displayName: optionalString(body, "displayName"),
             });
             return ok();
         });

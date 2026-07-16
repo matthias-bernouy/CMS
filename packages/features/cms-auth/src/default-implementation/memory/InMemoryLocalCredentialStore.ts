@@ -26,7 +26,7 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         };
         this._bySub.set(rec.sub, rec);
         this._emailToSub.set(email, rec.sub);
-        return { sub: rec.sub, email, displayName: input.displayName ?? email };
+        return { sub: rec.sub, email };
     }
 
     async verify(email: string, password: string): Promise<Identity | null> {
@@ -34,8 +34,6 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         const rec = sub ? this._bySub.get(sub) : undefined;
         // Spend a verify's worth of time on an unknown email (timing parity).
         if (!rec) { await dummyPasswordVerify(password); return null; }
-        // No `displayName` — see the Mongo impl: returning it would clobber the
-        // user's stored displayName on every login.
         if (!(await Bun.password.verify(password, rec.hash))) return null;
         if (rec.emailVerifiedAt === null) return null;
         return { sub: rec.sub, email: rec.email };

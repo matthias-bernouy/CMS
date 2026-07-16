@@ -55,7 +55,7 @@ describe("public auth routes", () => {
     test("signup sends verification, blocks login, then verified login creates a session", async () => {
         const { server, credentials, emailer } = setup();
         try {
-            expect((await post(server, "/signup", { email: "A@X.com", password: "password-1", displayName: "Ada" })).status).toBe(200);
+            expect((await post(server, "/signup", { email: "A@X.com", password: "password-1" })).status).toBe(200);
             expect(emailer.sent.length).toBe(1);
             expect(emailer.sent[0]!.subject).toContain("Verify your email");
             expect(emailer.sent[0]!.text).toContain("http://site.test/auth/verify-email?token=");
@@ -73,10 +73,16 @@ describe("public auth routes", () => {
             expect(loggedIn.status).toBe(200);
             const cookie = sessionCookie(loggedIn);
             expect(cookie).toContain("site-session=");
-            expect((await loggedIn.json() as { subject: { role: string } }).subject.role).toBe("user");
+            expect((await loggedIn.json() as { subject: { email: string; role: string } }).subject).toMatchObject({
+                email: "a@x.com",
+                role: "user",
+            });
 
             const me = await server.request("GET", "/me", { headers: { cookie } });
-            expect((await me.json() as { subject: { role: string } | null }).subject?.role).toBe("user");
+            expect((await me.json() as { subject: { email: string; role: string } | null }).subject).toMatchObject({
+                email: "a@x.com",
+                role: "user",
+            });
 
             const logout = await post(server, "/logout", {});
             expect(logout.status).toBe(200);
@@ -90,9 +96,8 @@ describe("public auth routes", () => {
         const { server, credentials } = setup({ emailer: disabledEmailer() });
         try {
             expect((await post(server, "/signup", {
-                email:       "disabled@x.com",
-                password:    "password-1",
-                displayName: "No Mail",
+                email:    "disabled@x.com",
+                password: "password-1",
             })).status).toBe(200);
             expect((await credentials.getByEmail("disabled@x.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
 

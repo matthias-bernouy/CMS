@@ -4,4 +4,4 @@
  * cms-auth's generic `DefaultRole` on purpose — reconciling the two is the
  * roles project's call, not this package's.
  */
-export type CMS_ROLES = "admin" | "user";
+export type CMS_ROLES = "admin" | "user" | "support" | "finance";

@@ -9,10 +9,10 @@ import type { FieldCrypto } from "@bernouy/envelope-crypto";
  * MongoDB `UsersRepository`. One collection (`<prefix>users`), the identity
  * `sub` stored as `_id`. `collectionPrefix` isolates a tenant.
  *
- * PII is encrypted at rest under the tenant DEK (`FieldCrypto`): `email` and
- * `displayName` are stored as ciphertext blobs, never in clear. `emailIndex`
- * is a blind index (HMAC) enabling EXACT-match search only — substring search
- * and sorting on PII are not possible, so `list` sorts by `createdAt` /
+ * PII is encrypted at rest under the tenant DEK (`FieldCrypto`): `email` is
+ * stored as ciphertext, never in clear. `emailIndex` is a blind index (HMAC)
+ * enabling EXACT-match search only — substring search and sorting on PII are
+ * not possible, so `list` sorts by `createdAt` /
  * `lastSeenAt` and `search` is an exact email match.
  */
 export type MongoUsersConfig = { collectionPrefix?: string };
@@ -25,7 +25,6 @@ type UserDoc<Role extends string> = {
     provider?:       string;          // provenance (not PII): "local", "google"…
     emailEnc?:       EncryptedBlob;
     emailIndex?:     string;          // HMAC(email) — exact-match lookup
-    displayNameEnc?: EncryptedBlob;
 };
 
 export class MongoUsersRepository<Role extends string = string> implements UsersRepository<Role> {
@@ -51,9 +50,6 @@ export class MongoUsersRepository<Role extends string = string> implements Users
             $set.emailEnc   = await this.fieldCrypto.encrypt(identity.email);
             $set.emailIndex = this.fieldCrypto.blindIndex(identity.email);
         }
-        if (identity.displayName !== undefined) {
-            $set.displayNameEnc = await this.fieldCrypto.encrypt(identity.displayName);
-        }
         if (identity.provider !== undefined) $set.provider = identity.provider;
         const d = await this.col.findOneAndUpdate(
             { _id: identity.sub },
@@ -74,14 +70,6 @@ export class MongoUsersRepository<Role extends string = string> implements Users
             { $set: { role } as Partial<UserDoc<Role>> },
             { returnDocument: "after" },
         );
-        return d ? this._fromDoc(d) : null;
-    }
-
-    async setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null> {
-        const $set: Partial<UserDoc<Role>> = {};
-        if (patch.displayName !== undefined) $set.displayNameEnc = await this.fieldCrypto.encrypt(patch.displayName);
-        if (Object.keys($set).length === 0) return this.getBySub(sub);
-        const d = await this.col.findOneAndUpdate({ _id: sub }, { $set }, { returnDocument: "after" });
         return d ? this._fromDoc(d) : null;
     }
 
@@ -114,7 +102,6 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         const out: TUser<Role> = { sub: d._id, role: d.role, createdAt: d.createdAt, lastSeenAt: d.lastSeenAt };
         if (d.provider)       out.provider    = d.provider;
         if (d.emailEnc)       out.email       = await this.fieldCrypto.decrypt(d.emailEnc);
-        if (d.displayNameEnc) out.displayName = await this.fieldCrypto.decrypt(d.displayNameEnc);
         return out;
     }
 }

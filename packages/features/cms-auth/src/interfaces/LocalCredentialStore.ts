@@ -22,7 +22,6 @@ export type LocalCredential = {
 export type NewCredential = {
     email:          string;
     password:       string;
-    displayName?:   string;
     /** Defaults to true for existing admin/bootstrap flows. Public signup will
      *  pass false and complete verification through the auth token flow. */
     emailVerified?: boolean;

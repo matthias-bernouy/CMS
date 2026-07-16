@@ -43,5 +43,5 @@ export class SubjectResolver<Role extends string = string> {
 }
 
 function toSubject<Role extends string>(u: TUser<Role>): Subject<Role> {
-    return { identifier: u.sub, role: u.role, displayName: u.displayName ?? u.sub };
+    return { identifier: u.sub, role: u.role, ...(u.email ? { email: u.email } : {}) };
 }

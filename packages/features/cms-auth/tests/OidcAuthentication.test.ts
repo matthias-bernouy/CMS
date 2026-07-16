@@ -112,7 +112,7 @@ describe("OidcAuthentication", () => {
         expect(res.headers.get("vary")).toBe("Cookie, Authorization");
         const user = await users.getBySub("sso:sub-1");
         expect(user?.email).toBeUndefined();
-        expect(user?.displayName).toBe("Alice");
+        expect(user).not.toHaveProperty("displayName");
     });
 
     test("token exchange failure redirects without logging the provider body", async () => {

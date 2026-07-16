@@ -23,11 +23,10 @@ describe("InMemoryUsersRepository.upsert", () => {
 
     test("only updates fields the identity carries (no clobber to undefined)", async () => {
         const r = repo();
-        await r.upsert({ sub: "s1", email: "a@x.com", displayName: "Bob" }, "user");
-        await r.upsert({ sub: "s1" }, "user"); // re-login without email/displayName
+        await r.upsert({ sub: "s1", email: "a@x.com" }, "user");
+        await r.upsert({ sub: "s1" }, "user"); // re-login without email
         const u = await r.getBySub("s1");
         expect(u?.email).toBe("a@x.com");
-        expect(u?.displayName).toBe("Bob");
     });
 });
 
@@ -38,16 +37,6 @@ describe("InMemoryUsersRepository basic ops", () => {
 
     test("setRole on unknown returns null", async () => {
         expect(await repo().setRole("nope", "admin")).toBeNull();
-    });
-
-    test("setProfile updates displayName, keeps role, leaves unknown null", async () => {
-        const r = repo();
-        await r.upsert({ sub: "s1", email: "a@x.com", displayName: "Bob" }, "admin");
-        const u = await r.setProfile("s1", { displayName: "Bobby" });
-        expect(u?.displayName).toBe("Bobby");
-        expect(u?.role).toBe("admin");          // role untouched
-        expect(u?.email).toBe("a@x.com");        // other fields untouched
-        expect(await r.setProfile("nope", { displayName: "X" })).toBeNull();
     });
 
     test("delete removes the user", async () => {

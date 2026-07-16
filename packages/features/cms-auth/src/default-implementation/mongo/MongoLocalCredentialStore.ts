@@ -67,7 +67,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
             if (e && typeof e === "object" && (e as { code?: number }).code === 11000) throw new Error("email already registered");
             throw e;
         }
-        return { sub: doc._id, email, displayName: input.displayName ?? email };
+        return { sub: doc._id, email };
     }
 
     async verify(email: string, password: string): Promise<Identity | null> {
@@ -77,9 +77,6 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         if (!doc) { await dummyPasswordVerify(password); return null; }
         if (!(await Bun.password.verify(password, doc.hash))) return null;
         if (doc.emailVerifiedAt === null) return null;
-        // No `displayName`: the credential store doesn't own one. Returning the
-        // email here would overwrite the user's real displayName on every login
-        // (SubjectResolver.upsert only updates provided fields).
         const stored = await this.fieldCrypto.decrypt(doc.emailEnc);
         return { sub: doc._id, email: stored };
     }

@@ -4,7 +4,7 @@ import { sanitizeReturnTo } from "cms-auth/core/cookies";
 export type InMemoryAuthConfig<Role extends string> = {
     role: Role;
     identifier?: string;
-    displayName?: string;
+    email?: string;
 };
 
 /**
@@ -24,7 +24,7 @@ export class InMemoryAuthentication<Role extends string = DefaultRole>
         this._subject = {
             identifier:  config.identifier  ?? "dev-user",
             role:        config.role,
-            displayName: config.displayName ?? `Dev ${config.role}`,
+            ...(config.email ? { email: config.email } : {}),
         };
     }
 

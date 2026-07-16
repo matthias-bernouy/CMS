@@ -19,10 +19,11 @@ describe("internalUserId", () => {
 describe("SubjectResolver", () => {
     test("fromIdentity records under provider:sub and assigns the default role", async () => {
         const { resolver } = make();
-        const subject = await resolver.fromIdentity({ sub: "123", provider: "local", displayName: "Bob" });
+        const subject = await resolver.fromIdentity({ sub: "123", provider: "local", email: "bob@example.com" });
         expect(subject.identifier).toBe("local:123");
         expect(subject.role).toBe("user");
-        expect(subject.displayName).toBe("Bob");
+        expect(subject.email).toBe("bob@example.com");
+        expect(subject).not.toHaveProperty("displayName");
     });
 
     test("fromSub maps a known principal, null otherwise", async () => {

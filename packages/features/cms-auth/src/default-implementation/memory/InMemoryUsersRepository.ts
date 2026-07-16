@@ -23,10 +23,9 @@ export class InMemoryUsersRepository<Role extends string = string> implements Us
             return clone(created);
         }
         // Only update fields the identity actually carries — a re-login without
-        // an email/displayName must not wipe the stored ones (mirrors Mongo's
+        // an email must not wipe the stored one (mirrors Mongo's
         // `$set`-only-provided behavior).
         const next: TUser<Role> = { ...cur, lastSeenAt: now };
-        if (identity.displayName !== undefined) next.displayName = identity.displayName;
         if (identity.email       !== undefined) next.email       = identity.email;
         if (identity.provider    !== undefined) next.provider    = identity.provider;
         this._users.set(identity.sub, next);
@@ -42,15 +41,6 @@ export class InMemoryUsersRepository<Role extends string = string> implements Us
         const u = this._users.get(sub);
         if (!u) return null;
         const next = { ...u, role };
-        this._users.set(sub, next);
-        return clone(next);
-    }
-
-    async setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null> {
-        const u = this._users.get(sub);
-        if (!u) return null;
-        const next = { ...u };
-        if (patch.displayName !== undefined) next.displayName = patch.displayName;
         this._users.set(sub, next);
         return clone(next);
     }

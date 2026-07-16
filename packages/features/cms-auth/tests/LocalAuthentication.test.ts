@@ -101,7 +101,7 @@ describe("LocalAuthentication login", () => {
 describe("LocalAuthentication.getSubject", () => {
     test("valid session cookie → subject (role read from the store)", async () => {
         const { auth, resolver, codec } = setup();
-        const subject = await resolver.fromIdentity({ sub: "u1", provider: "local", displayName: "Bob" });
+        const subject = await resolver.fromIdentity({ sub: "u1", provider: "local", email: "bob@example.com" });
         const token = await codec.sign({ kind: "session", sub: subject.identifier }, 3600);
         const got = await auth.getSubject(new Request("http://x/cms/t/admin", { headers: { cookie: `cms-t-session=${token}` } }));
         expect(got?.identifier).toBe("local:u1");
