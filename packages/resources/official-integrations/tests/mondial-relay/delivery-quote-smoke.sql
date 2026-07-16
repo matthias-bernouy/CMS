@@ -1,3 +1,5 @@
+\set ON_ERROR_STOP on
+
 begin;
 set local role service_role;
 
