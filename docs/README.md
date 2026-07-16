@@ -25,3 +25,12 @@ implementation notes live in each package's `AGENTS.md`.
   for authored blocs and editor-facing bloc code.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
+
+## Design Plans
+
+- [Newsletter Broadcast Plan](../BROADCAST_PLAN.md) describes the durable
+  campaign architecture that should replace the smoke-test newsletter emailer
+  function for large sends.
+- [Stripe Connect C2C Protected Buyer Plan](../STRIPE_CONNECT_C2C_PROCTED_BUYER.md)
+  defines mandatory protected C2C settlement, Commerce-owned fee policy,
+  marketplace claims, refunds, and Stripe reconciliation.

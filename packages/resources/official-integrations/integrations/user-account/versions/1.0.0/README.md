@@ -4,6 +4,14 @@ This blueprint stores personal information for CMS users through the configured
 connector. Version `1.0.0` ships one Supabase connector that owns the database
 schema and the `cms-user-account` Edge Function.
 
+The public account form depends on the `basic-blocs` integration. It is a Light
+DOM `Composition` built from `basic-stack`, `basic-grid`, `basic-input`,
+`basic-button`, native forms, and the page-level declarative CMS binding
+runtime. Avatar selection is encapsulated by the form-associated
+`user-account-avatar` component and its Shadow DOM. The form editor settings
+can hide individual identity, contact, address, and regional-preference fields
+without exposing the generated children in the page structure.
+
 The CMS remains the only caller. Current-user endpoints forward a computed
 `x-user-id` and a generated private bearer token to the connector function.
 Backoffice dashboard endpoints keep `x-user-id` as the acting CMS user and pass
@@ -58,9 +66,17 @@ computes this value and injects it into the source request.
 
 ```text
 cms_user_id text primary key
-email text null
 phone text null
-display_name text null
+given_name text null
+surname text null
+birth_date date null
+address_line_1 text null
+address_line_2 text null
+address_line_3 text null
+postal_code text null
+city text null
+region text null
+country_code text null
 avatar_url text null
 avatar_file_id text null
 locale text null
@@ -69,8 +85,9 @@ created_at timestamptz
 updated_at timestamptz
 ```
 
-Empty strings sent for editable fields are normalized to `null`. Email values
-are lowercased and trimmed. `avatar_url` stores an external HTTP URL when a site
+Empty strings sent for editable fields are normalized to `null`. The login
+email remains owned by CMS authentication and is not copied into this schema.
+`avatar_url` stores an external HTTP URL when a site
 wants to manage avatars elsewhere. `avatar_file_id` stores a private Supabase
 Storage object path returned by the connector upload endpoint.
 
@@ -110,8 +127,17 @@ Request:
 
 ```json
 {
-  "email": "reader@example.com",
-  "displayName": "Reader",
+  "phone": "+33600000000",
+  "givenName": "Ada",
+  "surname": "Lovelace",
+  "birthDate": "1992-04-18",
+  "addressLine1": "12 rue des Tests",
+  "addressLine2": "Bâtiment B",
+  "addressLine3": "Appartement 4",
+  "postalCode": "75001",
+  "city": "Paris",
+  "region": "Île-de-France",
+  "countryCode": "FR",
   "avatarUrl": "https://example.com/avatar.png",
   "avatarFileId": "avatars/4d967.../019f...jpg",
   "locale": "fr-FR",
@@ -120,10 +146,28 @@ Request:
 ```
 
 Every field is optional. Send `null` or an empty string to clear a field.
+`birthDate` uses `YYYY-MM-DD`; `countryCode` uses an ISO 3166-1 alpha-2 code.
+
+### POST /personal-information/metadata
+
+Partially updates the current user's configured extra fields. Field ids are
+sent directly as top-level keys so native CMS forms do not need to construct a
+nested object.
+
+```json
+{
+  "level": "club",
+  "playingStyles": ["aggressive", "all-court"]
+}
+```
+
+Unknown fields and values that do not match the configured type or allowed
+options are rejected. Existing metadata keys omitted from the request are kept.
 
 ### POST /personal-information/avatar
 
-Uploads an avatar image for the current `x-user-id`.
+Uploads an avatar image for the current `x-user-id` and attaches it to the
+personal information row.
 
 Request:
 
@@ -132,14 +176,7 @@ multipart/form-data
 file File required
 ```
 
-Returns:
-
-```json
-{ "fileId": "avatars/4d967.../019f...jpg" }
-```
-
-Save the returned `fileId` through `POST /personal-information` as
-`avatarFileId`.
+Returns the updated personal information row, including `avatarFileId`.
 
 ### GET /personal-information/avatar
 
@@ -168,7 +205,7 @@ q string optional
 limit number optional, capped at 200
 ```
 
-`q` searches CMS user id, email, phone, and display name.
+`q` searches CMS user id, phone, given name, and surname.
 
 ### GET /personal-information/record
 
@@ -197,8 +234,8 @@ Body is the same shape as `POST /personal-information`.
 
 ### POST /personal-information/record/avatar
 
-Uploads an avatar image for a target CMS user. The `x-user-id` header remains
-the admin actor.
+Uploads and attaches an avatar image for a target CMS user. The `x-user-id`
+header remains the admin actor.
 
 Query:
 
@@ -213,8 +250,7 @@ multipart/form-data
 file File required
 ```
 
-Returns `{ "fileId": "..." }`. Save the returned value through
-`POST /personal-information/record` as `avatarFileId`.
+Returns the updated personal information row, including `avatarFileId`.
 
 ### GET /personal-information/record/avatar
 

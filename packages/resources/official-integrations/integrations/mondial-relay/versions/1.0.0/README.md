@@ -1,171 +1,215 @@
 # Mondial Relay Delivery Integration
 
-This blueprint creates a CMS source and dashboard for Mondial Relay Connect
-shipping. The CMS stays stateless for delivery data: it injects a generated
-private API key server-side, while the Supabase Edge Function owns Mondial Relay
-Connect calls and stores operational rows in a private `delivery` schema.
+This provider integration owns Mondial Relay Connect shipment creation, private
+label storage, detailed tracking observations, and normalized delivery facts.
+It does not decide Commerce cancellation, refund, claim, or settlement
+eligibility.
 
-## Files
+## Supported Contract
 
-- `definition.json`: declarative CMS integration definition for this version.
-- `connectors/supabase/schema.sql`: private Supabase Postgres schema for
-  shipments, tracking events, and editable delivery settings.
-- `connectors/supabase/functions/cms-delivery/index.ts`: Supabase Edge Function
-  entrypoint.
-- `connectors/supabase/functions/cms-delivery/*.ts`: helper modules imported by
-  the entrypoint. The CMS Supabase deployer uploads the whole function
-  directory, so relative imports stay deployable.
-- `connectors/supabase/supabase.config.toml`: function config fragment.
+Version `1.0.0` deliberately supports only:
 
-## Architecture
+- France to France delivery;
+- collection mode `CCC`;
+- delivery mode `24R`;
+- EUR declared value;
+- one Commerce order, one shipment, and one parcel;
+- immutable, revisioned delivery quotes bound to one Commerce order version and
+  buyer CMS identity.
 
-```text
-CMS dashboard or source call
-  -> /.cms/sources/delivery/*
-  -> Supabase Edge Function cms-delivery
-  -> private delivery schema
-  -> Mondial Relay Connect API v2
-```
+Shipment creation requires `externalOrderId`. That value is the unique
+idempotency key, so concurrent calls cannot create multiple local shipment
+reservations. A confirmed provider rejection is retryable. A network timeout or
+ambiguous response leaves the reservation in `unknown` and blocks automatic
+retry. A `creating` reservation whose twenty-minute lease expires is also moved
+to visible manual review without a second provider call.
 
-The Edge Function wraps Mondial Relay Connect shipment creation in JSON
-endpoints for the CMS and proxies the official Mondial Relay parcel shop picker
-service for pickup point lookup. It never exposes Mondial Relay credentials,
-Supabase service-role keys, or the generated CMS API key to browser code.
+Quote creation stores server-owned shipping price, EUR currency, parcel weight,
+relay data, merchandise subtotal, and private buyer/seller fulfillment
+snapshots. Exact replay returns the same quote. Changed replay input, expiry
+before financial locking, or an order/buyer mismatch fails closed.
 
-## Supabase Setup
+## Ownership And Access
 
-1. Run `connectors/supabase/schema.sql` against the target Supabase database.
-2. Expose the `delivery` schema to the Supabase Data API for server-side Edge
-   Function access. The SQL still revokes `anon` and `authenticated` and grants
-   access only to `service_role`. When this integration is deployed through the
-   Supabase connector deployer, `definition.json` declares
-   `dataApiSchemas: ["delivery"]` so the deployer can synchronize
-   `pgrst.db_schemas` on the `authenticator` role before reloading the PostgREST
-   config and schema cache automatically.
-3. Deploy the `cms-delivery` Edge Function from the full
-   `connectors/supabase/functions/cms-delivery` directory.
-4. Copy the function config from `connectors/supabase/supabase.config.toml`;
-   the function validates its own CMS API key, so `verify_jwt` must be `false`.
-5. Deploy the Edge Function with the secrets below. When installing through the
-   CMS Supabase connector flow, these values are collected from the integration
-   form and pushed to Supabase automatically:
-   - `CMS_DELIVERY_API_KEY`: generated bearer token accepted from the CMS source.
-   - `MONDIAL_RELAY_CONNECT_ENDPOINT`: Connect endpoint, for example
-     `https://connect-api-sandbox.mondialrelay.com/api/shipment`.
-   - `MONDIAL_RELAY_CONNECT_LOGIN`: Connect API login.
-   - `MONDIAL_RELAY_CONNECT_PASSWORD`: Connect API password.
-   - `MONDIAL_RELAY_CONNECT_CUSTOMER_ID`: Connect brand/customer id.
-   - `MONDIAL_RELAY_WIDGET_BRAND`: parcel shop picker brand. The declarative
-     installer sets it from `mondialRelayConnectCustomerId` so the CMS form only
-     asks for the API 2 identity once.
-   - `SUPABASE_URL`: Supabase project URL.
-   - `SUPABASE_SECRET_KEYS` or `SUPABASE_SERVICE_ROLE_KEY`: server-side key used
-     only inside the Edge Function. Hosted Supabase projects expose
-     `SUPABASE_SECRET_KEYS` as a JSON dictionary; the function reads the
-     `default` entry.
+The raw creation, relay-selection read/write, handoff, cancellation, and batch
+reconciliation endpoints are system-only CMS source endpoints. The Commerce
+linking integration verifies buyer or seller ownership before calling them.
 
-Delivery modes, sender address, default parcel dimensions, label output
-options, and declared currency are stored in the private
-`delivery.settings` table. They are edited from the CMS dashboard through the
-source endpoints and do not require redeploying the Edge Function.
+The provider label URL is private and is never returned by shipment creation,
+shipment reads, tracking projections, or dashboards. A verified seller can ask
+the linking integration for a ten-minute capability bound to their CMS user id.
+The authenticated `label?token=...` endpoint validates the capability and
+proxies the PDF with `Cache-Control: private, no-store`.
+Capabilities can still be issued after a seller handoff declaration while the
+shipment remains `label_ready`, but not after the first trusted carrier scan.
 
-Never expose `CMS_DELIVERY_API_KEY`, `MONDIAL_RELAY_CONNECT_PASSWORD`, Supabase
-secret keys, or service-role keys to browser code.
+A buyer receives only an allowlisted tracking projection. The buyer never
+receives a label token or provider label URL.
 
-If the Edge Function returns `Invalid schema: delivery`, the database schema
-exists but PostgREST/Data API has not exposed it yet or has a stale schema
-cache. The CMS Supabase connector deployer handles both automatically. For a
-manual install, add `delivery` to the Supabase Data API exposed schemas, run
-`alter role authenticator set pgrst.db_schemas = 'public,storage,delivery';`,
-then run `notify pgrst, 'reload config';` and
-`notify pgrst, 'reload schema';` before retrying the request. Keep any existing
-schemas from the project in the comma-separated list.
+## Normalized Tracking
 
-## CMS Installation
-
-Import `definition.json` with kind `mondial-relay`. Configure:
-
-- `id`: usually `delivery`.
-- `mondialRelayConnectEndpoint`: Connect shipment endpoint.
-- `mondialRelayConnectLogin`: Connect API login.
-- `mondialRelayConnectPassword`: Connect API password.
-- `mondialRelayConnectCustomerId`: Connect brand/customer id.
-
-After import, CMS pages, blocs, or dashboards can call:
+`WSI2_TracingColisDetaille` returns a request status plus human-readable
+tracking events. The connector stores the provider label, date, time, relay, and
+location for each event and derives one of these facts:
 
 ```text
-/.cms/sources/delivery/shipments
-/.cms/sources/delivery/shipment?id=<shipment-id>
-/.cms/sources/delivery/settings
-/.cms/sources/delivery/setting?id=default
-/.cms/sources/delivery/setSettings
-/.cms/sources/delivery/relayPoints?country=FR&postalCode=75001&weightGrams=500
-/.cms/sources/delivery/createShipment
-/.cms/sources/delivery/label?expeditionNumber=<number>
-/.cms/sources/delivery/tracking?expeditionNumber=<number>
-/.cms/sources/delivery/parseTrackingLink?url=<mondial-relay-url>
+carrier_accepted
+in_transit
+arrived_at_pickup_point
+available_for_pickup
+collected_by_recipient
+pickup_expired
+returning_to_sender
+returned_to_sender
+incident
+lost
 ```
 
-The dashboard shipment form uses a `lookup` field backed by `relayPoints`, so
-operators select a pickup point instead of typing a relay code manually. The
-lookup uses Mondial Relay's official parcel shop picker service with the same
-brand/customer id used for Connect shipment creation; it does not require API 1
-SOAP private-key credentials.
+Normalization is conservative:
 
-The same form pre-fills shipment country, delivery modes, parcel dimensions,
-content, and currency from the editable `default` settings profile. Operators
-can override those values before creating each shipment.
+- top-level `STAT 82` alone maps only to `arrived_at_pickup_point`;
+- generic “delivered” wording is not recipient handoff;
+- `collected_by_recipient` requires an explicit detailed event such as
+  “remis au destinataire” with a provider date;
+- `carrier_accepted` requires an explicit detailed first-scan event with a
+  provider date;
+- arrival and availability remain non-terminal and continue reconciliation;
+- `collected_by_recipient`, `lost`, `returned_to_sender`, and
+  `cancelled` cannot regress through ordinary synchronization;
+- an unrecognized event is retained as raw provider evidence but cannot invent
+  a trusted milestone.
 
-Use the dashboard `Edit settings` action after installation and fill the
-`default` profile before creating labels. The Edge Function normalizes French
-phone numbers to E.164 for Connect, for example `0608138404` and
-`+330608138404` become `+33608138404`.
+The connector persists separate milestone timestamps, including
+`carrier_accepted_at` and `recipient_handoff_at`. The latter is populated
+only from explicit recipient collection and is the only delivery timestamp that
+Commerce may use to start the buyer claim window.
 
-## Live Label Test
+Mondial Relay publishes a provider-maintained tracing-code workbook. Its labels
+and the certification environment must be checked before changing the
+normalization lexicon.
 
-The repository test suite mocks Mondial Relay by default so CI stays
-deterministic and never creates live shipments. To verify real Connect sandbox
-label creation, run the opt-in live test from the workspace root:
+## Reconciliation
 
-```bash
-MONDIAL_RELAY_CONNECT_LIVE_TEST=1 \
-MONDIAL_RELAY_CONNECT_LOGIN=<api-2-login> \
-MONDIAL_RELAY_CONNECT_PASSWORD=<api-2-password> \
-MONDIAL_RELAY_CONNECT_CUSTOMER_ID=<api-2-brand-id> \
-bun test packages/resources/official-integrations/tests/mondial-relay-connect.live.test.ts
+`POST /system/reconcile` selects a bounded set of non-terminal shipments whose
+last check is older than four hours, calls the tracking WebService, stores
+events idempotently, and returns at most 24 pending normalized events. Shipments
+merely available for pickup remain eligible for later batches. A normalized
+event remains pending until the linking integration acknowledges it after a
+successful Commerce projection; a failed or interrupted run therefore replays
+the same provider event identifier instead of losing the business fact.
+
+The linking integration installs
+`reconcileMondialRelayFulfillments`. The CmsCore runtime calls this system-only
+function directly; it forwards every normalized event to Commerce
+`recordOrderFulfillment`, then acknowledges that event in Delivery. Browser
+visits are never required for collection, expiry, return, incident, or loss
+synchronization.
+
+Production uses a bounded batch every fifteen minutes. The database leases due
+shipments with `FOR UPDATE SKIP LOCKED`; a worker crash becomes reclaimable
+after twenty minutes, while provider errors receive a separate fifteen-minute
+retry deadline. Successful checks retain the normal four-hour refresh cadence.
+The CMS system function is intentionally not exposed as an HTTP cron endpoint.
+Local development requires the explicit `p9r dev --workers` flag.
+
+## Seller Handoff And Cancellation Races
+
+A seller handoff declaration is stored separately from carrier state. It
+prevents a no-scan timeout from being treated as a simple cancellation, but it
+does not set `carrier_accepted_at` and never proves delivery.
+
+Seller handoff, provider scans, and a system-authorized pre-carrier
+cancellation use compare-and-set updates against the same shipment status. A
+cancellation is accepted only for `created`, `label_ready`, or `failed`
+without seller handoff or carrier acceptance. A concurrent scan or handoff
+causes the cancellation to fail closed.
+
+Commerce owns seller and buyer cancellation deadlines. The provider integration
+only applies a cancellation after the Commerce orchestration authorizes it.
+
+## Unknown Creation Recovery
+
+An administrator can recover an exact ambiguous `unknown` reservation only after
+verifying the shipment in Mondial Relay. The dashboard action requires the
+reservation id, external order id, eight-digit expedition number, and an audit
+reason; an optional verified HTTPS label URL can also be attached. Every attempt is written to
+`delivery.shipment_recovery_events`. Ordinary synchronization cannot use this
+path or regress a terminal shipment.
+
+## Commerce Projection Queue
+
+Normalized carrier events use a durable projection queue. Delivery claims at
+most eight events per worker run with `FOR UPDATE SKIP LOCKED`, a five-minute
+lease, a random claim token, an attempt counter, and a scheduled retry time.
+Completion and failure commands must present the active event id and claim
+token, so concurrent workers cannot complete each other's work.
+
+A crashed worker leaves a lease that can be reclaimed. A Commerce rejection
+records a bounded error and schedules a retry without acknowledging success.
+After five failed or expired leases the event moves to `manual_review` and no
+longer blocks later carrier scans. The Delivery dashboard exposes retrying and
+manual-review events in **Projection exceptions** without exposing raw provider
+payloads or claim tokens.
+
+## Supabase Security
+
+The connector uses a private `delivery` schema. SQL revokes `public`,
+`anon`, and `authenticated`, enables and forces RLS, and grants only the
+server-side service role. Privileged mutation endpoints require the generated
+`CMS_DELIVERY_API_KEY`; the service key and Mondial Relay credentials never
+reach browser code.
+
+Provider endpoints are closed choices, not arbitrary URLs. Runtime validation
+accepts only the exact official Connect production or sandbox shipment URL and
+the exact official tracking WebService URL. It rejects non-HTTPS URLs,
+credentials, explicit ports, query strings, fragments, and redirects before a
+request containing provider credentials can be sent.
+
+The schema contains:
+
+- `delivery.shipments`;
+- `delivery.delivery_quotes`;
+- `delivery.shipment_events`;
+- `delivery.relay_selections`;
+- `delivery.label_access_tokens`;
+- `delivery.shipment_recovery_events`;
+- `delivery.settings`.
+
+The integration declares `dataApiSchemas: ["delivery"]` because hosted
+Supabase no longer exposes newly created schemas automatically. Re-run the
+security and performance advisors before release.
+
+## Main CMS Source Endpoints
+
+```text
+GET  relayPoints                         public lookup
+GET  shipments / shipment               administrator reads
+GET  relaySelection                     system
+POST saveRelaySelection                 system
+GET  deliveryQuote                      system, public projection of one exact quote
+POST resolveDeliveryQuote               system, private exact quote resolution
+POST saveClaimReturnRelaySelection      system, claim-return relay only
+POST createShipment                     system
+POST issueLabelAccess                   system
+GET  label?token=...                    authenticated capability proxy
+POST declareSellerHandoff               system
+POST cancelShipmentReservation          system
+POST reconcileShipments                 system
+POST acknowledgeShipmentEvent           system, lease-bound success
+POST failShipmentEventProjection        system, lease-bound retry/manual review
+GET  shipmentProjectionExceptions       administrator reads
+POST recoverUnknownShipment             administrator, audited
 ```
-
-`MONDIAL_RELAY_CONNECT_ENDPOINT` defaults to
-`https://connect-api-sandbox.mondialrelay.com/api/shipment`.
-`MONDIAL_RELAY_CONNECT_RELAY_LOCATION` defaults to `FR-031270`.
-
-## 1.0.0 Scope
-
-- Mondial Relay Connect API v2 only.
-- France pickup point delivery only: `CCC` collection, `24R` delivery, `FR`
-  sender, recipient, and relay location country.
-- Pickup point lookup through the official Mondial Relay parcel shop picker
-  service using the Connect brand/customer id.
-- Editable delivery settings stored in `delivery.settings` and managed through
-  the CMS source/dashboard.
-- Standalone delivery rows, with an optional `externalOrderId` for future order
-  integrations.
-- Shipment creation returns a shipment number and a PDF label URL.
-- Label retrieval proxies the stored label URL through the CMS source endpoint.
-- Tracking currently reads stored shipment events and parses Mondial Relay
-  tracking links; it does not yet call a Connect tracking endpoint.
-
-The current dashboard renderer has no generic file-opening row action yet. The
-source already exposes `label` as a file endpoint and stores `labelUrl` on
-shipments so a later dashboard action can open or print labels without changing
-the connector contract.
 
 ## References
 
-- Supabase Edge Functions: https://supabase.com/docs/guides/functions
-- Supabase Edge Function secrets: https://supabase.com/docs/guides/functions/secrets
-- Supabase Data API security: https://supabase.com/docs/guides/api/securing-your-api
-- Mondial Relay Connect sandbox endpoint:
-  https://connect-api-sandbox.mondialrelay.com/api/shipment
-- Mondial Relay parcel shop picker documentation:
-  https://storage.mondialrelay.fr/widget-v-411.pdf
+- Mondial Relay detailed tracking method:
+  https://www.mondialrelay.fr/WebService/WebService.asmx?op=WSI2_TracingColisDetaille
+- Mondial Relay technical toolbox and tracing-code workbook:
+  https://www.mondialrelay.fr/documentation-technique/boites-a-outils/
+- Mondial Relay Web Service solution:
+  https://www.mondialrelay.fr/media/124122/solution-web-service-v511.pdf
+- Supabase scheduling Edge Functions:
+  https://supabase.com/docs/guides/functions/schedule-functions
+- Supabase Data API security:
+  https://supabase.com/docs/guides/api/securing-your-api

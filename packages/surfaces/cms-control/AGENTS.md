@@ -8,7 +8,7 @@ browser bundle in `src/static/assets/control-components.js`.
 
 - `@bernouy/cms-control`: server-side `ControlCms`.
 - `@bernouy/cms-control/component`: view-side bloc authoring, only
-  `Component` from `@bernouy/components/base`.
+  `Component` and `Composition` from `@bernouy/components/base`.
 - `@bernouy/cms-control/editor`: editor-side bloc authoring helpers. Bloc editor
   bundles are rewritten by `p9rExternalsPlugin` to use `window.p9rEditor`.
 

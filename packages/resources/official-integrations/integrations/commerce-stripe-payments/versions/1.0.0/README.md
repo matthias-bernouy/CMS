@@ -1,0 +1,147 @@
+# Commerce Stripe Payments
+
+This linking integration connects Commerce business decisions to Stripe
+Connect provider operations. It installs buyer and system functions, the
+protected payment bloc, provider-operation triggers, and the composed Payments
+& Disputes administration dashboard.
+
+Commerce remains authoritative for the buyer, seller, locked financial terms,
+fees, shipping allocation, claim decisions, refunds, and settlement release.
+Stripe Connect creates and reconciles the platform PaymentIntent, Charge,
+Transfer, Transfer Reversal, Refund, and Stripe Dispute objects. This linking
+integration translates opaque seller identities and moves explicit immutable
+authorizations between those authorities; it never calculates money.
+
+The browser provides only a Commerce order id and Stripe Payment Element
+interaction. It cannot provide a trusted seller, amount, fee, destination,
+currency, refund, or release decision.
+
+## Seller sale enrollment
+
+The integration configures one current seller-agreement version and its
+SHA-256 hash through the required `sellerTermsVersion` and `sellerTermsHash`
+installation inputs. The browser can never choose either value. The
+authenticated `getSellerSaleEnrollment` function asks Stripe whether the exact
+configured pair already has an immutable acceptance proof and exposes only the
+`marketplaceTermsCurrentVersionAccepted` decision needed by the seller form.
+
+`submitSellerOfferPrice` accepts an optional Stripe Account Token and the
+explicit `sellerTermsAccepted: true` confirmation from a checkbox that must not
+be preselected. On first enrollment it combines those browser-produced
+credentials with the server-configured version and hash, asks Stripe Connect to
+persist the user, timestamp, version, and hash proof, verifies the returned
+minimal enrollment, and only then submits the price to Commerce. Replays send
+the configured version and hash without manufacturing a new acceptance. A new
+configured version therefore requires a new explicit acceptance but does not
+require a new Stripe identity token for an existing minimal account.
+
+No contact email is trusted from this function input. Stripe obtains it from
+the Account Token that also carries the identity and Stripe Terms attestation.
+A minimal application-controlled recipient account with accepted Stripe and
+marketplace terms can accept held platform payments. A bank account, active
+Transfers, enabled payouts, and Commerce administrative verification are not
+price-publication gates. Commerce still independently rejects seller states
+that its own policy marks as rejected or suspended, and this integration never
+promotes a Commerce seller based on a Stripe status.
+
+## Payment bloc
+
+The integration also installs a buyer-facing Payment Element bloc:
+
+```html
+<commerce-stripe-payment order-id="order-42"></commerce-stripe-payment>
+```
+
+Bind only `order-id` to the authenticated buyer's Commerce order. The bloc
+calls `createPaymentForOrder`; Commerce locks and returns the immutable
+financial snapshot, and Stripe Connect creates or strictly replays the
+protected platform PaymentIntent.
+
+Reloading checkout intentionally replays that command so the browser can
+recover the existing payable PaymentIntent client secret. It never creates a
+second provider payment for the order reference. Each Commerce projection is
+identified by the Stripe payment id and returned provider snapshot timestamp:
+an unchanged snapshot is an exact replay, while a later Stripe sync (including
+a real status transition) is recorded as a new provider-truth event.
+
+Seller Balance Settings are deliberately not configured on this checkout
+path. A minimal recipient without a bank account or completed payout
+activation can therefore be paid into the protected platform flow without a
+seller payout-settings request blocking PaymentIntent creation. Platform
+liability controls remain a checkout prerequisite because they protect funds
+already owed across all held orders.
+
+The bloc loads Stripe Payment Element and confirms the PaymentIntent with
+`redirect: if_required`. It never treats the browser PaymentIntent object as
+provider truth: it polls the mutating `refreshPaymentForOrder` command until
+Stripe webhook ingestion or provider retrieval confirms the server-side state.
+The known `charge_balance_transaction_expansion` provider projection gap is
+treated as reconciliation in progress, not as a marketplace review: the bloc
+keeps polling for up to roughly one minute and keeps payment submission locked.
+Every other manual-review reason, and every active Stripe dispute, remains
+blocked for review. Card data remains inside Stripe's iframe. The bloc emits
+`commerce-stripe-payment:ready`, `:success`, `:processing`, `:refund`,
+`:blocked`, and `:error` DOM events.
+
+The authenticated `getPaymentForOrder` function is read-only and verifies order
+ownership before returning the current Stripe projection. The POST-only
+`refreshPaymentForOrder` command additionally records that provider truth in
+Commerce. Account pages use these server projections instead of trusting a
+browser event.
+
+## Settlement and refund orchestration
+
+Commerce issues unique release and refund authorizations after locking its
+settlement row. Asynchronous triggers call system-only linking functions. Those
+functions execute the idempotent Stripe operation and report the provider
+result back to Commerce. A failed trigger cannot authorize money by itself;
+the durable Commerce/Stripe operation remains pending for reconciliation.
+
+Each release authorization also carries the authoritative seller identity,
+current required seller minimum balance, and the payout delay from the locked
+Commerce policy. Immediately before every Transfer attempt, including worker
+retries, the linking function idempotently applies the automatic seller payout
+schedule with a key derived from the release authorization and those control
+values. Failure or ambiguity while applying those controls fails closed before
+the Transfer; checkout is unaffected and the durable release remains
+retryable.
+
+Refunds after a seller Transfer use the Commerce-authorized seller recovery
+amount. Stripe Connect confirms the required Transfer Reversal before creating
+the Refund. Ambiguous provider results remain `manual_review`.
+
+Marketplace claims and Stripe card disputes remain separate. Commerce resolves
+marketplace claims. Stripe Connect owns provider dispute evidence, submission,
+acceptance, deadlines, and won/lost truth. The composed dashboard displays both
+without merging their state machines.
+
+## Runtime workers
+
+The production CmsCore runtime executes the system-only deadline, pending
+PaymentIntent cancellation, refund, release, Stripe reconciliation, and
+Mondial Relay reconciliation functions on bounded recurring schedules. It
+invokes declarative functions directly through
+the server-side function executor, so there is no public scheduler route and no
+additional shared scheduler credential. Missing functions are inert until their
+integration is installed, and one invocation of a given job never overlaps its
+previous invocation in the same process.
+
+Financial mutation jobs use batches of five every minute. Stripe reconciliation
+uses batches of five every fifteen seconds; the provider source enforces a shared
+per-run call budget, while Commerce refreshes the platform liability aggregate and
+terminal risk windows on every tick. A twenty-item backlog therefore has one minute
+of scheduled drain capacity before retry overhead. Mondial Relay reconciliation
+uses batches of five every fifteen minutes; Delivery's database clock still
+enforces the normal four-hour tracking refresh interval. Every run has a unique
+`runKey`, while Commerce and provider operations keep their own durable business
+keys and stale leases for cross-process recovery.
+
+Local development does not run money-moving workers by default. Start it with
+`p9r dev --workers` only against the intended test environment. Browser visits
+are never a scheduling mechanism.
+
+Colors inherit the active theme tokens by default: `--primary-base`,
+`--primary-contrasted`, `--bg-surface`, `--border-default`, and `--text-main`.
+The editor offers optional theme-aware overrides for accent, background,
+border, and text colors, plus editable content, return page, and
+tabs/accordion layout.

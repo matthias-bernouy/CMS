@@ -1,346 +1,426 @@
-# Stripe Connect C2C Integration
+# Stripe Connect C2C Protected Payments
 
-This blueprint connects C2C sellers to Stripe transfer accounts and creates
-destination-charge PaymentIntents through the configured connector. Version
-`1.0.0` ships one Supabase connector that owns the database schema and the
-`cms-stripe-connect` Edge Function.
+This resource is the Stripe provider adapter for protected C2C orders. It
+onboards connected recipients and owns provider truth for platform
+PaymentIntents, Charges, separate Transfers, Transfer Reversals, Refunds,
+Stripe disputes, payouts, signed webhook events, and reconciliation.
 
-The CMS remains the only caller. User-facing endpoints forward a computed
-`x-user-id` and a generated private bearer token to the connector function.
-Backoffice dashboard endpoints use the same private bearer token and remain
-behind CMS admin permissions.
+Commerce remains authoritative for fee policy, immutable order allocations,
+marketplace claims, delivery evidence, refund decisions, and release
+authorizations. This connector does not calculate a fee or decide that an
+order is releasable.
 
-## Files
-
-- `definition.json`: declarative CMS integration definition for this version.
-- `blocs/stripe-connect-onboarding`: user-facing Stripe embedded onboarding
-  bloc.
-- `connectors/supabase/schema.sql`: private Supabase Postgres schema with
-  `stripe_connect.accounts` and `stripe_connect.payments`.
-- `connectors/supabase/functions/cms-stripe-connect/index.ts`: standalone
-  Supabase Edge Function.
-- `connectors/supabase/supabase.config.toml`: Supabase function config fragment.
-
-## Automatic Installation
-
-Import kind `stripe-connect`. Integration answers are:
-
-- `id`: source id, usually `stripe-connect`.
-- `stripeSecretKey`: Stripe secret or restricted key used only by the Supabase
-  Edge Function.
-- `stripePublishableKey`: Stripe publishable key returned by the user-facing
-  client config endpoint for ConnectJS initialization.
-- `defaultCountry`: default country for newly created seller accounts.
-- `defaultCurrency`: default currency for newly created PaymentIntents.
-
-The installer must provide a Supabase connector deployer. That deployer applies
-the SQL schema, exposes `stripe_connect` to the Supabase Data API for
-server-side function access, deploys the Edge Function, sets
-`CMS_STRIPE_CONNECT_API_KEY`, `STRIPE_SECRET_KEY`,
-`STRIPE_PUBLISHABLE_KEY`, `STRIPE_CONNECT_DEFAULT_COUNTRY`, and
-`STRIPE_CONNECT_DEFAULT_CURRENCY` in Supabase function secrets, and returns
-`functionsBaseUrl` for the generated CMS source contract.
-
-The CMS generates and stores one secret:
-
-- `cmsApiKey`: shared bearer token accepted from the CMS source.
-
-The CMS also stores the provided Stripe secret key so the connector deployer can
-inject it into Supabase. Never expose that key to browser code.
-
-## Architecture
+## Protected money flow
 
 ```text
-CMS page or bloc
-  -> /.cms/sources/stripe-connect/*
-  -> authorization: Bearer <CMS-generated secret>
-  -> x-user-id: <computed CMS user id>
-  -> Supabase Edge Function cms-stripe-connect
-  -> Stripe API + stripe_connect schema
+Commerce locks financial terms
+  -> platform PaymentIntent captures buyerTotalAmount
+  -> signed webhook confirms the Charge
+  -> settlement stays held
+  -> Commerce creates one release authorization
+  -> Stripe Transfer uses the stored Charge as source_transaction
+  -> the connected account payout schedule moves available funds to the bank
 ```
 
-The browser must never send a trusted `x-user-id` directly to Supabase. The CMS
-computes this value and injects it into the source request.
+The PaymentIntent deliberately omits:
 
-## Onboarding Bloc
+- `transfer_data[destination]`;
+- `application_fee_amount`;
+- `on_behalf_of`.
 
-The integration installs one bloc:
+The seller is a Transfer recipient, not the merchant of the protected card
+Charge. Stripe processing fees, refunds, chargebacks, and negative platform
+balances remain the platform's responsibility.
 
-```html
-<stripe-connect-onboarding source-id="stripe-connect"></stripe-connect-onboarding>
-```
+Only EUR, one seller, and one protected payment allocation per Commerce order
+are supported in this first contract. A replay must match buyer, seller,
+connected account, amount, seller Transfer allocation, currency, financial
+revision, and the full Commerce financial terms hash.
 
-It loads Stripe Connect.js, calls `getConnectClientConfig` to get the
-publishable key, then calls `createOnboardingSession` to mount Stripe Embedded
-Account Onboarding for the current C2C seller.
+## API versions
 
-Optional attributes:
-
-- `source-id`: installed source id. Defaults to `stripe-connect`.
-- `source-prefix`: source proxy prefix. Defaults to `/.cms/sources`.
-- `email`, `country`: optional Stripe account prefill values.
-- `title`, `copy`, `button-label`, `connected-label`: display labels.
-- `preview-label`: display label used when the bloc runs inside an editor
-  iframe and cannot open the Stripe authentication popup.
-- `locale`: passed to Stripe Connect.js.
-- `auto`: starts onboarding as soon as the bloc connects.
-
-The integration grants authenticated users access to
-`getConnectClientConfig`, `createOnboardingSession`, `createOnboardingLink`,
-and `getConnectStatus` during import. The integration definition declares the
-Stripe Connect.js script, network, and frame CSP origins used by the bloc.
-
-## Tables
-
-`stripe_connect.accounts` is keyed by the CMS user id:
+Every Stripe v1 request sends:
 
 ```text
-cms_user_id text primary key
-stripe_account_id text unique
-country text
-business_type text null
-onboarding_status text
-charges_enabled boolean
-payouts_enabled boolean
-details_submitted boolean
-disabled_reason text null
-requirements_* text[] / jsonb
-created_at timestamptz
-updated_at timestamptz
+Stripe-Version: 2026-02-25.clover
 ```
 
-`stripe_connect.payments` stores CMS-side PaymentIntent state:
+The Stripe webhook endpoint must be registered with the same version. Accounts
+v2 calls are pinned separately to `2026-06-24.dahlia`, because the recipient
+onboarding contract uses that preview namespace. Changing either version is a
+reviewed provider-contract upgrade with fixtures and webhook tests.
+
+## Private Supabase ledger
+
+The `stripe_connect` schema is revoked from `public`, `anon`, and
+`authenticated`, has forced RLS as defense in depth, and grants access only to
+`service_role`. It stores independent facts in:
+
+- `accounts`;
+- `payments` and append-only `payment_events`;
+- `financial_operations`;
+- `transfers` and `transfer_reversals`;
+- `refunds`;
+- `stripe_disputes` and staged `stripe_dispute_evidence`;
+- durable `stripe_events`;
+- `payout_events`;
+- `reconciliation_runs`;
+- `provider_exceptions`.
+
+Payment, settlement, refund, and Stripe dispute states are not collapsed into
+one status. Every external money movement first reserves a unique business
+operation in a short PostgreSQL transaction, calls Stripe with a stable
+idempotency key, then attaches provider truth in a second short transaction.
+No database lock is held across an HTTP request.
+
+An ambiguous result creates a critical provider exception and moves the
+payment to `manual_review`. There is no immediate-settlement or unprotected
+fallback.
+
+Succeeded Charges and Refunds also persist their Stripe Balance Transaction
+ids, currency, fee details, signed fee, and net amounts. The original Charge
+processing fee is non-refundable provider cost. A Refund balance transaction
+can carry a negative fee adjustment (a Stripe fee credit), so refund fees and
+the aggregate actual processing cost are intentionally signed integers. Replay
+by the same Balance Transaction id is idempotent and cannot count a credit or
+cost twice. The operations dashboard reports the actual Stripe processing cost
+and `platformRetainedAmount - actualStripeProcessingFeeAmount`; estimated fees
+remain immutable Commerce pricing inputs, never provider truth.
+
+A succeeded PaymentIntent is accepted only after its Charge and Balance
+Transaction have been fully loaded and validated. If Stripe returns either
+relationship as an id, the connector retrieves that object explicitly before
+checking ids, amount, captured amount, currency, transfer group, fees, and net.
+An unresolved or divergent object remains fail-closed. The connector can clear
+only the historical `charge_balance_transaction_expansion` review after a full
+revalidation, zero refund/transfer/dispute movement, and no other open provider
+exception; one database transaction restores `held`, resolves that exception,
+and appends the recovery audit event.
+
+This version is a breaking replacement, not a migration. There is no legacy
+destination-charge archive, backfill, or compatibility path. Reset any
+pre-protection development schema before applying `schema.sql`; only the
+protected separate-Charges-and-Transfers ledger is supported.
+
+## Direct Stripe webhooks
+
+Register three direct Edge Function URLs in Stripe, each with its own signing
+secret:
 
 ```text
-id bigint identity primary key
-client_reference_id text unique null
-buyer_cms_user_id text
-seller_cms_user_id text
-stripe_payment_intent_id text unique null
-stripe_charge_id text null
-currency text
-amount_total integer
-application_fee_amount integer
-seller_amount integer
-status text
-created_at timestamptz
-updated_at timestamptz
+{functionsBaseUrl}/cms-stripe-connect/webhooks/stripe
+{functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect
+{functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect-v2
 ```
 
-Amounts are stored in the smallest currency unit.
+The first endpoint receives platform snapshot events for indirect platform
+Charges, PaymentIntents, Refunds, disputes, Transfers, and payouts. The second
+is a Connect snapshot endpoint for events carrying a connected `account`,
+including all payout lifecycle events. The third receives Accounts v2 thin
+events such as `v2.core.account[requirements].updated` and retrieves the
+current versioned Account instead of trusting the thin payload. Each route has
+its own signing secret: `STRIPE_WEBHOOK_SECRET`,
+`STRIPE_CONNECT_WEBHOOK_SECRET`, and
+`STRIPE_CONNECT_V2_WEBHOOK_SECRET` respectively.
 
-## Edge Function Contract
+The route does not accept the CMS bearer token. It:
 
-User-facing routes require:
+- reads the untouched raw request body;
+- caps it at 512 KiB;
+- verifies `Stripe-Signature` with HMAC-SHA256 and a five-minute tolerance;
+- persists the complete event and SHA-256 payload digest before returning;
+- deduplicates by Stripe account plus event id;
+- returns quickly with `202` for a new durable event;
+- leaves ordered, retryable processing to provider reconciliation.
 
-```text
-authorization: Bearer <CMS_STRIPE_CONNECT_API_KEY>
-x-user-id: <computed CMS user id>
-```
+Configure the snapshot endpoints for the pinned v1 API version and the thin
+destination for the pinned Accounts v2 contract:
 
-Backoffice routes require the bearer token and do not require `x-user-id`.
+- PaymentIntent success, processing, failure, and cancellation;
+- Charge and Refund changes;
+- dispute creation, update, closure, withdrawal, and reinstatement;
+- Transfer creation, update, and reversal;
+- connected-account `account.updated` compatibility snapshots;
+- `payout.created`, `payout.updated`, `payout.paid`, and `payout.failed`;
+- Accounts v2 requirements, recipient configuration, capability status,
+  identity, and top-level Account updates.
 
-The Supabase function URL shape is:
+Unknown events remain durable but cause no money mutation. Duplicate and
+out-of-order delivery is expected. Reconciliation retrieves current Stripe
+objects instead of treating an old event payload as final truth.
 
-```text
-https://PROJECT_REF.supabase.co/functions/v1/cms-stripe-connect
-```
+## Buyer-facing payment endpoints
 
-### GET /connect/status
+### `createProtectedPayment`
 
-Returns the current user's Stripe connected account status. If a Stripe account
-exists, the function first retrieves it from Stripe and stores the latest status.
-
-### GET /connect/config
-
-Returns the Stripe publishable key used by the front end to initialize ConnectJS
-for embedded onboarding.
-
-### POST /connect/onboarding/session
-
-Creates a Stripe connected seller account if needed, then creates an Account
-Session for Stripe Connect embedded onboarding. Seller accounts are created as
-individual, recipient-agreement, transfers-only accounts. The response
-`clientSecret` is a single-use front-end token for ConnectJS.
-
-Request:
+Authenticated POST. The caller is the buyer from `x-user-id`; the body comes
+only from locked Commerce terms:
 
 ```json
 {
-  "email": "seller@example.com",
-  "country": "FR"
-}
-```
-
-All fields are optional. They are used as Stripe account prefill values when a
-connected seller account is created.
-
-### POST /connect/onboarding
-
-Fallback hosted onboarding route. Prefer `/connect/onboarding/session` for the
-main product UX.
-
-Creates a Stripe connected seller account if needed, then creates an account
-onboarding link.
-
-Request:
-
-```json
-{
-  "returnUrl": "https://example.com/stripe/return",
-  "refreshUrl": "https://example.com/stripe/refresh",
-  "email": "seller@example.com",
-  "country": "FR"
-}
-```
-
-Only `returnUrl` and `refreshUrl` are required.
-
-### POST /payments
-
-Creates a destination-charge PaymentIntent for the current buyer and a connected
-seller.
-
-Request:
-
-```json
-{
-  "sellerUserId": "local:019f...",
-  "amountTotal": 10000,
-  "applicationFeeAmount": 1200,
+  "sellerUserId": "seller-subject",
+  "amountTotal": 11200,
+  "sellerTransferAmount": 9000,
   "currency": "eur",
-  "clientReferenceId": "order_123",
-  "description": "Order #123"
+  "clientReferenceId": "commerce-order-public-id",
+  "financialTermsHash": "64-lowercase-hex-characters",
+  "financialRevision": 1,
+  "dualApprovalThresholdAmount": 100000,
+  "description": "Order C2C-1001"
 }
 ```
 
-Returns the CMS payment id, Stripe PaymentIntent id, current status, and client
-secret.
+The output is the provider payment projection plus the PaymentIntent client
+secret. The browser never supplies an application fee, destination account,
+Charge id, Transfer group, buyer identity, or settlement mode.
 
-### GET /payments/payment
+Payment creation and cancellation serialize on `clientReferenceId` through a
+private lifecycle guard. If cancellation wins before a provider payment exists,
+the guard becomes a durable tombstone and `createProtectedPayment` permanently
+rejects that reference. If creation wins, cancellation receives the exact local
+payment row and must reconcile the PaymentIntent. An HTTP 404 is never treated
+as safe proof of absence.
 
-Returns one payment visible to the current user.
+Every request first validates that `STRIPE_SECRET_KEY` and
+`STRIPE_PUBLISHABLE_KEY` use the same explicit test or live mode. Each of the
+platform, connected-account v1, and Accounts v2 webhook boundaries also rejects
+a signed event whose `livemode` differs from that configured mode, before the
+event can be persisted or processed.
 
-Query:
+### `getProtectedPayment`
 
-```text
-paymentId number required
-```
+Authenticated GET by numeric `paymentId`. The payment is visible only to its
+buyer or seller.
 
-### GET /admin/accounts
+### `getProtectedPaymentByClientReference`
 
-Returns connected accounts for the CMS dashboard.
+Authenticated GET by immutable Commerce `clientReferenceId`. Only the buyer
+can resolve by reference. The response is `{ "exists": true, "payment": ... }`
+for that buyer. A missing or non-visible reference returns `{ "exists": false }`
+so callers cannot enumerate another buyer's payment and do not have to turn an
+expected absence into an upstream error.
 
-Query:
+The projection exposes separate `paymentStatus`, `settlementStatus`, and
+`disputeStatus`, provider ids, immutable allocation, transferred/reversed/
+refunded totals, last Stripe event, and manual-review reason. It also exposes
+`commercePaymentStatus`, which is forced to `manual_review` whenever settlement
+is under manual review; Commerce integrations must project this derived status
+instead of treating a raw provider success as authorization to continue.
 
-```text
-q string optional
-status string optional
-limit number optional, capped at 200
-```
+## System money commands
 
-### GET /admin/accounts/account
+These endpoints are provider commands for trusted linking or finance
+functions. They are not browser-role endpoints.
 
-Returns and refreshes one connected account by CMS user id.
-
-Query:
-
-```text
-userId string required
-```
-
-### POST /admin/accounts/account/onboarding/session
-
-Creates or refreshes a Stripe embedded onboarding Account Session for a target
-CMS user. The admin is only the actor; the target user is passed explicitly.
-
-Query:
-
-```text
-userId string required
-```
-
-Request body is the same shape as `POST /connect/onboarding/session`.
-
-### POST /admin/accounts/account/onboarding
-
-Fallback hosted onboarding route. Prefer
-`/admin/accounts/account/onboarding/session` for the main dashboard flow.
-
-Creates or refreshes a Stripe onboarding link for a target CMS user. The admin
-is only the actor; the target user is passed explicitly.
-
-Query:
-
-```text
-userId string required
-```
-
-Request body is the same shape as `POST /connect/onboarding`.
-
-### GET /admin/payments
-
-Returns payments for the CMS dashboard.
-
-Query:
-
-```text
-q string optional
-status string optional
-limit number optional, capped at 200
-```
-
-### POST /admin/payments
-
-Creates a destination-charge PaymentIntent for explicit buyer and seller CMS
-users.
-
-Request:
+### `requestSettlementRelease`
 
 ```json
 {
-  "buyerUserId": "local:019f...",
-  "sellerUserId": "local:019e...",
-  "amountTotal": 10000,
-  "applicationFeeAmount": 1200,
-  "currency": "eur",
-  "clientReferenceId": "order_123",
-  "description": "Order #123"
+  "paymentId": 42,
+  "releaseAuthorizationId": "commerce-release-uuid",
+  "amount": 9000,
+  "currency": "eur"
 }
 ```
 
-Returns the CMS payment id, Stripe PaymentIntent id, current status, and client
-secret.
+The connector reuses the snapshotted destination and Charge. It refuses an
+unconfirmed payment, amount overflow, currency mismatch, refund, or open Stripe
+dispute. Stripe receives a separate Transfer with `source_transaction`,
+`transfer_group`, and a stable `settlement:{paymentId}:{authorization}` key.
 
-### GET /admin/payments/payment
+### `requestTransferReversal`
 
-Returns and refreshes one payment by CMS payment id.
+Creates one durable recovery request and allocates it newest-first across as
+many as 23 confirmed local Transfers. Each child reversal has its own stable
+idempotency key; the request succeeds only when the complete requested amount
+is confirmed. Allocation shortfalls and ambiguous provider responses fail
+closed in finance review.
 
-Query:
+### `requestProtectedRefund`
 
-```text
-paymentId number required
+Dashboard/linking-friendly saga:
+
+```json
+{
+  "paymentId": 42,
+  "refundRequestId": "commerce-refund-uuid",
+  "commerceRefundRequestId": 17,
+  "amount": 11200,
+  "authorizedSellerAmount": 1200,
+  "sellerEntitlementReductionAmount": 9000,
+  "reason": "Marketplace claim resolved for buyer"
+}
 ```
 
-### GET /health
+The final seller entitlement is cumulative Commerce truth; the reduction for
+this refund is stored separately from the Transfer Reversal actually required
+at execution time. Stripe provider state is reconciled immediately before the
+calculation, then the payment row is locked while the refund operation is
+reserved. Any confirmed or in-flight Transfer above the final entitlement
+blocks the Refund until recovery is confirmed.
+The response includes `payment`, `reversal`, `refund`, and an ordered normalized
+`operations` array for Commerce provider-event recording.
+Each operation projection carries the typed amount, currency, release or refund
+business correlation, numeric `commerceRefundRequestId` when supplied, and
+provider occurrence time so reconciliation can repair a missing Commerce
+projection without parsing an opaque Stripe response.
 
-Returns `{ "ok": true }` after validating the CMS bearer token. This endpoint
-does not require `x-user-id`.
+Payment, financial-operation, and dispute projections use one durable outbox.
+Rows are leased with attempt counters and backoff, acknowledged only after
+Commerce accepts them, and moved to finance review after repeated failure.
+Refund projections remain causally blocked until every reversal from the same
+recovery request has been acknowledged; unrelated poison rows do not block the
+rest of the queue.
 
-## V1 Limit
+Stripe does not reverse separate Transfers when a Charge is refunded. The
+connector therefore never interprets a Refund response as seller recovery.
 
-This version does not install a Stripe webhook endpoint. Payment and account
-state is refreshed when status endpoints are read. Add Stripe webhook handling
-before using dashboard state as a settlement, dispute, or payout source of
-truth.
+## Stripe disputes
+
+Marketplace claims are not Stripe disputes. This connector handles only the
+card-network provider process.
+
+Signed dispute events block unreleased settlement. If funds were already
+transferred, the connector attempts a bounded Transfer Reversal and moves any
+ambiguous or impossible recovery to `manual_review`.
+
+Provider sources expose:
+
+- `listStripeDisputes` and `getStripeDispute`;
+- `uploadStripeDisputeFile` for private JPEG, PNG, or PDF evidence up to 5 MiB;
+- `stageStripeDisputeEvidence`, which does not submit to Stripe;
+- `submitStripeDisputeEvidence`, guarded by the literal confirmation
+  `SUBMIT STRIPE EVIDENCE` and the provider deadline;
+- `acceptStripeDispute`, guarded by `ACCEPT STRIPE DISPUTE`.
+
+Dashboard requests receive trusted `x-cms-user-id` and `x-cms-user-role`
+headers from CmsCore. Provider listings, evidence upload, and evidence staging
+allow only the exact `support` or `finance` roles. Final evidence submission
+and dispute acceptance allow only `finance`; a generic `admin` role is not
+treated as finance. System money and payout commands remain callable only from
+system functions through the CMS secret boundary.
+
+The stage command accepts either a provider evidence object or flat dashboard
+fields such as `evidenceText`, `customerCommunicationFileId`,
+`shippingDocumentationFileId`, `shippingTrackingNumber`, `shippingDate`,
+`receiptFileId`, and `productDescription`.
+
+Submission and acceptance reserve stable operations and keep the finance actor
+in the audit trail. Submission never marks a dispute won. Final status comes
+only from Stripe webhook or retrieval truth.
+
+## Payout and seller risk
+
+The seller wallet is read-only. The previous seller-controlled "pay out all
+available funds" command was removed. Available and pending connected-account
+balances remain visible, while payout scheduling and risk restrictions stay
+provider/finance controls.
+
+`getSellerProviderRisk` retrieves the connected Stripe balance and current
+Balance Settings. `configureSellerPayoutSchedule` applies a specific,
+versioned Commerce risk-policy decision with a stable
+`payoutScheduleChangeId`. It supports Stripe's `manual`, `daily`, `weekly`, and
+`monthly` schedules plus optional EUR minimum balance, settlement delay, and
+negative-balance debit control. The command is replay-safe, verifies current
+provider state after a lost response, and moves ambiguity to finance review.
+The connector never selects a risk policy itself.
+
+Protected payment creation fails closed unless the Stripe **platform** Balance
+Settings use the controlled automatic daily schedule and an EUR minimum balance
+covering the monotonic aggregate of held seller liabilities and operational
+reserves. Automatic payouts can move only the excess. The platform deliberately
+does not use `interval=manual`: French manual payout holds have a 90-day limit,
+while Commerce can carry a versioned 120-day seller reserve on the platform.
+`configurePlatformPayoutControls` is the idempotent system command that applies
+the automatic schedule and minimum with a global revision/lease, rechecks a
+concurrent higher aggregate before finalization, and never lowers a confirmed
+minimum automatically. An ambiguous update enters `manual_review`. There is no
+connector endpoint that manually pays out the platform balance. A privileged
+out-of-band manual or instant payout is a critical trust-boundary exception.
+
+The required platform amount remains an exact, revisioned Commerce aggregate.
+The provider minimum may safely overcover it: without a decrease authorization,
+the connector targets the maximum of the Commerce requirement, its last
+confirmed provider minimum, and the minimum read from Stripe. It attaches the
+new Commerce revision to that retained amount and reports the higher applied
+amount back to Commerce. A provider decrease targets the exact Commerce
+aggregate and requires the UUID of a Finance authorization bound to that exact
+revision; stale revisions, changed amounts, and missing or mismatched decrease
+authorizations are rejected. Provider I/O never occurs while holding a database
+lock, and a concurrently winning revision is re-evaluated before completion.
+Commerce keeps each order's risk-reserve contribution after the seller Transfer
+until the snapshotted liability window expires (and longer while a Stripe
+dispute remains open). The scheduled reconciliation refreshes time-based expiry
+and applies only increases or already-authorized decreases.
+
+Every payout lifecycle event is stored. A failed payout or any manual/instant
+payout created outside the application-controlled flow creates provider risk
+state and restricts the account until review. This does not remove the
+platform's residual chargeback liability
+after a successful bank payout. Live operation also requires Stripe Radar,
+seller verification, value and velocity limits, operational reserves, and
+documented debt recovery.
+
+Transfer recovery failures and unrecovered chargebacks create durable seller
+exposure rows and aggregate debt on the connected-account projection. Any open
+exposure blocks new protected payments and Transfers. The connector also
+changes the actual Stripe connected-account Balance Settings to a manual payout
+schedule with an EUR minimum balance covering the exposure; a provider failure
+to enforce that hold is a critical exception and remains in manual review.
+Clearing local debt never restores an automatic payout schedule without a new
+Commerce-authorized payout-control command.
+
+## Reconciliation and operations sources
+
+The resource intentionally installs no standalone seller or payment dashboard.
+It exposes provider sources for the composed Commerce **Payments & Disputes**
+dashboard:
+
+- `listProviderPayments` / `getProviderPayment`;
+- `listProviderRefunds` / `getProviderRefund`;
+- `listStripeDisputes` / `getStripeDispute`;
+- `listProviderExceptions`;
+- `listFinancialOperations`;
+- `reconcileProviderPayment`;
+- `runProviderReconciliation`.
+
+Reconciliation claims durable webhook events and stale financial operations
+with `FOR UPDATE SKIP LOCKED`, retrieves current provider objects, searches
+Transfers by transfer group and metadata, searches Reversals and Refunds by
+their stored business metadata, repairs missing projections, recomputes
+captured/refunded/transferred/reversed totals, and detects arithmetic
+divergence. It never manufactures a release authorization or provider success.
+Webhook claims record `processing_started_at`; an invocation interrupted after
+claiming an event can reclaim it after five minutes instead of leaving it in
+`processing` forever. The linking integration's internal CmsCore scheduler
+runs reconciliation in bounded batches. Stripe webhooks only ingest signed raw
+events and never depend on a browser request to be processed.
+
+## Seller onboarding
+
+Every recipient is created as an Accounts v2 `dashboard: none` account with
+requirements, fees, and losses controlled by the application. Express login,
+manual payout, instant payout, and payout embedded components are not exposed.
+The persisted `application_controlled_recipient` proof is required before a
+seller can receive a protected payment. Country and currency are pinned to
+France and EUR for this version.
+
+The seller-facing `stripe-connect-onboarding` bloc preserves direct Stripe
+tokenization of identity and IBAN data. CmsCore receives token ids, not raw bank
+details. Accounts v2 recipient configuration requests Stripe Transfers and
+payout capabilities but not seller card-payment capability.
+
+After activation the bloc displays Stripe balances and status. It cannot create
+a manual payout. Commerce seller moderation, marketplace risk, Stripe payout
+eligibility, and financial holds remain independent states.
 
 ## References
 
-- Stripe account creation: https://docs.stripe.com/api/accounts/create
-- Stripe Account Sessions: https://docs.stripe.com/api/account_sessions/create
-- Stripe embedded onboarding: https://docs.stripe.com/connect/embedded-onboarding
-- Stripe account links: https://docs.stripe.com/api/account_links/create
-- Stripe PaymentIntent creation: https://docs.stripe.com/api/payment_intents/create
-- Stripe destination charges: https://docs.stripe.com/connect/destination-charges
-- Supabase Edge Functions: https://supabase.com/docs/guides/functions
+- Stripe separate charges and transfers: https://docs.stripe.com/connect/separate-charges-and-transfers
+- Stripe marketplace refunds and disputes: https://docs.stripe.com/connect/marketplace/tasks/refunds-disputes
+- Stripe webhooks: https://docs.stripe.com/webhooks
+- Stripe disputes API: https://docs.stripe.com/disputes/api
+- Stripe refund lifecycle: https://docs.stripe.com/refunds
+- Stripe API versioning: https://docs.stripe.com/api/versioning
+- Stripe Balance Settings: https://docs.stripe.com/api/balance-settings
 - Supabase Data API security: https://supabase.com/docs/guides/api/securing-your-api

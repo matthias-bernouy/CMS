@@ -101,11 +101,12 @@ step, consumers resolve straight to `src/`.
 
 `infra/images/cms/` ships the deployment artefact: a `Dockerfile` (runs
 `packages/runtimes/cms-server`), a per-instance `compose.yml`, and a shared
-`infra/compose.yml` (`nginx-proxy` + `acme-companion` + `mongo`). The design
-hosts **many instances on one server** sharing one nginx + one Mongo, each
-instance routed by domain via `VIRTUAL_HOST_MULTIPORTS` (`DOMAIN` for
-Delivery, `admin.DOMAIN` for Control). Content / users / secrets live in
-MongoDB; file blobs (and generated image variants) in a per-instance folder.
+`infra/compose.yml` (`nginx-proxy` + `acme-companion` + `mongo`). The design hosts
+**many instances on one server** sharing the TLS proxy and one authenticated
+MongoDB server. Every instance selects a dedicated database and owns its file
+directory; the current shared application credential is not a database-level
+security boundary. Domains are routed via `VIRTUAL_HOST_MULTIPORTS` (`DOMAIN`
+for Delivery, `admin.DOMAIN` for Control).
 See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for the
 quick start.
 

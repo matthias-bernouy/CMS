@@ -5,6 +5,8 @@ Runtime package for the `p9r` command.
 ## Responsibilities
 
 - `p9r dev`: run the local editor against `site/`.
+- `p9r preview`: run the same local composition with production runtime
+  behavior. It is not a production deployment.
 - `p9r push` / `p9r pull`: sync system, sources, files, blocs, templates, and
   pages.
 - `p9r files reindex`: reconcile the local media tree and registry.
