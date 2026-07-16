@@ -288,8 +288,10 @@ describe("user-account 1.0.0 source", () => {
         });
         expect(accountFormTemplate).toContain('name="givenName"');
         expect(accountFormTemplate).toContain('name="surname"');
-        expect(accountFormTemplate).toContain('name="birthDate" label="Date de naissance" type="date" date-format="day-month-year"');
-        expect(accountFormTemplate).toContain('placeholder="jj/mm/aaaa"');
+        expect(accountFormTemplate).toContain('name="birthDate" label="Date de naissance" type="date" autocomplete="bday" min="1900-01-01"');
+        expect(accountFormTemplate).not.toContain('date-format="day-month-year"');
+        expect(accountFormTemplate).not.toContain('placeholder="jj/mm/aaaa"');
+        expect(accountFormTemplate).not.toContain("invalid-date-message");
         expect(accountFormTemplate).toContain('data-account-button>Enregistrer</basic-button>');
         expect(accountFormTemplate).toContain('name="addressLine3"');
         expect(accountFormTemplate).toContain('name="countryCode"');
@@ -302,6 +304,7 @@ describe("user-account 1.0.0 source", () => {
             .toBeLessThan(accountFormTemplate.indexOf('data-account-field="phone"'));
         expect(accountForm?.viewJS).toContain('extends Composition');
         expect(accountForm?.viewJS).toContain('`${prefix}/system-auth/me`');
+        expect(accountForm?.viewJS).toContain('this.querySelector(\'[data-account-field="birth-date"]\'), "max", currentLocalDate()');
         expect(accountFormTemplate).toContain('<basic-input');
         expect(accountFormTemplate).toContain('<basic-button type="submit"');
         expect(accountFormTemplate).toContain('<user-account-avatar data-avatar-input name="file"');

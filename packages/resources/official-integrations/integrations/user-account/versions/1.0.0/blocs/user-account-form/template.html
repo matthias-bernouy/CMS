@@ -36,7 +36,7 @@
                         <basic-grid min="lg" max="none" gap="sm">
                             <basic-input data-account-field="given-name" name="givenName" label="Prénom" autocomplete="given-name" maxlength="100" value="{{ givenName }}"></basic-input>
                             <basic-input data-account-field="surname" name="surname" label="Nom" autocomplete="family-name" maxlength="100" value="{{ surname }}"></basic-input>
-                            <basic-input data-account-field="birth-date" name="birthDate" label="Date de naissance" type="date" date-format="day-month-year" autocomplete="bday" min="1900-01-01" placeholder="jj/mm/aaaa" invalid-date-message="Saisissez une date valide au format jj/mm/aaaa." value="{{ birthDate }}"></basic-input>
+                            <basic-input data-account-field="birth-date" name="birthDate" label="Date de naissance" type="date" autocomplete="bday" min="1900-01-01" value="{{ birthDate }}"></basic-input>
                             <section data-account-field="login-email" data-auth-load>
                                 <basic-input data-auth-email label="Adresse e-mail" type="email" autocomplete="email" value="{{ subject.email }}" disabled></basic-input>
                             </section>

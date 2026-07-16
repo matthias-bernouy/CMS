@@ -97,6 +97,7 @@ export class UserAccountForm extends Composition {
         this.setAttributeIfChanged(this.querySelector("[data-account-load]"), "cms-source", `${this.sourceBase}/getAccount`);
         this.setAttributeIfChanged(this.querySelector("[data-account-form]"), "cms-source", `${this.sourceBase}/updateAccount as save`);
         this.setAttributeIfChanged(this.querySelector("[data-avatar-form]"), "cms-source", `${this.sourceBase}/uploadAccountAvatar as avatar`);
+        this.setAttributeIfChanged(this.querySelector('[data-account-field="birth-date"]'), "max", currentLocalDate());
 
         this.setText("[data-account-button]", this.getAttribute("button-label") || "Enregistrer");
         this.syncColors();
@@ -228,6 +229,13 @@ export class UserAccountForm extends Composition {
         if (event.target?.matches?.("[data-avatar-form]")) this.saveAfterAvatar = false;
         queueMicrotask(() => this.syncColors());
     };
+}
+
+function currentLocalDate(date = new Date()) {
+    const year = String(date.getFullYear()).padStart(4, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", UserAccountForm);

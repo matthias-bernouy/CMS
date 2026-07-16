@@ -39,6 +39,7 @@ class MondialRelayPicker extends HTMLElement {
         this.render();
         this.syncPresentation();
         this.form.addEventListener("submit", this.onSubmit);
+        this.postalCodeInput.addEventListener("input", this.onPostalCodeInput);
         this.clearButton.addEventListener("click", this.onClear);
 
         if (isFramed()) {
@@ -53,6 +54,7 @@ class MondialRelayPicker extends HTMLElement {
 
     disconnectedCallback() {
         this.form?.removeEventListener("submit", this.onSubmit);
+        this.postalCodeInput?.removeEventListener("input", this.onPostalCodeInput);
         this.clearButton?.removeEventListener("click", this.onClear);
     }
 
@@ -61,7 +63,7 @@ class MondialRelayPicker extends HTMLElement {
             this.internalsRef.setFormValue(value || "");
         }
         if (!this.isConnected || !this.form) return;
-        this.syncPresentation();
+        this.syncPresentation(name);
         if (name === "order-id" && !isFramed()) {
             this.restoreSelection().catch(error => {
                 if (!isNotFound(error)) this.fail(error);
@@ -109,6 +111,8 @@ class MondialRelayPicker extends HTMLElement {
         event.preventDefault();
         this.search().catch(error => this.fail(error));
     };
+
+    onPostalCodeInput = () => this.syncPostalCodeValidity();
 
     onClear = () => this.clearForChange();
 
@@ -270,12 +274,17 @@ class MondialRelayPicker extends HTMLElement {
         `;
     }
 
-    syncPresentation() {
+    syncPresentation(changedAttribute = "") {
         this.titleElement.textContent = this.getAttribute("title") || "Choisissez un point relais";
         this.copyElement.textContent = this.getAttribute("copy") || "Trouvez les points relais Mondial Relay disponibles près de chez vous.";
         this.searchButton.textContent = this.getAttribute("button-label") || "Rechercher";
-        this.postalCodeInput.value = this.getAttribute("postal-code")?.trim() || this.postalCodeInput.value;
-        this.cityInput.value = this.getAttribute("city")?.trim() || this.cityInput.value;
+        if (!changedAttribute || changedAttribute === "postal-code") {
+            this.postalCodeInput.value = this.getAttribute("postal-code")?.trim() ?? "";
+            this.syncPostalCodeValidity();
+        }
+        if (!changedAttribute || changedAttribute === "city") {
+            this.cityInput.value = this.getAttribute("city")?.trim() ?? "";
+        }
         for (const [attribute, property] of [
             ["accent-color", "--relay-accent"],
             ["background-color", "--relay-background"],
@@ -289,7 +298,17 @@ class MondialRelayPicker extends HTMLElement {
         this.syncDisabled();
     }
 
+    syncPostalCodeValidity() {
+        const input = this.postalCodeInput;
+        input.setCustomValidity("");
+        if (!input.value.trim()) {
+            input.setCustomValidity("Le code postal est obligatoire.");
+        }
+        return input.validity.valid;
+    }
+
     async search() {
+        this.syncPostalCodeValidity();
         if (!this.form.reportValidity()) return;
         this.setBusy(true);
         this.setStatus("Recherche des points relais…", "idle");
