@@ -19,7 +19,7 @@ export async function resolveDeliverySubject(delivery: DeliveryCms, req: Request
 
 export async function resolveDeliverySourceContext(delivery: DeliveryCms, req: Request): Promise<Record<string, string>> {
     const subject = await resolveDeliverySubject(delivery, req);
-    return subject ? { userID: subject.identifier } : {};
+    return subject ? { userID: subject.identifier, userRole: subject.role } : {};
 }
 
 export async function authorizeDeliverySourceEndpoint(
@@ -36,6 +36,12 @@ export async function authorizeDeliverySourceEndpoint(
     const subject = Object.prototype.hasOwnProperty.call(options, "subject")
         ? options.subject ?? null
         : await resolveDeliverySubject(delivery, req);
+
+    if (endpoint.access?.roles !== undefined) {
+        return subject && endpoint.access.roles.includes(subject.role)
+            ? true
+            : { authorized: false, status: subject ? 403 : 401 };
+    }
 
     if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerAccessMode(subject?.role ?? PUBLIC_ROLE))) {
         return {

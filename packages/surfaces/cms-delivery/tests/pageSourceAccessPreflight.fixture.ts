@@ -7,8 +7,20 @@ import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runne
 const SHOP_SOURCE: Source = {
     urn: "urn:shop",
     endpoints: [
-        { urn: "urn:shop:listProducts", method: "GET", access: { mode: "public" }, targetUrl: "https://api.example.com/products" },
-        { urn: "urn:shop:createOrder", method: "POST", access: { mode: "system" }, targetUrl: "https://api.example.com/orders" },
+        {
+            urn: "urn:shop:listProducts",
+            method: "GET",
+            access: { mode: "public" },
+            targetUrl: "https://api.example.com/products",
+            output: [{ status: "200", body: { type: "object" } }],
+        },
+        {
+            urn: "urn:shop:createOrder",
+            method: "POST",
+            access: { mode: "system" },
+            targetUrl: "https://api.example.com/orders",
+            output: [{ status: "200", body: { type: "object" } }],
+        },
     ],
 };
 

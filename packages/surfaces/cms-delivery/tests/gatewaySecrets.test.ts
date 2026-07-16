@@ -13,7 +13,9 @@ const SECURED: Source = {
         method: "GET",
         access: { mode: "public" },
         targetUrl: "https://api.example.com/data",
+        responseKind: "file",
         headers: [{ name: "authorization", source: { from: "secret", ref: "${API_KEY}", prefix: "Bearer " } }],
+        output: [{ status: "200" }],
     }],
 };
 
@@ -24,6 +26,7 @@ const COMPUTED: Source = {
         method:    "GET",
         access:    { mode: "auth" },
         targetUrl: "https://api.example.com/me",
+        responseKind: "file",
         input: {
             params: [{
                 name:     "user_id",
@@ -31,8 +34,15 @@ const COMPUTED: Source = {
                 required: true,
                 source:   { from: "computed", ref: "userID" },
                 schema:   { type: "string" },
+            }, {
+                name:     "user_role",
+                in:       "query",
+                required: true,
+                source:   { from: "computed", ref: "userRole" },
+                schema:   { type: "string" },
             }],
         },
+        output: [{ status: "200" }],
     }],
 };
 
@@ -186,13 +196,13 @@ describe("Delivery gateway secrets", () => {
             const res = await handler(new Request("http://site/.cms/sources/computed/me"));
 
             expect(res.status).toBe(200);
-            expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123");
+            expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123&user_role=user");
         } finally {
             fetchSpy.mockRestore();
         }
     });
 
-    test("resolves computed userID from the Delivery auth subject", async () => {
+    test("resolves computed user identity and role from the Delivery auth subject", async () => {
         const handler = await mountDeliveryGateway({
             providers: [COMPUTED],
             roles: await gatewayRoles(USER_ROLE, "urn:computed:me"),
@@ -207,7 +217,7 @@ describe("Delivery gateway secrets", () => {
             const res = await handler(new Request("http://site/.cms/sources/computed/me"));
 
             expect(res.status).toBe(200);
-            expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123");
+            expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123&user_role=user");
         } finally {
             fetchSpy.mockRestore();
         }

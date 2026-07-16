@@ -82,6 +82,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
         const prefix = sourcesPrefix(runner.basePath);
         const sourceDeps = {
             ...(delivery.sourceResolveSecret ? { resolveSecret: delivery.sourceResolveSecret } : {}),
+            ...(delivery.identities ? { identities: delivery.identities } : {}),
             resolveContext: (req: Request) => resolveDeliverySourceContext(delivery, req),
         };
         const proxiedSources = delivery.sources && delivery.functions

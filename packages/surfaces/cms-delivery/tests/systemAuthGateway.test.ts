@@ -94,7 +94,7 @@ describe("Delivery system auth gateway", () => {
     test("signup, verification, login, me and logout run through system-auth", async () => {
         const { post, get, emailer } = await setup();
 
-        expect((await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1", displayName: "Ada" }))).status).toBe(200);
+        expect((await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1" }))).status).toBe(200);
         expect(emailer.sent).toHaveLength(1);
 
         const blocked = await post(jsonRequest("/login", { email: "ada@example.com", password: "password-1" }));
@@ -110,7 +110,10 @@ describe("Delivery system auth gateway", () => {
         expect(cookie).toContain("site-session=");
 
         const me = await get(new Request(url("/me"), { headers: { cookie } }));
-        expect((await me.json() as { subject: { role: string } | null }).subject?.role).toBe("user");
+        expect((await me.json() as { subject: { email: string; role: string } | null }).subject).toMatchObject({
+            email: "ada@example.com",
+            role: "user",
+        });
 
         const logout = await post(jsonRequest("/logout", {}));
         expect(logout.status).toBe(200);

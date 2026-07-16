@@ -11,6 +11,7 @@ import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
+import type { IdentityService } from "@bernouy/cms-identities";
 import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "@bernouy/cms-files";
 import { optimizePageImages } from "@bernouy/cms-files";
@@ -45,6 +46,8 @@ export type DeliveryCmsConfig = {
     functions?: FunctionRepository;
     /** Optional endpoint trigger store. Requires sources + functions to run. */
     triggers?: TriggerRepository;
+    /** Federated opaque identity aliases used by functions and source bindings. */
+    identities?: IdentityService;
     /**
      * Optional secret resolver for source headers.
      *
@@ -133,6 +136,7 @@ export default class DeliveryCms {
     private _sourceResolveSecret?: SourceSecretResolver;
     private _functions?:         FunctionRepository;
     private _triggers?:          TriggerRepository;
+    private _identities?:        IdentityService;
     private _auth?:              PublicAuthRoutesConfig<string>;
     private _roles?:             RolesRepository;
     private _integrationInstallations?: IntegrationInstallationRepository;
@@ -151,6 +155,7 @@ export default class DeliveryCms {
         this._sources            = config.sources;
         this._functions          = config.functions;
         this._triggers           = config.triggers;
+        this._identities         = config.identities;
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
         this._auth               = config.auth;
@@ -196,6 +201,10 @@ export default class DeliveryCms {
 
     get triggers(){
         return this._triggers;
+    }
+
+    get identities(){
+        return this._identities;
     }
 
     /** Public auth API config, or `undefined` when not mounted. */

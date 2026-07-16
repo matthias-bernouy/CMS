@@ -15,12 +15,16 @@
         "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
+        "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "linkedom": "^0.18.12",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-content": "workspace:*"
+    },
+    "devDependencies": {
+        "sharp": "^0.34.5"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
