@@ -8,6 +8,12 @@ const SHAPE_TYPES = ["string", "number", "boolean", "object", "array"] as const;
  *  the depth check alone). */
 const MAX_DEPTH = 10;
 const MAX_NODES = 500;
+const ARRAY_INDEX = /^\d+$/;
+
+export type DataShapePathOptions = {
+    /** Traverse an array's item shape without requiring an explicit numeric segment. */
+    implicitArrayItems?: boolean;
+};
 
 /**
  * Validate + normalise an untrusted JSON value into a `DataShape`. The body/output
@@ -18,6 +24,40 @@ const MAX_NODES = 500;
  */
 export function parseDataShape(value: unknown, path: string): DataShape {
     return walkShape(value, path, 0, { n: 0 });
+}
+
+export function dataShapeAtPath(
+    shape: DataShape | undefined,
+    path: string | readonly string[],
+    options: DataShapePathOptions = {},
+): DataShape | undefined {
+    let current = shape;
+    for (const part of pathParts(path)) {
+        if (!current) return undefined;
+        if (current.type === "array") {
+            current = current.items;
+            if (!current) return undefined;
+            if (ARRAY_INDEX.test(part)) continue;
+            if (!options.implicitArrayItems) return undefined;
+        }
+        if (current.type !== "object") return undefined;
+        current = current.properties?.[part];
+    }
+    return current;
+}
+
+export function dataValueAtPath(value: unknown, path: string | readonly string[]): unknown {
+    let current = value;
+    for (const part of pathParts(path)) {
+        if (current === null || current === undefined || typeof current !== "object") return undefined;
+        if (!Object.hasOwn(current, part)) return undefined;
+        current = (current as Record<string, unknown>)[part];
+    }
+    return current;
+}
+
+function pathParts(path: string | readonly string[]): string[] {
+    return (typeof path === "string" ? path.split(".") : [...path]).filter(Boolean);
 }
 
 function walkShape(value: unknown, path: string, depth: number, count: { n: number }): DataShape {

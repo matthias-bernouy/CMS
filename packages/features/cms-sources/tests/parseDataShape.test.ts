@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseDataShape } from "cms-sources/core/parseDataShape";
+import { dataShapeAtPath, dataValueAtPath, parseDataShape } from "cms-sources/core/parseDataShape";
 import type { DataShape } from "cms-sources/interfaces/DataShape";
 
 describe("parseDataShape", () => {
@@ -102,5 +102,31 @@ describe("parseDataShape", () => {
         } catch (err) {
             expect((err as { status?: number }).status).toBe(400);
         }
+    });
+});
+
+describe("data shape paths", () => {
+    const shape = {
+        type: "object" as const,
+        properties: {
+            users: {
+                type: "array" as const,
+                items: {
+                    type: "object" as const,
+                    properties: { id: { type: "number" as const } },
+                },
+            },
+        },
+    };
+
+    test("uses one traversal for indexed data and optional item-shape paths", () => {
+        expect(dataShapeAtPath(shape, "users.0.id")?.type).toBe("number");
+        expect(dataShapeAtPath(shape, ["users", "id"], { implicitArrayItems: true })?.type).toBe("number");
+        expect(dataShapeAtPath(shape, "users.id")).toBeUndefined();
+        expect(dataValueAtPath({ users: [{ id: 42 }] }, "users.0.id")).toBe(42);
+    });
+
+    test("never traverses inherited object properties", () => {
+        expect(dataValueAtPath({}, "constructor.name")).toBeUndefined();
     });
 });

@@ -1,5 +1,4 @@
 import type { EndpointParam, SourceEndpoint } from "../interfaces/Source";
-import type { DataShape } from "../interfaces/DataShape";
 import {
     COMPUTED_PARAM_REFS,
     HTTP_METHODS,
@@ -8,6 +7,7 @@ import {
     RESPONSE_KINDS,
 } from "../interfaces/Source";
 import { isSourceEndpointAccessMode } from "./access";
+import { dataShapeAtPath } from "./parseDataShape";
 import { isForbiddenHeaderName, isValidHeaderName, isValidHeaderValue, MAX_ENDPOINT_HEADERS } from "./headerPolicy";
 import { validateSourceTargetUrl } from "./sourceTargetUrl";
 
@@ -49,19 +49,11 @@ function validateIdentityBindings(endpoint: SourceEndpoint, errors: string[]): v
             errors.push(`empty identity binding path for "${endpoint.urn}"`);
             continue;
         }
-        const shapes = (endpoint.output ?? []).map(output => shapeAt(output.body, binding.responsePath));
+        const shapes = (endpoint.output ?? []).map(output => dataShapeAtPath(output.body, binding.responsePath));
         if (!shapes.some(shape => shape?.semantic?.kind === "user-id" && shape.semantic.authority)) {
             errors.push(`identity binding path is not a qualified user-id for "${endpoint.urn}": "${binding.responsePath}"`);
         }
     }
-}
-
-function shapeAt(shape: DataShape | undefined, path: string): DataShape | undefined {
-    return path.split(".").filter(Boolean).reduce<DataShape | undefined>((current, part) => {
-        if (!current) return undefined;
-        if (current.type === "array" && /^\d+$/.test(part)) return current.items;
-        return current.type === "object" ? current.properties?.[part] : undefined;
-    }, shape);
 }
 
 function validateAccess(endpoint: SourceEndpoint, errors: string[]): void {

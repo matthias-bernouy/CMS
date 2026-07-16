@@ -8,6 +8,7 @@ import {
     type SourceOverlayFieldType,
 } from "../interfaces/SourceOverlay";
 import { executeEndpoint, type ExecutorDeps } from "./executeEndpoint";
+import { dataValueAtPath } from "./parseDataShape";
 import { parseUrn } from "./urn";
 
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -51,7 +52,7 @@ export async function materializeSourceOverlay(
 }
 
 function fieldsFromBody(body: unknown, path: string, map?: SourceOverlayFieldSourceMap): SourceOverlayField[] {
-    const value = valueAt(body, path);
+    const value = dataValueAtPath(body, path);
     if (!Array.isArray(value)) return [];
     const seen = new Set<string>();
     const fields: SourceOverlayField[] = [];
@@ -66,12 +67,12 @@ function fieldsFromBody(body: unknown, path: string, map?: SourceOverlayFieldSou
 
 function fieldFromEntry(entry: unknown, map: SourceOverlayFieldSourceMap = {}): SourceOverlayField | null {
     if (!isRecord(entry)) return null;
-    const id = text(valueAt(entry, map.id ?? "id"));
-    const type = fieldType(valueAt(entry, map.type ?? "type"));
+    const id = text(dataValueAtPath(entry, map.id ?? "id"));
+    const type = fieldType(dataValueAtPath(entry, map.type ?? "type"));
     if (!id || !SIMPLE_ID.test(id) || !type) return null;
     return {
         id,
-        label: text(valueAt(entry, map.label ?? "label")) || id,
+        label: text(dataValueAtPath(entry, map.label ?? "label")) || id,
         type,
         ...optionalText(entry, map.path ?? "path", "path"),
         ...optionalText(entry, map.section ?? "section", "section"),
@@ -85,16 +86,6 @@ function fieldFromEntry(entry: unknown, map: SourceOverlayFieldSourceMap = {}): 
     };
 }
 
-function valueAt(value: unknown, path: string): unknown {
-    if (!path) return value;
-    let current = value;
-    for (const part of path.split(".").filter(Boolean)) {
-        if (!isRecord(current)) return undefined;
-        current = current[part];
-    }
-    return current;
-}
-
 function fieldType(value: unknown): SourceOverlayFieldType | null {
     return (SOURCE_OVERLAY_FIELD_TYPES as readonly unknown[]).includes(value)
         ? value as SourceOverlayFieldType
@@ -102,17 +93,17 @@ function fieldType(value: unknown): SourceOverlayFieldType | null {
 }
 
 function optionalText(entry: Record<string, unknown>, path: string, key: "path" | "section"): Pick<SourceOverlayField, typeof key> {
-    const value = text(valueAt(entry, path));
+    const value = text(dataValueAtPath(entry, path));
     return value ? { [key]: value } as Pick<SourceOverlayField, typeof key> : {};
 }
 
 function optionalBool(entry: Record<string, unknown>, path: string, key: BoolFieldKey): Partial<SourceOverlayField> {
-    const value = valueAt(entry, path);
+    const value = dataValueAtPath(entry, path);
     return typeof value === "boolean" ? { [key]: value } : {};
 }
 
 function optionalOptions(entry: Record<string, unknown>, path: string): Pick<SourceOverlayField, "options"> | Record<never, never> {
-    const value = valueAt(entry, path);
+    const value = dataValueAtPath(entry, path);
     if (!Array.isArray(value)) return {};
     return { options: value.map(option).filter((item): item is SourceOverlayDashboardOption => item !== null) };
 }

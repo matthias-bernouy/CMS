@@ -1,3 +1,4 @@
+import { dataValueAtPath } from "@bernouy/cms-sources";
 import type { FunctionValue } from "../interfaces/FunctionDefinition";
 
 export type FunctionRuntimeVars = {
@@ -50,13 +51,7 @@ export function resolveReference(ref: string, vars: FunctionRuntimeVars): unknow
 }
 
 export function valueAt(value: unknown, path: string | undefined): unknown {
-    if (!path) return value;
-    return path.split(".").filter(Boolean).reduce((current, part) => {
-        if (current === null || current === undefined) return undefined;
-        if (Array.isArray(current) && /^\d+$/.test(part)) return current[Number(part)];
-        if (typeof current !== "object") return undefined;
-        return (current as Record<string, unknown>)[part];
-    }, value);
+    return dataValueAtPath(value, path ?? "");
 }
 
 export function collectReferences(value: unknown): string[] {

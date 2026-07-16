@@ -85,7 +85,12 @@ export {
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
 } from "../core/access";
-export { parseDataShape } from "../core/parseDataShape";
+export {
+    dataShapeAtPath,
+    dataValueAtPath,
+    parseDataShape,
+    type DataShapePathOptions,
+} from "../core/parseDataShape";
 export {
     DataShapeProjectionError,
     projectStrictDataShape,
