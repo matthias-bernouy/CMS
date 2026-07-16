@@ -1,5 +1,8 @@
 import type { Source, SourceEndpoint } from "../interfaces/Source";
-import type { SourceRepository } from "../interfaces/SourceRepository";
+import type {
+    SourceRepository,
+    SourceSchemaInvalidationScope,
+} from "../interfaces/SourceRepository";
 import { SourceValidationError } from "./errors";
 import { systemSourceUrnOf } from "./systemSources";
 
@@ -11,6 +14,7 @@ import { systemSourceUrnOf } from "./systemSources";
 export class CompositeSourceRepository implements SourceRepository {
     private readonly systemSources = new Map<string, Source>();
     readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
+    readonly invalidateSchema?: (scope?: SourceSchemaInvalidationScope) => void;
 
     constructor(
         private readonly inner: SourceRepository,
@@ -29,6 +33,9 @@ export class CompositeSourceRepository implements SourceRepository {
                 }
                 return inner.getEndpointForAuthorization!(urn);
             };
+        }
+        if (inner.invalidateSchema) {
+            this.invalidateSchema = scope => inner.invalidateSchema!(scope);
         }
     }
 

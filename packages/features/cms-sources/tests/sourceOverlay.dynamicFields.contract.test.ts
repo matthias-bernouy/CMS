@@ -114,7 +114,7 @@ describe("dynamic source overlay contracts", () => {
         await expect(repository.getEndpoint(targetEndpoint.urn)).resolves.toEqual(targetEndpoint);
     });
 
-    test("materializes every concurrent lookup result without fixing the current request count", async () => {
+    test("single-flights concurrent materialization lookups", async () => {
         const probe = createSourceOverlayFetchProbe(async () => Response.json(dynamicFieldsResponse));
         const repository = await dynamicOverlayRepository(probe.fetchImpl);
 
@@ -124,7 +124,7 @@ describe("dynamic source overlay contracts", () => {
         ));
 
         expect(endpoints).toEqual(Array.from({ length: 4 }, () => enrichedTargetEndpoint));
-        expect(probe.count("/fields")).toBeGreaterThan(0);
+        expect(probe.count("/fields")).toBe(1);
         expect(probe.observations.every(entry => new URL(entry.url).pathname === "/fields")).toBeTrue();
     });
 });

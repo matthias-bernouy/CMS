@@ -26,7 +26,10 @@ export {
     isValidHeaderValue, MAX_ENDPOINT_HEADERS, MAX_HEADER_VALUE_LENGTH,
 } from "../core/headerPolicy";
 
-export type { SourceRepository } from "../interfaces/SourceRepository";
+export type {
+    SourceRepository,
+    SourceSchemaInvalidationScope,
+} from "../interfaces/SourceRepository";
 export type {
     SourceOverlay,
     SourceOverlayDashboardDataRef,
@@ -107,9 +110,16 @@ export {
     SourceOverlaySourceRepository,
     applySourceOverlays,
     materializeSourceOverlays,
+    sourceOverlaySchemaCacheFor,
     sourceOverlayFieldPath,
     type SourceOverlaySourceRepositoryOptions,
 } from "../core/sourceOverlay";
+export {
+    DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS,
+    SourceOverlaySchemaCache,
+    type SourceOverlaySchemaCacheOptions,
+    type SourceOverlaySchemaCacheSelector,
+} from "../core/SourceOverlaySchemaCache";
 export {
     sourceDtoToSource,
     sourceToDto,

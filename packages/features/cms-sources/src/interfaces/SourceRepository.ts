@@ -1,5 +1,9 @@
 import type { Source, SourceEndpoint } from "./Source";
 
+export type SourceSchemaInvalidationScope = {
+    sourceId?: string;
+};
+
 /**
  * Persistence of sources. Aggregate: a `Source` is stored in full
  * (with its endpoints), keyed by its `urn`. Writes are whole-aggregate: the admin
@@ -35,4 +39,7 @@ export interface SourceRepository {
      * here and defer enrichment until after authorization succeeds.
      */
     getEndpointForAuthorization?(urn: string): Promise<SourceEndpoint | null>;
+
+    /** Invalidates derived endpoint schemas after a successful schema-changing operation. */
+    invalidateSchema?(scope?: SourceSchemaInvalidationScope): void;
 }

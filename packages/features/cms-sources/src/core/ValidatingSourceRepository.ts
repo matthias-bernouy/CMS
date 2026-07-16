@@ -1,4 +1,7 @@
-import type { SourceRepository } from "../interfaces/SourceRepository";
+import type {
+    SourceRepository,
+    SourceSchemaInvalidationScope,
+} from "../interfaces/SourceRepository";
 import type { Source, SourceEndpoint } from "../interfaces/Source";
 import { validateSource } from "./validateSource";
 import { SourceValidationError } from "./errors";
@@ -12,10 +15,14 @@ import { SourceValidationError } from "./errors";
  */
 export class ValidatingSourceRepository implements SourceRepository {
     readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
+    readonly invalidateSchema?: (scope?: SourceSchemaInvalidationScope) => void;
 
     constructor(private readonly inner: SourceRepository) {
         if (inner.getEndpointForAuthorization) {
             this.getEndpointForAuthorization = (urn: string) => inner.getEndpointForAuthorization!(urn);
+        }
+        if (inner.invalidateSchema) {
+            this.invalidateSchema = scope => inner.invalidateSchema!(scope);
         }
     }
 

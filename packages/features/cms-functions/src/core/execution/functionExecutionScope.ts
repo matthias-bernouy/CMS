@@ -11,6 +11,7 @@ import type {
     SourceComputedContext,
     SourceEndpoint,
     SourceRepository,
+    SourceSchemaInvalidationScope,
 } from "@bernouy/cms-sources";
 import type { ExecuteFunctionOptions, FunctionUserContext } from "../executeFunction";
 import { memoizePromise } from "./promiseMemoization";
@@ -83,6 +84,11 @@ class ExecutionSourceRepository implements SourceRepository {
 
     getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         return memoizePromise(this.endpoints, urn, () => this.inner.getEndpoint(urn));
+    }
+
+    invalidateSchema(scope?: SourceSchemaInvalidationScope): void {
+        this.endpoints.clear();
+        this.inner.invalidateSchema?.(scope);
     }
 }
 

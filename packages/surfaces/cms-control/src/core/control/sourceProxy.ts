@@ -56,11 +56,11 @@ export function mountControlSourceProxy(
     const proxiedSources = overlaySources && state.functions
         ? withFunctionsSource(overlaySources, state.functions)
         : overlaySources;
-    const interceptEndpoint = state.triggers && state.functions && state.sources
+    const interceptEndpoint = state.triggers && state.functions && overlaySources
         ? createTriggerInterceptor({
             triggers: state.triggers,
             functions: state.functions,
-            sources: state.sources,
+            sources: overlaySources,
             deps: sourceDeps,
             resolveUser: async (req) => {
                 const subject = await state.auth.getSubject(req).catch(() => null);
@@ -72,13 +72,13 @@ export function mountControlSourceProxy(
         : undefined;
     const executeSystemEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
         if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-            if (!state.functions || !state.sources) {
+            if (!state.functions || !overlaySources) {
                 return new Response("function executor not configured", { status: 501 });
             }
             const subject = await state.auth.getSubject(req).catch(() => null);
             return executeFunctionSystemSourceEndpoint(endpoint, req, {
                 functions: state.functions,
-                sources: state.sources,
+                sources: overlaySources,
                 deps: sourceDeps,
                 resolveUser: async () => subject
                     ? { id: subject.identifier, role: subject.role }

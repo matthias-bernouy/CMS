@@ -8,7 +8,7 @@ import {
 import listDashboards from "cms-control/api/dashboards.get";
 
 describe("GET /api/dashboards dynamic overlay schema contract", () => {
-    test("preserves the payload across the two current schema materializations", async () => {
+    test("reuses one schema materialization without changing the dashboard payload", async () => {
         const sources = new InMemorySourceRepository();
         const overlays = new InMemorySourceOverlayRepository();
         const dashboards = new InMemoryDashboardRepository();
@@ -66,6 +66,6 @@ describe("GET /api/dashboards dynamic overlay schema contract", () => {
                 },
             },
         });
-        expect(fieldSourceCalls).toBe(2);
+        expect(fieldSourceCalls).toBe(1);
     });
 });

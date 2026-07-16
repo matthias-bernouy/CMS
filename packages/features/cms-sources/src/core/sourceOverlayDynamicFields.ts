@@ -9,6 +9,7 @@ import {
 } from "../interfaces/SourceOverlay";
 import { executeEndpoint, type ExecutorDeps } from "./executeEndpoint";
 import { dataValueAtPath } from "./parseDataShape";
+import type { SourceOverlaySchemaCache } from "./SourceOverlaySchemaCache";
 import { parseUrn } from "./urn";
 
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -18,23 +19,39 @@ export async function materializeSourceOverlays(
     source: Source,
     overlays: readonly SourceOverlay[],
     deps?: ExecutorDeps,
+    cache?: SourceOverlaySchemaCache,
 ): Promise<SourceOverlay[]> {
-    return Promise.all(overlays.map(overlay => materializeSourceOverlay(source, overlay, deps)));
+    return Promise.all(overlays.map(overlay => materializeSourceOverlay(source, overlay, deps, cache)));
 }
 
 export async function materializeSourceOverlay(
     source: Source,
     overlay: SourceOverlay,
     deps?: ExecutorDeps,
+    cache?: SourceOverlaySchemaCache,
 ): Promise<SourceOverlay> {
     if (!overlay.fieldSource) return structuredClone(overlay);
 
+    const load = () => loadSourceOverlayFields(source, overlay, deps);
+    const fields = cache
+        ? await cache.getOrLoad(source, overlay, load)
+        : await load();
+    return { ...structuredClone(overlay), fields: fields ?? [] };
+}
+
+async function loadSourceOverlayFields(
+    source: Source,
+    overlay: SourceOverlay,
+    deps?: ExecutorDeps,
+): Promise<SourceOverlayField[] | null> {
+    const fieldSource = overlay.fieldSource;
+    if (!fieldSource) return null;
     const endpoint = source.endpoints.find(candidate =>
-        parseUrn(candidate.urn)?.endpoint === overlay.fieldSource?.endpointId);
-    if (!endpoint) return { ...structuredClone(overlay), fields: [] };
+        parseUrn(candidate.urn)?.endpoint === fieldSource.endpointId);
+    if (!endpoint) return null;
 
     const requestUrl = new URL("http://cms.local/source-overlay-fields");
-    for (const [name, value] of Object.entries(overlay.fieldSource.params ?? {})) {
+    for (const [name, value] of Object.entries(fieldSource.params ?? {})) {
         requestUrl.searchParams.set(name, value);
     }
     const request = new Request(requestUrl, {
@@ -42,18 +59,15 @@ export async function materializeSourceOverlay(
         headers: { accept: "application/json" },
     });
     const response = await executeEndpoint(endpoint, request, deps);
-    if (!response.ok) return { ...structuredClone(overlay), fields: [] };
+    if (!response.ok) return null;
 
     const body = await response.json().catch(() => null);
-    return {
-        ...structuredClone(overlay),
-        fields: fieldsFromBody(body, overlay.fieldSource.path ?? "fields", overlay.fieldSource.map),
-    };
+    return fieldsFromBody(body, fieldSource.path ?? "fields", fieldSource.map);
 }
 
-function fieldsFromBody(body: unknown, path: string, map?: SourceOverlayFieldSourceMap): SourceOverlayField[] {
+function fieldsFromBody(body: unknown, path: string, map?: SourceOverlayFieldSourceMap): SourceOverlayField[] | null {
     const value = dataValueAtPath(body, path);
-    if (!Array.isArray(value)) return [];
+    if (!Array.isArray(value)) return null;
     const seen = new Set<string>();
     const fields: SourceOverlayField[] = [];
     for (const entry of value) {

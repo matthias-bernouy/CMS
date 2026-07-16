@@ -1,4 +1,10 @@
-import { systemSourceUrnOf, type Source, type SourceEndpoint, type SourceRepository } from "@bernouy/cms-sources";
+import {
+    systemSourceUrnOf,
+    type Source,
+    type SourceEndpoint,
+    type SourceRepository,
+    type SourceSchemaInvalidationScope,
+} from "@bernouy/cms-sources";
 import type { FunctionRepository } from "../interfaces/FunctionRepository";
 import { FunctionSourceRepository } from "./FunctionSourceRepository";
 import { SYSTEM_FUNCTIONS_SOURCE_URN } from "./projection";
@@ -6,6 +12,7 @@ import { SYSTEM_FUNCTIONS_SOURCE_URN } from "./projection";
 export class FunctionAwareSourceRepository implements SourceRepository {
     private readonly functionSources: FunctionSourceRepository;
     readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
+    readonly invalidateSchema?: (scope?: SourceSchemaInvalidationScope) => void;
 
     constructor(
         private readonly inner: SourceRepository,
@@ -19,6 +26,9 @@ export class FunctionAwareSourceRepository implements SourceRepository {
                 }
                 return inner.getEndpointForAuthorization!(urn);
             };
+        }
+        if (inner.invalidateSchema) {
+            this.invalidateSchema = scope => inner.invalidateSchema!(scope);
         }
     }
 

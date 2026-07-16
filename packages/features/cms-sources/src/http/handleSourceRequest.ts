@@ -4,6 +4,7 @@ import { resolveEndpoint } from "../core/resolveEndpoint";
 import { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
 import { systemSourceUrnOf } from "../core/systemSources";
 import { sourceEndpointAccessMode } from "../core/access";
+import { parseUrn } from "../core/urn";
 
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
@@ -76,10 +77,27 @@ export async function handleSourceRequest(
         return new Response("source endpoint changed", { status: 409 });
     }
 
-    const dispatch = (req: Request) => dispatchEndpoint(resolved.endpoint, req, opts.deps);
+    const dispatch = async (req: Request) => {
+        const response = await dispatchEndpoint(resolved.endpoint, req, opts.deps);
+        invalidateSchemaAfterSuccess(source, resolved.endpoint, response);
+        return response;
+    };
     return opts.deps?.interceptEndpoint
         ? opts.deps.interceptEndpoint(resolved.endpoint, request, dispatch)
         : dispatch(request);
+}
+
+function invalidateSchemaAfterSuccess(
+    source: SourceRepository,
+    endpoint: SourceEndpoint,
+    response: Response,
+): void {
+    if (response.status >= 200
+        && response.status < 300
+        && endpoint.effects?.invalidatesSchema) {
+        const sourceId = parseUrn(endpoint.urn)?.source;
+        source.invalidateSchema?.(sourceId ? { sourceId } : undefined);
+    }
 }
 
 function unresolvedEndpointResponse(reason: "not_found" | "method_not_allowed"): Response {

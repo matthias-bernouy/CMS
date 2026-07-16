@@ -1,39 +1,79 @@
 import type { Source, SourceEndpoint } from "../interfaces/Source";
-import type { SourceRepository } from "../interfaces/SourceRepository";
+import type {
+    SourceRepository,
+    SourceSchemaInvalidationScope,
+} from "../interfaces/SourceRepository";
 import type { SourceOverlay, SourceOverlayRepository } from "../interfaces/SourceOverlay";
 import type { ExecutorDeps } from "./executeEndpoint";
+import {
+    DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS,
+    SourceOverlaySchemaCache,
+    type SourceOverlaySchemaCacheSelector,
+} from "./SourceOverlaySchemaCache";
 import { materializeSourceOverlays } from "./sourceOverlayDynamicFields";
 import { applySourceOverlays, overlaysFor, sourceOverlayFieldPath } from "./sourceOverlayProjection";
 import { parseUrn, sourceUrnOf } from "./urn";
 
 export type SourceOverlaySourceRepositoryOptions = {
     deps?: ExecutorDeps;
+    schemaCache?: SourceOverlaySchemaCache;
+    schemaCacheTtlMs?: number;
 };
 
+type SourceOverlaySchemaCacheRegistry = {
+    byTtl: Map<number, SourceOverlaySchemaCache>;
+    caches: Set<SourceOverlaySchemaCache>;
+};
+
+const sharedSchemaCaches = new WeakMap<SourceOverlayRepository, SourceOverlaySchemaCacheRegistry>();
+
 export class SourceOverlaySourceRepository implements SourceRepository {
+    private readonly schemaCache: SourceOverlaySchemaCache;
+
     constructor(
         private readonly inner: SourceRepository,
         private readonly overlays: SourceOverlayRepository,
         private readonly options: SourceOverlaySourceRepositoryOptions = {},
-    ) {}
-
-    createSource(source: Source): Promise<Source> {
-        return this.inner.createSource(source);
+    ) {
+        this.schemaCache = options.schemaCache ?? sourceOverlaySchemaCacheFor(overlays, options.schemaCacheTtlMs);
+        schemaCacheRegistry(overlays).caches.add(this.schemaCache);
     }
 
-    updateSource(source: Source): Promise<Source | null> {
-        return this.inner.updateSource(source);
+    async createSource(source: Source): Promise<Source> {
+        const created = await this.inner.createSource(source);
+        this.invalidateOverlaySchemas({ sourceId: sourceId(source) });
+        return created;
     }
 
-    deleteSource(urn: string): Promise<boolean> {
-        return this.inner.deleteSource(urn);
+    async updateSource(source: Source): Promise<Source | null> {
+        const updated = await this.inner.updateSource(source);
+        if (updated) this.invalidateOverlaySchemas({ sourceId: sourceId(source) });
+        return updated;
+    }
+
+    async deleteSource(urn: string): Promise<boolean> {
+        const deleted = await this.inner.deleteSource(urn);
+        const sourceId = parseUrn(urn)?.source;
+        if (deleted && sourceId) this.invalidateOverlaySchemas({ sourceId });
+        return deleted;
+    }
+
+    invalidateOverlaySchemas(selector: SourceOverlaySchemaCacheSelector = {}): void {
+        for (const cache of schemaCacheRegistry(this.overlays).caches) cache.invalidate(selector);
+    }
+
+    invalidateSchema(scope: SourceSchemaInvalidationScope = {}): void {
+        this.invalidateOverlaySchemas(scope);
     }
 
     async getSource(urn: string): Promise<Source | null> {
         const source = await this.inner.getSource(urn);
         if (!source) return null;
         const overlays = await this.overlays.getOverlaysForSource(sourceId(source));
-        return applySourceOverlays(source, await materializeSourceOverlays(source, overlays, this.options.deps));
+        return applySourceOverlays(
+            source,
+            await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
+        );
     }
 
     async getAllSources(): Promise<Source[]> {
@@ -42,7 +82,12 @@ export class SourceOverlaySourceRepository implements SourceRepository {
         return Promise.all(sources.map(async source =>
             applySourceOverlays(
                 source,
-                await materializeSourceOverlays(source, overlaysFor(source, overlays), this.options.deps),
+                await materializeSourceOverlays(
+                    source,
+                    overlaysFor(source, overlays),
+                    this.options.deps,
+                    this.schemaCache,
+                ),
             )));
     }
 
@@ -62,7 +107,7 @@ export class SourceOverlaySourceRepository implements SourceRepository {
 
         const enriched = applySourceOverlays(
             source,
-            await materializeSourceOverlays(source, overlays, this.options.deps),
+            await materializeSourceOverlays(source, overlays, this.options.deps, this.schemaCache),
         );
         return enriched.endpoints.find(candidate => candidate.urn === urn) ?? null;
     }
@@ -77,6 +122,30 @@ export class SourceOverlaySourceRepository implements SourceRepository {
 
 function sourceId(source: Source): string {
     return parseUrn(source.urn)?.source ?? "";
+}
+
+export function sourceOverlaySchemaCacheFor(
+    overlays: SourceOverlayRepository,
+    configuredTtlMs?: number,
+): SourceOverlaySchemaCache {
+    const ttlMs = configuredTtlMs ?? DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS;
+    const registry = schemaCacheRegistry(overlays);
+    let cache = registry.byTtl.get(ttlMs);
+    if (!cache) {
+        cache = new SourceOverlaySchemaCache({ ttlMs });
+        registry.byTtl.set(ttlMs, cache);
+        registry.caches.add(cache);
+    }
+    return cache;
+}
+
+function schemaCacheRegistry(overlays: SourceOverlayRepository): SourceOverlaySchemaCacheRegistry {
+    let registry = sharedSchemaCaches.get(overlays);
+    if (!registry) {
+        registry = { byTtl: new Map(), caches: new Set() };
+        sharedSchemaCaches.set(overlays, registry);
+    }
+    return registry;
 }
 
 function overlayTargetsEndpoint(

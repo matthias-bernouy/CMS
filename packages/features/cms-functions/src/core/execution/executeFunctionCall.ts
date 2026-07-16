@@ -38,6 +38,9 @@ export async function executeFunctionCall(
         const mappings = await resolveCallMappings(definition, call, endpoint, vars, options);
         const response = await executeEndpoint(endpoint, callRequest(endpoint, mappings), options.deps);
         if (!response.ok) throw await callFailureError(call.endpoint, response, options);
+        if (endpoint.effects?.invalidatesSchema) {
+            options.sources.invalidateSchema?.({ sourceId: call.source });
+        }
 
         const { text, truncated } = await readLimitedText(
             response,
