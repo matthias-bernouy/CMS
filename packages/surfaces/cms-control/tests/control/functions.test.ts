@@ -2,10 +2,40 @@ import { describe, expect, test } from "bun:test";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySourceRepository, makeEndpointUrn, makeSourceUrn } from "@bernouy/cms-sources";
 import executeAdminFunction from "cms-control/api/functions/execute.post";
+import createFunction from "cms-control/api/functions/create.post";
+import getFunctionCatalog from "cms-control/api/functions/catalog.get";
 import getFunctionDetail from "cms-control/api/functions/detail.get";
 import listFunctions from "cms-control/api/functions.get";
 
 describe("functions API", () => {
+    test("creates a validated function from the admin authoring endpoint", async () => {
+        const functions = new InMemoryFunctionRepository();
+        const sources = new InMemorySourceRepository();
+        const response = await createFunction(new Request("http://localhost/cms/api/functions/create", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ definition: echoFunction() }),
+        }), { functions, sources } as any);
+
+        expect(response.status).toBe(201);
+        expect(await response.json()).toMatchObject({ id: "echoPayload", label: "Echo payload" });
+        expect(await functions.getFunction("echoPayload")).toEqual(echoFunction());
+    });
+
+    test("returns the source catalog used by the function authoring UI", async () => {
+        const sources = new InMemorySourceRepository();
+        await sources.createSource(emailerSource());
+
+        const response = await getFunctionCatalog(new Request("http://localhost/cms/api/functions/catalog"), { sources } as any);
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual([expect.objectContaining({
+            id: "emailer",
+            label: "Emailer",
+            endpoints: [expect.objectContaining({ endpointId: "sendTemplateEmail", method: "POST" })],
+        })]);
+    });
+
     test("lists functions as admin display rows", async () => {
         const functions = new InMemoryFunctionRepository();
         await functions.createFunction({
@@ -123,7 +153,7 @@ describe("functions API", () => {
         });
     });
 
-    test("returns source failure details from the admin execution endpoint", async () => {
+    test("returns a correlated source failure without exposing upstream details", async () => {
         const functions = new InMemoryFunctionRepository();
         await functions.createFunction(sendEmailFunction());
         const sources = new InMemorySourceRepository();
@@ -151,15 +181,16 @@ describe("functions API", () => {
         );
 
         expect(response.status).toBe(502);
-        expect(await response.json()).toEqual({
-            error: 'Function call "sendTemplateEmail" failed with status 400',
-            details: {
-                call: "sendTemplateEmail",
-                status: 400,
-                contentType: "application/json",
-                body: { error: "missing required token: user.name" },
-            },
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+        const correlationId = response.headers.get("x-correlation-id");
+        expect(correlationId).toMatch(/^[0-9a-f-]{36}$/);
+        const body = await response.json();
+        expect(body).toEqual({
+            error: "Function execution failed",
+            correlationId,
         });
+        expect(JSON.stringify(body)).not.toContain("missing required token");
     });
 
     test("returns 501 when no repository is configured", async () => {

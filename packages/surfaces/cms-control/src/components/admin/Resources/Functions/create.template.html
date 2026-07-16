@@ -1,0 +1,215 @@
+<a slot="back" class="back" aria-label="Back to functions">&lt;</a>
+
+<span slot="title">Create function</span>
+
+<div slot="actions" class="header-actions">
+    <button type="button" class="button quiet" data-role="collapse">Collapse all</button>
+    <button type="button" class="button primary" data-role="save">Create function</button>
+</div>
+
+<div slot="main" class="journey-intro">
+    <strong>Build a workflow in four steps</strong>
+    <span>Complete one section at a time. Close it when you are done.</span>
+</div>
+
+<details slot="main" class="editor-panel" open data-panel="general">
+    <summary>
+        <span class="step-number">1</span>
+        <span>
+            <strong>Describe the function</strong>
+            <small>Name the workflow and choose who can execute it.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label>
+            Function name
+            <input data-field="name" placeholder="Ship paid order" />
+        </label>
+
+        <label>
+            Identifier
+            <span>Generated from the name. You can adjust it before creation.</span>
+            <input data-field="id" placeholder="shipPaidOrder" />
+        </label>
+
+        <label>
+            Description
+            <span>Explain the outcome, not the implementation.</span>
+            <textarea class="compact" data-field="description"
+                placeholder="Creates a shipment after checking that the order is paid."></textarea>
+        </label>
+
+        <div class="short-row">
+            <label>
+                HTTP method
+                <select data-field="method">
+                    <option>GET</option>
+                    <option selected>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                </select>
+            </label>
+
+            <label>
+                Who can execute it?
+                <select data-field="access">
+                    <option value="admin">Administrators</option>
+                    <option value="auth">Authenticated users</option>
+                    <option value="public">Everyone</option>
+                    <option value="system">System only</option>
+                </select>
+            </label>
+        </div>
+    </div>
+</details>
+
+<details slot="main" class="editor-panel" data-panel="input">
+    <summary>
+        <span class="step-number">2</span>
+        <span>
+            <strong>Define what it receives</strong>
+            <small>Skip this section when callers do not provide data.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <div class="callout">
+            No input is required by default. Add a schema only when the workflow needs caller-provided data.
+        </div>
+
+        <div class="contract-group">
+            <div class="group-heading">
+                <strong>URL parameters</strong>
+                <span>Each parameter becomes available as <code>$input.params.name</code>.</span>
+            </div>
+            <div data-role="params-schema"></div>
+        </div>
+
+        <div class="contract-group">
+            <div class="group-heading">
+                <strong>Request body fields</strong>
+                <span>Each field becomes available as <code>$input.body.field</code>.</span>
+            </div>
+            <div data-role="body-schema"></div>
+        </div>
+
+        <details class="advanced-panel">
+            <summary>Advanced JSON override</summary>
+            <div class="advanced-body">
+                <label>
+                    Parameters schema
+                    <span>Leave empty to use the visual fields above.</span>
+                    <textarea data-field="params"></textarea>
+                </label>
+                <label>
+                    Body schema
+                    <span>Leave empty to use the visual fields above.</span>
+                    <textarea data-field="body"></textarea>
+                </label>
+            </div>
+        </details>
+    </div>
+</details>
+
+<details slot="main" class="editor-panel" data-panel="workflow">
+    <summary>
+        <span class="step-number">3</span>
+        <span>
+            <strong>Build the workflow</strong>
+            <small>Call endpoints and add business rules in execution order.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <div class="workflow-help">
+            <div>
+                <strong>Call endpoint</strong>
+                <span>Reads or changes data through an installed source.</span>
+            </div>
+            <div>
+                <strong>Add rule</strong>
+                <span>Stops the function when a condition fails.</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button type="button" class="button secondary" data-role="add-call">+ Call endpoint</button>
+            <button type="button" class="button secondary" data-role="add-assert">+ Add rule</button>
+        </div>
+
+        <div class="steps" data-role="steps"></div>
+
+        <div class="empty" data-role="steps-empty">
+            <strong>No workflow steps yet.</strong>
+            <span>Add an endpoint call or a business rule above.</span>
+        </div>
+    </div>
+</details>
+
+<details slot="main" class="editor-panel" data-panel="return">
+    <summary>
+        <span class="step-number">4</span>
+        <span>
+            <strong>Choose the result</strong>
+            <small>Return a status and optionally expose workflow data.</small>
+        </span>
+        <span class="chevron">⌄</span>
+    </summary>
+
+    <div class="panel-body">
+        <label class="narrow-field">
+            Success status
+            <input data-field="return-status" type="number" min="200" max="599" value="200" />
+        </label>
+
+        <label>
+            Returned value
+            <span>Choose one of the values produced by the workflow.</span>
+            <div data-role="return-picker"></div>
+        </label>
+
+        <label>
+            Documented responses
+            <span>Optional JSON response contract.</span>
+            <textarea data-field="output"
+                placeholder='Advanced override: [{"status":"200","body":{"type":"object"}}]'></textarea>
+        </label>
+    </div>
+</details>
+
+<details slot="aside" class="side-panel" open>
+    <summary>
+        <strong>Reference guide</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+    <div class="side-body reference-list">
+        <span>Use these values in mappings:</span>
+        <code>$input.params.name</code>
+        <code>$input.body.field</code>
+        <code>$ctx.user.id</code>
+        <code>$ctx.user.role</code>
+        <code>$steps.stepId.field</code>
+    </div>
+</details>
+
+<details slot="aside" class="side-panel">
+    <summary>
+        <strong>Before creating</strong>
+        <span class="chevron">⌄</span>
+    </summary>
+    <div class="side-body checklist">
+        <span>✓ Give every call a unique identifier</span>
+        <span>✓ Reference only earlier steps</span>
+        <span>✓ Keep GET functions free of side effects</span>
+    </div>
+</details>
+
+<div slot="aside" class="status-panel">
+    <strong>Status</strong>
+    <div class="message" data-role="message">Complete the four sections, then create the function.</div>
+</div>

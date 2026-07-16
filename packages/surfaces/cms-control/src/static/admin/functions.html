@@ -1,5 +1,8 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Functions</span>
+    <a href="{{BASE_PATH}}/admin/functions/create" slot="action" style="text-decoration:none">
+        <p9r-button color="primary">+ Create function</p9r-button>
+    </a>
 
     <p9r-table cms-source="{{BASE_PATH}}/api/functions">
         <p9r-row slot="header" cms-condition="$source.loaded">

@@ -76,6 +76,21 @@ export type FunctionExecutionResult = {
     contentType: string;
 };
 
+export type FunctionCatalogEndpoint = {
+    endpointId: string;
+    method: string;
+    params: Array<{ name: string; required?: boolean; type?: string; semantic?: DataShape["semantic"] }>;
+    body?: DataShape;
+    output?: Array<{ status: string; body?: DataShape }>;
+    meta?: { name?: string; description?: string };
+};
+
+export type FunctionCatalogSource = {
+    id: string;
+    label: string;
+    endpoints: FunctionCatalogEndpoint[];
+};
+
 export function basePath(): string {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
@@ -92,6 +107,22 @@ export function currentFunctionId(): string {
 export async function fetchFunctionDetail(id: string): Promise<FunctionDetail> {
     const response = await fetch(route(`/api/functions/detail?id=${encodeURIComponent(id)}`), {
         headers: { Accept: "application/json" },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json() as Promise<FunctionDetail>;
+}
+
+export async function fetchFunctionCatalog(): Promise<FunctionCatalogSource[]> {
+    const response = await fetch(route("/api/functions/catalog"), { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json() as Promise<FunctionCatalogSource[]>;
+}
+
+export async function createFunctionDefinition(definition: unknown): Promise<FunctionDetail> {
+    const response = await fetch(route("/api/functions/create"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ definition }),
     });
     if (!response.ok) throw new Error(await response.text());
     return response.json() as Promise<FunctionDetail>;

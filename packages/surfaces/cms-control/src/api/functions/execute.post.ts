@@ -29,6 +29,7 @@ export default async function executeAdminFunction(req: Request, cms: ControlCms
     return executeFunction(fn, new Request(url, init), {
         sources: cms.sources,
         deps: cms.sourceExecutorDeps,
+        identities: cms.identities,
         user: subject ? { id: subject.identifier, role: subject.role } : undefined,
         includeCallErrorDetails: true,
     });
