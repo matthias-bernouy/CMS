@@ -1,0 +1,9 @@
+{
+    "default-tag": "user-account-avatar",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "User account avatar",
+        "description": "Profile image picker for the User Account integration."
+    }
+}

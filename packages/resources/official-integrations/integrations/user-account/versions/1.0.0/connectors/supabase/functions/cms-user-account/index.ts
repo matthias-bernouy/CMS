@@ -2,9 +2,17 @@ type JsonRecord = Record<string, unknown>;
 
 type UserAccountRow = {
     cms_user_id: string;
-    email: string | null;
     phone: string | null;
-    display_name: string | null;
+    given_name: string | null;
+    surname: string | null;
+    birth_date: string | null;
+    address_line_1: string | null;
+    address_line_2: string | null;
+    address_line_3: string | null;
+    postal_code: string | null;
+    city: string | null;
+    region: string | null;
+    country_code: string | null;
     avatar_url: string | null;
     avatar_file_id: string | null;
     locale: string | null;
@@ -19,10 +27,19 @@ type ExtraFieldRow = {
     label: string;
     field_type: "string" | "number" | "boolean";
     required: boolean;
+    multiple: boolean;
     show_in_dashboard_table: boolean;
+    options: ExtraFieldOption[];
     position: number;
     created_at: string;
     updated_at: string;
+};
+
+type ExtraFieldOption = {
+    id: string;
+    value: string;
+    label: string;
+    position: number;
 };
 
 class HttpError extends Error {
@@ -37,7 +54,7 @@ class HttpError extends Error {
 const corsHeaders = {
     "access-control-allow-origin": "*",
     "access-control-allow-headers": "authorization, content-type, x-user-id",
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
 };
 
 const accountSchema = "user_account";
@@ -51,9 +68,17 @@ const avatarContentTypes = new Map([
 ]);
 const accountSelect = [
     "cms_user_id",
-    "email",
     "phone",
-    "display_name",
+    "given_name",
+    "surname",
+    "birth_date",
+    "address_line_1",
+    "address_line_2",
+    "address_line_3",
+    "postal_code",
+    "city",
+    "region",
+    "country_code",
     "avatar_url",
     "avatar_file_id",
     "locale",
@@ -67,7 +92,9 @@ const extraFieldSelect = [
     "label",
     "field_type",
     "required",
+    "multiple",
     "show_in_dashboard_table",
+    "options",
     "position",
     "created_at",
     "updated_at",
@@ -84,6 +111,10 @@ Deno.serve(async (request) => {
             if (request.method === "POST") return await updateAccount(request);
             return methodNotAllowed("GET, POST, OPTIONS");
         }
+        if (route === "/account/metadata" || route === "/personal-information/metadata") {
+            if (request.method === "POST") return await updateAccountMetadata(request);
+            return methodNotAllowed("POST, OPTIONS");
+        }
         if (route === "/account/avatar" || route === "/personal-information/avatar") {
             if (request.method === "GET") return await getAccountAvatar(request);
             if (request.method === "POST") return await uploadAccountAvatar(request);
@@ -97,8 +128,13 @@ Deno.serve(async (request) => {
             if (request.method === "POST") return await createExtraField(request);
             return methodNotAllowed("GET, POST, OPTIONS");
         }
+        if (route === "/extra-fields/reorder" || route === "/personal-information/extra-fields/reorder") {
+            return await withMethod(request, "POST", () => reorderExtraFields(request));
+        }
         if (route === "/extra-fields/field" || route === "/personal-information/extra-fields/field") {
-            return await withMethod(request, "GET", () => getExtraField(request));
+            if (request.method === "GET") return await getExtraField(request);
+            if (request.method === "DELETE") return await deleteExtraField(request);
+            return methodNotAllowed("GET, DELETE, OPTIONS");
         }
         if (route === "/accounts/account" || route === "/personal-information/record") {
             if (request.method === "GET") return await getAccountByUserId(request);
@@ -138,11 +174,33 @@ async function updateAccount(request: Request): Promise<Response> {
     return json(publicAccount(row, userId));
 }
 
+async function updateAccountMetadata(request: Request): Promise<Response> {
+    const { userId } = requireCmsRequest(request);
+    const body = await readJsonObject(request);
+    const metadataPatch = await validatedMetadataPatch(body);
+    const existing = await getAccountRow(userId);
+    const metadata = {
+        ...(existing && isRecord(existing.metadata) ? existing.metadata : {}),
+    };
+
+    for (const [key, value] of Object.entries(metadataPatch)) {
+        if (value === undefined) delete metadata[key];
+        else metadata[key] = value;
+    }
+
+    if (JSON.stringify(metadata).length > 16384) {
+        throw new HttpError(400, "metadata is too large");
+    }
+    const row = await upsertAccountRow(userId, { metadata });
+    return json(publicAccount(row, userId));
+}
+
 async function uploadAccountAvatar(request: Request): Promise<Response> {
     const { userId } = requireCmsRequest(request);
     const file = await readUploadFile(request);
     const fileId = await uploadAvatarFile(userId, file);
-    return json({ fileId });
+    const row = await upsertAccountRow(userId, { avatar_file_id: fileId });
+    return json(publicAccount(row, userId));
 }
 
 async function getAccountAvatar(request: Request): Promise<Response> {
@@ -185,8 +243,9 @@ async function listAccounts(request: Request): Promise<Response> {
     if (search) {
         const clauses = [
             `cms_user_id.ilike.${search}`,
-            `email.ilike.${search}`,
             `phone.ilike.${search}`,
+            `given_name.ilike.${search}`,
+            `surname.ilike.${search}`,
             `display_name.ilike.${search}`,
         ].join(",");
         query.set("or", `(${clauses})`);
@@ -215,7 +274,7 @@ async function getExtraField(request: Request): Promise<Response> {
 
     const id = requiredQueryText(request, "id", 64);
     if (id === "__new__") {
-        return json({ field: { id: "", label: "", type: "string", required: false, showInDashboardTable: false } });
+        return json({ field: { id: "", label: "", type: "string", required: false, multiple: false, hasAllowedValues: false, showInDashboardTable: false, options: [] } });
     }
 
     const response = await rest(
@@ -225,7 +284,7 @@ async function getExtraField(request: Request): Promise<Response> {
     if (!response.ok) throw await restError(response);
     const rows = await response.json() as ExtraFieldRow[];
     if (!rows[0]) throw new HttpError(404, "field not found");
-    return json({ field: extraField(rows[0]) });
+    return json({ field: extraFieldDetail(rows[0]) });
 }
 
 async function createExtraField(request: Request): Promise<Response> {
@@ -235,12 +294,16 @@ async function createExtraField(request: Request): Promise<Response> {
     const label = requiredText(body, "label", 120);
     const id = optionalText(body, "id", 64) ?? fieldIdFromLabel(label);
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new HttpError(400, "id is invalid");
+    const fieldType = requiredFieldType(body, "type");
+    const hasAllowedValues = optionalBoolean(body, "hasAllowedValues") ?? body.options !== undefined;
     const values = {
         id,
         label,
-        field_type: requiredFieldType(body, "type"),
+        field_type: fieldType,
         required: optionalBoolean(body, "required") ?? false,
+        multiple: optionalBoolean(body, "multiple") ?? false,
         show_in_dashboard_table: optionalBoolean(body, "showInDashboardTable") ?? false,
+        options: fieldType === "boolean" || !hasAllowedValues ? [] : extraFieldOptions(body.options),
     };
     const response = await rest(`extra_fields?on_conflict=id&select=${extraFieldSelect}`, {
         method: "POST",
@@ -252,6 +315,39 @@ async function createExtraField(request: Request): Promise<Response> {
     });
     if (!response.ok) throw await restError(response);
     return json({ field: extraField(firstRow<ExtraFieldRow>(await response.json())) });
+}
+
+async function reorderExtraFields(request: Request): Promise<Response> {
+    requireCmsRequest(request, { requireUser: false });
+    const ids = requiredIdList(await readJsonObject(request), "ids");
+    const existingResponse = await rest(`extra_fields?select=id&order=position.asc,id.asc`, { method: "GET" });
+    if (!existingResponse.ok) throw await restError(existingResponse);
+    const existingIds = (await existingResponse.json() as Array<{ id: string }>).map(field => field.id);
+    if (ids.length !== existingIds.length || ids.some(id => !existingIds.includes(id))) {
+        throw new HttpError(400, "ids must contain every configured field exactly once");
+    }
+    await Promise.all(ids.map(async (id, position) => {
+        const response = await rest(`extra_fields?id=eq.${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ position }),
+        });
+        if (!response.ok) throw await restError(response);
+    }));
+    return json({ ids });
+}
+
+async function deleteExtraField(request: Request): Promise<Response> {
+    requireCmsRequest(request, { requireUser: false });
+
+    const id = requiredQueryText(request, "id", 64);
+    const response = await rest(`extra_fields?id=eq.${encodeURIComponent(id)}&select=id`, {
+        method: "DELETE",
+        headers: { prefer: "return=representation" },
+    });
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as Array<{ id: string }>;
+    return json({ deleted: rows.length > 0, id });
 }
 
 async function getAccountByUserId(request: Request): Promise<Response> {
@@ -286,7 +382,8 @@ async function uploadAccountAvatarByUserId(request: Request): Promise<Response> 
     const userId = requiredQueryText(request, "userId", 200);
     const file = await readUploadFile(request);
     const fileId = await uploadAvatarFile(userId, file);
-    return json({ fileId });
+    const row = await upsertAccountRow(userId, { avatar_file_id: fileId });
+    return json(publicAccount(row, userId));
 }
 
 async function getAccountAvatarByUserId(request: Request): Promise<Response> {
@@ -341,9 +438,17 @@ async function getAccountRow(userId: string): Promise<UserAccountRow | null> {
 
 function accountValues(body: JsonRecord): JsonRecord {
     return stripUndefined({
-        email: optionalEmail(body, "email"),
         phone: optionalText(body, "phone", 64),
-        display_name: optionalText(body, "displayName", 160),
+        given_name: optionalText(body, "givenName", 100),
+        surname: optionalText(body, "surname", 100),
+        birth_date: optionalBirthDate(body, "birthDate"),
+        address_line_1: optionalText(body, "addressLine1", 200),
+        address_line_2: optionalText(body, "addressLine2", 200),
+        address_line_3: optionalText(body, "addressLine3", 200),
+        postal_code: optionalText(body, "postalCode", 32),
+        city: optionalText(body, "city", 120),
+        region: optionalText(body, "region", 120),
+        country_code: optionalCountryCode(body, "countryCode"),
         avatar_url: optionalUrl(body, "avatarUrl"),
         avatar_file_id: optionalText(body, "avatarFileId", 512),
         locale: optionalText(body, "locale", 35),
@@ -357,9 +462,17 @@ function publicAccount(row: UserAccountRow | null, userId: string): JsonRecord {
         return {
             exists: false,
             userId,
-            email: null,
             phone: null,
-            displayName: null,
+            givenName: null,
+            surname: null,
+            birthDate: null,
+            addressLine1: null,
+            addressLine2: null,
+            addressLine3: null,
+            postalCode: null,
+            city: null,
+            region: null,
+            countryCode: null,
             avatarUrl: null,
             avatarFileId: null,
             locale: null,
@@ -373,9 +486,17 @@ function publicAccount(row: UserAccountRow | null, userId: string): JsonRecord {
     return {
         exists: true,
         userId: row.cms_user_id,
-        email: row.email,
         phone: row.phone,
-        displayName: row.display_name,
+        givenName: row.given_name,
+        surname: row.surname,
+        birthDate: row.birth_date,
+        addressLine1: row.address_line_1,
+        addressLine2: row.address_line_2,
+        addressLine3: row.address_line_3,
+        postalCode: row.postal_code,
+        city: row.city,
+        region: row.region,
+        countryCode: row.country_code,
         avatarUrl: row.avatar_url,
         avatarFileId: row.avatar_file_id,
         locale: row.locale,
@@ -391,10 +512,79 @@ function extraField(row: ExtraFieldRow): JsonRecord {
         id: row.id,
         label: row.label,
         type: row.field_type,
-        section: "accountFields",
+        section: "additionalInformation",
         required: row.required,
+        multiple: row.multiple,
         showInDashboardTable: row.show_in_dashboard_table,
+        ...(Array.isArray(row.options) && row.options.length ? { options: row.options } : {}),
     };
+}
+
+function extraFieldDetail(row: ExtraFieldRow): JsonRecord {
+    return {
+        ...extraField(row),
+        hasAllowedValues: Array.isArray(row.options) && row.options.length > 0,
+        options: Array.isArray(row.options) ? row.options : [],
+    };
+}
+
+async function validatedMetadataPatch(body: JsonRecord): Promise<Record<string, unknown | undefined>> {
+    const response = await rest(`extra_fields?select=${extraFieldSelect}&order=position.asc,id.asc`, { method: "GET" });
+    if (!response.ok) throw await restError(response);
+    const fields = await response.json() as ExtraFieldRow[];
+    const configured = new Map(fields.map(field => [field.id, field]));
+    const patch: Record<string, unknown | undefined> = {};
+
+    for (const [key, value] of Object.entries(body)) {
+        const field = configured.get(key);
+        if (!field) throw new HttpError(400, `${key} is not a configured metadata field`);
+        patch[key] = metadataFieldValue(field, value);
+    }
+
+    return patch;
+}
+
+function metadataFieldValue(field: ExtraFieldRow, value: unknown): unknown | undefined {
+    if (value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
+        if (field.required) throw new HttpError(400, `${field.id} is required`);
+        return undefined;
+    }
+
+    if (field.multiple) {
+        const entries = Array.isArray(value) ? value : [value];
+        const normalized = entries.map((entry, index) => metadataScalarValue(field, entry, `${field.id}.${index}`));
+        if (!normalized.length && field.required) throw new HttpError(400, `${field.id} is required`);
+        return normalized;
+    }
+
+    if (Array.isArray(value)) {
+        if (value.length !== 1) throw new HttpError(400, `${field.id} must contain one value`);
+        value = value[0];
+    }
+    return metadataScalarValue(field, value, field.id);
+}
+
+function metadataScalarValue(field: ExtraFieldRow, value: unknown, path: string): string | number | boolean {
+    let normalized: string | number | boolean;
+    if (field.field_type === "string") {
+        if (typeof value !== "string") throw new HttpError(400, `${path} must be a string`);
+        normalized = value.trim();
+        if (!normalized) throw new HttpError(400, `${path} must not be empty`);
+        if (normalized.length > 1000) throw new HttpError(400, `${path} is too long`);
+    } else if (field.field_type === "number") {
+        normalized = typeof value === "number" ? value : Number(typeof value === "string" ? value.trim() : NaN);
+        if (!Number.isFinite(normalized)) throw new HttpError(400, `${path} must be a number`);
+    } else {
+        if (value === true || value === "true" || value === "1" || value === "on") normalized = true;
+        else if (value === false || value === "false" || value === "0" || value === "off") normalized = false;
+        else throw new HttpError(400, `${path} must be a boolean`);
+    }
+
+    const allowed = new Set((field.options ?? []).map(option => option.value));
+    if (allowed.size && !allowed.has(String(normalized))) {
+        throw new HttpError(400, `${path} is not an allowed value`);
+    }
+    return normalized;
 }
 
 function routePath(request: Request): string {
@@ -612,6 +802,27 @@ function optionalText(body: JsonRecord, name: string, maxLength: number): string
     return normalized;
 }
 
+function optionalBirthDate(body: JsonRecord, name: string): string | null | undefined {
+    const value = optionalText(body, name, 10);
+    if (value === undefined || value === null) return value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new HttpError(400, `${name} must use YYYY-MM-DD`);
+    const date = new Date(`${value}T00:00:00.000Z`);
+    if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+        throw new HttpError(400, `${name} is invalid`);
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (value < "1900-01-01" || value > today) throw new HttpError(400, `${name} is outside the accepted range`);
+    return value;
+}
+
+function optionalCountryCode(body: JsonRecord, name: string): string | null | undefined {
+    const value = optionalText(body, name, 2);
+    if (value === undefined || value === null) return value;
+    const normalized = value.toUpperCase();
+    if (!/^[A-Z]{2}$/.test(normalized)) throw new HttpError(400, `${name} must be an ISO 3166-1 alpha-2 code`);
+    return normalized;
+}
+
 function requiredText(body: JsonRecord, name: string, maxLength: number): string {
     const value = optionalText(body, name, maxLength);
     if (!value) throw new HttpError(400, `${name} is required`);
@@ -633,20 +844,54 @@ function requiredFieldType(body: JsonRecord, name: string): "string" | "number" 
     throw new HttpError(400, `${name} must be string, number, or boolean`);
 }
 
+function requiredIdList(body: JsonRecord, name: string): string[] {
+    const value = body[name];
+    if (!Array.isArray(value)) throw new HttpError(400, `${name} must be an array`);
+    const ids = value.map((entry, index) => {
+        if (typeof entry !== "string" || !entry.trim()) throw new HttpError(400, `${name}.${index} must be a non-empty string`);
+        return entry.trim();
+    });
+    if (new Set(ids).size !== ids.length) throw new HttpError(400, `${name} must not contain duplicates`);
+    return ids;
+}
+
+function extraFieldOptions(value: unknown): ExtraFieldOption[] {
+    if (value === undefined || value === null) return [];
+    if (!Array.isArray(value)) throw new HttpError(400, "options must be an array");
+    if (value.length > 100) throw new HttpError(400, "options cannot contain more than 100 items");
+    const ids = new Set<string>();
+    const values = new Set<string>();
+    return value.map((entry, position) => {
+        if (!isRecord(entry)) throw new HttpError(400, `options.${position} must be an object`);
+        const optionValue = requiredOptionText(entry, "value", position);
+        const label = requiredOptionText(entry, "label", position);
+        const id = optionalText(entry, "id", 120) ?? optionIdFromValue(optionValue);
+        if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new HttpError(400, `options.${position}.id is invalid`);
+        if (ids.has(id)) throw new HttpError(400, `options.${position}.id must be unique`);
+        if (values.has(optionValue)) throw new HttpError(400, `options.${position}.value must be unique`);
+        ids.add(id);
+        values.add(optionValue);
+        return { id, value: optionValue, label, position };
+    });
+}
+
+function requiredOptionText(value: JsonRecord, name: string, position: number): string {
+    const text = optionalText(value, name, 120);
+    if (!text) throw new HttpError(400, `options.${position}.${name} is required`);
+    return text;
+}
+
+function optionIdFromValue(value: string): string {
+    const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return `option-${normalized || "value"}`;
+}
+
 function fieldIdFromLabel(label: string): string {
     return label
         .trim()
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "_")
         .replace(/^_+|_+$/g, "") || crypto.randomUUID().replace(/-/g, "_");
-}
-
-function optionalEmail(body: JsonRecord, name: string): string | null | undefined {
-    const value = optionalText(body, name, 320);
-    if (value === undefined || value === null) return value;
-    const email = value.toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, `${name} is invalid`);
-    return email;
 }
 
 function optionalUrl(body: JsonRecord, name: string): string | null | undefined {

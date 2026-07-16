@@ -1,6 +1,7 @@
 {
     "default-tag": "user-account-form",
     "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {
         "title": "User account form",

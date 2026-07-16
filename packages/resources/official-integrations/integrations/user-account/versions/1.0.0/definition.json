@@ -17,11 +17,21 @@
             "defaultValue": "user-account"
         }
     ],
+    "dependencies": [
+        {
+            "name": "basicBlocs",
+            "kind": "basic-blocs"
+        }
+    ],
     "ui": {
         "mark": "U",
         "markClass": "user-account",
         "emit": "source:updated",
         "instructions": [
+            [
+                "Install Basic Blocs",
+                "Install the Basic Blocs integration used by the composable account form controls."
+            ],
             [
                 "Deploy connector resources",
                 "Apply the bundled Supabase schema and Edge Function to the configured project."
@@ -54,6 +64,10 @@
         ],
         "resources": [
             [
+                "Dependencies",
+                "Basic Blocs form controls"
+            ],
+            [
                 "Sources",
                 "User personal information source contract"
             ],
@@ -77,6 +91,7 @@
         ],
         "sync": [
             "Validate answers",
+            "Validate Basic Blocs dependency",
             "Generate private API key",
             "Deploy Supabase connector",
             "Install user personal information source",
@@ -120,6 +135,16 @@
         {
             "type": "bloc",
             "bloc": {
+                "tag": "user-account-avatar",
+                "name": "User account avatar",
+                "group": "User account",
+                "description": "Profile image picker used by the User Account form.",
+                "path": "blocs/user-account-avatar"
+            }
+        },
+        {
+            "type": "bloc",
+            "bloc": {
                 "tag": "user-account-form",
                 "name": "User account form",
                 "group": "User account",
@@ -134,7 +159,7 @@
                 "meta": {
                     "name": "User Personal Information",
                     "description": "Supabase-backed personal information endpoints and dashboard reads.",
-                    "icon": "user"
+                    "icon": { "path": "assets/user-personal-information.svg" }
                 },
                 "endpoints": [
                     {
@@ -172,15 +197,47 @@
                                         "userId": {
                                             "type": "string"
                                         },
-                                        "email": {
-                                            "type": "string",
-                                            "nullable": true
-                                        },
                                         "phone": {
                                             "type": "string",
                                             "nullable": true
                                         },
-                                        "displayName": {
+                                        "givenName": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "surname": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "birthDate": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine1": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine2": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine3": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postalCode": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "region": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "countryCode": {
                                             "type": "string",
                                             "nullable": true
                                         },
@@ -243,13 +300,37 @@
                         "body": {
                             "type": "object",
                             "properties": {
-                                "email": {
-                                    "type": "string"
-                                },
                                 "phone": {
                                     "type": "string"
                                 },
-                                "displayName": {
+                                "givenName": {
+                                    "type": "string"
+                                },
+                                "surname": {
+                                    "type": "string"
+                                },
+                                "birthDate": {
+                                    "type": "string"
+                                },
+                                "addressLine1": {
+                                    "type": "string"
+                                },
+                                "addressLine2": {
+                                    "type": "string"
+                                },
+                                "addressLine3": {
+                                    "type": "string"
+                                },
+                                "postalCode": {
+                                    "type": "string"
+                                },
+                                "city": {
+                                    "type": "string"
+                                },
+                                "region": {
+                                    "type": "string"
+                                },
+                                "countryCode": {
                                     "type": "string"
                                 },
                                 "avatarUrl": {
@@ -278,15 +359,47 @@
                                         "userId": {
                                             "type": "string"
                                         },
-                                        "email": {
-                                            "type": "string",
-                                            "nullable": true
-                                        },
                                         "phone": {
                                             "type": "string",
                                             "nullable": true
                                         },
-                                        "displayName": {
+                                        "givenName": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "surname": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "birthDate": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine1": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine2": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine3": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postalCode": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "region": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "countryCode": {
                                             "type": "string",
                                             "nullable": true
                                         },
@@ -307,16 +420,91 @@
                                             "nullable": true
                                         },
                                         "createdAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "updatedAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         }
                                     },
                                     "required": [
                                         "exists",
                                         "userId"
                                     ]
+                                }
+                            },
+                            {
+                                "status": "400",
+                                "body": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } },
+                                    "required": ["error"]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "updateAccountMetadata",
+                        "method": "POST",
+                        "access": "auth",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/metadata",
+                        "meta": {
+                            "name": "Update current user metadata",
+                            "description": "Partially update configured metadata fields using their field ids as top-level body keys."
+                        },
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {}
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": { "type": "boolean" },
+                                        "userId": { "type": "string" },
+                                        "phone": { "type": "string", "nullable": true },
+                                        "givenName": { "type": "string", "nullable": true }, "surname": { "type": "string", "nullable": true }, "birthDate": { "type": "string", "nullable": true }, "addressLine1": { "type": "string", "nullable": true }, "addressLine2": { "type": "string", "nullable": true }, "addressLine3": { "type": "string", "nullable": true }, "postalCode": { "type": "string", "nullable": true }, "city": { "type": "string", "nullable": true }, "region": { "type": "string", "nullable": true }, "countryCode": { "type": "string", "nullable": true },
+                                        "avatarUrl": { "type": "string", "nullable": true },
+                                        "avatarFileId": { "type": "string", "nullable": true },
+                                        "locale": { "type": "string", "nullable": true },
+                                        "timezone": { "type": "string", "nullable": true },
+                                        "metadata": {
+                                            "type": "object",
+                                            "properties": {}
+                                        },
+                                        "createdAt": { "type": "string", "nullable": true },
+                                        "updatedAt": { "type": "string", "nullable": true }
+                                    },
+                                    "required": ["exists", "userId"]
+                                }
+                            },
+                            {
+                                "status": "400",
+                                "body": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } },
+                                    "required": ["error"]
                                 }
                             }
                         ]
@@ -328,7 +516,7 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/avatar",
                         "meta": {
                             "name": "Upload current user avatar",
-                            "description": "Upload an avatar image for the current CMS user. The request must be multipart/form-data with a file field."
+                            "description": "Upload and attach an avatar image to the current CMS user. The request must be multipart/form-data with a file field."
                         },
                         "params": [],
                         "headers": [
@@ -354,12 +542,25 @@
                                 "body": {
                                     "type": "object",
                                     "properties": {
-                                        "fileId": {
-                                            "type": "string"
-                                        }
+                                        "exists": { "type": "boolean" },
+                                        "userId": { "type": "string" },
+                                        "phone": { "type": "string", "nullable": true },
+                                        "givenName": { "type": "string", "nullable": true }, "surname": { "type": "string", "nullable": true }, "birthDate": { "type": "string", "nullable": true }, "addressLine1": { "type": "string", "nullable": true }, "addressLine2": { "type": "string", "nullable": true }, "addressLine3": { "type": "string", "nullable": true }, "postalCode": { "type": "string", "nullable": true }, "city": { "type": "string", "nullable": true }, "region": { "type": "string", "nullable": true }, "countryCode": { "type": "string", "nullable": true },
+                                        "avatarUrl": { "type": "string", "nullable": true },
+                                        "avatarFileId": { "type": "string", "nullable": true },
+                                        "locale": { "type": "string", "nullable": true },
+                                        "timezone": { "type": "string", "nullable": true },
+                                        "metadata": {
+                                            "type": "object",
+                                            "properties": {}
+                                        },
+                                        "createdAt": { "type": "string", "nullable": true },
+                                        "updatedAt": { "type": "string", "nullable": true }
                                     },
                                     "required": [
-                                        "fileId"
+                                        "exists",
+                                        "userId",
+                                        "avatarFileId"
                                     ]
                                 }
                             }
@@ -401,7 +602,8 @@
                                     "ref": "userID"
                                 }
                             }
-                        ]
+                        ],
+                        "output": [{ "status": "200" }, { "status": "206" }]
                     },
                     {
                         "endpointId": "deleteAccount",
@@ -460,7 +662,7 @@
                                 "name": "q",
                                 "in": "query",
                                 "type": "string",
-                                "description": "Search by CMS user id, email, phone, or display name."
+                                "description": "Search by CMS user id, phone, given name, or surname."
                             },
                             {
                                 "name": "limit",
@@ -503,15 +705,47 @@
                                                     "userId": {
                                                         "type": "string"
                                                     },
-                                                    "email": {
-                                                        "type": "string",
-                                                        "nullable": true
-                                                    },
                                                     "phone": {
                                                         "type": "string",
                                                         "nullable": true
                                                     },
-                                                    "displayName": {
+                                                    "givenName": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "surname": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "birthDate": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "addressLine1": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "addressLine2": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "addressLine3": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "postalCode": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "city": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "countryCode": {
                                                         "type": "string",
                                                         "nullable": true
                                                     },
@@ -532,10 +766,12 @@
                                                         "nullable": true
                                                     },
                                                     "createdAt": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "updatedAt": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     }
                                                 },
                                                 "required": [
@@ -570,6 +806,7 @@
                                 "in": "query",
                                 "required": true,
                                 "type": "string",
+                                "semantic": { "kind": "user-id", "authority": "cms" },
                                 "description": "CMS user id."
                             }
                         ],
@@ -602,15 +839,47 @@
                                         "userId": {
                                             "type": "string"
                                         },
-                                        "email": {
-                                            "type": "string",
-                                            "nullable": true
-                                        },
                                         "phone": {
                                             "type": "string",
                                             "nullable": true
                                         },
-                                        "displayName": {
+                                        "givenName": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "surname": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "birthDate": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine1": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine2": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine3": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postalCode": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "region": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "countryCode": {
                                             "type": "string",
                                             "nullable": true
                                         },
@@ -684,13 +953,37 @@
                         "body": {
                             "type": "object",
                             "properties": {
-                                "email": {
-                                    "type": "string"
-                                },
                                 "phone": {
                                     "type": "string"
                                 },
-                                "displayName": {
+                                "givenName": {
+                                    "type": "string"
+                                },
+                                "surname": {
+                                    "type": "string"
+                                },
+                                "birthDate": {
+                                    "type": "string"
+                                },
+                                "addressLine1": {
+                                    "type": "string"
+                                },
+                                "addressLine2": {
+                                    "type": "string"
+                                },
+                                "addressLine3": {
+                                    "type": "string"
+                                },
+                                "postalCode": {
+                                    "type": "string"
+                                },
+                                "city": {
+                                    "type": "string"
+                                },
+                                "region": {
+                                    "type": "string"
+                                },
+                                "countryCode": {
                                     "type": "string"
                                 },
                                 "avatarUrl": {
@@ -719,15 +1012,47 @@
                                         "userId": {
                                             "type": "string"
                                         },
-                                        "email": {
-                                            "type": "string",
-                                            "nullable": true
-                                        },
                                         "phone": {
                                             "type": "string",
                                             "nullable": true
                                         },
-                                        "displayName": {
+                                        "givenName": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "surname": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "birthDate": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine1": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine2": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "addressLine3": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "postalCode": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "city": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "region": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "countryCode": {
                                             "type": "string",
                                             "nullable": true
                                         },
@@ -748,10 +1073,12 @@
                                             "nullable": true
                                         },
                                         "createdAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "updatedAt": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         }
                                     },
                                     "required": [
@@ -823,7 +1150,7 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record/avatar",
                         "meta": {
                             "name": "Upload user avatar",
-                            "description": "Upload an avatar image for a target CMS user. The request must be multipart/form-data with a file field."
+                            "description": "Upload and attach an avatar image to a target CMS user. The request must be multipart/form-data with a file field."
                         },
                         "params": [
                             {
@@ -857,12 +1184,25 @@
                                 "body": {
                                     "type": "object",
                                     "properties": {
-                                        "fileId": {
-                                            "type": "string"
-                                        }
+                                        "exists": { "type": "boolean" },
+                                        "userId": { "type": "string" },
+                                        "phone": { "type": "string", "nullable": true },
+                                        "givenName": { "type": "string", "nullable": true }, "surname": { "type": "string", "nullable": true }, "birthDate": { "type": "string", "nullable": true }, "addressLine1": { "type": "string", "nullable": true }, "addressLine2": { "type": "string", "nullable": true }, "addressLine3": { "type": "string", "nullable": true }, "postalCode": { "type": "string", "nullable": true }, "city": { "type": "string", "nullable": true }, "region": { "type": "string", "nullable": true }, "countryCode": { "type": "string", "nullable": true },
+                                        "avatarUrl": { "type": "string", "nullable": true },
+                                        "avatarFileId": { "type": "string", "nullable": true },
+                                        "locale": { "type": "string", "nullable": true },
+                                        "timezone": { "type": "string", "nullable": true },
+                                        "metadata": {
+                                            "type": "object",
+                                            "properties": {}
+                                        },
+                                        "createdAt": { "type": "string", "nullable": true },
+                                        "updatedAt": { "type": "string", "nullable": true }
                                     },
                                     "required": [
-                                        "fileId"
+                                        "exists",
+                                        "userId",
+                                        "avatarFileId"
                                     ]
                                 }
                             }
@@ -910,7 +1250,8 @@
                                     "ref": "userID"
                                 }
                             }
-                        ]
+                        ],
+                        "output": [{ "status": "200" }, { "status": "206" }]
                     },
                     {
                         "endpointId": "listExtraFields",
@@ -952,23 +1293,33 @@
                                                     "type": {
                                                         "type": "string"
                                                     },
-                                                    "section": {
-                                                        "type": "string"
-                                                    },
                                                     "required": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "multiple": {
                                                         "type": "boolean"
                                                     },
                                                     "showInDashboardTable": {
                                                         "type": "boolean"
+                                                    },
+                                                    "options": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": { "type": "string" },
+                                                                "value": { "type": "string" },
+                                                                "label": { "type": "string" },
+                                                                "position": { "type": "number" }
+                                                            },
+                                                            "required": ["value", "label"]
+                                                        }
                                                     }
                                                 },
                                                 "required": [
                                                     "id",
                                                     "label",
-                                                    "type",
-                                                    "section",
-                                                    "required",
-                                                    "showInDashboardTable"
+                                                    "type"
                                                 ]
                                             }
                                         }
@@ -984,6 +1335,9 @@
                         "endpointId": "createExtraField",
                         "method": "POST",
                         "access": "admin",
+                        "effects": {
+                            "invalidatesSchema": true
+                        },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields",
                         "meta": {
                             "name": "Create personal information field",
@@ -1015,8 +1369,27 @@
                                 "required": {
                                     "type": "boolean"
                                 },
+                                "multiple": {
+                                    "type": "boolean"
+                                },
+                                "hasAllowedValues": {
+                                    "type": "boolean"
+                                },
                                 "showInDashboardTable": {
                                     "type": "boolean"
+                                },
+                                "options": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "string" },
+                                            "value": { "type": "string" },
+                                            "label": { "type": "string" },
+                                            "position": { "type": "number" }
+                                        },
+                                        "required": ["value", "label"]
+                                    }
                                 }
                             },
                             "required": [
@@ -1042,23 +1415,36 @@
                                                 "type": {
                                                     "type": "string"
                                                 },
-                                                "section": {
-                                                    "type": "string"
-                                                },
                                                 "required": {
+                                                    "type": "boolean"
+                                                },
+                                                "multiple": {
+                                                    "type": "boolean"
+                                                },
+                                                "hasAllowedValues": {
                                                     "type": "boolean"
                                                 },
                                                 "showInDashboardTable": {
                                                     "type": "boolean"
+                                                },
+                                                "options": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": { "type": "string" },
+                                                            "value": { "type": "string" },
+                                                            "label": { "type": "string" },
+                                                            "position": { "type": "number" }
+                                                        },
+                                                        "required": ["value", "label"]
+                                                    }
                                                 }
                                             },
                                             "required": [
                                                 "id",
                                                 "label",
-                                                "type",
-                                                "section",
-                                                "required",
-                                                "showInDashboardTable"
+                                                "type"
                                             ]
                                         }
                                     },
@@ -1115,27 +1501,126 @@
                                                 "type": {
                                                     "type": "string"
                                                 },
-                                                "section": {
-                                                    "type": "string"
-                                                },
                                                 "required": {
+                                                    "type": "boolean"
+                                                },
+                                                "multiple": {
+                                                    "type": "boolean"
+                                                },
+                                                "hasAllowedValues": {
                                                     "type": "boolean"
                                                 },
                                                 "showInDashboardTable": {
                                                     "type": "boolean"
+                                                },
+                                                "options": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": { "type": "string" },
+                                                            "value": { "type": "string" },
+                                                            "label": { "type": "string" },
+                                                            "position": { "type": "number" }
+                                                        },
+                                                        "required": ["value", "label"]
+                                                    }
                                                 }
                                             },
                                             "required": [
                                                 "id",
                                                 "label",
-                                                "type",
-                                                "required",
-                                                "showInDashboardTable"
+                                                "type"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "field"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "reorderExtraFields",
+                        "method": "POST",
+                        "access": "admin",
+                        "effects": { "invalidatesSchema": true },
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields/reorder",
+                        "meta": {
+                            "name": "Reorder personal information fields",
+                            "description": "Save the display order of configured personal information fields."
+                        },
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": { "ids": { "type": "array", "items": { "type": "string" } } },
+                            "required": ["ids"]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": { "ids": { "type": "array", "items": { "type": "string" } } },
+                                    "required": ["ids"]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "deleteExtraField",
+                        "method": "DELETE",
+                        "access": "admin",
+                        "effects": {
+                            "invalidatesSchema": true
+                        },
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/extra-fields/field",
+                        "meta": {
+                            "name": "Delete personal information field",
+                            "description": "Delete a configured extra personal information field definition while keeping existing account metadata values."
+                        },
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Configured extra field id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deleted": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "deleted",
+                                        "id"
                                     ]
                                 }
                             }
@@ -1184,8 +1669,8 @@
                 "label": "Extra fields",
                 "sections": [
                     {
-                        "id": "accountFields",
-                        "label": "Personal information"
+                        "id": "additionalInformation",
+                        "label": "Additional information"
                     }
                 ],
                 "input": [
@@ -1206,14 +1691,17 @@
                         "endpointId": "updateAccount"
                     },
                     {
+                        "endpointId": "updateAccountMetadata"
+                    },
+                    {
+                        "endpointId": "createUserPersonalInformation"
+                    },
+                    {
                         "endpointId": "listAccounts",
                         "path": "accounts[]"
                     },
                     {
                         "endpointId": "getAccountByUserId"
-                    },
-                    {
-                        "endpointId": "createUserPersonalInformation"
                     }
                 ],
                 "fieldSource": {
@@ -1224,12 +1712,34 @@
             }
         },
         {
+            "type": "sourceOverlay",
+            "overlay": {
+                "id": "{{answers.id}}-flat-metadata-fields",
+                "sourceId": "{{answers.id}}",
+                "label": "Metadata form fields",
+                "input": [
+                    {
+                        "endpointId": "updateAccountMetadata",
+                        "editable": "self"
+                    }
+                ],
+                "fieldSource": {
+                    "endpointId": "listExtraFields",
+                    "path": "fields",
+                    "map": {
+                        "path": "id"
+                    }
+                },
+                "fields": []
+            }
+        },
+        {
             "type": "dashboard",
             "dashboard": {
                 "id": "{{answers.id}}-users",
                 "meta": {
                     "name": "Users",
-                    "icon": "database"
+                    "icon": { "path": "assets/users.svg" }
                 },
                 "source": "{{answers.id}}",
                 "views": [
@@ -1258,15 +1768,15 @@
                         ],
                         "columns": [
                             {
-                                "id": "displayName",
-                                "label": "Name",
-                                "path": "displayName",
+                                "id": "givenName",
+                                "label": "Given name",
+                                "path": "givenName",
                                 "primary": true
                             },
                             {
-                                "id": "email",
-                                "label": "Email",
-                                "path": "email"
+                                "id": "surname",
+                                "label": "Surname",
+                                "path": "surname"
                             },
                             {
                                 "id": "phone",
@@ -1304,11 +1814,8 @@
                             }
                         },
                         "title": {
-                            "path": "displayName",
+                            "path": "givenName",
                             "fallback": "User"
-                        },
-                        "status": {
-                            "path": "email"
                         },
                         "actions": [
                             {
@@ -1322,11 +1829,19 @@
                                         "userId": "$resource.userId"
                                     },
                                     "body": {
-                                        "displayName": "$field.displayName",
-                                        "email": "$field.email",
+                                        "givenName": "$field.givenName",
+                                        "surname": "$field.surname",
+                                        "birthDate": "$field.birthDate",
                                         "phone": "$field.phone",
-                                        "avatarUrl": "$field.avatarUrl",
-                                        "avatarFileId": "$field.avatarFileId",
+                                        "addressLine1": "$field.addressLine1",
+                                        "addressLine2": "$field.addressLine2",
+                                        "addressLine3": "$field.addressLine3",
+                                        "postalCode": "$field.postalCode",
+                                        "city": "$field.city",
+                                        "region": "$field.region",
+                                        "countryCode": "$field.countryCode",
+                                        "avatarUrl": "$resource.avatarUrl",
+                                        "avatarFileId": "$resource.avatarFileId",
                                         "locale": "$field.locale",
                                         "timezone": "$field.timezone"
                                     }
@@ -1358,33 +1873,27 @@
                                         "type": "readonly"
                                     },
                                     {
-                                        "id": "displayName",
-                                        "label": "Name",
-                                        "path": "displayName",
+                                        "id": "givenName",
+                                        "label": "Given name",
+                                        "path": "givenName",
                                         "type": "text"
                                     },
                                     {
-                                        "id": "email",
-                                        "label": "Email",
-                                        "path": "email",
+                                        "id": "surname",
+                                        "label": "Surname",
+                                        "path": "surname",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "birthDate",
+                                        "label": "Birth date",
+                                        "path": "birthDate",
                                         "type": "text"
                                     },
                                     {
                                         "id": "phone",
                                         "label": "Phone",
                                         "path": "phone",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "avatarUrl",
-                                        "label": "Avatar URL",
-                                        "path": "avatarUrl",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "avatarFileId",
-                                        "label": "Avatar file id",
-                                        "path": "avatarFileId",
                                         "type": "text"
                                     },
                                     {
@@ -1400,9 +1909,35 @@
                                         "type": "text"
                                     }
                                 ]
+                            },
+                            {
+                                "id": "addressFields",
+                                "title": "Address",
+                                "fields": [
+                                    { "id": "addressLine1", "label": "Address line 1", "path": "addressLine1", "type": "text" },
+                                    { "id": "addressLine2", "label": "Address line 2", "path": "addressLine2", "type": "text" },
+                                    { "id": "addressLine3", "label": "Address line 3", "path": "addressLine3", "type": "text" },
+                                    { "id": "postalCode", "label": "Postal code", "path": "postalCode", "type": "text" },
+                                    { "id": "city", "label": "City", "path": "city", "type": "text" },
+                                    { "id": "region", "label": "Region / state", "path": "region", "type": "text" },
+                                    { "id": "countryCode", "label": "Country code", "path": "countryCode", "type": "text" }
+                                ]
                             }
                         ],
                         "aside": [
+                            {
+                                "id": "avatar",
+                                "title": "Avatar",
+                                "fields": [
+                                    {
+                                        "id": "avatarPreview",
+                                        "label": "Avatar",
+                                        "path": "avatarUrl",
+                                        "type": "readonly",
+                                        "format": "image"
+                                    }
+                                ]
+                            },
                             {
                                 "id": "accountMetadata",
                                 "title": "Metadata",
@@ -1434,12 +1969,12 @@
                 "id": "{{answers.id}}-fields",
                 "meta": {
                     "name": "Fields",
-                    "icon": "layout"
+                    "icon": { "path": "assets/fields.svg" }
                 },
                 "source": "{{answers.id}}",
                 "views": [
                     {
-                        "widget": "w-table",
+                        "widget": "w-navigation-list",
                         "id": "extraFieldsTable",
                         "title": "Personal information fields",
                         "source": {
@@ -1447,28 +1982,14 @@
                             "itemsPath": "fields"
                         },
                         "rowKey": "id",
-                        "columns": [
-                            {
-                                "id": "label",
-                                "label": "Label",
-                                "path": "label",
-                                "primary": true
-                            },
-                            {
-                                "id": "id",
-                                "label": "ID",
-                                "path": "id"
-                            },
-                            {
-                                "id": "type",
-                                "label": "Type",
-                                "path": "type",
-                                "format": "badge"
-                            }
-                        ],
+                        "item": {
+                            "title": { "path": "label" },
+                            "badge": { "path": "type" }
+                        },
                         "selection": {
                             "opens": "extraFieldDetail"
                         },
+                        "reorderable": { "action": "reorderExtraFields" },
                         "actions": [
                             {
                                 "id": "newExtraField",
@@ -1476,6 +1997,14 @@
                                 "tone": "primary",
                                 "selection": {
                                     "opens": "extraFieldDetail"
+                                }
+                            },
+                            {
+                                "id": "reorderExtraFields",
+                                "label": "Reorder fields",
+                                "endpoint": {
+                                    "endpoint": "reorderExtraFields",
+                                    "body": { "ids": "$value" }
                                 }
                             }
                         ]
@@ -1510,12 +2039,33 @@
                                         "id": "$field.id",
                                         "type": "$field.type",
                                         "required": "$field.required",
-                                        "showInDashboardTable": "$field.showInDashboardTable"
+                                        "multiple": "$field.multiple",
+                                        "hasAllowedValues": "$field.hasAllowedValues",
+                                        "showInDashboardTable": "$field.showInDashboardTable",
+                                        "options": "$field.options"
                                     }
                                 },
                                 "after": {
                                     "opens": "extraFieldDetail",
                                     "row": "$result.field.id"
+                                }
+                            },
+                            {
+                                "id": "deleteExtraField",
+                                "label": "Delete field",
+                                "icon": "trash",
+                                "tone": "danger",
+                                "placement": "more",
+                                "confirm": "Delete this field definition? Existing user metadata values will be kept.",
+                                "visibleWhen": {
+                                    "value": "$field.id",
+                                    "notEquals": ""
+                                },
+                                "endpoint": {
+                                    "endpoint": "deleteExtraField",
+                                    "params": {
+                                        "id": "$resource.id"
+                                    }
                                 }
                             }
                         ],
@@ -1535,7 +2085,11 @@
                                         "id": "id",
                                         "label": "ID",
                                         "path": "id",
-                                        "type": "text"
+                                        "type": "readonly",
+                                        "visibleWhen": {
+                                            "value": "$field.id",
+                                            "notEquals": ""
+                                        }
                                     },
                                     {
                                         "id": "type",
@@ -1555,6 +2109,68 @@
                                             {
                                                 "label": "Boolean",
                                                 "value": "boolean"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "multiple",
+                                        "label": "Allow multiple values",
+                                        "path": "multiple",
+                                        "type": "select",
+                                        "options": [
+                                            {
+                                                "label": "No",
+                                                "value": "false"
+                                            },
+                                            {
+                                                "label": "Yes",
+                                                "value": "true"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "id": "hasAllowedValues",
+                                        "label": "Restrict to allowed values",
+                                        "path": "hasAllowedValues",
+                                        "type": "checkbox",
+                                        "visibleWhen": {
+                                            "value": "$field.type",
+                                            "notEquals": "boolean"
+                                        }
+                                    },
+                                    {
+                                        "id": "options",
+                                        "label": "Allowed values",
+                                        "path": "options",
+                                        "type": "reorderable-list",
+                                        "itemKey": "id",
+                                        "positionPath": "position",
+                                        "addLabel": "Add value",
+                                        "maxItems": 100,
+                                        "visibleWhen": {
+                                            "all": [
+                                                {
+                                                    "value": "$field.type",
+                                                    "notEquals": "boolean"
+                                                },
+                                                {
+                                                    "value": "$field.hasAllowedValues",
+                                                    "equals": true
+                                                }
+                                            ]
+                                        },
+                                        "fields": [
+                                            {
+                                                "id": "value",
+                                                "label": "Value",
+                                                "path": "value",
+                                                "required": true
+                                            },
+                                            {
+                                                "id": "label",
+                                                "label": "Label",
+                                                "path": "label",
+                                                "required": true
                                             }
                                         ]
                                     },

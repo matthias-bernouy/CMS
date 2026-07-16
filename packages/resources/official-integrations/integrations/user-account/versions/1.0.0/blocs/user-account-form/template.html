@@ -1,0 +1,69 @@
+<basic-stack gap="lg" data-account-layout>
+    <section data-account-load>
+        <basic-stack gap="lg">
+            <form data-account-field="avatar" data-avatar-form cms-source-trigger="submit" cms-source-method="POST" cms-condition="$source.loaded">
+                <basic-stack gap="sm" align-items="start">
+                    <user-account-avatar data-avatar-input name="file" accept="image/jpeg,image/png,image/webp,image/gif"></user-account-avatar>
+                    <span data-avatar-file-id hidden>{{ avatarFileId }}</span>
+                    <p cms-condition="avatar.loading">Envoi de l’image…</p>
+                    <basic-toast data-toast-kind="error" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="avatar.error">Impossible de mettre à jour la photo de profil.</basic-toast>
+                </basic-stack>
+            </form>
+
+            <basic-stack gap="lg" cms-condition="$source.loading">
+                <basic-skeleton shape="circle" width="7rem" height="7rem" animation="wave" label="Chargement de vos informations"></basic-skeleton>
+                <basic-grid min="lg" max="none" gap="sm">
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                </basic-grid>
+                <basic-stack gap="sm">
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                </basic-stack>
+                <basic-grid min="lg" max="none" gap="sm">
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                    <basic-skeleton height="4.5rem" animation="wave" aria-hidden="true"></basic-skeleton>
+                </basic-grid>
+            </basic-stack>
+            <basic-toast data-toast-kind="error" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="$source.error">Impossible de charger vos informations personnelles.</basic-toast>
+
+            <form data-account-form cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-condition="$source.loaded">
+                <basic-stack gap="lg">
+                    <basic-stack gap="md">
+                        <basic-grid min="lg" max="none" gap="sm">
+                            <basic-input data-account-field="given-name" name="givenName" label="Prénom" autocomplete="given-name" maxlength="100" value="{{ givenName }}"></basic-input>
+                            <basic-input data-account-field="surname" name="surname" label="Nom" autocomplete="family-name" maxlength="100" value="{{ surname }}"></basic-input>
+                            <basic-input data-account-field="birth-date" name="birthDate" label="Date de naissance" type="date" date-format="day-month-year" autocomplete="bday" min="1900-01-01" placeholder="jj/mm/aaaa" invalid-date-message="Saisissez une date valide au format jj/mm/aaaa." value="{{ birthDate }}"></basic-input>
+                            <section data-account-field="login-email" data-auth-load>
+                                <basic-input data-auth-email label="Adresse e-mail" type="email" autocomplete="email" value="{{ subject.email }}" disabled></basic-input>
+                            </section>
+                            <basic-input data-account-field="phone" name="phone" label="Téléphone" type="tel" autocomplete="tel" maxlength="64" value="{{ phone }}"></basic-input>
+                        </basic-grid>
+
+                        <basic-stack gap="sm">
+                            <basic-input data-account-field="address-line-1" name="addressLine1" label="Adresse" autocomplete="address-line1" maxlength="200" value="{{ addressLine1 }}"></basic-input>
+                            <basic-input data-account-field="address-line-2" name="addressLine2" label="Complément d’adresse" autocomplete="address-line2" maxlength="200" value="{{ addressLine2 }}"></basic-input>
+                            <basic-input data-account-field="address-line-3" name="addressLine3" label="Complément d’adresse 2" autocomplete="address-line3" maxlength="200" value="{{ addressLine3 }}"></basic-input>
+                        </basic-stack>
+
+                        <basic-grid min="lg" max="none" gap="sm">
+                            <basic-input data-account-field="postal-code" name="postalCode" label="Code postal" autocomplete="postal-code" maxlength="32" value="{{ postalCode }}"></basic-input>
+                            <basic-input data-account-field="city" name="city" label="Ville" autocomplete="address-level2" maxlength="120" value="{{ city }}"></basic-input>
+                            <basic-input data-account-field="region" name="region" label="Région / État" autocomplete="address-level1" maxlength="120" value="{{ region }}"></basic-input>
+                            <basic-input data-account-field="country-code" name="countryCode" label="Code pays" autocomplete="country" maxlength="2" placeholder="FR" value="{{ countryCode }}"></basic-input>
+                            <basic-input data-account-field="locale" name="locale" label="Langue" autocomplete="language" maxlength="35" value="{{ locale }}"></basic-input>
+                            <basic-input data-account-field="timezone" name="timezone" label="Fuseau horaire" maxlength="64" value="{{ timezone }}"></basic-input>
+                        </basic-grid>
+                    </basic-stack>
+
+                    <basic-button type="submit" data-account-button>Enregistrer</basic-button>
+                    <basic-toast data-toast-kind="success" role="status" aria-live="polite" aria-atomic="true" position="top-right" duration="4500" cms-condition="save.ok">Informations enregistrées.</basic-toast>
+                    <basic-toast data-toast-kind="error" role="alert" aria-live="assertive" aria-atomic="true" position="top-right" duration="6000" cms-condition="save.error">Impossible d’enregistrer vos informations.</basic-toast>
+                </basic-stack>
+            </form>
+        </basic-stack>
+    </section>
+</basic-stack>

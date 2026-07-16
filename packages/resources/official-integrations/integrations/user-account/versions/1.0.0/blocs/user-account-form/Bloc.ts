@@ -1,212 +1,233 @@
-class UserAccountForm extends HTMLElement {
+import { Composition } from "@bernouy/components/base";
+
+import template from "./template.html" with { type: "text" };
+
+const fields = [
+    "given-name",
+    "surname",
+    "birth-date",
+    "phone",
+    "address-line-1",
+    "address-line-2",
+    "address-line-3",
+    "postal-code",
+    "city",
+    "region",
+    "country-code",
+    "locale",
+    "timezone",
+    "avatar",
+];
+
+export class UserAccountForm extends Composition {
+    static observedAttributes = [
+        "source-id",
+        "source-prefix",
+        "button-label",
+        "show-login-email",
+        "text-color",
+        "background-color",
+        "field-text-color",
+        "field-background-color",
+        "field-border-color",
+        "accent-color",
+        "button-text-color",
+        "button-background-color",
+        "button-border-color",
+        "avatar-background-color",
+        "avatar-border-color",
+        "skeleton-base-color",
+        "skeleton-highlight-color",
+        "toast-position",
+        "toast-width",
+        "toast-density",
+        "toast-radius",
+        "toast-shadow",
+        "success-toast-duration",
+        "error-toast-duration",
+        "success-toast-text-color",
+        "success-toast-background-color",
+        "success-toast-border-color",
+        "error-toast-text-color",
+        "error-toast-background-color",
+        "error-toast-border-color",
+        ...fields.map(field => `show-${field}`),
+    ];
+
     constructor() {
-        super();
-        this.root = this.attachShadow({ mode: "open" });
-        this.account = null;
+        super({ template });
+        this.avatarObserver = null;
+        this.sourceBase = "";
+        this.saveAfterAvatar = false;
     }
 
     connectedCallback() {
-        this.render();
-        this.form.addEventListener("submit", event => {
-            event.preventDefault();
-            this.submit().catch(error => this.setStatus(errorMessage(error), "error"));
-        });
-        this.load().catch(error => this.setStatus(errorMessage(error), "error"));
+        this.addEventListener("cms-source:success", this.onSourceSettled);
+        this.addEventListener("cms-source:failed", this.onSourceFailed);
+        this.addEventListener("submit", this.onSubmitCapture, true);
+        super.connectedCallback();
+
+        const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
+        this.avatarObserver = new Observer(() => queueMicrotask(() => {
+            this.syncColors();
+            this.syncAvatarPreview();
+        }));
+        this.avatarObserver.observe(this, { childList: true, characterData: true, subtree: true });
+        this.sync();
     }
 
-    render() {
-        const title = this.getAttribute("title") || "Account";
-        const copy = this.getAttribute("copy") || "Update your personal information.";
-        const buttonLabel = this.getAttribute("button-label") || "Save";
-
-        this.root.innerHTML = `
-            <style>
-                :host { display: block; font: inherit; color: inherit; }
-                form {
-                    display: grid;
-                    gap: 1rem;
-                    max-width: 42rem;
-                }
-                .header { display: grid; gap: .25rem; }
-                h2 { margin: 0; font-size: 1.25rem; line-height: 1.2; }
-                p { margin: 0; color: color-mix(in srgb, currentColor 68%, transparent); }
-                .grid {
-                    display: grid;
-                    gap: .75rem;
-                    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-                }
-                label {
-                    display: grid;
-                    gap: .35rem;
-                    font-weight: 700;
-                }
-                input {
-                    box-sizing: border-box;
-                    width: 100%;
-                    min-height: 2.5rem;
-                    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-                    border-radius: .5rem;
-                    background: Canvas;
-                    color: currentColor;
-                    font: inherit;
-                    padding: .55rem .7rem;
-                }
-                input:focus-visible, button:focus-visible {
-                    outline: 2px solid currentColor;
-                    outline-offset: 2px;
-                }
-                button {
-                    width: max-content;
-                    min-height: 2.5rem;
-                    border: 0;
-                    border-radius: .5rem;
-                    background: #0f6b57;
-                    color: white;
-                    cursor: pointer;
-                    font: inherit;
-                    font-weight: 700;
-                    padding: .55rem .9rem;
-                }
-                button:disabled { cursor: wait; opacity: .65; }
-                .status { min-height: 1.25rem; font-size: .95rem; }
-                .status[data-state="error"] { color: #b42318; }
-                .status[data-state="success"] { color: #0f6b57; }
-            </style>
-            <form>
-                <div class="header">
-                    <h2>${escapeHtml(title)}</h2>
-                    <p>${escapeHtml(copy)}</p>
-                </div>
-                <div class="grid">
-                    <label>
-                        <span>Display name</span>
-                        <input name="displayName" autocomplete="name">
-                    </label>
-                    <label>
-                        <span>Email</span>
-                        <input name="email" type="email" autocomplete="email">
-                    </label>
-                    <label>
-                        <span>Phone</span>
-                        <input name="phone" autocomplete="tel">
-                    </label>
-                    <label>
-                        <span>Locale</span>
-                        <input name="locale" autocomplete="language">
-                    </label>
-                    <label>
-                        <span>Timezone</span>
-                        <input name="timezone">
-                    </label>
-                    <label>
-                        <span>Avatar URL</span>
-                        <input name="avatarUrl" type="url">
-                    </label>
-                </div>
-                <button type="submit">${escapeHtml(buttonLabel)}</button>
-                <p class="status" data-status></p>
-            </form>
-        `;
+    disconnectedCallback() {
+        this.removeEventListener("cms-source:success", this.onSourceSettled);
+        this.removeEventListener("cms-source:failed", this.onSourceFailed);
+        this.removeEventListener("submit", this.onSubmitCapture, true);
+        this.avatarObserver?.disconnect();
+        this.avatarObserver = null;
     }
 
-    async load() {
-        this.setStatus(this.getAttribute("loading-label") || "Loading...", "idle");
-        const account = await this.requestSource("getAccount");
-        this.account = account;
-        for (const name of ["displayName", "email", "phone", "locale", "timezone", "avatarUrl"]) {
-            const input = this.root.querySelector(`[name='${name}']`);
-            if (input) input.value = account[name] || "";
+    attributeChangedCallback() {
+        if (this.isConnected) queueMicrotask(() => this.sync());
+    }
+
+    sync() {
+        const prefix = (this.getAttribute("source-prefix") || "/.cms/sources").replace(/\/+$/, "");
+        const sourceId = encodeURIComponent(this.getAttribute("source-id") || "user-account");
+        this.sourceBase = `${prefix}/${sourceId}`;
+
+        this.setAttributeIfChanged(this.querySelector("[data-auth-load]"), "cms-source", `${prefix}/system-auth/me`);
+        this.setAttributeIfChanged(this.querySelector("[data-account-load]"), "cms-source", `${this.sourceBase}/getAccount`);
+        this.setAttributeIfChanged(this.querySelector("[data-account-form]"), "cms-source", `${this.sourceBase}/updateAccount as save`);
+        this.setAttributeIfChanged(this.querySelector("[data-avatar-form]"), "cms-source", `${this.sourceBase}/uploadAccountAvatar as avatar`);
+
+        this.setText("[data-account-button]", this.getAttribute("button-label") || "Enregistrer");
+        this.syncColors();
+
+        for (const field of fields) {
+            const element = this.querySelector(`[data-account-field="${field}"]`);
+            if (!element) continue;
+            const visible = this.getAttribute(`show-${field}`) !== "false";
+            element.hidden = !visible;
+            const control = element.matches?.("[name]") ? element : element.querySelector?.("[name]");
+            control?.toggleAttribute("disabled", !visible);
         }
-        this.setStatus("", "idle");
+        const loginEmail = this.querySelector('[data-account-field="login-email"]');
+        if (loginEmail) loginEmail.hidden = this.getAttribute("show-login-email") === "false";
+        this.syncAvatarPreview();
     }
 
-    async submit() {
-        this.button.disabled = true;
-        this.setStatus(this.getAttribute("saving-label") || "Saving...", "idle");
-        try {
-            const payload = {};
-            for (const name of ["displayName", "email", "phone", "locale", "timezone", "avatarUrl"]) {
-                const input = this.root.querySelector(`[name='${name}']`);
-                if (input) payload[name] = input.value.trim() || null;
+    syncColors() {
+        const layout = this.querySelector("[data-account-layout]");
+        this.setOptionalAttribute(layout, "text-color", this.getAttribute("text-color"));
+        this.setOptionalAttribute(layout, "background-color", this.getAttribute("background-color"));
+
+        for (const input of this.querySelectorAll("basic-input")) {
+            this.setOptionalAttribute(input, "text-color", this.getAttribute("field-text-color"));
+            this.setOptionalAttribute(input, "background-color", this.getAttribute("field-background-color"));
+            this.setOptionalAttribute(input, "border-color", this.getAttribute("field-border-color"));
+            this.setOptionalAttribute(input, "accent-color", this.getAttribute("accent-color"));
+        }
+
+        const button = this.querySelector("[data-account-button]");
+        this.setOptionalAttribute(button, "text-color", this.getAttribute("button-text-color"));
+        this.setOptionalAttribute(button, "background-color", this.getAttribute("button-background-color"));
+        this.setOptionalAttribute(button, "border-color", this.getAttribute("button-border-color"));
+        this.setOptionalAttribute(button, "accent-color", this.getAttribute("accent-color"));
+
+        const avatar = this.querySelector("[data-avatar-input]");
+        this.setOptionalAttribute(avatar, "accent-color", this.getAttribute("accent-color"));
+        this.setOptionalAttribute(avatar, "action-text-color", this.getAttribute("button-text-color"));
+        this.setOptionalAttribute(avatar, "background-color", this.getAttribute("avatar-background-color"));
+        this.setOptionalAttribute(avatar, "border-color", this.getAttribute("avatar-border-color"));
+
+        for (const skeleton of this.querySelectorAll("basic-skeleton")) {
+            this.setOptionalAttribute(skeleton, "base-color", this.getAttribute("skeleton-base-color"));
+            this.setOptionalAttribute(skeleton, "highlight-color", this.getAttribute("skeleton-highlight-color"));
+        }
+
+        for (const toast of this.querySelectorAll("basic-toast")) {
+            const kind = toast.getAttribute("data-toast-kind") === "success" ? "success" : "error";
+            this.setAttributeIfChanged(toast, "position", this.getAttribute("toast-position") || "top-right");
+            this.setAttributeIfChanged(toast, "width", this.getAttribute("toast-width") || "auto");
+            this.setAttributeIfChanged(toast, "density", this.getAttribute("toast-density") || "regular");
+            this.setAttributeIfChanged(toast, "radius", this.getAttribute("toast-radius") || "md");
+            this.setAttributeIfChanged(toast, "shadow", this.getAttribute("toast-shadow") || "none");
+            this.setAttributeIfChanged(toast, "duration", this.getAttribute(`${kind}-toast-duration`) || (kind === "success" ? "4500" : "6000"));
+            this.setOptionalAttribute(toast, "text-color", this.getAttribute(`${kind}-toast-text-color`));
+            this.setOptionalAttribute(toast, "close-color", this.getAttribute(`${kind}-toast-text-color`));
+            this.setOptionalAttribute(toast, "background-color", this.getAttribute(`${kind}-toast-background-color`));
+            this.setOptionalAttribute(toast, "border-color", this.getAttribute(`${kind}-toast-border-color`));
+        }
+    }
+
+    setAttributeIfChanged(element, name, value) {
+        if (element && element.getAttribute(name) !== value) element.setAttribute(name, value);
+    }
+
+    setOptionalAttribute(element, name, value) {
+        if (!element) return;
+        const normalized = value?.trim() || "";
+        if (!normalized) {
+            element.removeAttribute(name);
+            return;
+        }
+        this.setAttributeIfChanged(element, name, normalized);
+    }
+
+    setText(selector, value) {
+        const element = this.querySelector(selector);
+        if (element && element.textContent !== value) element.textContent = value;
+    }
+
+    syncAvatarPreview() {
+        const avatar = this.querySelector("[data-avatar-input]");
+        if (!avatar || avatar.hasSelection) return;
+
+        const fileId = this.querySelector("[data-avatar-file-id]")?.textContent?.trim() || "";
+        if (fileId.includes("{{") || fileId.includes("}}")) return;
+        if (!fileId) {
+            avatar.removeAttribute("src");
+            return;
+        }
+
+        this.setAttributeIfChanged(
+            avatar,
+            "src",
+            `${this.sourceBase}/getAccountAvatar?fileId=${encodeURIComponent(fileId)}`,
+        );
+    }
+
+    onSubmitCapture = event => {
+        const mainForm = this.querySelector("[data-account-form]");
+        if (event.target !== mainForm || this.saveAfterAvatar) return;
+
+        const file = this.querySelector("[data-avatar-input]")?.files?.[0];
+        if (!file) return;
+        if (typeof mainForm.reportValidity === "function" && !mainForm.reportValidity()) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this.saveAfterAvatar = true;
+        this.querySelector("[data-avatar-form]")?.requestSubmit();
+    };
+
+    onSourceSettled = event => {
+        if (event.target?.matches?.("[data-avatar-form]")) {
+            const fileId = event.detail?.body?.avatarFileId;
+            const value = this.querySelector("[data-avatar-file-id]");
+            if (value && typeof fileId === "string" && fileId) value.textContent = fileId;
+
+            if (this.saveAfterAvatar) {
+                this.saveAfterAvatar = false;
+                queueMicrotask(() => this.querySelector("[data-account-form]")?.requestSubmit());
+                return;
             }
-            const account = await this.requestSource("updateAccount", {
-                method: "POST",
-                body: JSON.stringify(payload),
-            });
-            this.account = account;
-            this.dispatchEvent(new CustomEvent("user-account:saved", {
-                bubbles: true,
-                composed: true,
-                detail: account,
-            }));
-            this.setStatus(this.getAttribute("saved-label") || "Account saved.", "success");
-        } finally {
-            this.button.disabled = false;
         }
-    }
+        queueMicrotask(() => this.sync());
+    };
 
-    async requestSource(endpoint, init = {}) {
-        const response = await fetch(this.sourceUrl(endpoint), {
-            credentials: "include",
-            ...init,
-            headers: {
-                accept: "application/json",
-                ...(init.body ? { "content-type": "application/json" } : {}),
-                ...headersObject(init.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(errorMessageFromBody(body, response));
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid source response.");
-        return body;
-    }
-
-    sourceUrl(endpoint) {
-        const prefix = this.getAttribute("source-prefix") || "/.cms/sources";
-        const sourceId = this.getAttribute("source-id") || "user-account";
-        return `${prefix.replace(/\/+$/, "")}/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}`;
-    }
-
-    setStatus(message, state) {
-        this.status.textContent = message;
-        this.status.dataset.state = state;
-    }
-
-    get form() {
-        return this.root.querySelector("form");
-    }
-
-    get button() {
-        return this.root.querySelector("button");
-    }
-
-    get status() {
-        return this.root.querySelector("[data-status]");
-    }
-}
-
-function headersObject(headers) {
-    if (!headers) return {};
-    return Object.fromEntries(new Headers(headers).entries());
-}
-
-function errorMessage(error) {
-    return error instanceof Error ? error.message : "Unable to update account.";
-}
-
-function errorMessageFromBody(body, response) {
-    if (body && typeof body === "object" && "error" in body) return String(body.error);
-    return `${response.status} ${response.statusText}`;
-}
-
-function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "\"": "&quot;",
-        "'": "&#39;",
-    })[char] || char);
+    onSourceFailed = event => {
+        if (event.target?.matches?.("[data-avatar-form]")) this.saveAfterAvatar = false;
+        queueMicrotask(() => this.syncColors());
+    };
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", UserAccountForm);
