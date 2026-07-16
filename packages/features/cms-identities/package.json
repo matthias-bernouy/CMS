@@ -6,9 +6,11 @@
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
-        ".": "./src/exports/index.ts"
+        ".": "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
     },
     "peerDependencies": {
+        "mongodb": "^7.2.0",
         "typescript": "^5.9.3"
     }
 }
