@@ -1,5 +1,85 @@
-type JsonRecord = Record<string, unknown>;
-type StripeBusinessType = "company" | "government_entity" | "individual" | "non_profit";
+import {
+    defaultCountry,
+    defaultCurrency,
+    protectedPlatformPayoutInterval,
+    requiredEnv,
+    sellerActivityDescription,
+    stripeLivemode,
+    stripeV1ApiVersion,
+    stripeV2AccountIncludes,
+    stripeV2ApiVersion,
+    stripeWebhookMaximumBytes,
+    stripeWebhookToleranceSeconds,
+} from "./config/runtime.ts";
+import {
+    callRpcObject,
+    callRpcRows,
+    firstRow,
+    getRowByField,
+    insertRow,
+    listRows,
+    rest,
+    restError,
+    updateRow,
+} from "./db/postgrest.ts";
+import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
+import {
+    assertAllowedKeys,
+    assertOnlyKeys,
+    marketplaceTermsExpectationFromBody,
+    marketplaceTermsExpectationFromRequest,
+    optionalBoolean,
+    optionalCountry,
+    optionalCurrency,
+    optionalEmail,
+    optionalNonNegativeInteger,
+    optionalPositiveInteger,
+    optionalStripeToken,
+    optionalText,
+    readJsonObject,
+    requiredHash,
+    requiredInteger,
+    requiredString,
+    requiredStripeToken,
+    validBusinessType,
+} from "./http/body.ts";
+import { HttpError } from "./http/errors.ts";
+import { optionalMonthlyPayoutDays, optionalWeeklyPayoutDays, requiredPayoutInterval } from "./http/payouts.ts";
+import {
+    optionalPaymentStatus,
+    optionalSettlementStatus,
+    optionalStatus,
+    queryLimit,
+    requiredQueryInteger,
+    requiredQueryText,
+    requiredReleaseKind,
+    searchPattern,
+    validHttpsUrl,
+    validUrl,
+} from "./http/query.ts";
+import { json } from "./http/responses.ts";
+import { serveStripeConnect } from "./http/router.ts";
+import { retrievePayout, stripeV1, stripeV2 } from "./provider/stripe-client.ts";
+import { connectConfig, health } from "./routes/system.ts";
+import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
+import {
+    arrayAt,
+    errorMessage,
+    isRecord,
+    jsonEqual,
+    numberAt,
+    objectAt,
+    recordArrayAt,
+    requiredRecordInteger,
+    requiredRecordString,
+    stringArrayAt,
+    stringAt,
+    stripeObjectId,
+    stripUndefined,
+    unixTimestampAt,
+    unique,
+} from "./shared/data.ts";
+import type { JsonRecord, StripeBusinessType } from "./shared/types.ts";
 
 type ConnectAccountRow = {
     cms_user_id: string;
@@ -302,36 +382,6 @@ type StripeBalance = JsonRecord & {
 type StripeBalanceSettings = JsonRecord & {
     payments?: JsonRecord;
 };
-
-class HttpError extends Error {
-    constructor(
-        readonly status: number,
-        message: string,
-    ) {
-        super(message);
-    }
-}
-
-const corsHeaders = {
-    "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization, content-type, x-user-id, x-cms-user-id, x-cms-user-role",
-    "access-control-allow-methods": "GET, POST, OPTIONS",
-};
-
-const stripeV1ApiBase = "https://api.stripe.com/v1";
-const stripeV2ApiBase = "https://api.stripe.com/v2";
-const stripeV1ApiVersion = "2026-02-25.clover";
-const stripeV2ApiVersion = "2026-06-24.dahlia";
-const stripeWebhookToleranceSeconds = 300;
-const stripeWebhookMaximumBytes = 512 * 1024;
-const protectedPlatformPayoutInterval = "daily";
-const stripeV2AccountIncludes = [
-    "configuration.recipient",
-    "defaults",
-    "identity",
-    "requirements",
-] as const;
-const connectSchema = "stripe_connect";
 const accountSelect = [
     "cms_user_id",
     "stripe_account_id",
@@ -449,76 +499,50 @@ const disputeSelect = [
     "balance_transaction_ids", "provider_snapshot", "created_at", "updated_at",
 ].join(",");
 
-Deno.serve(async (request) => {
-    try {
-        assertStripeKeyModeCoherence();
-        const route = routePath(request);
-        if (route === "/webhooks/stripe") {
-            return await withMethod(request, "POST", () => ingestStripeWebhook(request, "platform"));
-        }
-        if (route === "/webhooks/stripe-connect") {
-            return await withMethod(request, "POST", () => ingestStripeWebhook(request, "connect"));
-        }
-        if (route === "/webhooks/stripe-connect-v2") {
-            return await withMethod(request, "POST", () => ingestStripeWebhook(request, "connect_v2"));
-        }
-        if (request.method === "OPTIONS") return optionsResponse();
-
-        if (route === "/health") return await withMethod(request, "GET", () => health(request));
-        if (route === "/connect/config") return await withMethod(request, "GET", () => connectConfig(request));
-        if (route === "/connect/status") return await withMethod(request, "GET", () => connectStatus(request));
-        if (route === "/connect/wallet") return await withMethod(request, "GET", () => connectWallet(request));
-        if (route === "/connect/enrollment") return await withMethod(request, "POST", () => connectEnrollment(request));
-        if (route === "/connect/verification") return await withMethod(request, "POST", () => connectVerification(request));
-        if (route === "/connect/onboarding") return await withMethod(request, "POST", () => connectOnboarding(request));
-        if (route === "/connect/onboarding/session") return await withMethod(request, "POST", () => connectOnboardingSession(request));
-        if (route === "/payments/seller-eligibility") return await withMethod(request, "POST", () => checkSellerHeldPaymentEligibility(request));
-        if (route === "/payments/protected") return await withMethod(request, "POST", () => createProtectedPayment(request));
-        if (route === "/payments/payment") return await withMethod(request, "GET", () => getProtectedPayment(request));
-        if (route === "/payments/reference") return await withMethod(request, "GET", () => getProtectedPaymentByReference(request));
-        if (route === "/operations/payment-cancellation") return await withMethod(request, "POST", () => requestPaymentIntentCancellation(request));
-        if (route === "/operations/release") return await withMethod(request, "POST", () => requestSettlementRelease(request));
-        if (route === "/operations/reversal") return await withMethod(request, "POST", () => requestTransferReversal(request));
-        if (route === "/operations/protected-refund") return await withMethod(request, "POST", () => requestProtectedRefund(request));
-        if (route === "/reconciliation/payment") return await withMethod(request, "POST", () => reconcileProviderPayment(request));
-        if (route === "/reconciliation/run") return await withMethod(request, "POST", () => runProviderReconciliation(request));
-        if (route === "/reconciliation/projections/ack") return await withMethod(request, "POST", () => acknowledgeCommerceProjection(request));
-        if (route === "/reconciliation/projections/fail") return await withMethod(request, "POST", () => failCommerceProjection(request));
-        if (route === "/admin/platform/payout-protection") return await withMethod(request, "POST", () => configurePlatformPayoutProtection(request));
-        if (route === "/admin/accounts/account/risk") return await withMethod(request, "GET", () => getSellerProviderRisk(request));
-        if (route === "/admin/accounts/account/payout-schedule") return await withMethod(request, "POST", () => configureSellerPayoutSchedule(request));
-        if (route === "/admin/accounts/account/onboarding") return await withMethod(request, "POST", () => adminCreateOnboarding(request));
-        if (route === "/admin/accounts/account/onboarding/session") return await withMethod(request, "POST", () => adminCreateOnboardingSession(request));
-        if (route === "/admin/payments") return await withMethod(request, "GET", () => listProviderPayments(request));
-        if (route === "/admin/payments/payment") return await withMethod(request, "GET", () => getProviderPayment(request));
-        if (route === "/admin/refunds") return await withMethod(request, "GET", () => listProviderRefunds(request));
-        if (route === "/admin/refunds/refund") return await withMethod(request, "GET", () => getProviderRefund(request));
-        if (route === "/admin/disputes") return await withMethod(request, "GET", () => listStripeDisputes(request));
-        if (route === "/admin/disputes/dispute") return await withMethod(request, "GET", () => getStripeDispute(request));
-        if (route === "/admin/disputes/files") return await withMethod(request, "POST", () => uploadStripeDisputeFile(request));
-        if (route === "/admin/disputes/evidence/stage") return await withMethod(request, "POST", () => stageStripeDisputeEvidence(request));
-        if (route === "/admin/disputes/evidence/submit") return await withMethod(request, "POST", () => submitStripeDisputeEvidence(request));
-        if (route === "/admin/disputes/accept") return await withMethod(request, "POST", () => acceptStripeDispute(request));
-        if (route === "/admin/exceptions") return await withMethod(request, "GET", () => listProviderExceptions(request));
-        if (route === "/admin/exceptions/exception") return await withMethod(request, "GET", () => getProviderException(request));
-        if (route === "/admin/commerce-projections/requeue") return await withMethod(request, "POST", () => requeueCommerceProjection(request));
-        if (route === "/admin/operations") return await withMethod(request, "GET", () => listFinancialOperations(request));
-
-        return json({ error: "not found" }, 404);
-    } catch (error) {
-        return handleError(error);
-    }
+serveStripeConnect({
+    ingestPlatformWebhook: request => ingestStripeWebhook(request, "platform"),
+    ingestConnectWebhook: request => ingestStripeWebhook(request, "connect"),
+    ingestConnectV2Webhook: request => ingestStripeWebhook(request, "connect_v2"),
+    health,
+    connectConfig,
+    connectStatus,
+    connectWallet,
+    connectEnrollment,
+    connectVerification,
+    connectOnboarding,
+    connectOnboardingSession,
+    checkSellerHeldPaymentEligibility,
+    createProtectedPayment,
+    getProtectedPayment,
+    getProtectedPaymentByReference,
+    requestPaymentIntentCancellation,
+    requestSettlementRelease,
+    requestTransferReversal,
+    requestProtectedRefund,
+    reconcileProviderPayment,
+    runProviderReconciliation,
+    acknowledgeCommerceProjection,
+    failCommerceProjection,
+    configurePlatformPayoutProtection,
+    getSellerProviderRisk,
+    configureSellerPayoutSchedule,
+    adminCreateOnboarding,
+    adminCreateOnboardingSession,
+    listProviderPayments,
+    getProviderPayment,
+    listProviderRefunds,
+    getProviderRefund,
+    listStripeDisputes,
+    getStripeDispute,
+    uploadStripeDisputeFile,
+    stageStripeDisputeEvidence,
+    submitStripeDisputeEvidence,
+    acceptStripeDispute,
+    listProviderExceptions,
+    getProviderException,
+    requeueCommerceProjection,
+    listFinancialOperations,
 });
-
-async function health(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    return json({ ok: true, stripeMode: stripeLivemode() ? "live" : "test" });
-}
-
-async function connectConfig(request: Request): Promise<Response> {
-    requireCmsRequest(request);
-    return json({ publishableKey: requiredEnv("STRIPE_PUBLISHABLE_KEY") });
-}
 
 async function connectStatus(request: Request): Promise<Response> {
     const { userId } = requireCmsRequest(request);
@@ -4094,55 +4118,6 @@ function sameScalarSet(left: unknown[], right: unknown[]): boolean {
     return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
 }
 
-async function stripeV1<T extends JsonRecord>(
-    path: string,
-    init: RequestInit,
-    options: { idempotencyKey?: string } = {},
-): Promise<T> {
-    const headers = new Headers(init.headers);
-    headers.set("authorization", `Bearer ${requiredEnv("STRIPE_SECRET_KEY")}`);
-    headers.set("stripe-version", stripeV1ApiVersion);
-    if (init.body instanceof URLSearchParams) headers.set("content-type", "application/x-www-form-urlencoded");
-    if (options.idempotencyKey) headers.set("idempotency-key", options.idempotencyKey);
-    const response = await fetch(`${stripeV1ApiBase}${path}`, { ...init, headers });
-    const data = await response.json().catch(() => null);
-    if (response.ok && isRecord(data)) return data as T;
-    throw stripeError(response.status, data);
-}
-
-async function retrievePayout(payoutId: string, stripeAccountId: string): Promise<JsonRecord> {
-    const headers = new Headers();
-    if (stripeAccountId !== "platform") headers.set("stripe-account", stripeAccountId);
-    return await stripeV1<JsonRecord>(`/payouts/${encodeURIComponent(payoutId)}`, {
-        method: "GET",
-        headers,
-    });
-}
-
-async function stripeV2<T extends JsonRecord>(
-    path: string,
-    init: RequestInit,
-    options: { idempotencyKey?: string } = {},
-): Promise<T> {
-    const headers = new Headers(init.headers);
-    headers.set("authorization", `Bearer ${requiredEnv("STRIPE_SECRET_KEY")}`);
-    headers.set("stripe-version", stripeV2ApiVersion);
-    headers.set("content-type", "application/json");
-    if (options.idempotencyKey) headers.set("idempotency-key", options.idempotencyKey);
-    const response = await fetch(`${stripeV2ApiBase}${path}`, { ...init, headers });
-    const data = await response.json().catch(() => null);
-    if (response.ok && isRecord(data)) return data as T;
-    throw stripeError(response.status, data);
-}
-
-function stripeError(status: number, data: unknown): HttpError {
-    const error = isRecord(data) && isRecord(data.error) ? data.error : null;
-    const message = error && typeof error.message === "string"
-        ? error.message
-        : `Stripe request failed (${status})`;
-    return new HttpError(status >= 400 && status < 500 ? status : 502, message);
-}
-
 function accountPatchFromStripe(account: StripeAccount, apiVersion: StripeAccountApiVersion): JsonRecord {
     return apiVersion === "v2" ? accountPatchFromStripeV2(account) : accountPatchFromStripeV1(account);
 }
@@ -4752,74 +4727,6 @@ function publicPaymentWithClientSecret(row: ConnectPaymentRow, clientSecret: str
     };
 }
 
-function routePath(request: Request): string {
-    const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
-    const marker = "/cms-stripe-connect";
-    const index = pathname.indexOf(marker);
-    if (index === -1) return pathname || "/";
-    return pathname.slice(index + marker.length) || "/";
-}
-
-async function withMethod(request: Request, method: string, handler: () => Promise<Response>): Promise<Response> {
-    if (request.method !== method) return methodNotAllowed(`${method}, OPTIONS`);
-    return handler();
-}
-
-function methodNotAllowed(allow: string): Response {
-    return new Response("Method Not Allowed", {
-        status: 405,
-        headers: { ...corsHeaders, allow },
-    });
-}
-
-function requireCmsRequest(
-    request: Request,
-    options: { requireUser?: boolean } = {},
-): { userId: string } {
-    const expected = requiredEnv("CMS_STRIPE_CONNECT_API_KEY");
-    const authorization = request.headers.get("authorization") ?? "";
-    const token = authorization.startsWith("Bearer ") ? authorization.slice("Bearer ".length).trim() : "";
-    if (!token || !safeEqual(token, expected)) throw new HttpError(401, "invalid CMS API key");
-
-    const requireUser = options.requireUser ?? true;
-    const userId = request.headers.get("x-cms-user-id")?.trim()
-        || request.headers.get("x-user-id")?.trim()
-        || "";
-    if (requireUser && !userId) throw new HttpError(401, "missing x-user-id");
-    if (userId.length > 200) throw new HttpError(400, "x-user-id is too long");
-    return { userId };
-}
-
-function requireDashboardAdmin(request: Request): { userId: string; actorKind: "admin" } {
-    const { userId } = requireCmsRequest(request);
-    const role = request.headers.get("x-cms-user-role")?.trim() ?? "";
-    if (role !== "admin") throw new HttpError(403, "the CMS admin role is required");
-    return { userId, actorKind: "admin" };
-}
-
-async function rest(path: string, init: RequestInit): Promise<Response> {
-    const key = serviceRoleKey();
-    const base = requiredEnv("SUPABASE_URL").replace(/\/$/, "");
-    const headers = new Headers(init.headers);
-    headers.set("apikey", key);
-    headers.set("authorization", `Bearer ${key}`);
-    headers.set("accept-profile", connectSchema);
-    if (init.method && init.method !== "GET") headers.set("content-profile", connectSchema);
-    return fetch(`${base}/rest/v1/${path}`, { ...init, headers });
-}
-
-async function restError(response: Response): Promise<HttpError> {
-    const data = await response.json().catch(() => null);
-    const message = isRecord(data) && typeof data.message === "string"
-        ? data.message
-        : `Supabase request failed (${response.status})`;
-    if (message.startsWith("validation:")) return new HttpError(400, message.slice("validation:".length).trim());
-    if (message.startsWith("not_found:")) return new HttpError(404, message.slice("not_found:".length).trim());
-    if (message.startsWith("conflict:")) return new HttpError(409, message.slice("conflict:".length).trim());
-    if (message.startsWith("forbidden:")) return new HttpError(403, message.slice("forbidden:".length).trim());
-    return new HttpError(502, message);
-}
-
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
     const payment = await getPaymentRow(paymentId);
     if (!payment) throw new HttpError(404, "payment not found");
@@ -4956,69 +4863,6 @@ async function reservePlatformFinancialOperation(
 
 async function updateFinancialOperation(operationId: number, values: JsonRecord): Promise<FinancialOperationRow | null> {
     return await updateRow<FinancialOperationRow>("financial_operations", operationId, values, operationSelect);
-}
-
-async function insertRow<T>(table: string, select: string, values: JsonRecord): Promise<T> {
-    const response = await rest(`${table}?select=${encodeURIComponent(select)}`, {
-        method: "POST",
-        headers: { "content-type": "application/json", prefer: "return=representation" },
-        body: JSON.stringify(stripUndefined(values)),
-    });
-    if (!response.ok) throw await restError(response);
-    return firstRow<T>(await response.json());
-}
-
-async function updateRow<T = JsonRecord>(
-    table: string,
-    id: number,
-    values: JsonRecord,
-    select = "*",
-): Promise<T | null> {
-    const response = await rest(`${table}?id=eq.${id}&select=${encodeURIComponent(select)}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json", prefer: "return=representation" },
-        body: JSON.stringify(stripUndefined(values)),
-    });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as T[];
-    return rows[0] ?? null;
-}
-
-async function getRowByField<T>(table: string, field: string, value: string, select: string): Promise<T | null> {
-    const response = await rest(
-        `${table}?${field}=eq.${encodeURIComponent(value)}&select=${encodeURIComponent(select)}&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as T[];
-    return rows[0] ?? null;
-}
-
-async function listRows<T>(path: string): Promise<T[]> {
-    const response = await rest(path, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    return await response.json() as T[];
-}
-
-async function callRpcRows<T>(name: string, body: JsonRecord): Promise<T[]> {
-    const response = await rest(`rpc/${name}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    });
-    if (!response.ok) throw await restError(response);
-    return await response.json() as T[];
-}
-
-async function callRpcObject<T>(name: string, body: JsonRecord): Promise<T> {
-    const response = await rest(`rpc/${name}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    });
-    if (!response.ok) throw await restError(response);
-    const value = await response.json();
-    return (isRecord(value) ? value : firstRow<T>(value)) as T;
 }
 
 async function enqueueCommerceProviderProjection(
@@ -6385,459 +6229,6 @@ function stripeEventCreatedAt(event: JsonRecord): string {
     throw new HttpError(400, "Stripe event created timestamp is invalid");
 }
 
-function firstRow<T>(value: unknown): T {
-    if (!Array.isArray(value) || !value[0]) throw new HttpError(502, "Supabase returned no rows");
-    return value[0] as T;
-}
-
-function optionsResponse(): Response {
-    return new Response("ok", { headers: corsHeaders });
-}
-
-function json(data: unknown, status = 200): Response {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: {
-            ...corsHeaders,
-            "content-type": "application/json; charset=utf-8",
-        },
-    });
-}
-
-function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
-    console.error(error);
-    return json({ error: "internal error" }, 500);
-}
-
-async function readJsonObject(request: Request): Promise<JsonRecord> {
-    let value: unknown;
-    try {
-        value = await request.json();
-    } catch {
-        throw new HttpError(400, "invalid JSON body");
-    }
-    if (!isRecord(value)) throw new HttpError(400, "body must be an object");
-    return value;
-}
-
-function requiredString(body: JsonRecord, name: string, maxLength: number): string {
-    const value = body[name];
-    if (typeof value !== "string") throw new HttpError(400, `${name} is required`);
-    const normalized = value.trim();
-    if (!normalized) throw new HttpError(400, `${name} is required`);
-    if (normalized.length > maxLength) throw new HttpError(400, `${name} is too long`);
-    return normalized;
-}
-
-function assertOnlyKeys(body: JsonRecord, allowed: string[]): void {
-    const unexpected = Object.keys(body).find(key => !allowed.includes(key));
-    if (unexpected) {
-        throw new HttpError(400, `${unexpected} is not accepted; submit Stripe token ids and the contact email only`);
-    }
-}
-
-function assertAllowedKeys(body: JsonRecord, allowed: string[]): void {
-    const unexpected = Object.keys(body).find(key => !allowed.includes(key));
-    if (unexpected) throw new HttpError(400, `${unexpected} is not allowed`);
-}
-
-function requiredHash(body: JsonRecord, name: string): string {
-    const value = requiredString(body, name, 64).toLowerCase();
-    if (!/^[a-f0-9]{64}$/.test(value)) throw new HttpError(400, `${name} must be a SHA-256 hex digest`);
-    return value;
-}
-
-function marketplaceTermsExpectationFromBody(body: JsonRecord): { version: string; hash: string } | null {
-    const hasVersion = body.marketplaceTermsVersion !== undefined && body.marketplaceTermsVersion !== null;
-    const hasHash = body.marketplaceTermsHash !== undefined && body.marketplaceTermsHash !== null;
-    if (!hasVersion && !hasHash) return null;
-    if (!hasVersion || !hasHash) {
-        throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash must be provided together");
-    }
-    return {
-        version: requiredString(body, "marketplaceTermsVersion", 200),
-        hash: requiredHash(body, "marketplaceTermsHash"),
-    };
-}
-
-function marketplaceTermsExpectationFromRequest(request: Request): { version: string; hash: string } | null {
-    const params = new URL(request.url).searchParams;
-    const version = params.get("marketplaceTermsVersion");
-    const hash = params.get("marketplaceTermsHash");
-    if (version === null && hash === null) return null;
-    return marketplaceTermsExpectationFromBody({
-        marketplaceTermsVersion: version,
-        marketplaceTermsHash: hash,
-    });
-}
-
-function optionalText(body: JsonRecord, name: string, maxLength: number): string | null {
-    const value = body[name];
-    if (value === undefined || value === null) return null;
-    if (typeof value !== "string") throw new HttpError(400, `${name} must be a string`);
-    const normalized = value.trim();
-    if (!normalized) return null;
-    if (normalized.length > maxLength) throw new HttpError(400, `${name} is too long`);
-    return normalized;
-}
-
-function requiredStripeToken(body: JsonRecord, name: string, prefix: string): string {
-    const value = requiredString(body, name, 500);
-    if (!value.startsWith(prefix) || !/^[A-Za-z0-9_]+$/.test(value)) {
-        throw new HttpError(400, `${name} is invalid`);
-    }
-    return value;
-}
-
-function optionalStripeToken(body: JsonRecord, name: string, prefix: string): string | null {
-    const value = optionalText(body, name, 500);
-    if (!value) return null;
-    if (!value.startsWith(prefix) || !/^[A-Za-z0-9_]+$/.test(value)) {
-        throw new HttpError(400, `${name} is invalid`);
-    }
-    return value;
-}
-
-function optionalEmail(body: JsonRecord, name: string): string | null {
-    const value = optionalText(body, name, 320);
-    if (!value) return null;
-    const email = value.toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, `${name} is invalid`);
-    return email;
-}
-
-function optionalCountry(body: JsonRecord, name: string): string | null {
-    const value = optionalText(body, name, 2);
-    if (!value) return null;
-    const country = value.toUpperCase();
-    if (!/^[A-Z]{2}$/.test(country)) throw new HttpError(400, `${name} must be a two-letter country code`);
-    return country;
-}
-
-function optionalCurrency(body: JsonRecord, name: string): string | null {
-    const value = optionalText(body, name, 3);
-    if (!value) return null;
-    const currency = value.toLowerCase();
-    if (!/^[a-z]{3}$/.test(currency)) throw new HttpError(400, `${name} must be a three-letter currency code`);
-    return currency;
-}
-
-function validBusinessType(value: unknown): value is StripeBusinessType {
-    return value === "company" ||
-        value === "government_entity" ||
-        value === "individual" ||
-        value === "non_profit";
-}
-
-function requiredInteger(body: JsonRecord, name: string): number {
-    const value = body[name];
-    if (typeof value === "string" && value.trim()) {
-        const number = Number(value);
-        if (Number.isInteger(number)) return number;
-    }
-    if (typeof value !== "number" || !Number.isInteger(value)) throw new HttpError(400, `${name} must be an integer`);
-    return value;
-}
-
-function optionalPositiveInteger(body: JsonRecord, name: string): number | null {
-    if (body[name] === undefined || body[name] === null) return null;
-    const value = requiredInteger(body, name);
-    if (value <= 0) throw new HttpError(400, `${name} must be positive`);
-    return value;
-}
-
-function optionalNonNegativeInteger(body: JsonRecord, name: string): number | null {
-    if (body[name] === undefined || body[name] === null) return null;
-    const value = requiredInteger(body, name);
-    if (value < 0) throw new HttpError(400, `${name} must be non-negative`);
-    return value;
-}
-
-function optionalBoolean(body: JsonRecord, name: string): boolean | null {
-    const value = body[name];
-    if (value === undefined || value === null) return null;
-    if (typeof value !== "boolean") throw new HttpError(400, `${name} must be a boolean`);
-    return value;
-}
-
-function requiredPayoutInterval(body: JsonRecord, name: string): "manual" | "daily" | "weekly" | "monthly" {
-    const value = requiredString(body, name, 20);
-    if (value !== "manual" && value !== "daily" && value !== "weekly" && value !== "monthly") {
-        throw new HttpError(400, `${name} must be manual, daily, weekly, or monthly`);
-    }
-    return value;
-}
-
-function optionalWeeklyPayoutDays(body: JsonRecord, name: string): string[] {
-    const value = body[name];
-    if (value === undefined || value === null) return [];
-    if (!Array.isArray(value)) throw new HttpError(400, `${name} must be an array`);
-    const allowed = new Set(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]);
-    const days = value.map(entry => {
-        if (typeof entry !== "string" || !allowed.has(entry)) throw new HttpError(400, `${name} contains an invalid day`);
-        return entry;
-    });
-    if (new Set(days).size !== days.length) throw new HttpError(400, `${name} contains duplicate days`);
-    return days;
-}
-
-function optionalMonthlyPayoutDays(body: JsonRecord, name: string): number[] {
-    const value = body[name];
-    if (value === undefined || value === null) return [];
-    if (!Array.isArray(value)) throw new HttpError(400, `${name} must be an array`);
-    const days = value.map(entry => {
-        if (!Number.isSafeInteger(entry) || Number(entry) < 1 || Number(entry) > 31) {
-            throw new HttpError(400, `${name} must contain days from 1 to 31`);
-        }
-        return Number(entry);
-    });
-    if (new Set(days).size !== days.length) throw new HttpError(400, `${name} contains duplicate days`);
-    return days;
-}
-
-function validUrl(value: string, name: string): string {
-    let parsed: URL;
-    try {
-        parsed = new URL(value);
-    } catch {
-        throw new HttpError(400, `${name} is invalid`);
-    }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        throw new HttpError(400, `${name} must be an http or https URL`);
-    }
-    return parsed.toString();
-}
-
-function validHttpsUrl(value: string, name: string): string {
-    const normalized = validUrl(value, name);
-    if (new URL(normalized).protocol !== "https:") throw new HttpError(400, `${name} must be an https URL`);
-    return normalized;
-}
-
-function requiredQueryText(request: Request, name: string, maxLength: number): string {
-    const value = new URL(request.url).searchParams.get(name)?.trim() ?? "";
-    if (!value) throw new HttpError(400, `${name} is required`);
-    if (value.length > maxLength) throw new HttpError(400, `${name} is too long`);
-    return value;
-}
-
-function requiredQueryInteger(request: Request, name: string): number {
-    const value = Number(new URL(request.url).searchParams.get(name));
-    if (!Number.isInteger(value) || value <= 0) throw new HttpError(400, `${name} must be a positive integer`);
-    return value;
-}
-
-function queryLimit(value: string | null): number {
-    if (!value) return 100;
-    const limit = Number(value);
-    if (!Number.isInteger(limit) || limit < 1) throw new HttpError(400, "limit must be a positive integer");
-    return Math.min(limit, 200);
-}
-
-function searchPattern(value: string | null): string | null {
-    const normalized = value?.trim() ?? "";
-    if (!normalized) return null;
-    if (normalized.length > 160) throw new HttpError(400, "q is too long");
-
-    const safe = normalized
-        .replace(/[^A-Za-z0-9@._+\-\s:]/g, " ")
-        .trim()
-        .replace(/\s+/g, "*");
-    return safe ? `*${safe}*` : null;
-}
-
-function optionalStatus(value: string | null): string | null {
-    const status = value?.trim() ?? "";
-    if (!status) return null;
-    if (![
-        "not_started",
-        "link_created",
-        "onboarding_started",
-        "requirements_due",
-        "pending_verification",
-        "enabled",
-        "restricted",
-        "rejected",
-    ].includes(status)) throw new HttpError(400, "status is invalid");
-    return status;
-}
-
-function optionalPaymentStatus(value: string | null): string | null {
-    const status = value?.trim() ?? "";
-    if (!status) return null;
-    if (![
-        "created",
-        "requires_action",
-        "processing",
-        "succeeded",
-        "failed",
-        "cancelled",
-    ].includes(status)) throw new HttpError(400, "status is invalid");
-    return status;
-}
-
-function optionalSettlementStatus(value: string | null): string | null {
-    const status = value?.trim() ?? "";
-    if (!status) return null;
-    if (![
-        "held", "eligible", "release_pending", "released", "blocked", "refund_pending",
-        "refunded", "reversal_pending", "reversed", "manual_review",
-    ].includes(status)) throw new HttpError(400, "settlementStatus is invalid");
-    return status;
-}
-
-function requiredReleaseKind(value: unknown): "initial" | "reserve" | "recovery" {
-    if (value === "initial" || value === "reserve" || value === "recovery") return value;
-    throw new HttpError(400, "releaseKind is invalid");
-}
-
-function defaultCountry(): string {
-    const value = (Deno.env.get("STRIPE_CONNECT_DEFAULT_COUNTRY") ?? "FR").trim().toUpperCase();
-    if (value !== "FR") throw new HttpError(500, "STRIPE_CONNECT_DEFAULT_COUNTRY must be FR for this integration version");
-    return value;
-}
-
-function defaultCurrency(): string {
-    const value = (Deno.env.get("STRIPE_CONNECT_DEFAULT_CURRENCY") ?? "eur").trim().toLowerCase();
-    if (value !== "eur") throw new HttpError(500, "STRIPE_CONNECT_DEFAULT_CURRENCY must be EUR for this integration version");
-    return value;
-}
-
-function sellerActivityDescription(): string {
-    const value = (Deno.env.get("STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION") ??
-        "Sale of second-hand goods between individuals through an online marketplace.").trim();
-    if (!value) throw new HttpError(500, "STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION is invalid");
-    if (value.length > 400) throw new HttpError(500, "STRIPE_CONNECT_SELLER_ACTIVITY_DESCRIPTION is too long");
-    return value;
-}
-
-function serviceRoleKey(): string {
-    const [key] = supabaseSecretKeys();
-    if (key) return key;
-    throw new HttpError(500, "missing Supabase secret key");
-}
-
-function supabaseSecretKeys(): string[] {
-    const keys: string[] = [];
-    const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
-    if (secretKeys) {
-        try {
-            const parsed = JSON.parse(secretKeys);
-            if (isRecord(parsed)) {
-                for (const value of Object.values(parsed)) {
-                    if (typeof value === "string" && value) keys.push(value);
-                }
-            }
-        } catch {
-            throw new HttpError(500, "SUPABASE_SECRET_KEYS must be valid JSON");
-        }
-    }
-
-    const modernSecretKey = Deno.env.get("SUPABASE_SECRET_KEY");
-    if (modernSecretKey) keys.push(modernSecretKey);
-
-    const legacyServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (legacyServiceRoleKey) keys.push(legacyServiceRoleKey);
-
-    return unique(keys);
-}
-
-function requiredEnv(name: string): string {
-    const value = Deno.env.get(name);
-    if (!value) throw new HttpError(500, `missing ${name}`);
-    return value;
-}
-
-function assertStripeKeyModeCoherence(): void {
-    stripeLivemode();
-}
-
-function stripeLivemode(): boolean {
-    const secretKey = requiredEnv("STRIPE_SECRET_KEY");
-    const publishableKey = requiredEnv("STRIPE_PUBLISHABLE_KEY");
-    const secretMode = secretKey.startsWith("sk_live_") ? "live"
-        : secretKey.startsWith("sk_test_") ? "test" : null;
-    const publishableMode = publishableKey.startsWith("pk_live_") ? "live"
-        : publishableKey.startsWith("pk_test_") ? "test" : null;
-    if (!secretMode || !publishableMode || secretMode !== publishableMode) {
-        throw new HttpError(500, "Stripe secret and publishable keys must use the same explicit test or live mode");
-    }
-    return secretMode === "live";
-}
-
-function safeEqual(left: string, right: string): boolean {
-    if (left.length !== right.length) return false;
-    let result = 0;
-    for (let i = 0; i < left.length; i++) {
-        result |= left.charCodeAt(i) ^ right.charCodeAt(i);
-    }
-    return result === 0;
-}
-
-function stripUndefined(value: JsonRecord): JsonRecord {
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
-}
-
-function unique(values: string[]): string[] {
-    return [...new Set(values.filter(Boolean))];
-}
-
-function objectAt(value: JsonRecord, key: string): JsonRecord {
-    const child = value[key];
-    return isRecord(child) ? child : {};
-}
-
-function stringAt(value: JsonRecord, key: string): string {
-    const child = value[key];
-    return typeof child === "string" ? child : "";
-}
-
-function stripeObjectId(value: unknown): string {
-    if (typeof value === "string") return value;
-    return isRecord(value) ? stringAt(value, "id") : "";
-}
-
-function numberAt(value: JsonRecord, key: string): number | undefined {
-    const child = value[key];
-    return typeof child === "number" ? child : undefined;
-}
-
-function unixTimestampAt(value: JsonRecord, key: string): number | undefined {
-    const child = value[key];
-    if (typeof child === "number") return child;
-    if (typeof child !== "string") return undefined;
-    const milliseconds = Date.parse(child);
-    return Number.isFinite(milliseconds) ? Math.floor(milliseconds / 1000) : undefined;
-}
-
-function arrayAt(value: JsonRecord, key: string): unknown[] {
-    const child = value[key];
-    return Array.isArray(child) ? child : [];
-}
-
-function stringArrayAt(value: JsonRecord, key: string): string[] {
-    return arrayAt(value, key).filter((entry): entry is string => typeof entry === "string");
-}
-
-function recordArrayAt(value: JsonRecord, key: string): JsonRecord[] {
-    return arrayAt(value, key).filter((entry): entry is JsonRecord => isRecord(entry));
-}
-
-function requiredRecordString(value: JsonRecord, key: string, maxLength: number): string {
-    const child = value[key];
-    if (typeof child !== "string" || !child.trim() || child.length > maxLength) {
-        throw new HttpError(400, `Stripe event ${key} is invalid`);
-    }
-    return child;
-}
-
-function requiredRecordInteger(value: JsonRecord, key: string): number {
-    const child = value[key];
-    if (!Number.isSafeInteger(child)) throw new HttpError(400, `Stripe event ${key} is invalid`);
-    return child as number;
-}
-
 function refundStatusFromStripe(refund: StripeRefund): string {
     switch (refund.status) {
         case "succeeded": return "succeeded";
@@ -6906,29 +6297,4 @@ function decodeBase64(value: string): Uint8Array {
     } catch {
         throw new HttpError(400, "base64 evidence is invalid");
     }
-}
-
-function jsonEqual(left: unknown, right: unknown): boolean {
-    return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : "unknown provider error";
-}
-
-function bytesToHex(bytes: Uint8Array): string {
-    return [...bytes].map(byte => byte.toString(16).padStart(2, "0")).join("");
-}
-
-async function digest(value: string): Promise<string> {
-    const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-    return bytesToHex(new Uint8Array(buffer));
-}
-
-async function stableStripeIdempotencyKey(namespace: string, businessKey: string): Promise<string> {
-    return `cms:${namespace}:${await digest(businessKey)}`;
-}
-
-function isRecord(value: unknown): value is JsonRecord {
-    return !!value && typeof value === "object" && !Array.isArray(value);
 }
