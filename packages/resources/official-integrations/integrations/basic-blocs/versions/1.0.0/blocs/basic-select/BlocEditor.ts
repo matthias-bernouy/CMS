@@ -45,6 +45,17 @@ export class BasicSelectEditor extends Editor {
                 settings: [
                     {
                         type: "segmented",
+                        label: "Presentation",
+                        attribute: "presentation",
+                        defaultValue: "auto",
+                        options: [
+                            { label: "Auto", value: "auto" },
+                            { label: "Native", value: "native" },
+                            { label: "Custom", value: "custom" },
+                        ],
+                    },
+                    {
+                        type: "segmented",
                         label: "Multiple",
                         attribute: "multiple",
                         defaultValue: "",

@@ -203,7 +203,7 @@
                 "tag": "basic-select",
                 "name": "Select",
                 "group": "Form",
-                "description": "Form-associated native select with an encapsulated label.",
+                "description": "Form-associated select with adaptive native and custom presentations.",
                 "path": "blocs/basic-select"
             }
         },

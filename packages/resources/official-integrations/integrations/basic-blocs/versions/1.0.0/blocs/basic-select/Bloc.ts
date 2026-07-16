@@ -11,6 +11,7 @@ class BasicSelect extends HTMLElement {
         "multiple",
         "name",
         "placeholder",
+        "presentation",
         "required",
         "text-color",
         "value",
@@ -28,6 +29,8 @@ class BasicSelect extends HTMLElement {
         this.activeIndex = -1;
         this.open = false;
         this.showValidation = false;
+        this.presentationQuery = null;
+        this.activePresentation = null;
         this.root.innerHTML = `
             <style>
                 :host {
@@ -47,12 +50,15 @@ class BasicSelect extends HTMLElement {
 
                 .label { font-weight: var(--cms-label-weight, 650); }
 
-                .control {
+                .custom-shell,
+                .native-shell {
+                    position: relative;
+                    min-width: 0;
+                }
+
+                .control,
+                .native-control {
                     box-sizing: border-box;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: .75rem;
                     width: 100%;
                     min-height: var(--cms-input-height, 2.75rem);
                     padding: var(--cms-input-padding, .65rem .75rem);
@@ -65,7 +71,24 @@ class BasicSelect extends HTMLElement {
                     cursor: pointer;
                 }
 
-                .control:focus-visible {
+                .control {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: .75rem;
+                }
+
+                .native-control {
+                    display: block;
+                    appearance: none;
+                    padding-inline-end: 2.25rem;
+                }
+
+                :host([multiple]) .native-control { padding-inline-end: .75rem; }
+                :host([multiple]) .native-shell::after { display: none; }
+
+                .control:focus-visible,
+                .native-control:focus-visible {
                     outline: 2px solid var(--cms-focus-color, var(--secondary-base, currentColor));
                     outline-offset: 2px;
                 }
@@ -93,6 +116,19 @@ class BasicSelect extends HTMLElement {
 
                 :host([data-open]) .chevron {
                     transform: translateY(.15rem) rotate(225deg);
+                }
+
+                .native-shell::after {
+                    position: absolute;
+                    top: 50%;
+                    right: .9rem;
+                    width: .55rem;
+                    height: .55rem;
+                    border-right: 1.5px solid currentColor;
+                    border-bottom: 1.5px solid currentColor;
+                    content: "";
+                    pointer-events: none;
+                    transform: translateY(-65%) rotate(45deg);
                 }
 
                 .listbox {
@@ -146,7 +182,8 @@ class BasicSelect extends HTMLElement {
 
                 .option:disabled { cursor: not-allowed; opacity: .5; }
                 :host([disabled]) { opacity: .6; }
-                :host([disabled]) .control { cursor: not-allowed; }
+                :host([disabled]) .control,
+                :host([disabled]) .native-control { cursor: not-allowed; }
                 .hint { color: var(--cms-muted-color, color-mix(in srgb, currentColor 65%, transparent)); }
                 .error { color: var(--cms-error-color, #b42318); }
                 .source { display: none; }
@@ -158,11 +195,16 @@ class BasicSelect extends HTMLElement {
             </style>
             <div class="field" part="field">
                 <span id="field-label" class="label" part="label"></span>
-                <button class="control" part="control" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="listbox" aria-describedby="hint error">
-                    <span id="control-value" class="value" part="value"></span>
-                    <span class="chevron" part="chevron" aria-hidden="true"></span>
-                </button>
-                <div id="listbox" class="listbox" part="listbox" role="listbox" hidden></div>
+                <div class="custom-shell">
+                    <button class="control" part="control" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="listbox" aria-describedby="hint error">
+                        <span id="control-value" class="value" part="value"></span>
+                        <span class="chevron" part="chevron" aria-hidden="true"></span>
+                    </button>
+                    <div id="listbox" class="listbox" part="listbox" role="listbox" hidden></div>
+                </div>
+                <div class="native-shell" hidden>
+                    <select class="native-control" part="control native-control" aria-describedby="hint error"></select>
+                </div>
                 <small id="hint" class="hint" part="hint"></small>
                 <small id="error" class="error" part="error" aria-live="polite"></small>
             </div>
@@ -170,9 +212,12 @@ class BasicSelect extends HTMLElement {
         `;
         this.fieldElement = this.root.querySelector(".field");
         this.labelElement = this.root.querySelector(".label");
+        this.customShell = this.root.querySelector(".custom-shell");
         this.control = this.root.querySelector(".control");
         this.valueElement = this.root.querySelector(".value");
         this.listbox = this.root.querySelector(".listbox");
+        this.nativeShell = this.root.querySelector(".native-shell");
+        this.nativeControl = this.root.querySelector(".native-control");
         this.hintElement = this.root.querySelector(".hint");
         this.errorElement = this.root.querySelector(".error");
         this.slotElement = this.root.querySelector("slot");
@@ -181,8 +226,14 @@ class BasicSelect extends HTMLElement {
 
     connectedCallback() {
         this.upgradeProperty("value");
+        this.presentationQuery = this.ownerDocument.defaultView?.matchMedia?.(
+            "(hover: none) and (pointer: coarse)",
+        ) ?? null;
+        this.addPresentationQueryListener();
         this.control.addEventListener("click", this.onControlClick);
         this.control.addEventListener("keydown", this.onControlKeydown);
+        this.nativeControl.addEventListener("input", this.onNativeInput);
+        this.nativeControl.addEventListener("change", this.onNativeChange);
         this.listbox.addEventListener("click", this.onOptionClick);
         this.listbox.addEventListener("keydown", this.onOptionKeydown);
         this.slotElement.addEventListener("slotchange", this.rebuild);
@@ -204,18 +255,25 @@ class BasicSelect extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.removePresentationQueryListener();
+        this.presentationQuery = null;
         this.control.removeEventListener("click", this.onControlClick);
         this.control.removeEventListener("keydown", this.onControlKeydown);
+        this.nativeControl.removeEventListener("input", this.onNativeInput);
+        this.nativeControl.removeEventListener("change", this.onNativeChange);
         this.listbox.removeEventListener("click", this.onOptionClick);
         this.listbox.removeEventListener("keydown", this.onOptionKeydown);
         this.slotElement.removeEventListener("slotchange", this.rebuild);
         this.removeEventListener("invalid", this.onInvalid);
         document.removeEventListener("pointerdown", this.onDocumentPointerDown);
         this.observer.disconnect();
+        this.closeListbox(false);
     }
 
     attributeChangedCallback(name) {
         if (!this.isConnected) return;
+        const restorePresentationFocus = ["multiple", "presentation"].includes(name) &&
+            Boolean(this.focusedControl);
         if (name === "value") {
             this.requestedValues = this.normalizeValues(this.getAttribute("value"));
             this.applyValues(this.requestedValues);
@@ -223,7 +281,7 @@ class BasicSelect extends HTMLElement {
             this.requestedValues = this.normalizeValues(this.value);
             this.applyValues(this.requestedValues);
         }
-        this.sync();
+        this.sync(restorePresentationFocus);
     }
 
     formResetCallback() {
@@ -265,36 +323,94 @@ class BasicSelect extends HTMLElement {
     }
 
     focus(options) {
-        this.control.focus(options);
+        this.activeControl.focus(options);
     }
 
-    sync() {
+    sync(restorePresentationFocus = false) {
         this.syncColors();
         this.labelElement.textContent = this.getAttribute("label") || "";
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
         this.hintElement.hidden = !this.hintElement.textContent;
-        this.control.disabled = this.disabled;
         if (this.disabled && this.open) this.closeListbox(false);
         this.control.setAttribute("aria-expanded", String(this.open));
+        this.nativeControl.multiple = this.multiple;
+        this.nativeControl.required = this.hasAttribute("required");
         const accessibleLabel = this.getAttribute("accessible-label") || "";
         if (this.labelElement.textContent) {
             this.control.setAttribute("aria-labelledby", "field-label control-value");
             this.control.removeAttribute("aria-label");
+            this.nativeControl.setAttribute("aria-labelledby", "field-label");
+            this.nativeControl.removeAttribute("aria-label");
             this.listbox.setAttribute("aria-label", this.labelElement.textContent);
         } else if (accessibleLabel) {
             this.control.removeAttribute("aria-labelledby");
             this.control.setAttribute("aria-label", accessibleLabel);
+            this.nativeControl.removeAttribute("aria-labelledby");
+            this.nativeControl.setAttribute("aria-label", accessibleLabel);
             this.listbox.setAttribute("aria-label", accessibleLabel);
         } else {
             this.control.removeAttribute("aria-labelledby");
             this.control.removeAttribute("aria-label");
+            this.nativeControl.removeAttribute("aria-labelledby");
+            this.nativeControl.removeAttribute("aria-label");
             this.listbox.removeAttribute("aria-label");
         }
         this.listbox.setAttribute("aria-multiselectable", String(this.multiple));
         this.renderValue();
         this.renderOptions();
+        this.syncPresentation(restorePresentationFocus);
         this.updateFormValue();
+    }
+
+    addPresentationQueryListener() {
+        if (!this.presentationQuery) return;
+        if (typeof this.presentationQuery.addEventListener === "function") {
+            this.presentationQuery.addEventListener("change", this.onPresentationQueryChange);
+        } else {
+            this.presentationQuery.addListener?.(this.onPresentationQueryChange);
+        }
+    }
+
+    removePresentationQueryListener() {
+        if (!this.presentationQuery) return;
+        if (typeof this.presentationQuery.removeEventListener === "function") {
+            this.presentationQuery.removeEventListener("change", this.onPresentationQueryChange);
+        } else {
+            this.presentationQuery.removeListener?.(this.onPresentationQueryChange);
+        }
+    }
+
+    resolvePresentation() {
+        const requested = (this.getAttribute("presentation") || "auto").trim().toLowerCase();
+        if (requested === "native" || requested === "custom") return requested;
+        return this.presentationQuery?.matches && !this.multiple ? "native" : "custom";
+    }
+
+    syncPresentation(forceRestoreFocus = false) {
+        const next = this.resolvePresentation();
+        const previous = this.activePresentation;
+        const focused = this.focusedControl;
+        const shouldRestoreFocus = forceRestoreFocus || Boolean(
+            previous && focused &&
+            (this.customShell.contains(focused) || this.nativeShell.contains(focused)),
+        );
+
+        if (next !== previous && this.open) this.closeListbox(false);
+        this.activePresentation = next;
+        this.setAttribute("data-resolved-presentation", next);
+        this.customShell.hidden = next !== "custom";
+        this.customShell.inert = next !== "custom";
+        this.nativeShell.hidden = next !== "native";
+        this.nativeShell.inert = next !== "native";
+        this.control.disabled = this.disabled || next !== "custom";
+        this.nativeControl.disabled = this.disabled || next !== "native";
+
+        if (next !== previous && shouldRestoreFocus) {
+            queueMicrotask(() => {
+                if (this.isConnected) this.activeControl.focus({ preventScroll: true });
+            });
+        }
     }
 
     syncColors() {
@@ -386,6 +502,37 @@ class BasicSelect extends HTMLElement {
             button.textContent = option.label;
             return button;
         }));
+
+        const nativeOptions = this.optionModels.map(option => {
+            const element = document.createElement("option");
+            element.value = option.value;
+            element.textContent = option.label;
+            element.disabled = option.disabled;
+            element.selected = selected.has(option.value);
+            return element;
+        });
+        let emptySelectionIndex = -1;
+        if (!this.multiple && selected.size === 0) {
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = this.getAttribute("placeholder") || "Select an option";
+            placeholder.disabled = true;
+            placeholder.hidden = true;
+            placeholder.selected = true;
+            nativeOptions.unshift(placeholder);
+            emptySelectionIndex = 0;
+        }
+        this.nativeControl.replaceChildren(...nativeOptions);
+        if (this.multiple) {
+            for (const option of this.nativeControl.options)
+                option.selected = selected.has(option.value);
+        } else {
+            const selectedIndex = Array.from(this.nativeControl.options)
+                .findIndex(option => selected.has(option.value));
+            this.nativeControl.selectedIndex = selectedIndex >= 0
+                ? selectedIndex
+                : emptySelectionIndex;
+        }
     }
 
     updateFormValue() {
@@ -402,11 +549,14 @@ class BasicSelect extends HTMLElement {
 
         const missing = this.hasAttribute("required") &&
             (values.length === 0 || values.every(value => value === ""));
+        const exposeInvalidity = !this.disabled && this.showValidation && missing;
+        this.control.setAttribute("aria-invalid", String(exposeInvalidity));
+        this.nativeControl.setAttribute("aria-invalid", String(exposeInvalidity));
         if (this.disabled || !missing) this.internals.setValidity({});
         else this.internals.setValidity(
             { valueMissing: true },
             "Select an option.",
-            this.control,
+            this.activeControl,
         );
         this.errorElement.textContent = this.showValidation && missing
             ? "Select an option."
@@ -415,7 +565,7 @@ class BasicSelect extends HTMLElement {
     }
 
     openListbox(direction = 1) {
-        if (this.disabled || this.optionModels.length === 0) return;
+        if (this.activePresentation !== "custom" || this.disabled || this.optionModels.length === 0) return;
         this.open = true;
         this.toggleAttribute("data-open", true);
         this.listbox.hidden = false;
@@ -478,6 +628,43 @@ class BasicSelect extends HTMLElement {
         this[name] = value;
     }
 
+    get activeControl() {
+        return this.activePresentation === "native" ? this.nativeControl : this.control;
+    }
+
+    get focusedControl() {
+        const documentActive = this.ownerDocument.activeElement;
+        if (documentActive !== this) {
+            return this.customShell.contains(documentActive) || this.nativeShell.contains(documentActive)
+                ? documentActive
+                : null;
+        }
+        try {
+            return this.root.activeElement;
+        } catch {
+            return null;
+        }
+    }
+
+    onPresentationQueryChange = () => {
+        this.syncPresentation();
+        this.updateFormValue();
+    };
+
+    onNativeInput = event => {
+        event.stopPropagation();
+    };
+
+    onNativeChange = event => {
+        event.stopPropagation();
+        if (this.activePresentation !== "native" || this.disabled) return;
+        this.requestedValues = this.multiple
+            ? Array.from(this.nativeControl.selectedOptions, option => option.value)
+            : (this.nativeControl.selectedIndex < 0 ? [] : [this.nativeControl.value]);
+        this.applyValues(this.requestedValues);
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    };
+
     onControlClick = () => {
         if (this.open) this.closeListbox(false);
         else this.openListbox(1);
@@ -534,7 +721,7 @@ class BasicSelect extends HTMLElement {
     onInvalid = () => {
         this.showValidation = true;
         this.updateFormValue();
-        this.control.focus();
+        this.focus();
     };
 }
 
