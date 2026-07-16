@@ -18,6 +18,12 @@ import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/operations-exceptions.contracts";
+import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
+import type {
+    DashboardTable,
+    PostgrestRequestRecord,
+} from "./stripe-connect/dashboard-contract-harness";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -4592,6 +4598,7 @@ class StripeConnectMock {
     lastTransferParameters: Record<string, string> | null = null;
     readonly moneyCallOrder: string[] = [];
     readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }> = [];
+    readonly postgrestRequests: PostgrestRequestRecord[] = [];
     readonly stripeRequests: StripeRequestRecord[] = [];
     paymentIntentCreateCount = 0;
     chargeRetrieveCount = 0;
@@ -5232,6 +5239,11 @@ class StripeConnectMock {
         expect(request.headers.get("accept-profile")).toBe("stripe_connect");
         if (method !== "GET" && method !== "HEAD") expect(request.headers.get("content-profile")).toBe("stripe_connect");
         const table = decodeURIComponent(url.pathname.slice("/rest/v1/".length));
+        this.postgrestRequests.push({
+            method,
+            table,
+            searchParams: Array.from(url.searchParams.entries()),
+        });
         if (table === "rpc/reserve_protected_payment" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const payment = asRecord(body.p_payment);
@@ -6128,6 +6140,43 @@ class StripeConnectMock {
 
     rows(table: string): JsonRecord[] {
         return this.tables[table]!.map(row => ({ ...row }));
+    }
+
+    seedDashboardPayment(clientReferenceId: string, patch: JsonRecord = {}): number {
+        const payment = this.insertPayment({
+            client_reference_id: clientReferenceId,
+            financial_terms_hash: financialTermsHash,
+            financial_revision: 1,
+            dual_approval_threshold_amount: 1000,
+            buyer_cms_user_id: `buyer-${clientReferenceId}`,
+            seller_cms_user_id: `seller-${clientReferenceId}`,
+            seller_stripe_account_id: `acct_${clientReferenceId}`,
+            stripe_payment_intent_id: `pi_${clientReferenceId}`,
+            transfer_group: `group_${clientReferenceId}`,
+            currency: "eur",
+            amount_total: 1200,
+            seller_transfer_amount: 1080,
+            platform_retained_amount: 120,
+            payment_status: "succeeded",
+            settlement_status: "held",
+            description: null,
+            ...patch,
+        });
+        return Number(payment.id);
+    }
+
+    seedDashboardRow(table: DashboardTable, row: JsonRecord): JsonRecord {
+        return this.insertGeneric(table, row);
+    }
+
+    patchDashboardRow(table: DashboardTable, id: number, patch: JsonRecord): void {
+        const row = this.tables[table]?.find(candidate => same(candidate.id, id));
+        if (!row) throw new Error(`unknown ${table} dashboard row ${id}`);
+        this.update(row, patch);
+    }
+
+    clearPostgrestRequests(): void {
+        this.postgrestRequests.length = 0;
     }
 
     clearStripeRequests(): void {
@@ -7067,3 +7116,19 @@ async function okJson(response: Response): Promise<JsonRecord> {
     expect(response.status).toBeLessThan(300);
     return body;
 }
+
+const createDashboardReadHarness = async () => {
+    const harness = await createHarness();
+    return {
+        rest: harness.rest,
+        request: async (
+            userId: string,
+            role: string | undefined,
+            endpoint: string,
+            params: Record<string, string> = {},
+        ) => await sourceRequestWithRole(harness, userId, role, endpoint, params),
+    };
+};
+
+registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
+registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
