@@ -6,19 +6,12 @@ import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
-import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest, type SourceEndpoint } from "@bernouy/cms-sources";
-import { PUBLIC_AUTH_ROUTES, executeAuthSystemSourceEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
-import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN, withFunctionsSource } from "@bernouy/cms-functions";
-import { createTriggerInterceptor } from "@bernouy/cms-triggers";
+import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
-import {
-    authorizeDeliverySourceEndpoint,
-    resolveDeliverySubject,
-    resolveDeliverySourceContext,
-} from "cms-delivery/core/sources/authorization";
+import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerSourceProxy";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -78,53 +71,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
             serveFilesRequest({ metadata: delivery.filesMetadata, blob: delivery.filesBlob }, req, { prefix }));
     });
 
-    runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
-        const prefix = sourcesPrefix(runner.basePath);
-        const sourceDeps = {
-            ...(delivery.sourceResolveSecret ? { resolveSecret: delivery.sourceResolveSecret } : {}),
-            ...(delivery.identities ? { identities: delivery.identities } : {}),
-            resolveContext: (req: Request) => resolveDeliverySourceContext(delivery, req),
-        };
-        const proxiedSources = delivery.sources && delivery.functions
-            ? withFunctionsSource(delivery.sources, delivery.functions)
-            : delivery.sources;
-        const interceptEndpoint = delivery.triggers && delivery.functions && delivery.sources
-            ? createTriggerInterceptor({
-                triggers: delivery.triggers,
-                functions: delivery.functions,
-                sources: delivery.sources,
-                deps: sourceDeps,
-                resolveUser: async (req) => {
-                    const subject = await resolveDeliverySubject(delivery, req);
-                    return subject ? { id: subject.identifier, role: subject.role } : {};
-                },
-            })
-            : undefined;
-        const deps = {
-            ...sourceDeps,
-            executeSystemEndpoint: async (endpoint: SourceEndpoint, req: Request) => {
-                if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-                    if (!delivery.functions || !delivery.sources) return new Response("function executor not configured", { status: 501 });
-                    const subject = await resolveDeliverySubject(delivery, req);
-                    return executeFunctionSystemSourceEndpoint(endpoint, req, {
-                        functions: delivery.functions,
-                        sources: delivery.sources,
-                        deps: sourceDeps,
-                        resolveUser: async () => subject ? { id: subject.identifier, role: subject.role } : {},
-                    });
-                }
-                if (delivery.auth) return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, req);
-                return new Response("system source executor not configured", { status: 501 });
-            },
-            authorizeEndpoint: (endpoint: SourceEndpoint, req: Request) =>
-                authorizeDeliverySourceEndpoint(delivery, endpoint, req),
-            ...(interceptEndpoint ? { interceptEndpoint } : {}),
-        };
-        for (const method of SOURCE_PROXY_METHODS) {
-            proxyRunner.setDefaultEndpoint(method, (req) =>
-                handleSourceRequest(proxiedSources, req, { prefix, deps }));
-        }
-    });
+    registerDeliverySourceProxy(delivery);
 
     // Responsive image variants at `/.cms/img/<id>/<width>.webp` — mounted only
     // when a variant store is wired (else the renderer just serves originals).
