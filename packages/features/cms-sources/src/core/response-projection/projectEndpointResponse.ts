@@ -1,5 +1,6 @@
 import type { SourceEndpoint } from "../../interfaces/Source";
 import { responseHeaders } from "../endpointHeaders";
+import { DataShapeProjectionError } from "../projectStrictDataShape";
 import { projectDataShape } from "./projectDataShape";
 import { readBoundedJson } from "./readBoundedJson";
 import {
@@ -8,6 +9,7 @@ import {
     type LegacyResponseContractReason,
     type ResponseProjectionOptions,
 } from "./responseProjectionEvents";
+import { attachProjectedTriggerResponseBody } from "./triggerResponseBody";
 
 export {
     RESPONSE_PROJECTION_MODES,
@@ -96,7 +98,19 @@ export async function projectEndpointResponse(
         });
     }
 
-    return projectedJsonResponse(upstream, projected.value);
+    const response = projectedJsonResponse(upstream, projected.value);
+    if (declared.triggerBody) {
+        try {
+            attachProjectedTriggerResponseBody(response, parsed.value, projected.value, declared.triggerBody);
+        } catch (error) {
+            if (!(error instanceof DataShapeProjectionError)) throw error;
+            return projectionFailure(endpoint.urn, upstream.status, false, "type_mismatch", options, {
+                path: "$trigger",
+                expectedType: declared.triggerBody.type,
+            });
+        }
+    }
+    return response;
 }
 
 function passthrough(upstream: Response): Response {

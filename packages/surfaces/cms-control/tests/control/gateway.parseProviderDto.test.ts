@@ -280,6 +280,35 @@ describe("parseSourceDto", () => {
         expect(dto.endpoints[0]!.output).toEqual(output as any);
     });
 
+    test("output JSON blob preserves server-only trigger response fields", () => {
+        const output = [{
+            status: "201",
+            body: { type: "object", properties: { id: { type: "number" } } },
+            triggerBody: {
+                type: "object",
+                properties: {
+                    authorization: { type: "string" },
+                    actorId: { type: "string", semantic: { kind: "user-id" } },
+                },
+                required: ["authorization", "actorId"],
+            },
+        }];
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+
+        expect(dto.endpoints[0]!.output).toEqual(output as any);
+        expect(sourceDtoToSource(dto).endpoints[0]!.output?.[0]?.triggerBody)
+            .toEqual({
+                ...output[0]!.triggerBody,
+                properties: {
+                    authorization: { type: "string" },
+                    actorId: {
+                        type: "string",
+                        semantic: { kind: "user-id", authority: "shop" },
+                    },
+                },
+            } as any);
+    });
+
     test("blank body field → no body on the DTO", () => {
         const dto = parseSourceDto(validBody({ "endpoints.0.body": "" }));
         expect(dto.endpoints[0]!.body).toBeUndefined();

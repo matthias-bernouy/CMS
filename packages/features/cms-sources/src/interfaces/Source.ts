@@ -90,6 +90,9 @@ export type SourceMeta = {
 export type EndpointResponse = {
     status: string;
     body?: DataShape;
+    /** Additional server-only object fields merged into the body seen by
+     * response triggers. They are never serialized to the source caller. */
+    triggerBody?: DataShape;
 };
 
 export type SourceEndpoint = {

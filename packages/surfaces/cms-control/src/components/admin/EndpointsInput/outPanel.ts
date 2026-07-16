@@ -1,6 +1,6 @@
 import { makeResponseRow, type ResponseRowHandle } from "./responseRow";
 import { jsonField, type EndpointSeed } from "./shared";
-import type { DataShape } from "@bernouy/cms-sources";
+import type { EndpointResponse } from "@bernouy/cms-sources";
 
 /** The "Out" tab: the editable response contract — a per-status list serialised
  *  into ONE JSON blob `endpoints.<i>.output` (an `EndpointResponse[]`). Each row
@@ -28,7 +28,7 @@ export function makeOutPanel(endpointIdx: number, seed: EndpointSeed): HTMLEleme
         .filter((r): r is NonNullable<typeof r> => r !== null);
     const sync = () => field.sync(readRows);
 
-    const addRow = (r: { status?: string; body?: DataShape }) => {
+    const addRow = (r: Partial<EndpointResponse>) => {
         const handle = makeResponseRow(r, sync, () => {
             const i = handles.indexOf(handle);
             if (i >= 0) handles.splice(i, 1);

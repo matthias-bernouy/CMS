@@ -104,6 +104,9 @@ function endpointDtoToEndpoint(sourceId: string, e: SourceEndpointDto, authority
     if (e.output?.length) endpoint.output = e.output.map(output => ({
         ...output,
         ...(output.body ? { body: qualifyIdentityAuthority(output.body, authority) } : {}),
+        ...(output.triggerBody ? {
+            triggerBody: qualifyIdentityAuthority(output.triggerBody, authority),
+        } : {}),
     }));
     if (e.meta) endpoint.meta = e.meta;
     if (e.headers?.length) endpoint.headers = e.headers;

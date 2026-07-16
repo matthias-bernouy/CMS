@@ -1,6 +1,10 @@
-import type { FunctionUserContext } from "@bernouy/cms-functions";
-import type { ExecutorDeps, SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
-import type { FunctionRepository } from "@bernouy/cms-functions";
+import type { FunctionRepository, FunctionUserContext } from "@bernouy/cms-functions";
+import {
+    triggerResponseProjection,
+    type ExecutorDeps,
+    type SourceEndpoint,
+    type SourceRepository,
+} from "@bernouy/cms-sources";
 import { readJsonBodyUnderLimit, DEFAULT_TRIGGER_BODY_LIMIT_BYTES } from "./bodyBuffer";
 import { endpointMatch, matchingTriggers } from "./matchTrigger";
 import { anyTriggerReadsRequestBody, anyTriggerReadsResponseBody } from "./triggerRefs";
@@ -62,9 +66,11 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
         const response = await next(request);
         if (!responseTriggers.length) return response;
 
-        const responseBodyPromise = anyTriggerReadsResponseBody(responseTriggers)
-            ? readJsonBodyUnderLimit(response.clone(), options.maxBodyBytes ?? DEFAULT_TRIGGER_BODY_LIMIT_BYTES)
-            : Promise.resolve(undefined);
+        const responseBodyPromise = responseBodyForTriggers(
+            response,
+            responseTriggers,
+            options.maxBodyBytes ?? DEFAULT_TRIGGER_BODY_LIMIT_BYTES,
+        );
         const responseSync = syncTriggers(responseTriggers);
         if (responseSync.length) {
             const result = await runTriggers({
@@ -89,6 +95,18 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
 
         return response;
     };
+}
+
+function responseBodyForTriggers(
+    response: Response,
+    triggers: readonly TriggerRecord[],
+    maxBodyBytes: number,
+): Promise<unknown | undefined> {
+    if (!anyTriggerReadsResponseBody(triggers)) return Promise.resolve(undefined);
+    const projected = triggerResponseProjection(response);
+    return projected !== undefined
+        ? Promise.resolve(projected.byteLength <= maxBodyBytes ? projected.body : undefined)
+        : readJsonBodyUnderLimit(response.clone(), maxBodyBytes);
 }
 
 function runtimeOptions(options: CreateTriggerInterceptorOptions, endpoint: SourceEndpoint, request: Request) {

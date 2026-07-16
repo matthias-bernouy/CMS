@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import type { DataShape } from "@bernouy/cms-sources";
 import { makeNode } from "cms-control/components/admin/EndpointsInput/bodyNode";
+import { makeResponseRow } from "cms-control/components/admin/EndpointsInput/responseRow";
 import { parseShapeField } from "cms-control/core/validation/gateway/parseShapeField";
 
 describe("parseShapeField", () => {
@@ -49,5 +50,24 @@ describe("endpoint DataShape editor", () => {
         };
 
         expect(makeNode(shape, () => undefined).read()).toEqual(shape);
+    });
+
+    test("preserves server-only trigger fields while editing the public response", () => {
+        const triggerBody: DataShape = {
+            type: "object",
+            properties: { authorization: { type: "string" } },
+            required: ["authorization"],
+        };
+        const row = makeResponseRow({
+            status: "201",
+            body: { type: "object", properties: { id: { type: "number" } } },
+            triggerBody,
+        }, () => undefined, () => undefined);
+
+        expect(row.read()).toEqual({
+            status: "201",
+            body: { type: "object", properties: { id: { type: "number" } } },
+            triggerBody,
+        });
     });
 });

@@ -14,8 +14,9 @@ import { str } from "./gatewayValidators";
 
 /** Parse a per-endpoint `output` JSON blob into a per-status `EndpointResponse[]`, or
  *  `undefined` when nothing valid remains. Bad entries dropped, status must be a code
- *  or "default" (`isValidResponseStatus`), duplicates keep the FIRST; a body failing
- *  `parseDataShape` (proto/depth/node-count defenses) is dropped while the status entry is kept. */
+ *  or "default" (`isValidResponseStatus`), duplicates keep the FIRST; body shapes
+ *  failing `parseDataShape` (proto/depth/node-count defenses) are dropped while the
+ *  status entry is kept. */
 export function parseResponsesBlob(raw: string | undefined, path: string): EndpointResponse[] | undefined {
     if (raw == null || raw === "") return undefined;
     let parsed: unknown;
@@ -31,7 +32,11 @@ export function parseResponsesBlob(raw: string | undefined, path: string): Endpo
         seen.add(status);   // dedupe: keep first
         let body: DataShape | undefined;
         if (e.body != null) try { body = parseDataShape(e.body, `${path}[${i}].body`); } catch { /* bad body dropped */ }
-        out.push(body ? { status, body } : { status });
+        let triggerBody: DataShape | undefined;
+        if (e.triggerBody != null) {
+            try { triggerBody = parseDataShape(e.triggerBody, `${path}[${i}].triggerBody`); } catch { /* bad body dropped */ }
+        }
+        out.push({ status, ...(body ? { body } : {}), ...(triggerBody ? { triggerBody } : {}) });
     });
     return out.length ? out : undefined;
 }

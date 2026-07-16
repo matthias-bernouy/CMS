@@ -12157,7 +12157,11 @@ cms-endpoints-input .ep-add:hover {
       if (!s2)
         return null;
       const body = tree.read();
-      return { status: s2, ...body ? { body } : {} };
+      return {
+        status: s2,
+        ...body ? { body } : {},
+        ...seed.triggerBody ? { triggerBody: seed.triggerBody } : {}
+      };
     };
     return { element: row, read };
   }
@@ -25150,8 +25154,9 @@ textarea {
       references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
       if (this.select("phase").value === "response") {
         references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
-        const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status))?.body ?? endpoint?.output?.find((entry) => entry.status === "default")?.body;
-        references.push(...referencesFromShape(output, "$response.body", "Response body"));
+        const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status)) ?? endpoint?.output?.find((entry) => entry.status === "default");
+        references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
+        references.push(...referencesFromShape(output?.triggerBody, "$response.body", "Response body / trigger-only"));
       }
       return uniqueReferences(references);
     }

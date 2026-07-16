@@ -1,7 +1,7 @@
 import { makeIconButton, ICON_X } from "./controls";
 import { makeDataShapeTree } from "./dataShapeTree";
 import { makeStatusField } from "./statusField";
-import type { DataShape, EndpointResponse } from "@bernouy/cms-sources";
+import type { EndpointResponse } from "@bernouy/cms-sources";
 
 /** Handle for one response row: its element + a `read()` that assembles the
  *  `EndpointResponse`. The body `read` is captured in the closure (it can't be
@@ -17,7 +17,7 @@ export type ResponseRowHandle = {
  *  `onRemove`, which the panel uses to drop this row's handle AND its element (so a
  *  removed row stops contributing to the serialised list — not just the DOM). */
 export function makeResponseRow(
-    seed: { status?: string; body?: DataShape },
+    seed: Partial<EndpointResponse>,
     onChange: () => void,
     onRemove: () => void,
 ): ResponseRowHandle {
@@ -51,7 +51,11 @@ export function makeResponseRow(
         const s = status.read();
         if (!s) return null;
         const body = tree.read();
-        return { status: s, ...(body ? { body } : {}) };
+        return {
+            status: s,
+            ...(body ? { body } : {}),
+            ...(seed.triggerBody ? { triggerBody: seed.triggerBody } : {}),
+        };
     };
 
     return { element: row, read };

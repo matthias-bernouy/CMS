@@ -8,6 +8,7 @@ import {
 } from "../interfaces/Source";
 import { isSourceEndpointAccessMode } from "./access";
 import { dataShapeAtPath } from "./parseDataShape";
+import { validateTriggerResponse } from "./response-projection/validateTriggerResponse";
 import { isForbiddenHeaderName, isValidHeaderName, isValidHeaderValue, MAX_ENDPOINT_HEADERS } from "./headerPolicy";
 import { validateSourceTargetUrl } from "./sourceTargetUrl";
 
@@ -161,6 +162,7 @@ function validateResponses(endpoint: SourceEndpoint, errors: string[]): void {
     for (const response of endpoint.output) {
         if (!isValidResponseStatus(response.status)) errors.push(`invalid response status for "${endpoint.urn}": "${response.status}" (expected an HTTP code or "default")`);
         if (seen.has(response.status)) errors.push(`duplicate response status for "${endpoint.urn}": "${response.status}"`);
+        validateTriggerResponse(endpoint, response, errors);
         seen.add(response.status);
     }
 }

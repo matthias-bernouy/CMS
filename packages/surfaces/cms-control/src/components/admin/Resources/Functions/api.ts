@@ -1,4 +1,4 @@
-import type { DataShape } from "@bernouy/cms-sources";
+import type { DataShape, EndpointResponse } from "@bernouy/cms-sources";
 
 export type FunctionUiValue =
     | null
@@ -81,7 +81,7 @@ export type FunctionCatalogEndpoint = {
     method: string;
     params: Array<{ name: string; required?: boolean; type?: string; semantic?: DataShape["semantic"] }>;
     body?: DataShape;
-    output?: Array<{ status: string; body?: DataShape }>;
+    output?: EndpointResponse[];
     meta?: { name?: string; description?: string };
 };
 
