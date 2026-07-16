@@ -9,6 +9,7 @@ import {
 } from "./execution/functionResponses";
 import { json } from "./execution/response";
 import { runFunctionSteps } from "./execution/runFunctionSteps";
+import { withFunctionExecutionScope } from "./execution/functionExecutionScope";
 import {
     FunctionExecutionError,
     UnexpectedFunctionExecutionError,
@@ -58,7 +59,7 @@ export async function executeFunction(
             steps: {},
         };
 
-        const scopedOptions = withFunctionUserContext(options);
+        const scopedOptions = withFunctionExecutionScope(options);
         const assertionFailure = await runFunctionSteps(fn.steps, vars, scopedOptions, fn);
         if (assertionFailure) {
             return functionErrorResponse(fn, assertionFailure.status, await assertionFailure.json());
@@ -88,21 +89,4 @@ export async function executeFunction(
         }
         return await serverFailureResponse(fn, 500, options);
     }
-}
-
-function withFunctionUserContext(options: ExecuteFunctionOptions): ExecuteFunctionOptions {
-    const originalResolveContext = options.deps?.resolveContext;
-    const userID = options.user?.id;
-    const userRole = options.user?.role;
-    return {
-        ...options,
-        deps: {
-            ...options.deps,
-            resolveContext: async request => ({
-                ...(originalResolveContext ? await originalResolveContext(request) : {}),
-                ...(userID ? { userID } : {}),
-                ...(userRole ? { userRole } : {}),
-            }),
-        },
-    };
 }

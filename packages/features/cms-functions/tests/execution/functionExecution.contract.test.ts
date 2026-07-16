@@ -79,7 +79,10 @@ describe("function execution contract", () => {
             },
         ]);
         expect(probe.budgetSince(mark)).toMatchObject({
+            endpointLookups: 1,
             upstreamCalls: 2,
+            secretResolutions: 1,
+            contextResolutions: 1,
             uniqueEndpointUrns: 1,
             uniqueUpstreamTargets: 1,
         });
@@ -111,7 +114,12 @@ describe("function execution contract", () => {
             error: "Function execution failed",
             correlationId,
         });
-        expect(probe.budgetSince(mark).upstreamCalls).toBe(1);
+        expect(probe.budgetSince(mark)).toMatchObject({
+            endpointLookups: 1,
+            upstreamCalls: 1,
+            secretResolutions: 1,
+            contextResolutions: 1,
+        });
     });
 });
 

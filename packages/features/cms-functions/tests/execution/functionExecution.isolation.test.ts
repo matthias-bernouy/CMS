@@ -51,7 +51,12 @@ describe("function execution isolation", () => {
             userRole: "user",
             value: "payload",
         });
-        expect(probe.budgetSince(firstMark).upstreamCalls).toBe(1);
+        expect(probe.budgetSince(firstMark)).toMatchObject({
+            endpointLookups: 1,
+            upstreamCalls: 1,
+            secretResolutions: 1,
+            contextResolutions: 1,
+        });
 
         await inner.updateSource(versionedSource("provider-b.test"));
         secret = "secret-b";
@@ -64,7 +69,12 @@ describe("function execution isolation", () => {
             userRole: "admin",
             value: "payload",
         });
-        expect(probe.budgetSince(secondMark).upstreamCalls).toBe(1);
+        expect(probe.budgetSince(secondMark)).toMatchObject({
+            endpointLookups: 1,
+            upstreamCalls: 1,
+            secretResolutions: 1,
+            contextResolutions: 1,
+        });
         expect(requests).toEqual([
             {
                 provider: "provider-a.test",
@@ -103,7 +113,11 @@ describe("function execution isolation", () => {
                 if (new URL(request.url).host === "commerce.test") {
                     return Response.json({ sellerId: 184, amount: 2500 });
                 }
-                const body = await request.json() as { sellerId: string; amount: number };
+                const body = await request.json() as {
+                    sellerId: string;
+                    reviewerSellerId: string;
+                    amount: number;
+                };
                 paymentBodies.push(body);
                 return Response.json({ paymentId: `payment-${body.sellerId}`, status: "pending" });
             },
@@ -117,7 +131,11 @@ describe("function execution isolation", () => {
         });
         expect(first.status).toBe(200);
         expect(await first.json()).toEqual({ paymentId: "payment-acct_a", status: "pending" });
-        expect(probe.budgetSince(firstMark).upstreamCalls).toBe(2);
+        expect(probe.budgetSince(firstMark)).toMatchObject({
+            endpointLookups: 2,
+            upstreamCalls: 2,
+            identityResolutions: 1,
+        });
 
         stripeSellerId = "acct_b";
         const secondMark = probe.mark();
@@ -128,10 +146,14 @@ describe("function execution isolation", () => {
         });
         expect(second.status).toBe(200);
         expect(await second.json()).toEqual({ paymentId: "payment-acct_b", status: "pending" });
-        expect(probe.budgetSince(secondMark).upstreamCalls).toBe(2);
+        expect(probe.budgetSince(secondMark)).toMatchObject({
+            endpointLookups: 2,
+            upstreamCalls: 2,
+            identityResolutions: 1,
+        });
         expect(paymentBodies).toEqual([
-            { sellerId: "acct_a", amount: 2500 },
-            { sellerId: "acct_b", amount: 2500 },
+            { sellerId: "acct_a", reviewerSellerId: "acct_a", amount: 2500 },
+            { sellerId: "acct_b", reviewerSellerId: "acct_b", amount: 2500 },
         ]);
     });
 });
@@ -198,6 +220,7 @@ function identityFunction(): CmsFunction {
                     endpoint: "createPayment",
                     body: {
                         sellerId: "$steps.order.sellerId",
+                        reviewerSellerId: "$steps.order.sellerId",
                         amount: "$steps.order.amount",
                     },
                 },
@@ -249,9 +272,13 @@ function stripeSource(): Source {
                             type: "string",
                             semantic: { kind: "user-id", authority: "stripe-connect" },
                         },
+                        reviewerSellerId: {
+                            type: "string",
+                            semantic: { kind: "user-id", authority: "stripe-connect" },
+                        },
                         amount: { type: "number" },
                     },
-                    required: ["sellerId", "amount"],
+                    required: ["sellerId", "reviewerSellerId", "amount"],
                 },
             },
             output: [{
