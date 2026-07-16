@@ -6,6 +6,13 @@ export type SourceOverlayFieldType = typeof SOURCE_OVERLAY_FIELD_TYPES[number];
 export const SOURCE_OVERLAY_EDITABLE_SCOPES = ["self", "admin", "all"] as const;
 export type SourceOverlayEditableScope = typeof SOURCE_OVERLAY_EDITABLE_SCOPES[number];
 
+export type SourceOverlayDashboardOption = {
+    value: string;
+    label: string;
+    subtitle?: string;
+    media?: string;
+};
+
 export type SourceOverlayField = {
     id: string;
     label: string;
@@ -17,10 +24,12 @@ export type SourceOverlayField = {
     path?: string;
     section?: string;
     required?: boolean;
+    multiple?: boolean;
     selfEditable?: boolean;
     adminEditable?: boolean;
     showInDashboardTable?: boolean;
     exposeToEditorSources?: boolean;
+    options?: SourceOverlayDashboardOption[];
 };
 
 export type SourceOverlaySection = {
@@ -46,14 +55,18 @@ export type SourceOverlayFieldSourceMap = {
     path?: string;
     section?: string;
     required?: string;
+    multiple?: string;
     selfEditable?: string;
     adminEditable?: string;
     showInDashboardTable?: string;
     exposeToEditorSources?: string;
+    options?: string;
 };
 
 export type SourceOverlayFieldSource = {
     endpointId: string;
+    /** Static request params used to materialize one entity-specific field set. */
+    params?: Record<string, string>;
     path?: string;
     map?: SourceOverlayFieldSourceMap;
 };
@@ -69,13 +82,6 @@ export type SourceOverlayDashboardDataRef = SourceOverlayDashboardEndpointRef & 
     itemsPath?: string;
     itemPath?: string;
     totalPath?: string;
-};
-
-export type SourceOverlayDashboardOption = {
-    value: string;
-    label: string;
-    subtitle?: string;
-    media?: string;
 };
 
 export type SourceOverlayDashboardLookupRef = SourceOverlayDashboardDataRef & {
@@ -124,6 +130,8 @@ export interface SourceOverlayRepository {
     deleteOverlay(id: string): Promise<boolean>;
 }
 
-export function sourceOverlayFieldShape(field: Pick<SourceOverlayField, "type">): DataShape {
-    return { type: field.type };
+export function sourceOverlayFieldShape(field: Pick<SourceOverlayField, "type" | "label" | "multiple">): DataShape {
+    return field.multiple
+        ? { type: "array", items: { type: field.type }, title: field.label }
+        : { type: field.type, title: field.label };
 }

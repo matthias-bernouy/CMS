@@ -2,6 +2,7 @@ import type { Source } from "../interfaces/Source";
 import {
     SOURCE_OVERLAY_FIELD_TYPES,
     type SourceOverlay,
+    type SourceOverlayDashboardOption,
     type SourceOverlayField,
     type SourceOverlayFieldSourceMap,
     type SourceOverlayFieldType,
@@ -10,7 +11,7 @@ import { executeEndpoint, type ExecutorDeps } from "./executeEndpoint";
 import { parseUrn } from "./urn";
 
 const SIMPLE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
-type BoolFieldKey = "required" | "selfEditable" | "adminEditable" | "showInDashboardTable" | "exposeToEditorSources";
+type BoolFieldKey = "required" | "multiple" | "selfEditable" | "adminEditable" | "showInDashboardTable" | "exposeToEditorSources";
 
 export async function materializeSourceOverlays(
     source: Source,
@@ -31,7 +32,11 @@ export async function materializeSourceOverlay(
         parseUrn(candidate.urn)?.endpoint === overlay.fieldSource?.endpointId);
     if (!endpoint) return { ...structuredClone(overlay), fields: [] };
 
-    const request = new Request("http://cms.local/source-overlay-fields", {
+    const requestUrl = new URL("http://cms.local/source-overlay-fields");
+    for (const [name, value] of Object.entries(overlay.fieldSource.params ?? {})) {
+        requestUrl.searchParams.set(name, value);
+    }
+    const request = new Request(requestUrl, {
         method: endpoint.method,
         headers: { accept: "application/json" },
     });
@@ -71,10 +76,12 @@ function fieldFromEntry(entry: unknown, map: SourceOverlayFieldSourceMap = {}): 
         ...optionalText(entry, map.path ?? "path", "path"),
         ...optionalText(entry, map.section ?? "section", "section"),
         ...optionalBool(entry, map.required ?? "required", "required"),
+        ...optionalBool(entry, map.multiple ?? "multiple", "multiple"),
         ...optionalBool(entry, map.selfEditable ?? "selfEditable", "selfEditable"),
         ...optionalBool(entry, map.adminEditable ?? "adminEditable", "adminEditable"),
         ...optionalBool(entry, map.showInDashboardTable ?? "showInDashboardTable", "showInDashboardTable"),
         ...optionalBool(entry, map.exposeToEditorSources ?? "exposeToEditorSources", "exposeToEditorSources"),
+        ...optionalOptions(entry, map.options ?? "options"),
     };
 }
 
@@ -102,6 +109,33 @@ function optionalText(entry: Record<string, unknown>, path: string, key: "path" 
 function optionalBool(entry: Record<string, unknown>, path: string, key: BoolFieldKey): Partial<SourceOverlayField> {
     const value = valueAt(entry, path);
     return typeof value === "boolean" ? { [key]: value } : {};
+}
+
+function optionalOptions(entry: Record<string, unknown>, path: string): Pick<SourceOverlayField, "options"> | Record<never, never> {
+    const value = valueAt(entry, path);
+    if (!Array.isArray(value)) return {};
+    return { options: value.map(option).filter((item): item is SourceOverlayDashboardOption => item !== null) };
+}
+
+function option(value: unknown): SourceOverlayDashboardOption | null {
+    if (!isRecord(value)) return null;
+    const optionValue = text(value.value);
+    const label = text(value.label);
+    if (!optionValue || !label) return null;
+    return {
+        value: optionValue,
+        label,
+        ...optionalOptionText(value.subtitle, "subtitle"),
+        ...optionalOptionText(value.media, "media"),
+    };
+}
+
+function optionalOptionText(
+    value: unknown,
+    key: "subtitle" | "media",
+): Pick<SourceOverlayDashboardOption, typeof key> | Record<never, never> {
+    const parsed = text(value);
+    return parsed ? { [key]: parsed } as Pick<SourceOverlayDashboardOption, typeof key> : {};
 }
 
 function text(value: unknown): string {
