@@ -28,6 +28,7 @@ describe("protected C2C financial policy contract", () => {
         const endpoint = source.source.endpoints.find((candidate: any) => candidate.endpointId === "prepareProtectedPayment");
         const body = endpoint.output[0].body;
 
+        expect(endpoint.access).toBe("system");
         expect(body.required).toEqual(expect.arrayContaining([
             "payoutDelayDays",
             "sellerReserveLiabilityDays",

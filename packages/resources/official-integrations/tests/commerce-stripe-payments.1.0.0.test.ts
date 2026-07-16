@@ -89,6 +89,9 @@ describe("commerce-stripe-payments 1.0.0", () => {
         if (!releaseFn) throw new Error("executeAuthorizedSettlementRelease function not imported");
         if (!refundFn || !cancellationFn || !deadlineWorker || !cancellationWorker || !releaseWorker || !refundWorker || !reconciliationWorker) throw new Error("protected financial workers not imported");
         if (!enrollmentFn || !platformDecreaseFn || !submitPriceFn || !protectedOrderFn) throw new Error("seller sale enrollment functions not imported");
+        expect(fn.access).toEqual({ mode: "auth" });
+        expect((await sources.getEndpoint(makeEndpointUrn("commerce", "prepareProtectedPayment")))?.access)
+            .toEqual({ mode: "system" });
         expect(result.artifacts).toEqual([
             { type: "function", id: enrollmentFn.id, action: "created" },
             { type: "function", id: platformDecreaseFn.id, action: "created" },
@@ -1862,6 +1865,7 @@ function commerceSource(): Source {
             {
                 urn: makeEndpointUrn("commerce", "prepareProtectedPayment"),
                 method: "POST",
+                access: { mode: "system" },
                 targetUrl: "https://commerce.test/payment/prepare",
                 headers: [{ name: "x-cms-user-id", source: { from: "computed", ref: "userID" } }],
                 input: { body: {

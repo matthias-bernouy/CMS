@@ -148,6 +148,7 @@ describe("Commerce protected Stripe combined installation", () => {
         const preparedPayment = await sources.getEndpoint(makeEndpointUrn("commerce", "prepareProtectedPayment"));
         const createdPayment = await sources.getEndpoint(makeEndpointUrn("stripe-connect", "createProtectedPayment"));
         const sellerPayout = await sources.getEndpoint(makeEndpointUrn("stripe-connect", "configureSellerPayoutSchedule"));
+        expect(preparedPayment?.access).toEqual({ mode: "system" });
         expect(preparedPayment?.output?.[0]?.body?.properties?.sellerId?.semantic?.authority).toBe("cms");
         expect(createdPayment?.input?.body?.properties?.sellerUserId?.semantic?.authority).toBe("cms");
         expect(sellerPayout?.input?.body?.properties?.userId?.semantic?.authority).toBe("cms");
@@ -234,6 +235,9 @@ describe("Commerce protected Stripe combined installation", () => {
         ]));
 
         await assertImportedAccessGrants(sources, functions, roles);
+        expect((await roles.get(USER_ROLE))?.grants.some(
+            grant => grant.permission === makeEndpointUrn("commerce", "prepareProtectedPayment"),
+        )).toBe(false);
         expect((await sources.getEndpoint(makeEndpointUrn("commerce", "reviewOrderRefund")))?.access)
             .toEqual({ mode: "admin", roles: ["finance"] });
         expect((await sources.getEndpoint(makeEndpointUrn("commerce", "resolveOrderClaim")))?.access)
