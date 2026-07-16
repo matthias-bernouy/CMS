@@ -495,18 +495,74 @@ describe("mondial-relay 1.0.0 source", () => {
             }
             expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
                 ["GET", "/rest/v1/shipments"],
-                ["GET", "/rest/v1/shipment_events"],
             ]);
             const shipmentRequest = harness.postgrestRequests()[0]!;
             expect(shipmentRequest.searchParams[params.id ? "id" : "expedition_number"]).toBe(
                 `eq.${params.id ?? params.expeditionNumber}`,
             );
-            expect(harness.postgrestRequests()[1]?.searchParams).toMatchObject({
-                shipment_id: `eq.${shipment.id}`,
-                order: "occurred_at.desc.nullslast,created_at.desc",
+            expect(shipmentRequest.searchParams).toMatchObject({
+                "events.order": "occurred_at.desc.nullslast,created_at.desc",
             });
+            expect(shipmentRequest.searchParams.select).toContain(
+                "events:shipment_events!shipment_events_shipment_id_fkey(",
+            );
             expect(harness.providerRequests()).toEqual([]);
         }
+
+        harness.resetRequestHistory();
+        const byExternalOrder = await sourceRequest(harness, "shipmentForExternalOrder", {
+            method: "GET",
+            userId: "system",
+            userRole: "system",
+            enforceAccess: true,
+            params: { externalOrderId: "order-1001" },
+        });
+        expect(byExternalOrder.status).toBe(200);
+        expect(await jsonBody(byExternalOrder)).toEqual({
+            items: [{
+                id: shipment.id,
+                expeditionNumber: "00435394",
+                status: "label_ready",
+                trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
+                deliveryRelayLocation: "FR-031270",
+                latestEventLabel: "Disponible au Point Relais",
+                latestEventAt: "2026-07-14T11:00:00.000Z",
+                carrierAcceptedAt: "2026-07-13T08:00:00.000Z",
+                sellerHandoffDeclaredAt: null,
+                recipientHandoffAt: null,
+                createdAt: "2026-07-02T10:00:00.000Z",
+                events: expected.events,
+            }],
+        });
+        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/shipments"],
+        ]);
+        expect(harness.postgrestRequests()[0]?.searchParams).toMatchObject({
+            external_order_id: "eq.order-1001",
+            order: "created_at.desc",
+            "events.order": "occurred_at.desc.nullslast,created_at.desc",
+        });
+        const externalOrderSelect = harness.postgrestRequests()[0]?.searchParams.select ?? "";
+        for (const privateField of [
+            "recipient_name", "recipient_email", "recipient_phone", "recipient_address",
+            "recipient_postal_code", "recipient_city", "recipient_country", "sender_", "raw_",
+        ]) {
+            expect(externalOrderSelect).not.toContain(privateField);
+        }
+        expect(harness.providerRequests()).toEqual([]);
+
+        harness.resetRequestHistory();
+        const forbiddenExternalOrderLookup = await sourceRequest(harness, "shipmentForExternalOrder", {
+            method: "GET",
+            userId: "member-1",
+            userRole: "member",
+            enforceAccess: true,
+            params: { externalOrderId: "order-1001" },
+        });
+        expect(forbiddenExternalOrderLookup.status).toBe(403);
+        expect(await forbiddenExternalOrderLookup.text()).toBe("Forbidden");
+        expect(harness.postgrestRequests()).toEqual([]);
+        expect(harness.providerRequests()).toEqual([]);
 
         for (const caller of [
             { userId: "", userRole: "member", status: 401, body: "Unauthorized" },
@@ -537,6 +593,21 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(missing.status).toBe(404);
         expect(await jsonBody(missing)).toEqual({ error: "shipment not found" });
+        expect(missingHarness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/shipments"],
+        ]);
+        expect(missingHarness.providerRequests()).toEqual([]);
+
+        missingHarness.resetRequestHistory();
+        const noShipmentForOrder = await sourceRequest(missingHarness, "shipmentForExternalOrder", {
+            method: "GET",
+            userId: "system",
+            userRole: "system",
+            enforceAccess: true,
+            params: { externalOrderId: "order-without-shipment" },
+        });
+        expect(noShipmentForOrder.status).toBe(200);
+        expect(await jsonBody(noShipmentForOrder)).toEqual({ items: [] });
         expect(missingHarness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
         ]);
@@ -2009,7 +2080,32 @@ async function createHarness(options: {
             const fields = selectedFields(url);
             expect(fields).not.toContain("shipping_amount");
             expect(fields).not.toContain("currency");
-            return jsonResponse(projectRows(url, insertedShipments), 200);
+            const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+            const externalOrderId = url.searchParams.get("external_order_id")?.replace(/^eq\./, "");
+            const expeditionNumber = url.searchParams.get("expedition_number")?.replace(/^eq\./, "");
+            const rows = insertedShipments.filter(row =>
+                (!id || row.id === id)
+                && (!externalOrderId || row.external_order_id === externalOrderId)
+                && (!expeditionNumber || row.expedition_number === expeditionNumber)
+            );
+            if (url.searchParams.get("order") === "created_at.desc") {
+                rows.sort((left, right) => timestamp(right.created_at) - timestamp(left.created_at));
+            }
+            const projected = projectRows(url, rows.slice(0, Number(url.searchParams.get("limit") ?? rows.length)));
+            const eventFields = embeddedFields(fields, "events:shipment_events");
+            if (eventFields.length) {
+                for (const [index, row] of rows.entries()) {
+                    if (!projected[index]) break;
+                    projected[index]!.events = shipmentEvents
+                        .filter(event => event.shipment_id === row.id)
+                        .sort((left, right) => {
+                            const occurred = nullableTimestampDescending(left.occurred_at, right.occurred_at);
+                            return occurred || timestamp(right.created_at) - timestamp(left.created_at);
+                        })
+                        .map(event => projectRecord(event, eventFields));
+                }
+            }
+            return jsonResponse(projected, 200);
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/claim_due_shipments" && method === "POST") {
             const body = JSON.parse(requestBody) as JsonRecord;
@@ -2767,16 +2863,53 @@ function jsonResponse(value: unknown, status = 200): Response {
 function projectRows(url: URL, rows: JsonRecord[]): JsonRecord[] {
     const fields = selectedFields(url);
     if (!fields.length || fields.includes("*")) return rows;
-    return rows.map(row => Object.fromEntries(fields
+    return rows.map(row => projectRecord(row, fields));
+}
+
+function projectRecord(row: JsonRecord, fields: string[]): JsonRecord {
+    return Object.fromEntries(fields
         .filter(field => Object.hasOwn(row, field))
-        .map(field => [field, row[field]])));
+        .map(field => [field, row[field]]));
 }
 
 function selectedFields(url: URL): string[] {
-    return (url.searchParams.get("select") ?? "")
-        .split(",")
-        .map(field => field.trim())
-        .filter(Boolean);
+    return splitSelectFields(url.searchParams.get("select") ?? "");
+}
+
+function splitSelectFields(select: string): string[] {
+    const fields: string[] = [];
+    let start = 0;
+    let depth = 0;
+    for (let index = 0; index < select.length; index += 1) {
+        if (select[index] === "(") depth += 1;
+        else if (select[index] === ")") depth -= 1;
+        else if (select[index] === "," && depth === 0) {
+            fields.push(select.slice(start, index).trim());
+            start = index + 1;
+        }
+    }
+    fields.push(select.slice(start).trim());
+    return fields.filter(Boolean);
+}
+
+function embeddedFields(fields: string[], prefix: string): string[] {
+    const field = fields.find(candidate => candidate.startsWith(`${prefix}!`) || candidate.startsWith(`${prefix}(`));
+    if (!field) return [];
+    const open = field.indexOf("(");
+    return open < 0 ? [] : splitSelectFields(field.slice(open + 1, -1));
+}
+
+function nullableTimestampDescending(left: unknown, right: unknown): number {
+    const leftMissing = left === null || left === undefined || left === "";
+    const rightMissing = right === null || right === undefined || right === "";
+    if (leftMissing) return rightMissing ? 0 : 1;
+    if (rightMissing) return -1;
+    return timestamp(right) - timestamp(left);
+}
+
+function timestamp(value: unknown): number {
+    const parsed = Date.parse(String(value ?? ""));
+    return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function jsonpResponse(value: string, status = 200): Response {

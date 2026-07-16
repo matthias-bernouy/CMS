@@ -66,8 +66,8 @@
             "id": "shipments",
             "call": {
               "source": "{{dependencies.delivery.sourceId}}",
-              "endpoint": "shipments",
-              "params": { "externalOrderId": "$steps.order.publicId", "limit": 1, "offset": 0 }
+              "endpoint": "shipmentForExternalOrder",
+              "params": { "externalOrderId": "$steps.order.publicId" }
             }
           },
           {
@@ -77,26 +77,21 @@
               "max": 1,
               "steps": [
                 {
-                  "id": "shipment",
-                  "call": {
-                    "source": "{{dependencies.delivery.sourceId}}",
-                    "endpoint": "shipment",
-                    "params": { "id": "$item.id" }
-                  }
+                  "assert": { "condition": { "exists": "$item.id" } }
                 }
               ],
               "yield": {
-                "id": "$steps.shipment.id",
-                "expeditionNumber": "$steps.shipment.expeditionNumber",
-                "status": "$steps.shipment.status",
-                "trackingUrl": "$steps.shipment.trackingUrl",
-                "deliveryRelayLocation": "$steps.shipment.deliveryRelayLocation",
-                "latestEventLabel": "$steps.shipment.latestEventLabel",
-                "latestEventAt": "$steps.shipment.latestEventAt",
-                "carrierAcceptedAt": "$steps.shipment.carrierAcceptedAt",
-                "recipientHandoffAt": "$steps.shipment.recipientHandoffAt",
-                "createdAt": "$steps.shipment.createdAt",
-                "events": "$steps.shipment.events"
+                "id": "$item.id",
+                "expeditionNumber": "$item.expeditionNumber",
+                "status": "$item.status",
+                "trackingUrl": "$item.trackingUrl",
+                "deliveryRelayLocation": "$item.deliveryRelayLocation",
+                "latestEventLabel": "$item.latestEventLabel",
+                "latestEventAt": "$item.latestEventAt",
+                "carrierAcceptedAt": "$item.carrierAcceptedAt",
+                "recipientHandoffAt": "$item.recipientHandoffAt",
+                "createdAt": "$item.createdAt",
+                "events": "$item.events"
               }
             }
           }
@@ -136,8 +131,8 @@
             "id": "shipments",
             "call": {
               "source": "{{dependencies.delivery.sourceId}}",
-              "endpoint": "shipments",
-              "params": { "externalOrderId": "$steps.sale.publicId", "limit": 1, "offset": 0 }
+              "endpoint": "shipmentForExternalOrder",
+              "params": { "externalOrderId": "$steps.sale.publicId" }
             }
           },
           {
@@ -147,27 +142,22 @@
               "max": 1,
               "steps": [
                 {
-                  "id": "shipment",
-                  "call": {
-                    "source": "{{dependencies.delivery.sourceId}}",
-                    "endpoint": "shipment",
-                    "params": { "id": "$item.id" }
-                  }
+                  "assert": { "condition": { "exists": "$item.id" } }
                 }
               ],
               "yield": {
-                "id": "$steps.shipment.id",
-                "expeditionNumber": "$steps.shipment.expeditionNumber",
-                "status": "$steps.shipment.status",
-                "trackingUrl": "$steps.shipment.trackingUrl",
-                "deliveryRelayLocation": "$steps.shipment.deliveryRelayLocation",
-                "latestEventLabel": "$steps.shipment.latestEventLabel",
-                "latestEventAt": "$steps.shipment.latestEventAt",
-                "carrierAcceptedAt": "$steps.shipment.carrierAcceptedAt",
-                "sellerHandoffDeclaredAt": "$steps.shipment.sellerHandoffDeclaredAt",
-                "recipientHandoffAt": "$steps.shipment.recipientHandoffAt",
-                "createdAt": "$steps.shipment.createdAt",
-                "events": "$steps.shipment.events"
+                "id": "$item.id",
+                "expeditionNumber": "$item.expeditionNumber",
+                "status": "$item.status",
+                "trackingUrl": "$item.trackingUrl",
+                "deliveryRelayLocation": "$item.deliveryRelayLocation",
+                "latestEventLabel": "$item.latestEventLabel",
+                "latestEventAt": "$item.latestEventAt",
+                "carrierAcceptedAt": "$item.carrierAcceptedAt",
+                "sellerHandoffDeclaredAt": "$item.sellerHandoffDeclaredAt",
+                "recipientHandoffAt": "$item.recipientHandoffAt",
+                "createdAt": "$item.createdAt",
+                "events": "$item.events"
               }
             }
           }

@@ -16,6 +16,21 @@ export async function shipmentRowByExpedition(expeditionNumber: string): Promise
     return await getOne("shipments", { expedition_number: expeditionNumber }, shipmentSelect());
 }
 
+export async function shipmentWithEventsRowById(id: string): Promise<JsonRecord | null> {
+    return await shipmentWithEventsRow({ id });
+}
+
+export async function shipmentWithEventsRowByExpedition(expeditionNumber: string): Promise<JsonRecord | null> {
+    return await shipmentWithEventsRow({ expedition_number: expeditionNumber });
+}
+
+export async function shipmentWithEventsRowByExternalOrderId(externalOrderId: string): Promise<JsonRecord | null> {
+    return await shipmentWithEventsRow(
+        { external_order_id: externalOrderId },
+        { newestFirst: true, shipmentFields: shipmentTrackingSelect() },
+    );
+}
+
 export async function privateShipmentRowById(id: string): Promise<JsonRecord | null> {
     return await getOne("shipments", { id }, privateShipmentSelect());
 }
@@ -390,6 +405,34 @@ function eventSelect(): string {
         "projection_claim_token", "projection_last_error", "projection_manual_review_at", "event_label", "event_date",
         "event_time", "location", "relay_number", "relay_country", "created_at",
     ].join(",");
+}
+
+async function shipmentWithEventsRow(
+    filters: Record<string, string>,
+    options: { newestFirst?: boolean; shipmentFields?: string } = {},
+): Promise<JsonRecord | null> {
+    const select = `${options.shipmentFields ?? shipmentSelect()},`
+        + `events:shipment_events!shipment_events_shipment_id_fkey(${shipmentDetailEventSelect()})`;
+    const params = [`select=${encodeURIComponent(select)}`, "limit=1"];
+    for (const [key, value] of Object.entries(filters)) {
+        params.push(`${encodeURIComponent(key)}=eq.${encodeURIComponent(value)}`);
+    }
+    if (options.newestFirst) params.push(`order=${encodeURIComponent("created_at.desc")}`);
+    params.push(`events.order=${encodeURIComponent("occurred_at.desc.nullslast,created_at.desc")}`);
+    const rows = await restJson<JsonRecord[]>(`shipments?${params.join("&")}`, { method: "GET" });
+    return rows[0] ?? null;
+}
+
+function shipmentTrackingSelect(): string {
+    return [
+        "id", "expedition_number", "status", "tracking_url", "delivery_relay_number",
+        "latest_event_label", "latest_event_at", "carrier_accepted_at",
+        "seller_handoff_declared_at", "recipient_handoff_at", "created_at",
+    ].join(",");
+}
+
+function shipmentDetailEventSelect(): string {
+    return ["normalized_status", "occurred_at", "event_label", "event_date", "event_time", "location"].join(",");
 }
 
 export function relaySelectionSelect(): string {

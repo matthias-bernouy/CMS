@@ -38,7 +38,9 @@ import {
     shipmentRowByExternalOrderId,
     shipmentRowWithRequestByIdempotencyKey,
     shipmentRowByExpedition,
-    shipmentRowById,
+    shipmentWithEventsRowByExpedition,
+    shipmentWithEventsRowByExternalOrderId,
+    shipmentWithEventsRowById,
     shipmentsRows,
     shipmentProjectionExceptionRows,
     shipmentSelect,
@@ -59,6 +61,9 @@ Deno.serve(async (request) => {
         if (request.method === "GET" && route === "/health") return health(request);
         if (request.method === "GET" && route === "/shipments") return await shipments(request);
         if (request.method === "GET" && route === "/shipment") return await shipment(request);
+        if (request.method === "GET" && route === "/system/shipment-for-external-order") {
+            return await shipmentForExternalOrder(request);
+        }
         if (request.method === "POST" && route === "/shipments") return await createShipment(request);
         if (request.method === "GET" && route === "/settings") return await settings(request);
         if (request.method === "POST" && route === "/settings") return await setSettings(request);
@@ -140,13 +145,16 @@ async function shipments(request: Request): Promise<Response> {
 async function shipment(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const url = new URL(request.url);
-    const row = await shipmentByRequest(url);
+    const row = await shipmentWithEventsByRequest(url);
     if (!row) throw new HttpError(404, "shipment not found");
-    const events = await shipmentEvents(String(row.id));
-    return json({
-        ...toShipmentJson(row),
-        events: events.map(publicTrackingEvent),
-    });
+    return json(shipmentDetailJson(row));
+}
+
+async function shipmentForExternalOrder(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+    const externalOrderId = requiredQuery(new URL(request.url), "externalOrderId");
+    const row = await shipmentWithEventsRowByExternalOrderId(externalOrderId);
+    return json({ items: row ? [shipmentTrackingJson(row)] : [] });
 }
 
 async function createShipment(request: Request): Promise<Response> {
@@ -922,6 +930,32 @@ function publicTrackingEvent(row: JsonRecord): JsonRecord {
     };
 }
 
+function shipmentDetailJson(row: JsonRecord): JsonRecord {
+    const events = Array.isArray(row.events) ? row.events.filter(isRecord) : [];
+    return {
+        ...toShipmentJson(row),
+        events: events.map(publicTrackingEvent),
+    };
+}
+
+function shipmentTrackingJson(row: JsonRecord): JsonRecord {
+    const detail = shipmentDetailJson(row);
+    return {
+        id: detail.id,
+        expeditionNumber: detail.expeditionNumber,
+        status: detail.status,
+        trackingUrl: detail.trackingUrl,
+        deliveryRelayLocation: detail.deliveryRelayLocation,
+        latestEventLabel: detail.latestEventLabel,
+        latestEventAt: detail.latestEventAt,
+        carrierAcceptedAt: detail.carrierAcceptedAt,
+        sellerHandoffDeclaredAt: detail.sellerHandoffDeclaredAt,
+        recipientHandoffAt: detail.recipientHandoffAt,
+        createdAt: detail.createdAt,
+        events: detail.events,
+    };
+}
+
 function toShipmentJson(row: JsonRecord): JsonRecord {
     const out = camelizeRecord(row);
     if (typeof out.deliveryRelayNumber === "string") out.deliveryRelayLocation = out.deliveryRelayNumber;
@@ -1031,11 +1065,11 @@ function settingsRowFromBody(body: JsonRecord): JsonRecord {
     return row;
 }
 
-async function shipmentByRequest(url: URL): Promise<JsonRecord | null> {
+async function shipmentWithEventsByRequest(url: URL): Promise<JsonRecord | null> {
     const id = queryText(url, "id");
-    if (id) return await shipmentRowById(id);
+    if (id) return await shipmentWithEventsRowById(id);
     const expeditionNumber = queryText(url, "expeditionNumber");
-    if (expeditionNumber) return await shipmentRowByExpedition(expeditionNumber);
+    if (expeditionNumber) return await shipmentWithEventsRowByExpedition(expeditionNumber);
     throw new HttpError(400, "id or expeditionNumber is required");
 }
 
