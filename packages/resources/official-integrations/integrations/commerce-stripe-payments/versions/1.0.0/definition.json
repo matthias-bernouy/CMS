@@ -772,7 +772,18 @@
                         "orderId": { "type": "number" },
                         "orderPublicId": { "type": "string" },
                         "paymentExists": { "type": "boolean" },
-                        "payment": { "type": "object" }
+                        "payment": {
+                            "type": "object",
+                            "properties": {
+                                "paymentStatus": { "type": "string" },
+                                "settlementStatus": { "type": "string" },
+                                "disputeStatus": { "type": "string" },
+                                "reconciliationPending": { "type": "boolean" },
+                                "refundedAmount": { "type": "number" },
+                                "amountTotal": { "type": "number" },
+                                "currency": { "type": "string" }
+                            }
+                        }
                     },
                     "required": ["orderId", "orderPublicId", "paymentExists"]
                 } }],
@@ -1239,7 +1250,26 @@
                         "required": ["orderId"]
                     }
                 },
-                "output": [{ "status": "200", "body": { "type": "object" } }],
+                "output": [{ "status": "200", "body": {
+                    "type": "object",
+                    "properties": {
+                        "orderId": { "type": "number" },
+                        "orderPublicId": { "type": "string" },
+                        "payment": {
+                            "type": "object",
+                            "properties": {
+                                "paymentStatus": { "type": "string" },
+                                "settlementStatus": { "type": "string" },
+                                "disputeStatus": { "type": "string" },
+                                "reconciliationPending": { "type": "boolean" },
+                                "refundedAmount": { "type": "number" },
+                                "amountTotal": { "type": "number" },
+                                "currency": { "type": "string" }
+                            }
+                        }
+                    },
+                    "required": ["orderId", "orderPublicId", "payment"]
+                } }],
                 "steps": [
                     {
                         "id": "order",
@@ -1295,8 +1325,7 @@
                     "body": {
                         "orderId": "$steps.order.id",
                         "orderPublicId": "$steps.order.publicId",
-                        "payment": "$steps.paymentLookup.payment",
-                        "commercePayment": "$steps.commercePayment"
+                        "payment": "$steps.paymentLookup.payment"
                     }
                 }
             }

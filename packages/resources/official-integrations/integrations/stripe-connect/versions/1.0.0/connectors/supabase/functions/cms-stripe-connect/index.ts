@@ -4520,6 +4520,7 @@ function publicPayment(row: ConnectPaymentRow): JsonRecord {
             : row.payment_status,
         settlementStatus: row.settlement_status,
         disputeStatus: row.dispute_status,
+        reconciliationPending: isTransientBalanceTransactionExpansionReview(row),
         manualReviewReason: row.manual_review_reason,
         description: row.description,
         paidAt: row.paid_at,

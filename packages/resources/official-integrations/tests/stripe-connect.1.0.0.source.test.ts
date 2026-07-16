@@ -107,11 +107,18 @@ describe("stripe-connect 1.0.0 source", () => {
             ?.output?.[0]?.body?.properties?.payments?.items;
         const enrollment = endpoint("enrollConnectSeller");
         const protectedPaymentOutput = protectedPayment?.output?.[0]?.body;
-        const protectedPaymentReadOutput = endpoint("getProtectedPayment")?.output?.[0]?.body;
-        const protectedPaymentReferenceOutput = endpoint("getProtectedPaymentByClientReference")?.output?.[0]?.body;
+        const protectedPaymentRead = endpoint("getProtectedPayment");
+        const protectedPaymentReference = endpoint("getProtectedPaymentByClientReference");
+        const protectedPaymentReadOutput = protectedPaymentRead?.output?.[0]?.body;
+        const protectedPaymentReferenceOutput = protectedPaymentReference?.output?.[0]?.body;
         expect(enrollment?.timeoutMs).toBe(60_000);
         expect(reconciliationPaymentOutput?.properties?.commercePaymentStatus).toEqual({ type: "string" });
         expect(reconciliationPaymentOutput?.required).toContain("commercePaymentStatus");
+        expect(protectedPaymentReadOutput?.properties?.reconciliationPending).toEqual({ type: "boolean" });
+        expect(protectedPaymentReferenceOutput?.properties?.payment?.properties?.reconciliationPending)
+            .toEqual({ type: "boolean" });
+        expect(protectedPaymentRead?.access).toEqual({ mode: "system" });
+        expect(protectedPaymentReference?.access).toEqual({ mode: "system" });
         expect(enrollment?.input?.body?.required ?? []).toEqual([]);
         expect(Object.keys(enrollment?.input?.body?.properties ?? {})).toEqual([
             "accountToken", "contactEmail", "marketplaceTermsAccepted",
@@ -319,16 +326,26 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(mismatch.status).toBe(409);
         expect(await jsonBody(mismatch)).toEqual({ error: "protected payment replay does not match immutable financial terms" });
         expect(listedPayments.payments).toEqual([expect.objectContaining({ clientReferenceId: "order-1", stripePaymentIntentId: "pi_1" })]);
-        expect(fetched).toMatchObject({ paymentId: payment.paymentId, clientReferenceId: "order-1" });
+        expect(fetched).toMatchObject({
+            paymentId: payment.paymentId,
+            clientReferenceId: "order-1",
+            reconciliationPending: false,
+        });
         expect(fetchedByReference).toMatchObject({
             exists: true,
-            payment: { paymentId: payment.paymentId, clientReferenceId: "order-1", commercePaymentStatus: "created" },
+            payment: {
+                paymentId: payment.paymentId,
+                clientReferenceId: "order-1",
+                commercePaymentStatus: "created",
+                reconciliationPending: false,
+            },
         });
         expect(missingByReference).toEqual({ exists: false });
         expect(hiddenByReference).toEqual({ exists: false });
         expect(harness.rest.rows("payments")).toHaveLength(1);
         expect(dashboard).toBeNull();
-        expect(userRole?.grants.map(grant => grant.permission)).toEqual(expect.arrayContaining([
+        const userPermissions = userRole?.grants.map(grant => grant.permission) ?? [];
+        expect(userPermissions).toEqual(expect.arrayContaining([
             "urn:stripe-connect:getConnectClientConfig",
             "urn:stripe-connect:getConnectStatus",
             "urn:stripe-connect:getConnectWallet",
@@ -337,6 +354,8 @@ describe("stripe-connect 1.0.0 source", () => {
             "urn:stripe-connect:createOnboardingLink",
             "urn:stripe-connect:createOnboardingSession",
         ]));
+        expect(userPermissions).not.toContain("urn:stripe-connect:getProtectedPayment");
+        expect(userPermissions).not.toContain("urn:stripe-connect:getProtectedPaymentByClientReference");
         expect(harness.importedBlocs[0]?.viewJS).toContain("Activer mes versements");
         expect(harness.importedBlocs[0]?.viewJS).toContain("submitConnectVerification");
         expect(harness.importedBlocs[0]?.viewJS).toContain('requestAccountSource("getAccount")');
@@ -3199,6 +3218,7 @@ describe("stripe-connect 1.0.0 source", () => {
             paymentStatus: "succeeded",
             commercePaymentStatus: "manual_review",
             settlementStatus: "manual_review",
+            reconciliationPending: true,
             manualReviewReason: "Stripe payment provider truth mismatch: charge_balance_transaction_expansion",
         });
         expect(harness.rest.rows("payment_events").some(row => (

@@ -297,7 +297,7 @@
                         ]
                     },
                     {
-                        "endpointId": "getProtectedPayment", "method": "GET", "access": "auth",
+                        "endpointId": "getProtectedPayment", "method": "GET", "access": "system",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/payment",
                         "params": [{ "name": "paymentId", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -323,7 +323,8 @@
                                 "actualStripeFeeCurrency": { "type": "string", "nullable": true }, "actualStripeChargeFeeDetails": { "type": "array", "items": { "type": "object" } },
                                 "actualPlatformMarginAfterStripeAmount": { "type": "number" },
                                 "paymentStatus": { "type": "string" }, "commercePaymentStatus": { "type": "string" }, "settlementStatus": { "type": "string" },
-                                "disputeStatus": { "type": "string" }, "manualReviewReason": { "type": "string", "nullable": true },
+                                "disputeStatus": { "type": "string" }, "reconciliationPending": { "type": "boolean" },
+                                "manualReviewReason": { "type": "string", "nullable": true },
                                 "paidAt": { "type": "string", "nullable": true }, "cancelledAt": { "type": "string", "nullable": true },
                                 "lastProviderSyncAt": { "type": "string" }, "occurredAt": { "type": "string" },
                                 "createdAt": { "type": "string" }, "updatedAt": { "type": "string" }
@@ -333,7 +334,7 @@
                         ]
                     },
                     {
-                        "endpointId": "getProtectedPaymentByClientReference", "method": "GET", "access": "auth",
+                        "endpointId": "getProtectedPaymentByClientReference", "method": "GET", "access": "system",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/reference",
                         "params": [{ "name": "clientReferenceId", "in": "query", "type": "string", "required": true }],
                         "headers": [
@@ -360,7 +361,8 @@
                                 "actualStripeFeeCurrency": { "type": "string", "nullable": true }, "actualStripeChargeFeeDetails": { "type": "array", "items": { "type": "object" } },
                                 "actualPlatformMarginAfterStripeAmount": { "type": "number" },
                                 "paymentStatus": { "type": "string" }, "commercePaymentStatus": { "type": "string" }, "settlementStatus": { "type": "string" },
-                                "disputeStatus": { "type": "string" }, "manualReviewReason": { "type": "string", "nullable": true },
+                                "disputeStatus": { "type": "string" }, "reconciliationPending": { "type": "boolean" },
+                                "manualReviewReason": { "type": "string", "nullable": true },
                                 "paidAt": { "type": "string", "nullable": true }, "cancelledAt": { "type": "string", "nullable": true },
                                 "lastProviderSyncAt": { "type": "string" }, "occurredAt": { "type": "string" },
                                 "createdAt": { "type": "string" }, "updatedAt": { "type": "string" }

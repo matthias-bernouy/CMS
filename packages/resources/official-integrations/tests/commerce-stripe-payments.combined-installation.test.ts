@@ -145,6 +145,12 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(sourceEndpointAccessMode((await sources.getEndpoint(
             makeEndpointUrn("stripe-connect", "createProtectedPayment"),
         ))!)).toBe("system");
+        expect(sourceEndpointAccessMode((await sources.getEndpoint(
+            makeEndpointUrn("stripe-connect", "getProtectedPayment"),
+        ))!)).toBe("system");
+        expect(sourceEndpointAccessMode((await sources.getEndpoint(
+            makeEndpointUrn("stripe-connect", "getProtectedPaymentByClientReference"),
+        ))!)).toBe("system");
         const preparedPayment = await sources.getEndpoint(makeEndpointUrn("commerce", "prepareProtectedPayment"));
         const createdPayment = await sources.getEndpoint(makeEndpointUrn("stripe-connect", "createProtectedPayment"));
         const sellerPayout = await sources.getEndpoint(makeEndpointUrn("stripe-connect", "configureSellerPayoutSchedule"));

@@ -245,14 +245,14 @@ describe("commerce-stripe-payments 1.0.0", () => {
         expect(importedBlocs[0]?.viewJS).toContain("refreshPaymentForOrder");
         expect(importedBlocs[0]?.viewJS).toContain("refreshPaymentUntilSettled");
         expect(importedBlocs[0]?.viewJS).toContain("PAYMENT_RECONCILIATION_POLL_TIMEOUT_MS = 60_000");
-        expect(importedBlocs[0]?.viewJS).toContain('TRANSIENT_PAYMENT_RECONCILIATION_REASON = "Stripe payment provider truth mismatch: charge_balance_transaction_expansion"');
-        expect(importedBlocs[0]?.viewJS).toContain("isTransientPaymentReconciliation(payment)");
-        expect(importedBlocs[0]?.viewJS).toContain('String(payment?.manualReviewReason || "").trim() === TRANSIENT_PAYMENT_RECONCILIATION_REASON');
+        expect(importedBlocs[0]?.viewJS).toContain("payment?.reconciliationPending === true");
+        expect(importedBlocs[0]?.viewJS).not.toContain("manualReviewReason");
+        expect(importedBlocs[0]?.viewJS).not.toContain("charge_balance_transaction_expansion");
         expect(importedBlocs[0]?.viewJS).toContain('!["blocked", "reversed"].includes(settlement)');
         expect(importedBlocs[0]?.viewJS).toContain("this.paymentSubmissionLocked = true");
         expect(importedBlocs[0]?.viewJS).toContain("this.paymentSubmissionLocked || !currentFormIsUsable");
-        const transientReconciliationBranch = importedBlocs[0]?.viewJS.indexOf("if (isTransientPaymentReconciliation(payment)") ?? -1;
-        const manualReviewBranch = importedBlocs[0]?.viewJS.indexOf('if (payment?.manualReviewReason || settlement === "manual_review")') ?? -1;
+        const transientReconciliationBranch = importedBlocs[0]?.viewJS.indexOf("if (payment?.reconciliationPending === true") ?? -1;
+        const manualReviewBranch = importedBlocs[0]?.viewJS.indexOf('if (settlement === "manual_review")') ?? -1;
         const disputeBranch = importedBlocs[0]?.viewJS.indexOf('if (["open", "under_review", "lost"].includes(dispute))') ?? -1;
         expect(disputeBranch).toBeGreaterThanOrEqual(0);
         expect(transientReconciliationBranch).toBeGreaterThan(disputeBranch);
@@ -760,11 +760,19 @@ describe("commerce-stripe-payments 1.0.0", () => {
                             paymentStatus: "succeeded",
                             commercePaymentStatus: "manual_review",
                             settlementStatus: "manual_review",
+                            disputeStatus: "none",
+                            reconciliationPending: true,
+                            refundedAmount: 0,
                             manualReviewReason: "Provider truth is awaiting reconciliation",
                             amountTotal: 2500,
                             currency: "EUR",
                             financialTermsHash: "terms_hash_42",
+                            stripePaymentIntentId: "pi_9",
                             stripeChargeId: "ch_9",
+                            buyerUserId: "buyer-subject",
+                            sellerUserId: "seller-subject",
+                            platformRetainedAmount: 250,
+                            actualPlatformMarginAfterStripeAmount: 175,
                             updatedAt: "2026-07-13T00:01:00.000Z",
                         },
                     });
@@ -776,20 +784,13 @@ describe("commerce-stripe-payments 1.0.0", () => {
             orderId: 42,
             orderPublicId: "order-public-42",
             payment: {
-                paymentId: 9,
                 paymentStatus: "succeeded",
-                commercePaymentStatus: "manual_review",
                 settlementStatus: "manual_review",
-                manualReviewReason: "Provider truth is awaiting reconciliation",
+                disputeStatus: "none",
+                reconciliationPending: true,
+                refundedAmount: 0,
                 amountTotal: 2500,
                 currency: "EUR",
-                financialTermsHash: "terms_hash_42",
-                stripeChargeId: "ch_9",
-                updatedAt: "2026-07-13T00:01:00.000Z",
-            },
-            commercePayment: {
-                paymentStatus: "succeeded",
-                settlementStatus: "held",
             },
         });
         expect(refreshedPaymentBody).toMatchObject({
@@ -798,6 +799,13 @@ describe("commerce-stripe-payments 1.0.0", () => {
             providerPaymentId: 9,
             status: "manual_review",
             providerChargeId: "ch_9",
+            providerPaymentIntentId: "pi_9",
+            providerSnapshot: {
+                buyerUserId: "buyer-subject",
+                sellerUserId: "seller-subject",
+                financialTermsHash: "terms_hash_42",
+                platformRetainedAmount: 250,
+            },
         });
 
         const existingPaymentStatus = await executeFunction(statusFn, new Request(
@@ -824,6 +832,20 @@ describe("commerce-stripe-payments 1.0.0", () => {
                             paymentStatus: "succeeded",
                             commercePaymentStatus: "succeeded",
                             settlementStatus: "held",
+                            disputeStatus: "none",
+                            reconciliationPending: false,
+                            refundedAmount: 0,
+                            amountTotal: 2500,
+                            currency: "EUR",
+                            financialTermsHash: "terms_hash_42",
+                            stripePaymentIntentId: "pi_9",
+                            stripeChargeId: "ch_9",
+                            buyerUserId: "buyer-subject",
+                            sellerUserId: "seller-subject",
+                            platformRetainedAmount: 250,
+                            actualPlatformMarginAfterStripeAmount: 175,
+                            manualReviewReason: "internal-only reason",
+                            updatedAt: "2026-07-13T00:01:00.000Z",
                         },
                     });
                 },
@@ -835,10 +857,13 @@ describe("commerce-stripe-payments 1.0.0", () => {
             orderPublicId: "order-public-42",
             paymentExists: true,
             payment: {
-                paymentId: 9,
                 paymentStatus: "succeeded",
-                commercePaymentStatus: "succeeded",
                 settlementStatus: "held",
+                disputeStatus: "none",
+                reconciliationPending: false,
+                refundedAmount: 0,
+                amountTotal: 2500,
+                currency: "EUR",
             },
         });
 
@@ -2271,6 +2296,7 @@ function stripeSource(): Source {
             {
                 urn: makeEndpointUrn("stripe-connect", "getProtectedPaymentByClientReference"),
                 method: "GET",
+                access: { mode: "system" },
                 targetUrl: "https://stripe.test/payment-by-reference",
                 headers: [{ name: "x-user-id", source: { from: "computed", ref: "userID" } }],
                 input: { params: [{
@@ -2290,11 +2316,18 @@ function stripeSource(): Source {
                                 paymentStatus: { type: "string" },
                                 commercePaymentStatus: { type: "string" },
                                 settlementStatus: { type: "string" },
+                                disputeStatus: { type: "string" },
+                                reconciliationPending: { type: "boolean" },
+                                refundedAmount: { type: "number" },
                                 manualReviewReason: { type: "string" },
                                 amountTotal: { type: "number" },
                                 currency: { type: "string" },
                                 financialTermsHash: { type: "string" },
                                 stripeChargeId: { type: "string" },
+                                buyerUserId: { type: "string" },
+                                sellerUserId: { type: "string" },
+                                platformRetainedAmount: { type: "number" },
+                                actualPlatformMarginAfterStripeAmount: { type: "number" },
                                 updatedAt: { type: "string" },
                             },
                         },

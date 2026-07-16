@@ -1,7 +1,6 @@
 const STRIPE_JS_URL = "https://js.stripe.com/v3/";
 const PAYMENT_ELEMENT_SLOT = "stripe-payment-element";
 const PAYMENT_RECONCILIATION_POLL_TIMEOUT_MS = 60_000;
-const TRANSIENT_PAYMENT_RECONCILIATION_REASON = "Stripe payment provider truth mismatch: charge_balance_transaction_expansion";
 
 let stripeJsLoader = null;
 
@@ -599,8 +598,8 @@ function protectedPaymentState(payment) {
     const amountTotal = Number(payment?.amountTotal);
     const refundedAmount = Number(payment?.refundedAmount);
     if (["open", "under_review", "lost"].includes(dispute)) return "disputed";
-    if (isTransientPaymentReconciliation(payment) && !["blocked", "reversed"].includes(settlement)) return "processing";
-    if (payment?.manualReviewReason || settlement === "manual_review") return "manual_review";
+    if (payment?.reconciliationPending === true && !["blocked", "reversed"].includes(settlement)) return "processing";
+    if (settlement === "manual_review") return "manual_review";
     if (settlement === "refunded" || (Number.isSafeInteger(amountTotal) && amountTotal > 0 && refundedAmount >= amountTotal)) {
         return "refunded";
     }
@@ -615,10 +614,6 @@ function protectedPaymentState(payment) {
         return state === "canceled" ? "cancelled" : state;
     }
     return "created";
-}
-
-function isTransientPaymentReconciliation(payment) {
-    return String(payment?.manualReviewReason || "").trim() === TRANSIENT_PAYMENT_RECONCILIATION_REASON;
 }
 
 function formatAmount(amount, currency) {
