@@ -94,3 +94,37 @@ export class DetailRequestCoordinator {
         }
     }
 }
+
+/** Per-target consumers and generations shared by lookup and schema loaders. */
+export class DetailRequestTargets {
+    private readonly consumers = new Map<string, DetailRequestConsumer>();
+    private readonly generations = new Map<string, number>();
+
+    constructor(private readonly requests: DetailRequestCoordinator) {}
+
+    consumer(key: string): DetailRequestConsumer {
+        const existing = this.consumers.get(key);
+        if (existing) return existing;
+        const consumer = this.requests.createConsumer();
+        this.consumers.set(key, consumer);
+        return consumer;
+    }
+
+    invalidate(key: string): number {
+        const generation = (this.generations.get(key) ?? 0) + 1;
+        this.generations.set(key, generation);
+        const consumer = this.consumers.get(key);
+        if (consumer) this.requests.cancel(consumer);
+        return generation;
+    }
+
+    isCurrent(key: string, generation: number): boolean {
+        return this.generations.get(key) === generation;
+    }
+
+    clear(): void {
+        for (const consumer of this.consumers.values()) this.requests.cancel(consumer);
+        this.consumers.clear();
+        this.generations.clear();
+    }
+}

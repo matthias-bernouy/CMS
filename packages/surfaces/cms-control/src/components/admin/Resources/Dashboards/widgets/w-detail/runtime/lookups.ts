@@ -5,8 +5,8 @@ import {
     lookupTargetKeysDependingOn,
 } from "../../../runtime/lookups";
 import type { WDetailData } from "../types";
-import { DetailFieldState, parseJson, type DetailWidget } from "./fieldState";
-import { DetailRequestCoordinator, type DetailRequestConsumer } from "./requests";
+import { DetailFieldState, readDetailBinding, type DetailWidget } from "./fieldState";
+import { DetailRequestCoordinator, DetailRequestTargets } from "./requests";
 
 type LookupCallbacks = {
     setData(value: WDetailData): void;
@@ -26,15 +26,16 @@ export class DetailLookups {
     private scopeGeneration = 0;
     private reloadTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly pendingTargetKeys = new Set<string>();
-    private readonly consumers = new Map<string, DetailRequestConsumer>();
-    private readonly targetGenerations = new Map<string, number>();
+    private readonly targets: DetailRequestTargets;
 
     constructor(
         private readonly dataset: DOMStringMap,
         private readonly fields: DetailFieldState,
         private readonly requests: DetailRequestCoordinator,
         private readonly callbacks: LookupCallbacks,
-    ) {}
+    ) {
+        this.targets = new DetailRequestTargets(requests);
+    }
 
     get options(): DetailOptions {
         return this.currentOptions;
@@ -65,7 +66,7 @@ export class DetailLookups {
         const next = { ...this.currentOptions };
         let accepted = false;
         for (const result of results) {
-            if (this.targetGenerations.get(result.key) !== result.generation) continue;
+            if (!this.targets.isCurrent(result.key, result.generation)) continue;
             if (result.failed && Object.hasOwn(this.currentOptions, result.key)) continue;
             next[result.key] = result.options;
             accepted = true;
@@ -87,9 +88,9 @@ export class DetailLookups {
     }
 
     schedule(changedFieldId: string): void {
-        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
-        if (!widget || widget.widget !== "w-detail") return;
-        const targetKeys = lookupTargetKeysDependingOn(widget, changedFieldId);
+        const binding = readDetailBinding(this.dataset);
+        if (!binding) return;
+        const targetKeys = lookupTargetKeysDependingOn(binding.widget, changedFieldId);
         if (targetKeys.size === 0) return;
         for (const key of targetKeys) {
             this.pendingTargetKeys.add(key);
@@ -100,10 +101,9 @@ export class DetailLookups {
             this.reloadTimer = null;
             const targetedKeys = new Set(this.pendingTargetKeys);
             this.pendingTargetKeys.clear();
-            const resource = this.fields.currentResource();
-            const sourceId = this.dataset.sourceId ?? "";
-            if (!sourceId || resource === undefined) return;
-            void this.load(widget, resource, this.dataset.rowKey ?? "", sourceId, this.fields.currentFields(), {
+            const latest = readDetailBinding(this.dataset);
+            if (!latest?.sourceId) return;
+            void this.load(latest.widget, latest.resource, latest.rowKey, latest.sourceId, this.fields.currentFields(), {
                 targetKeys: targetedKeys,
                 useLatestFields: true,
             });
@@ -112,9 +112,7 @@ export class DetailLookups {
 
     clear(): void {
         this.scopeGeneration += 1;
-        for (const consumer of this.consumers.values()) this.requests.cancel(consumer);
-        this.consumers.clear();
-        this.targetGenerations.clear();
+        this.targets.clear();
         this.clearPendingRefresh();
         this.currentOptions = {};
     }
@@ -126,8 +124,8 @@ export class DetailLookups {
         fields: Record<string, unknown>,
         key: string,
     ): Promise<TargetLoad> {
-        const consumer = this.consumer(key);
-        const generation = this.invalidateTarget(key);
+        const consumer = this.targets.consumer(key);
+        const generation = this.targets.invalidate(key);
         try {
             const result = await loadDetailLookupOptions(sourceId, widget, resource, fields, {
                 targetKeys: new Set([key]),
@@ -144,20 +142,8 @@ export class DetailLookups {
         }
     }
 
-    private consumer(key: string): DetailRequestConsumer {
-        const existing = this.consumers.get(key);
-        if (existing) return existing;
-        const consumer = this.requests.createConsumer();
-        this.consumers.set(key, consumer);
-        return consumer;
-    }
-
     private invalidateTarget(key: string): number {
-        const generation = (this.targetGenerations.get(key) ?? 0) + 1;
-        this.targetGenerations.set(key, generation);
-        const consumer = this.consumers.get(key);
-        if (consumer) this.requests.cancel(consumer);
-        return generation;
+        return this.targets.invalidate(key);
     }
 
     private clearPendingRefresh(): void {

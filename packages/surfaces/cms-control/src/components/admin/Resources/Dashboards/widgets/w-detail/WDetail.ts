@@ -1,11 +1,10 @@
 import { Component } from "@bernouy/components/base";
-import { valueAt } from "../../runtime/expressions";
 import { detailData, fieldValues } from "../../runtime/mapping";
 import "../w-section/WSection";
 import "cms-control/components/admin/ShellDetail/ShellDetail";
 import { applyLookupOption, DetailView } from "./runtime/detailView";
 import { DetailEvents } from "./runtime/events";
-import { DetailFieldState, parseJson, type DetailWidget } from "./runtime/fieldState";
+import { DetailFieldState, readDetailBinding, type DetailWidget } from "./runtime/fieldState";
 import { DetailLookups } from "./runtime/lookups";
 import { DetailRequestCoordinator } from "./runtime/requests";
 import { DetailSchemasState } from "./runtime/schemas";
@@ -96,31 +95,21 @@ export class DashboardWDetail extends Component {
 
     private refreshConditionalFields(): void {
         if (this.mode !== "bound") return;
-        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
-        const resource = this.fields.currentResource();
-        if (!widget || resource === undefined) return;
+        const binding = readDetailBinding(this.dataset);
+        if (!binding) return;
         const previous = this.value;
-        const next = this.mapData(widget, resource, this.value.rowKey, this.fields.currentFields());
+        const next = this.mapData(binding.widget, binding.resource, this.value.rowKey, this.fields.currentFields());
         this.value = next;
         this.view.refresh(previous, next);
     }
 
     private syncBoundData(): void {
-        const configJson = this.dataset.configJson ?? "";
-        const widget = parseJson<DetailWidget>(configJson);
-        const sourceJson = this.dataset.sourceJson ?? "";
-        const sourceData = parseJson<unknown>(sourceJson);
-        if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
+        const binding = readDetailBinding(this.dataset);
+        if (!binding) {
             this.resetState();
             return;
         }
-        const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
-        if (resource === undefined) {
-            this.resetState();
-            return;
-        }
-        const rowKey = this.dataset.rowKey ?? "";
-        const sourceId = this.dataset.sourceId ?? "";
+        const { widget, resource, rowKey, sourceId } = binding;
         const scopeKey = JSON.stringify([sourceId, widget.id, rowKey, this.bindingRevision]);
         this.requests.syncScope(scopeKey);
         this.fields.syncScope(scopeKey);

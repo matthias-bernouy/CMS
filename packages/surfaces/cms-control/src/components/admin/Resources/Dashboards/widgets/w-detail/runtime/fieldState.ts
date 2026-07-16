@@ -5,6 +5,13 @@ import type { WDetailData, WDetailField } from "../types";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 
+export type DetailBinding = {
+    widget: DetailWidget;
+    resource: unknown;
+    rowKey: string;
+    sourceId: string;
+};
+
 export class DetailFieldState {
     private scopeKey = "";
     private values: Record<string, unknown> = {};
@@ -44,11 +51,7 @@ export class DetailFieldState {
     }
 
     currentResource(): unknown | undefined {
-        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
-        if (!widget || widget.widget !== "w-detail") return undefined;
-        const sourceData = parseJson<unknown>(this.dataset.sourceJson ?? "");
-        if (sourceData === null) return undefined;
-        return widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+        return readDetailBinding(this.dataset)?.resource;
     }
 
     currentFields(): Record<string, unknown> {
@@ -65,6 +68,21 @@ export class DetailFieldState {
         return Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]"))
             .find(control => control.dataset.fieldControl === fieldId) ?? null;
     }
+}
+
+export function readDetailBinding(dataset: DOMStringMap): DetailBinding | null {
+    const widget = parseJson<DetailWidget>(dataset.configJson ?? "");
+    const sourceJson = dataset.sourceJson ?? "";
+    const sourceData = parseJson<unknown>(sourceJson);
+    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) return null;
+    const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+    if (resource === undefined) return null;
+    return {
+        widget,
+        resource,
+        rowKey: dataset.rowKey ?? "",
+        sourceId: dataset.sourceId ?? "",
+    };
 }
 
 export function parseJson<T>(value: string): T | null {
