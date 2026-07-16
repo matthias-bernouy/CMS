@@ -64,6 +64,12 @@ describe("commerce seller offer read contract", () => {
             seller_id: "eq.7", workflow_state: "in.(pending_review)",
             order: "updated_at.desc,id.desc", limit: "2", offset: "2",
         });
+        expect(Object.fromEntries(new URL(capturedFetches()[3]!.url).searchParams)).toMatchObject({
+            offer_id: "in.(92,91)", order: "sort_order.asc,id.asc",
+        });
+        expect(Object.fromEntries(new URL(capturedFetches()[4]!.url).searchParams)).toMatchObject({
+            offer_id: "in.(92,91)", order: "created_at.desc,id.desc",
+        });
     });
 
     test("returns an empty page after the single ownership lookup when no seller exists", async () => {
@@ -76,6 +82,27 @@ describe("commerce seller offer read contract", () => {
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 4, offset: 8 });
         expect(capturedFetches().map(resourceName)).toEqual(["sellers"]);
+    });
+
+    test("preserves the exact total when the requested offset is beyond the page", async () => {
+        setRestResponder(request => {
+            const resource = resourceName(request);
+            if (resource === "sellers") return jsonResponse([{ id: 7 }]);
+            if (resource === "offer_workflow_states") return jsonResponse([]);
+            if (resource === "offers") return jsonResponse([], 200, { "content-range": "*/7" });
+            throw new Error(`Unexpected seller offer request: ${request.url}`);
+        });
+
+        const response = await requestCommerce("/me/offers?limit=2&offset=3000000000", {
+            userId: "seller-user-123",
+        });
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ items: [], total: 7, limit: 2, offset: 3000000000 });
+        expect(capturedFetches().map(resourceName)).toEqual([
+            "sellers", "offer_workflow_states", "offers",
+        ]);
+        expect(new URL(capturedFetches()[2]!.url).searchParams.get("offset")).toBe("3000000000");
     });
 });
 
@@ -92,12 +119,13 @@ function sellerResponse(url: URL): Response {
     if (resource === "offers") return jsonResponse(offers(), 200, { "content-range": "2-3/7" });
     if (resource === "offer_media") return jsonResponse([
         { offer_id: 92, media_id: 14, sort_order: 1, is_main: false },
+        { offer_id: 92, media_id: 15, sort_order: 1, is_main: false },
         { offer_id: 91, media_id: 12, sort_order: 1, is_main: false },
         { offer_id: 91, media_id: 13, sort_order: 2, is_main: true },
     ]);
     if (resource === "offer_price_proposals") return jsonResponse([
         { id: 3, offer_id: 91, amount: 12000, status: "pending", created_at: "2026-07-05T10:00:00Z" },
-        { id: 2, offer_id: 91, amount: 11000, status: "accepted", created_at: "2026-07-04T10:00:00Z" },
+        { id: 2, offer_id: 91, amount: 11000, status: "accepted", created_at: "2026-07-05T10:00:00Z" },
     ]);
     return jsonResponse([]);
 }
