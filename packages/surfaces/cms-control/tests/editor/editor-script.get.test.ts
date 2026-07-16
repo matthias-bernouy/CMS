@@ -61,4 +61,42 @@ describe("editor catalog script endpoint", () => {
         expect(js).toContain(`defaultContent: ""`);
         expect(js).not.toContain("BE5_DEFAULT_CONTENT_TO_BE_REPLACED");
     });
+
+    test("keeps line-comment-only scripts isolated from the following bloc", async () => {
+        const cache = new Map<string, unknown>();
+        const unsafeId = `native-"form\nnext`;
+        const cms = {
+            repository: {
+                getBlocsJS: async () => [
+                    {
+                        id:       unsafeId,
+                        viewJS:   "",
+                        editorJS: "// Native behavior is provided by the browser.",
+                    },
+                    {
+                        id:       "valid-editor",
+                        viewJS:   "",
+                        editorJS: "window.__validEditorLoaded = true;",
+                    },
+                ],
+            },
+            cache: {
+                get: (key: string) => cache.get(key) ?? null,
+                set: (key: string, value: unknown) => { cache.set(key, value); },
+            },
+        };
+
+        const response = await editorScriptGet(
+            new Request("http://localhost/cms/api/editor/script.js"),
+            cms as any,
+        );
+        const js = await response.text();
+        const browser = {} as { __validEditorLoaded?: boolean };
+
+        expect(() => new Function("window", js)).not.toThrow();
+        new Function("window", js)(browser);
+
+        expect(browser.__validEditorLoaded).toBe(true);
+        expect(js).toContain(JSON.stringify(`[editor] bloc ${unsafeId} editorJS:`));
+    });
 });

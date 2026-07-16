@@ -6,9 +6,10 @@ export default async function editorScriptGet(req: Request, cms: ControlCms) {
     return cachedResponseAsync(req, P9R_CACHE.EDITOR_SCRIPT, cms.cache, async () => {
         const blocs = await cms.repository.getBlocsJS();
 
-        const js = blocs.map(b => [
-            `try { ${normalizeEditorScript(b.editorJS)} } catch(e) { console.error("[editor] bloc ${b.id} editorJS:", e); }`,
-        ].join("\n")).join("\n");
+        const js = blocs.map(bloc => {
+            const errorLabel = JSON.stringify(`[editor] bloc ${bloc.id} editorJS:`);
+            return `try {\n${normalizeEditorScript(bloc.editorJS)}\n} catch (e) {\nconsole.error(${errorLabel}, e);\n}`;
+        }).join("\n");
 
         return compress(js, "text/javascript");
     }, publicAssetCacheControl(req));

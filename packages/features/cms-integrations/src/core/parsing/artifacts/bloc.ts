@@ -8,6 +8,8 @@ export function parseBlocTemplate(
 ): Extract<DeclarativeArtifactTemplate, { type: "bloc" }>["bloc"] {
     const tag = text(value.tag);
     const blocName = text(value.name);
+    const viewJS = executableSource(value.viewJS);
+    const editorJS = executableSource(value.editorJS);
     if (!tag) throw new MissingIntegrationParam(`${name}.tag`);
     if (!blocName) throw new MissingIntegrationParam(`${name}.name`);
     return {
@@ -18,10 +20,14 @@ export function parseBlocTemplate(
         ...(text(value.path) ? { path: text(value.path)! } : {}),
         ...(text(value.view) ? { view: text(value.view)! } : {}),
         ...(value.editor === null ? { editor: null } : text(value.editor) ? { editor: text(value.editor)! } : {}),
-        ...(text(value.viewJS) ? { viewJS: text(value.viewJS)! } : {}),
-        ...(value.editorJS === null ? { editorJS: null } : text(value.editorJS) ? { editorJS: text(value.editorJS)! } : {}),
+        ...(viewJS !== undefined ? { viewJS } : {}),
+        ...(value.editorJS === null ? { editorJS: null } : editorJS !== undefined ? { editorJS } : {}),
         ...(value.source !== undefined ? { source: parseSourceBundle(value.source, `${name}.source`) } : {}),
     };
+}
+
+function executableSource(value: unknown): string | undefined {
+    return typeof value === "string" && value.trim() ? value : undefined;
 }
 
 function parseSourceBundle(value: unknown, name: string): Record<string, string> {

@@ -6,9 +6,10 @@ export default async function editorViewScriptGet(req: Request, cms: ControlCms)
     return cachedResponseAsync(req, P9R_CACHE.EDITOR_VIEW_SCRIPT, cms.cache, async () => {
         const blocs = await cms.repository.getBlocsJS();
         const js = blocs
-            .map(bloc =>
-                `try { ${bloc.viewJS} } catch(e) { console.error("[editor] bloc ${bloc.id} viewJS:", e); }`,
-            )
+            .map(bloc => {
+                const errorLabel = JSON.stringify(`[editor] bloc ${bloc.id} viewJS:`);
+                return `try {\n${bloc.viewJS}\n} catch (e) {\nconsole.error(${errorLabel}, e);\n}`;
+            })
             .join("\n");
 
         return compress(js, "text/javascript");
