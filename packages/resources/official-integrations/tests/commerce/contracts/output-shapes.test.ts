@@ -203,6 +203,12 @@ describe("commerce response contracts", () => {
             if (table === "list_public_offers_read_model") {
                 return jsonResponse({ settings_available: true, items: [], total: 0 });
             }
+            if (table === "list_seller_offers_read_model") {
+                return jsonResponse({
+                    seller_exists: true, status_valid: true, rows: [], total: 0,
+                    workflow_states: [], media: [], active_price_proposals: [],
+                });
+            }
             const rows: Record<string, unknown[]> = {
                 settings: [{ require_verified_seller: false }],
                 products: [{ id: 1, metadata: {} }],

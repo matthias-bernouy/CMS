@@ -16,6 +16,7 @@ const workflowStates = [
     { code: "rejected", label: "Rejected", phase: "terminal", terminal: true },
     { code: "archived", label: "Archived", phase: "terminal", terminal: true },
 ];
+const sellerReadModelRpc = "list_seller_offers_read_model";
 
 describe("commerce seller offer read boundaries", () => {
     test("requires a CMS user before resolving a seller", async () => {
@@ -28,8 +29,11 @@ describe("commerce seller offer read boundaries", () => {
 
     test("returns the empty seller page before validating an unknown display status", async () => {
         setRestResponder(request => {
-            expect(resourceName(request)).toBe("sellers");
-            return jsonResponse([]);
+            expect(resourceName(request)).toBe(sellerReadModelRpc);
+            return jsonResponse(sellerBundle({
+                seller_exists: false,
+                workflow_states: [],
+            }));
         });
 
         const response = await requestCommerce(
@@ -39,11 +43,17 @@ describe("commerce seller offer read boundaries", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 4, offset: 8 });
-        expect(capturedFetches().map(call => resourceName(call))).toEqual(["sellers"]);
+        expect(resources()).toEqual([sellerReadModelRpc]);
+        expect(rpcBodies()).toEqual([{
+            p_cms_user_id: "user-without-seller",
+            p_status: "unknown",
+            p_limit: 4,
+            p_offset: 8,
+        }]);
     });
 
     test("rejects an unknown display status after resolving the seller and workflow states", async () => {
-        useSellerResponder();
+        useSellerResponder({ status_valid: false });
 
         const response = await requestCommerce("/me/offers?status=unknown", {
             userId: "seller-user-123",
@@ -51,9 +61,13 @@ describe("commerce seller offer read boundaries", () => {
 
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "status is invalid" });
-        expect(capturedFetches().map(call => resourceName(call))).toEqual([
-            "sellers", "offer_workflow_states",
-        ]);
+        expect(resources()).toEqual([sellerReadModelRpc]);
+        expect(rpcBodies()).toEqual([{
+            p_cms_user_id: "seller-user-123",
+            p_status: "unknown",
+            p_limit: 50,
+            p_offset: 0,
+        }]);
     });
 
     test("rejects an invalid limit before identity or PostgREST work", async () => {
@@ -79,16 +93,25 @@ describe("commerce seller offer read boundaries", () => {
         );
 
         expect({ online: online.status, review: review.status }).toEqual({ online: 200, review: 200 });
-        expect(offersQueries()).toEqual([
-            expect.objectContaining({
-                publication_status: "eq.active",
-                workflow_state: "eq.changes_requested",
-            }),
-            expect.objectContaining({
-                publication_status: "eq.paused",
-                workflow_state: "in.(pending_review)",
-            }),
+        expect(rpcBodies()).toEqual([
+            {
+                p_cms_user_id: "seller-user-123",
+                p_status: "online",
+                p_publication_status: "paused",
+                p_workflow_state: "changes_requested",
+                p_limit: 50,
+                p_offset: 0,
+            },
+            {
+                p_cms_user_id: "seller-user-123",
+                p_status: "under_review",
+                p_publication_status: "paused",
+                p_workflow_state: "changes_requested",
+                p_limit: 50,
+                p_offset: 0,
+            },
         ]);
+        expect(resources()).toEqual([sellerReadModelRpc, sellerReadModelRpc]);
     });
 
     test("sanitizes PostgREST search syntax and clamps pagination", async () => {
@@ -101,29 +124,43 @@ describe("commerce seller offer read boundaries", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 100, offset: 0 });
-        expect(offersQueries()).toEqual([expect.objectContaining({
-            seller_id: "eq.7",
-            or: "(title.ilike.*Blade  Pro  *,slug.ilike.*Blade  Pro  *)",
-            limit: "100",
-            offset: "0",
-        })]);
+        expect(rpcBodies()).toEqual([{
+            p_cms_user_id: "seller-user-123",
+            p_query: "Blade  Pro  ",
+            p_limit: 100,
+            p_offset: 0,
+        }]);
+        expect(resources()).toEqual([sellerReadModelRpc]);
     });
 });
 
-function useSellerResponder(): void {
+function useSellerResponder(overrides: Record<string, unknown> = {}): void {
     setRestResponder(request => {
         const resource = resourceName(request);
-        if (resource === "sellers") return jsonResponse([{ id: 7 }]);
-        if (resource === "offer_workflow_states") return jsonResponse(workflowStates);
-        if (resource === "offers") return jsonResponse([], 200, { "content-range": "*/0" });
+        if (resource === sellerReadModelRpc) return jsonResponse(sellerBundle(overrides));
         throw new Error(`Unexpected seller offer request: ${request.url}`);
     });
 }
 
-function offersQueries(): Record<string, string>[] {
-    return capturedFetches()
-        .filter(call => resourceName(call) === "offers")
-        .map(call => Object.fromEntries(new URL(call.url).searchParams));
+function sellerBundle(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+        seller_exists: true,
+        status_valid: true,
+        rows: [],
+        total: 0,
+        workflow_states: workflowStates,
+        media: [],
+        active_price_proposals: [],
+        ...overrides,
+    };
+}
+
+function rpcBodies(): Record<string, unknown>[] {
+    return capturedFetches().map(call => call.body);
+}
+
+function resources(): string[] {
+    return capturedFetches().map(call => resourceName(call));
 }
 
 function resourceName(request: Request | { url: string }): string {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-    capturedFetches,
+    expectSingleRpc,
     installCommerceTestEnvironment,
     jsonResponse,
     requestCommerce,
@@ -10,8 +10,8 @@ import {
 installCommerceTestEnvironment();
 
 describe("commerce seller offer read contract", () => {
-    test("preserves the exact page, projections, nulls, ordering, and five-call budget", async () => {
-        setRestResponder(request => sellerResponse(new URL(request.url)));
+    test("preserves the exact page, projections, nulls, ordering, and one-call budget", async () => {
+        setRestResponder(() => jsonResponse(sellerBundle()));
 
         const response = await requestCommerce(
             "/me/offers?status=under_review&limit=2&offset=2",
@@ -56,24 +56,16 @@ describe("commerce seller offer read contract", () => {
             limit: 2,
             offset: 2,
         });
-        expect(capturedFetches().map(resourceName)).toEqual([
-            "sellers", "offer_workflow_states", "offers", "offer_media", "offer_price_proposals",
-        ]);
-        const offersUrl = new URL(capturedFetches()[2]!.url);
-        expect(Object.fromEntries(offersUrl.searchParams)).toMatchObject({
-            seller_id: "eq.7", workflow_state: "in.(pending_review)",
-            order: "updated_at.desc,id.desc", limit: "2", offset: "2",
-        });
-        expect(Object.fromEntries(new URL(capturedFetches()[3]!.url).searchParams)).toMatchObject({
-            offer_id: "in.(92,91)", order: "sort_order.asc,id.asc",
-        });
-        expect(Object.fromEntries(new URL(capturedFetches()[4]!.url).searchParams)).toMatchObject({
-            offer_id: "in.(92,91)", order: "created_at.desc,id.desc",
+        expect(expectSingleRpc("list_seller_offers_read_model").body).toEqual({
+            p_cms_user_id: "seller-user-123",
+            p_status: "under_review",
+            p_limit: 2,
+            p_offset: 2,
         });
     });
 
-    test("returns an empty page after the single ownership lookup when no seller exists", async () => {
-        setRestResponder(() => jsonResponse([]));
+    test("returns an empty page from the single bundle call when no seller exists", async () => {
+        setRestResponder(() => jsonResponse({ seller_exists: false, status_valid: true }));
 
         const response = await requestCommerce("/me/offers?limit=4&offset=8", {
             userId: "buyer-without-seller",
@@ -81,17 +73,18 @@ describe("commerce seller offer read contract", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 4, offset: 8 });
-        expect(capturedFetches().map(resourceName)).toEqual(["sellers"]);
+        expect(expectSingleRpc("list_seller_offers_read_model").body).toEqual({
+            p_cms_user_id: "buyer-without-seller",
+            p_limit: 4,
+            p_offset: 8,
+        });
     });
 
     test("preserves the exact total when the requested offset is beyond the page", async () => {
-        setRestResponder(request => {
-            const resource = resourceName(request);
-            if (resource === "sellers") return jsonResponse([{ id: 7 }]);
-            if (resource === "offer_workflow_states") return jsonResponse([]);
-            if (resource === "offers") return jsonResponse([], 200, { "content-range": "*/7" });
-            throw new Error(`Unexpected seller offer request: ${request.url}`);
-        });
+        setRestResponder(() => jsonResponse({
+            seller_exists: true, status_valid: true, rows: [], workflow_states: [],
+            media: [], active_price_proposals: [], total: 7,
+        }));
 
         const response = await requestCommerce("/me/offers?limit=2&offset=3000000000", {
             userId: "seller-user-123",
@@ -99,35 +92,38 @@ describe("commerce seller offer read contract", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 7, limit: 2, offset: 3000000000 });
-        expect(capturedFetches().map(resourceName)).toEqual([
-            "sellers", "offer_workflow_states", "offers",
-        ]);
-        expect(new URL(capturedFetches()[2]!.url).searchParams.get("offset")).toBe("3000000000");
+        expect(expectSingleRpc("list_seller_offers_read_model").body).toEqual({
+            p_cms_user_id: "seller-user-123",
+            p_limit: 2,
+            p_offset: 3000000000,
+        });
     });
 });
 
-function sellerResponse(url: URL): Response {
-    const resource = url.pathname.split("/").at(-1);
-    if (resource === "sellers") return jsonResponse([{ id: 7 }]);
-    if (resource === "offer_workflow_states") return jsonResponse([
-        { code: "draft", label: "Draft", phase: "draft", terminal: false },
-        { code: "pending_review", label: "Pending review", phase: "admin_review", terminal: false },
-        { code: "changes_requested", label: "Changes requested", phase: "seller_input", terminal: false },
-        { code: "rejected", label: "Rejected", phase: "terminal", terminal: true },
-        { code: "archived", label: "Archived", phase: "terminal", terminal: true },
-    ]);
-    if (resource === "offers") return jsonResponse(offers(), 200, { "content-range": "2-3/7" });
-    if (resource === "offer_media") return jsonResponse([
-        { offer_id: 92, media_id: 14, sort_order: 1, is_main: false },
-        { offer_id: 92, media_id: 15, sort_order: 1, is_main: false },
-        { offer_id: 91, media_id: 12, sort_order: 1, is_main: false },
-        { offer_id: 91, media_id: 13, sort_order: 2, is_main: true },
-    ]);
-    if (resource === "offer_price_proposals") return jsonResponse([
-        { id: 3, offer_id: 91, amount: 12000, status: "pending", created_at: "2026-07-05T10:00:00Z" },
-        { id: 2, offer_id: 91, amount: 11000, status: "accepted", created_at: "2026-07-05T10:00:00Z" },
-    ]);
-    return jsonResponse([]);
+function sellerBundle(): Record<string, unknown> {
+    return {
+        seller_exists: true,
+        status_valid: true,
+        rows: offers(),
+        workflow_states: [
+            { code: "draft", label: "Draft", phase: "draft", terminal: false },
+            { code: "pending_review", label: "Pending review", phase: "admin_review", terminal: false },
+            { code: "changes_requested", label: "Changes requested", phase: "seller_input", terminal: false },
+            { code: "rejected", label: "Rejected", phase: "terminal", terminal: true },
+            { code: "archived", label: "Archived", phase: "terminal", terminal: true },
+        ],
+        media: [
+            { offer_id: 92, media_id: 14, sort_order: 1, is_main: false },
+            { offer_id: 92, media_id: 15, sort_order: 1, is_main: false },
+            { offer_id: 91, media_id: 12, sort_order: 1, is_main: false },
+            { offer_id: 91, media_id: 13, sort_order: 2, is_main: true },
+        ],
+        active_price_proposals: [
+            { id: 3, offer_id: 91, amount: 12000, status: "pending", created_at: "2026-07-05T10:00:00Z" },
+            { id: 2, offer_id: 91, amount: 11000, status: "accepted", created_at: "2026-07-05T10:00:00Z" },
+        ],
+        total: 7,
+    };
 }
 
 function offers(): Record<string, unknown>[] {
@@ -135,8 +131,4 @@ function offers(): Record<string, unknown>[] {
         { id: 92, seller_id: 7, product_id: 42, variant_id: null, slug: "second", title: "Second", description: null, condition_code: "good", publication_status: "draft", workflow_state: "pending_review", accepted_price_amount: 13000, currency: "eur", availability: "available", quantity_available: 1, metadata: { privateNote: "kept for seller" }, version: 3, created_at: "2026-07-02T10:00:00Z", updated_at: "2026-07-04T10:00:00Z" },
         { id: 91, seller_id: 7, product_id: 41, variant_id: 51, slug: "first", title: "First", description: "Used racket", condition_code: "used", publication_status: "draft", workflow_state: "pending_review", accepted_price_amount: 11000, currency: "eur", availability: "reserved", quantity_available: 0, metadata: {}, version: 2, created_at: "2026-07-01T10:00:00Z", updated_at: "2026-07-03T10:00:00Z" },
     ];
-}
-
-function resourceName(call: { url: string }): string {
-    return new URL(call.url).pathname.split("/").at(-1)!;
 }
