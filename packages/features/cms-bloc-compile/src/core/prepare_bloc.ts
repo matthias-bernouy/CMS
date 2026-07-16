@@ -112,13 +112,14 @@ function jsStringLiteralContent(value: string): string {
     return JSON.stringify(value).slice(1, -1).replaceAll("$", "$$$$");
 }
 
-async function runBuild(
+export async function runBuild(
     options: Bun.BuildConfig,
     label: string,
+    build: typeof Bun.build = Bun.build,
 ): Promise<string> {
     let result: Bun.BuildOutput;
     try {
-        result = await Bun.build(options);
+        result = await build(options);
     } catch (e) {
         throw new Error(`Build failed (${label}):\n${formatError(e)}`);
     }

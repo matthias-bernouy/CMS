@@ -1,44 +1,8 @@
-import { describe, test, expect, mock } from "bun:test";
+import { describe, test, expect } from "bun:test";
 import { Buffer } from "node:buffer";
 import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
 import type { TBloc } from "@bernouy/cms-content";
-
-const prepareBlocCalls: Array<{
-    blocId: string;
-    source?: Record<string, string>;
-    defaultContent?: string;
-    native?: boolean;
-}> = [];
-
-// Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
-// Must be registered before importBloc is imported.
-const realBlocCompile = await import("@bernouy/cms-bloc-compile");
-mock.module("@bernouy/cms-bloc-compile", () => ({
-    ...realBlocCompile,
-    prepare_bloc: async (
-        _view: File,
-        _editor: File | null,
-        label: string,
-        group: string,
-        description: string,
-        blocId: string,
-        source?: Record<string, string>,
-        defaultContent?: string,
-        options?: { native?: boolean },
-    ): Promise<TBloc> => {
-        prepareBlocCalls.push({ blocId, source, defaultContent, native: options?.native });
-        return {
-            id:       blocId,
-            name:     label,
-            group,
-            description,
-            viewJS:   "/*view*/",
-            editorJS: "/*editor*/",
-        };
-    },
-}));
-
-const { default: importBloc } = await import("cms-control/api/bloc/bloc.post");
+import importBloc from "cms-control/api/bloc/bloc.post";
 
 type CreateBlocCall = { bloc: TBloc };
 
@@ -223,7 +187,6 @@ describe("bloc.post", () => {
     });
 
     test("passes manifest defaultContent file content to prepare_bloc", async () => {
-        prepareBlocCalls.length = 0;
         const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(
             makeRequest({
@@ -241,11 +204,11 @@ describe("bloc.post", () => {
 
         expect(res.status).toBe(200);
         expect(createBlocCalls).toHaveLength(1);
-        expect(prepareBlocCalls[0]?.defaultContent).toBe(`<my-bloc><p slot="header">Title</p><p>Body</p></my-bloc>`);
+        expect(createBlocCalls[0]?.bloc.editorJS)
+            .toContain(`<my-bloc><p slot=\\"header\\">Title</p><p>Body</p></my-bloc>`);
     });
 
     test("allows native text bloc tags without manifest runtime metadata", async () => {
-        prepareBlocCalls.length = 0;
         const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(
             makeRequest({
@@ -264,7 +227,7 @@ describe("bloc.post", () => {
         expect(res.status).toBe(200);
         expect(createBlocCalls).toHaveLength(1);
         expect(createBlocCalls[0]?.bloc.id).toBe("p");
-        expect(prepareBlocCalls[0]?.native).toBe(true);
-        expect(prepareBlocCalls[0]?.defaultContent).toBe(`<p>Text</p>`);
+        expect(createBlocCalls[0]?.bloc.viewJS).toBe("/*view*/");
+        expect(createBlocCalls[0]?.bloc.editorJS).toContain(`<p>Text</p>`);
     });
 });

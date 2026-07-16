@@ -93,4 +93,24 @@ describe("getBlocGroupManifest", () => {
         expect(tagToGroup.get("base-nav")).toBe(group);
         expect(groups.get(group!)).toEqual(["base-nav", "site-header"]);
     });
+
+    test("separates a dependency that is also used directly", async () => {
+        const views: Record<string, string> = {
+            "site-header": "const t = `<base-nav></base-nav>`;",
+            "base-nav": "NAV();",
+        };
+        const delivery = {
+            repository: {
+                getAllPages: async () => [
+                    { content: "<site-header></site-header>" },
+                    { content: "<base-nav></base-nav>" },
+                ],
+                getBlocsList: async () => Object.keys(views).map(id => ({ id })),
+                getBlocViewJS: async (tag: string) => views[tag] ?? null,
+            },
+        } as unknown as DeliveryCms;
+
+        const { tagToGroup } = await getBlocGroupManifest(delivery);
+        expect(tagToGroup.get("site-header")).not.toBe(tagToGroup.get("base-nav"));
+    });
 });

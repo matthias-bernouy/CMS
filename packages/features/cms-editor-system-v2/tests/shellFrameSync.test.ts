@@ -1,6 +1,10 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
+import {
+    COMPOSITION_INPUT_ATTRIBUTE,
+    COMPOSITION_RUNTIME_ATTRIBUTE,
+} from "@bernouy/components/composition-runtime";
 
 import type { ShellControllerParts } from "../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
 
@@ -113,6 +117,55 @@ describe("Shell frame binding sync", () => {
 
         expect(shellParts(shell).commands.getContentHtml().trim())
             .toBe(`<section cms-source="/api/plans"><p>Plan</p></section>`);
+    });
+
+    test("serializes composition inputs instead of generated Light DOM", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { document: editorDocument } = parseHTML(`
+            <main data-cms-content>
+                <site-header ${COMPOSITION_RUNTIME_ATTRIBUTE}>
+                    <template ${COMPOSITION_INPUT_ATTRIBUTE}>
+                        <span data-authored>Authored input</span>
+                    </template>
+                    <nav data-generated>Generated header</nav>
+                </site-header>
+            </main>
+        `);
+        const shell = new Shell();
+        document.body.append(shell);
+        shellParts(shell).frames.frameDocument = editorDocument;
+
+        const content = shellParts(shell).commands.getContentHtml();
+
+        expect(content).toContain(`<span data-authored="">Authored input</span>`);
+        expect(content).not.toContain(COMPOSITION_RUNTIME_ATTRIBUTE);
+        expect(content).not.toContain(COMPOSITION_INPUT_ATTRIBUTE);
+        expect(content).not.toContain("data-generated");
+    });
+
+    test("syncs canonical composition input without accumulating runtime output", async () => {
+        installDom();
+        const { syncViewFrameContent } = await import("../src/components/Layout/Shell/Domain/shellBindingPreview");
+        const { document: editorDocument } = parseHTML(`
+            <main data-cms-content>
+                <site-header ${COMPOSITION_RUNTIME_ATTRIBUTE}>
+                    <template ${COMPOSITION_INPUT_ATTRIBUTE}><span data-authored>Input</span></template>
+                    <nav data-generated>Generated</nav>
+                </site-header>
+            </main>
+        `);
+        const { document: viewDocument } = parseHTML(`<main data-cms-content></main>`);
+
+        syncViewFrameContent(editorDocument, viewDocument, "loading");
+        syncViewFrameContent(editorDocument, viewDocument, "loading");
+
+        const content = viewDocument.querySelector("[data-cms-content]")!.innerHTML;
+        expect(content).toContain("data-authored");
+        expect(content).not.toContain(COMPOSITION_RUNTIME_ATTRIBUTE);
+        expect(content).not.toContain(COMPOSITION_INPUT_ATTRIBUTE);
+        expect(content).not.toContain("data-generated");
     });
 
     test("restores view source templates before restarting runtime", async () => {

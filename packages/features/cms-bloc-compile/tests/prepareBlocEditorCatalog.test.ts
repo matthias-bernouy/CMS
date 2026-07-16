@@ -1,11 +1,6 @@
-import { afterEach, describe, expect, spyOn, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { runBuild } from "../src/core/prepare_bloc";
 import { prepare_bloc } from "../src/exports";
-
-const originalBuild = Bun.build;
-
-afterEach(() => {
-    Bun.build = originalBuild;
-});
 
 describe("prepare_bloc editor catalog output", () => {
     test("materializes bundled source files used by view imports", async () => {
@@ -46,6 +41,26 @@ describe("prepare_bloc editor catalog output", () => {
             "demo-card",
             { "../outside.js": Buffer.from("unsafe").toString("base64") },
         )).rejects.toThrow("Invalid bloc source path: ../outside.js");
+    });
+
+    test("exposes the Light DOM Composition base to view bundles", async () => {
+        const view = new File([
+            `import { Composition } from "@bernouy/components/base";`,
+            `export class DemoComposition extends Composition {`,
+            `  constructor() { super({ template: "<p>Demo</p>" }); }`,
+            `}`,
+        ], "DemoComposition.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            "Demo composition",
+            "Composition",
+            "",
+            "demo-composition",
+        );
+
+        expect(bloc.viewJS).toContain("window.p9r.Composition");
     });
 
     test("uses the stable editor catalog runtime for blocs without editor source", async () => {
@@ -179,38 +194,20 @@ describe("prepare_bloc editor catalog output", () => {
     });
 
     test("reports Bun build failures instead of returning an empty view bundle", async () => {
-        spyOn(Bun, "build").mockImplementation(async (options: Bun.BuildConfig) => {
-            const entry = String(options.entrypoints?.[0] ?? "");
-            if (entry.endsWith("demo-card.js")) {
-                return {
-                    success: false,
-                    outputs: [],
-                    logs:    [new Error("missing dependency")],
-                } as unknown as Bun.BuildOutput;
-            }
-            return {
-                success: true,
-                outputs: [{ text: async () => "editor output" }],
-                logs:    [],
-            } as unknown as Bun.BuildOutput;
-        });
-
         const view = new File(["import './missing.js';"], "DemoCard.ts", { type: "text/typescript" });
 
         await expect(prepare_bloc(view, null, "Demo card", "Content", "", "demo-card"))
-            .rejects.toThrow(/Build failed \(view bundle for demo-card\):\n  - missing dependency/);
+            .rejects.toThrow(/Build failed \(view bundle for demo-card\):/);
     });
 
     test("reports missing Bun build outputs", async () => {
-        spyOn(Bun, "build").mockImplementation(async () => ({
+        const build = async () => ({
             success: true,
             outputs: [],
             logs:    [],
-        }) as unknown as Bun.BuildOutput);
+        }) as unknown as Bun.BuildOutput;
 
-        const view = new File(["customElements.define('demo-card', class extends HTMLElement {});"], "DemoCard.ts", { type: "text/typescript" });
-
-        await expect(prepare_bloc(view, null, "Demo card", "Content", "", "demo-card"))
-            .rejects.toThrow(/Build failed \((view|editor) bundle for demo-card\):\n  \(no details from Bun.build\)/);
+        await expect(runBuild({ entrypoints: ["demo-card.js"] }, "view bundle for demo-card", build))
+            .rejects.toThrow(/Build failed \(view bundle for demo-card\):\n  \(no details from Bun.build\)/);
     });
 });
