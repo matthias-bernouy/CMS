@@ -80,9 +80,9 @@ describe("basic-blocs 1.0.0", () => {
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("part=\"label\"");
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("form.requestSubmit()");
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(":host([hidden]) { display: none !important; }");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(":host { display: block; box-sizing: border-box; min-width: 0; max-width: 100%;");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(".field { display: grid; min-width: 0;");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("input { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%;");
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(":host { display: block; box-sizing: border-box; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%;");
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(".field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0;");
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch;");
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain("visibleWhen");
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('attribute: "autocomplete"');
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('type: "color"');
