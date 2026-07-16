@@ -13,6 +13,7 @@
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
+        { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-functions" },
         { "path": "../../features/cms-triggers" },

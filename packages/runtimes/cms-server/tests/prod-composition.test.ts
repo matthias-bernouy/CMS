@@ -14,7 +14,8 @@ describe("production CMS composition", () => {
         expect(source).toContain("const functions         = new MongoFunctionRepository(db);");
         expect(source).toContain("const triggers          = new MongoTriggerRepository(db);");
         expect(source).toContain("const relations         = new MongoRelationRepository(db);");
-        expect(source).toContain("dashboards,\n    relations,\n    functions,\n    triggers,\n    sourceOverlays,");
-        expect(source).toContain("sources: deliverySources, analytics,\n    functions,\n    triggers,");
+        expect(source).toContain("dashboards,\n    relations,\n    functions,\n    triggers,\n    identities,\n    sourceOverlays,");
+        expect(source).toContain("sources: deliverySources, analytics,\n    functions,\n    triggers,\n    identities,");
+        expect(source).toContain("startProductionSystemFunctionWorkers({");
     });
 });

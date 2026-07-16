@@ -19,14 +19,18 @@ import { CompositeSourceRepository, SourceOverlaySourceRepository, SYSTEM_SOURCE
 import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
 import { MongoTriggerRepository } from "@bernouy/cms-triggers/mongo";
+import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
 import { MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
 import { MongoRelationRepository } from "@bernouy/cms-relations/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
-import { MongoIntegrationInstallationRepository } from "@bernouy/cms-integrations/mongo";
+import {
+    MongoIntegrationConnectorProviderRepository,
+    MongoIntegrationInstallationRepository,
+} from "@bernouy/cms-integrations/mongo";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
-import { SupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import { ConfiguredSupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
 import type { IntegrationConnectorDeployer, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { MongoClient } from "mongodb";
@@ -55,6 +59,7 @@ import {
 } from "@bernouy/cms-auth/mongo";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { readRuntimeEnv } from "./runtimeEnv";
+import { startProductionSystemFunctionWorkers } from "./systemFunctionWorkers";
 
 const {
     CONTROL_PORT,
@@ -117,14 +122,15 @@ const sources           = new CompositeSourceRepository(new ValidatingSourceRepo
 const sourceOverlays     = new MongoSourceOverlayRepository(db);                 await sourceOverlays.init();
 const functions         = new MongoFunctionRepository(db);                        await functions.init();
 const triggers          = new MongoTriggerRepository(db);                         await triggers.init();
+const identities        = new MongoIdentityService(db);                           await identities.init();
 const dashboards        = new MongoDashboardRepository(db);                       await dashboards.init();
 const relations         = new MongoRelationRepository(db);                        await relations.init();
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
 const integrationsStore = new MongoIntegrationInstallationRepository(db);              await integrationsStore.init();
+const integrationConnectorProviders = new MongoIntegrationConnectorProviderRepository(db);
 const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
 const integrationCatalog = createIntegrationCatalog(process.env, `http://127.0.0.1:${CONTROL_PORT}/.cms/repository`);
-const integrationConnectorDeployers = createIntegrationConnectorDeployers(process.env);
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
 const roles             = new ValidatingRolesRepository(mongoRoles);
@@ -133,8 +139,16 @@ const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStor
     collection:   db.collection("cms_secrets"),
     secretCrypto,
 }));
+const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
+    new ConfiguredSupabaseConnectorDeployer({
+        integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
+        providerRepository: integrationConnectorProviders,
+        secrets,
+        functionSecrets: readSupabaseFunctionSecrets(process.env),
+    }),
+];
 const resolveSecret     = createSecretResolver(secrets);
-const deliverySources   = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { resolveSecret } });
+const deliverySources   = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { resolveSecret, identities } });
 const cache = new InMemoryCache();
 
 // Seed the builtin `local` identity provider (idempotent).
@@ -154,7 +168,6 @@ if (!existingAdmin) {
         await createLocalUser({ credentials, users }, {
             email:       CMS_ADMIN_EMAIL,
             password:    CMS_ADMIN_PASSWORD,
-            displayName: "Administrator",
             role:        "admin",
         });
     } catch (err) {
@@ -207,11 +220,13 @@ const controlCms = new ControlCms(controlRunner, repo, auth, {
     deliveryUrl: DELIVERY_PUBLIC_URL,
     integrationCatalog,
     integrationInstallations: integrationsStore,
+    integrationConnectorProviders,
     integrationConnectorDeployers,
     dashboards,
     relations,
     functions,
     triggers,
+    identities,
     sourceOverlays,
     publicAuth: {
         ...publicAuthBase,
@@ -230,6 +245,7 @@ new DeliveryCms({
     runner: deliveryRunner, repository: repo, cache, sources: deliverySources, analytics,
     functions,
     triggers,
+    identities,
     integrationInstallations: integrationsStore,
     analyticsSalt: ANALYTICS_SALT_SECRET,
     sourceResolveSecret: resolveSecret,
@@ -239,6 +255,12 @@ new DeliveryCms({
         emailVerificationUrl: CMS_AUTH_EMAIL_VERIFICATION_URL,
         passwordResetUrl:     CMS_AUTH_PASSWORD_RESET_URL,
     },
+});
+
+startProductionSystemFunctionWorkers({
+    functions,
+    sources: deliverySources,
+    deps: { resolveSecret, identities },
 });
 
 controlRunner.start(CONTROL_PORT);
@@ -256,21 +278,6 @@ function createIntegrationCatalog(
 ): IntegrationDefinitionRepository {
     const repositoryUrl = source.P9R_INTEGRATION_REPOSITORY_URL?.trim();
     return new HttpIntegrationDefinitionRepository(repositoryUrl || localRepositoryUrl);
-}
-
-function createIntegrationConnectorDeployers(source: Record<string, string | undefined>): IntegrationConnectorDeployer[] | undefined {
-    const accessToken = source.SUPABASE_ACCESS_TOKEN?.trim() || source.SUPABASE_TOKEN_CONNECTION?.trim();
-    const projectRef = source.SUPABASE_PROJECT_REF?.trim() || source.SUPABASE_PROJECT_ID?.trim();
-    if (!accessToken && !projectRef) return undefined;
-    if (!accessToken || !projectRef) {
-        throw new Error("Supabase connector deployment requires SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF");
-    }
-    return [new SupabaseConnectorDeployer({
-        integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
-        accessToken,
-        projectRef,
-        functionSecrets: readSupabaseFunctionSecrets(source),
-    })];
 }
 
 function readSupabaseFunctionSecrets(source: Record<string, string | undefined>): Record<string, string> {
