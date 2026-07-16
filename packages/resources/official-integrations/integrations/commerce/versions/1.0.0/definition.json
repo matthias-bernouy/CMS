@@ -1620,7 +1620,7 @@
                         }, "required": ["runKey", "control", "authorizations"] } }]
                     },
                     {
-                        "endpointId": "authorizePlatformPayoutLiabilityDecrease", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "authorizePlatformPayoutLiabilityDecrease", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/platform-payout-liability/authorize-decrease", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -1947,7 +1947,7 @@
                     },
                     {
                         "endpointId": "recoverOrderShipmentCreation", "method": "POST",
-                        "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/shipment-creation/recover", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2205,7 +2205,7 @@
                         }, "required": ["runKey", "authorizations"] } }]
                     },
                     {
-                        "endpointId": "c2cPolicies", "method": "GET", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "c2cPolicies", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/c2c-policies", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2293,7 +2293,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "createC2cPolicyRevision", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "createC2cPolicyRevision", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/c2c-policies", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2340,7 +2340,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "protectedPayments", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "protectedPayments", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/protected-payments",
                         "params": [
                             { "name": "q", "in": "query", "type": "string" }, { "name": "paymentStatus", "in": "query", "type": "string" },
@@ -2369,7 +2369,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "protectedPayment", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "protectedPayment", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/protected-payment",
                         "params": [{ "name": "orderId", "in": "query", "type": "number" }, { "name": "publicId", "in": "query", "type": "string" }],
                         "headers": [
@@ -2403,7 +2403,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "claims", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "claims", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claims",
                         "params": [{ "name": "status", "in": "query", "type": "string" }, { "name": "reason", "in": "query", "type": "string" }, { "name": "orderId", "in": "query", "type": "number" }, { "name": "limit", "in": "query", "type": "number" }, { "name": "offset", "in": "query", "type": "number" }],
                         "headers": [
@@ -2420,7 +2420,7 @@
                         } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" } } } }]
                     },
                     {
-                        "endpointId": "claim", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "claim", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim",
                         "params": [{ "name": "id", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -2455,7 +2455,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "claimEvidenceFile", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "claimEvidenceFile", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/evidence",
                         "params": [{ "name": "evidenceId", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -2469,7 +2469,7 @@
                         }, "required": ["error"] } }]
                     },
                     {
-                        "endpointId": "claimEvidenceItems", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "claimEvidenceItems", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/evidence-items",
                         "params": [
                             { "name": "claimId", "in": "query", "type": "number", "required": true },
@@ -2492,7 +2492,7 @@
                         }, "required": ["items", "total", "limit", "offset"] } }]
                     },
                     {
-                        "endpointId": "claimEvidenceItem", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "claimEvidenceItem", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/evidence-item",
                         "params": [{ "name": "id", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -2509,7 +2509,7 @@
                         }, "required": ["id", "claimId", "submittedByKind", "mimeType", "fileSize", "sha256", "createdAt"] } }]
                     },
                     {
-                        "endpointId": "resolveOrderClaim", "method": "POST", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "resolveOrderClaim", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/claim/resolve", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2531,7 +2531,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "refundRequests", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "refundRequests", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/refund-requests",
                         "params": [{ "name": "status", "in": "query", "type": "string" }, { "name": "orderId", "in": "query", "type": "number" }, { "name": "limit", "in": "query", "type": "number" }, { "name": "offset", "in": "query", "type": "number" }],
                         "headers": [
@@ -2549,7 +2549,7 @@
                         } } }, "total": { "type": "number" }, "limit": { "type": "number" }, "offset": { "type": "number" } } } }]
                     },
                     {
-                        "endpointId": "refundRequest", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "refundRequest", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/refund-request",
                         "params": [{ "name": "id", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -2569,7 +2569,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "requestOrderRefund", "method": "POST", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "requestOrderRefund", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/refund", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2587,7 +2587,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "reviewOrderRefund", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "reviewOrderRefund", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/refund/review", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2606,7 +2606,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "authorizeOrderRelease", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "authorizeOrderRelease", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/release", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2630,7 +2630,7 @@
                         }, "required": ["status", "releaseAuthorizationId", "orderId", "orderPublicId", "paymentId", "businessKey", "sellerId", "sellerRequiredMinimumBalanceAmount", "payoutDelayDays", "amount", "currency", "financialTermsHash"] } }]
                     },
                     {
-                        "endpointId": "reviewOrderCancellation", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "reviewOrderCancellation", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/order/cancellation/review", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -2648,7 +2648,7 @@
                         } } }]
                     },
                     {
-                        "endpointId": "listCommerceExceptions", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "listCommerceExceptions", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/commerce-exceptions",
                         "params": [{ "name": "kind", "in": "query", "type": "string" }, { "name": "status", "in": "query", "type": "string" }, { "name": "orderId", "in": "query", "type": "number" }, { "name": "limit", "in": "query", "type": "number" }, { "name": "offset", "in": "query", "type": "number" }],
                         "headers": [

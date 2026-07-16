@@ -1,8 +1,6 @@
 \set ON_ERROR_STOP on
-
 begin;
 set local role service_role;
-
 do $$
 begin
     begin
@@ -18,7 +16,7 @@ begin
                 'sellerFeeFixedAmount', 0,
                 'sellerFeeRefundPolicy', 'never'
             ),
-            'finance-unsafe-cap-smoke',
+            'admin-unsafe-cap-smoke',
             (select version from commerce.settings where id = 'default')
         );
         raise exception 'smoke: fixed fee above its maximum was published';
@@ -28,7 +26,6 @@ begin
     end;
 end;
 $$;
-
 select commerce.create_c2c_policy_revision(
     jsonb_build_object(
         'name', 'Dual approval smoke policy',
@@ -40,7 +37,7 @@ select commerce.create_c2c_policy_revision(
         'dualApprovalThresholdAmount', 8000,
         'highValueReviewAmount', 500000
     ),
-    'finance-policy-smoke',
+    'admin-policy-smoke',
     (select version from commerce.settings where id = 'default')
 );
 
@@ -102,6 +99,7 @@ do $$
 declare
     v_order_id bigint;
     v_prior jsonb;
+    v_prior_review jsonb;
     v_request jsonb;
     v_first jsonb;
     v_final jsonb;
@@ -110,16 +108,24 @@ declare
 begin
     select id into v_order_id from commerce.orders where order_number = 'APPROVAL-SMOKE-1';
     v_prior := commerce.request_order_refund(
-        v_order_id, 'first split remedy', 4000, 'support', 'support-smoke'
+        v_order_id, 'first split remedy', 4000, 'admin', 'admin-requester'
     );
-    if v_prior->>'status' <> 'approved'
+    if v_prior->>'status' <> 'requested'
+        or (v_prior->>'requires_finance_approval')::boolean is not true
         or (v_prior->>'dual_approval_required')::boolean is true then
-        raise exception 'smoke: first sub-threshold refund was not policy-approved';
+        raise exception 'smoke: admin sub-threshold refund bypassed explicit review';
+    end if;
+    v_prior_review := commerce.review_refund_request(
+        (v_prior->>'id')::bigint, 'approved', 'admin-one', 'explicit admin review',
+        (v_prior->>'version')::integer
+    );
+    if v_prior_review->>'status' <> 'approved' then
+        raise exception 'smoke: reviewed sub-threshold refund was not approved';
     end if;
     update commerce.refund_requests set status = 'succeeded'
-    where id = (v_prior->>'id')::bigint;
+        where id = (v_prior->>'id')::bigint;
     v_request := commerce.request_order_refund(
-        v_order_id, 'cumulative high-value support remedy', 5000, 'support', 'support-smoke'
+        v_order_id, 'cumulative high-value admin remedy', 5000, 'admin', 'admin-requester'
     );
     if v_request->>'status' <> 'requested'
         or (v_request->>'dual_approval_required')::boolean is not true
@@ -127,27 +133,27 @@ begin
         raise exception 'smoke: cumulative refund thresholds were not applied';
     end if;
     v_first := commerce.review_refund_request(
-        (v_request->>'id')::bigint, 'approved', 'finance-one', 'first approval',
+        (v_request->>'id')::bigint, 'approved', 'admin-one', 'first approval',
         (v_request->>'version')::integer
     );
-    if v_first->>'status' <> 'requested' or v_first->>'first_approved_by' <> 'finance-one' then
+    if v_first->>'status' <> 'requested' or v_first->>'first_approved_by' <> 'admin-one' then
         raise exception 'smoke: first approval became executable';
     end if;
     begin
         perform commerce.review_refund_request(
-            (v_request->>'id')::bigint, 'approved', 'finance-one', 'duplicate actor',
+            (v_request->>'id')::bigint, 'approved', 'admin-one', 'duplicate actor',
             (v_first->>'version')::integer
         );
         raise exception 'smoke: one actor completed dual approval';
     exception when others then
         if sqlerrm = 'smoke: one actor completed dual approval'
-            or sqlerrm <> 'forbidden: dual approval requires a second finance actor' then raise; end if;
+            or sqlerrm <> 'forbidden: dual approval requires a second admin actor' then raise; end if;
     end;
     v_final := commerce.review_refund_request(
-        (v_request->>'id')::bigint, 'approved', 'finance-two', 'second approval',
+        (v_request->>'id')::bigint, 'approved', 'admin-two', 'second approval',
         (v_first->>'version')::integer
     );
-    if v_final->>'status' <> 'approved' or v_final->>'second_approved_by' <> 'finance-two' then
+    if v_final->>'status' <> 'approved' or v_final->>'second_approved_by' <> 'admin-two' then
         raise exception 'smoke: second approval did not authorize refund';
     end if;
     v_batch := commerce.pending_order_refund_authorizations('dual-refund-smoke', 25);

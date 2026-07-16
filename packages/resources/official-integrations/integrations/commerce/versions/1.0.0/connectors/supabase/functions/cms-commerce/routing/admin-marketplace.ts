@@ -1,5 +1,5 @@
 import { methodNotAllowed } from "../core/http.ts";
-import { requireCmsRole } from "../core/auth.ts";
+import { requireCmsAdmin } from "../core/auth.ts";
 import { getOffer, listOffers, reviewOffer, upsertOffer } from "../routes/offers.ts";
 import { getOfferImageFile, removeOfferImage, reorderOfferImages, replaceOfferImage, uploadOfferImage } from "../routes/offer/media.ts";
 import { getOrder, listOrders } from "../routes/orders.ts";
@@ -53,73 +53,73 @@ export async function handleAdminMarketplaceRoute(route: string, request: Reques
         return request.method === "GET" ? await getOrder(request, false) : methodNotAllowed("GET");
     }
     if (route === "/admin/protected-payments") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await listProtectedPayments(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/protected-payment") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await getProtectedPayment(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/claims") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await listClaims(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/claim") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await getClaim(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/claim/evidence") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await getClaimEvidenceFile(request, "admin") : methodNotAllowed("GET");
     }
     if (route === "/admin/claim/evidence-items") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await listClaimEvidence(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/claim/evidence-item") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await getClaimEvidenceMetadata(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/claim/resolve") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "POST" ? await resolveOrderClaim(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/refund-requests") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await listRefundRequests(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/refund-request") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await getRefundRequest(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/order/refund") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "POST" ? await requestOrderRefund(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/refund/review") {
-        requireCmsRole(request, "finance");
+        requireCmsAdmin(request);
         return request.method === "POST" ? await reviewOrderRefund(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/order/release") {
-        requireCmsRole(request, "finance");
+        requireCmsAdmin(request);
         return request.method === "POST" ? await authorizeOrderRelease(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/platform-payout-liability/authorize-decrease") {
-        requireCmsRole(request, "finance");
+        requireCmsAdmin(request);
         return request.method === "POST"
             ? await authorizePlatformPayoutLiabilityDecrease(request)
             : methodNotAllowed("POST");
     }
     if (route === "/admin/order/cancellation/review") {
-        requireCmsRole(request, "finance");
+        requireCmsAdmin(request);
         return request.method === "POST" ? await reviewOrderCancellation(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/order/shipment-creation/recover") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "POST" ? await recoverOrderShipmentCreation(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/commerce-exceptions") {
-        requireCmsRole(request, "support", "finance");
+        requireCmsAdmin(request);
         return request.method === "GET" ? await listCommerceExceptions(request) : methodNotAllowed("GET");
     }
     return null;

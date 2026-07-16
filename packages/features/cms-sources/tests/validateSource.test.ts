@@ -15,7 +15,6 @@ describe("validateSource", () => {
     test("validates endpoint method and access mode", () => {
         expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), method: "FETCH" as any }] })).some(e => e.includes("invalid method"))).toBe(true);
         expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access: { mode: "public" } }] }))).toEqual([]);
-        expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access: { mode: "admin", roles: ["support", "finance"] } }] }))).toEqual([]);
         expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access: { mode: "visitor" as any } }] })).some(e => e.includes("invalid access mode"))).toBe(true);
     });
 
@@ -27,25 +26,9 @@ describe("validateSource", () => {
         }
     });
 
-    test("validates explicit endpoint access roles", () => {
-        const wrongMode = validateSource(source({ endpoints: [{
-            ...ep("urn:shop:wrongMode"),
-            access: { mode: "auth", roles: ["support"] },
-        }] }));
-        expect(wrongMode.some(error => error.includes("require admin mode"))).toBe(true);
-
-        const malformed = validateSource(source({ endpoints: [{
-            ...ep("urn:shop:malformed"),
-            access: { mode: "admin", roles: ["support", " ", "support"] },
-        }] }));
-        expect(malformed.some(error => error.includes("non-empty role id"))).toBe(true);
-        expect(malformed.some(error => error.includes("duplicate access role"))).toBe(true);
-
-        const nonArray = validateSource(source({ endpoints: [{
-            ...ep("urn:shop:nonArray"),
-            access: { mode: "admin", roles: "finance" } as any,
-        }] }));
-        expect(nonArray.some(error => error.includes("expected an array"))).toBe(true);
+    test("keeps legacy stored role metadata readable during migration", () => {
+        const access = { mode: "admin", roles: ["legacy-role"] } as any;
+        expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access }] }))).toEqual([]);
     });
 
     test("validates params", () => {

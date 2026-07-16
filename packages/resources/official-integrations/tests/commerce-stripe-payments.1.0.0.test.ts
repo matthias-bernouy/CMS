@@ -2058,7 +2058,7 @@ function commerceOperationsEndpoints(): Source["endpoints"] {
         {
             urn: makeEndpointUrn("commerce", "claimEvidenceFile"),
             method: "GET",
-            access: { mode: "admin", roles: ["support", "finance"] },
+            access: { mode: "admin" },
             targetUrl: "https://commerce.test/claim-evidence-file",
             responseKind: "file",
             mediaType: "application/octet-stream",

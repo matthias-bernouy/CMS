@@ -44,21 +44,4 @@ export async function validateFunction(
 function validateAccess(fn: CmsFunction, errors: string[]): void {
     if (fn.access === undefined) return;
     if (!isSourceEndpointAccessMode(fn.access.mode)) errors.push("function.access.mode is not supported");
-    const roles = (fn.access as { roles?: unknown }).roles;
-    if (roles === undefined) return;
-    if (fn.access.mode !== "admin") errors.push("function.access.roles requires admin mode");
-    if (!Array.isArray(roles)) {
-        errors.push("function.access.roles must be an array");
-        return;
-    }
-    const seen = new Set<string>();
-    for (const role of roles) {
-        if (typeof role !== "string" || !role.trim()) {
-            errors.push("function.access.roles must contain non-empty role ids");
-            continue;
-        }
-        const roleId = role.trim();
-        if (seen.has(roleId)) errors.push(`function.access.roles contains duplicate role ${roleId}`);
-        seen.add(roleId);
-    }
 }

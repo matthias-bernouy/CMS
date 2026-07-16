@@ -459,7 +459,7 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
             reason: "Verified against the provider back office",
         }), {
             sources,
-            user: { id: "support-operator", role: "support" },
+            user: { id: "cms-administrator", role: "admin" },
             deps: { fetchImpl: async (input, init) => {
                 const req = new Request(input, init);
                 const path = new URL(req.url).pathname;
@@ -484,25 +484,27 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
         });
     });
 
-    test("rejects a generic CMS administrator before partially recovering Delivery", async () => {
+    test("enforces shipment recovery as exact admin-only before mutation", async () => {
         const { sources, functions } = await installedFunctions();
         const fn = await requiredFunction(functions, "recoverMondialRelayShipmentCreation");
+        expect(fn.access).toEqual({ mode: "admin" });
+
         let calls = 0;
         const response = await executeFunction(fn, request(fn.id, {
             shipmentId: "shipment-unknown-42", orderPublicId: "order-public-42",
-            expeditionNumber: "12345678", labelUrl: "https://connect-api-sandbox.mondialrelay.com/label.pdf",
-            reason: "Verified against the provider back office",
+            expeditionNumber: "12345678", reason: "Verified against the provider back office",
         }), {
             sources,
-            user: { id: "cms-administrator", role: "admin" },
+            user: { id: "custom-operator", role: "custom" },
             deps: { fetchImpl: async () => {
-                calls += 1;
+                calls++;
                 return Response.json({});
             } },
         });
+
         expect(response.status).toBe(403);
         expect(await response.json()).toEqual({
-            error: "Shipment recovery requires a support or finance operator",
+            error: "Shipment recovery requires an admin",
         });
         expect(calls).toBe(0);
     });

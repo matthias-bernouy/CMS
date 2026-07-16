@@ -48,7 +48,7 @@ export async function requestCommerce(path: string, options: {
     authenticated?: boolean;
     authorization?: string;
     userId?: string;
-    userRole?: string;
+    userRole?: string | null;
     body?: JsonRecord;
     formData?: FormData;
 } = {}): Promise<Response> {
@@ -99,7 +99,7 @@ function commerceRequest(path: string, options: {
     authenticated?: boolean;
     authorization?: string;
     userId?: string;
-    userRole?: string;
+    userRole?: string | null;
     body?: JsonRecord;
     formData?: FormData;
 }): Request {
@@ -108,7 +108,10 @@ function commerceRequest(path: string, options: {
         headers.set("authorization", options.authorization ?? `Bearer ${commerceApiKey}`);
     }
     if (options.userId) headers.set("x-cms-user-id", options.userId);
-    if (options.userRole) headers.set("x-cms-user-role", options.userRole);
+    const userRole = options.userRole === undefined && path.startsWith("/admin/")
+        ? "admin"
+        : options.userRole;
+    if (userRole) headers.set("x-cms-user-role", userRole);
     if (options.body) headers.set("content-type", "application/json");
     return new Request(`https://cms.example.test/functions/v1/cms-commerce${path}`, {
         method: options.method ?? (options.body || options.formData ? "POST" : "GET"),

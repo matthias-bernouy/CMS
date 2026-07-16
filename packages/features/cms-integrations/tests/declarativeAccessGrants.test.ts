@@ -28,7 +28,7 @@ describe("@bernouy/cms-integrations access grants", () => {
                             endpoint("catalog", "public"),
                             endpoint("myOrders", { mode: "auth" }),
                             endpoint("adminOrders", "admin"),
-                            endpoint("financeOperations", { mode: "admin", roles: ["finance", "support"] }),
+                            endpoint("protectedOperations", { mode: "admin" }),
                             endpoint("createOrder", "system"),
                         ],
                     },
@@ -64,13 +64,10 @@ describe("@bernouy/cms-integrations access grants", () => {
         expect((await roles.get(USER_ROLE))?.grants.map(grant => grant.permission)).toEqual([
             "urn:shop:myOrders",
         ]);
-        expect((await sources.getEndpoint("urn:shop:financeOperations"))?.access).toEqual({
-            mode: "admin",
-            roles: ["finance", "support"],
-        });
+        expect((await sources.getEndpoint("urn:shop:protectedOperations"))?.access).toEqual({ mode: "admin" });
     });
 
-    test("rejects malformed explicit endpoint roles", () => {
+    test("rejects role-specific endpoint access", () => {
         const definition = (access: unknown) => ({
             kind: "shop",
             label: "Shop",
@@ -80,18 +77,17 @@ describe("@bernouy/cms-integrations access grants", () => {
                 source: {
                     id: "shop",
                     meta: { name: "Shop" },
-                    endpoints: [endpoint("financeOperations", access as any)],
+                    endpoints: [endpoint("protectedOperations", access as any)],
                 },
             }],
         });
 
-        expect(() => parseIntegrationDefinition(definition({ mode: "auth", roles: ["finance"] }))).toThrow(/only supported for admin access/);
-        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["finance", "finance"] }))).toThrow(/duplicates role finance/);
-        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["finance", " "] }))).toThrow(/roles\.1/);
+        expect(() => parseIntegrationDefinition(definition({ mode: "auth", roles: ["custom"] }))).toThrow(/no longer supported/);
+        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["custom"] }))).toThrow(/no longer supported/);
     });
 });
 
-function endpoint(endpointId: string, access: string | { mode: string; roles?: string[] }) {
+function endpoint(endpointId: string, access: string | { mode: string }) {
     return {
         endpointId,
         method: "GET",

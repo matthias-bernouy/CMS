@@ -7,8 +7,15 @@ const integrationRoot = resolve(import.meta.dir, "../../../integrations/commerce
 describe("protected C2C financial policy contract", () => {
     test("derives generic refund allocations and enforces distinct dual approvers", async () => {
         const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
+        const createRefund = functionSql(schema, "create_refund_request", "refund_authorization_payload");
         const requestRefund = functionSql(schema, "request_order_refund", "review_refund_request");
         const reviewRefund = functionSql(schema, "review_refund_request", "authorize_order_release");
+        const authorizeRelease = functionSql(schema, "authorize_order_release", "authorize_order_reserve_release");
+        const reviewCancellationAs = functionSql(schema, "review_order_cancellation_as", "review_order_cancellation");
+        const reviewCancellation = functionSql(schema, "review_order_cancellation", "process_due_order_deadlines");
+        const deadlineWorker = functionSql(schema, "process_due_order_deadlines", "authorize_due_order_releases");
+        const resolveClaim = functionSql(schema, "resolve_marketplace_claim", "request_order_refund");
+        const recoverShipment = functionSql(schema, "recover_order_shipment_creation", "fail_order_shipment_creation");
 
         expect(requestRefund).not.toContain("p_seller_recovery_amount");
         expect(requestRefund).not.toContain("p_protection_fee_refund_amount");
@@ -17,7 +24,22 @@ describe("protected C2C financial policy contract", () => {
         expect(schema).toContain("refund_requests_one_nonterminal_order_idx");
         expect(schema).toContain("v_cumulative_amount >= v_protection.finance_review_threshold_amount");
         expect(schema).toContain("v_cumulative_amount >= v_protection.dual_approval_threshold_amount");
-        expect(reviewRefund).toContain("dual approval requires a second finance actor");
+        expect(createRefund).toContain("p_requested_by_kind is null");
+        expect(createRefund).toContain("p_requested_by_kind not in ('buyer', 'seller', 'admin', 'system')");
+        expect(createRefund).toContain("p_requested_by_kind = 'admin'");
+        expect(requestRefund).toContain("if p_actor_kind is distinct from 'admin'");
+        expect(resolveClaim).toContain("if p_actor_kind is distinct from 'admin'");
+        expect(recoverShipment).toContain("p_actor_kind is distinct from 'admin'");
+        expect(authorizeRelease).toContain("p_actor_kind is null or p_actor_kind not in ('admin', 'system')");
+        expect(reviewCancellationAs).toContain("'order_cancellation', p_actor_kind, p_actor_id");
+        expect(reviewCancellation).toContain("p_request_id, p_decision, 'admin', p_actor_id, p_reason");
+        expect(deadlineWorker).toContain("v_candidate.id, 'approved', 'system', 'deadline-worker:'");
+        expect(schema).toContain("actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')");
+        expect(schema).toContain("requested_by_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')");
+        expect(schema).toContain("actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system', 'provider')");
+        expect(schema).toContain("authorized_by_kind in ('finance', 'admin', 'system')");
+        expect(reviewRefund).toContain("dual approval requires a second admin actor");
+        expect(reviewRefund).toContain("'admin', p_actor_id");
         expect(reviewRefund).toContain("first_approved_by = p_actor_id");
         expect(reviewRefund).toContain("second_approved_by");
     });
@@ -70,7 +92,7 @@ describe("protected C2C financial policy contract", () => {
         expect(schema).toContain("authorize_platform_payout_liability_decrease");
         expect(schema).toContain("conflict: stale platform payout liability revision");
         expect(schema).toContain("provider applied amount is below the Commerce aggregate");
-        expect(schema).toContain("Finance-authorized provider decrease must match the exact Commerce aggregate");
+        expect(schema).toContain("Admin-authorized provider decrease must match the exact Commerce aggregate");
         expect(schema).toContain("liability.risk_release_at > now()");
         expect(schema).toContain("status not in ('won', 'prevented', 'warning_closed')");
     });
@@ -352,12 +374,7 @@ describe("protected C2C financial policy contract", () => {
         const financialEndpoints = source.source.endpoints.filter((item: any) => financialIds.has(item.endpointId));
         expect(financialEndpoints).toHaveLength(financialIds.size);
         for (const endpoint of financialEndpoints) {
-            expect(endpoint.access?.mode).toBe("admin");
-            expect(endpoint.access?.roles).toEqual(expect.arrayContaining(
-                endpoint.endpointId === "c2cPolicies" || endpoint.endpointId === "createC2cPolicyRevision"
-                    || endpoint.endpointId === "reviewOrderRefund" || endpoint.endpointId === "authorizeOrderRelease"
-                    || endpoint.endpointId === "reviewOrderCancellation" ? ["finance"] : ["support", "finance"],
-            ));
+            expect(endpoint.access).toEqual({ mode: "admin" });
             expect(endpoint.headers).toEqual(expect.arrayContaining([
                 { name: "x-cms-user-id", source: { from: "computed", ref: "userID" } },
                 { name: "x-cms-user-role", source: { from: "computed", ref: "userRole" } },
@@ -365,7 +382,7 @@ describe("protected C2C financial policy contract", () => {
         }
     });
 
-    test("publishes protected C2C revisions from the Finance settings dashboard with CAS and typed controls", async () => {
+    test("publishes protected C2C revisions from the admin settings dashboard with CAS and typed controls", async () => {
         const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const dashboard = definition.artifacts.find((artifact: any) =>
@@ -525,7 +542,7 @@ describe("protected C2C financial policy contract", () => {
 
 function functionSql(schema: string, start: string, end: string): string {
     return schema.slice(
-        schema.indexOf(`create or replace function commerce.${start}`),
-        schema.indexOf(`create or replace function commerce.${end}`),
+        schema.indexOf(`create or replace function commerce.${start}(`),
+        schema.indexOf(`create or replace function commerce.${end}(`),
     );
 }

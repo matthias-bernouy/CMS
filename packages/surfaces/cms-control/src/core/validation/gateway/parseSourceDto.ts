@@ -140,21 +140,10 @@ function parseAccessBlob(raw: unknown, name: string): SourceEndpointAccess | und
     if (!isSourceEndpointAccessMode(value.mode)) {
         throw new InvalidParam(`${name}.mode`, "must be public|auth|admin|system.");
     }
-    if (value.roles === undefined) return { mode: value.mode };
-    if (value.mode !== "admin") {
-        throw new InvalidParam(`${name}.roles`, "is only supported for admin access.");
+    if (value.roles !== undefined) {
+        throw new InvalidParam(`${name}.roles`, "is no longer supported; use admin access.");
     }
-    if (!Array.isArray(value.roles)) throw new InvalidParam(`${name}.roles`, "must be an array.");
-    const roles: string[] = [];
-    const seen = new Set<string>();
-    for (const [index, rawRole] of value.roles.entries()) {
-        const role = typeof rawRole === "string" ? rawRole.trim() : "";
-        if (!role) throw new InvalidParam(`${name}.roles.${index}`, "must be a non-empty role id.");
-        if (seen.has(role)) throw new InvalidParam(`${name}.roles.${index}`, "must be unique.");
-        seen.add(role);
-        roles.push(role);
-    }
-    return { mode: "admin", roles };
+    return { mode: value.mode };
 }
 
 function parseEffectsBlob(raw: unknown, name: string): SourceEndpointEffects | undefined {

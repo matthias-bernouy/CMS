@@ -1,4 +1,4 @@
-import { cmsUserId, requireCmsRole } from "../../core/auth.ts";
+import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../../core/records.ts";
@@ -32,7 +32,7 @@ export async function requestOrderRefund(request: Request): Promise<Response> {
         p_order_id: integer(body.orderId, "orderId", true),
         p_reason: requiredText(body.reason, "reason"),
         p_requested_amount: integer(body.amount, "amount", true),
-        p_actor_kind: requireCmsRole(request, "support", "finance"),
+        p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
     });
     return json(camelize(result), 201);

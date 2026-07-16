@@ -11,6 +11,7 @@ import {
     optionsResponse,
     queryText,
     readJsonObject,
+    requireCmsAdminWriteRequest,
     requireCmsRequest,
     requireCmsWriteRequest,
     requiredQuery,
@@ -829,7 +830,7 @@ async function projectionExceptions(request: Request): Promise<Response> {
 }
 
 async function reviewProjectionException(request: Request): Promise<Response> {
-    requireCmsWriteRequest(request);
+    requireCmsAdminWriteRequest(request);
     const body = await readJsonObject(request);
     const actorCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
     return json(camelizeRecord(await reviewShipmentEventProjection(

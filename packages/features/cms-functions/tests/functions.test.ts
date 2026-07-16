@@ -80,19 +80,9 @@ describe("cms functions", () => {
 
     test("projects function access onto the system source endpoint", () => {
         const fn = updateMyProductFunction();
-        fn.access = { mode: "admin", roles: ["finance"] };
+        fn.access = { mode: "admin" };
 
-        expect(functionAsEndpoint(fn).access).toEqual({ mode: "admin", roles: ["finance"] });
-    });
-
-    test("validates explicit function access roles", async () => {
-        const wrongMode = updateMyProductFunction();
-        wrongMode.access = { mode: "auth", roles: ["finance"] };
-        expect(await validateFunction(wrongMode)).toContain("function.access.roles requires admin mode");
-
-        const duplicates = updateMyProductFunction();
-        duplicates.access = { mode: "admin", roles: ["finance", "finance"] };
-        expect(await validateFunction(duplicates)).toContain("function.access.roles contains duplicate role finance");
+        expect(functionAsEndpoint(fn).access).toEqual({ mode: "admin" });
     });
 
     test("resolves concat expressions", () => {

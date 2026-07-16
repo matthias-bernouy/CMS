@@ -205,23 +205,17 @@ describe("parseSourceDto", () => {
             .toThrow(/Invalid param endpoints\.0\.targetUrl/);
     });
 
-    test("round-trips explicit endpoint access roles", () => {
-        const access = { mode: "admin" as const, roles: ["finance", "support"] };
+    test("round-trips endpoint access mode", () => {
+        const access = { mode: "admin" as const };
         const dto = parseSourceDto(validBody({ "endpoints.0.access": JSON.stringify(access) }));
         expect(dto.endpoints[0]!.access).toEqual(access);
         expect(sourceDtoToSource(dto).endpoints[0]!.access).toEqual(access);
     });
 
-    test("rejects malformed explicit endpoint access roles", () => {
+    test("rejects role-specific endpoint access", () => {
         expect(() => parseSourceDto(validBody({
-            "endpoints.0.access": JSON.stringify({ mode: "auth", roles: ["support"] }),
-        }))).toThrow(/only supported for admin access/);
-        expect(() => parseSourceDto(validBody({
-            "endpoints.0.access": JSON.stringify({ mode: "admin", roles: ["support", "support"] }),
-        }))).toThrow(/must be unique/);
-        expect(() => parseSourceDto(validBody({
-            "endpoints.0.access": JSON.stringify({ mode: "admin", roles: [""] }),
-        }))).toThrow(/non-empty role id/);
+            "endpoints.0.access": JSON.stringify({ mode: "admin", roles: ["custom"] }),
+        }))).toThrow(/no longer supported/);
     });
 
     test("duplicate endpointId across rows → InvalidParam", () => {

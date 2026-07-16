@@ -95,9 +95,9 @@ describe("buildUpstreamUrl", () => {
             source: { from: "computed", ref: "userRole" },
             schema: { type: "string" },
         }] } });
-        const r = buildUpstreamUrl(e, q("operator_role=admin"), { userRole: "support" });
+        const r = buildUpstreamUrl(e, q("operator_role=admin"), { userRole: "custom" });
         expect(r.ok).toBe(true);
-        if (r.ok) expect(r.url).toBe("https://api.example.com/v1/items?operator_role=support");
+        if (r.ok) expect(r.url).toBe("https://api.example.com/v1/items?operator_role=custom");
     });
 
     test("required computed userID absent → 401", () => {

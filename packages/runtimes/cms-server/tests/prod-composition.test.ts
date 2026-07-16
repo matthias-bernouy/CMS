@@ -18,4 +18,16 @@ describe("production CMS composition", () => {
         expect(source).toContain("sources: deliverySources, analytics,\n    functions,\n    triggers,\n    identities,");
         expect(source).toContain("startProductionSystemFunctionWorkers({");
     });
+
+    test("migrates removed operator roles before mounting the surfaces", async () => {
+        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+
+        const migration = source.indexOf("await migrateLegacyOperatorRoles(users, mongoRoles)");
+        const control = source.indexOf("const controlCms = new ControlCms");
+        const delivery = source.indexOf("new DeliveryCms({");
+
+        expect(migration).toBeGreaterThan(-1);
+        expect(migration).toBeLessThan(control);
+        expect(migration).toBeLessThan(delivery);
+    });
 });

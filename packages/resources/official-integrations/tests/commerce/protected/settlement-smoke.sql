@@ -9,7 +9,7 @@ select commerce.create_c2c_policy_revision(
         'buyerFeeFixedAmount', 500, 'sellerFeeRateBps', 500,
         'sellerReserveRateBps', 1000, 'payoutDelayDays', 14,
         'highValueReviewAmount', 500000, 'claimRatioReviewBps', 10000
-    ), 'smoke-finance',
+    ), 'smoke-admin',
     (select version from commerce.settings where id = 'default')
 );
 
@@ -209,7 +209,7 @@ begin
     v_refund := commerce.create_refund_request(
         v_order.id, null, 'full-post-transfer-smoke', 'full_post_transfer_refund',
         v_terms.buyer_total_amount, v_terms.buyer_protection_fee_amount,
-        v_terms.seller_proceeds_amount, 'support', 'support-smoke', true
+        v_terms.seller_proceeds_amount, 'system', 'refund-worker-smoke', true
     );
     if v_refund->>'status' <> 'approved' then
         raise exception 'smoke: full post-Transfer refund was not approved';
@@ -362,7 +362,7 @@ $$;
 
 select commerce.resolve_marketplace_claim(
     :split_claim_id, 'split', :split_refund_amount, :split_decided_seller_amount,
-    0, 'Partial value retained by seller', 'support', 'support-split-smoke',
+    0, 'Partial value retained by seller', 'admin', 'admin-split-smoke',
     :split_claim_version
 );
 
@@ -384,6 +384,8 @@ begin
     where order_id = v_order.id;
     v_authorization := commerce.refund_authorization_payload(v_refund.id);
     if v_settlement.status <> 'refund_pending'
+        or v_refund.status <> 'requested'
+        or v_refund.requires_finance_approval is not true
         or v_settlement.authorized_seller_amount <> v_terms.seller_proceeds_amount
         or v_settlement.seller_reserve_liability_remaining_amount
             <> v_terms.seller_reserve_liability_amount then
@@ -400,8 +402,14 @@ begin
 end;
 $$;
 
-select id as split_refund_request_id, business_key as split_refund_business_key
+select id as split_refund_request_id, business_key as split_refund_business_key,
+    version as split_refund_version
 from commerce.refund_requests where order_id = :split_order_id \gset
+
+select commerce.review_refund_request(
+    :split_refund_request_id, 'approved', 'admin-split-review',
+    'Split claim financial allocation reviewed', :split_refund_version
+);
 
 select commerce.record_order_settlement_projection(
     :'split_order_public_id', 'evt-split-refund-success', 'refund', 802, 'succeeded',
@@ -649,7 +657,7 @@ insert into commerce.marketplace_claims (
     :anomaly_order_id, 'protected-anomaly-buyer', :seller_id,
     'return_requested', 'return_required', 'Delayed return tracking smoke',
     'return_required', now() - interval '4 days', now() + interval '1 day',
-    'awaiting_carrier', 'support-return-smoke'
+    'awaiting_carrier', 'admin-return-smoke'
 ) returning id as return_claim_id \gset
 
 select commerce.record_claim_return_delivery(
@@ -792,7 +800,7 @@ select commerce.create_c2c_policy_revision(
         'highValueReviewAmount', 500000,
         'claimRatioReviewBps', 10000
     ),
-    'finance-full-buyer-smoke',
+    'admin-full-buyer-smoke',
     (select version from commerce.settings where id = 'default')
 );
 
@@ -887,7 +895,7 @@ begin
         perform commerce.resolve_marketplace_claim(
             v_claim.id, 'split', v_terms.buyer_total_amount, 1,
             v_terms.buyer_protection_fee_amount, 'Invalid preserved seller cent',
-            'support', 'support-full-claim-smoke', v_claim.version
+            'admin', 'admin-full-claim-smoke', v_claim.version
         );
         raise exception 'smoke: platform contribution cap preserved seller money during a full refund';
     exception when others then
@@ -902,7 +910,7 @@ $$;
 select commerce.resolve_marketplace_claim(
     :full_claim_id, 'buyer', :full_claim_buyer_total, 0,
     :full_claim_protection_fee, 'Empty package evidence accepted',
-    'support', 'support-full-claim-smoke', :full_claim_version
+    'admin', 'admin-full-claim-smoke', :full_claim_version
 );
 
 do $$
@@ -919,7 +927,9 @@ begin
     where order_id = v_terms.order_id;
     v_platform_contribution := v_refund.requested_amount
         - v_refund.protection_fee_refund_amount - v_refund.seller_recovery_amount;
-    if v_refund.requested_amount <> 14695
+    if v_refund.status <> 'requested'
+        or v_refund.requires_finance_approval is not true
+        or v_refund.requested_amount <> 14695
         or v_refund.protection_fee_refund_amount <> 745
         or v_refund.seller_recovery_amount <> 13230
         or v_platform_contribution <> 720
@@ -937,8 +947,14 @@ begin
 end;
 $$;
 
-select id as full_claim_refund_request_id, business_key as full_claim_refund_business_key
+select id as full_claim_refund_request_id, business_key as full_claim_refund_business_key,
+    version as full_claim_refund_version
 from commerce.refund_requests where order_id = :full_claim_order_id \gset
+
+select commerce.review_refund_request(
+    :full_claim_refund_request_id, 'approved', 'admin-full-claim-review',
+    'Full buyer claim financial allocation reviewed', :full_claim_refund_version
+);
 
 select commerce.record_order_settlement_projection(
     :'full_claim_order_public_id', 'evt-full-claim-refund-success',

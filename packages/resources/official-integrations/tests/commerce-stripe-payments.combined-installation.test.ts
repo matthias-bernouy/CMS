@@ -245,11 +245,11 @@ describe("Commerce protected Stripe combined installation", () => {
             grant => grant.permission === makeEndpointUrn("commerce", "prepareProtectedPayment"),
         )).toBe(false);
         expect((await sources.getEndpoint(makeEndpointUrn("commerce", "reviewOrderRefund")))?.access)
-            .toEqual({ mode: "admin", roles: ["finance"] });
+            .toEqual({ mode: "admin" });
         expect((await sources.getEndpoint(makeEndpointUrn("commerce", "resolveOrderClaim")))?.access)
-            .toEqual({ mode: "admin", roles: ["support", "finance"] });
+            .toEqual({ mode: "admin" });
         expect((await sources.getEndpoint(makeEndpointUrn("stripe-connect", "submitStripeDisputeEvidence")))?.access)
-            .toEqual({ mode: "admin", roles: ["finance"] });
+            .toEqual({ mode: "admin" });
 
         const expectedBlocIds = definitions.flatMap(definition => (definition.artifacts ?? [])
             .filter((artifact): artifact is Extract<typeof artifact, { type: "bloc" }> => artifact.type === "bloc")

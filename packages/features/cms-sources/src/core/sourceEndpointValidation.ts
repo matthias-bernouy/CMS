@@ -62,25 +62,6 @@ function validateAccess(endpoint: SourceEndpoint, errors: string[]): void {
     if (!isSourceEndpointAccessMode(endpoint.access.mode)) {
         errors.push(`invalid access mode for "${endpoint.urn}": "${(endpoint.access as { mode?: unknown }).mode}"`);
     }
-    const roles = (endpoint.access as { roles?: unknown }).roles;
-    if (roles === undefined) return;
-    if (endpoint.access.mode !== "admin") {
-        errors.push(`access roles require admin mode for "${endpoint.urn}"`);
-    }
-    if (!Array.isArray(roles)) {
-        errors.push(`invalid access roles for "${endpoint.urn}": expected an array`);
-        return;
-    }
-    const seen = new Set<string>();
-    for (const [index, role] of roles.entries()) {
-        if (typeof role !== "string" || !role.trim()) {
-            errors.push(`invalid access role for "${endpoint.urn}" at index ${index}: expected a non-empty role id`);
-            continue;
-        }
-        const roleId = role.trim();
-        if (seen.has(roleId)) errors.push(`duplicate access role for "${endpoint.urn}": "${roleId}"`);
-        seen.add(roleId);
-    }
 }
 
 function validateParams(endpoint: SourceEndpoint, errors: string[]): void {

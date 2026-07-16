@@ -1415,9 +1415,16 @@ create table if not exists commerce.marketplace_claim_events (
     message text,
     data jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now(),
-    constraint marketplace_claim_events_actor check (actor_kind in ('buyer', 'seller', 'support', 'finance', 'system')),
+    constraint marketplace_claim_events_actor check (actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')),
     constraint marketplace_claim_events_data check (jsonb_typeof(data) = 'object')
 );
+
+alter table commerce.marketplace_claim_events
+    drop constraint if exists marketplace_claim_events_actor;
+alter table commerce.marketplace_claim_events
+    add constraint marketplace_claim_events_actor check (
+        actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')
+    );
 
 create index if not exists marketplace_claim_events_claim_idx
     on commerce.marketplace_claim_events(claim_id, created_at, id);
@@ -1546,7 +1553,7 @@ create table if not exists commerce.refund_requests (
         and seller_reserve_offset_amount between 0 and seller_recovery_amount
         and protection_fee_refund_amount + seller_recovery_amount <= requested_amount
     ),
-    constraint refund_requests_actor check (requested_by_kind in ('buyer', 'seller', 'support', 'finance', 'system')),
+    constraint refund_requests_actor check (requested_by_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')),
     constraint refund_requests_dual_approval check (
         not dual_approval_required
         or (second_approved_by is null or first_approved_by is distinct from second_approved_by)
@@ -1559,7 +1566,8 @@ create table if not exists commerce.refund_requests (
 alter table commerce.refund_requests
     add column if not exists seller_reserve_offset_amount bigint not null default 0;
 alter table commerce.refund_requests
-    drop constraint if exists refund_requests_amounts;
+    drop constraint if exists refund_requests_amounts,
+    drop constraint if exists refund_requests_actor;
 alter table commerce.refund_requests
     add constraint refund_requests_amounts check (
         requested_amount between 1 and 9007199254740991
@@ -1567,6 +1575,9 @@ alter table commerce.refund_requests
         and seller_recovery_amount between 0 and requested_amount
         and seller_reserve_offset_amount between 0 and seller_recovery_amount
         and protection_fee_refund_amount + seller_recovery_amount <= requested_amount
+    ),
+    add constraint refund_requests_actor check (
+        requested_by_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')
     );
 
 create index if not exists refund_requests_order_idx
@@ -1600,7 +1611,7 @@ create table if not exists commerce.settlement_release_authorizations (
     constraint settlement_release_authorizations_currency check (currency = 'eur'),
     constraint settlement_release_authorizations_hash check (financial_terms_hash ~ '^[a-f0-9]{64}$'),
     constraint settlement_release_authorizations_status check (status in ('authorized', 'provider_pending', 'confirmed', 'failed', 'manual_review')),
-    constraint settlement_release_authorizations_actor check (authorized_by_kind in ('finance', 'system'))
+    constraint settlement_release_authorizations_actor check (authorized_by_kind in ('finance', 'admin', 'system'))
 );
 
 alter table commerce.settlement_release_authorizations
@@ -1613,7 +1624,8 @@ alter table commerce.settlement_release_authorizations
     drop constraint if exists settlement_release_authorizations_order_kind_unique,
     drop constraint if exists settlement_release_authorizations_kind,
     drop constraint if exists settlement_release_authorizations_recovery_revision,
-    drop constraint if exists settlement_release_authorizations_hash;
+    drop constraint if exists settlement_release_authorizations_hash,
+    drop constraint if exists settlement_release_authorizations_actor;
 
 alter table commerce.settlement_release_authorizations
     add constraint settlement_release_authorizations_kind
@@ -1623,7 +1635,9 @@ alter table commerce.settlement_release_authorizations
         or (release_kind <> 'recovery' and recovery_revision is null)
     ),
     add constraint settlement_release_authorizations_hash
-        check (financial_terms_hash ~ '^[a-f0-9]{64}$');
+        check (financial_terms_hash ~ '^[a-f0-9]{64}$'),
+    add constraint settlement_release_authorizations_actor
+        check (authorized_by_kind in ('finance', 'admin', 'system'));
 
 create unique index if not exists settlement_release_authorizations_fixed_kind_unique
     on commerce.settlement_release_authorizations(order_id, release_kind)
@@ -2082,9 +2096,16 @@ create table if not exists commerce.audit_events (
     reason text,
     data jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now(),
-    constraint audit_events_actor_kind check (actor_kind in ('buyer', 'seller', 'support', 'finance', 'system', 'provider')),
+    constraint audit_events_actor_kind check (actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system', 'provider')),
     constraint audit_events_data check (jsonb_typeof(data) = 'object')
 );
+
+alter table commerce.audit_events
+    drop constraint if exists audit_events_actor_kind;
+alter table commerce.audit_events
+    add constraint audit_events_actor_kind check (
+        actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system', 'provider')
+    );
 
 create index if not exists audit_events_order_idx
     on commerce.audit_events(order_id, created_at, id);
@@ -6142,7 +6163,7 @@ declare
     v_policy_deficit bigint;
 begin
     if p_actor_id is null or length(btrim(p_actor_id)) = 0 then
-        raise exception 'forbidden: finance actor is required';
+        raise exception 'forbidden: admin actor is required';
     end if;
     if jsonb_typeof(p_payload) <> 'object' then
         raise exception 'validation: policy payload must be an object';
@@ -6950,7 +6971,7 @@ declare
 begin
     if p_actor_id is null or length(btrim(p_actor_id)) = 0
         or p_reason is null or length(btrim(p_reason)) = 0 then
-        raise exception 'validation: Finance actor and reason are required';
+        raise exception 'validation: Admin actor and reason are required';
     end if;
     perform pg_catalog.pg_advisory_xact_lock(
         pg_catalog.hashtextextended('commerce:platform-payout-liability', 0)
@@ -6984,7 +7005,7 @@ begin
     end if;
     perform commerce.append_financial_event(
         null, 'platform_payout_liability', v_control.liability_revision::text,
-        'platform_payout_decrease_authorized', 'finance', p_actor_id, p_reason,
+        'platform_payout_decrease_authorized', 'admin', p_actor_id, p_reason,
         jsonb_build_object('requiredMinimumAmount', v_control.required_minimum_amount,
             'previousProviderAmount', v_control.last_provider_applied_amount,
             'decreaseAuthorizationId', v_control.decrease_authorization_id),
@@ -6992,7 +7013,7 @@ begin
         'platform-payout-decrease:' || v_control.liability_revision
     );
     return commerce.refresh_platform_payout_liability(
-        'Finance decrease authorization CAS confirmation', null
+        'Admin decrease authorization CAS confirmation', null
     );
 end;
 $$;
@@ -7029,16 +7050,16 @@ begin
     end if;
     if v_control.decrease_authorization_id is not null then
         if v_control.decrease_authorization_id is distinct from p_decrease_authorization_id then
-            raise exception 'forbidden: exact Finance decrease authorization does not match';
+            raise exception 'forbidden: exact Admin decrease authorization does not match';
         end if;
         if p_applied_minimum_amount is distinct from v_control.required_minimum_amount then
-            raise exception 'conflict: Finance-authorized provider decrease must match the exact Commerce aggregate';
+            raise exception 'conflict: Admin-authorized provider decrease must match the exact Commerce aggregate';
         end if;
     end if;
     if p_applied_minimum_amount < v_control.last_provider_applied_amount then
         if v_control.decrease_authorization_id is null
             or v_control.decrease_authorization_id is distinct from p_decrease_authorization_id then
-            raise exception 'forbidden: exact Finance decrease authorization is required';
+            raise exception 'forbidden: exact Admin decrease authorization is required';
         end if;
     end if;
     update commerce.platform_payout_liability_revisions set
@@ -8745,6 +8766,11 @@ declare
     v_request commerce.refund_requests%rowtype;
     v_business_key text;
 begin
+    if p_requested_by_kind is null
+        or p_requested_by_kind not in ('buyer', 'seller', 'admin', 'system')
+        or p_requested_by is null or length(btrim(p_requested_by)) = 0 then
+        raise exception 'forbidden: refund request actor is not allowed';
+    end if;
     select * into v_order from commerce.orders where id = p_order_id for update;
     if not found then raise exception 'not_found: order'; end if;
     select * into v_terms from commerce.order_financial_terms where order_id = v_order.id;
@@ -8796,7 +8822,7 @@ begin
     end if;
     v_cumulative_amount := v_existing_amount + p_requested_amount;
     v_requires_finance := v_cumulative_amount >= v_protection.finance_review_threshold_amount
-        or p_requested_by_kind = 'finance';
+        or p_requested_by_kind = 'admin';
     v_requires_dual := v_cumulative_amount >= v_protection.dual_approval_threshold_amount;
     v_business_key := coalesce(
         nullif(btrim(p_business_key), ''),
@@ -8989,8 +9015,8 @@ declare
     v_platform_contribution_cap bigint;
     v_refund jsonb;
 begin
-    if p_actor_kind not in ('support', 'finance') then
-        raise exception 'forbidden: claim resolution role is not allowed';
+    if p_actor_kind is distinct from 'admin' then
+        raise exception 'forbidden: admin claim resolution actor is required';
     end if;
     if p_outcome not in ('buyer', 'seller', 'split', 'return_required') then
         raise exception 'validation: unsupported claim outcome';
@@ -9164,8 +9190,8 @@ declare
     v_remaining_non_fee bigint;
     v_request jsonb;
 begin
-    if p_actor_kind not in ('support', 'finance') then
-        raise exception 'forbidden: refund request role is not allowed';
+    if p_actor_kind is distinct from 'admin' then
+        raise exception 'forbidden: admin refund request actor is required';
     end if;
     select * into v_terms from commerce.order_financial_terms where order_id = p_order_id;
     if not found then raise exception 'conflict: refund requires immutable financial terms'; end if;
@@ -9305,7 +9331,7 @@ begin
     if v_request.version is distinct from p_expected_version then raise exception 'conflict: stale refund request version'; end if;
     if v_request.status <> 'requested' then raise exception 'conflict: refund request is no longer reviewable'; end if;
     if p_actor_id is null or length(btrim(p_actor_id)) = 0 then
-        raise exception 'forbidden: finance actor is required';
+        raise exception 'forbidden: admin actor is required';
     end if;
     if p_decision = 'approved' and v_request.dual_approval_required
         and v_request.first_approved_by is null then
@@ -9317,7 +9343,7 @@ begin
     else
         if p_decision = 'approved' and v_request.dual_approval_required
             and v_request.first_approved_by = p_actor_id then
-            raise exception 'forbidden: dual approval requires a second finance actor';
+            raise exception 'forbidden: dual approval requires a second admin actor';
         end if;
         update commerce.refund_requests set
             status = p_decision,
@@ -9344,7 +9370,7 @@ begin
         v_request.order_id, 'refund_request', v_request.id::text,
         case when p_decision = 'approved' and v_request.status = 'requested'
             then 'refund_first_approved' else 'refund_' || p_decision end,
-        'finance', p_actor_id, p_reason, '{}'::jsonb,
+        'admin', p_actor_id, p_reason, '{}'::jsonb,
         'commerce.refund.reviewed', 'refund:' || v_request.id || ':' || p_decision || ':' || p_expected_version
     );
     return to_jsonb(v_request) || jsonb_build_object(
@@ -9375,7 +9401,9 @@ declare
     v_authorization commerce.settlement_release_authorizations%rowtype;
     v_seller_required_minimum_balance bigint;
 begin
-    if p_actor_kind not in ('finance', 'system') then raise exception 'forbidden: release actor is not allowed'; end if;
+    if p_actor_kind is null or p_actor_kind not in ('admin', 'system') then
+        raise exception 'forbidden: release actor is not allowed';
+    end if;
     select * into v_order from commerce.orders where id = p_order_id;
     if not found then raise exception 'not_found: order'; end if;
     select * into v_settlement from commerce.order_settlements
@@ -10411,7 +10439,7 @@ declare
 begin
     if p_provider_reference is null or length(btrim(p_provider_reference)) = 0
         or p_provider_shipment_id is null or length(btrim(p_provider_shipment_id)) = 0
-        or p_actor_kind not in ('support', 'finance')
+        or p_actor_kind is distinct from 'admin'
         or p_actor_id is null or length(btrim(p_actor_id)) = 0
         or p_reason is null or length(btrim(p_reason)) < 8 then
         raise exception 'validation: provider shipment and audited recovery reason are required';
@@ -10921,7 +10949,7 @@ begin
         raise exception 'not_found: order';
     elsif p_actor_kind = 'seller' and v_seller.cms_user_id <> p_actor_id then
         raise exception 'not_found: sale';
-    elsif p_actor_kind not in ('buyer', 'seller', 'support', 'system') then
+    elsif p_actor_kind is null or p_actor_kind not in ('buyer', 'seller', 'system') then
         raise exception 'forbidden: cancellation actor is not allowed';
     end if;
     select * into v_fulfillment from commerce.order_fulfillments where order_id = v_order.id for update;
@@ -11020,9 +11048,10 @@ begin
 end;
 $$;
 
-create or replace function commerce.review_order_cancellation(
+create or replace function commerce.review_order_cancellation_as(
     p_request_id bigint,
     p_decision text,
+    p_actor_kind text,
     p_actor_id text,
     p_reason text
 )
@@ -11034,13 +11063,15 @@ declare
     v_request commerce.order_cancellation_requests%rowtype;
     v_order commerce.orders%rowtype;
     v_payment commerce.order_payment_attempts%rowtype;
-    v_terms commerce.order_financial_terms%rowtype;
     v_fulfillment commerce.order_fulfillments%rowtype;
     v_refund jsonb;
     v_payment_cancellation jsonb;
 begin
     if p_decision not in ('approved', 'rejected') then raise exception 'validation: unsupported cancellation decision'; end if;
-    if p_actor_id is null or length(btrim(p_actor_id)) = 0 then raise exception 'forbidden: finance actor is required'; end if;
+    if p_actor_kind is null or p_actor_kind not in ('admin', 'system')
+        or p_actor_id is null or length(btrim(p_actor_id)) = 0 then
+        raise exception 'forbidden: cancellation review actor is not allowed';
+    end if;
     select * into v_request from commerce.order_cancellation_requests where id = p_request_id for update;
     if not found then raise exception 'not_found: cancellation request'; end if;
     if v_request.status <> 'requested' then raise exception 'conflict: cancellation request is no longer reviewable'; end if;
@@ -11050,7 +11081,7 @@ begin
         update commerce.orders set status = 'active' where id = v_request.order_id and status = 'cancellation_pending';
         perform commerce.append_financial_event(
             v_request.order_id, 'cancellation', v_request.id::text, 'cancellation_rejected',
-            'finance', p_actor_id, p_reason, '{}'::jsonb,
+            p_actor_kind, p_actor_id, p_reason, '{}'::jsonb,
             'commerce.order.cancellation_reviewed', 'cancellation:' || v_request.id || ':rejected'
         );
         return to_jsonb(v_request);
@@ -11058,7 +11089,6 @@ begin
     select * into v_order from commerce.orders where id = v_request.order_id for update;
     select * into v_payment from commerce.order_payment_attempts
     where order_id = v_order.id order by created_at desc limit 1;
-    select * into v_terms from commerce.order_financial_terms where order_id = v_order.id;
     select * into v_fulfillment from commerce.order_fulfillments where order_id = v_order.id for update;
     if v_fulfillment.status in ('shipment_creating', 'label_created') then
         update commerce.order_cancellation_requests set
@@ -11074,7 +11104,7 @@ begin
     elsif v_payment.status = 'succeeded' then
         v_refund := commerce.create_cancellation_refund_request(
             v_order.id, 'cancellation:' || v_request.id,
-            'order_cancellation', 'support', p_actor_id
+            'order_cancellation', p_actor_kind, p_actor_id
         );
         update commerce.order_cancellation_requests set
             status = 'refund_pending', decision_reason = p_reason, decided_by = p_actor_id
@@ -11092,7 +11122,7 @@ begin
     end if;
     perform commerce.append_financial_event(
         v_request.order_id, 'cancellation', v_request.id::text,
-        'cancellation_' || v_request.status, 'finance', p_actor_id, p_reason,
+        'cancellation_' || v_request.status, p_actor_kind, p_actor_id, p_reason,
         jsonb_build_object('refundRequest', v_refund),
         'commerce.order.cancellation_reviewed', 'cancellation:' || v_request.id || ':' || v_request.status
     );
@@ -11104,6 +11134,21 @@ begin
         'orderPublicId', v_order.public_id
     );
 end;
+$$;
+
+create or replace function commerce.review_order_cancellation(
+    p_request_id bigint,
+    p_decision text,
+    p_actor_id text,
+    p_reason text
+)
+returns jsonb
+language sql
+set search_path = ''
+as $$
+select commerce.review_order_cancellation_as(
+    p_request_id, p_decision, 'admin', p_actor_id, p_reason
+);
 $$;
 
 create or replace function commerce.process_due_order_deadlines(
@@ -11236,8 +11281,8 @@ begin
             limit v_limit - v_processed
             for update of request, order_row, fulfillment skip locked
         loop
-            v_review := commerce.review_order_cancellation(
-                v_candidate.id, 'approved', 'deadline-worker:' || p_run_key,
+            v_review := commerce.review_order_cancellation_as(
+                v_candidate.id, 'approved', 'system', 'deadline-worker:' || p_run_key,
                 'Buyer cancellation auto-approved after scan grace without seller handoff or carrier acceptance'
             );
             v_events := v_events || jsonb_build_array(jsonb_build_object(
@@ -11305,7 +11350,7 @@ begin
         end loop;
     end if;
 
-    -- Missing seller evidence or an expired return is a support-review fact,
+    -- Missing seller evidence or an expired return is a manual-review fact,
     -- never an automatic monetary decision or admission of fault.
     if v_processed < v_limit then
         for v_candidate in
@@ -11330,7 +11375,7 @@ begin
             ) values (
                 v_candidate.id, v_candidate.deadline_kind, 'system',
                 'deadline-worker:' || p_run_key,
-                'Deadline elapsed; support review is required before any financial decision',
+                'Deadline elapsed; manual review is required before any financial decision',
                 jsonb_build_object('previousStatus', v_candidate.status)
             );
             perform commerce.append_financial_event(

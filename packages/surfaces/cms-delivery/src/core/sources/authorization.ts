@@ -37,12 +37,6 @@ export async function authorizeDeliverySourceEndpoint(
         ? options.subject ?? null
         : await resolveDeliverySubject(delivery, req);
 
-    if (endpoint.access?.roles !== undefined) {
-        return subject && endpoint.access.roles.includes(subject.role)
-            ? true
-            : { authorized: false, status: subject ? 403 : 401 };
-    }
-
     if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerAccessMode(subject?.role ?? PUBLIC_ROLE))) {
         return {
             authorized: false,

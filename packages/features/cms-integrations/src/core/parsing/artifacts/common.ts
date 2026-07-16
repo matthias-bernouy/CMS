@@ -63,15 +63,8 @@ export function parseAccessTemplate(value: unknown, name: string): SourceEndpoin
     if (!isSourceEndpointAccessMode(mode)) {
         throw new IntegrationInputError(name, "must be public, auth, admin, or system");
     }
-    if (!record || record.roles === undefined) return { mode: mode as SourceEndpointAccessMode };
-    if (mode !== "admin") {
-        throw new IntegrationInputError(`${name}.roles`, "is only supported for admin access");
+    if (record?.roles !== undefined) {
+        throw new IntegrationInputError(`${name}.roles`, "is no longer supported; use admin access");
     }
-    const roles = parseStringList(record.roles, `${name}.roles`);
-    const seen = new Set<string>();
-    for (const [index, role] of roles.entries()) {
-        if (seen.has(role)) throw new IntegrationInputError(`${name}.roles.${index}`, `duplicates role ${role}`);
-        seen.add(role);
-    }
-    return { mode: "admin", roles };
+    return { mode: mode as SourceEndpointAccessMode };
 }

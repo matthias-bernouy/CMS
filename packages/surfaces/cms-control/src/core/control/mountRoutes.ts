@@ -20,7 +20,7 @@ import { CMS_FILES_ROUTE, filesPrefix, serveFilesRequest } from "@bernouy/cms-fi
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import { renderLoginPage } from "cms-control/core/auth/authPages";
 import { mountControlSourceProxy } from "cms-control/core/control/sourceProxy";
-import { createControlAccessGuard } from "cms-control/core/control/operatorAccess";
+import { createControlAccessGuard } from "cms-control/core/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/control/types";
 import serveStaticFolder from "cms-control/core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/registerEndpoints/serveApiFolder";

@@ -59,6 +59,7 @@ import {
 } from "@bernouy/cms-auth/mongo";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { readRuntimeEnv } from "./runtimeEnv";
+import { migrateLegacyOperatorRoles } from "./migrateLegacyOperatorRoles";
 import { startProductionSystemFunctionWorkers } from "./systemFunctionWorkers";
 
 const {
@@ -133,6 +134,14 @@ const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFIC
 const integrationCatalog = createIntegrationCatalog(process.env, `http://127.0.0.1:${CONTROL_PORT}/.cms/repository`);
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
+// Run against the storage adapter before validation in case an older release
+// persisted either removed role as a non-deletable builtin.
+const legacyRoleMigration = await migrateLegacyOperatorRoles(users, mongoRoles);
+if (legacyRoleMigration.promotedUsers || legacyRoleMigration.removedRoleDefinitions.length) {
+    console.log(
+        `Migrated ${legacyRoleMigration.promotedUsers} legacy operators to admin; removed roles: ${legacyRoleMigration.removedRoleDefinitions.join(", ") || "none"}`,
+    );
+}
 const roles             = new ValidatingRolesRepository(mongoRoles);
 const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStore({
     scopeId:      SCOPE_ID,

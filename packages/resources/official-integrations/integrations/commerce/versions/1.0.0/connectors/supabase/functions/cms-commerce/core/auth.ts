@@ -20,11 +20,9 @@ export function optionalCmsUserId(request: Request): string {
     return (request.headers.get("x-cms-user-id") ?? "").trim() || "cms-admin";
 }
 
-export function requireCmsRole(request: Request, ...allowed: Array<"support" | "finance">): "support" | "finance" {
+export function requireCmsAdmin(request: Request): void {
     const role = (request.headers.get("x-cms-user-role") ?? "").trim();
-    if (role !== "support" && role !== "finance") throw new HttpError(403, "financial role is required");
-    if (!allowed.includes(role)) throw new HttpError(403, "financial role is not allowed");
-    return role;
+    if (role !== "admin") throw new HttpError(403, "CMS admin role is required");
 }
 
 function safeEqual(left: string, right: string): boolean {

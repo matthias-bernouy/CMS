@@ -180,7 +180,7 @@
             "function": {
                 "id": "applyPlatformPayoutLiabilityDecrease",
                 "method": "POST",
-                "access": { "mode": "admin", "roles": ["finance"] },
+                "access": { "mode": "admin" },
                 "meta": {
                     "name": "Apply platform payout liability decrease",
                     "description": "Authorize one exact current Commerce aggregate revision, apply it to Stripe, and persist the provider receipt with CAS."

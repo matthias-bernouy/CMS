@@ -961,7 +961,7 @@ async function getProtectedPaymentByReference(request: Request): Promise<Respons
 }
 
 async function getSellerProviderRisk(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const userId = requiredQueryText(request, "userId", 200);
     const account = await syncAccountForUser(userId);
     if (!account?.stripe_account_id) throw new HttpError(404, "connected account not found");
@@ -1304,8 +1304,7 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
 }
 
 async function listProviderPayments(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
-
+    requireDashboardAdmin(request);
     const params = new URL(request.url).searchParams;
     const limit = queryLimit(params.get("limit"));
     const search = searchPattern(params.get("q"));
@@ -1339,7 +1338,7 @@ async function listProviderPayments(request: Request): Promise<Response> {
 }
 
 async function getProviderPayment(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const paymentId = requiredQueryInteger(request, "paymentId");
     const row = await getPaymentRow(paymentId);
     if (!row) throw new HttpError(404, "payment not found");
@@ -1989,7 +1988,7 @@ async function executeRefund(
 }
 
 async function listProviderRefunds(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const listed = await listTable(request, "refunds", refundSelect, "refund_request_id,stripe_refund_id", "refunds");
     const rows = listed.refunds as RefundRow[];
     const refunds = await Promise.all(rows.map(async row => ({
@@ -2000,7 +1999,7 @@ async function listProviderRefunds(request: Request): Promise<Response> {
 }
 
 async function getProviderRefund(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const refundId = requiredQueryInteger(request, "refundId");
     const row = await getRowByField<RefundRow>("refunds", "id", String(refundId), refundSelect);
     if (!row) throw new HttpError(404, "refund not found");
@@ -2008,7 +2007,7 @@ async function getProviderRefund(request: Request): Promise<Response> {
 }
 
 async function listStripeDisputes(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const listed = await listTable(request, "stripe_disputes", disputeSelect, "stripe_dispute_id,stripe_charge_id,reason", "disputes");
     const rows = listed.disputes as StripeDisputeRow[];
     const disputes = await Promise.all(rows.map(publicDisputeWithContext));
@@ -2016,7 +2015,7 @@ async function listStripeDisputes(request: Request): Promise<Response> {
 }
 
 async function getStripeDispute(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const disputeId = requiredQueryText(request, "disputeId", 200);
     const row = await getRowByField<StripeDisputeRow>("stripe_disputes", "stripe_dispute_id", disputeId, disputeSelect);
     if (!row) throw new HttpError(404, "Stripe dispute not found");
@@ -2024,7 +2023,7 @@ async function getStripeDispute(request: Request): Promise<Response> {
 }
 
 async function uploadStripeDisputeFile(request: Request): Promise<Response> {
-    const { userId, role } = requireDashboardRole(request, ["support", "finance"]);
+    const { userId, actorKind } = requireDashboardAdmin(request);
     const body = await readJsonObject(request);
     assertAllowedKeys(body, ["disputeId", "fileName", "mimeType", "base64"]);
     const disputeId = requiredString(body, "disputeId", 200);
@@ -2041,7 +2040,7 @@ async function uploadStripeDisputeFile(request: Request): Promise<Response> {
     const fileBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     form.set("file", new Blob([fileBuffer], { type: mimeType }), fileName);
     const stripeFile = await stripeV1<JsonRecord>("/files", { method: "POST", body: form });
-    await insertPaymentEvent(dispute.payment_id, "stripe_dispute_file_uploaded", role, userId, {
+    await insertPaymentEvent(dispute.payment_id, "stripe_dispute_file_uploaded", actorKind, userId, {
         disputeId,
         stripeFileId: stripeFile.id,
         fileName,
@@ -2050,7 +2049,7 @@ async function uploadStripeDisputeFile(request: Request): Promise<Response> {
 }
 
 async function stageStripeDisputeEvidence(request: Request): Promise<Response> {
-    const { userId, role } = requireDashboardRole(request, ["support", "finance"]);
+    const { userId, actorKind } = requireDashboardAdmin(request);
     const body = await readJsonObject(request);
     assertAllowedKeys(body, [
         "disputeId", "evidenceOperationId", "evidence", "evidenceText",
@@ -2076,7 +2075,7 @@ async function stageStripeDisputeEvidence(request: Request): Promise<Response> {
             staged_by: userId,
         });
         await updateRow("stripe_disputes", dispute.id, { evidence_status: "staged" });
-        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_staged", role, userId, {
+        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_staged", actorKind, userId, {
             disputeId, evidenceOperationId,
         });
     }
@@ -2084,7 +2083,7 @@ async function stageStripeDisputeEvidence(request: Request): Promise<Response> {
 }
 
 async function submitStripeDisputeEvidence(request: Request): Promise<Response> {
-    const { userId, role } = requireDashboardRole(request, ["finance"]);
+    const { userId, actorKind } = requireDashboardAdmin(request);
     const body = await readJsonObject(request);
     assertAllowedKeys(body, ["disputeId", "submissionOperationId", "evidenceOperationId", "confirmation"]);
     const dispute = await requiredDispute(requiredString(body, "disputeId", 200));
@@ -2118,11 +2117,11 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
         actionType: "dispute_evidence_submit",
         dispute,
         actorId: userId,
-        actorKind: role,
+        actorKind,
         payload: operationRequest,
     });
     if (!approval.approved) {
-        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_first_approval_recorded", role, userId, {
+        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_first_approval_recorded", actorKind, userId, {
             disputeId: dispute.stripe_dispute_id,
             submissionOperationId,
             approvalStatus: approval.approvalStatus,
@@ -2160,7 +2159,7 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
                 evidence_status: "submitted",
                 provider_snapshot: provider,
             });
-            await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_submitted", role, userId, {
+            await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_submitted", actorKind, userId, {
                 disputeId: dispute.stripe_dispute_id,
                 operationId: operation.id,
                 approvalStatus: approval.approvalStatus,
@@ -2182,7 +2181,7 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
 }
 
 async function acceptStripeDispute(request: Request): Promise<Response> {
-    const { userId, role } = requireDashboardRole(request, ["finance"]);
+    const { userId, actorKind } = requireDashboardAdmin(request);
     const body = await readJsonObject(request);
     assertAllowedKeys(body, ["disputeId", "acceptanceOperationId", "confirmation"]);
     const dispute = await requiredDispute(requiredString(body, "disputeId", 200));
@@ -2213,11 +2212,11 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
         actionType: "dispute_accept",
         dispute,
         actorId: userId,
-        actorKind: role,
+        actorKind,
         payload: operationRequest,
     });
     if (!approval.approved) {
-        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_acceptance_first_approval_recorded", role, userId, {
+        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_acceptance_first_approval_recorded", actorKind, userId, {
             disputeId: dispute.stripe_dispute_id,
             acceptanceOperationId,
             approvalStatus: approval.approvalStatus,
@@ -2250,7 +2249,7 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
                 evidence_status: "accepted",
                 provider_snapshot: provider,
             });
-            await insertPaymentEvent(dispute.payment_id, "stripe_dispute_accepted", role, userId, {
+            await insertPaymentEvent(dispute.payment_id, "stripe_dispute_accepted", actorKind, userId, {
                 disputeId: dispute.stripe_dispute_id,
                 operationId: operation.id,
                 approvalStatus: approval.approvalStatus,
@@ -2272,12 +2271,12 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
 }
 
 async function listProviderExceptions(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     return json(await listTable(request, "provider_exceptions", "*", "exception_type,message", "exceptions", "detected_at"));
 }
 
 async function getProviderException(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const exceptionId = requiredQueryInteger(request, "id");
     const exception = await getRowByField<JsonRecord>("provider_exceptions", "id", String(exceptionId), "*");
     if (!exception) throw new HttpError(404, "provider exception not found");
@@ -2285,7 +2284,7 @@ async function getProviderException(request: Request): Promise<Response> {
 }
 
 async function requeueCommerceProjection(request: Request): Promise<Response> {
-    const { userId } = requireDashboardRole(request, ["finance"]);
+    const { userId } = requireDashboardAdmin(request);
     const body = await readJsonObject(request);
     assertAllowedKeys(body, ["projectionId", "expectedInterventionRevision", "reason"]);
     const result = await callRpcObject<JsonRecord>("requeue_commerce_projection_outbox", {
@@ -2303,7 +2302,7 @@ async function requeueCommerceProjection(request: Request): Promise<Response> {
 }
 
 async function listFinancialOperations(request: Request): Promise<Response> {
-    requireDashboardRole(request, ["support", "finance"]);
+    requireDashboardAdmin(request);
     const listed = await listTable(request, "financial_operations", operationSelect, "business_key,stripe_object_id,last_error", "operations");
     const rows = listed.operations as FinancialOperationRow[];
     const operations = await Promise.all(rows.map(async row => {
@@ -4791,19 +4790,11 @@ function requireCmsRequest(
     return { userId };
 }
 
-function requireDashboardRole(
-    request: Request,
-    allowedRoles: Array<"support" | "finance">,
-): { userId: string; role: "support" | "finance" } {
+function requireDashboardAdmin(request: Request): { userId: string; actorKind: "admin" } {
     const { userId } = requireCmsRequest(request);
-    const role = request.headers.get("x-cms-user-role")?.trim().toLowerCase() ?? "";
-    if (role !== "support" && role !== "finance") {
-        throw new HttpError(403, "a trusted support or finance role is required");
-    }
-    if (!allowedRoles.includes(role)) {
-        throw new HttpError(403, "the trusted finance role is required");
-    }
-    return { userId, role };
+    const role = request.headers.get("x-cms-user-role")?.trim() ?? "";
+    if (role !== "admin") throw new HttpError(403, "the CMS admin role is required");
+    return { userId, actorKind: "admin" };
 }
 
 async function rest(path: string, init: RequestInit): Promise<Response> {
@@ -5598,7 +5589,7 @@ async function authorizeIrreversibleDisputeAction(options: {
     actionType: "dispute_evidence_submit" | "dispute_accept";
     dispute: StripeDisputeRow;
     actorId: string;
-    actorKind: "support" | "finance";
+    actorKind: "admin";
     payload: JsonRecord;
 }): Promise<{
     approved: boolean;
@@ -5607,7 +5598,7 @@ async function authorizeIrreversibleDisputeAction(options: {
     firstApprovedBy: string;
     secondApprovedBy?: string;
 }> {
-    if (options.actorKind !== "finance") throw new HttpError(403, "finance approval actor is required");
+    if (options.actorKind !== "admin") throw new HttpError(403, "admin approval actor is required");
     const payment = await requiredPayment(options.dispute.payment_id);
     const response = await rest("rpc/authorize_irreversible_dispute_action", {
         method: "POST",

@@ -19,9 +19,6 @@ export type SourceEndpointAccessMode = typeof SOURCE_ENDPOINT_ACCESS_MODES[numbe
 
 export type SourceEndpointAccess = {
     mode: SourceEndpointAccessMode;
-    /** Explicit role allow-list for privileged operator endpoints. When set,
-     *  the endpoint must use `admin` mode and callers are matched by role id. */
-    roles?: string[];
 };
 
 /** Effects declared by an endpoint after a successful response.

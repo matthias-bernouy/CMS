@@ -1,4 +1,4 @@
-import { cmsUserId, requireCmsRole } from "../../core/auth.ts";
+import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../../core/records.ts";
@@ -151,7 +151,7 @@ export async function resolveOrderClaim(request: Request): Promise<Response> {
         p_seller_transfer_amount: integer(body.sellerTransferAmount, "sellerTransferAmount", true),
         p_protection_fee_refund_amount: integer(body.protectionFeeRefundAmount, "protectionFeeRefundAmount", true),
         p_decision_reason: requiredText(body.decisionReason, "decisionReason"),
-        p_actor_kind: requireCmsRole(request, "support", "finance"),
+        p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
         p_expected_version: integer(body.expectedVersion, "expectedVersion", true),
     });

@@ -1,5 +1,5 @@
 import { methodNotAllowed } from "../core/http.ts";
-import { requireCmsRole } from "../core/auth.ts";
+import { requireCmsAdmin } from "../core/auth.ts";
 import {
     deleteCustomField,
     getCustomField,
@@ -28,7 +28,7 @@ export async function handleAdminConfigurationRoute(route: string, request: Requ
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/admin/c2c-policies") {
-        requireCmsRole(request, "finance");
+        requireCmsAdmin(request);
         if (request.method === "GET") return await getC2cPolicies();
         if (request.method === "POST") return await createC2cPolicyRevision(request);
         return methodNotAllowed("GET", "POST");

@@ -370,7 +370,7 @@
                         }, "required": ["exists"] } }]
                     },
                     {
-                        "endpointId": "getSellerProviderRisk", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "getSellerProviderRisk", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/accounts/account/risk",
                         "params": [{ "name": "userId", "in": "query", "type": "string", "semantic": { "kind": "user-id", "authority": "cms" }, "required": true }],
                         "headers": [
@@ -682,7 +682,7 @@
                         ]
                     },
                     {
-                        "endpointId": "listProviderPayments", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "listProviderPayments", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/payments",
                         "params": [{ "name": "q", "in": "query", "type": "string" }, { "name": "paymentStatus", "in": "query", "type": "string" }, { "name": "settlementStatus", "in": "query", "type": "string" }, { "name": "limit", "in": "query", "type": "number" }],
                         "headers": [
@@ -720,7 +720,7 @@
                         ]
                     },
                     {
-                        "endpointId": "getProviderPayment", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "getProviderPayment", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/payments/payment",
                         "params": [{ "name": "paymentId", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -756,7 +756,7 @@
                         ]
                     },
                     {
-                        "endpointId": "listProviderRefunds", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "listProviderRefunds", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/refunds",
                         "params": [{ "name": "q", "in": "query", "type": "string" }, { "name": "status", "in": "query", "type": "string" }, { "name": "limit", "in": "query", "type": "number" }],
                         "headers": [
@@ -770,7 +770,7 @@
                         ]
                     },
                     {
-                        "endpointId": "getProviderRefund", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "getProviderRefund", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/refunds/refund",
                         "params": [{ "name": "refundId", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -785,7 +785,7 @@
                         ]
                     },
                     {
-                        "endpointId": "listStripeDisputes", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "listStripeDisputes", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes",
                         "params": [{ "name": "q", "in": "query", "type": "string" }, { "name": "status", "in": "query", "type": "string" }, { "name": "limit", "in": "query", "type": "number" }],
                         "headers": [
@@ -811,7 +811,7 @@
                         ]
                     },
                     {
-                        "endpointId": "getStripeDispute", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "getStripeDispute", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/dispute",
                         "params": [{ "name": "disputeId", "in": "query", "type": "string", "required": true }],
                         "headers": [
@@ -835,7 +835,7 @@
                         ]
                     },
                     {
-                        "endpointId": "uploadStripeDisputeFile", "method": "POST", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "uploadStripeDisputeFile", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/files", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -853,7 +853,7 @@
                         ]
                     },
                     {
-                        "endpointId": "stageStripeDisputeEvidence", "method": "POST", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "stageStripeDisputeEvidence", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/evidence/stage", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -879,7 +879,7 @@
                         ]
                     },
                     {
-                        "endpointId": "submitStripeDisputeEvidence", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "submitStripeDisputeEvidence", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/evidence/submit", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -903,7 +903,7 @@
                         ]
                     },
                     {
-                        "endpointId": "acceptStripeDispute", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "acceptStripeDispute", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/disputes/accept", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -927,7 +927,7 @@
                         ]
                     },
                     {
-                        "endpointId": "getProviderException", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "getProviderException", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/exceptions/exception",
                         "params": [{ "name": "id", "in": "query", "type": "number", "required": true }],
                         "headers": [
@@ -949,7 +949,7 @@
                         ]
                     },
                     {
-                        "endpointId": "requeueCommerceProjection", "method": "POST", "access": { "mode": "admin", "roles": ["finance"] },
+                        "endpointId": "requeueCommerceProjection", "method": "POST", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/commerce-projections/requeue", "params": [],
                         "headers": [
                             { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
@@ -973,7 +973,7 @@
                         ]
                     },
                     {
-                        "endpointId": "listProviderExceptions", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "listProviderExceptions", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/exceptions",
                         "params": [{ "name": "q", "in": "query", "type": "string" }, { "name": "status", "in": "query", "type": "string" }, { "name": "limit", "in": "query", "type": "number" }],
                         "headers": [
@@ -994,7 +994,7 @@
                         ]
                     },
                     {
-                        "endpointId": "listFinancialOperations", "method": "GET", "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "endpointId": "listFinancialOperations", "method": "GET", "access": { "mode": "admin" },
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/operations",
                         "params": [{ "name": "q", "in": "query", "type": "string" }, { "name": "status", "in": "query", "type": "string" }, { "name": "limit", "in": "query", "type": "number" }],
                         "headers": [

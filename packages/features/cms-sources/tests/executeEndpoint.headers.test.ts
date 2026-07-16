@@ -43,9 +43,9 @@ describe("executeEndpoint headers", () => {
         const endpoint = ep({ headers: [{ name: "X-User-Role", source: { from: "computed", ref: "userRole" } }] });
         await executeEndpoint(endpoint, new Request("http://local/x"), {
             fetchImpl,
-            resolveContext: async () => ({ userRole: "finance" }),
+            resolveContext: async () => ({ userRole: "admin" }),
         });
-        expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("x-user-role")).toBe("finance");
+        expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("x-user-role")).toBe("admin");
     });
 
     test("computed config header failures stop before fetch", async () => {

@@ -42,18 +42,18 @@ describe("authorizeDeliverySourceEndpoint", () => {
         expect(result).toBe(true);
     });
 
-    test("enforces explicit endpoint roles without grants or an admin bypass", async () => {
+    test("ignores removed role metadata and keeps the admin bypass", async () => {
         const roles = new InMemoryRolesRepository();
         const restricted = {
             ...endpoint("refund", "admin"),
-            access: { mode: "admin" as const, roles: ["finance"] },
+            access: { mode: "admin" as const, roles: ["legacy-role"] } as any,
         };
 
-        const finance = await authorizeDeliverySourceEndpoint(
+        const legacy = await authorizeDeliverySourceEndpoint(
             cmsWithRoles(roles),
             restricted,
             new Request("http://site/.cms/sources/shop/refund"),
-            { subject: { identifier: "finance-1", role: "finance" } as never },
+            { subject: { identifier: "legacy-1", role: "legacy-role" } as never },
         );
         const admin = await authorizeDeliverySourceEndpoint(
             cmsWithRoles(roles),
@@ -62,8 +62,8 @@ describe("authorizeDeliverySourceEndpoint", () => {
             { subject: { identifier: "admin-1", role: "admin" } as never },
         );
 
-        expect(finance).toBe(true);
-        expect(admin).toEqual({ authorized: false, status: 403 });
+        expect(legacy).toEqual({ authorized: false, status: 403 });
+        expect(admin).toBe(true);
     });
 });
 

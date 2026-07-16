@@ -1014,8 +1014,16 @@ describe("mondial-relay 1.0.0 source", () => {
             id: claimed.eventId, projectionStatus: "manual_review", projectionAttempts: 5,
         })]);
 
+        const forbidden = await sourceRequest(harness, "reviewShipmentProjectionException", {
+            method: "POST", userId: "legacy-support-operator", userRole: "support", body: {
+                eventId: claimed.eventId, action: "requeue",
+                reason: "Commerce projection endpoint has recovered",
+            },
+        });
+        expect(forbidden.status).toBe(403);
+
         const requeued = await sourceRequest(harness, "reviewShipmentProjectionException", {
-            method: "POST", userId: "support-operator", body: {
+            method: "POST", userId: "admin-operator", userRole: "admin", body: {
                 eventId: claimed.eventId, action: "requeue",
                 reason: "Commerce projection endpoint has recovered",
             },
@@ -2050,6 +2058,7 @@ async function sourceRequest(harness: {
 }, endpoint: string, options: {
     method: "GET" | "POST";
     userId: string;
+    userRole?: string;
     params?: Record<string, string>;
     body?: JsonRecord;
 }): Promise<Response> {
@@ -2064,7 +2073,10 @@ async function sourceRequest(harness: {
         deps: {
             fetchImpl: harness.sourceFetch,
             resolveSecret: harness.resolveSecret,
-            resolveContext: async () => ({ userID: options.userId }),
+            resolveContext: async () => ({
+                userID: options.userId,
+                userRole: options.userRole ?? "admin",
+            }),
             responseProjectionMode: "strict",
         },
     });

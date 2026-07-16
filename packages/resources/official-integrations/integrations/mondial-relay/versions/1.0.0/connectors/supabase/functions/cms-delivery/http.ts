@@ -22,7 +22,7 @@ export class ProviderStatusError extends HttpError {
 
 export const corsHeaders = {
     "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization, content-type, x-cms-user-id",
+    "access-control-allow-headers": "authorization, content-type, x-cms-user-id, x-cms-user-role",
     "access-control-allow-methods": "GET, POST, OPTIONS",
 };
 
@@ -64,6 +64,13 @@ export function requireCmsRequest(request: Request): void {
 export function requireCmsWriteRequest(request: Request): void {
     requireCmsRequest(request);
     if (request.method !== "POST") throw new HttpError(405, "method not allowed");
+}
+
+export function requireCmsAdminWriteRequest(request: Request): void {
+    requireCmsWriteRequest(request);
+    if (request.headers.get("x-cms-user-role")?.trim() !== "admin") {
+        throw new HttpError(403, "admin role is required");
+    }
 }
 
 export function handleError(error: unknown): Response {

@@ -7,7 +7,7 @@ export async function authorizeOrderRelease(request: Request): Promise<Response>
     const body = await readJsonObject(request);
     const result = await rpc("authorize_order_release", {
         p_order_id: integer(body.orderId, "orderId", true),
-        p_actor_kind: "finance",
+        p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
         p_reason: text(body.reason) ?? null,
         p_expected_settlement_version: integer(

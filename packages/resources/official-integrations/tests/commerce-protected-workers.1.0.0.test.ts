@@ -31,6 +31,8 @@ describe("commerce 1.0.0 protected workers", () => {
         expect(schema).toContain("provider cancellation must be confirmed before inventory restoration");
         expect(schema).not.toContain("v_attempt.status in ('failed', 'cancelled')");
         expect(schema).toContain("Missing scans without an eligible cancellation never imply a refund");
-        expect(schema).toContain("support review is required before any financial decision");
+        expect(schema).toContain("manual review is required before any financial decision");
+        expect(schema).toContain("review_order_cancellation_as(");
+        expect(schema).toContain("v_candidate.id, 'approved', 'system', 'deadline-worker:'");
     });
 });

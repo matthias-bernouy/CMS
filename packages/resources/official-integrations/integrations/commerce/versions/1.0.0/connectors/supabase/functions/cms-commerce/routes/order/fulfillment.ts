@@ -1,7 +1,7 @@
 import { json } from "../../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../../core/records.ts";
 import { rpc } from "../../core/rest.ts";
-import { cmsUserId, requireCmsRole } from "../../core/auth.ts";
+import { cmsUserId } from "../../core/auth.ts";
 
 export async function recordOrderFulfillment(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
@@ -73,7 +73,6 @@ export async function failOrderShipmentCreation(request: Request): Promise<Respo
 }
 
 export async function recoverOrderShipmentCreation(request: Request): Promise<Response> {
-    const actorKind = requireCmsRole(request, "support", "finance");
     const body = await readJsonObject(request);
     const result = await rpc("recover_order_shipment_creation", {
         p_order_public_id: requiredText(body.orderPublicId, "orderPublicId"),
@@ -81,7 +80,7 @@ export async function recoverOrderShipmentCreation(request: Request): Promise<Re
         p_provider_shipment_id: requiredText(body.providerShipmentId, "providerShipmentId"),
         p_provider_snapshot: typeof body.providerSnapshot === "object" && body.providerSnapshot !== null
             ? body.providerSnapshot : {},
-        p_actor_kind: actorKind,
+        p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
         p_reason: requiredText(body.reason, "reason"),
     });

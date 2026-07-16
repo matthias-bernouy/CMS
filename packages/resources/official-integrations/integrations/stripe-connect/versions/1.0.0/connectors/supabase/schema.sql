@@ -409,10 +409,16 @@ create table if not exists stripe_connect.payment_events (
     created_at timestamptz not null default now(),
     constraint payment_events_type_not_blank check (length(btrim(event_type)) > 0),
     constraint payment_events_actor_kind_valid check (
-        actor_kind in ('system', 'webhook', 'reconciliation', 'support', 'finance')
+        actor_kind in ('system', 'webhook', 'reconciliation', 'support', 'finance', 'admin')
     ),
     constraint payment_events_data_object check (jsonb_typeof(data) = 'object')
 );
+
+alter table stripe_connect.payment_events
+    drop constraint if exists payment_events_actor_kind_valid,
+    add constraint payment_events_actor_kind_valid check (
+        actor_kind in ('system', 'webhook', 'reconciliation', 'support', 'finance', 'admin')
+    );
 
 create table if not exists stripe_connect.financial_operations (
     id bigint generated always as identity primary key,
@@ -1582,14 +1588,26 @@ create table if not exists stripe_connect.irreversible_dispute_action_approvals 
     constraint irreversible_dispute_action_payload check (payload_sha256 ~ '^[a-f0-9]{64}$'),
     constraint irreversible_dispute_action_status check (status in ('pending_second_approval', 'approved')),
     constraint irreversible_dispute_action_first_actor check (
-        first_actor_kind = 'finance' and length(btrim(first_actor_id)) > 0
+        first_actor_kind in ('finance', 'admin') and length(btrim(first_actor_id)) > 0
     ),
     constraint irreversible_dispute_action_second_actor check (
         (status = 'pending_second_approval' and second_actor_kind is null and second_actor_id is null and second_approved_at is null)
-        or (status = 'approved' and second_actor_kind = 'finance' and length(btrim(second_actor_id)) > 0
+        or (status = 'approved' and second_actor_kind in ('finance', 'admin') and length(btrim(second_actor_id)) > 0
             and second_actor_id <> first_actor_id and second_approved_at is not null)
     )
 );
+
+alter table stripe_connect.irreversible_dispute_action_approvals
+    drop constraint if exists irreversible_dispute_action_first_actor,
+    drop constraint if exists irreversible_dispute_action_second_actor,
+    add constraint irreversible_dispute_action_first_actor check (
+        first_actor_kind in ('finance', 'admin') and length(btrim(first_actor_id)) > 0
+    ),
+    add constraint irreversible_dispute_action_second_actor check (
+        (status = 'pending_second_approval' and second_actor_kind is null and second_actor_id is null and second_approved_at is null)
+        or (status = 'approved' and second_actor_kind in ('finance', 'admin') and length(btrim(second_actor_id)) > 0
+            and second_actor_id <> first_actor_id and second_approved_at is not null)
+    );
 
 create table if not exists stripe_connect.stripe_events (
     id bigint generated always as identity primary key,
@@ -2426,7 +2444,7 @@ begin
             where control_key = 'default'
             returning * into v_control;
         elsif v_control.decrease_authorization_id is distinct from p_decrease_authorization_id then
-            raise exception 'forbidden: exact Finance decrease authorization does not match Commerce authority';
+            raise exception 'forbidden: exact Admin decrease authorization does not match Commerce authority';
         end if;
     end if;
 
@@ -2548,8 +2566,8 @@ as $$
 declare
     v_approval stripe_connect.irreversible_dispute_action_approvals%rowtype;
 begin
-    if p_actor_kind <> 'finance' or nullif(btrim(p_actor_id), '') is null then
-        raise exception 'forbidden: finance approval actor is required';
+    if p_actor_kind is distinct from 'admin' or nullif(btrim(p_actor_id), '') is null then
+        raise exception 'forbidden: admin approval actor is required';
     end if;
     if p_action_type not in ('dispute_evidence_submit', 'dispute_accept') then
         raise exception 'validation: unsupported irreversible dispute action';

@@ -132,7 +132,7 @@ select commerce.fail_order_shipment_creation(
 select commerce.recover_order_shipment_creation(
     :'order_public_id', '12345678', 'delivery-shipment-1',
     '{"status":"label_ready","idempotentReplay":true}'::jsonb,
-    'support', 'delivery-saga-support',
+    'admin', 'delivery-saga-admin',
     'Matched the exact provider shipment after an ambiguous response'
 );
 
@@ -158,7 +158,7 @@ begin
     end if;
     v_recovery_replay := commerce.recover_order_shipment_creation(
         v_order.public_id, '12345678', 'delivery-shipment-1',
-        '{"status":"label_ready"}'::jsonb, 'support', 'delivery-saga-support',
+        '{"status":"label_ready"}'::jsonb, 'admin', 'delivery-saga-admin',
         'Retry after the audited recovery response was lost'
     );
     if (v_recovery_replay->>'idempotentReplay')::boolean is not true then

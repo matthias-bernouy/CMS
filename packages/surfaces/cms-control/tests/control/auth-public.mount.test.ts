@@ -192,33 +192,28 @@ describe("Control public auth mount", () => {
         }
     });
 
-    test("uses explicit endpoint roles without grants and does not preserve the admin bypass", async () => {
+    test("ignores removed endpoint role metadata and preserves the admin bypass", async () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:operator-actions",
             endpoints: [{
                 urn: "urn:operator-actions:refund",
                 method: "POST",
-                access: { mode: "admin", roles: ["finance"] },
+                access: { mode: "admin", roles: ["legacy-role"] } as any,
                 targetUrl: "https://operator.test/refund",
                 output: [{ status: "200", body: { type: "object" } }],
             }],
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ ok: true }));
         try {
-            const finance = await mountedSourceHandler("finance", sources);
-            const allowed = await finance(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
+            const admin = await mountedSourceHandler("admin", sources);
+            const allowed = await admin(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
             expect(allowed.status).toBe(200);
             expect(fetchSpy).toHaveBeenCalledTimes(1);
 
-            const admin = await mountedSourceHandler("admin", sources);
-            const denied = await admin(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
+            const legacy = await mountedSourceHandler("legacy-role", sources);
+            const denied = await legacy(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
             expect(denied.status).toBe(403);
-            expect(fetchSpy).toHaveBeenCalledTimes(1);
-
-            const support = await mountedSourceHandler("support", sources);
-            const wrongOperator = await support(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
-            expect(wrongOperator.status).toBe(403);
             expect(fetchSpy).toHaveBeenCalledTimes(1);
         } finally {
             fetchSpy.mockRestore();

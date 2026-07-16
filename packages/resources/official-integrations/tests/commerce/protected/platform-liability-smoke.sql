@@ -19,7 +19,7 @@ select commerce.create_c2c_policy_revision(
         'highValueReviewAmount', 500000,
         'claimRatioReviewBps', 10000
     ),
-    'platform-liability-smoke-finance',
+    'platform-liability-smoke-admin',
     (select version from commerce.settings where id = 'default')
 );
 
@@ -176,18 +176,18 @@ begin
     v_revision := (v_control->>'liabilityRevision')::bigint;
     begin
         perform commerce.authorize_platform_payout_liability_decrease(
-            v_revision - 1, 'finance-stale', 'stale decrease must fail'
+            v_revision - 1, 'admin-stale', 'stale decrease must fail'
         );
-        raise exception 'smoke: stale Finance decrease revision was accepted';
+        raise exception 'smoke: stale Admin decrease revision was accepted';
     exception when others then
-        if sqlerrm = 'smoke: stale Finance decrease revision was accepted'
+        if sqlerrm = 'smoke: stale Admin decrease revision was accepted'
             or sqlerrm <> 'conflict: stale platform payout liability revision' then raise; end if;
     end;
     v_authorized := commerce.authorize_platform_payout_liability_decrease(
-        v_revision, 'finance-current', 'terminal risk window expired'
+        v_revision, 'admin-current', 'terminal risk window expired'
     );
     if nullif(v_authorized->>'decreaseAuthorizationId', '') is null then
-        raise exception 'smoke: exact Finance decrease authorization was not persisted';
+        raise exception 'smoke: exact Admin decrease authorization was not persisted';
     end if;
     v_previous_provider_amount := (v_authorized->>'lastProviderAppliedAmount')::bigint;
     begin
@@ -196,10 +196,10 @@ begin
             v_previous_provider_amount,
             (v_authorized->>'decreaseAuthorizationId')::uuid
         );
-        raise exception 'smoke: overcovered receipt consumed an exact Finance decrease authorization';
+        raise exception 'smoke: overcovered receipt consumed an exact Admin decrease authorization';
     exception when others then
-        if sqlerrm = 'smoke: overcovered receipt consumed an exact Finance decrease authorization'
-            or sqlerrm <> 'conflict: Finance-authorized provider decrease must match the exact Commerce aggregate'
+        if sqlerrm = 'smoke: overcovered receipt consumed an exact Admin decrease authorization'
+            or sqlerrm <> 'conflict: Admin-authorized provider decrease must match the exact Commerce aggregate'
         then raise; end if;
     end;
     select * into v_persisted
@@ -207,7 +207,7 @@ begin
     where control_key = 'default';
     if v_persisted.decrease_authorization_id::text
         is distinct from v_authorized->>'decreaseAuthorizationId' then
-        raise exception 'smoke: rejected overcoverage consumed the Finance decrease authorization';
+        raise exception 'smoke: rejected overcoverage consumed the Admin decrease authorization';
     end if;
 end;
 $$;

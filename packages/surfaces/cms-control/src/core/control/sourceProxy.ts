@@ -39,9 +39,6 @@ export function mountControlSourceProxy(
     const authorizeEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
         const subject = await state.auth.getSubject(req).catch(() => null);
         if (!subject) return false;
-        if (endpoint.access?.roles !== undefined) {
-            return endpoint.access.roles.includes(subject.role);
-        }
         if (!sourceEndpointAccessAllows(
             sourceEndpointAccessMode(endpoint),
             controlCallerAccessMode(subject.role),
