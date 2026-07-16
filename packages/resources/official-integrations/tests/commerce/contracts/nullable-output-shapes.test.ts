@@ -7,7 +7,6 @@ type Endpoint = { endpointId: string; output?: Array<{ status?: string; body?: D
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
 const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
-
 describe("commerce nullable response contracts", () => {
     test("preserves catalogue nulls across public and management projections", async () => {
         const endpoints = await commerceEndpoints();
@@ -155,11 +154,11 @@ describe("commerce nullable response contracts", () => {
                 evidence: [{ description: null }],
             }],
             ["refundRequests", { items: [{ claimId: null, firstApprovedBy: null }] }],
+            ["getOrderFulfillmentAuthorization", { allowed: true, reason: null }],
         ];
         expectProjections(endpoints, cases);
     });
 });
-
 let endpointsPromise: Promise<Endpoint[]> | undefined;
 function commerceEndpoints(): Promise<Endpoint[]> {
     endpointsPromise ??= readFile(definitionPath, "utf8").then(content => {

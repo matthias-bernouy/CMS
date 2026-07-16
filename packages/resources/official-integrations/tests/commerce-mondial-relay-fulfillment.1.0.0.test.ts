@@ -139,7 +139,7 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
                     if (url.pathname === "/fulfillment-authorization") {
                         return Response.json({
                             allowed: true,
-                            reason: "",
+                            reason: null,
                             orderId: 42,
                             orderPublicId: "order-public-42",
                             sellerId: "seller-subject",
@@ -1064,7 +1064,7 @@ async function sourcesForFulfillment(): Promise<InMemorySourceRepository> {
             }),
         }), { id: string() }),
         endpoint("getOrderFulfillmentAuthorization", "GET", "/fulfillment-authorization", object({
-            allowed: boolean(), reason: string(), orderId: number(), orderPublicId: string(),
+            allowed: boolean(), reason: { type: "string", nullable: true }, orderId: number(), orderPublicId: string(),
             sellerId: { type: "string", semantic: "user-id" }, buyerCmsUserId: string(),
             currency: string(), deliveryQuoteId: string(), merchandiseSubtotalMinorAmount: number(),
             shippingAmount: number(), buyerTotalAmount: number(), financialTermsHash: string(),
