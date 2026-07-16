@@ -1,0 +1,86 @@
+import {
+    expectedFirstAdminOrder,
+    expectedFirstEntries,
+    expectedFirstPublicMetadata,
+    expectedSellerList,
+} from "./expected-lists";
+import {
+    expectedAdminEvents,
+    expectedAdminLines,
+    expectedBuyerEvents,
+    expectedClaim,
+    expectedFinancialTerms,
+    expectedFulfillment,
+    expectedOperation,
+    expectedSellerLines,
+    expectedSettlement,
+} from "./expected-parts";
+
+const seller = { id: 17, kind: "user", slug: "seller-17", displayName: "Seller 17" };
+
+export const expectedBuyerDetail = {
+    ...expectedFirstAdminOrder,
+    metadata: expectedFirstPublicMetadata,
+    metadataEntries: expectedFirstEntries,
+    lines: expectedAdminLines,
+    events: expectedBuyerEvents,
+    seller,
+    operation: expectedOperation,
+    financialTerms: expectedFinancialTerms,
+    fulfillment: expectedFulfillment,
+    settlement: expectedSettlement,
+    claim: expectedClaim,
+};
+
+export const expectedAdminDetail = {
+    ...expectedFirstAdminOrder,
+    metadata: { publicNote: "Ring twice", weight: 305, insured: true, internalRisk: "high" },
+    lines: expectedAdminLines,
+    events: expectedAdminEvents,
+    seller,
+    operation: expectedOperation,
+    financialTerms: expectedFinancialTerms,
+    fulfillment: expectedFulfillment,
+    settlement: expectedSettlement,
+    claim: expectedClaim,
+};
+
+export const expectedSellerDetail = {
+    ...expectedSellerList.items[0],
+    operation: {
+        orderId: 42, orderPublicId: "order-public-42", orderNumber: "CO-42", currency: "eur",
+        paymentStatus: "succeeded", fulfillmentStatus: "in_transit", settlementStatus: "held",
+        claimStatus: "open", recipientHandoffAt: null, recipientHandoffFirstObservedAt: null,
+        claimWindowStartedAt: null, claimByAt: "2026-07-22T12:00:00.000Z",
+        releaseEligibleAt: "2026-07-20T12:00:00.000Z", updatedAt: "2026-07-12T13:00:00.000Z",
+    },
+    financialTerms: {
+        orderId: 42, merchandiseSubtotalAmount: 10_000, shippingAmount: 450,
+        sellerCommissionAmount: 1_000, platformShippingShareAmount: 450,
+        sellerShippingShareAmount: 0, sellerProceedsAmount: 9_000,
+        sellerTransferReleaseAmount: 8_500, sellerReserveLiabilityAmount: 500,
+        currency: "eur", pricingLockedAt: "2026-07-12T12:01:00.000Z",
+        payByAt: "2026-07-12T12:31:00.000Z", financialRevision: 2,
+    },
+    fulfillment: {
+        orderId: 42, status: "in_transit", sellerHandoffDeadline: "2026-07-13T12:00:00.000Z",
+        scanGraceDeadline: "2026-07-14T12:00:00.000Z",
+        sellerHandoffDeclaredAt: "2026-07-13T12:30:00.000Z",
+        carrierAcceptedAt: "2026-07-13T13:00:00.000Z", recipientHandoffAt: null,
+        recipientHandoffFirstObservedAt: null, claimWindowStartedAt: null,
+        claimByAt: "2026-07-22T12:00:00.000Z", releaseEligibleAt: "2026-07-20T12:00:00.000Z",
+        blockingReason: null, version: 4,
+    },
+    settlement: {
+        orderId: 42, status: "held", authorizedSellerAmount: 9_000,
+        totalTransferredAmount: 0, totalReversedAmount: 0,
+        sellerReserveLiabilityRemainingAmount: 500, version: 2,
+    },
+    authorization: {
+        allowed: false, reason: "shipment_not_collected", orderId: 42,
+        orderPublicId: "order-public-42", sellerId: 17, currency: "eur",
+        paymentStatus: "succeeded", fulfillmentStatus: "in_transit",
+    },
+    lines: expectedSellerLines,
+    events: expectedBuyerEvents,
+};
