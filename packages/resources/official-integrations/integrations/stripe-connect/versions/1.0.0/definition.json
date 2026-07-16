@@ -482,6 +482,9 @@
                                 "body": {
                                     "type": "object",
                                     "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
                                         "clientSecret": {
                                             "type": "string"
                                         },
@@ -508,6 +511,7 @@
                                         }
                                     },
                                     "required": [
+                                        "exists",
                                         "clientSecret",
                                         "userId",
                                         "connected",
@@ -578,11 +582,31 @@
                                         "paymentId": {
                                             "type": "number"
                                         },
-                                        "stripePaymentIntentId": {
+                                        "clientReferenceId": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "buyerUserId": {
                                             "type": "string"
+                                        },
+                                        "sellerUserId": {
+                                            "type": "string"
+                                        },
+                                        "stripePaymentIntentId": {
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "clientSecret": {
                                             "type": "string"
+                                        },
+                                        "amountTotal": {
+                                            "type": "number"
+                                        },
+                                        "applicationFeeAmount": {
+                                            "type": "number"
+                                        },
+                                        "sellerAmount": {
+                                            "type": "number"
                                         },
                                         "status": {
                                             "type": "string"
@@ -590,7 +614,12 @@
                                     },
                                     "required": [
                                         "paymentId",
+                                        "buyerUserId",
+                                        "sellerUserId",
                                         "clientSecret",
+                                        "amountTotal",
+                                        "applicationFeeAmount",
+                                        "sellerAmount",
                                         "status"
                                     ]
                                 }
@@ -635,6 +664,10 @@
                                     "properties": {
                                         "paymentId": {
                                             "type": "number"
+                                        },
+                                        "clientReferenceId": {
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "buyerUserId": {
                                             "type": "string"
@@ -982,6 +1015,9 @@
                                 "body": {
                                     "type": "object",
                                     "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
                                         "clientSecret": {
                                             "type": "string"
                                         },
@@ -1008,6 +1044,7 @@
                                         }
                                     },
                                     "required": [
+                                        "exists",
                                         "clientSecret",
                                         "userId",
                                         "connected",
@@ -1068,13 +1105,18 @@
                                                         "type": "number"
                                                     },
                                                     "clientReferenceId": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "buyerUserId": {
                                                         "type": "string"
                                                     },
                                                     "sellerUserId": {
                                                         "type": "string"
+                                                    },
+                                                    "stripePaymentIntentId": {
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "currency": {
                                                         "type": "string"
@@ -1179,7 +1221,8 @@
                                             "type": "number"
                                         },
                                         "clientReferenceId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "buyerUserId": {
                                             "type": "string"
@@ -1188,7 +1231,8 @@
                                             "type": "string"
                                         },
                                         "stripePaymentIntentId": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "clientSecret": {
                                             "type": "string"
