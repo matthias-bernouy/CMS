@@ -21,6 +21,13 @@ import { resolve } from "node:path";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
+type StripeRequestRecord = {
+    method: string;
+    pathname: string;
+    searchParams: Array<[string, string]>;
+    idempotencyKey: string | null;
+    stripeAccount: string | null;
+};
 
 function isRecord(value: unknown): value is JsonRecord {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -37,6 +44,7 @@ const stripeUrl = "https://api.stripe.com";
 const edgeFunctionUrl = "../integrations/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts";
 const financialTermsHash = "a".repeat(64);
 const marketplaceTermsHash = "c".repeat(64);
+const isoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
@@ -236,6 +244,47 @@ describe("stripe-connect 1.0.0 source", () => {
         }
     });
 
+    test("preserves routing, method, authentication, and authorization responses", async () => {
+        const harness = await createHarness();
+        const cmsHeaders = {
+            authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+            "x-cms-user-id": "user-123",
+        };
+
+        const options = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/payments/protected`,
+            { method: "OPTIONS" },
+        ));
+        const wrongMethod = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/payments/protected`,
+            { method: "GET", headers: cmsHeaders },
+        ));
+        const unknown = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/unknown`,
+            { headers: cmsHeaders },
+        ));
+        const unauthenticated = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/admin/payments`,
+        ));
+        const forbidden = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/admin/payments`,
+            { headers: { ...cmsHeaders, "x-cms-user-role": "member" } },
+        ));
+
+        expect(options.status).toBe(200);
+        expect(await options.text()).toBe("ok");
+        expect(wrongMethod.status).toBe(405);
+        expect(wrongMethod.headers.get("allow")).toBe("POST, OPTIONS");
+        expect(await wrongMethod.text()).toBe("Method Not Allowed");
+        expect(unknown.status).toBe(404);
+        expect(await jsonBody(unknown)).toEqual({ error: "not found" });
+        expect(unauthenticated.status).toBe(401);
+        expect(await jsonBody(unauthenticated)).toEqual({ error: "invalid CMS API key" });
+        expect(forbidden.status).toBe(403);
+        expect(await jsonBody(forbidden)).toEqual({ error: "the CMS admin role is required" });
+        expect(harness.rest.stripeRequests).toHaveLength(0);
+    });
+
     test("rejects livemode mismatch on every signed Stripe webhook boundary", async () => {
         const harness = await createHarness();
         const created = Math.floor(Date.now() / 1000);
@@ -422,6 +471,222 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(harness.rest.lastPaymentIntentParameters?.has("transfer_data[destination]")).toBeFalse();
         expect(harness.rest.lastPaymentIntentParameters?.has("application_fee_amount")).toBeFalse();
         expect(harness.rest.lastPaymentIntentParameters?.has("on_behalf_of")).toBeFalse();
+    });
+
+    test("keeps payment creation and admin payment reads on their provider boundaries", async () => {
+        const harness = await createHarness();
+        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
+            email: "seller@example.com",
+        }, { userId: "seller-1" }));
+
+        harness.rest.clearStripeRequests();
+        const creationResponse = await sourceJson(harness, "createProtectedPayment", {
+            sellerUserId: "seller-1",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            currency: "eur",
+            clientReferenceId: "provider-boundary-order",
+            financialTermsHash,
+            dualApprovalThresholdAmount: 1000,
+        });
+        expect(creationResponse.status).toBe(200);
+        const created = await jsonBody(creationResponse);
+        const transferGroup = "cms_order_068ccc3b0562834d11de0cd73aa06bcc945b494427cc05d88e974850a075ce15";
+        expect(created.lastProviderSyncAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(created).toEqual({
+            paymentId: 1,
+            providerPaymentId: 1,
+            clientReferenceId: "provider-boundary-order",
+            financialTermsHash,
+            financialRevision: 1,
+            dualApprovalThresholdAmount: 1000,
+            buyerUserId: "user-123",
+            sellerUserId: "seller-1",
+            stripePaymentIntentId: "pi_1",
+            stripeChargeId: null,
+            providerEventId: null,
+            transferGroup,
+            currency: "eur",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            platformRetainedAmount: 120,
+            refundedAmount: 0,
+            transferredAmount: 0,
+            reversedAmount: 0,
+            stripeChargeBalanceTransactionId: null,
+            actualStripeChargeFeeAmount: 0,
+            actualStripeRefundFeeAmount: 0,
+            actualStripeProcessingFeeAmount: 0,
+            actualStripeChargeNetAmount: null,
+            actualStripeFeeCurrency: null,
+            actualStripeChargeFeeDetails: [],
+            actualPlatformMarginAfterStripeAmount: 120,
+            paymentStatus: "created",
+            commercePaymentStatus: "created",
+            settlementStatus: "held",
+            disputeStatus: "none",
+            manualReviewReason: null,
+            paidAt: null,
+            cancelledAt: null,
+            lastProviderSyncAt: created.lastProviderSyncAt,
+            occurredAt: "2026-07-06T12:10:00.000Z",
+            createdAt: "2026-07-06T12:05:00.000Z",
+            updatedAt: "2026-07-06T12:10:00.000Z",
+            clientSecret: "pi_1_secret",
+        });
+        expect(harness.rest.stripeRequests).toEqual([
+            {
+                method: "GET",
+                pathname: "/v2/core/accounts/acct_seller_example_com",
+                searchParams: [
+                    ["include[0]", "configuration.recipient"],
+                    ["include[1]", "defaults"],
+                    ["include[2]", "identity"],
+                    ["include[3]", "requirements"],
+                ],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+            {
+                method: "GET",
+                pathname: "/v1/balance_settings",
+                searchParams: [],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+            {
+                method: "POST",
+                pathname: "/v1/payment_intents",
+                searchParams: [],
+                idempotencyKey: `payment:1:${financialTermsHash}`,
+                stripeAccount: null,
+            },
+        ]);
+
+        harness.rest.clearStripeRequests();
+        const listedResponse = await sourceRequestWithRole(
+            harness, "admin-1", "admin", "listProviderPayments", { q: "provider-boundary", limit: "20" },
+        );
+        expect(listedResponse.status).toBe(200);
+        const listedBody = await jsonBody(listedResponse);
+        expect(listedBody).toEqual({
+            payments: [{
+                paymentId: 1,
+                providerPaymentId: 1,
+                clientReferenceId: "provider-boundary-order",
+                financialTermsHash,
+                financialRevision: 1,
+                buyerUserId: "user-123",
+                sellerUserId: "seller-1",
+                stripePaymentIntentId: "pi_1",
+                stripeChargeId: null,
+                providerEventId: null,
+                transferGroup,
+                currency: "eur",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                platformRetainedAmount: 120,
+                refundedAmount: 0,
+                transferredAmount: 0,
+                reversedAmount: 0,
+                stripeChargeBalanceTransactionId: null,
+                actualStripeChargeFeeAmount: 0,
+                actualStripeRefundFeeAmount: 0,
+                actualStripeProcessingFeeAmount: 0,
+                actualStripeChargeNetAmount: null,
+                actualStripeFeeCurrency: null,
+                actualStripeChargeFeeDetails: [],
+                actualPlatformMarginAfterStripeAmount: 120,
+                paymentStatus: "created",
+                settlementStatus: "held",
+                disputeStatus: "none",
+                manualReviewReason: null,
+                description: null,
+                paidAt: null,
+                cancelledAt: null,
+                lastProviderSyncAt: created.lastProviderSyncAt,
+                occurredAt: "2026-07-06T12:10:00.000Z",
+                createdAt: "2026-07-06T12:05:00.000Z",
+                updatedAt: "2026-07-06T12:10:00.000Z",
+            }],
+            total: 1,
+        });
+        expect(harness.rest.stripeRequests).toEqual([]);
+
+        harness.rest.setPaymentIntentSucceeded("pi_1");
+        const adminHeaders = {
+            authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+            "x-cms-user-id": "admin-1",
+            "x-cms-user-role": "admin",
+        };
+        const detailResponse = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/admin/payments/payment?paymentId=1`,
+            { headers: adminHeaders },
+        ));
+        expect(detailResponse.status).toBe(200);
+        const detailBody = await jsonBody(detailResponse);
+        expect(detailBody.paidAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(detailBody.lastProviderSyncAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(detailBody).toEqual({
+            paymentId: 1,
+            providerPaymentId: 1,
+            clientReferenceId: "provider-boundary-order",
+            financialTermsHash,
+            financialRevision: 1,
+            dualApprovalThresholdAmount: 1000,
+            buyerUserId: "user-123",
+            sellerUserId: "seller-1",
+            stripePaymentIntentId: "pi_1",
+            stripeChargeId: "ch_1",
+            stripeChargeBalanceTransactionId: "txn_charge_1",
+            providerEventId: null,
+            transferGroup,
+            currency: "eur",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            platformRetainedAmount: 120,
+            refundedAmount: 0,
+            transferredAmount: 0,
+            reversedAmount: 0,
+            actualStripeChargeFeeAmount: 65,
+            actualStripeRefundFeeAmount: 0,
+            actualStripeProcessingFeeAmount: 65,
+            actualStripeChargeNetAmount: 1135,
+            actualStripeFeeCurrency: "eur",
+            actualStripeChargeFeeDetails: [{ type: "stripe_fee", amount: 65, currency: "eur" }],
+            actualPlatformMarginAfterStripeAmount: 55,
+            paymentStatus: "succeeded",
+            commercePaymentStatus: "succeeded",
+            settlementStatus: "held",
+            disputeStatus: "none",
+            reconciliationPending: false,
+            manualReviewReason: null,
+            description: null,
+            paidAt: detailBody.paidAt,
+            cancelledAt: null,
+            lastProviderSyncAt: detailBody.lastProviderSyncAt,
+            occurredAt: "2026-07-06T12:10:00.000Z",
+            createdAt: "2026-07-06T12:05:00.000Z",
+            updatedAt: "2026-07-06T12:10:00.000Z",
+        });
+        expect(harness.rest.stripeRequests).toEqual([
+            {
+                method: "GET",
+                pathname: "/v1/payment_intents/pi_1",
+                searchParams: [["expand[]", "latest_charge.balance_transaction"]],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+        ]);
+
+        harness.rest.clearStripeRequests();
+        const missingResponse = await harness.edgeRequest(new Request(
+            `${functionsBaseUrl}/cms-stripe-connect/admin/payments/payment?paymentId=999`,
+            { headers: adminHeaders },
+        ));
+        expect(missingResponse.status).toBe(404);
+        expect(await jsonBody(missingResponse)).toEqual({ error: "payment not found" });
+        expect(harness.rest.stripeRequests).toEqual([]);
     });
 
     test("returns the authenticated seller wallet directly from Stripe", async () => {
@@ -3074,36 +3339,190 @@ describe("stripe-connect 1.0.0 source", () => {
             dualApprovalThresholdAmount: 1000,
         }));
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
+        harness.rest.clearStripeRequests();
 
         const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
             runKey: "lost-payment-webhook-reconciliation",
             limit: 25,
         }));
-        expect(reconciliation).toMatchObject({
+        const payments = reconciliation.payments as JsonRecord[];
+        const operations = reconciliation.operations as JsonRecord[];
+        expect(reconciliation.finishedAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(payments[0]?.paidAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(payments[0]?.lastProviderSyncAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(payments[1]?.paidAt).toBe(payments[0]?.paidAt);
+        expect(payments[1]?.lastProviderSyncAt).toBe(payments[0]?.lastProviderSyncAt);
+        expect(operations[0]?.claimedAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        expect(operations[0]?.completedAt).toEqual(expect.stringMatching(isoTimestampPattern));
+        const transferGroup = "cms_order_3335ee91cff910e16ec8360d9a159c7d08a409c9b7307cb706e78a7e1247f2c3";
+        const expectedPayment = {
+            paymentId: 1,
+            providerPaymentId: 1,
+            clientReferenceId: "lost-payment-webhook-order",
+            financialTermsHash,
+            financialRevision: 1,
+            buyerUserId: "user-123",
+            sellerUserId: "seller-1",
+            stripePaymentIntentId: "pi_1",
+            stripeChargeId: "ch_1",
+            transferGroup,
+            currency: "eur",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            platformRetainedAmount: 120,
+            refundedAmount: 0,
+            transferredAmount: 0,
+            reversedAmount: 0,
+            stripeChargeBalanceTransactionId: "txn_charge_1",
+            actualStripeChargeFeeAmount: 65,
+            actualStripeRefundFeeAmount: 0,
+            actualStripeProcessingFeeAmount: 65,
+            actualStripeChargeNetAmount: 1135,
+            actualStripeFeeCurrency: "eur",
+            actualStripeChargeFeeDetails: [{ type: "stripe_fee", amount: 65, currency: "eur" }],
+            actualPlatformMarginAfterStripeAmount: 55,
+            paymentStatus: "succeeded",
+            commercePaymentStatus: "succeeded",
+            settlementStatus: "held",
+            disputeStatus: "none",
+            manualReviewReason: null,
+            description: null,
+            paidAt: payments[0]?.paidAt,
+            cancelledAt: null,
+            lastProviderSyncAt: payments[0]?.lastProviderSyncAt,
+            occurredAt: "2026-07-06T12:10:00.000Z",
+            projectionAttemptCount: 1,
+            causalSequence: 0,
+            createdAt: "2026-07-06T12:05:00.000Z",
+            updatedAt: "2026-07-06T12:10:00.000Z",
+        };
+        expect(reconciliation).toEqual({
+            runId: 4,
+            runKey: "lost-payment-webhook-reconciliation",
             status: "succeeded",
             scannedCount: 1,
             repairedCount: 1,
             exceptionCount: 0,
-            details: { reconciledStalePayments: 1 },
+            details: {
+                stripeApiVersion: "2026-02-25.clover",
+                processedStripeEvents: 0,
+                recoveredFinancialOperations: 0,
+                reconciledStalePayments: 1,
+                reconciledSellerRiskAccounts: 0,
+                reconciledManualPayoutHolds: 0,
+                platformPayoutInterval: "daily",
+                platformPayoutMinimum: 0,
+                platformRequiredMinimum: 0,
+                workBudgetLimit: 25,
+                workBudgetConsumed: 1,
+            },
+            finishedAt: reconciliation.finishedAt,
+            payments: [
+                {
+                    ...expectedPayment,
+                    providerEventId: "payment:1:payment-intent-create:created:none:8ff5f26ecf043c8d4f737fc241bfd33465c18f801f18a0b233274e521c3f3129",
+                    projectionId: 3,
+                    projectionClaimToken: "claim-3-1",
+                },
+                {
+                    ...expectedPayment,
+                    providerEventId: "payment:1:provider-sync:succeeded:ch_1:9d3a23058256c7334017e4d1d1c5679af6efbc0d7ffb6c1c536eb254a04d433b",
+                    projectionId: 5,
+                    projectionClaimToken: "claim-5-1",
+                },
+            ],
+            operations: [{
+                providerOperationId: 2,
+                paymentId: 1,
+                providerPaymentId: 1,
+                clientReferenceId: "lost-payment-webhook-order",
+                businessKey: `payment:1:${financialTermsHash}`,
+                operationType: "payment_intent_create",
+                status: "succeeded",
+                amount: 1200,
+                currency: "eur",
+                releaseAuthorizationId: null,
+                refundRequestId: null,
+                commerceRefundRequestId: null,
+                stripeObjectId: "pi_1",
+                request: {
+                    amount: 1200,
+                    currency: "eur",
+                    clientReferenceId: "lost-payment-webhook-order",
+                    financialTermsHash,
+                    transferGroup,
+                },
+                response: {
+                    id: "pi_1",
+                    status: "requires_payment_method",
+                    amount: 1200,
+                    amount_received: 0,
+                    currency: "eur",
+                    transfer_group: transferGroup,
+                    metadata: {
+                        cms_payment_id: "1",
+                        client_reference_id: "lost-payment-webhook-order",
+                        financial_terms_hash: financialTermsHash,
+                        seller_cms_user_id: "seller-1",
+                    },
+                    latest_charge: null,
+                },
+                lastError: null,
+                attemptCount: 1,
+                nextAttemptAt: null,
+                claimedAt: operations[0]?.claimedAt,
+                completedAt: operations[0]?.completedAt,
+                providerEventId: "operation:2:succeeded",
+                occurredAt: "2026-07-06T12:10:00.000Z",
+                createdAt: "2026-07-06T12:04:00.000Z",
+                updatedAt: "2026-07-06T12:10:00.000Z",
+            }],
+            commerceOperations: [],
+            disputes: [],
         });
-        expect(reconciliation.payments).toContainEqual(expect.objectContaining({
-            paymentId: created.paymentId,
-            clientReferenceId: "lost-payment-webhook-order",
-            financialTermsHash,
-            paymentStatus: "succeeded",
-            commercePaymentStatus: "succeeded",
-            stripeChargeId: "ch_1",
-            stripeChargeBalanceTransactionId: "txn_charge_1",
-            actualStripeChargeFeeAmount: 65,
-            actualStripeProcessingFeeAmount: 65,
-            providerEventId: expect.stringContaining("provider-sync:succeeded:ch_1"),
-        }));
         expect(harness.rest.rows("payments")[0]).toMatchObject({
             stripe_charge_balance_transaction_id: "txn_charge_1",
             actual_stripe_charge_fee_amount: 65,
             actual_stripe_refund_fee_amount: 0,
             actual_stripe_processing_fee_amount: 65,
         });
+        expect(harness.rest.stripeRequests).toEqual([
+            {
+                method: "GET",
+                pathname: "/v1/balance_settings",
+                searchParams: [],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+            {
+                method: "GET",
+                pathname: "/v1/payment_intents/pi_1",
+                searchParams: [["expand[]", "latest_charge.balance_transaction"]],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+            {
+                method: "GET",
+                pathname: "/v1/disputes",
+                searchParams: [["charge", "ch_1"], ["limit", "100"]],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+            {
+                method: "GET",
+                pathname: "/v1/refunds",
+                searchParams: [["charge", "ch_1"], ["limit", "100"]],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+            {
+                method: "GET",
+                pathname: "/v1/transfers",
+                searchParams: [["transfer_group", transferGroup], ["limit", "100"]],
+                idempotencyKey: null,
+                stripeAccount: null,
+            },
+        ]);
     });
 
     test("retrieves and validates Charge and BalanceTransaction references before accepting provider success", async () => {
@@ -4173,6 +4592,7 @@ class StripeConnectMock {
     lastTransferParameters: Record<string, string> | null = null;
     readonly moneyCallOrder: string[] = [];
     readonly accountCreationRequests: Array<{ body: JsonRecord; idempotencyKey: string | null }> = [];
+    readonly stripeRequests: StripeRequestRecord[] = [];
     paymentIntentCreateCount = 0;
     chargeRetrieveCount = 0;
     balanceTransactionRetrieveCount = 0;
@@ -5710,6 +6130,10 @@ class StripeConnectMock {
         return this.tables[table]!.map(row => ({ ...row }));
     }
 
+    clearStripeRequests(): void {
+        this.stripeRequests.length = 0;
+    }
+
     private async stripeFetch(request: Request, url: URL, method: string): Promise<Response> {
         expect(request.headers.get("authorization")).toBe("Bearer sk_test_123");
         if (url.pathname.startsWith("/v1/")) {
@@ -5719,6 +6143,13 @@ class StripeConnectMock {
             expect(request.headers.get("stripe-version")).toBe("2026-06-24.dahlia");
             expect(request.headers.get("content-type")).toBe("application/json");
         }
+        this.stripeRequests.push({
+            method,
+            pathname: url.pathname,
+            searchParams: Array.from(url.searchParams.entries()),
+            idempotencyKey: request.headers.get("idempotency-key"),
+            stripeAccount: request.headers.get("stripe-account"),
+        });
         if (url.pathname === "/v2/core/accounts" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             if ("account_token" in body) {
