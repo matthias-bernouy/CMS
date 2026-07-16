@@ -8,6 +8,7 @@ import type { TPageRef, TSystem } from "@bernouy/cms-content";
 export type SystemPayload = {
     site:   Partial<TSystem["site"]>;
     editor: Partial<TSystem["editor"]>;
+    theme?: TSystem["theme"];
 };
 
 export type LocalSystem = {
@@ -37,6 +38,7 @@ export async function scanSystem(siteDir: string): Promise<LocalSystem | null> {
     const payload: SystemPayload = {
         site:   raw.site   ?? {},
         editor: raw.editor ?? {},
+        theme:  raw.theme,
     };
 
     if (hasTheme) {

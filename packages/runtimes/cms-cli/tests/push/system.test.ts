@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { scanSystem, canonicalSystemHash } from "cms-cli/push/system/scan";
 import { flatten, projectRemote } from "cms-cli/push/system/apply";
+import { defaultThemeSettings } from "@bernouy/cms-content";
 
 function tmpSite(files: Record<string, string>): string {
     const root = mkdtempSync(join(tmpdir(), "p9r-sys-"));
@@ -27,6 +28,12 @@ describe("scanSystem", () => {
         const local = await scanSystem(dir);
         expect(local?.payload.site.name).toBe("Foo");
         expect(local?.payload.site.theme).toBe(":root { --x: red; }");
+    });
+
+    test("reads structured theme settings from system.json", async () => {
+        const theme = defaultThemeSettings();
+        const dir = tmpSite({ "system.json": JSON.stringify({ theme }) });
+        expect((await scanSystem(dir))?.payload.theme).toEqual(theme);
     });
 
     test("collects all system page refs", async () => {

@@ -1,5 +1,5 @@
 import type { SystemPayload } from "./scan";
-import type { TPageRef } from "@bernouy/cms-content";
+import type { TPageRef, TSystem } from "@bernouy/cms-content";
 import { pageRefToString } from "@bernouy/cms-content";
 
 const HEADERS_JSON = (token: string) => ({
@@ -10,6 +10,7 @@ const HEADERS_JSON = (token: string) => ({
 type RemoteSystem = {
     site:   Record<string, unknown>;
     editor: Record<string, unknown>;
+    theme?: TSystem["theme"];
 };
 
 /** GET the current system snapshot (settings endpoint exposes the full record). */
@@ -18,7 +19,7 @@ export async function fetchRemoteSystem(adminBase: URL, token: string): Promise<
     const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
     if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
     const data = await res.json() as RemoteSystem;
-    return { site: data.site ?? {}, editor: data.editor ?? {} };
+    return { site: data.site ?? {}, editor: data.editor ?? {}, theme: data.theme };
 }
 
 /**
@@ -31,12 +32,16 @@ export function projectRemote(local: SystemPayload, remote: RemoteSystem): Syste
     const editor: Record<string, unknown> = {};
     for (const k of Object.keys(local.site))   site[k]   = remote.site[k];
     for (const k of Object.keys(local.editor)) editor[k] = remote.editor[k];
-    return { site: site as SystemPayload["site"], editor: editor as SystemPayload["editor"] };
+    return {
+        site: site as SystemPayload["site"],
+        editor: editor as SystemPayload["editor"],
+        ...(local.theme ? { theme: remote.theme } : {}),
+    };
 }
 
 /** Flat-dotted shape expected by `parseSettingsUpdateDto`. */
-export function flatten(payload: SystemPayload): Record<string, string> {
-    const body: Record<string, string> = {};
+export function flatten(payload: SystemPayload): Record<string, unknown> {
+    const body: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(payload.site)) {
         if (k === "notFound" || k === "forbidden" || k === "serverError" || k === "login") body[`site.${k}`] = pageRefToString(v as TPageRef);
         else if (typeof v === "string")              body[`site.${k}`] = v;
@@ -44,10 +49,11 @@ export function flatten(payload: SystemPayload): Record<string, string> {
     for (const [k, v] of Object.entries(payload.editor)) {
         if (typeof v === "string") body[`editor.${k}`] = v;
     }
+    if (payload.theme) body.theme = payload.theme;
     return body;
 }
 
-export async function postSystem(adminBase: URL, token: string, body: Record<string, string>): Promise<void> {
+export async function postSystem(adminBase: URL, token: string, body: Record<string, unknown>): Promise<void> {
     const url = new URL("api/system/settings", adminBase).href;
     const res = await fetch(url, {
         method:  "POST",
