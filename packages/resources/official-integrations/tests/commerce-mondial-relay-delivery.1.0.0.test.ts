@@ -48,7 +48,23 @@ describe("commerce-mondial-relay-delivery 1.0.0", () => {
             "urn:system-functions:getRelayPointForOrder",
         ]));
 
-        let deliveryBody: unknown;
+        const callTimeline: string[] = [];
+        const deliveryCalls: Array<{ method: string; pathname: string; body: unknown }> = [];
+        const savedQuote = deliveryQuote(false);
+        const resolvedQuote = {
+            ...deliveryQuote(true),
+            quoteId: `mrq_${"b".repeat(64)}`,
+            shippingAmount: 475,
+        };
+        const lockedFinancialTerms = {
+            orderId: 42,
+            deliveryQuoteId: `mrq_${"b".repeat(64)}`,
+            shippingAmount: 475,
+            buyerTotalAmount: 1575,
+            currency: "eur",
+            financialTermsHash: "terms-resolved-42",
+        };
+        let financialLockBody: unknown;
         const response = await executeFunction(fn, new Request("https://cms.test/functions/setRelayPointForOrder", {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -65,6 +81,8 @@ describe("commerce-mondial-relay-delivery 1.0.0", () => {
             deps: {
                 fetchImpl: async (input, init) => {
                     const request = new Request(input, init);
+                    const pathname = new URL(request.url).pathname;
+                    callTimeline.push(pathname);
                     if (request.url.startsWith("https://commerce.test")) {
                         if (request.url.includes("quote-authorization")) {
                             return Response.json({
@@ -79,7 +97,8 @@ describe("commerce-mondial-relay-delivery 1.0.0", () => {
                             });
                         }
                         if (request.url.includes("financial-lock")) {
-                            return Response.json({ orderId: 42, deliveryQuoteId: `mrq_${"a".repeat(64)}`, shippingAmount: 450, buyerTotalAmount: 1550, currency: "eur", financialTermsHash: "terms-42" });
+                            financialLockBody = await request.json();
+                            return Response.json(lockedFinancialTerms);
                         }
                         return Response.json({
                             id: 42,
@@ -95,18 +114,32 @@ describe("commerce-mondial-relay-delivery 1.0.0", () => {
                             addressLine1: "2 rue du Vendeur", postalCode: "69001", city: "Lyon", countryCode: "FR",
                         });
                     }
+                    const body = await request.json();
+                    deliveryCalls.push({ method: request.method, pathname, body });
                     if (request.url.includes("/resolve")) {
-                        return Response.json(deliveryQuote(true));
+                        return Response.json(resolvedQuote);
                     }
-                    deliveryBody = await request.json();
                     expect(request.headers.get("x-cms-user-id")).toBe("buyer-subject");
-                    return Response.json(deliveryQuote(false));
+                    return Response.json(savedQuote);
                 },
             },
         });
 
         expect(response.status).toBe(200);
-        expect(deliveryBody).toEqual({
+        expect(deliveryCalls).toHaveLength(2);
+        expect(deliveryCalls.map(call => [call.method, call.pathname])).toEqual([
+            ["POST", "/relay-selection"],
+            ["POST", "/resolve"],
+        ]);
+        expect(callTimeline).toEqual([
+            "/order",
+            "/quote-authorization",
+            "/account",
+            "/relay-selection",
+            "/resolve",
+            "/financial-lock",
+        ]);
+        expect(deliveryCalls[0]?.body).toEqual({
             requestKey: "commerce-order:order-public-42:version:1:relay:FR-024474",
             externalOrderId: "order-public-42",
             orderVersion: 1,
@@ -126,17 +159,25 @@ describe("commerce-mondial-relay-delivery 1.0.0", () => {
                 addressLine1: "2 rue du Vendeur", postalCode: "69001", city: "Lyon", countryCode: "FR",
             },
         });
-        expect(await response.json()).toMatchObject({
-            selection: {
-                externalOrderId: "order-public-42",
-                relayLocation: "FR-024474",
-                name: "RELAIS G20 RUE REAUMUR",
-                nature: "1",
-                pointType: "relay_point",
-                weightGrams: 500,
-                shippingAmount: 450,
-            },
-            financialTerms: { deliveryQuoteId: `mrq_${"a".repeat(64)}`, shippingAmount: 450, buyerTotalAmount: 1550 },
+        expect(deliveryCalls[1]?.body).toEqual({
+            quoteId: `mrq_${"a".repeat(64)}`,
+            externalOrderId: "order-public-42",
+            selectedForCmsUserId: "buyer-subject",
+            orderVersion: 1,
+            merchandiseSubtotalMinorAmount: 1000,
+            currency: "eur",
+            purpose: "financial_lock",
+        });
+        expect(financialLockBody).toEqual({
+            orderPublicId: "order-public-42",
+            deliveryQuoteId: `mrq_${"b".repeat(64)}`,
+            shippingAmount: 475,
+            currency: "eur",
+            expectedVersion: 1,
+        });
+        expect(await response.json()).toEqual({
+            selection: savedQuote,
+            financialTerms: lockedFinancialTerms,
         });
     });
 

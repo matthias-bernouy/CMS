@@ -15,6 +15,8 @@ import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import {
     handleSourceRequest,
     InMemorySourceRepository,
+    sourceEndpointAccessAllows,
+    sourceEndpointAccessMode,
     validateSource,
     type SourceRepository,
 } from "@bernouy/cms-sources";
@@ -29,6 +31,18 @@ import { dataApiError } from "../integrations/mondial-relay/versions/1.0.0/conne
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
+type ObservedFetchRequest = {
+    method: string;
+    url: string;
+    pathname: string;
+    searchParams: Record<string, string>;
+    body?: unknown;
+};
+type ObservedFetchStep = {
+    kind: "postgrest" | "provider";
+    method: string;
+    pathname: string;
+};
 
 const sourcePrefix = "/.cms/sources/";
 const functionsBaseUrl = "https://project.supabase.co/functions/v1";
@@ -284,12 +298,14 @@ describe("mondial-relay 1.0.0 source", () => {
         const body = await jsonBody(response);
 
         expect(response.status).toBe(201);
-        expect(body).toMatchObject({
+        expect(body).toEqual({
             ok: true,
+            id: harness.insertedShipments[0]?.id,
             expeditionNumber: "00435394",
+            trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
             status: "label_ready",
+            createdAt: "2026-07-02T10:00:00.000Z",
         });
-        expect(body).not.toHaveProperty("labelUrl");
         expect(harness.connectRequestXml()).toContain('<DeliveryMode Mode="24R" Location="FR-031270" />');
         expect(harness.connectRequestXml()).toContain('<CollectionMode Mode="CCC" Location="" />');
         expect(harness.connectRequestXml()).toContain('<Weight Value="500" Unit="gr" />');
@@ -329,6 +345,202 @@ describe("mondial-relay 1.0.0 source", () => {
             modeSandbox: true,
             statuses: [{ code: "0", level: "Info", message: "Success" }],
         });
+        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/settings"],
+            ["GET", "/rest/v1/delivery_quotes"],
+            ["POST", "/rest/v1/shipments"],
+            ["PATCH", "/rest/v1/shipments"],
+        ]);
+        expect(harness.providerRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["POST", "/api/shipment"],
+        ]);
+        expect(harness.fetchTimeline()).toEqual([
+            { kind: "postgrest", method: "GET", pathname: "/rest/v1/settings" },
+            { kind: "postgrest", method: "GET", pathname: "/rest/v1/delivery_quotes" },
+            { kind: "postgrest", method: "POST", pathname: "/rest/v1/shipments" },
+            { kind: "provider", method: "POST", pathname: "/api/shipment" },
+            { kind: "postgrest", method: "PATCH", pathname: "/rest/v1/shipments" },
+        ]);
+        expect(harness.postgrestRequests()[1]?.searchParams.quote_id).toBe(`eq.mrq_${"a".repeat(64)}`);
+        expect(harness.postgrestRequests()[2]?.body).toMatchObject({
+            status: "creating",
+            external_order_id: "order-1001",
+            seller_cms_user_id: "seller-42",
+            delivery_quote_id: `mrq_${"a".repeat(64)}`,
+        });
+        expect(harness.postgrestRequests()[2]?.body).not.toHaveProperty("expedition_number");
+        expect(harness.postgrestRequests()[3]?.body).toMatchObject({
+            status: "label_ready",
+            expedition_number: "00435394",
+            tracking_number: "00435394",
+        });
+    });
+
+    test("returns the exact admin shipment detail by id or expedition with ordered events", async () => {
+        const harness = await createHarness();
+        await createShipment(harness, validShipmentBody());
+        const shipment = harness.insertedShipments[0]!;
+        Object.assign(shipment, {
+            last_error: null,
+            recipient_address_line2: null,
+            latest_event_label: "Disponible au Point Relais",
+            latest_event_at: "2026-07-14T11:00:00.000Z",
+            carrier_accepted_at: "2026-07-13T08:00:00.000Z",
+            arrived_at_pickup_point_at: "2026-07-14T10:45:00.000Z",
+            available_for_pickup_at: "2026-07-14T11:00:00.000Z",
+            recipient_handoff_at: null,
+            pickup_expired_at: null,
+            returning_to_sender_at: null,
+            returned_to_sender_at: null,
+            incident_at: null,
+            lost_at: null,
+            seller_handoff_declared_at: null,
+        });
+        harness.shipmentEvents.push(
+            {
+                id: 2,
+                shipment_id: shipment.id,
+                order_public_id: "order-1001",
+                expedition_number: "00435394",
+                provider_event_key: "event-latest",
+                normalized_status: "available_for_pickup",
+                occurred_at: "2026-07-14T11:00:00.000Z",
+                event_label: "Disponible au Point Relais",
+                event_date: "14/07/2026",
+                event_time: "11:00",
+                location: "PARIS",
+                created_at: "2026-07-14T11:01:00.000Z",
+            },
+            {
+                id: 1,
+                shipment_id: shipment.id,
+                order_public_id: "order-1001",
+                expedition_number: "00435394",
+                provider_event_key: "event-created",
+                normalized_status: "in_transit",
+                occurred_at: null,
+                event_label: "Prise en charge agence",
+                event_date: null,
+                event_time: null,
+                location: null,
+                created_at: "2026-07-13T08:00:00.000Z",
+            },
+        );
+        const expected = {
+            id: shipment.id,
+            externalOrderId: "order-1001",
+            expeditionNumber: "00435394",
+            status: "label_ready",
+            createdAt: "2026-07-02T10:00:00.000Z",
+            lastError: null,
+            trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
+            recipientName: "Client Test",
+            recipientEmail: "recipient@example.test",
+            recipientPhone: "+33600000000",
+            recipientAddressLine1: "17B Chemin du Fond du Val",
+            recipientAddressLine2: null,
+            recipientPostalCode: "76930",
+            recipientCity: "Octeville-sur-Mer",
+            recipientCountry: "FR",
+            weightGrams: 500,
+            packageCount: 1,
+            latestEventLabel: "Disponible au Point Relais",
+            latestEventAt: "2026-07-14T11:00:00.000Z",
+            carrierAcceptedAt: "2026-07-13T08:00:00.000Z",
+            arrivedAtPickupPointAt: "2026-07-14T10:45:00.000Z",
+            availableForPickupAt: "2026-07-14T11:00:00.000Z",
+            recipientHandoffAt: null,
+            pickupExpiredAt: null,
+            returningToSenderAt: null,
+            returnedToSenderAt: null,
+            incidentAt: null,
+            lostAt: null,
+            sellerHandoffDeclaredAt: null,
+            events: [
+                {
+                    eventLabel: "Disponible au Point Relais",
+                    eventDate: "14/07/2026",
+                    eventTime: "11:00",
+                    normalizedStatus: "available_for_pickup",
+                    occurredAt: "2026-07-14T11:00:00.000Z",
+                    location: "PARIS",
+                },
+                {
+                    eventLabel: "Prise en charge agence",
+                    eventDate: null,
+                    eventTime: null,
+                    normalizedStatus: "in_transit",
+                    occurredAt: null,
+                    location: null,
+                },
+            ],
+            deliveryRelayLocation: "FR-031270",
+        };
+
+        for (const params of [{ id: String(shipment.id) }, { expeditionNumber: "00435394" }]) {
+            harness.resetRequestHistory();
+            const response = await sourceRequest(harness, "shipment", {
+                method: "GET",
+                userId: "admin-1",
+                userRole: "admin",
+                enforceAccess: true,
+                params,
+            });
+
+            expect(response.status).toBe(200);
+            const detail = await jsonBody(response);
+            expect(detail).toEqual(expected);
+            for (const privateField of ["senderEmail", "metadata", "rawResponse", "labelUrl"]) {
+                expect(detail).not.toHaveProperty(privateField);
+            }
+            expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+                ["GET", "/rest/v1/shipments"],
+                ["GET", "/rest/v1/shipment_events"],
+            ]);
+            const shipmentRequest = harness.postgrestRequests()[0]!;
+            expect(shipmentRequest.searchParams[params.id ? "id" : "expedition_number"]).toBe(
+                `eq.${params.id ?? params.expeditionNumber}`,
+            );
+            expect(harness.postgrestRequests()[1]?.searchParams).toMatchObject({
+                shipment_id: `eq.${shipment.id}`,
+                order: "occurred_at.desc.nullslast,created_at.desc",
+            });
+            expect(harness.providerRequests()).toEqual([]);
+        }
+
+        for (const caller of [
+            { userId: "", userRole: "member", status: 401, body: "Unauthorized" },
+            { userId: "member-1", userRole: "member", status: 403, body: "Forbidden" },
+        ]) {
+            harness.resetRequestHistory();
+            const response = await sourceRequest(harness, "shipment", {
+                method: "GET",
+                userId: caller.userId,
+                userRole: caller.userRole,
+                enforceAccess: true,
+                params: { id: String(shipment.id) },
+            });
+            expect(response.status).toBe(caller.status);
+            expect(await response.text()).toBe(caller.body);
+            expect(harness.postgrestRequests()).toEqual([]);
+            expect(harness.providerRequests()).toEqual([]);
+        }
+
+        const missingHarness = await createHarness();
+        const missing = await sourceRequest(missingHarness, "shipment", {
+            method: "GET",
+            userId: "admin-1",
+            userRole: "admin",
+            enforceAccess: true,
+            responseProjectionMode: "compatibility",
+            params: { id: "missing-shipment" },
+        });
+        expect(missing.status).toBe(404);
+        expect(await jsonBody(missing)).toEqual({ error: "shipment not found" });
+        expect(missingHarness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/shipments"],
+        ]);
+        expect(missingHarness.providerRequests()).toEqual([]);
     });
 
     test("keeps explicit empty flat seller fields when matching the immutable quote snapshot", async () => {
@@ -451,18 +663,46 @@ describe("mondial-relay 1.0.0 source", () => {
     test("replays a completed shipment without creating a second Mondial Relay shipment", async () => {
         const harness = await createHarness();
         const first = await createShipment(harness, validShipmentBody());
+        harness.resetRequestHistory();
         const replay = await createShipment(harness, validShipmentBody());
 
         expect(first.status).toBe(201);
         expect(replay.status).toBe(200);
-        expect(await jsonBody(replay)).toMatchObject({
+        expect(await jsonBody(replay)).toEqual({
             ok: true,
+            id: harness.insertedShipments[0]?.id,
             expeditionNumber: "00435394",
+            trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
             status: "label_ready",
+            createdAt: "2026-07-02T10:00:00.000Z",
             idempotentReplay: true,
         });
         expect(harness.connectRequestCount()).toBe(1);
         expect(harness.insertedShipments).toHaveLength(1);
+        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/settings"],
+            ["GET", "/rest/v1/delivery_quotes"],
+            ["POST", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/shipments"],
+        ]);
+        expect(harness.providerRequests()).toEqual([]);
+    });
+
+    test("rejects an immutable quote bound to another buyer before reserving or calling Connect", async () => {
+        const harness = await createHarness();
+        const response = await createShipment(harness, {
+            ...validShipmentBody(),
+            selectedForCmsUserId: "another-buyer",
+        });
+
+        expect(response.status).toBe(409);
+        expect(await jsonBody(response)).toEqual({ error: "shipment delivery quote binding is invalid" });
+        expect(harness.insertedShipments).toEqual([]);
+        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/settings"],
+            ["GET", "/rest/v1/delivery_quotes"],
+        ]);
+        expect(harness.providerRequests()).toEqual([]);
     });
 
     test("accepts the exact five-key Commerce metadata contract on lost-response recovery", async () => {
@@ -1046,24 +1286,69 @@ describe("mondial-relay 1.0.0 source", () => {
             city: "Paris",
         });
         const saved = await jsonBody(savedResponse);
-        const loaded = await jsonBody(await relaySelection(harness, "order-public-42"));
 
         expect(savedResponse.status).toBe(200);
-        expect(saved).toMatchObject({
-            quoteId: expect.stringMatching(/^mrq_[a-f0-9]{64}$/),
+        expect(saved).toEqual({
+            quoteId: "mrq_12a24601fa17ea51f8af4b4a33a43c932d1c638945fda05f283ac297fa161054",
             externalOrderId: "order-public-42",
             orderVersion: 1,
             revision: 1,
+            selectedForCmsUserId: "user-123",
             relayLocation: "FR-034439",
+            country: "FR",
+            number: "034439",
             name: "ARS INFORMATIQUE",
+            addressLine1: "38 RUE MAUCONSEIL",
+            addressLine2: "",
             postalCode: "75001",
             city: "PARIS",
+            latitude: 48.8641433,
+            longitude: 2.3470309,
             nature: "1",
             pointType: "relay_point",
             weightGrams: 500,
             shippingAmount: 450,
             currency: "eur",
+            merchandiseSubtotalMinorAmount: 12_345,
+            quotedAt: "2026-07-13T10:00:00.000Z",
+            expiresAt: "2099-07-13T10:15:00.000Z",
         });
+        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/shipments"],
+            ["GET", "/rest/v1/settings"],
+            ["POST", "/rest/v1/rpc/reserve_delivery_quote"],
+        ]);
+        expect(harness.providerRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/parcelshop-picker/v4_0/services/parcelshop-picker.svc/SearchPR"],
+        ]);
+        expect(harness.fetchTimeline()).toEqual([
+            { kind: "postgrest", method: "GET", pathname: "/rest/v1/shipments" },
+            { kind: "postgrest", method: "GET", pathname: "/rest/v1/settings" },
+            {
+                kind: "provider",
+                method: "GET",
+                pathname: "/parcelshop-picker/v4_0/services/parcelshop-picker.svc/SearchPR",
+            },
+            { kind: "postgrest", method: "POST", pathname: "/rest/v1/rpc/reserve_delivery_quote" },
+        ]);
+        expect(harness.postgrestRequests().filter(request => request.pathname === "/rest/v1/delivery_quotes")).toEqual([]);
+        expect(harness.postgrestRequests()[2]?.body).toMatchObject({
+            p_quote_id: "mrq_12a24601fa17ea51f8af4b4a33a43c932d1c638945fda05f283ac297fa161054",
+            p_request_key: "quote-request:order-public-42:1:FR-034439",
+            p_external_order_id: "order-public-42",
+            p_order_version: 1,
+            p_selected_by: "user-123",
+            p_selected_for_cms_user_id: "user-123",
+            p_relay_location: "FR-034439",
+            p_weight_grams: 500,
+            p_shipping_amount: 450,
+            p_currency: "eur",
+            p_merchandise_subtotal_minor_amount: 12_345,
+            p_ttl_seconds: 900,
+        });
+
+        harness.resetRequestHistory();
+        const loaded = await jsonBody(await relaySelection(harness, "order-public-42"));
         expect(loaded).toMatchObject({
             externalOrderId: "order-public-42",
             relayLocation: "FR-034439",
@@ -1074,6 +1359,10 @@ describe("mondial-relay 1.0.0 source", () => {
             shippingAmount: 450,
             currency: "eur",
         });
+        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            ["GET", "/rest/v1/relay_selections"],
+            ["GET", "/rest/v1/delivery_quotes"],
+        ]);
         expect(harness.relaySelections).toHaveLength(0);
         expect(harness.deliveryQuotes).toContainEqual(expect.objectContaining({
             external_order_id: "order-public-42",
@@ -1526,11 +1815,22 @@ async function createHarness(options: {
     let cancellationRaceInjected = false;
     let relayLookupUrl: URL | undefined;
     const upstreamRequestUrls: string[] = [];
+    const postgrestRequests: ObservedFetchRequest[] = [];
+    const providerRequests: ObservedFetchRequest[] = [];
+    const fetchTimeline: ObservedFetchStep[] = [];
     activeFetch = async (input, init) => {
         const request = requestFromFetchInput(input, init);
         const url = new URL(request.url);
         const method = request.method.toUpperCase();
         const requestBody = method === "GET" || method === "HEAD" ? "" : await request.clone().text();
+        const observed = observeFetchRequest(request, url, method, requestBody);
+        if (url.origin === supabaseUrl) {
+            postgrestRequests.push(observed);
+            fetchTimeline.push({ kind: "postgrest", method, pathname: url.pathname });
+        } else {
+            providerRequests.push(observed);
+            fetchTimeline.push({ kind: "provider", method, pathname: url.pathname });
+        }
         if (url.origin !== supabaseUrl) upstreamRequestUrls.push(request.url);
 
         if (url.origin === "https://widget.mondialrelay.com" && url.pathname.endsWith("/SearchPR")) {
@@ -1948,6 +2248,14 @@ async function createHarness(options: {
         trackingRequestCount: () => trackingRequestCount,
         trackingRequestRedirect: () => trackingRequestRedirect,
         upstreamRequestUrls: () => [...upstreamRequestUrls],
+        postgrestRequests: () => postgrestRequests.map(request => ({ ...request })),
+        providerRequests: () => providerRequests.map(request => ({ ...request })),
+        fetchTimeline: () => fetchTimeline.map(step => ({ ...step })),
+        resetRequestHistory() {
+            postgrestRequests.length = 0;
+            providerRequests.length = 0;
+            fetchTimeline.length = 0;
+        },
         relayLookupUrl: () => relayLookupUrl,
         async edgeRequest(request: Request): Promise<Response> {
             return await handler(request);
@@ -1979,6 +2287,27 @@ function requestFromFetchInput(input: RequestInfo | URL, init?: RequestInit): Re
         body: init?.body ?? (input instanceof Request ? input.body : undefined),
         redirect: init?.redirect,
     });
+}
+
+function observeFetchRequest(
+    request: Request,
+    url: URL,
+    method: string,
+    requestBody: string,
+): ObservedFetchRequest {
+    const observed: ObservedFetchRequest = {
+        method,
+        url: request.url,
+        pathname: url.pathname,
+        searchParams: Object.fromEntries(url.searchParams),
+    };
+    if (!requestBody) return observed;
+    try {
+        observed.body = JSON.parse(requestBody) as unknown;
+    } catch {
+        observed.body = requestBody;
+    }
+    return observed;
 }
 
 async function relayPoints(harness: {
@@ -2059,6 +2388,8 @@ async function sourceRequest(harness: {
     method: "GET" | "POST";
     userId: string;
     userRole?: string;
+    enforceAccess?: boolean;
+    responseProjectionMode?: "strict" | "compatibility";
     params?: Record<string, string>;
     body?: JsonRecord;
 }): Promise<Response> {
@@ -2073,11 +2404,20 @@ async function sourceRequest(harness: {
         deps: {
             fetchImpl: harness.sourceFetch,
             resolveSecret: harness.resolveSecret,
+            authorizeEndpoint: options.enforceAccess ? endpoint => {
+                if (!options.userId) return { authorized: false, status: 401 };
+                const callerMode = options.userRole === "system"
+                    ? "system"
+                    : options.userRole === "admin" ? "admin" : "auth";
+                return sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerMode)
+                    ? true
+                    : { authorized: false, status: 403 };
+            } : undefined,
             resolveContext: async () => ({
                 userID: options.userId,
                 userRole: options.userRole ?? "admin",
             }),
-            responseProjectionMode: "strict",
+            responseProjectionMode: options.responseProjectionMode ?? "strict",
         },
     });
 }
