@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "commerce-mondial-relay-delivery",
+    "label": "Commerce Mondial Relay delivery",
+    "category": "Delivery",
+    "description": "Validate and persist Mondial Relay pickup points for authenticated Commerce orders.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}

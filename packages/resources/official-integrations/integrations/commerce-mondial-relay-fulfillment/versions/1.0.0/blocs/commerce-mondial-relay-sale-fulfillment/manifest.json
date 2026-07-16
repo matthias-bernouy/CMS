@@ -1,0 +1,10 @@
+{
+    "default-tag": "commerce-mondial-relay-sale-fulfillment",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Mondial Relay seller shipment",
+        "description": "Seller-only label creation, protected download, handoff declaration, and carrier tracking."
+    }
+}

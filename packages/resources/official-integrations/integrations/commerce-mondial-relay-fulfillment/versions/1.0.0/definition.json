@@ -1,0 +1,1243 @@
+{
+  "schema": "cms.integration.definition.v1",
+  "kind": "commerce-mondial-relay-fulfillment",
+  "label": "Commerce Mondial Relay fulfillment",
+  "version": "1.0.0",
+  "category": "Delivery",
+  "description": "Seller-only Mondial Relay 24R fulfillment with Commerce authorization and system reconciliation.",
+  "inputs": [],
+  "dependencies": [
+    { "name": "commerce", "kind": "commerce" },
+    { "name": "delivery", "kind": "mondial-relay" }
+  ],
+  "ui": {
+    "mark": "CF",
+    "markClass": "commerce-mondial-relay-fulfillment",
+    "emit": "functions:updated",
+    "checks": [
+      "Only the authenticated order seller can create a label or declare carrier handoff.",
+      "Commerce authorizes shipment creation from locked payment and financial state.",
+      "The buyer can read tracking but never receives a label URL or label token.",
+      "Label downloads use short-lived seller-bound capabilities.",
+      "Carrier observations reach Commerce only through the system reconciliation function.",
+      "Mondial Relay arrival and pickup availability never become recipient handoff.",
+      "The Commerce public order id is the one-shipment idempotency key."
+    ],
+    "resources": [
+      ["Functions", "Seller shipment, label capability, handoff, cancellation, and reconciliation commands"],
+      ["Blocs", "Seller-only Mondial Relay sale fulfillment"]
+    ],
+    "sync": [
+      "Validate dependencies",
+      "Install fulfillment functions",
+      "Install seller bloc",
+      "Refresh Functions and Blocs"
+    ]
+  },
+  "artifacts": [
+    {
+      "type": "function",
+      "function": {
+        "id": "getShipmentForOrder",
+        "method": "GET",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Get shipment for order",
+          "description": "Return an allowlisted tracking projection after Commerce verifies buyer ownership."
+        },
+        "input": { "params": { "orderId": { "type": "string" } } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "order",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "myOrder",
+              "params": { "id": "$input.params.orderId" }
+            }
+          },
+          {
+            "assert": {
+              "condition": { "equals": ["$steps.order.buyerCmsUserId", "$ctx.user.id"] },
+              "failure": { "status": 403, "error": "Order does not belong to the current buyer" }
+            }
+          },
+          {
+            "id": "shipments",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "shipments",
+              "params": { "externalOrderId": "$steps.order.publicId", "limit": 1, "offset": 0 }
+            }
+          },
+          {
+            "id": "tracking",
+            "forEach": {
+              "items": "$steps.shipments.items",
+              "max": 1,
+              "steps": [
+                {
+                  "id": "shipment",
+                  "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "shipment",
+                    "params": { "id": "$item.id" }
+                  }
+                }
+              ],
+              "yield": {
+                "id": "$steps.shipment.id",
+                "expeditionNumber": "$steps.shipment.expeditionNumber",
+                "status": "$steps.shipment.status",
+                "trackingUrl": "$steps.shipment.trackingUrl",
+                "deliveryRelayLocation": "$steps.shipment.deliveryRelayLocation",
+                "latestEventLabel": "$steps.shipment.latestEventLabel",
+                "latestEventAt": "$steps.shipment.latestEventAt",
+                "carrierAcceptedAt": "$steps.shipment.carrierAcceptedAt",
+                "recipientHandoffAt": "$steps.shipment.recipientHandoffAt",
+                "createdAt": "$steps.shipment.createdAt",
+                "events": "$steps.shipment.events"
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": {
+            "orderId": "$steps.order.id",
+            "orderPublicId": "$steps.order.publicId",
+            "shipments": "$steps.tracking"
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "getShipmentForMySale",
+        "method": "GET",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Get shipment for my sale",
+          "description": "Return a sanitized shipment projection after Commerce resolves seller ownership."
+        },
+        "input": { "params": { "orderId": { "type": "string" } } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "sale",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "mySale",
+              "params": { "id": "$input.params.orderId" }
+            }
+          },
+          {
+            "id": "shipments",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "shipments",
+              "params": { "externalOrderId": "$steps.sale.publicId", "limit": 1, "offset": 0 }
+            }
+          },
+          {
+            "id": "details",
+            "forEach": {
+              "items": "$steps.shipments.items",
+              "max": 1,
+              "steps": [
+                {
+                  "id": "shipment",
+                  "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "shipment",
+                    "params": { "id": "$item.id" }
+                  }
+                }
+              ],
+              "yield": {
+                "id": "$steps.shipment.id",
+                "expeditionNumber": "$steps.shipment.expeditionNumber",
+                "status": "$steps.shipment.status",
+                "trackingUrl": "$steps.shipment.trackingUrl",
+                "deliveryRelayLocation": "$steps.shipment.deliveryRelayLocation",
+                "latestEventLabel": "$steps.shipment.latestEventLabel",
+                "latestEventAt": "$steps.shipment.latestEventAt",
+                "carrierAcceptedAt": "$steps.shipment.carrierAcceptedAt",
+                "sellerHandoffDeclaredAt": "$steps.shipment.sellerHandoffDeclaredAt",
+                "recipientHandoffAt": "$steps.shipment.recipientHandoffAt",
+                "createdAt": "$steps.shipment.createdAt",
+                "events": "$steps.shipment.events"
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": {
+            "orderId": "$steps.sale.id",
+            "orderPublicId": "$steps.sale.publicId",
+            "orderNumber": "$steps.sale.orderNumber",
+            "shipments": "$steps.details"
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "createShipmentForMySale",
+        "method": "POST",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Create shipment for my sale",
+          "description": "Create one idempotent 24R shipment after Commerce authorizes the seller fulfillment."
+        },
+        "input": {
+          "body": {
+            "type": "object",
+            "properties": { "orderId": { "type": "string" } },
+            "required": ["orderId"]
+          }
+        },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "sale",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "mySale",
+              "params": { "id": "$input.body.orderId" }
+            }
+          },
+          {
+            "id": "eligibility",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "getOrderFulfillmentAuthorization",
+              "params": { "orderPublicId": "$steps.sale.publicId" }
+            }
+          },
+          {
+            "assert": {
+              "condition": { "equals": ["$steps.eligibility.sellerId", "$ctx.user.id"] },
+              "failure": { "status": 403, "error": "Fulfillment authorization belongs to another seller" }
+            }
+          },
+          {
+            "assert": {
+              "condition": { "equals": ["$steps.eligibility.allowed", true] },
+              "failure": { "status": 409, "error": "Commerce has not authorized shipment creation" }
+            }
+          },
+          {
+            "id": "authorization",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "reserveOrderShipmentCreation",
+              "body": { "orderPublicId": "$steps.sale.publicId", "workerId": { "$concat": ["seller-request:", "$ctx.user.id"] } }
+            }
+          },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.sellerId", "$ctx.user.id"] },
+            "failure": { "status": 403, "error": "Shipment creation reservation belongs to another seller" }
+          } },
+          {
+            "id": "quote",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "resolveDeliveryQuote",
+              "body": {
+                "quoteId": "$steps.authorization.deliveryQuoteId",
+                "externalOrderId": "$steps.sale.publicId",
+                "selectedForCmsUserId": "$steps.authorization.buyerCmsUserId",
+                "merchandiseSubtotalMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+                "currency": "$steps.authorization.currency",
+                "purpose": "fulfillment"
+              }
+            }
+          },
+          {
+            "id": "shipment",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "createShipment",
+              "body": {
+                "externalOrderId": "$steps.sale.publicId",
+                "sellerCmsUserId": "$steps.authorization.sellerId",
+                "deliveryQuoteId": "$steps.quote.quoteId",
+                "quoteExternalOrderId": "$steps.quote.externalOrderId",
+                "quotePurpose": "fulfillment",
+                "selectedForCmsUserId": "$steps.authorization.buyerCmsUserId",
+                "senderName": "$steps.quote.sellerFulfillmentSnapshot.name",
+                "senderFirstName": "$steps.quote.sellerFulfillmentSnapshot.firstName",
+                "senderLastName": "$steps.quote.sellerFulfillmentSnapshot.lastName",
+                "senderEmail": "$steps.quote.sellerFulfillmentSnapshot.email",
+                "senderPhone": "$steps.quote.sellerFulfillmentSnapshot.phone",
+                "senderAddressLine1": "$steps.quote.sellerFulfillmentSnapshot.addressLine1",
+                "senderAddressLine2": "$steps.quote.sellerFulfillmentSnapshot.addressLine2",
+                "senderAddressLine3": "$steps.quote.sellerFulfillmentSnapshot.addressLine3",
+                "senderPostalCode": "$steps.quote.sellerFulfillmentSnapshot.postalCode",
+                "senderCity": "$steps.quote.sellerFulfillmentSnapshot.city",
+                "senderCountry": "$steps.quote.sellerFulfillmentSnapshot.country",
+                "recipientName": "$steps.quote.recipientSnapshot.name",
+                "recipientFirstName": "$steps.quote.recipientSnapshot.firstName",
+                "recipientLastName": "$steps.quote.recipientSnapshot.lastName",
+                "recipientEmail": "$steps.quote.recipientSnapshot.email",
+                "recipientPhone": "$steps.quote.recipientSnapshot.phone",
+                "recipientAddressLine1": "$steps.quote.recipientSnapshot.addressLine1",
+                "recipientAddressLine2": "$steps.quote.recipientSnapshot.addressLine2",
+                "recipientAddressLine3": "$steps.quote.recipientSnapshot.addressLine3",
+                "recipientPostalCode": "$steps.quote.recipientSnapshot.postalCode",
+                "recipientCity": "$steps.quote.recipientSnapshot.city",
+                "recipientCountry": "$steps.quote.recipientSnapshot.country",
+                "deliveryRelayLocation": "$steps.quote.relayLocation",
+                "weightGrams": "$steps.quote.weightGrams",
+                "packageCount": 1,
+                "declaredValueMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+                "declaredCurrency": "EUR",
+                "metadata": {
+                  "commerceOrderId": "$steps.sale.publicId",
+                  "financialTermsHash": "$steps.authorization.financialTermsHash",
+                  "deliveryQuoteId": "$steps.authorization.deliveryQuoteId",
+                  "declaredValueMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+                  "declaredCurrency": "EUR"
+                }
+              }
+            }
+          },
+          {
+            "id": "commerceFulfillment",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "completeOrderShipmentCreation",
+              "body": {
+                "operationId": "$steps.authorization.operationId",
+                "claimToken": "$steps.authorization.claimToken",
+                "providerReference": "$steps.shipment.expeditionNumber",
+                "providerShipmentId": "$steps.shipment.id",
+                "providerSnapshot": { "status": "$steps.shipment.status", "createdAt": "$steps.shipment.createdAt" }
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": {
+            "orderId": "$steps.sale.id",
+            "orderPublicId": "$steps.sale.publicId",
+            "shipment": "$steps.shipment",
+            "fulfillment": "$steps.commerceFulfillment"
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "requestShipmentLabelForMySale",
+        "method": "POST",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Request shipment label for my sale",
+          "description": "Issue a short-lived seller-bound label capability without exposing the provider URL."
+        },
+        "input": {
+          "body": {
+            "type": "object",
+            "properties": { "orderId": { "type": "string" } },
+            "required": ["orderId"]
+          }
+        },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "sale",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "mySale",
+              "params": { "id": "$input.body.orderId" }
+            }
+          },
+          {
+            "id": "labelAuthorization",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "getOrderLabelAuthorization",
+              "params": { "orderPublicId": "$steps.sale.publicId" }
+            }
+          },
+          {
+            "assert": {
+              "condition": { "all": [
+                { "equals": ["$steps.labelAuthorization.allowed", true] },
+                { "equals": ["$steps.labelAuthorization.sellerCmsUserId", "$ctx.user.id"] }
+              ] },
+              "failure": { "status": 409, "error": "Commerce has not authorized label access" }
+            }
+          },
+          {
+            "id": "capability",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "issueLabelAccess",
+              "body": {
+                "externalOrderId": "$steps.sale.publicId",
+                "sellerCmsUserId": "$ctx.user.id"
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": {
+            "labelUrl": { "$concat": ["/.cms/sources/{{dependencies.delivery.sourceId}}/label?token=", "$steps.capability.token"] },
+            "expiresAt": "$steps.capability.expiresAt"
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "declareShipmentHandoffForMySale",
+        "method": "POST",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Declare shipment handoff for my sale",
+          "description": "Record the seller assertion separately from the first trusted carrier scan."
+        },
+        "input": {
+          "body": {
+            "type": "object",
+            "properties": { "orderId": { "type": "string" } },
+            "required": ["orderId"]
+          }
+        },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "sale",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "mySale",
+              "params": { "id": "$input.body.orderId" }
+            }
+          },
+          {
+            "id": "handoff",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "declareSellerHandoff",
+              "body": { "externalOrderId": "$steps.sale.publicId" }
+            }
+          },
+          {
+            "id": "commerceFulfillment",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "recordOrderFulfillment",
+              "body": {
+                "orderPublicId": "$steps.sale.publicId",
+                "providerEventId": { "$concat": ["mondial-relay|", "$steps.handoff.expeditionNumber", "|seller_handoff|", "$steps.handoff.sellerHandoffDeclaredAt"] },
+                "normalizedStatus": "seller_handoff_declared",
+                "occurredAt": "$steps.handoff.sellerHandoffDeclaredAt",
+                "providerReference": "$steps.handoff.expeditionNumber",
+                "sellerHandoffDeclaredAt": "$steps.handoff.sellerHandoffDeclaredAt"
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": { "shipment": "$steps.handoff", "fulfillment": "$steps.commerceFulfillment" }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "getClaimReturnForMe",
+        "method": "GET",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Get my claim return shipment",
+          "description": "Return a sanitized claim-bound return shipment to its buyer or seller."
+        },
+        "input": { "params": { "claimId": { "type": "number" } } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "authorization", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getClaimReturnAuthorization",
+            "params": { "claimId": "$input.params.claimId" }
+          } },
+          { "assert": {
+            "condition": { "in": ["$ctx.user.id", ["$steps.authorization.buyerCmsUserId", "$steps.authorization.sellerCmsUserId"]] },
+            "failure": { "status": 403, "error": "Marketplace claim return does not belong to the current user" }
+          } },
+          { "id": "shipments", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipments",
+            "params": { "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] }, "limit": 1, "offset": 0 }
+          } },
+          { "id": "tracking", "forEach": {
+            "items": "$steps.shipments.items", "max": 1,
+            "steps": [{ "id": "shipment", "call": {
+              "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipment", "params": { "id": "$item.id" }
+            } }],
+            "yield": {
+              "id": "$steps.shipment.id", "expeditionNumber": "$steps.shipment.expeditionNumber",
+              "status": "$steps.shipment.status", "trackingUrl": "$steps.shipment.trackingUrl",
+              "deliveryRelayLocation": "$steps.shipment.deliveryRelayLocation",
+              "latestEventLabel": "$steps.shipment.latestEventLabel", "latestEventAt": "$steps.shipment.latestEventAt",
+              "carrierAcceptedAt": "$steps.shipment.carrierAcceptedAt",
+              "recipientHandoffAt": "$steps.shipment.recipientHandoffAt",
+              "createdAt": "$steps.shipment.createdAt", "events": "$steps.shipment.events"
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": {
+          "claimId": "$steps.authorization.claimId", "claimStatus": "$steps.authorization.claimStatus",
+          "returnShipByAt": "$steps.authorization.returnShipByAt",
+          "returnDeliveryStatus": "$steps.authorization.returnDeliveryStatus",
+          "orderNumber": "$steps.authorization.orderNumber", "allowed": "$steps.authorization.allowed",
+          "reason": "$steps.authorization.reason", "shipments": "$steps.tracking"
+        } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "setRelayPointForMyClaimReturn",
+        "method": "POST",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Set relay point for my claim return",
+          "description": "Let only the claim seller select the server-validated relay that will receive the return."
+        },
+        "input": { "body": { "type": "object", "properties": {
+          "claimId": { "type": "number" }, "relayLocation": { "type": "string" },
+          "country": { "type": "string" }, "postalCode": { "type": "string" }, "city": { "type": "string" }
+        }, "required": ["claimId", "relayLocation", "country", "postalCode"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "authorization", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getClaimReturnAuthorization",
+            "params": { "claimId": "$input.body.claimId" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.sellerCmsUserId", "$ctx.user.id"] },
+            "failure": { "status": 403, "error": "Only the claim seller can select the return relay" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.allowed", true] },
+            "failure": { "status": 409, "error": "Commerce has not authorized this claim return" }
+          } },
+          { "id": "selection", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "saveClaimReturnRelaySelection",
+            "body": {
+              "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] },
+              "relayLocation": "$input.body.relayLocation", "country": "$input.body.country",
+              "postalCode": "$input.body.postalCode", "city": "$input.body.city"
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": { "selection": "$steps.selection" } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "getRelayPointForMyClaimReturn",
+        "method": "GET",
+        "access": { "mode": "auth" },
+        "meta": { "name": "Get relay point for my claim return", "description": "Return the selected return relay to either claim participant." },
+        "input": { "params": { "claimId": { "type": "number" } } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "authorization", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getClaimReturnAuthorization",
+            "params": { "claimId": "$input.params.claimId" }
+          } },
+          { "assert": {
+            "condition": { "in": ["$ctx.user.id", ["$steps.authorization.buyerCmsUserId", "$steps.authorization.sellerCmsUserId"]] },
+            "failure": { "status": 403, "error": "Marketplace claim return does not belong to the current user" }
+          } },
+          { "id": "selection", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "relaySelection",
+            "params": { "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] } }
+          } }
+        ],
+        "return": { "status": 200, "body": "$steps.selection" }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "createClaimReturnShipmentForMyPurchase",
+        "method": "POST",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Create claim return shipment for my purchase",
+          "description": "Create one idempotent buyer-to-seller claim return from trusted Commerce and account snapshots."
+        },
+        "input": { "body": { "type": "object", "properties": { "claimId": { "type": "number" } }, "required": ["claimId"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "authorization", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getClaimReturnAuthorization",
+            "params": { "claimId": "$input.body.claimId" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.buyerCmsUserId", "$ctx.user.id"] },
+            "failure": { "status": 403, "error": "Only the claim buyer can create the return shipment" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.allowed", true] },
+            "failure": { "status": 409, "error": "Commerce has not authorized this claim return" }
+          } },
+          { "id": "quote", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "resolveDeliveryQuote",
+            "body": {
+              "quoteId": "$steps.authorization.deliveryQuoteId",
+              "externalOrderId": "$steps.authorization.orderPublicId",
+              "selectedForCmsUserId": "$steps.authorization.buyerCmsUserId",
+              "merchandiseSubtotalMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+              "currency": "$steps.authorization.currency",
+              "purpose": "claim_return"
+            }
+          } },
+          { "id": "selection", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "relaySelection",
+            "params": { "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] } }
+          } },
+          { "id": "authorizationRecheck", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getClaimReturnAuthorization",
+            "params": { "claimId": "$steps.authorization.claimId" }
+          } },
+          { "assert": {
+            "condition": { "all": [
+              { "equals": ["$steps.authorizationRecheck.allowed", true] },
+              { "equals": ["$steps.authorizationRecheck.claimVersion", "$steps.authorization.claimVersion"] },
+              { "equals": ["$steps.authorizationRecheck.buyerCmsUserId", "$steps.authorization.buyerCmsUserId"] },
+              { "equals": ["$steps.authorizationRecheck.sellerCmsUserId", "$steps.authorization.sellerCmsUserId"] },
+              { "equals": ["$steps.authorizationRecheck.orderPublicId", "$steps.authorization.orderPublicId"] }
+            ] },
+            "failure": { "status": 409, "error": "Claim return authorization changed before shipment creation" }
+          } },
+          { "id": "shipment", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "createShipment",
+            "body": {
+              "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] },
+              "sellerCmsUserId": "$steps.authorization.buyerCmsUserId",
+              "deliveryQuoteId": "$steps.quote.quoteId",
+              "quoteExternalOrderId": "$steps.authorization.orderPublicId",
+              "quotePurpose": "claim_return",
+              "selectedForCmsUserId": "$steps.authorization.buyerCmsUserId",
+              "senderName": "$steps.quote.recipientSnapshot.name",
+              "senderFirstName": "$steps.quote.recipientSnapshot.firstName",
+              "senderLastName": "$steps.quote.recipientSnapshot.lastName",
+              "senderEmail": "$steps.quote.recipientSnapshot.email",
+              "senderPhone": "$steps.quote.recipientSnapshot.phone",
+              "senderAddressLine1": "$steps.quote.recipientSnapshot.addressLine1",
+              "senderAddressLine2": "$steps.quote.recipientSnapshot.addressLine2",
+              "senderAddressLine3": "$steps.quote.recipientSnapshot.addressLine3",
+              "senderPostalCode": "$steps.quote.recipientSnapshot.postalCode",
+              "senderCity": "$steps.quote.recipientSnapshot.city",
+              "senderCountry": "$steps.quote.recipientSnapshot.country",
+              "recipientName": "$steps.quote.sellerFulfillmentSnapshot.name",
+              "recipientFirstName": "$steps.quote.sellerFulfillmentSnapshot.firstName",
+              "recipientLastName": "$steps.quote.sellerFulfillmentSnapshot.lastName",
+              "recipientEmail": "$steps.quote.sellerFulfillmentSnapshot.email",
+              "recipientPhone": "$steps.quote.sellerFulfillmentSnapshot.phone",
+              "recipientAddressLine1": "$steps.quote.sellerFulfillmentSnapshot.addressLine1",
+              "recipientAddressLine2": "$steps.quote.sellerFulfillmentSnapshot.addressLine2",
+              "recipientAddressLine3": "$steps.quote.sellerFulfillmentSnapshot.addressLine3",
+              "recipientPostalCode": "$steps.quote.sellerFulfillmentSnapshot.postalCode",
+              "recipientCity": "$steps.quote.sellerFulfillmentSnapshot.city",
+              "recipientCountry": "$steps.quote.sellerFulfillmentSnapshot.country",
+              "deliveryRelayLocation": "$steps.selection.relayLocation",
+              "weightGrams": "$steps.selection.weightGrams", "packageCount": 1,
+              "declaredValueMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+              "declaredCurrency": "EUR",
+              "metadata": {
+                "commerceClaimId": "$steps.authorization.claimId",
+                "commerceOrderId": "$steps.authorization.orderPublicId", "shipmentKind": "claim_return",
+                "deliveryQuoteId": "$steps.authorization.deliveryQuoteId",
+                "declaredValueMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
+                "declaredCurrency": "EUR"
+              }
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": {
+          "claimId": "$steps.authorization.claimId",
+          "shipment": {
+            "id": "$steps.shipment.id", "expeditionNumber": "$steps.shipment.expeditionNumber",
+            "trackingUrl": "$steps.shipment.trackingUrl", "status": "$steps.shipment.status",
+            "createdAt": "$steps.shipment.createdAt", "idempotentReplay": "$steps.shipment.idempotentReplay"
+          }
+        } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "requestClaimReturnLabelForMyPurchase",
+        "method": "POST",
+        "access": { "mode": "auth" },
+        "meta": {
+          "name": "Request claim return label for my purchase",
+          "description": "Issue a short-lived buyer-bound return-label capability without exposing the provider URL."
+        },
+        "input": { "body": { "type": "object", "properties": { "claimId": { "type": "number" } }, "required": ["claimId"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "authorization", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getClaimReturnAuthorization",
+            "params": { "claimId": "$input.body.claimId" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.buyerCmsUserId", "$ctx.user.id"] },
+            "failure": { "status": 403, "error": "Only the claim buyer can request the return label" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.authorization.allowed", true] },
+            "failure": { "status": 409, "error": "Commerce has not authorized this claim return" }
+          } },
+          { "id": "capability", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "issueLabelAccess",
+            "body": {
+              "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] },
+              "sellerCmsUserId": "$ctx.user.id"
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": {
+          "labelUrl": { "$concat": ["/.cms/sources/{{dependencies.delivery.sourceId}}/label?token=", "$steps.capability.token"] },
+          "expiresAt": "$steps.capability.expiresAt"
+        } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "reconcileMondialRelayShipmentOperations",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+          "name": "Reconcile Mondial Relay shipment operations",
+          "description": "Recover durable shipment creation and cancellation sagas without holding database locks across provider calls."
+        },
+        "input": { "body": { "type": "object", "properties": {
+          "runKey": { "type": "string" }, "limit": { "type": "number" }
+        }, "required": ["runKey", "limit"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "creationClaims", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "claimPendingShipmentCreations",
+            "body": { "runKey": "$input.body.runKey", "limit": "$input.body.limit" }
+          } },
+          { "id": "creations", "forEach": {
+            "items": "$steps.creationClaims.items", "max": 5, "continueOnError": true,
+            "steps": [
+              { "id": "quote", "call": {
+                "source": "{{dependencies.delivery.sourceId}}", "endpoint": "resolveDeliveryQuote",
+                "body": {
+                  "quoteId": "$item.deliveryQuoteId", "externalOrderId": "$item.orderPublicId",
+                  "selectedForCmsUserId": "$item.buyerCmsUserId",
+                  "merchandiseSubtotalMinorAmount": "$item.merchandiseSubtotalMinorAmount",
+                  "currency": "$item.currency", "purpose": "fulfillment"
+                }
+              } },
+              { "id": "shipment", "call": {
+                "source": "{{dependencies.delivery.sourceId}}", "endpoint": "createShipment",
+                "body": {
+                  "externalOrderId": "$item.orderPublicId", "sellerCmsUserId": "$item.sellerId",
+                  "deliveryQuoteId": "$steps.quote.quoteId",
+                  "quoteExternalOrderId": "$steps.quote.externalOrderId", "quotePurpose": "fulfillment",
+                  "selectedForCmsUserId": "$item.buyerCmsUserId",
+                  "senderName": "$steps.quote.sellerFulfillmentSnapshot.name",
+                  "senderFirstName": "$steps.quote.sellerFulfillmentSnapshot.firstName",
+                  "senderLastName": "$steps.quote.sellerFulfillmentSnapshot.lastName",
+                  "senderEmail": "$steps.quote.sellerFulfillmentSnapshot.email",
+                  "senderPhone": "$steps.quote.sellerFulfillmentSnapshot.phone",
+                  "senderAddressLine1": "$steps.quote.sellerFulfillmentSnapshot.addressLine1",
+                  "senderAddressLine2": "$steps.quote.sellerFulfillmentSnapshot.addressLine2",
+                  "senderAddressLine3": "$steps.quote.sellerFulfillmentSnapshot.addressLine3",
+                  "senderPostalCode": "$steps.quote.sellerFulfillmentSnapshot.postalCode",
+                  "senderCity": "$steps.quote.sellerFulfillmentSnapshot.city",
+                  "senderCountry": "$steps.quote.sellerFulfillmentSnapshot.country",
+                  "recipientName": "$steps.quote.recipientSnapshot.name",
+                  "recipientFirstName": "$steps.quote.recipientSnapshot.firstName",
+                  "recipientLastName": "$steps.quote.recipientSnapshot.lastName",
+                  "recipientEmail": "$steps.quote.recipientSnapshot.email",
+                  "recipientPhone": "$steps.quote.recipientSnapshot.phone",
+                  "recipientAddressLine1": "$steps.quote.recipientSnapshot.addressLine1",
+                  "recipientAddressLine2": "$steps.quote.recipientSnapshot.addressLine2",
+                  "recipientAddressLine3": "$steps.quote.recipientSnapshot.addressLine3",
+                  "recipientPostalCode": "$steps.quote.recipientSnapshot.postalCode",
+                  "recipientCity": "$steps.quote.recipientSnapshot.city",
+                  "recipientCountry": "$steps.quote.recipientSnapshot.country",
+                  "deliveryRelayLocation": "$steps.quote.relayLocation", "weightGrams": "$steps.quote.weightGrams",
+                  "packageCount": 1, "declaredValueMinorAmount": "$item.merchandiseSubtotalMinorAmount",
+                  "declaredCurrency": "EUR",
+                  "metadata": {
+                    "commerceOrderId": "$item.orderPublicId",
+                    "financialTermsHash": "$item.financialTermsHash",
+                    "deliveryQuoteId": "$item.deliveryQuoteId",
+                    "declaredValueMinorAmount": "$item.merchandiseSubtotalMinorAmount",
+                    "declaredCurrency": "EUR"
+                  }
+                }
+              } },
+              { "id": "complete", "call": {
+                "source": "{{dependencies.commerce.sourceId}}", "endpoint": "completeOrderShipmentCreation",
+                "body": {
+                  "operationId": "$item.operationId", "claimToken": "$item.claimToken",
+                  "providerReference": "$steps.shipment.expeditionNumber", "providerShipmentId": "$steps.shipment.id",
+                  "providerSnapshot": { "status": "$steps.shipment.status", "createdAt": "$steps.shipment.createdAt" }
+                }
+              } }
+            ],
+            "yield": "$steps.complete",
+            "onError": [{ "id": "failCreation", "call": {
+              "source": "{{dependencies.commerce.sourceId}}", "endpoint": "failOrderShipmentCreation",
+              "body": { "operationId": "$item.operationId", "claimToken": "$item.claimToken", "error": "Mondial Relay shipment creation reconciliation failed" }
+            } }],
+            "errorYield": { "operationId": "$item.operationId", "failed": true, "failure": "$steps.failCreation" }
+          } },
+          { "id": "cancellationClaims", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "claimPendingShipmentCancellations",
+            "body": { "runKey": "$input.body.runKey", "limit": "$input.body.limit" }
+          } },
+          { "id": "cancellations", "forEach": {
+            "items": "$steps.cancellationClaims.items", "max": 5, "continueOnError": true,
+            "steps": [
+              { "id": "deliveryCancellation", "call": {
+                "source": "{{dependencies.delivery.sourceId}}", "endpoint": "cancelShipmentReservation",
+                "body": { "externalOrderId": "$item.orderPublicId", "trackingUntil": "$item.trackingUntil" }
+              } },
+              { "id": "completeCancellation", "call": {
+                "source": "{{dependencies.commerce.sourceId}}", "endpoint": "completeOrderShipmentCancellation",
+                "body": {
+                  "operationId": "$item.operationId", "claimToken": "$item.claimToken",
+                  "providerStatus": "$steps.deliveryCancellation.status",
+                  "providerReference": "$steps.deliveryCancellation.expeditionNumber",
+                  "providerSnapshot": "$steps.deliveryCancellation"
+                }
+              } }
+            ],
+            "yield": "$steps.completeCancellation",
+            "onError": [{ "id": "failCancellation", "call": {
+              "source": "{{dependencies.commerce.sourceId}}", "endpoint": "failOrderShipmentCancellation",
+              "body": { "operationId": "$item.operationId", "claimToken": "$item.claimToken", "error": "Mondial Relay shipment cancellation reconciliation failed" }
+            } }],
+            "errorYield": { "operationId": "$item.operationId", "failed": true, "failure": "$steps.failCancellation" }
+          } }
+        ],
+        "return": { "status": 200, "body": { "creations": "$steps.creations", "cancellations": "$steps.cancellations" } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "reconcileMondialRelayFulfillments",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+          "name": "Reconcile Mondial Relay fulfillments",
+          "description": "Synchronize a bounded provider batch and project normalized events into Commerce."
+        },
+        "input": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "runKey": { "type": "string" },
+              "limit": { "type": "number" }
+            },
+            "required": ["runKey", "limit"]
+          }
+        },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "deliveryBatch",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "reconcileShipments",
+              "body": {
+                "runKey": "$input.body.runKey",
+                "limit": 8
+              }
+            }
+          },
+          {
+            "id": "commerceEvents",
+            "forEach": {
+              "items": "$steps.deliveryBatch.events",
+              "max": 8,
+              "continueOnError": true,
+              "steps": [
+                {
+                  "id": "record",
+                  "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recordOrderFulfillment",
+                    "body": {
+                      "orderPublicId": "$item.orderPublicId",
+                      "providerEventId": "$item.providerEventId",
+                      "normalizedStatus": "$item.normalizedStatus",
+                      "occurredAt": "$item.occurredAt",
+                      "providerReference": "$item.providerReference",
+                      "recipientHandoffAt": "$item.recipientHandoffAt",
+                      "carrierAcceptedAt": "$item.carrierAcceptedAt"
+                    }
+                  }
+                },
+                {
+                  "id": "acknowledge",
+                  "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "acknowledgeShipmentEvent",
+                    "body": {
+                      "eventId": "$item.eventId",
+                      "claimToken": "$item.claimToken"
+                    }
+                  }
+                }
+              ],
+              "yield": "$steps.record",
+              "onError": [{
+                "id": "failOrderProjection",
+                "call": {
+                  "source": "{{dependencies.delivery.sourceId}}",
+                  "endpoint": "failShipmentEventProjection",
+                  "body": {
+                    "eventId": "$item.eventId", "claimToken": "$item.claimToken",
+                    "error": "Commerce order fulfillment projection failed"
+                  }
+                }
+              }],
+              "errorYield": {
+                "eventId": "$item.eventId", "providerEventId": "$item.providerEventId",
+                "projectionFailed": true, "failure": "$steps.failOrderProjection"
+              }
+            }
+          },
+          {
+            "id": "commerceClaimReturnEvents",
+            "forEach": {
+              "items": "$steps.deliveryBatch.claimReturnEvents",
+              "max": 8,
+              "continueOnError": true,
+              "steps": [
+                {
+                  "id": "recordClaimReturn",
+                  "call": {
+                    "source": "{{dependencies.commerce.sourceId}}",
+                    "endpoint": "recordClaimReturnDelivery",
+                    "body": {
+                      "claimId": "$item.claimId",
+                      "providerEventId": "$item.providerEventId",
+                      "providerReference": "$item.providerReference",
+                      "normalizedStatus": "$item.normalizedStatus",
+                      "occurredAt": "$item.occurredAt",
+                      "providerEvidence": "$item.providerEvidence"
+                    }
+                  }
+                },
+                {
+                  "id": "acknowledgeClaimReturn",
+                  "call": {
+                    "source": "{{dependencies.delivery.sourceId}}",
+                    "endpoint": "acknowledgeShipmentEvent",
+                    "body": {
+                      "eventId": "$item.eventId",
+                      "claimToken": "$item.claimToken"
+                    }
+                  }
+                }
+              ],
+              "yield": "$steps.recordClaimReturn",
+              "onError": [{
+                "id": "failClaimReturnProjection",
+                "call": {
+                  "source": "{{dependencies.delivery.sourceId}}",
+                  "endpoint": "failShipmentEventProjection",
+                  "body": {
+                    "eventId": "$item.eventId", "claimToken": "$item.claimToken",
+                    "error": "Commerce claim return projection failed"
+                  }
+                }
+              }],
+              "errorYield": {
+                "eventId": "$item.eventId", "providerEventId": "$item.providerEventId",
+                "projectionFailed": true, "failure": "$steps.failClaimReturnProjection"
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": {
+            "processed": "$steps.deliveryBatch.processed",
+            "shipments": "$steps.deliveryBatch.shipments",
+            "events": "$steps.commerceEvents",
+            "claimReturnEvents": "$steps.commerceClaimReturnEvents"
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "publishMondialRelayDeliveryHealth",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+          "name": "Publish Mondial Relay Delivery health",
+          "description": "Publish a global worker heartbeat and isolated order shipment watermarks without freezing unrelated settlements."
+        },
+        "input": { "body": { "type": "object", "properties": {
+          "runKey": { "type": "string" }, "limit": { "type": "number" }
+        }, "required": ["runKey", "limit"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "projectionHealth", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "deliveryProjectionHealth"
+          } },
+          { "id": "globalHealth", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recordDeliveryReconciliationHealth",
+            "body": {
+              "runKey": "$input.body.runKey", "checkedAt": "$steps.projectionHealth.checkedAt",
+              "pendingProjectionCount": "$steps.projectionHealth.pendingProjectionCount",
+              "manualReviewCount": "$steps.projectionHealth.manualReviewCount",
+              "trackingErrorCount": "$steps.projectionHealth.trackingErrorCount"
+            }
+          } },
+          { "id": "orders", "forEach": {
+            "items": "$steps.projectionHealth.orders", "max": 24,
+            "steps": [{ "id": "orderHealth", "call": {
+              "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recordDeliveryOrderReconciliationHealth",
+              "body": {
+                "runKey": "$input.body.runKey", "checkedAt": "$steps.projectionHealth.checkedAt",
+                "orderPublicId": "$item.externalOrderId", "shipmentId": "$item.shipmentId",
+                "providerReference": "$item.providerReference", "shipmentStatus": "$item.shipmentStatus",
+                "pendingProjectionCount": "$item.pendingProjectionCount",
+                "manualReviewCount": "$item.manualReviewCount",
+                "trackingErrorCount": "$item.trackingErrorCount",
+                "trackingCheckedAt": "$item.trackingCheckedAt"
+              }
+            } }],
+            "yield": "$steps.orderHealth"
+          } }
+        ],
+        "return": { "status": 200, "body": {
+          "global": "$steps.globalHealth", "orders": "$steps.orders"
+        } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "recoverMondialRelayShipmentCreation",
+        "method": "POST",
+        "access": { "mode": "admin", "roles": ["support", "finance"] },
+        "meta": {
+          "name": "Recover Mondial Relay shipment creation",
+          "description": "Attach a verified provider shipment and complete the matching Commerce creation operation with an audited operator reason."
+        },
+        "input": { "body": { "type": "object", "properties": {
+          "shipmentId": { "type": "string" }, "orderPublicId": { "type": "string" },
+          "expeditionNumber": { "type": "string" }, "labelUrl": { "type": "string" },
+          "reason": { "type": "string" }
+        }, "required": ["shipmentId", "orderPublicId", "expeditionNumber", "reason"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "assert": {
+            "condition": { "in": ["$ctx.user.role", ["support", "finance"]] },
+            "failure": { "status": 403, "error": "Shipment recovery requires a support or finance operator" }
+          } },
+          { "id": "deliveryRecovery", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "recoverUnknownShipment",
+            "body": {
+              "shipmentId": "$input.body.shipmentId", "externalOrderId": "$input.body.orderPublicId",
+              "expeditionNumber": "$input.body.expeditionNumber", "labelUrl": "$input.body.labelUrl",
+              "reason": "$input.body.reason"
+            }
+          } },
+          { "id": "commerceRecovery", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recoverOrderShipmentCreation",
+            "body": {
+              "orderPublicId": "$input.body.orderPublicId",
+              "providerReference": "$steps.deliveryRecovery.expeditionNumber",
+              "providerShipmentId": "$steps.deliveryRecovery.id",
+              "reason": "$input.body.reason", "providerSnapshot": "$steps.deliveryRecovery"
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": {
+          "shipment": "$steps.deliveryRecovery", "fulfillment": "$steps.commerceRecovery"
+        } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "recordMondialRelayClaimReturnCarrierAcceptance",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+          "name": "Record claim return carrier acceptance",
+          "description": "Refresh a claim-bound Mondial Relay return and project only trusted carrier acceptance into Commerce."
+        },
+        "input": { "body": { "type": "object", "properties": {
+          "claimId": { "type": "number" }, "expeditionNumber": { "type": "string" }
+        }, "required": ["claimId", "expeditionNumber"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "shipment", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipment",
+            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.shipment.externalOrderId", { "$concat": ["claim-return:", "$input.body.claimId"] }] },
+            "failure": { "status": 409, "error": "Shipment is not bound to this marketplace claim return" }
+          } },
+          { "id": "tracking", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "tracking",
+            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
+          } },
+          { "assert": {
+            "condition": { "notEquals": ["$steps.tracking.carrierAcceptedAt", null] },
+            "failure": { "status": 409, "error": "Return has no trusted carrier acceptance yet" }
+          } },
+          { "id": "commerceClaim", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recordClaimReturnDelivery",
+            "body": {
+              "claimId": "$input.body.claimId",
+              "providerEventId": { "$concat": ["mondial-relay-return|", "$input.body.expeditionNumber", "|carrier_accepted|", "$steps.tracking.carrierAcceptedAt"] },
+              "providerReference": "$input.body.expeditionNumber",
+              "normalizedStatus": "carrier_accepted",
+              "occurredAt": "$steps.tracking.carrierAcceptedAt",
+              "providerEvidence": { "provider": "mondial-relay", "shipmentId": "$steps.shipment.id", "providerStatus": "$steps.tracking.status" }
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": { "shipment": "$steps.shipment", "tracking": "$steps.tracking", "claim": "$steps.commerceClaim" } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "recordMondialRelayClaimReturnRecipientHandoff",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+          "name": "Record claim return recipient handoff",
+          "description": "Refresh a claim-bound Mondial Relay return and unlock monetary resolution only after provider-confirmed handoff to the seller."
+        },
+        "input": { "body": { "type": "object", "properties": {
+          "claimId": { "type": "number" }, "expeditionNumber": { "type": "string" }
+        }, "required": ["claimId", "expeditionNumber"] } },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          { "id": "shipment", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipment",
+            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
+          } },
+          { "assert": {
+            "condition": { "equals": ["$steps.shipment.externalOrderId", { "$concat": ["claim-return:", "$input.body.claimId"] }] },
+            "failure": { "status": 409, "error": "Shipment is not bound to this marketplace claim return" }
+          } },
+          { "id": "tracking", "call": {
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "tracking",
+            "params": { "expeditionNumber": "$input.body.expeditionNumber" }
+          } },
+          { "assert": {
+            "condition": { "notEquals": ["$steps.tracking.recipientHandoffAt", null] },
+            "failure": { "status": 409, "error": "Return has not been handed to the seller by the carrier" }
+          } },
+          { "id": "commerceClaim", "call": {
+            "source": "{{dependencies.commerce.sourceId}}", "endpoint": "recordClaimReturnDelivery",
+            "body": {
+              "claimId": "$input.body.claimId",
+              "providerEventId": { "$concat": ["mondial-relay-return|", "$input.body.expeditionNumber", "|recipient_handoff|", "$steps.tracking.recipientHandoffAt"] },
+              "providerReference": "$input.body.expeditionNumber",
+              "normalizedStatus": "recipient_handoff",
+              "occurredAt": "$steps.tracking.recipientHandoffAt",
+              "providerEvidence": { "provider": "mondial-relay", "shipmentId": "$steps.shipment.id", "providerStatus": "$steps.tracking.status" }
+            }
+          } }
+        ],
+        "return": { "status": 200, "body": { "shipment": "$steps.shipment", "tracking": "$steps.tracking", "claim": "$steps.commerceClaim" } }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "id": "cancelMondialRelayShipment",
+        "method": "POST",
+        "access": { "mode": "system" },
+        "meta": {
+          "name": "Cancel Mondial Relay shipment",
+          "description": "Apply an already-authorized pre-carrier cancellation against the same shipment state used by scans."
+        },
+        "input": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "orderPublicId": { "type": "string" },
+              "providerEventId": { "type": "string" },
+              "occurredAt": { "type": "string" },
+              "trackingUntil": { "type": "string" }
+            },
+            "required": ["orderPublicId", "providerEventId", "occurredAt", "trackingUntil"]
+          }
+        },
+        "output": [{ "status": "200", "body": { "type": "object" } }],
+        "steps": [
+          {
+            "id": "shipment",
+            "call": {
+              "source": "{{dependencies.delivery.sourceId}}",
+              "endpoint": "cancelShipmentReservation",
+              "body": {
+                "externalOrderId": "$input.body.orderPublicId",
+                "trackingUntil": "$input.body.trackingUntil"
+              }
+            }
+          },
+          {
+            "id": "commerceFulfillment",
+            "call": {
+              "source": "{{dependencies.commerce.sourceId}}",
+              "endpoint": "recordOrderFulfillment",
+              "body": {
+                "orderPublicId": "$input.body.orderPublicId",
+                "providerEventId": "$input.body.providerEventId",
+                "normalizedStatus": "cancelled",
+                "occurredAt": "$input.body.occurredAt",
+                "providerReference": "$steps.shipment.expeditionNumber"
+              }
+            }
+          }
+        ],
+        "return": {
+          "status": 200,
+          "body": { "shipment": "$steps.shipment", "fulfillment": "$steps.commerceFulfillment" }
+        }
+      }
+    },
+    {
+      "type": "bloc",
+      "bloc": {
+        "tag": "commerce-mondial-relay-sale-fulfillment",
+        "name": "Mondial Relay seller fulfillment",
+        "group": "Delivery",
+        "description": "Creates the seller shipment, issues protected label downloads, separates seller handoff from carrier acceptance, and displays tracking.",
+        "path": "blocs/commerce-mondial-relay-sale-fulfillment"
+      }
+    }
+  ]
+}
