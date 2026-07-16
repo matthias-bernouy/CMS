@@ -1,0 +1,11 @@
+{
+    "runtime": "native",
+    "default-tag": "img",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Image",
+        "description": "Native responsive image with editable accessibility and loading attributes."
+    }
+}

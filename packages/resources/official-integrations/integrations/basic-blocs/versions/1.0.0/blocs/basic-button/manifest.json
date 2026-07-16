@@ -1,6 +1,7 @@
 {
     "default-tag": "basic-button",
     "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {
         "title": "Basic button",

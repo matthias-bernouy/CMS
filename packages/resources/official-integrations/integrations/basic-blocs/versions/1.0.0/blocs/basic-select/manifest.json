@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-select",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Select",
+        "description": "Form-associated native select with an encapsulated label."
+    }
+}
