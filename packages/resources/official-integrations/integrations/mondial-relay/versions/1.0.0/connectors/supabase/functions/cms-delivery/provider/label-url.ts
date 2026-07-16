@@ -1,4 +1,4 @@
-import { HttpError } from "./http.ts";
+import { HttpError } from "../http.ts";
 
 const mondialRelayLabelHosts = new Set([
     "connect-api.mondialrelay.com",

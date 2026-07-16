@@ -1,5 +1,5 @@
-import { envDefault } from "./env.ts";
-import { ProviderStatusError } from "./http.ts";
+import { envDefault } from "../env.ts";
+import { ProviderStatusError } from "../http.ts";
 
 export const mondialRelayConnectProductionEndpoint = "https://connect-api.mondialrelay.com/api/shipment";
 export const mondialRelayConnectSandboxEndpoint = "https://connect-api-sandbox.mondialrelay.com/api/shipment";

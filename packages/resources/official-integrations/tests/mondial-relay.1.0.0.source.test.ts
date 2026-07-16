@@ -18,12 +18,14 @@ import {
     validateSource,
     type SourceRepository,
 } from "@bernouy/cms-sources";
-import { md5 } from "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/md5.ts";
+import { md5 } from "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/provider/md5.ts";
 import {
     fallbackTrackingStatus,
     normalizeTrackingLabel,
     statusAfterObservation,
-} from "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/tracking-status.ts";
+} from "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/provider/tracking-status.ts";
+import { handleError } from "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/http.ts";
+import { dataApiError } from "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/shipment/supabase.ts";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -57,6 +59,32 @@ afterAll(() => {
 });
 
 describe("mondial-relay 1.0.0 source", () => {
+    test("redacts internal and unexpected database error details", async () => {
+        const publicDatabaseError = dataApiError(400, JSON.stringify({
+            message: "validation: invalid projection claim settings",
+        }));
+        expect(publicDatabaseError.status).toBe(400);
+        expect(publicDatabaseError.message).toBe("invalid projection claim settings");
+
+        const privateDatabaseError = dataApiError(500, JSON.stringify({
+            message: "duplicate key violates delivery_shipments_private_reference_key",
+            detail: "Key (private_reference)=(customer-secret) already exists",
+        }));
+        expect(privateDatabaseError.status).toBe(502);
+        expect(privateDatabaseError.message).toBe("Supabase Data API request failed (500)");
+        expect(privateDatabaseError.message).not.toContain("customer-secret");
+
+        const originalConsoleError = console.error;
+        console.error = () => undefined;
+        try {
+            const response = handleError(new Error("MONDIAL_RELAY_CONNECT_PASSWORD=secret"));
+            expect(response.status).toBe(500);
+            expect(await response.json()).toEqual({ error: "internal error" });
+        } finally {
+            console.error = originalConsoleError;
+        }
+    });
+
     test("computes the uppercase-compatible WebService security digest", () => {
         expect(md5("abc")).toBe("900150983cd24fb0d6963f7d28e17f72");
     });

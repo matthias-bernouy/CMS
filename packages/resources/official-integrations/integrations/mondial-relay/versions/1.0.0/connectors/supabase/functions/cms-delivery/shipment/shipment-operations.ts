@@ -1,5 +1,5 @@
-import { HttpError } from "./http.ts";
-import { validatedMondialRelayLabelUrl } from "./label-url.ts";
+import { HttpError } from "../http.ts";
+import { validatedMondialRelayLabelUrl } from "../provider/label-url.ts";
 import { cancelShipmentUnscanned, insertShipmentRecoveryEvent, shipmentRowByExternalOrderId, shipmentRowById, updateShipment } from "./supabase.ts";
 import type { JsonRecord } from "./types.ts";
 

@@ -1,5 +1,5 @@
-import { fetchTracking } from "./tracking.ts";
-import { normalizedStatuses, statusAfterObservation } from "./tracking-status.ts";
+import { fetchTracking } from "../provider/tracking.ts";
+import { normalizedStatuses, statusAfterObservation } from "../provider/tracking-status.ts";
 import {
     pendingShipmentEvents,
     shipmentRowById,

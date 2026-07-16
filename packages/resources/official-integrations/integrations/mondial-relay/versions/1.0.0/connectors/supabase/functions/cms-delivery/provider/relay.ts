@@ -1,6 +1,6 @@
-import { envDefault } from "./env.ts";
-import { HttpError, ProviderStatusError } from "./http.ts";
-import type { JsonRecord } from "./types.ts";
+import { envDefault } from "../env.ts";
+import { HttpError, ProviderStatusError } from "../http.ts";
+import type { JsonRecord } from "../shipment/types.ts";
 
 type WidgetRelayPoint = {
     ID?: string;

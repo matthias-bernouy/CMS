@@ -1,4 +1,4 @@
-import { HttpError } from "./http.ts";
+import { HttpError } from "../http.ts";
 import {
     issueLabelAccessToken,
     labelAccessTokenRow,

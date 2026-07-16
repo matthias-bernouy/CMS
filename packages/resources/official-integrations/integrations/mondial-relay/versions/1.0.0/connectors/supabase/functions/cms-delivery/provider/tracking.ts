@@ -1,5 +1,5 @@
-import { requiredEnv } from "./env.ts";
-import { ProviderStatusError } from "./http.ts";
+import { requiredEnv } from "../env.ts";
+import { ProviderStatusError } from "../http.ts";
 import { md5 } from "./md5.ts";
 import { mondialRelayTrackingEndpoint } from "./provider-endpoints.ts";
 import {
@@ -9,7 +9,7 @@ import {
     statusAfterObservation,
     trackingEventKey,
 } from "./tracking-status.ts";
-import type { JsonRecord } from "./types.ts";
+import type { JsonRecord } from "../shipment/types.ts";
 import { xmlBlocks, xmlEscape, xmlTag } from "./xml.ts";
 
 export interface TrackingResult {

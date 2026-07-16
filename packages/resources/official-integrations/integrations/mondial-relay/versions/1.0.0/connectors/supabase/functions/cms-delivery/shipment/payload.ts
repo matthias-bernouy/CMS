@@ -1,5 +1,5 @@
-import { envDefault } from "./env.ts";
-import { HttpError, isRecord } from "./http.ts";
+import { envDefault } from "../env.ts";
+import { HttpError, isRecord } from "../http.ts";
 import type { Address, DeliverySettings, JsonRecord, ShipmentPayload } from "./types.ts";
 
 export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | null = null): ShipmentPayload {

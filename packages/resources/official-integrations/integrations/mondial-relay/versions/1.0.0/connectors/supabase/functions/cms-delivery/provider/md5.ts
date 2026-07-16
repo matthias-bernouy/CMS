@@ -1,3 +1,9 @@
+const shifts = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+const constants = Array.from(
+    { length: 64 },
+    (_, index) => Math.floor(Math.abs(Math.sin(index + 1)) * 0x100000000) >>> 0,
+);
+
 export function md5(value: string): string {
     const bytes = new TextEncoder().encode(value);
     const length = bytes.length;
@@ -14,9 +20,6 @@ export function md5(value: string): string {
     let b0 = 0xefcdab89;
     let c0 = 0x98badcfe;
     let d0 = 0x10325476;
-    const shifts = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
-    const constants = Array.from({ length: 64 }, (_, index) => Math.floor(Math.abs(Math.sin(index + 1)) * 0x100000000) >>> 0);
-
     for (let offset = 0; offset < data.length; offset += 64) {
         let a = a0;
         let b = b0;

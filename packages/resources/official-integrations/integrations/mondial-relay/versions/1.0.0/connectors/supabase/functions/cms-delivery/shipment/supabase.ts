@@ -1,5 +1,5 @@
-import { envText } from "./env.ts";
-import { HttpError } from "./http.ts";
+import { envText } from "../env.ts";
+import { HttpError } from "../http.ts";
 import type { JsonRecord } from "./types.ts";
 
 const deliverySchema = "delivery";
@@ -455,11 +455,15 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
     const response = await fetch(`${base}/rest/v1/${path}`, { ...init, headers });
     if (response.ok) return response;
     const detail = await response.text().catch(() => "");
+    throw dataApiError(response.status, detail);
+}
+
+export function dataApiError(status: number, detail: string): HttpError {
     const message = postgresMessage(detail);
-    if (message.startsWith("not_found: ")) throw new HttpError(404, message.slice("not_found: ".length));
-    if (message.startsWith("conflict: ")) throw new HttpError(409, message.slice("conflict: ".length));
-    if (message.startsWith("validation: ")) throw new HttpError(400, message.slice("validation: ".length));
-    throw new HttpError(502, `Supabase Data API request failed (${response.status})${detail ? `: ${detail}` : ""}`);
+    if (message.startsWith("not_found: ")) return new HttpError(404, message.slice("not_found: ".length));
+    if (message.startsWith("conflict: ")) return new HttpError(409, message.slice("conflict: ".length));
+    if (message.startsWith("validation: ")) return new HttpError(400, message.slice("validation: ".length));
+    return new HttpError(502, `Supabase Data API request failed (${status})`);
 }
 
 function postgresMessage(detail: string): string {

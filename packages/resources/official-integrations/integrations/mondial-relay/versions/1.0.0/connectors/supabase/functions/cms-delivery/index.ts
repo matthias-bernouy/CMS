@@ -1,4 +1,4 @@
-import { createConnectShipment } from "./connect.ts";
+import { createConnectShipment } from "./provider/connect.ts";
 import { envDefault, envText, printableAscii } from "./env.ts";
 import {
     handleError,
@@ -16,13 +16,13 @@ import {
     requiredQuery,
     routePath,
 } from "./http.ts";
-import { issueLabelCapability, shipmentForLabelCapability } from "./label-access.ts";
-import { validatedMondialRelayLabelUrl } from "./label-url.ts";
-import { normalizePhone, shipmentPayload, stringValue } from "./payload.ts";
-import { mondialRelayConnectEndpoint } from "./provider-endpoints.ts";
-import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./reconciliation.ts";
-import { relayPointsFromUrl } from "./relay.ts";
-import { cancelShipmentReservation, declareSellerHandoff, recoverUnknownShipment } from "./shipment-operations.ts";
+import { issueLabelCapability, shipmentForLabelCapability } from "./shipment/label-access.ts";
+import { validatedMondialRelayLabelUrl } from "./provider/label-url.ts";
+import { normalizePhone, shipmentPayload, stringValue } from "./shipment/payload.ts";
+import { mondialRelayConnectEndpoint } from "./provider/provider-endpoints.ts";
+import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./shipment/reconciliation.ts";
+import { relayPointsFromUrl } from "./provider/relay.ts";
+import { cancelShipmentReservation, declareSellerHandoff, recoverUnknownShipment } from "./shipment/shipment-operations.ts";
 import {
     camelizeRecord,
     acknowledgeShipmentEvent,
@@ -47,8 +47,8 @@ import {
     markStaleShipmentCreationsUnknown,
     projectionHealth,
     reviewShipmentEventProjection,
-} from "./supabase.ts";
-import type { DeliverySettings, JsonRecord } from "./types.ts";
+} from "./shipment/supabase.ts";
+import type { DeliverySettings, JsonRecord } from "./shipment/types.ts";
 
 Deno.serve(async (request) => {
     try {

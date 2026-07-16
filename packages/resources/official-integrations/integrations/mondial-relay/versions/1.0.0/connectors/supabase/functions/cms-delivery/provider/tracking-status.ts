@@ -1,4 +1,4 @@
-import type { JsonRecord } from "./types.ts";
+import type { JsonRecord } from "../shipment/types.ts";
 
 export const normalizedStatuses = [
     "carrier_accepted",

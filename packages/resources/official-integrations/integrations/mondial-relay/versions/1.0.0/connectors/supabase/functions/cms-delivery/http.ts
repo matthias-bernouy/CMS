@@ -1,4 +1,4 @@
-import type { JsonRecord } from "./types.ts";
+import type { JsonRecord } from "./shipment/types.ts";
 import { envText } from "./env.ts";
 
 export class HttpError extends Error {
@@ -67,12 +67,14 @@ export function requireCmsWriteRequest(request: Request): void {
 }
 
 export function handleError(error: unknown): Response {
-    const status = error instanceof HttpError ? error.status : 500;
-    const message = error instanceof Error ? error.message : "internal error";
+    if (!(error instanceof HttpError)) {
+        console.error(error);
+        return json({ error: "internal error" }, 500);
+    }
     return json({
-        error: message,
+        error: error.message,
         ...(error instanceof ProviderStatusError ? { mondialRelay: error.provider } : {}),
-    }, status);
+    }, error.status);
 }
 
 export function isRecord(value: unknown): value is JsonRecord {
