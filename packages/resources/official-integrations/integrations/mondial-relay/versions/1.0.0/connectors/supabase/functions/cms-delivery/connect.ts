@@ -1,26 +1,31 @@
-import { envDefault, requiredEnv } from "./env.ts";
+import { requiredEnv } from "./env.ts";
 import { ProviderStatusError } from "./http.ts";
+import { validatedMondialRelayLabelUrl } from "./label-url.ts";
 import { splitStreet } from "./payload.ts";
+import { mondialRelayConnectEndpoint } from "./provider-endpoints.ts";
 import type { ConnectShipmentResult, ConnectStatus, JsonRecord, ShipmentPayload } from "./types.ts";
 import { decodeXml, xmlAttr, xmlAttributes, xmlEscape, xmlTag } from "./xml.ts";
 
-const defaultConnectEndpoint = "https://connect-api-sandbox.mondialrelay.com/api/shipment";
-
 export async function createConnectShipment(payload: ShipmentPayload): Promise<ConnectShipmentResult> {
+    const endpoint = mondialRelayConnectEndpoint();
     const requestXml = connectShipmentXml(payload);
-    const response = await fetch(connectEndpoint(), {
+    const response = await fetch(endpoint, {
         method: "POST",
+        redirect: "manual",
         headers: {
             accept: "application/xml",
             "content-type": "text/xml",
         },
         body: requestXml,
     }).catch(() => {
-        throw new ProviderStatusError(502, "Mondial Relay Connect request failed", providerContext(payload, []));
+        throw new ProviderStatusError(502, "Mondial Relay Connect request failed", providerContext(payload, [], false));
     });
+    if (response.redirected || (response.status >= 300 && response.status < 400)) {
+        throw new ProviderStatusError(502, "Mondial Relay Connect redirects are not allowed", providerContext(payload, [], false));
+    }
     const text = await response.text();
     if (!response.ok) {
-        throw new ProviderStatusError(502, `Mondial Relay Connect returned HTTP ${response.status}`, providerContext(payload, []));
+        throw new ProviderStatusError(502, `Mondial Relay Connect returned HTTP ${response.status}`, providerContext(payload, [], false));
     }
 
     const statuses = connectStatuses(text);
@@ -29,15 +34,16 @@ export async function createConnectShipment(payload: ShipmentPayload): Promise<C
         throw new ProviderStatusError(
             502,
             `Mondial Relay Connect returned status ${blocking.code}: ${blocking.message || connectStatusMessage(blocking.code)}`,
-            providerContext(payload, statuses),
+            providerContext(payload, statuses, true),
         );
     }
 
     const expeditionNumber = xmlAttr(text, "Shipment", "ShipmentNumber");
-    const labelUrl = xmlTag(text, "Output");
+    const rawLabelUrl = xmlTag(text, "Output");
     if (!expeditionNumber) {
-        throw new ProviderStatusError(502, "Mondial Relay Connect did not return a shipment number", providerContext(payload, statuses));
+        throw new ProviderStatusError(502, "Mondial Relay Connect did not return a shipment number", providerContext(payload, statuses, false));
     }
+    const labelUrl = rawLabelUrl ? validatedMondialRelayLabelUrl(rawLabelUrl).toString() : "";
 
     return {
         expeditionNumber,
@@ -157,11 +163,12 @@ function relayPointInfo(source: string): JsonRecord {
     return values;
 }
 
-function providerContext(payload: ShipmentPayload, statuses: ConnectStatus[]): JsonRecord {
+function providerContext(payload: ShipmentPayload, statuses: ConnectStatus[], retrySafe: boolean): JsonRecord {
     return {
         operation: "ShipmentCreationRequest",
-        endpoint: connectEndpoint(),
+        endpoint: mondialRelayConnectEndpoint(),
         statuses,
+        retrySafe,
         fields: {
             customerId: requiredEnv("MONDIAL_RELAY_CONNECT_CUSTOMER_ID"),
             modeCollection: payload.modeCollection,
@@ -170,10 +177,6 @@ function providerContext(payload: ShipmentPayload, statuses: ConnectStatus[]): J
             weightGrams: payload.weightGrams,
         },
     };
-}
-
-function connectEndpoint(): string {
-    return envDefault("MONDIAL_RELAY_CONNECT_ENDPOINT", defaultConnectEndpoint);
 }
 
 function connectStatusMessage(code: string): string {

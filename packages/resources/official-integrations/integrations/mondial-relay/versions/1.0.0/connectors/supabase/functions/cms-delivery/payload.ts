@@ -40,8 +40,9 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
         widthCm: integerValue(body.widthCm ?? nested(body, "package", "widthCm") ?? defaults.defaultWidthCm, "widthCm"),
         heightCm: integerValue(body.heightCm ?? nested(body, "package", "heightCm") ?? defaults.defaultHeightCm, "heightCm"),
         content: stringValue(body.content ?? nested(body, "package", "content")) || defaults.defaultContent,
-        declaredValue: amountText(body.declaredValue ?? nested(body, "declaredValue", "value")),
-        declaredCurrency: currencyText(body.declaredCurrency ?? nested(body, "declaredValue", "currency"), defaults.declaredCurrency),
+        declaredValueMinorAmount: minorAmount(body.declaredValueMinorAmount, "declaredValueMinorAmount"),
+        declaredValue: minorAmountText(body.declaredValueMinorAmount, "declaredValueMinorAmount"),
+        declaredCurrency: currencyText(body.declaredCurrency, defaults.declaredCurrency),
         connectCulture: defaults.connectCulture,
         connectVersionApi: defaults.connectVersionApi,
         connectOutputFormat: defaults.connectOutputFormat,
@@ -57,28 +58,48 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
 function addressFrom(body: JsonRecord, prefix: "sender" | "recipient", defaults: Address): Address {
     const source = isRecord(body[prefix]) ? body[prefix] as JsonRecord : {};
     const key = (name: string) => `${prefix}${name.charAt(0).toUpperCase()}${name.slice(1)}`;
-    const name = stringValue(source.name ?? body[key("name")]) || defaults.name;
-    const firstName = stringValue(source.firstName ?? source.firstname ?? body[key("firstName")] ?? body[key("firstname")]) || defaults.firstName;
-    const lastName = stringValue(source.lastName ?? source.lastname ?? body[key("lastName")] ?? body[key("lastname")]) || defaults.lastName;
+    const field = (...aliases: string[]) => {
+        for (const alias of aliases) {
+            if (Object.prototype.hasOwnProperty.call(source, alias)) return { supplied: true, value: source[alias] };
+        }
+        for (const alias of aliases) {
+            const flatKey = key(alias);
+            if (Object.prototype.hasOwnProperty.call(body, flatKey)) return { supplied: true, value: body[flatKey] };
+        }
+        return { supplied: false, value: undefined };
+    };
+    const text = (fallback: string, ...aliases: string[]) => {
+        const input = field(...aliases);
+        return { supplied: input.supplied, value: stringValue(input.supplied ? input.value : fallback) };
+    };
+    const nameInput = text(defaults.name, "name");
+    const firstNameInput = text(defaults.firstName, "firstName", "firstname");
+    const lastNameInput = text(defaults.lastName, "lastName", "lastname");
+    const name = nameInput.value;
+    const firstName = firstNameInput.value;
+    const lastName = lastNameInput.value;
     const split = splitName(name);
-    const country = (stringValue(source.country ?? body[key("country")]) || defaults.country).toUpperCase();
+    const country = text(defaults.country, "country").value.toUpperCase();
+    const phone = field("phone", "phoneNo");
+    const mobile = field("mobile", "mobileNo");
     return {
         name,
-        firstName: firstName || split.firstName,
-        lastName: lastName || split.lastName,
-        addressLine1: stringValue(source.addressLine1 ?? source.address1 ?? body[key("addressLine1")] ?? body[key("address1")]) || defaults.addressLine1,
-        addressLine2: stringValue(source.addressLine2 ?? source.address2 ?? body[key("addressLine2")] ?? body[key("address2")]) || defaults.addressLine2,
-        addressLine3: stringValue(source.addressLine3 ?? source.address3 ?? body[key("addressLine3")] ?? body[key("address3")]) || defaults.addressLine3,
-        city: stringValue(source.city ?? body[key("city")]) || defaults.city,
-        postalCode: stringValue(source.postalCode ?? source.postal_code ?? body[key("postalCode")] ?? body[key("postal_code")]) || defaults.postalCode,
+        firstName: firstNameInput.supplied ? firstName : firstName || split.firstName,
+        lastName: lastNameInput.supplied ? lastName : lastName || split.lastName,
+        addressLine1: text(defaults.addressLine1, "addressLine1", "address1").value,
+        addressLine2: text(defaults.addressLine2, "addressLine2", "address2").value,
+        addressLine3: text(defaults.addressLine3, "addressLine3", "address3").value,
+        city: text(defaults.city, "city").value,
+        postalCode: text(defaults.postalCode, "postalCode", "postal_code").value,
         country,
-        phone: phoneValue(source.phone ?? source.phoneNo ?? body[key("phone")] ?? body[key("phoneNo")], defaults.phone, country, `${prefix}.phone`),
-        mobile: phoneValue(source.mobile ?? source.mobileNo ?? body[key("mobile")] ?? body[key("mobileNo")], defaults.mobile, country, `${prefix}.mobile`),
-        email: stringValue(source.email ?? body[key("email")]) || defaults.email,
+        phone: phoneValue(phone.supplied ? phone.value : defaults.phone, "", country, `${prefix}.phone`),
+        mobile: phoneValue(mobile.supplied ? mobile.value : defaults.mobile, "", country, `${prefix}.mobile`),
+        email: text(defaults.email, "email").value,
     };
 }
 
 function validateShipmentPayload(payload: ShipmentPayload): void {
+    if (!payload.externalOrderId) throw new HttpError(400, "externalOrderId is required for protected fulfillment");
     if (payload.modeCollection !== "CCC") throw new HttpError(400, "modeCollection must be CCC for Mondial Relay Connect France");
     if (payload.modeDelivery !== "24R") throw new HttpError(400, "modeDelivery must be 24R for Mondial Relay Connect France");
     requireFrance(payload.sender.country, "sender.country");
@@ -87,11 +108,12 @@ function validateShipmentPayload(payload: ShipmentPayload): void {
     requireAddress(payload.sender, "sender");
     requireAddress(payload.recipient, "recipient");
     if (payload.weightGrams < 1) throw new HttpError(400, "weightGrams must be positive");
-    if (payload.packageCount < 1) throw new HttpError(400, "packageCount must be positive");
+    if (payload.packageCount !== 1) throw new HttpError(400, "packageCount must be 1 for protected single-parcel fulfillment");
     for (const [name, value] of [["lengthCm", payload.lengthCm], ["widthCm", payload.widthCm], ["heightCm", payload.heightCm]] as const) {
         if (value < 1) throw new HttpError(400, `${name} must be positive`);
     }
     validateMoney(payload.declaredValue, payload.declaredCurrency, "declaredValue");
+    if (payload.declaredCurrency !== "EUR") throw new HttpError(400, "declaredValue.currency must be EUR");
 }
 
 function requireAddress(address: Address, label: string): void {
@@ -174,12 +196,22 @@ function integerValue(value: unknown, name: string): number {
     return number;
 }
 
-function amountText(value: unknown): string {
+function minorAmount(value: unknown, name: string): number {
     const text = stringValue(value);
-    if (!text) return "0.00";
-    const number = Number(text);
-    if (!Number.isFinite(number) || number < 0) throw new HttpError(400, "amount must be a non-negative number");
-    return number.toFixed(2);
+    const amount = Number(text);
+    if (!Number.isSafeInteger(amount) || amount < 0 || amount > 999_999_999) {
+        throw new HttpError(400, `${name} must be an integer between 0 and 999999999 minor units`);
+    }
+    return amount;
+}
+
+function minorAmountText(value: unknown, name: string): string {
+    const amount = minorAmount(value, name);
+    const major = Math.floor(amount / 100);
+    const minor = String(amount % 100).padStart(2, "0");
+    const text = `${major}.${minor}`;
+    if (!/^\d{1,7}\.\d{2}$/.test(text)) throw new HttpError(400, `${name} exceeds the Mondial Relay limit`);
+    return text;
 }
 
 function currencyText(value: unknown, fallback = "EUR"): string {
@@ -230,6 +262,7 @@ function fallbackSettings(): DeliverySettings {
         defaultWidthCm: integerSetting("MONDIAL_RELAY_DEFAULT_WIDTH_CM", 20),
         defaultHeightCm: integerSetting("MONDIAL_RELAY_DEFAULT_HEIGHT_CM", 10),
         defaultContent: envDefault("MONDIAL_RELAY_DEFAULT_CONTENT", "Products"),
+        defaultShippingAmount: 450,
         declaredCurrency: envDefault("MONDIAL_RELAY_DECLARED_CURRENCY", "EUR"),
         connectCulture: envDefault("MONDIAL_RELAY_CONNECT_CULTURE", "fr-FR"),
         connectVersionApi: envDefault("MONDIAL_RELAY_CONNECT_VERSION_API", "1.0"),

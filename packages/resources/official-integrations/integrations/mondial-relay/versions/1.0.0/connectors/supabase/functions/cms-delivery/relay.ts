@@ -51,6 +51,7 @@ export async function relayPointsFromUrl(url: URL): Promise<JsonRecord[]> {
 
     return (body.PRList ?? [])
         .filter(point => point.Available !== false)
+        .filter(isSupported24RRelayPoint)
         .map(normalizeRelayPoint)
         .filter(point => point.location);
 }
@@ -62,9 +63,11 @@ function lookupParams(url: URL, brand: string): URLSearchParams {
     params.set("Country", query(url, "country", "FR").toUpperCase());
     params.set("PostCode", query(url, "postalCode", query(url, "cp", "")));
     params.set("City", query(url, "city", ""));
-    params.set("ColLivMod", query(url, "modeDelivery", envDefault("MONDIAL_RELAY_DEFAULT_MODE_LIV", "24R")).toUpperCase());
+    const modeDelivery = query(url, "modeDelivery", envDefault("MONDIAL_RELAY_DEFAULT_MODE_LIV", "24R")).toUpperCase();
+    if (modeDelivery !== "24R") throw new HttpError(400, "Mondial Relay relay lookup supports 24R only");
+    params.set("ColLivMod", modeDelivery);
     params.set("Weight", query(url, "weightGrams", query(url, "weight", "500")));
-    params.set("NbResults", String(boundedInteger(query(url, "limit", "10"), 1, 30)));
+    params.set("NbResults", String(boundedInteger(query(url, "limit", "8"), 1, 8)));
     params.set("SearchDelay", query(url, "searchDelay", ""));
     params.set("SearchFar", query(url, "radiusKm", "75"));
     params.set("ClientContainerId", "cms-delivery");
@@ -84,6 +87,7 @@ function normalizeRelayPoint(point: WidgetRelayPoint): JsonRecord {
     const name = point.Nom || "";
     const postalCode = point.CP || "";
     const city = point.Ville || "";
+    const nature = normalizedNature(point.Nature);
     return {
         location,
         number,
@@ -96,12 +100,21 @@ function normalizeRelayPoint(point: WidgetRelayPoint): JsonRecord {
         city,
         latitude: coordinate(point.Lat),
         longitude: coordinate(point.Long),
-        nature: point.Nature || "",
+        nature,
+        pointType: nature === "C" ? "locker" : "relay_point",
         available: point.Available !== false,
         warning: stripHtml(point.Warning || ""),
         photo: point.Photo || "",
         openingHoursHtml: point.HoursHtmlTable || "",
     };
+}
+
+function isSupported24RRelayPoint(point: WidgetRelayPoint): boolean {
+    return normalizedNature(point.Nature) !== "C";
+}
+
+function normalizedNature(value: string | undefined): string {
+    return (value || "").trim().toUpperCase();
 }
 
 function parseJsonp(source: string): WidgetSearchResponse {

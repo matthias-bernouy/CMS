@@ -3,7 +3,7 @@
     "kind": "mondial-relay",
     "label": "Mondial Relay Delivery",
     "category": "Delivery",
-    "description": "Create Mondial Relay Connect shipments, select pickup points, print delivery labels, and track stored parcels through a Supabase connector.",
+    "description": "Create and reconcile single-parcel Mondial Relay 24R shipments with protected seller label access and normalized carrier facts.",
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [

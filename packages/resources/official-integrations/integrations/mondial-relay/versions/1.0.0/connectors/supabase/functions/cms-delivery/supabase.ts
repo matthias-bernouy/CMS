@@ -16,11 +16,210 @@ export async function shipmentRowByExpedition(expeditionNumber: string): Promise
     return await getOne("shipments", { expedition_number: expeditionNumber }, shipmentSelect());
 }
 
+export async function privateShipmentRowById(id: string): Promise<JsonRecord | null> {
+    return await getOne("shipments", { id }, privateShipmentSelect());
+}
+
+export async function shipmentRowByExternalOrderId(externalOrderId: string): Promise<JsonRecord | null> {
+    return await getOne("shipments", { external_order_id: externalOrderId }, shipmentSelect());
+}
+
+export async function shipmentRowByIdempotencyKey(idempotencyKey: string): Promise<JsonRecord | null> {
+    return await getOne("shipments", { idempotency_key: idempotencyKey }, shipmentSelect());
+}
+
+export async function shipmentRowWithRequestByIdempotencyKey(idempotencyKey: string): Promise<JsonRecord | null> {
+    return await getOne("shipments", { idempotency_key: idempotencyKey }, `${shipmentSelect()},raw_request`);
+}
+
 export async function shipmentEvents(shipmentId: string): Promise<JsonRecord[]> {
     return await restJson<JsonRecord[]>(
-        `shipment_events?shipment_id=eq.${encodeURIComponent(shipmentId)}&select=${encodeURIComponent("id,shipment_id,expedition_number,event_label,event_date,event_time,location,relay_number,relay_country,created_at")}&order=created_at.desc`,
+        `shipment_events?shipment_id=eq.${encodeURIComponent(shipmentId)}&select=${encodeURIComponent(eventSelect())}&order=occurred_at.desc.nullslast,created_at.desc`,
         { method: "GET" },
     );
+}
+
+export async function claimShipmentsDueForTracking(workerId: string, limit: number): Promise<JsonRecord[]> {
+    return await restJson<JsonRecord[]>("rpc/claim_due_shipments", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ p_worker_id: workerId, p_limit: limit }),
+    });
+}
+
+export async function upsertShipmentEvents(rows: JsonRecord[]): Promise<void> {
+    if (!rows.length) return;
+    await restJson<JsonRecord[]>("shipment_events?on_conflict=shipment_id,provider_event_key", {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify(rows),
+    });
+}
+
+export async function pendingShipmentEvents(workerId: string, limit: number): Promise<JsonRecord[]> {
+    return await restJson<JsonRecord[]>("rpc/claim_pending_shipment_events", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_worker_id: workerId,
+            p_limit: limit,
+            p_lease_seconds: 300,
+            p_max_attempts: 5,
+        }),
+    });
+}
+
+export async function acknowledgeShipmentEvent(eventId: number, claimToken: string): Promise<boolean> {
+    return await restJson<boolean>("rpc/complete_shipment_event_projection", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ p_event_id: eventId, p_claim_token: claimToken }),
+    });
+}
+
+export async function failShipmentEventProjection(eventId: number, claimToken: string, error: string): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/fail_shipment_event_projection", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_event_id: eventId,
+            p_claim_token: claimToken,
+            p_error: error.slice(0, 2000),
+            p_retry_delay_seconds: 60,
+            p_max_attempts: 5,
+        }),
+    });
+}
+
+export async function shipmentProjectionExceptionRows(limit: number, offset: number): Promise<JsonRecord[]> {
+    return await restJson<JsonRecord[]>(
+        `shipment_events?projection_status=in.(retry_wait,manual_review)`
+        + `&select=${encodeURIComponent(eventSelect())}&order=projection_manual_review_at.desc.nullslast,created_at.asc,id.asc`
+        + `&limit=${limit}&offset=${offset}`,
+        { method: "GET" },
+    );
+}
+
+export async function issueLabelAccessToken(
+    externalOrderId: string,
+    sellerCmsUserId: string,
+    tokenHash: string,
+    expiresAt: string,
+): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/issue_label_access_token", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_external_order_id: externalOrderId,
+            p_seller_cms_user_id: sellerCmsUserId,
+            p_token_hash: tokenHash,
+            p_expires_at: expiresAt,
+        }),
+    });
+}
+
+export async function insertShipmentRecoveryEvent(row: JsonRecord): Promise<void> {
+    await restJson<JsonRecord[]>("shipment_recovery_events", {
+        method: "POST",
+        headers: { "content-type": "application/json", prefer: "return=minimal" },
+        body: JSON.stringify(row),
+    });
+}
+
+export async function labelAccessTokenRow(tokenHash: string, sellerCmsUserId: string): Promise<JsonRecord | null> {
+    return await getOne("label_access_tokens", {
+        token_hash: tokenHash,
+        seller_cms_user_id: sellerCmsUserId,
+    }, "token_hash,shipment_id,seller_cms_user_id,expires_at,revoked_at,created_at");
+}
+
+export async function relaySelectionRow(externalOrderId: string): Promise<JsonRecord | null> {
+    return await getOne("relay_selections", { external_order_id: externalOrderId }, relaySelectionSelect());
+}
+
+export async function deliveryQuoteRow(quoteId: string): Promise<JsonRecord | null> {
+    return await getOne("delivery_quotes", { quote_id: quoteId }, deliveryQuoteSelect(true));
+}
+
+export async function latestDeliveryQuoteRow(
+    externalOrderId: string,
+    selectedForCmsUserId: string,
+): Promise<JsonRecord | null> {
+    const rows = await restJson<JsonRecord[]>(
+        `delivery_quotes?external_order_id=eq.${encodeURIComponent(externalOrderId)}`
+        + `&selected_for_cms_user_id=eq.${encodeURIComponent(selectedForCmsUserId)}`
+        + `&select=${encodeURIComponent(deliveryQuoteSelect(false))}&order=revision.desc&limit=1`,
+        { method: "GET" },
+    );
+    return rows[0] ?? null;
+}
+
+export async function reserveDeliveryQuote(row: JsonRecord): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/reserve_delivery_quote", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(row),
+    });
+}
+
+export async function markStaleShipmentCreationsUnknown(limit: number): Promise<JsonRecord[]> {
+    return await restJson<JsonRecord[]>("rpc/mark_stale_shipment_creations_unknown", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ p_limit: limit, p_stale_seconds: 1200 }),
+    });
+}
+
+export async function cancelShipmentUnscanned(externalOrderId: string, trackingUntil: string): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/cancel_shipment_unscanned", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ p_external_order_id: externalOrderId, p_tracking_until: trackingUntil }),
+    });
+}
+
+export async function projectionHealth(): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/get_projection_health", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+    });
+}
+
+export async function reviewShipmentEventProjection(
+    eventId: number,
+    action: string,
+    actorCmsUserId: string,
+    reason: string,
+): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/review_shipment_event_projection", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_event_id: eventId,
+            p_action: action,
+            p_actor_cms_user_id: actorCmsUserId,
+            p_reason: reason,
+        }),
+    });
+}
+
+export async function upsertRelaySelectionRow(row: JsonRecord): Promise<JsonRecord> {
+    const rows = await restJson<JsonRecord[]>(
+        `relay_selections?on_conflict=external_order_id&select=${encodeURIComponent(relaySelectionSelect())}`,
+        {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                prefer: "resolution=merge-duplicates,return=representation",
+            },
+            body: JSON.stringify(row),
+        },
+    );
+    return rows[0] ?? row;
 }
 
 export async function settingsRow(id = "default"): Promise<JsonRecord | null> {
@@ -43,16 +242,37 @@ export async function upsertSettingsRow(row: JsonRecord): Promise<JsonRecord> {
     return rows[0] ?? next;
 }
 
-export async function insertShipment(row: JsonRecord): Promise<JsonRecord> {
-    const rows = await restJson<JsonRecord[]>("shipments", {
-        method: "POST",
+export async function reserveShipment(row: JsonRecord): Promise<JsonRecord | null> {
+    const rows = await restJson<JsonRecord[]>(
+        `shipments?on_conflict=idempotency_key&select=${encodeURIComponent(shipmentSelect())}`,
+        {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                prefer: "resolution=ignore-duplicates,return=representation",
+            },
+            body: JSON.stringify(row),
+        },
+    );
+    return rows[0] ?? null;
+}
+
+export async function updateShipment(
+    id: string,
+    patch: JsonRecord,
+    expectedStatus?: string,
+): Promise<JsonRecord | null> {
+    const filters = [`id=eq.${encodeURIComponent(id)}`];
+    if (expectedStatus) filters.push(`status=eq.${encodeURIComponent(expectedStatus)}`);
+    const rows = await restJson<JsonRecord[]>(`shipments?${filters.join("&")}&select=${encodeURIComponent(shipmentSelect())}`, {
+        method: "PATCH",
         headers: {
             "content-type": "application/json",
             prefer: "return=representation",
         },
-        body: JSON.stringify(row),
+        body: JSON.stringify(patch),
     });
-    return rows[0] ?? row;
+    return rows[0] ?? null;
 }
 
 export function settingsSelect(): string {
@@ -78,6 +298,7 @@ export function settingsSelect(): string {
         "default_width_cm",
         "default_height_cm",
         "default_content",
+        "default_shipping_amount",
         "declared_currency",
         "connect_culture",
         "connect_version_api",
@@ -92,10 +313,16 @@ export function shipmentSelect(): string {
     return [
         "id",
         "external_order_id",
+        "idempotency_key",
         "expedition_number",
         "tracking_number",
         "status",
-        "label_url",
+        "last_error",
+        "provider_call_started_at",
+        "creation_manual_review_at",
+        "cancellation_tracking_until",
+        "seller_cms_user_id",
+        "delivery_quote_id",
         "label_format",
         "tracking_url",
         "mode_collection",
@@ -121,6 +348,8 @@ export function shipmentSelect(): string {
         "recipient_city",
         "recipient_country",
         "weight_grams",
+        "declared_value_minor_amount",
+        "declared_currency",
         "package_count",
         "length_cm",
         "size_code",
@@ -128,10 +357,73 @@ export function shipmentSelect(): string {
         "instructions",
         "latest_event_label",
         "latest_event_at",
+        "tracking_checked_at",
+        "tracking_next_attempt_at",
+        "tracking_claimed_at",
+        "tracking_claimed_by",
+        "carrier_accepted_at",
+        "arrived_at_pickup_point_at",
+        "available_for_pickup_at",
+        "recipient_handoff_at",
+        "pickup_expired_at",
+        "returning_to_sender_at",
+        "returned_to_sender_at",
+        "incident_at",
+        "lost_at",
+        "seller_handoff_declared_at",
         "metadata",
         "raw_response",
         "created_at",
         "updated_at",
+    ].join(",");
+}
+
+export function privateShipmentSelect(): string {
+    return `${shipmentSelect()},label_url`;
+}
+
+function eventSelect(): string {
+    return [
+        "id", "shipment_id", "order_public_id", "expedition_number", "provider_event_key",
+        "normalized_status", "occurred_at", "commerce_projected_at", "projection_status",
+        "projection_attempts", "projection_next_attempt_at", "projection_claimed_at", "projection_claimed_by",
+        "projection_claim_token", "projection_last_error", "projection_manual_review_at", "event_label", "event_date",
+        "event_time", "location", "relay_number", "relay_country", "created_at",
+    ].join(",");
+}
+
+export function relaySelectionSelect(): string {
+    return [
+        "external_order_id",
+        "relay_location",
+        "relay_country",
+        "relay_number",
+        "relay_name",
+        "address_line1",
+        "address_line2",
+        "postal_code",
+        "city",
+        "latitude",
+        "longitude",
+        "weight_grams",
+        "shipping_amount",
+        "currency",
+        "selected_by",
+        "snapshot",
+        "created_at",
+        "updated_at",
+    ].join(",");
+}
+
+export function deliveryQuoteSelect(includePrivateSnapshots: boolean): string {
+    return [
+        "quote_id", "request_key", "external_order_id", "order_version", "revision",
+        "selected_by", "selected_for_cms_user_id", "relay_location", "relay_country",
+        "relay_number", "relay_name", "relay_address_line1", "relay_address_line2",
+        "relay_postal_code", "relay_city", "relay_latitude", "relay_longitude",
+        "weight_grams", "shipping_amount", "currency", "merchandise_subtotal_minor_amount",
+        ...(includePrivateSnapshots ? ["recipient_snapshot", "seller_fulfillment_snapshot"] : []),
+        "relay_snapshot", "quoted_at", "expires_at", "created_at",
     ].join(",");
 }
 
@@ -156,13 +448,28 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
     if (!base || !key) throw new HttpError(500, "Supabase service credentials are not configured");
     const headers = new Headers(init.headers);
     headers.set("apikey", key);
-    headers.set("authorization", `Bearer ${key}`);
+    if (key.startsWith("sb_")) headers.delete("authorization");
+    else headers.set("authorization", `Bearer ${key}`);
     headers.set("accept-profile", deliverySchema);
     if (init.method && init.method !== "GET") headers.set("content-profile", deliverySchema);
     const response = await fetch(`${base}/rest/v1/${path}`, { ...init, headers });
     if (response.ok) return response;
     const detail = await response.text().catch(() => "");
+    const message = postgresMessage(detail);
+    if (message.startsWith("not_found: ")) throw new HttpError(404, message.slice("not_found: ".length));
+    if (message.startsWith("conflict: ")) throw new HttpError(409, message.slice("conflict: ".length));
+    if (message.startsWith("validation: ")) throw new HttpError(400, message.slice("validation: ".length));
     throw new HttpError(502, `Supabase Data API request failed (${response.status})${detail ? `: ${detail}` : ""}`);
+}
+
+function postgresMessage(detail: string): string {
+    if (!detail) return "";
+    try {
+        const parsed = JSON.parse(detail) as JsonRecord;
+        return typeof parsed.message === "string" ? parsed.message : "";
+    } catch {
+        return "";
+    }
 }
 
 function supabaseDataApiKey(): string {

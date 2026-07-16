@@ -26,6 +26,7 @@ export type DeliverySettings = {
     defaultWidthCm: number;
     defaultHeightCm: number;
     defaultContent: string;
+    defaultShippingAmount: number;
     declaredCurrency: string;
     connectCulture: string;
     connectVersionApi: string;
@@ -51,6 +52,7 @@ export type ShipmentPayload = {
     widthCm: number;
     heightCm: number;
     content: string;
+    declaredValueMinorAmount: number;
     declaredValue: string;
     declaredCurrency: string;
     connectCulture: string;

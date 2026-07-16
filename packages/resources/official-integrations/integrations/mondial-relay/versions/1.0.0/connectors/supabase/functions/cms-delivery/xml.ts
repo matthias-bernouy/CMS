@@ -39,3 +39,9 @@ export function xmlAttributes(source: string, tag: string): Array<Record<string,
         return attrs;
     });
 }
+
+export function xmlBlocks(source: string, tag: string): string[] {
+    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return Array.from(source.matchAll(new RegExp(`<${escaped}>(.*?)</${escaped}>`, "gs")))
+        .map(match => match[1] ?? "");
+}

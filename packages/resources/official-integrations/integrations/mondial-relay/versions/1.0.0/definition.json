@@ -4,7 +4,7 @@
     "label": "Mondial Relay Delivery",
     "version": "1.0.0",
     "category": "Delivery",
-    "description": "Create Mondial Relay Connect shipments, print delivery labels, and track stored parcels through a Supabase connector.",
+    "description": "Create and reconcile protected single-parcel Mondial Relay 24R shipments through a Supabase connector.",
     "icon": {
         "path": "assets/icon.svg"
     },
@@ -19,9 +19,13 @@
         {
             "name": "mondialRelayConnectEndpoint",
             "label": "Mondial Relay Connect endpoint",
-            "type": "text",
+            "type": "select",
             "required": true,
-            "defaultValue": "https://connect-api-sandbox.mondialrelay.com/api/shipment"
+            "defaultValue": "https://connect-api-sandbox.mondialrelay.com/api/shipment",
+            "options": [
+                { "label": "Sandbox", "value": "https://connect-api-sandbox.mondialrelay.com/api/shipment" },
+                { "label": "Production", "value": "https://connect-api.mondialrelay.com/api/shipment" }
+            ]
         },
         {
             "name": "mondialRelayConnectLogin",
@@ -41,6 +45,29 @@
             "label": "Mondial Relay Connect customer id",
             "type": "text",
             "required": true
+        },
+        {
+            "name": "mondialRelayTrackingEndpoint",
+            "label": "Mondial Relay tracking WebService endpoint",
+            "type": "select",
+            "required": true,
+            "defaultValue": "https://api.mondialrelay.com/WebService.asmx",
+            "options": [
+                { "label": "Production WebService", "value": "https://api.mondialrelay.com/WebService.asmx" }
+            ]
+        },
+        {
+            "name": "mondialRelayTrackingBrand",
+            "label": "Mondial Relay WebService brand",
+            "type": "text",
+            "required": true
+        },
+        {
+            "name": "mondialRelayTrackingPrivateKey",
+            "label": "Mondial Relay WebService private key",
+            "type": "password",
+            "required": true,
+            "secret": true
         }
     ],
     "ui": {
@@ -54,7 +81,7 @@
             ],
             [
                 "Set Mondial Relay secrets",
-                "Configure the Mondial Relay Connect login, password, customer id, and CMS delivery API key in Supabase Function secrets."
+                "Configure the Mondial Relay Connect credentials, tracking WebService credentials, and CMS delivery API key in Supabase Function secrets."
             ],
             [
                 "Connect the CMS",
@@ -63,16 +90,21 @@
         ],
         "scopes": [
             "Mondial Relay Connect shipment creation",
+            "Mondial Relay WebService tracking synchronization",
+            "Normalized relay arrival, availability, collection, expiry, return, incident, and loss facts",
             "Mondial Relay pickup point lookup",
-            "Delivery label retrieval",
+            "Server-validated checkout relay selections",
+            "Seller-bound short-lived label capabilities",
             "Stored parcel tracking",
-            "Optional external order id linking"
+            "System-only bounded reconciliation"
         ],
         "checks": [
             "The CMS only stores the source configuration and private CMS API key reference.",
             "Mondial Relay Connect credentials live only in Supabase Function secrets.",
             "Create requests forward x-cms-user-id for audit context.",
-            "The connector schema stays private to anon and authenticated roles."
+            "The connector schema stays private to anon and authenticated roles.",
+            "STAT 82 never records recipient handoff without an explicit dated collection event.",
+            "Provider label URLs never appear in shipment projections or dashboards."
         ],
         "resources": [
             [
@@ -82,6 +114,10 @@
             [
                 "Dashboards",
                 "Delivery shipments dashboard"
+            ],
+            [
+                "Blocs",
+                "Theme-aware French relay point picker"
             ],
             [
                 "Secrets",
@@ -95,7 +131,8 @@
         "review": [
             "Keep the delivery schema private to anon and authenticated roles.",
             "Do not expose Mondial Relay Connect passwords, Supabase service-role keys, or generated CMS API keys to browser code.",
-            "Use externalOrderId only as an integration reference; this module does not own commerce orders."
+            "Schedule reconcileMondialRelayFulfillments independently from browser traffic.",
+            "Verify the normalization lexicon against Mondial Relay's current tracing-code workbook and certification environment."
         ],
         "sync": [
             "Validate answers",
@@ -103,14 +140,19 @@
             "Deploy Supabase connector",
             "Install delivery source",
             "Install delivery dashboard",
+            "Install relay point picker",
             "Refresh Sources"
         ],
-        "syncNote": "This integration creates a stateless CMS source. Supabase owns delivery rows, editable delivery settings, and Mondial Relay API calls."
+        "syncNote": "Supabase owns private provider rows and normalized events. Commerce remains the fulfillment, cancellation, claim, and settlement authority."
     },
     "secrets": [
         {
             "input": "mondialRelayConnectPassword",
             "key": "MONDIAL_RELAY_{{env answers.id}}_CONNECT_PASSWORD"
+        },
+        {
+            "input": "mondialRelayTrackingPrivateKey",
+            "key": "MONDIAL_RELAY_{{env answers.id}}_TRACKING_PRIVATE_KEY"
         }
     ],
     "generatedSecrets": [
@@ -143,7 +185,10 @@
                         "MONDIAL_RELAY_CONNECT_LOGIN": "{{answers.mondialRelayConnectLogin}}",
                         "MONDIAL_RELAY_CONNECT_PASSWORD": "{{connectorSecrets.mondialRelayConnectPassword}}",
                         "MONDIAL_RELAY_CONNECT_CUSTOMER_ID": "{{answers.mondialRelayConnectCustomerId}}",
-                        "MONDIAL_RELAY_WIDGET_BRAND": "{{answers.mondialRelayConnectCustomerId}}"
+                        "MONDIAL_RELAY_WIDGET_BRAND": "{{answers.mondialRelayConnectCustomerId}}",
+                        "MONDIAL_RELAY_TRACKING_ENDPOINT": "{{answers.mondialRelayTrackingEndpoint}}",
+                        "MONDIAL_RELAY_TRACKING_BRAND": "{{answers.mondialRelayTrackingBrand}}",
+                        "MONDIAL_RELAY_TRACKING_PRIVATE_KEY": "{{connectorSecrets.mondialRelayTrackingPrivateKey}}"
                     }
                 }
             ]
@@ -154,9 +199,9 @@
             "type": "bloc",
             "bloc": {
                 "tag": "mondial-relay-picker",
-                "name": "Mondial Relay picker",
+                "name": "Mondial Relay pickup point picker",
                 "group": "Delivery",
-                "description": "Public relay point picker backed by the Mondial Relay delivery source.",
+                "description": "Customizable pickup point picker with optional persistence on an authenticated Commerce order.",
                 "path": "blocs/mondial-relay-picker"
             }
         },
@@ -166,7 +211,7 @@
                 "id": "{{answers.id}}",
                 "meta": {
                     "name": "Mondial Relay Delivery",
-                    "description": "Supabase-backed Mondial Relay Connect shipment, label, and tracking endpoints.",
+                    "description": "Supabase-backed protected shipment, label capability, tracking normalization, and reconciliation endpoints.",
                     "icon": "truck"
                 },
                 "endpoints": [
@@ -205,6 +250,7 @@
                     {
                         "endpointId": "shipments",
                         "method": "GET",
+                        "access": "admin",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipments",
                         "params": [
                             {
@@ -266,6 +312,9 @@
                                                     "status": {
                                                         "type": "string"
                                                     },
+                                                    "lastError": {
+                                                        "type": "string"
+                                                    },
                                                     "recipientName": {
                                                         "type": "string"
                                                     },
@@ -273,9 +322,6 @@
                                                         "type": "string"
                                                     },
                                                     "recipientCity": {
-                                                        "type": "string"
-                                                    },
-                                                    "labelUrl": {
                                                         "type": "string"
                                                     },
                                                     "trackingUrl": {
@@ -320,6 +366,7 @@
                     {
                         "endpointId": "shipment",
                         "method": "GET",
+                        "access": "admin",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipment",
                         "params": [
                             {
@@ -361,7 +408,10 @@
                                         "status": {
                                             "type": "string"
                                         },
-                                        "labelUrl": {
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "lastError": {
                                             "type": "string"
                                         },
                                         "trackingUrl": {
@@ -403,6 +453,36 @@
                                         "latestEventAt": {
                                             "type": "string"
                                         },
+                                        "carrierAcceptedAt": {
+                                            "type": "string"
+                                        },
+                                        "arrivedAtPickupPointAt": {
+                                            "type": "string"
+                                        },
+                                        "availableForPickupAt": {
+                                            "type": "string"
+                                        },
+                                        "recipientHandoffAt": {
+                                            "type": "string"
+                                        },
+                                        "pickupExpiredAt": {
+                                            "type": "string"
+                                        },
+                                        "returningToSenderAt": {
+                                            "type": "string"
+                                        },
+                                        "returnedToSenderAt": {
+                                            "type": "string"
+                                        },
+                                        "incidentAt": {
+                                            "type": "string"
+                                        },
+                                        "lostAt": {
+                                            "type": "string"
+                                        },
+                                        "sellerHandoffDeclaredAt": {
+                                            "type": "string"
+                                        },
                                         "createdAt": {
                                             "type": "string"
                                         },
@@ -418,6 +498,15 @@
                                                         "type": "string"
                                                     },
                                                     "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "providerEventKey": {
+                                                        "type": "string"
+                                                    },
+                                                    "normalizedStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "occurredAt": {
                                                         "type": "string"
                                                     },
                                                     "location": {
@@ -546,6 +635,9 @@
                                                     "nature": {
                                                         "type": "string"
                                                     },
+                                                    "pointType": {
+                                                        "type": "string"
+                                                    },
                                                     "available": {
                                                         "type": "boolean"
                                                     },
@@ -556,6 +648,12 @@
                                                         "type": "string"
                                                     },
                                                     "openingHoursHtml": {
+                                                        "type": "string"
+                                                    },
+                                                    "shippingAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "currency": {
                                                         "type": "string"
                                                     }
                                                 },
@@ -579,8 +677,140 @@
                         ]
                     },
                     {
+                        "endpointId": "relaySelection",
+                        "method": "GET",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/relay-selection",
+                        "params": [
+                            { "name": "externalOrderId", "in": "query", "type": "string", "required": true }
+                        ],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
+                        ],
+                        "output": [
+                            { "status": "200", "body": {"type":"object","properties":{"externalOrderId":{"type":"string"},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"latitude":{"type":"number"},"longitude":{"type":"number"},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"},"selectedAt":{"type":"string"}},"required":["externalOrderId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency"]} }
+                        ]
+                    },
+                    {
+                        "endpointId": "saveClaimReturnRelaySelection",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/claim-return-relay-selections",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
+                        ],
+                        "body": { "type": "object", "properties": {
+                            "externalOrderId": { "type": "string" }, "relayLocation": { "type": "string" },
+                            "country": { "type": "string" }, "postalCode": { "type": "string" }, "city": { "type": "string" }
+                        }, "required": ["externalOrderId", "relayLocation", "country", "postalCode"] },
+                        "output": [{ "status": "200", "body": {"type":"object","properties":{"externalOrderId":{"type":"string"},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"}},"required":["externalOrderId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency"]} }]
+                    },
+                    {
+                        "endpointId": "saveRelaySelection",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/relay-selections",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "requestKey": { "type": "string" },
+                                "externalOrderId": { "type": "string" },
+                                "orderVersion": { "type": "number" },
+                                "selectedForCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
+                                "relayLocation": { "type": "string" },
+                                "country": { "type": "string" },
+                                "postalCode": { "type": "string" },
+                                "city": { "type": "string" },
+                                "currency": { "type": "string" },
+                                "merchandiseSubtotalMinorAmount": { "type": "number" },
+                                "recipientSnapshot": { "type": "object" },
+                                "sellerFulfillmentSnapshot": { "type": "object" }
+                            },
+                            "required": ["requestKey", "externalOrderId", "orderVersion", "selectedForCmsUserId", "relayLocation", "country", "postalCode", "currency", "merchandiseSubtotalMinorAmount", "recipientSnapshot", "sellerFulfillmentSnapshot"]
+                        },
+                        "output": [
+                            { "status": "200", "body": {"type":"object","properties":{"quoteId":{"type":"string"},"externalOrderId":{"type":"string"},"orderVersion":{"type":"number"},"revision":{"type":"number"},"selectedForCmsUserId":{"type":"string","semantic":{"kind":"user-id","authority":"cms"}},"relayLocation":{"type":"string"},"country":{"type":"string"},"number":{"type":"string"},"name":{"type":"string"},"addressLine1":{"type":"string"},"addressLine2":{"type":"string"},"postalCode":{"type":"string"},"city":{"type":"string"},"latitude":{"type":"number"},"longitude":{"type":"number"},"nature":{"type":"string"},"pointType":{"type":"string"},"weightGrams":{"type":"number"},"shippingAmount":{"type":"number"},"currency":{"type":"string"},"merchandiseSubtotalMinorAmount":{"type":"number"},"quotedAt":{"type":"string"},"expiresAt":{"type":"string"}},"required":["quoteId","externalOrderId","orderVersion","revision","selectedForCmsUserId","relayLocation","country","number","name","postalCode","city","weightGrams","shippingAmount","currency","merchandiseSubtotalMinorAmount","quotedAt","expiresAt"]} },
+                            { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "resolveDeliveryQuote",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/delivery-quotes/resolve",
+                        "params": [],
+                        "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
+                        "body": { "type": "object", "properties": {
+                            "quoteId": { "type": "string" }, "externalOrderId": { "type": "string" },
+                            "selectedForCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
+                            "orderVersion": { "type": "number" }, "merchandiseSubtotalMinorAmount": { "type": "number" },
+                            "currency": { "type": "string" }, "purpose": { "type": "string" }
+                        }, "required": ["quoteId", "externalOrderId", "selectedForCmsUserId", "purpose"] },
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": {
+                            "quoteId": { "type": "string" }, "externalOrderId": { "type": "string" },
+                            "orderVersion": { "type": "number" }, "revision": { "type": "number" },
+                            "selectedForCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
+                            "relayLocation": { "type": "string" }, "country": { "type": "string" },
+                            "number": { "type": "string" }, "name": { "type": "string" },
+                            "addressLine1": { "type": "string" }, "addressLine2": { "type": "string" },
+                            "postalCode": { "type": "string" }, "city": { "type": "string" },
+                            "nature": { "type": "string" }, "pointType": { "type": "string" },
+                            "weightGrams": { "type": "number" }, "shippingAmount": { "type": "number" },
+                            "currency": { "type": "string" }, "merchandiseSubtotalMinorAmount": { "type": "number" },
+                            "quotedAt": { "type": "string" }, "expiresAt": { "type": "string" },
+                            "recipientSnapshot": { "type": "object", "properties": {
+                                "name": { "type": "string" }, "firstName": { "type": "string" }, "lastName": { "type": "string" },
+                                "email": { "type": "string" }, "phone": { "type": "string" },
+                                "addressLine1": { "type": "string" }, "addressLine2": { "type": "string" }, "addressLine3": { "type": "string" },
+                                "postalCode": { "type": "string" }, "city": { "type": "string" }, "country": { "type": "string" }
+                            } },
+                            "sellerFulfillmentSnapshot": { "type": "object", "properties": {
+                                "name": { "type": "string" }, "firstName": { "type": "string" }, "lastName": { "type": "string" },
+                                "email": { "type": "string" }, "phone": { "type": "string" },
+                                "addressLine1": { "type": "string" }, "addressLine2": { "type": "string" }, "addressLine3": { "type": "string" },
+                                "postalCode": { "type": "string" }, "city": { "type": "string" }, "country": { "type": "string" }
+                            } }
+                        }, "required": ["quoteId", "externalOrderId", "orderVersion", "revision", "selectedForCmsUserId", "relayLocation", "country", "number", "name", "postalCode", "city", "weightGrams", "shippingAmount", "currency", "merchandiseSubtotalMinorAmount", "quotedAt", "expiresAt", "recipientSnapshot", "sellerFulfillmentSnapshot"] } },
+                            { "status": "404", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } },
+                            { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "deliveryQuote",
+                        "method": "GET",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/delivery-quotes/public",
+                        "params": [
+                            { "name": "quoteId", "in": "query", "type": "string", "required": true },
+                            { "name": "externalOrderId", "in": "query", "type": "string", "required": true },
+                            { "name": "selectedForCmsUserId", "in": "query", "type": "string", "semantic": { "kind": "user-id", "authority": "cms" }, "required": true }
+                        ],
+                        "headers": [{ "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }],
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": {
+                            "quoteId": { "type": "string" }, "externalOrderId": { "type": "string" },
+                            "orderVersion": { "type": "number" }, "revision": { "type": "number" },
+                            "selectedForCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
+                            "relayLocation": { "type": "string" }, "country": { "type": "string" },
+                            "number": { "type": "string" }, "name": { "type": "string" },
+                            "addressLine1": { "type": "string" }, "addressLine2": { "type": "string" },
+                            "postalCode": { "type": "string" }, "city": { "type": "string" },
+                            "nature": { "type": "string" }, "pointType": { "type": "string" },
+                            "weightGrams": { "type": "number" }, "shippingAmount": { "type": "number" },
+                            "currency": { "type": "string" }, "quotedAt": { "type": "string" }, "expiresAt": { "type": "string" }
+                        }, "required": ["quoteId", "externalOrderId", "relayLocation", "country", "number", "name", "postalCode", "city", "weightGrams", "shippingAmount", "currency", "quotedAt", "expiresAt"] } }]
+                    },
+                    {
                         "endpointId": "createShipment",
                         "method": "POST",
+                        "access": "system",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipments",
                         "params": [],
                         "headers": [
@@ -606,13 +836,35 @@
                                 "externalOrderId": {
                                     "type": "string"
                                 },
+                                "sellerCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
+                                "deliveryQuoteId": { "type": "string" },
+                                "quoteExternalOrderId": { "type": "string" },
+                                "quotePurpose": { "type": "string" },
+                                "selectedForCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
                                 "modeCollection": {
                                     "type": "string"
                                 },
                                 "modeDelivery": {
                                     "type": "string"
                                 },
+                                "senderName": { "type": "string" },
+                                "senderFirstName": { "type": "string" },
+                                "senderLastName": { "type": "string" },
+                                "senderEmail": { "type": "string" },
+                                "senderPhone": { "type": "string" },
+                                "senderAddressLine1": { "type": "string" },
+                                "senderAddressLine2": { "type": "string" },
+                                "senderAddressLine3": { "type": "string" },
+                                "senderPostalCode": { "type": "string" },
+                                "senderCity": { "type": "string" },
+                                "senderCountry": { "type": "string" },
                                 "recipientName": {
+                                    "type": "string"
+                                },
+                                "recipientFirstName": {
+                                    "type": "string"
+                                },
+                                "recipientLastName": {
                                     "type": "string"
                                 },
                                 "recipientEmail": {
@@ -663,14 +915,19 @@
                                 "content": {
                                     "type": "string"
                                 },
-                                "declaredValue": {
-                                    "type": "string"
+                                "declaredValueMinorAmount": {
+                                    "type": "number"
                                 },
                                 "declaredCurrency": {
                                     "type": "string"
-                                }
+                                },
+                                "metadata": { "type": "object" }
                             },
                             "required": [
+                                "externalOrderId",
+                                "sellerCmsUserId",
+                                "declaredValueMinorAmount",
+                                "declaredCurrency",
                                 "recipientName",
                                 "recipientAddressLine1",
                                 "recipientPostalCode",
@@ -693,14 +950,17 @@
                                         "expeditionNumber": {
                                             "type": "string"
                                         },
-                                        "labelUrl": {
-                                            "type": "string"
-                                        },
                                         "trackingUrl": {
                                             "type": "string"
                                         },
                                         "status": {
                                             "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "idempotentReplay": {
+                                            "type": "boolean"
                                         }
                                     },
                                     "required": [
@@ -710,6 +970,30 @@
                                         "status"
                                     ]
                                 }
+                            },
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": { "type": "boolean" },
+                                        "id": { "type": "string" },
+                                        "expeditionNumber": { "type": "string" },
+                                        "trackingUrl": { "type": "string" },
+                                        "status": { "type": "string" },
+                                        "createdAt": { "type": "string" },
+                                        "idempotentReplay": { "type": "boolean" }
+                                    },
+                                    "required": ["ok", "id", "expeditionNumber", "status"]
+                                }
+                            },
+                            {
+                                "status": "400",
+                                "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] }
+                            },
+                            {
+                                "status": "409",
+                                "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] }
                             }
                         ]
                     },
@@ -801,6 +1085,9 @@
                                                     },
                                                     "defaultContent": {
                                                         "type": "string"
+                                                    },
+                                                    "defaultShippingAmount": {
+                                                        "type": "number"
                                                     },
                                                     "declaredCurrency": {
                                                         "type": "string"
@@ -922,6 +1209,9 @@
                                         "defaultContent": {
                                             "type": "string"
                                         },
+                                        "defaultShippingAmount": {
+                                            "type": "number"
+                                        },
                                         "declaredCurrency": {
                                             "type": "string"
                                         },
@@ -1039,6 +1329,9 @@
                                 "defaultContent": {
                                     "type": "string"
                                 },
+                                "defaultShippingAmount": {
+                                    "type": "number"
+                                },
                                 "declaredCurrency": {
                                     "type": "string"
                                 },
@@ -1125,6 +1418,9 @@
                                         "defaultContent": {
                                             "type": "string"
                                         },
+                                        "defaultShippingAmount": {
+                                            "type": "number"
+                                        },
                                         "declaredCurrency": {
                                             "type": "string"
                                         },
@@ -1148,18 +1444,298 @@
                                         }
                                     }
                                 }
+                            },
+                            {
+                                "status": "400",
+                                "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] }
                             }
                         ]
                     },
                     {
+                        "endpointId": "issueLabelAccess",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/label-access",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "externalOrderId": { "type": "string" },
+                            "sellerCmsUserId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } }
+                            },
+                            "required": ["externalOrderId", "sellerCmsUserId"]
+                        },
+                        "output": [
+                            { "status": "201", "body": { "type": "object", "properties": { "token": { "type": "string" }, "expiresAt": { "type": "string" } }, "required": ["token", "expiresAt"] } },
+                            { "status": "404", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } },
+                            { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "declareSellerHandoff",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipments/handoff",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "body": { "type": "object", "properties": { "externalOrderId": { "type": "string" } }, "required": ["externalOrderId"] },
+                        "output": [
+                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" }, "status": { "type": "string" }, "sellerHandoffDeclaredAt": { "type": "string" } }, "required": ["id", "externalOrderId", "status", "sellerHandoffDeclaredAt"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "cancelShipmentReservation",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipments/cancel",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "body": { "type": "object", "properties": { "externalOrderId": { "type": "string" }, "trackingUntil": { "type": "string" } }, "required": ["externalOrderId", "trackingUntil"] },
+                        "output": [
+                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" }, "status": { "type": "string" } }, "required": ["id", "externalOrderId", "status"] } },
+                            { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "recoverUnknownShipment",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/admin/shipments/recover",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "shipmentId": { "type": "string" },
+                                "externalOrderId": { "type": "string" },
+                                "expeditionNumber": { "type": "string" },
+                                "labelUrl": { "type": "string" },
+                                "reason": { "type": "string" }
+                            },
+                            "required": ["shipmentId", "externalOrderId", "expeditionNumber", "reason"]
+                        },
+                        "output": [
+                            { "status": "200", "body": { "type": "object", "properties": { "id": { "type": "string" }, "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" }, "status": { "type": "string" }, "idempotentReplay": { "type": "boolean" } }, "required": ["id", "externalOrderId", "status"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "reconcileShipments",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/reconcile",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "runKey": { "type": "string" },
+                                "limit": { "type": "number" }
+                            },
+                            "required": ["runKey", "limit"]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "processed": { "type": "number" },
+                                        "staleCreations": { "type": "array", "items": { "type": "object", "properties": {
+                                            "id": { "type": "string" }, "externalOrderId": { "type": "string" },
+                                            "status": { "type": "string" }, "manualReviewAt": { "type": "string" }
+                                        } } },
+                                        "shipments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": { "type": "string" },
+                                                    "externalOrderId": { "type": "string" },
+                                                    "expeditionNumber": { "type": "string" },
+                                                    "status": { "type": "string" },
+                                                    "checkedAt": { "type": "string" },
+                                                    "reconciliationError": { "type": "boolean" }
+                                                }
+                                            }
+                                        },
+                                        "events": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "eventId": { "type": "number" },
+                                                    "claimToken": { "type": "string" },
+                                                    "projectionAttempts": { "type": "number" },
+                                                    "orderPublicId": { "type": "string" },
+                                                    "providerEventId": { "type": "string" },
+                                                    "normalizedStatus": { "type": "string" },
+                                                    "occurredAt": { "type": "string" },
+                                                    "providerReference": { "type": "string" },
+                                                    "carrierAcceptedAt": { "type": "string" },
+                                                    "recipientHandoffAt": { "type": "string" }
+                                                },
+                                                "required": ["eventId", "claimToken", "projectionAttempts", "orderPublicId", "providerEventId", "normalizedStatus", "occurredAt", "providerReference"]
+                                            }
+                                        },
+                                        "claimReturnEvents": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "eventId": { "type": "number" },
+                                                    "claimToken": { "type": "string" },
+                                                    "projectionAttempts": { "type": "number" },
+                                                    "claimId": { "type": "number" },
+                                                    "externalOrderId": { "type": "string" },
+                                                    "providerEventId": { "type": "string" },
+                                                    "normalizedStatus": { "type": "string" },
+                                                    "occurredAt": { "type": "string" },
+                                                    "providerReference": { "type": "string" },
+                                                    "providerEvidence": { "type": "object" }
+                                                },
+                                                "required": ["eventId", "claimToken", "projectionAttempts", "claimId", "externalOrderId", "providerEventId", "normalizedStatus", "occurredAt", "providerReference", "providerEvidence"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["processed", "shipments", "events", "claimReturnEvents"]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "deliveryProjectionHealth",
+                        "method": "GET",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/projection-health",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": {
+                            "checkedAt": { "type": "string" },
+                            "pendingProjectionCount": { "type": "number" },
+                            "manualReviewCount": { "type": "number" },
+                            "trackingErrorCount": { "type": "number" },
+                            "orders": { "type": "array", "items": { "type": "object", "properties": {
+                                "externalOrderId": { "type": "string" }, "shipmentId": { "type": "string" },
+                                "providerReference": { "type": "string" }, "shipmentStatus": { "type": "string" },
+                                "pendingProjectionCount": { "type": "number" }, "manualReviewCount": { "type": "number" },
+                                "trackingErrorCount": { "type": "number" }, "trackingCheckedAt": { "type": "string" }
+                            }, "required": ["externalOrderId", "shipmentId", "shipmentStatus", "pendingProjectionCount", "manualReviewCount", "trackingErrorCount"] } }
+                        }, "required": ["checkedAt", "pendingProjectionCount", "manualReviewCount", "trackingErrorCount", "orders"] } }]
+                    },
+                    {
+                        "endpointId": "acknowledgeShipmentEvent",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/events/ack",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "eventId": { "type": "number" },
+                                "claimToken": { "type": "string" }
+                            },
+                            "required": ["eventId", "claimToken"]
+                        },
+                        "output": [
+                            { "status": "200", "body": { "type": "object", "properties": { "acknowledged": { "type": "boolean" } }, "required": ["acknowledged"] } },
+                            { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
+                        ]
+                    },
+                    {
+                        "endpointId": "failShipmentEventProjection",
+                        "method": "POST",
+                        "access": "system",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/events/fail",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "eventId": { "type": "number" },
+                                "claimToken": { "type": "string" },
+                                "error": { "type": "string" }
+                            },
+                            "required": ["eventId", "claimToken", "error"]
+                        },
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": {
+                            "id": { "type": "number" }, "projectionStatus": { "type": "string" },
+                            "projectionAttempts": { "type": "number" }, "projectionNextAttemptAt": { "type": "string", "nullable": true },
+                            "projectionLastError": { "type": "string", "nullable": true }, "projectionManualReviewAt": { "type": "string", "nullable": true }
+                        }, "required": ["id", "projectionStatus", "projectionAttempts"] } }]
+                    },
+                    {
+                        "endpointId": "shipmentProjectionExceptions",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/admin/projection-exceptions",
+                        "params": [
+                            { "name": "limit", "in": "query", "type": "number" },
+                            { "name": "offset", "in": "query", "type": "number" }
+                        ],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                        ],
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": {
+                            "items": { "type": "array", "items": { "type": "object", "properties": {
+                                "id": { "type": "number" }, "shipmentId": { "type": "string" },
+                                "externalOrderId": { "type": "string" }, "expeditionNumber": { "type": "string" },
+                                "providerEventId": { "type": "string" }, "normalizedStatus": { "type": "string" },
+                                "occurredAt": { "type": "string" }, "projectionStatus": { "type": "string" },
+                                "projectionAttempts": { "type": "number" }, "projectionNextAttemptAt": { "type": "string" },
+                                "projectionLastError": { "type": "string" }, "projectionManualReviewAt": { "type": "string" },
+                                "createdAt": { "type": "string" }
+                            } } }, "limit": { "type": "number" }, "offset": { "type": "number" }
+                        }, "required": ["items", "limit", "offset"] } }]
+                    },
+                    {
+                        "endpointId": "reviewShipmentProjectionException",
+                        "method": "POST",
+                        "access": { "mode": "admin", "roles": ["support", "finance"] },
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/admin/projection-exceptions/review",
+                        "params": [],
+                        "headers": [
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
+                        ],
+                        "body": { "type": "object", "properties": {
+                            "eventId": { "type": "number" }, "action": { "type": "string" },
+                            "reason": { "type": "string" }
+                        }, "required": ["eventId", "action", "reason"] },
+                        "output": [{ "status": "200", "body": { "type": "object", "properties": {
+                            "id": { "type": "number" }, "projectionStatus": { "type": "string" },
+                            "projectionAttempts": { "type": "number" }, "projectionNextAttemptAt": { "type": "string" },
+                            "projectionLastError": { "type": "string" }
+                        }, "required": ["id", "projectionStatus", "projectionAttempts"] } }]
+                    },
+                    {
                         "endpointId": "label",
                         "method": "GET",
+                        "access": "auth",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/label",
                         "responseKind": "file",
                         "mediaType": "application/pdf",
                         "params": [
                             {
-                                "name": "expeditionNumber",
+                                "name": "token",
                                 "in": "query",
                                 "type": "string",
                                 "required": true
@@ -1173,12 +1749,15 @@
                                     "ref": "{{secrets.cmsApiKey}}",
                                     "prefix": "Bearer "
                                 }
-                            }
-                        ]
+                            },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
+                        ],
+                        "output": [{ "status": "200" }, { "status": "206" }, { "status": "404" }, { "status": "410" }]
                     },
                     {
                         "endpointId": "tracking",
                         "method": "GET",
+                        "access": "system",
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/tracking",
                         "params": [
                             {
@@ -1221,18 +1800,33 @@
                                         "latestEventAt": {
                                             "type": "string"
                                         },
+                                        "carrierAcceptedAt": {
+                                            "type": "string"
+                                        },
+                                        "recipientHandoffAt": {
+                                            "type": "string"
+                                        },
                                         "events": {
                                             "type": "array",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
-                                                    "label": {
+                                                    "eventLabel": {
                                                         "type": "string"
                                                     },
-                                                    "date": {
+                                                    "eventDate": {
                                                         "type": "string"
                                                     },
-                                                    "time": {
+                                                    "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "providerEventKey": {
+                                                        "type": "string"
+                                                    },
+                                                    "normalizedStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "occurredAt": {
                                                         "type": "string"
                                                     },
                                                     "location": {
@@ -1339,19 +1933,10 @@
                         "rowKey": "id",
                         "actions": [
                             {
-                                "id": "openCreateShipment",
-                                "label": "Create shipment",
-                                "tone": "primary",
-                                "placement": "primary",
-                                "selection": {
-                                    "opens": "createShipmentForm"
-                                }
-                            },
-                            {
                                 "id": "openSettings",
                                 "label": "Edit settings",
-                                "tone": "secondary",
-                                "placement": "secondary",
+                                "tone": "primary",
+                                "placement": "primary",
                                 "selection": {
                                     "opens": "settingsDetail"
                                 }
@@ -1372,6 +1957,10 @@
                                 "label": "Status",
                                 "options": [
                                     {
+                                        "value": "creating",
+                                        "label": "Creating"
+                                    },
+                                    {
                                         "value": "created",
                                         "label": "Created"
                                     },
@@ -1380,20 +1969,52 @@
                                         "label": "Label ready"
                                     },
                                     {
+                                        "value": "carrier_accepted",
+                                        "label": "Carrier accepted"
+                                    },
+                                    {
                                         "value": "in_transit",
                                         "label": "In transit"
                                     },
                                     {
-                                        "value": "delivered",
-                                        "label": "Delivered"
+                                        "value": "arrived_at_pickup_point",
+                                        "label": "Arrived at pickup point"
+                                    },
+                                    {
+                                        "value": "available_for_pickup",
+                                        "label": "Available for pickup"
+                                    },
+                                    {
+                                        "value": "collected_by_recipient",
+                                        "label": "Collected by recipient"
                                     },
                                     {
                                         "value": "incident",
                                         "label": "Incident"
                                     },
                                     {
+                                        "value": "lost",
+                                        "label": "Lost"
+                                    },
+                                    {
+                                        "value": "pickup_expired",
+                                        "label": "Pickup expired"
+                                    },
+                                    {
+                                        "value": "returning_to_sender",
+                                        "label": "Returning to sender"
+                                    },
+                                    {
+                                        "value": "returned_to_sender",
+                                        "label": "Returned to sender"
+                                    },
+                                    {
                                         "value": "cancelled",
                                         "label": "Cancelled"
+                                    },
+                                    {
+                                        "value": "failed",
+                                        "label": "Failed"
                                     },
                                     {
                                         "value": "unknown",
@@ -1447,256 +2068,38 @@
                         }
                     },
                     {
-                        "widget": "w-detail",
-                        "id": "createShipmentForm",
+                        "widget": "w-table",
+                        "id": "projectionExceptionsTable",
+                        "title": "Projection exceptions",
                         "source": {
-                            "endpoint": "setting",
-                            "params": {
-                                "id": "default"
-                            }
+                            "endpoint": "shipmentProjectionExceptions",
+                            "params": { "limit": "50" },
+                            "itemsPath": "items"
                         },
-                        "title": {
-                            "path": "externalOrderId",
-                            "fallback": "Create shipment"
-                        },
-                        "actions": [
-                            {
-                                "id": "createShipment",
-                                "label": "Create shipment",
-                                "tone": "primary",
-                                "placement": "primary",
-                                "endpoint": {
-                                    "endpoint": "createShipment",
-                                    "body": {
-                                        "externalOrderId": "$field.externalOrderId",
-                                        "modeCollection": "$field.modeCollection",
-                                        "modeDelivery": "$field.modeDelivery",
-                                        "recipientName": "$field.recipientName",
-                                        "recipientEmail": "$field.recipientEmail",
-                                        "recipientPhone": "$field.recipientPhone",
-                                        "recipientAddressLine1": "$field.recipientAddressLine1",
-                                        "recipientAddressLine2": "$field.recipientAddressLine2",
-                                        "recipientPostalCode": "$field.recipientPostalCode",
-                                        "recipientCity": "$field.recipientCity",
-                                        "recipientCountry": "$field.recipientCountry",
-                                        "deliveryRelayLocation": "$field.deliveryRelayLocation",
-                                        "weightGrams": "$field.weightGrams",
-                                        "packageCount": "$field.packageCount",
-                                        "lengthCm": "$field.lengthCm",
-                                        "widthCm": "$field.widthCm",
-                                        "heightCm": "$field.heightCm",
-                                        "content": "$field.content",
-                                        "declaredValue": "$field.declaredValue",
-                                        "declaredCurrency": "$field.declaredCurrency",
-                                        "instructions": "$field.instructions"
-                                    }
-                                },
-                                "after": {
-                                    "opens": "shipmentDetail",
-                                    "row": "$result.id"
+                        "rowKey": "id",
+                        "columns": [
+                            { "id": "projectionStatus", "label": "Status", "path": "projectionStatus", "primary": true },
+                            { "id": "externalOrderId", "label": "Order or claim", "path": "externalOrderId" },
+                            { "id": "expeditionNumber", "label": "Expedition", "path": "expeditionNumber" },
+                            { "id": "normalizedStatus", "label": "Carrier event", "path": "normalizedStatus" },
+                            { "id": "projectionAttempts", "label": "Attempts", "path": "projectionAttempts" },
+                            { "id": "projectionLastError", "label": "Last error", "path": "projectionLastError" },
+                            { "id": "projectionNextAttemptAt", "label": "Next attempt", "path": "projectionNextAttemptAt", "format": "date" },
+                            { "id": "projectionManualReviewAt", "label": "Manual review", "path": "projectionManualReviewAt", "format": "date" }
+                        ],
+                        "actions": [{
+                            "id": "requeueProjectionException",
+                            "label": "Requeue selected projection",
+                            "tone": "danger", "placement": "primary",
+                            "confirm": "Requeue this projection without changing its carrier status?",
+                            "endpoint": {
+                                "endpoint": "reviewShipmentProjectionException",
+                                "body": {
+                                    "eventId": "$selection.id", "action": "requeue",
+                                    "reason": "Operator requested a safe projection retry from the Delivery dashboard"
                                 }
                             }
-                        ],
-                        "main": [
-                            {
-                                "id": "recipient",
-                                "title": "Recipient",
-                                "fields": [
-                                    {
-                                        "id": "externalOrderId",
-                                        "label": "External order id",
-                                        "path": "externalOrderId",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientName",
-                                        "label": "Recipient",
-                                        "path": "recipientName",
-                                        "required": true,
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientEmail",
-                                        "label": "Recipient email",
-                                        "path": "recipientEmail",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientPhone",
-                                        "label": "Recipient phone",
-                                        "path": "recipientPhone",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientAddressLine1",
-                                        "label": "Address",
-                                        "path": "recipientAddressLine1",
-                                        "required": true,
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientAddressLine2",
-                                        "label": "Address line 2",
-                                        "path": "recipientAddressLine2",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientPostalCode",
-                                        "label": "Postal code",
-                                        "path": "recipientPostalCode",
-                                        "required": true,
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientCity",
-                                        "label": "City",
-                                        "path": "recipientCity",
-                                        "required": true,
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "recipientCountry",
-                                        "label": "Country",
-                                        "path": "senderCountry",
-                                        "required": true,
-                                        "type": "select",
-                                        "options": [
-                                            {
-                                                "value": "FR",
-                                                "label": "France"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "deliveryRelay",
-                                "title": "Pickup point",
-                                "fields": [
-                                    {
-                                        "id": "deliveryRelayLocation",
-                                        "label": "Pickup point",
-                                        "path": "deliveryRelayLocation",
-                                        "required": true,
-                                        "type": "combobox",
-                                        "lookup": {
-                                            "endpoint": "relayPoints",
-                                            "params": {
-                                                "country": "$field.recipientCountry",
-                                                "postalCode": "$field.recipientPostalCode",
-                                                "city": "$field.recipientCity",
-                                                "weightGrams": "$field.weightGrams",
-                                                "modeDelivery": "$field.modeDelivery",
-                                                "limit": "10"
-                                            },
-                                            "itemsPath": "items",
-                                            "valuePath": "location",
-                                            "labelPath": "label",
-                                            "subtitlePath": "addressLine1",
-                                            "descriptionPaths": [
-                                                "postalCode",
-                                                "city"
-                                            ]
-                                        }
-                                    }
-                                ]
-                            }
-                        ],
-                        "aside": [
-                            {
-                                "id": "parcel",
-                                "title": "Parcel",
-                                "fields": [
-                                    {
-                                        "id": "modeCollection",
-                                        "label": "Collection mode",
-                                        "path": "modeCollection",
-                                        "required": true,
-                                        "type": "select",
-                                        "options": [
-                                            {
-                                                "value": "CCC",
-                                                "label": "CCC"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "id": "modeDelivery",
-                                        "label": "Delivery mode",
-                                        "path": "modeDelivery",
-                                        "required": true,
-                                        "type": "select",
-                                        "options": [
-                                            {
-                                                "value": "24R",
-                                                "label": "24R"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "id": "weightGrams",
-                                        "label": "Weight grams",
-                                        "path": "defaultWeightGrams",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "packageCount",
-                                        "label": "Packages",
-                                        "path": "defaultPackageCount",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "lengthCm",
-                                        "label": "Length cm",
-                                        "path": "defaultLengthCm",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "widthCm",
-                                        "label": "Width cm",
-                                        "path": "defaultWidthCm",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "heightCm",
-                                        "label": "Height cm",
-                                        "path": "defaultHeightCm",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "content",
-                                        "label": "Content",
-                                        "path": "defaultContent",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "declaredValue",
-                                        "label": "Declared value",
-                                        "path": "declaredValue",
-                                        "type": "text"
-                                    },
-                                    {
-                                        "id": "declaredCurrency",
-                                        "label": "Declared currency",
-                                        "path": "declaredCurrency",
-                                        "type": "select",
-                                        "options": [
-                                            {
-                                                "value": "EUR",
-                                                "label": "EUR"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "id": "instructions",
-                                        "label": "Instructions",
-                                        "path": "instructions",
-                                        "type": "textarea",
-                                        "rows": 3
-                                    }
-                                ]
-                            }
-                        ]
+                        }]
                     },
                     {
                         "widget": "w-detail",
@@ -1714,6 +2117,26 @@
                         "status": {
                             "path": "status"
                         },
+                        "actions": [
+                            {
+                                "id": "recoverUnknownShipment",
+                                "label": "Recover unknown shipment",
+                                "tone": "danger",
+                                "placement": "more",
+                                "confirm": "Attach this verified Mondial Relay shipment to the ambiguous reservation?",
+                                "visibleWhen": { "value": "$field.status", "equals": "unknown" },
+                                "endpoint": {
+                                    "endpoint": "recoverUnknownShipment",
+                                    "body": {
+                                        "shipmentId": "$resource.id",
+                                        "externalOrderId": "$resource.externalOrderId",
+                                        "expeditionNumber": "$field.recoveryExpeditionNumber",
+                                        "labelUrl": "$field.recoveryLabelUrl",
+                                        "reason": "$field.recoveryReason"
+                                    }
+                                }
+                            }
+                        ],
                         "main": [
                             {
                                 "id": "shipmentGeneral",
@@ -1729,6 +2152,12 @@
                                         "id": "expeditionNumber",
                                         "label": "Expedition",
                                         "path": "expeditionNumber",
+                                        "type": "readonly"
+                                    },
+                                    {
+                                        "id": "lastError",
+                                        "label": "Last error",
+                                        "path": "lastError",
                                         "type": "readonly"
                                     },
                                     {
@@ -1796,13 +2225,6 @@
                                         "format": "url"
                                     },
                                     {
-                                        "id": "labelUrl",
-                                        "label": "Label URL",
-                                        "path": "labelUrl",
-                                        "type": "readonly",
-                                        "format": "url"
-                                    },
-                                    {
                                         "id": "latestEventLabel",
                                         "label": "Latest event",
                                         "path": "latestEventLabel",
@@ -1821,6 +2243,28 @@
                                         "path": "createdAt",
                                         "type": "readonly",
                                         "format": "date"
+                                    },
+                                    {
+                                        "id": "recoveryExpeditionNumber",
+                                        "label": "Verified expedition number",
+                                        "path": "recoveryExpeditionNumber",
+                                        "type": "text",
+                                        "visibleWhen": { "value": "$field.status", "equals": "unknown" }
+                                    },
+                                    {
+                                        "id": "recoveryLabelUrl",
+                                        "label": "Verified provider label URL",
+                                        "path": "recoveryLabelUrl",
+                                        "type": "text",
+                                        "visibleWhen": { "value": "$field.status", "equals": "unknown" }
+                                    },
+                                    {
+                                        "id": "recoveryReason",
+                                        "label": "Recovery reason",
+                                        "path": "recoveryReason",
+                                        "type": "textarea",
+                                        "rows": 3,
+                                        "visibleWhen": { "value": "$field.status", "equals": "unknown" }
                                     }
                                 ]
                             }
@@ -1871,6 +2315,7 @@
                                         "defaultWidthCm": "$field.defaultWidthCm",
                                         "defaultHeightCm": "$field.defaultHeightCm",
                                         "defaultContent": "$field.defaultContent",
+                                        "defaultShippingAmount": "$field.defaultShippingAmount",
                                         "declaredCurrency": "$field.declaredCurrency",
                                         "connectCulture": "$field.connectCulture",
                                         "connectVersionApi": "$field.connectVersionApi",
@@ -2041,6 +2486,13 @@
                                         "id": "defaultContent",
                                         "label": "Default content",
                                         "path": "defaultContent",
+                                        "required": true,
+                                        "type": "text"
+                                    },
+                                    {
+                                        "id": "defaultShippingAmount",
+                                        "label": "Shipping price (cents)",
+                                        "path": "defaultShippingAmount",
                                         "required": true,
                                         "type": "text"
                                     },
