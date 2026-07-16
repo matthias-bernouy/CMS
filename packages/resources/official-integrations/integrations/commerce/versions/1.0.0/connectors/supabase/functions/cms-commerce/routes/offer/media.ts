@@ -2,7 +2,7 @@ import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { corsHeaders, json } from "../../core/http.ts";
 import { camelize, isRecord } from "../../core/records.ts";
-import { one, restJson, rpc } from "../../core/rest.ts";
+import { one, rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import { productMediaBucket } from "../catalog/media-constants.ts";
 import { offerImagePath, readCommerceImage, readMediaIds, requiredQueryId } from "../catalog/media-request.ts";
@@ -60,24 +60,6 @@ async function requirePublicOfferMedia(mediaId: number): Promise<void> {
     const offer = link ? await one("offers", { id: String(link.offer_id) }, "publication_status,seller_id") : null;
     if (!offer || offer.publication_status !== "active") throw new HttpError(404, "offer image not found");
     await requirePublicSeller(String(offer.seller_id));
-}
-
-export async function offerMediaData(offerId: string): Promise<{ media: JsonRecord[]; mainImageMediaId: string | null }> {
-    const params = new URLSearchParams({
-        offer_id: `eq.${offerId}`,
-        select: "id,media_id,sort_order,is_main,media(id,storage_bucket,storage_path,mime_type,file_size,original_filename,alt,created_at,updated_at)",
-        order: "sort_order.asc,id.asc",
-    });
-    const rows = await restJson<JsonRecord[]>(`offer_media?${params.toString()}`);
-    const media = rows.map(row => {
-        const item = isRecord(row.media) ? row.media : {};
-        return camelize({ ...row, media: { ...item, url: "" } }) as JsonRecord;
-    });
-    const main = media.find(item => item.isMain) ?? media[0];
-    return {
-        media,
-        mainImageMediaId: main && isRecord(main.media) ? String(main.media.id ?? "") || null : null,
-    };
 }
 
 async function attachUploadedImage(request: Request, scope: OfferMediaScope, replacedMediaId: number | null): Promise<Response> {

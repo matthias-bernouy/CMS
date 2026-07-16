@@ -2,12 +2,10 @@ import { cmsUserId, optionalCmsUserId } from "../core/auth.ts";
 import { HttpError } from "../core/errors.ts";
 import { json } from "../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../core/records.ts";
-import { one, rpc } from "../core/rest.ts";
-import {
-    enrichOffer, optionalId, requireOwnedOffer, sellerOfferPayload,
-} from "./offer-helpers.ts";
+import { rpc } from "../core/rest.ts";
+import { optionalId, sellerOfferPayload } from "./offer-helpers.ts";
+import { getManagedOfferReadModel } from "./offer/managed-read-model.ts";
 import { getPublicOfferReadModel } from "./offer/public-read-model.ts";
-const offerSelect = "id,seller_id,product_id,variant_id,slug,title,description,condition_code,publication_status,workflow_state,accepted_price_amount,currency,availability,quantity_available,metadata,version,created_at,updated_at";
 export { listOffers } from "./offer/list.ts";
 
 export async function getOffer(request: Request, scope: "public" | "admin" | "self"): Promise<Response> {
@@ -37,12 +35,7 @@ export async function getOffer(request: Request, scope: "public" | "admin" | "se
     const slug = text(url.searchParams.get("slug"));
     if (id === null && !slug) throw new HttpError(400, "id or slug is required");
     if (scope === "public") return await getPublicOfferReadModel(id, slug);
-    const row = id !== null
-        ? await one("offers", { id }, offerSelect)
-        : await one("offers", { slug: slug! }, offerSelect);
-    if (!row) throw new HttpError(404, "offer not found");
-    if (scope === "self") await requireOwnedOffer(request, row);
-    return json(camelize(await enrichOffer(row, scope)));
+    return json(camelize(await getManagedOfferReadModel(request, scope, id, slug)));
 }
 
 export async function createMyOffer(request: Request): Promise<Response> {

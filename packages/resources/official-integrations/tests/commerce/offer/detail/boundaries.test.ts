@@ -7,7 +7,7 @@ import {
     setRestResponder,
 } from "../../harness";
 import { newOfferTemplate, nullOfferDetail } from "./expected";
-import { offerRow, resourceName } from "./fixtures";
+import { managedOfferResponse, managedOfferState } from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -34,7 +34,7 @@ describe("commerce offer detail boundaries", () => {
     });
 
     test("returns the missing self offer before requiring a CMS user", async () => {
-        setRestResponder(() => jsonResponse([]));
+        setRestResponder(() => managedOfferState("not_found"));
 
         const response = await requestCommerce("/me/offer?id=404");
 
@@ -54,12 +54,7 @@ describe("commerce offer detail boundaries", () => {
     });
 
     test("returns 404 when the offer seller disappeared without requiring a user header", async () => {
-        setRestResponder(request => {
-            const resource = resourceName(request);
-            if (resource === "offers") return jsonResponse([offerRow]);
-            if (resource === "sellers") return jsonResponse([]);
-            throw new Error(`Unexpected missing-owner request: ${request.url}`);
-        });
+        setRestResponder(() => managedOfferState("not_found"));
 
         const response = await requestCommerce("/me/offer?id=91");
 
@@ -68,12 +63,7 @@ describe("commerce offer detail boundaries", () => {
     });
 
     test("hides another seller offer before running any enrichment read", async () => {
-        setRestResponder(request => {
-            const resource = resourceName(request);
-            if (resource === "offers") return jsonResponse([offerRow]);
-            if (resource === "sellers") return jsonResponse([{ cms_user_id: "other-user" }]);
-            throw new Error(`Unexpected ownership request: ${request.url}`);
-        });
+        setRestResponder(() => managedOfferState("not_found"));
 
         const response = await requestCommerce("/me/offer?id=91", {
             userId: "seller-user-123",
@@ -84,12 +74,7 @@ describe("commerce offer detail boundaries", () => {
     });
 
     test("requires the CMS user only after loading an existing offer owner", async () => {
-        setRestResponder(request => {
-            const resource = resourceName(request);
-            if (resource === "offers") return jsonResponse([offerRow]);
-            if (resource === "sellers") return jsonResponse([{ cms_user_id: "seller-user-123" }]);
-            throw new Error(`Unexpected identity request: ${request.url}`);
-        });
+        setRestResponder(() => managedOfferState("identity_required"));
 
         const response = await requestCommerce("/me/offer?id=91");
 
@@ -98,18 +83,7 @@ describe("commerce offer detail boundaries", () => {
     });
 
     test("preserves null related projections and skips their dependent reads", async () => {
-        const row = { ...offerRow, variant_id: null };
-        setRestResponder(request => {
-            const url = new URL(request.url);
-            const resource = resourceName(request);
-            if (resource === "offers") return jsonResponse([row]);
-            if (resource === "sellers" && url.searchParams.get("select") === "cms_user_id") {
-                return jsonResponse([{ cms_user_id: "seller-user-123" }]);
-            }
-            if (["sellers", "products", "offer_price_rules"].includes(resource)) return jsonResponse([]);
-            if (["offer_price_proposals", "offer_media"].includes(resource)) return jsonResponse([]);
-            throw new Error(`Unexpected null projection request: ${request.url}`);
-        });
+        setRestResponder(() => managedOfferResponse(nullOfferDetail));
 
         const response = await requestCommerce("/me/offer?id=91", {
             userId: "seller-user-123",
@@ -118,5 +92,29 @@ describe("commerce offer detail boundaries", () => {
 
         expect(response.status).toBe(200);
         expect(body).toEqual(nullOfferDetail);
+    });
+
+    test("fails closed when the managed read model response is malformed", async () => {
+        setRestResponder(() => jsonResponse({ state: "ok" }));
+
+        const response = await requestCommerce("/me/offer?id=91", {
+            userId: "seller-user-123",
+        });
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+            error: "get_managed_offer_read_model returned an invalid response",
+        });
+    });
+
+    test("does not accept a seller-only identity state on the administrator path", async () => {
+        setRestResponder(() => managedOfferState("identity_required"));
+
+        const response = await requestCommerce("/admin/offer?id=91", { userRole: null });
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+            error: "get_managed_offer_read_model returned an invalid response",
+        });
     });
 });

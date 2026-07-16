@@ -2,12 +2,15 @@ import { describe, expect, test } from "bun:test";
 import {
     capturedFetches,
     installCommerceTestEnvironment,
-    jsonResponse,
     requestCommerce,
     setRestResponder,
 } from "../../harness";
 import { adminOfferDetail, nullOfferDetail, sellerOfferDetail } from "./expected";
-import { offerRow, resourceName, useFullOfferDetailResponder } from "./fixtures";
+import {
+    managedOfferResponse,
+    managedOfferState,
+    useFullOfferDetailResponder,
+} from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -37,7 +40,7 @@ describe("commerce offer detail selector and administrator contracts", () => {
     });
 
     test("returns the administrator missing-offer contract", async () => {
-        setRestResponder(() => jsonResponse([]));
+        setRestResponder(() => managedOfferState("not_found"));
 
         const response = await requestCommerce("/admin/offer?id=404", { userRole: null });
 
@@ -46,13 +49,7 @@ describe("commerce offer detail selector and administrator contracts", () => {
     });
 
     test("preserves administrator null projections and empty collections", async () => {
-        setRestResponder(request => {
-            const resource = resourceName(request);
-            if (resource === "offers") return jsonResponse([{ ...offerRow, variant_id: null }]);
-            if (["sellers", "products", "offer_price_rules"].includes(resource)) return jsonResponse([]);
-            if (["offer_price_proposals", "offer_media"].includes(resource)) return jsonResponse([]);
-            throw new Error(`Unexpected administrator null request: ${request.url}`);
-        });
+        setRestResponder(() => managedOfferResponse(nullOfferDetail));
 
         const response = await requestCommerce("/admin/offer?id=91", { userRole: null });
 
