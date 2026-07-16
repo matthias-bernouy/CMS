@@ -12,15 +12,21 @@ export function useCategoryResponder(options: CategoryResponderOptions = {}): vo
     const category = options.category === undefined ? categoryRow : options.category;
     const parent = options.parent === undefined ? parentRow : options.parent;
     const fields = options.fields ?? categoryFieldRows;
-    setRestResponder(request => {
+    setRestResponder(async request => {
         const url = new URL(request.url);
         const resource = url.pathname.split("/").at(-1);
-        if (resource === "categories") {
-            const isParent = url.searchParams.get("select") === "id,slug,full_slug,label,status";
-            const row = isParent ? parent : category;
-            return jsonResponse(row ? [row] : []);
+        if (resource === "get_category_read_model") {
+            const body = await request.clone().json() as Record<string, unknown>;
+            if (!category || (body.p_scope === "public" && category.status !== "active")) {
+                return jsonResponse({ state: "not_found" });
+            }
+            return jsonResponse({
+                state: "ok",
+                category,
+                parent: category.parent_id ? parent : null,
+                category_fields: body.p_scope === "admin" ? fields : [],
+            });
         }
-        if (resource === "category_custom_fields") return jsonResponse(fields);
         throw new Error(`Unexpected category request: ${request.url}`);
     });
 }

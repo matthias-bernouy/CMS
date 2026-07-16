@@ -53,8 +53,11 @@ describe("commerce category detail boundaries", () => {
         );
 
         expect(publicResponse.status).toBe(200);
-        expect(new URL(publicCalls[0]!.url).searchParams.get("full_slug"))
-            .toBe("eq.sports/tennis");
+        expect(publicCalls[0]!.body).toEqual({
+            p_scope: "public",
+            p_category_id: null,
+            p_full_slug: "sports/tennis",
+        });
         expect(admin.status).toBe(200);
         expect(await admin.json()).toEqual(newCategory);
         expect(capturedFetches()).toHaveLength(publicCalls.length);
@@ -89,7 +92,7 @@ describe("commerce category detail boundaries", () => {
 
             expect(response.status).toBe(200);
             expect(body.status).toBe(status);
-            expect(capturedFetches()).toHaveLength(3);
+            expect(capturedFetches()).toHaveLength(1);
         });
     }
 
@@ -97,11 +100,14 @@ describe("commerce category detail boundaries", () => {
         useCategoryResponder();
 
         const response = await requestCommerce("/admin/category?id=9&fullSlug=ignored");
-        const params = new URL(capturedFetches()[0]!.url).searchParams;
+        const call = capturedFetches()[0]!;
 
         expect(response.status).toBe(200);
-        expect(params.get("id")).toBe("eq.9");
-        expect(params.get("full_slug")).toBeNull();
+        expect(call.body).toEqual({
+            p_scope: "admin",
+            p_category_id: 9,
+            p_full_slug: null,
+        });
     });
 
     test("rejects an invalid CMS key before templates, selectors, or reads", async () => {
@@ -115,29 +121,31 @@ describe("commerce category detail boundaries", () => {
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("preserves database failures from each sequential category read", async () => {
-        for (const failingCall of [1, 2, 3]) {
-            const previousCalls = capturedFetches().length;
-            let calls = 0;
-            setRestResponder(request => {
-                calls += 1;
-                if (calls === failingCall) return jsonResponse({ message: `database failure ${failingCall}` }, 503);
-                const resource = new URL(request.url).pathname.split("/").at(-1);
-                if (resource === "categories") {
-                    const parent = new URL(request.url).searchParams.get("select") === "id,slug,full_slug,label,status";
-                    return jsonResponse([parent ? {
-                        id: 3, slug: "sports", full_slug: "sports", label: "Sports", status: "active",
-                    } : categoryRow]);
-                }
-                return jsonResponse([]);
-            });
+    test("preserves database category-read failures", async () => {
+        setRestResponder(() => jsonResponse({ message: "database failure" }, 503));
 
-            const response = await requestCommerce("/admin/category?id=9");
+        const response = await requestCommerce("/admin/category?id=9");
 
-            expect(response.status).toBe(502);
-            expect(await response.json()).toEqual({ error: `database failure ${failingCall}` });
-            expect(capturedFetches()).toHaveLength(previousCalls + failingCall);
-        }
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({ error: "database failure" });
+        expect(capturedFetches()).toHaveLength(1);
+    });
+
+    test("fails closed when the private read model is malformed", async () => {
+        setRestResponder(() => jsonResponse({
+            state: "ok",
+            category: categoryRow,
+            parent: null,
+            category_fields: [null],
+        }));
+
+        const response = await requestCommerce("/category?id=9");
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+            error: "get_category_read_model returned an invalid response",
+        });
+        expect(capturedFetches()).toHaveLength(1);
     });
 
     test("preserves routing method refusal without database work", async () => {

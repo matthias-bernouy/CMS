@@ -1,8 +1,9 @@
 import { HttpError } from "../../../core/errors.ts";
 import { json } from "../../../core/http.ts";
 import { camelize, integer, isRecord, readJsonObject, text } from "../../../core/records.ts";
-import { listRows, one, rpc } from "../../../core/rest.ts";
+import { listRows, rpc } from "../../../core/rest.ts";
 import type { JsonRecord } from "../../../core/types.ts";
+import { getCategoryReadModel } from "./category-read-model.ts";
 import { categoryFields } from "./category-fields.ts";
 
 const select = "id,parent_id,slug,full_slug,label,description,status,position,metadata,version,created_at,updated_at";
@@ -28,13 +29,15 @@ export async function getCategory(request: Request, admin: boolean): Promise<Res
         return json({ id: null, parentId: null, slug: "", fullSlug: "", label: "", description: "", status: "active", position: 0, metadata: {}, categoryFields: [], version: 1 });
     }
     const id = optionalId(url.searchParams.get("id"));
-    const fullSlug = text(url.searchParams.get("fullSlug"));
+    const fullSlug = text(url.searchParams.get("fullSlug")) ?? null;
     if (id === null && !fullSlug) throw new HttpError(400, "id or fullSlug is required");
-    const row = id !== null ? await one("categories", { id }, select) : await one("categories", { full_slug: fullSlug! }, select);
-    if (!row || (!admin && row.status !== "active")) throw new HttpError(404, "category not found");
-    const parent = row.parent_id ? await one("categories", { id: String(row.parent_id) }, "id,slug,full_slug,label,status") : null;
-    const fields = admin ? await categoryFields(Number(row.id)) : [];
-    return json({ ...(camelize(row) as object), parent: parent ? camelize(parent) : null, categoryFields: camelize(fields) });
+    const model = await getCategoryReadModel(admin ? "admin" : "public", id, id === null ? fullSlug : null);
+    if (!model) throw new HttpError(404, "category not found");
+    return json({
+        ...(camelize(model.category) as object),
+        parent: model.parent ? camelize(model.parent) : null,
+        categoryFields: camelize(model.categoryFields),
+    });
 }
 
 export async function upsertCategory(request: Request): Promise<Response> {
