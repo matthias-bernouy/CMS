@@ -61,6 +61,16 @@ const expectedProposal = {
     createdAt: "2026-07-17T12:00:00Z",
     updatedAt: "2026-07-17T13:00:00Z",
 };
+const proposalEvent = {
+    id: 11,
+    event_type: "created",
+    actor_kind: "buyer",
+    actor_id: "buyer-user",
+    previous_status: null,
+    next_status: "pending",
+    data: { amount: 9_500 },
+    created_at: "2026-07-17T12:00:00Z",
+};
 
 beforeAll(async () => {
     (globalThis as { Deno?: unknown }).Deno = {
@@ -94,19 +104,14 @@ describe("commerce negotiation read contracts", () => {
 
         expect(list.status).toBe(200);
         expect(await list.json()).toEqual({ items: [expectedProposal], total: 1 });
-        expect(databasePaths()).toEqual([
-            "/rest/v1/rpc/expire_pending_proposals",
-            "/rest/v1/proposals",
-        ]);
-        const listQuery = new URL(requests[1]!.url).searchParams;
-        expect(Object.fromEntries(listQuery)).toEqual({
-            select: expect.any(String),
-            order: "created_at.desc",
-            limit: "1",
-            offset: "2",
-            buyer_cms_user_id: "eq.buyer-user",
-            status: "eq.pending",
-            commerce_offer_id: "eq.42",
+        expect(databasePaths()).toEqual(["/rest/v1/rpc/list_participant_proposals"]);
+        expect(await requests[0]!.json()).toEqual({
+            p_user_id: "buyer-user",
+            p_role: "buyer",
+            p_status: "pending",
+            p_offer_id: 42,
+            p_limit: 1,
+            p_offset: 2,
         });
 
         requests.length = 0;
@@ -128,13 +133,12 @@ describe("commerce negotiation read contracts", () => {
                 createdAt: "2026-07-17T12:00:00Z",
             }],
         });
-        expect(databasePaths()).toEqual([
-            "/rest/v1/rpc/expire_pending_proposals",
-            "/rest/v1/proposals",
-            "/rest/v1/proposal_events",
-        ]);
-        expect(new URL(requests[1]!.url).searchParams.get("public_id")).toBe("eq.proposal-public-7");
-        expect(new URL(requests[2]!.url).searchParams.get("order")).toBe("created_at.asc");
+        expect(databasePaths()).toEqual(["/rest/v1/rpc/get_participant_proposal_detail"]);
+        expect(await requests[0]!.json()).toEqual({
+            p_user_id: "buyer-user",
+            p_id: null,
+            p_public_id: "proposal-public-7",
+        });
 
         requests.length = 0;
         const denied = await handler(new Request(
@@ -143,10 +147,7 @@ describe("commerce negotiation read contracts", () => {
         ));
         expect(denied.status).toBe(404);
         expect(await denied.json()).toEqual({ error: "proposal not found" });
-        expect(databasePaths()).toEqual([
-            "/rest/v1/rpc/expire_pending_proposals",
-            "/rest/v1/proposals",
-        ]);
+        expect(databasePaths()).toEqual(["/rest/v1/rpc/get_participant_proposal_detail"]);
 
         requests.length = 0;
         await expect(handler(new Request(`${functionUrl}/proposals`, {
@@ -160,20 +161,15 @@ const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestI
     const request = input instanceof Request ? input : new Request(input, init);
     requests.push(request.clone());
     const path = new URL(request.url).pathname;
-    if (path.endsWith("/rpc/expire_pending_proposals")) return Response.json([]);
-    if (path.endsWith("/proposals")) {
-        return Response.json([proposal], { headers: { "content-range": "0-0/1" } });
+    const body = request.method === "POST" ? await request.json() as Record<string, unknown> : {};
+    if (path.endsWith("/rpc/list_participant_proposals")) {
+        return Response.json({ items: [proposal], total: 1 });
     }
-    if (path.endsWith("/proposal_events")) return Response.json([{
-        id: 11,
-        event_type: "created",
-        actor_kind: "buyer",
-        actor_id: "buyer-user",
-        previous_status: null,
-        next_status: "pending",
-        data: { amount: 9_500 },
-        created_at: "2026-07-17T12:00:00Z",
-    }]);
+    if (path.endsWith("/rpc/get_participant_proposal_detail")) {
+        return Response.json(body.p_user_id === "buyer-user"
+            ? { proposal, events: [proposalEvent] }
+            : null);
+    }
     return Response.json({ message: "not found" }, { status: 404 });
 }) as typeof fetch;
 

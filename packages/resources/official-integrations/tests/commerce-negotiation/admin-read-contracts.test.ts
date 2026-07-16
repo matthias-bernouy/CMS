@@ -67,14 +67,12 @@ describe("commerce negotiation admin read contracts", () => {
         ));
         expect(list.status).toBe(200);
         expect(await list.json()).toEqual({ items: [publicProposal], total: 1 });
-        expect(databasePaths()).toEqual([
-            "/rest/v1/rpc/expire_pending_proposals",
-            "/rest/v1/proposals",
-        ]);
-        expect(Object.fromEntries(new URL(requests[1]!.url).searchParams)).toEqual({
-            select: expect.any(String), order: "created_at.desc", limit: "1", offset: "2",
-            or: "(commerce_offer_title.ilike.\"*racket*\",commerce_offer_slug.ilike.\"*racket*\",buyer_cms_user_id.ilike.\"*racket*\",seller_cms_user_id.ilike.\"*racket*\")",
-            status: "eq.pending",
+        expect(databasePaths()).toEqual(["/rest/v1/rpc/list_admin_proposals"]);
+        expect(await requests[0]!.json()).toEqual({
+            p_query: "racket",
+            p_status: "pending",
+            p_limit: 1,
+            p_offset: 2,
         });
 
         requests.length = 0;
@@ -90,13 +88,11 @@ describe("commerce negotiation admin read contracts", () => {
                 createdAt: "2026-07-18T12:00:00Z",
             }],
         });
-        expect(databasePaths()).toEqual([
-            "/rest/v1/rpc/expire_pending_proposals",
-            "/rest/v1/proposals",
-            "/rest/v1/proposal_events",
-        ]);
-        expect(new URL(requests[1]!.url).searchParams.get("public_id")).toBe("eq.proposal-public-9");
-        expect(new URL(requests[2]!.url).searchParams.get("order")).toBe("created_at.asc");
+        expect(databasePaths()).toEqual(["/rest/v1/rpc/get_admin_proposal_detail"]);
+        expect(await requests[0]!.json()).toEqual({
+            p_id: null,
+            p_public_id: "proposal-public-9",
+        });
 
         requests.length = 0;
         const denied = await handler(new Request(`${functionUrl}/admin/proposals`, {
@@ -112,11 +108,12 @@ const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestI
     const request = input instanceof Request ? input : new Request(input, init);
     requests.push(request.clone());
     const path = new URL(request.url).pathname;
-    if (path.endsWith("/rpc/expire_pending_proposals")) return Response.json([]);
-    if (path.endsWith("/proposals")) {
-        return Response.json([rawProposal], { headers: { "content-range": "0-0/1" } });
+    if (path.endsWith("/rpc/list_admin_proposals")) {
+        return Response.json({ items: [rawProposal], total: 1 });
     }
-    if (path.endsWith("/proposal_events")) return Response.json([rawEvent]);
+    if (path.endsWith("/rpc/get_admin_proposal_detail")) {
+        return Response.json({ proposal: rawProposal, events: [rawEvent] });
+    }
     return Response.json({ message: "not found" }, { status: 404 });
 }) as typeof fetch;
 

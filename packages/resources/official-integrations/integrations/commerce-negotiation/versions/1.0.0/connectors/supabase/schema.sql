@@ -209,6 +209,165 @@ begin
 end;
 $$;
 
+create or replace function commerce_negotiation.list_participant_proposals(
+    p_user_id text,
+    p_role text default null,
+    p_status text default null,
+    p_offer_id bigint default null,
+    p_limit integer default 50,
+    p_offset integer default 0
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+declare
+    v_limit integer := least(greatest(coalesce(p_limit, 50), 1), 200);
+    v_offset integer := least(greatest(coalesce(p_offset, 0), 0), 1000000);
+begin
+    if p_user_id is null or btrim(p_user_id) = '' then
+        raise exception 'unauthorized: CMS user identity required';
+    end if;
+    if p_role is not null and p_role not in ('buyer', 'seller') then
+        raise exception 'validation: role is invalid';
+    end if;
+    perform commerce_negotiation.expire_pending_proposals();
+    return (
+        with filtered as materialized (
+            select proposal.*
+            from commerce_negotiation.proposals proposal
+            where case p_role
+                when 'buyer' then proposal.buyer_cms_user_id = p_user_id
+                when 'seller' then proposal.seller_cms_user_id = p_user_id
+                else proposal.buyer_cms_user_id = p_user_id
+                    or proposal.seller_cms_user_id = p_user_id
+            end
+              and (p_status is null or proposal.status = p_status)
+              and (p_offer_id is null or proposal.commerce_offer_id = p_offer_id)
+        ), page as (
+            select filtered.*
+            from filtered
+            order by filtered.created_at desc
+            limit v_limit offset v_offset
+        )
+        select jsonb_build_object(
+            'items', coalesce(
+                (select jsonb_agg(to_jsonb(page) order by page.created_at desc) from page),
+                '[]'::jsonb
+            ),
+            'total', (select count(*) from filtered)
+        )
+    );
+end;
+$$;
+
+create or replace function commerce_negotiation.list_admin_proposals(
+    p_query text default null,
+    p_status text default null,
+    p_limit integer default 50,
+    p_offset integer default 0
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+declare
+    v_limit integer := least(greatest(coalesce(p_limit, 50), 1), 200);
+    v_offset integer := least(greatest(coalesce(p_offset, 0), 0), 1000000);
+begin
+    perform commerce_negotiation.expire_pending_proposals();
+    return (
+        with filtered as materialized (
+            select proposal.*
+            from commerce_negotiation.proposals proposal
+            where (p_status is null or proposal.status = p_status)
+              and (
+                  p_query is null
+                  or proposal.commerce_offer_title ilike '%' || p_query || '%'
+                  or proposal.commerce_offer_slug ilike '%' || p_query || '%'
+                  or proposal.buyer_cms_user_id ilike '%' || p_query || '%'
+                  or proposal.seller_cms_user_id ilike '%' || p_query || '%'
+              )
+        ), page as (
+            select filtered.*
+            from filtered
+            order by filtered.created_at desc
+            limit v_limit offset v_offset
+        )
+        select jsonb_build_object(
+            'items', coalesce(
+                (select jsonb_agg(to_jsonb(page) order by page.created_at desc) from page),
+                '[]'::jsonb
+            ),
+            'total', (select count(*) from filtered)
+        )
+    );
+end;
+$$;
+
+create or replace function commerce_negotiation.get_participant_proposal_detail(
+    p_user_id text,
+    p_id bigint default null,
+    p_public_id uuid default null
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+declare
+    v_proposal commerce_negotiation.proposals%rowtype;
+begin
+    if p_user_id is null or btrim(p_user_id) = '' then
+        raise exception 'unauthorized: CMS user identity required';
+    end if;
+    perform commerce_negotiation.expire_pending_proposals();
+    select proposal.* into v_proposal
+    from commerce_negotiation.proposals proposal
+    where case when p_id is not null then proposal.id = p_id
+        else proposal.public_id = p_public_id end
+      and (proposal.buyer_cms_user_id = p_user_id or proposal.seller_cms_user_id = p_user_id)
+    limit 1;
+    if not found then return null; end if;
+    return jsonb_build_object(
+        'proposal', to_jsonb(v_proposal),
+        'events', coalesce((
+            select jsonb_agg(to_jsonb(event) order by event.created_at asc)
+            from commerce_negotiation.proposal_events event
+            where event.proposal_id = v_proposal.id
+        ), '[]'::jsonb)
+    );
+end;
+$$;
+
+create or replace function commerce_negotiation.get_admin_proposal_detail(
+    p_id bigint default null,
+    p_public_id uuid default null
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $$
+declare
+    v_proposal commerce_negotiation.proposals%rowtype;
+begin
+    perform commerce_negotiation.expire_pending_proposals();
+    select proposal.* into v_proposal
+    from commerce_negotiation.proposals proposal
+    where case when p_id is not null then proposal.id = p_id
+        else proposal.public_id = p_public_id end
+    limit 1;
+    if not found then return null; end if;
+    return jsonb_build_object(
+        'proposal', to_jsonb(v_proposal),
+        'events', coalesce((
+            select jsonb_agg(to_jsonb(event) order by event.created_at asc)
+            from commerce_negotiation.proposal_events event
+            where event.proposal_id = v_proposal.id
+        ), '[]'::jsonb)
+    );
+end;
+$$;
+
 create or replace function commerce_negotiation.create_proposal(
     p_offer_id bigint,
     p_offer_slug text,

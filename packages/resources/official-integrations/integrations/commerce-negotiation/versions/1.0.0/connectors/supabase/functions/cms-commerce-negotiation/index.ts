@@ -54,13 +54,6 @@ class HttpError extends Error {
 }
 
 const schema = "commerce_negotiation";
-const proposalSelect = [
-    "id", "public_id", "commerce_offer_id", "commerce_offer_slug", "commerce_offer_title",
-    "seller_cms_user_id", "seller_display_name", "buyer_cms_user_id",
-    "reference_amount", "minimum_amount", "maximum_amount", "proposed_amount", "currency",
-    "buyer_message", "decision_message", "status", "version", "expires_at",
-    "accepted_at", "rejected_at", "withdrawn_at", "created_at", "updated_at",
-].join(",");
 const settingsSelect = "id,minimum_ratio_bps,maximum_ratio_bps,proposal_ttl_hours,enabled,version,created_at,updated_at";
 const corsHeaders = {
     "access-control-allow-origin": "*",
@@ -145,41 +138,34 @@ async function createMyProposal(request: Request): Promise<Response> {
 
 async function listMyProposals(request: Request): Promise<Response> {
     const userId = requireUserId(request);
-    await expirePending();
     const url = new URL(request.url);
     const role = optionalEnum(url.searchParams.get("role"), "role", ["buyer", "seller"]);
     const status = optionalEnum(url.searchParams.get("status"), "status", proposalStatuses);
     const offerId = optionalPositiveInteger(url.searchParams.get("offerId"), "offerId");
     const limit = boundedLimit(url.searchParams.get("limit"));
     const offset = boundedOffset(url.searchParams.get("offset"));
-    const query = new URLSearchParams({
-        select: proposalSelect,
-        order: "created_at.desc",
-        limit: String(limit),
-        offset: String(offset),
+    const result = await proposalList("list_participant_proposals", {
+        p_user_id: userId,
+        p_role: role,
+        p_status: status,
+        p_offer_id: offerId,
+        p_limit: limit,
+        p_offset: offset,
     });
-    if (role === "buyer") query.set("buyer_cms_user_id", `eq.${userId}`);
-    else if (role === "seller") query.set("seller_cms_user_id", `eq.${userId}`);
-    else query.set("or", `(buyer_cms_user_id.eq.${postgrestValue(userId)},seller_cms_user_id.eq.${postgrestValue(userId)})`);
-    if (status) query.set("status", `eq.${status}`);
-    if (offerId) query.set("commerce_offer_id", `eq.${offerId}`);
-    const response = await rest(`proposals?${query}`, { method: "GET", headers: { prefer: "count=exact" } });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ProposalRow[];
     return json({
-        items: rows.map(row => publicProposal(row, userId)),
-        total: countFromContentRange(response.headers.get("content-range")) ?? rows.length,
+        items: result.items.map(row => publicProposal(row, userId)),
+        total: result.total,
     });
 }
 
 async function getMyProposal(request: Request): Promise<Response> {
     const userId = requireUserId(request);
-    await expirePending();
-    const row = await proposalByRequest(request);
-    if (!row || (row.buyer_cms_user_id !== userId && row.seller_cms_user_id !== userId)) {
-        throw new HttpError(404, "proposal not found");
-    }
-    return json(await proposalDetail(row, userId));
+    const detail = await proposalDetail("get_participant_proposal_detail", {
+        p_user_id: userId,
+        ...proposalLookup(request),
+    });
+    if (!detail) throw new HttpError(404, "proposal not found");
+    return json({ ...publicProposal(detail.proposal, userId), events: detail.events.map(publicEvent) });
 }
 
 async function respondToProposal(request: Request): Promise<Response> {
@@ -207,34 +193,24 @@ async function withdrawMyProposal(request: Request): Promise<Response> {
 }
 
 async function listAdminProposals(request: Request): Promise<Response> {
-    await expirePending();
     const url = new URL(request.url);
     const q = optionalSearch(url.searchParams.get("q"));
     const status = optionalEnum(url.searchParams.get("status"), "status", proposalStatuses);
     const limit = boundedLimit(url.searchParams.get("limit"));
     const offset = boundedOffset(url.searchParams.get("offset"));
-    const query = new URLSearchParams({
-        select: proposalSelect,
-        order: "created_at.desc",
-        limit: String(limit),
-        offset: String(offset),
+    const result = await proposalList("list_admin_proposals", {
+        p_query: q,
+        p_status: status,
+        p_limit: limit,
+        p_offset: offset,
     });
-    if (q) {
-        const pattern = postgrestValue(`*${q}*`);
-        query.set("or", `(commerce_offer_title.ilike.${pattern},commerce_offer_slug.ilike.${pattern},buyer_cms_user_id.ilike.${pattern},seller_cms_user_id.ilike.${pattern})`);
-    }
-    if (status) query.set("status", `eq.${status}`);
-    const response = await rest(`proposals?${query}`, { method: "GET", headers: { prefer: "count=exact" } });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ProposalRow[];
-    return json({ items: rows.map(row => publicProposal(row)), total: countFromContentRange(response.headers.get("content-range")) ?? rows.length });
+    return json({ items: result.items.map(row => publicProposal(row)), total: result.total });
 }
 
 async function getAdminProposal(request: Request): Promise<Response> {
-    await expirePending();
-    const row = await proposalByRequest(request);
-    if (!row) throw new HttpError(404, "proposal not found");
-    return json(await proposalDetail(row));
+    const detail = await proposalDetail("get_admin_proposal_detail", proposalLookup(request));
+    if (!detail) throw new HttpError(404, "proposal not found");
+    return json({ ...publicProposal(detail.proposal), events: detail.events.map(publicEvent) });
 }
 
 async function cancelAdminProposal(request: Request): Promise<Response> {
@@ -296,40 +272,44 @@ async function settingsRow(): Promise<SettingsRow> {
     return firstRow<SettingsRow>(await response.json());
 }
 
-async function proposalByRequest(request: Request): Promise<ProposalRow | null> {
+function proposalLookup(request: Request): { p_id: number | null; p_public_id: string | null } {
     const url = new URL(request.url);
     const id = optionalPositiveInteger(url.searchParams.get("id"), "id");
     const publicId = optionalTextValue(url.searchParams.get("publicId"), 80);
     if (!id && !publicId) throw new HttpError(400, "id or publicId is required");
-    const query = new URLSearchParams({ select: proposalSelect, limit: "1" });
-    if (id) query.set("id", `eq.${id}`);
-    else query.set("public_id", `eq.${publicId}`);
-    const response = await rest(`proposals?${query}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ProposalRow[];
-    return rows[0] ?? null;
+    return { p_id: id, p_public_id: id ? null : publicId };
 }
 
-async function proposalDetail(row: ProposalRow, viewerId?: string): Promise<JsonRecord> {
-    const query = new URLSearchParams({
-        select: "id,event_type,actor_kind,actor_id,previous_status,next_status,data,created_at",
-        proposal_id: `eq.${row.id}`,
-        order: "created_at.asc",
-    });
-    const response = await rest(`proposal_events?${query}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    return { ...publicProposal(row, viewerId), events: (await response.json() as JsonRecord[]).map(publicEvent) };
+async function proposalList(name: string, body: JsonRecord): Promise<{ items: ProposalRow[]; total: number }> {
+    const value = await rpcValue(name, body);
+    if (!isRecord(value) || !Array.isArray(value.items)
+        || !value.items.every(isRecord) || !Number.isSafeInteger(value.total) || Number(value.total) < 0) {
+        throw new HttpError(502, `${name} returned an invalid list`);
+    }
+    return { items: value.items as ProposalRow[], total: Number(value.total) };
 }
 
-async function expirePending(): Promise<void> {
-    await rpc("expire_pending_proposals", {});
+async function proposalDetail(
+    name: string,
+    body: JsonRecord,
+): Promise<{ proposal: ProposalRow; events: JsonRecord[] } | null> {
+    const value = await rpcValue(name, body);
+    if (value === null) return null;
+    if (!isRecord(value) || !isRecord(value.proposal)
+        || !Array.isArray(value.events) || !value.events.every(isRecord)) {
+        throw new HttpError(502, `${name} returned an invalid detail`);
+    }
+    return { proposal: value.proposal as ProposalRow, events: value.events };
 }
 
 async function rpcRow<T>(name: string, body: JsonRecord): Promise<T> {
-    const response = await rpc(name, body);
-    const value = await response.json();
+    const value = await rpcValue(name, body);
     if (!isRecord(value)) throw new HttpError(502, `${name} returned an invalid row`);
     return value as T;
+}
+
+async function rpcValue(name: string, body: JsonRecord): Promise<unknown> {
+    return await (await rpc(name, body)).json();
 }
 
 async function rpc(name: string, body: JsonRecord): Promise<Response> {
@@ -556,15 +536,6 @@ function percentToBps(percent: number, name: string): number {
     const bps = Math.round(percent * 100);
     if (Math.abs(percent * 100 - bps) > 0.000001) throw new HttpError(400, `${name} supports at most two decimals`);
     return bps;
-}
-
-function postgrestValue(value: string): string {
-    return `"${value.replace(/["\\]/g, character => `\\${character}`)}"`;
-}
-
-function countFromContentRange(value: string | null): number | null {
-    const total = value?.split("/")[1];
-    return total && /^\d+$/.test(total) ? Number(total) : null;
 }
 
 function firstRow<T>(value: unknown): T {

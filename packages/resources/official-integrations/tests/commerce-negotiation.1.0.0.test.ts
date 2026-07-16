@@ -248,15 +248,16 @@ describe("commerce negotiation 1.0.0", () => {
                     updated_at: "2026-07-12T00:00:00Z",
                 }]);
             }
-            if (url.pathname.endsWith("/rest/v1/rpc/expire_pending_proposals")) {
-                return Response.json([]);
-            }
-            if (url.pathname.endsWith("/rest/v1/proposals")) {
-                expect(url.searchParams.get("buyer_cms_user_id")).toBe("eq.buyer-user");
-                expect(url.searchParams.get("status")).toBe("eq.pending");
-                expect(url.searchParams.get("commerce_offer_id")).toBe("eq.42");
-                expect(url.searchParams.get("limit")).toBe("1");
-                return Response.json([], { headers: { "content-range": "*/0" } });
+            if (url.pathname.endsWith("/rest/v1/rpc/list_participant_proposals")) {
+                expect(await request.json()).toEqual({
+                    p_user_id: "buyer-user",
+                    p_role: "buyer",
+                    p_status: "pending",
+                    p_offer_id: 42,
+                    p_limit: 1,
+                    p_offset: 0,
+                });
+                return Response.json({ items: [], total: 0 });
             }
             return new Response("not found", { status: 404 });
         };
@@ -319,8 +320,7 @@ describe("commerce negotiation 1.0.0", () => {
         expect(requests.map(request => new URL(request.url).pathname)).toEqual([
             "/rest/v1/settings",
             "/rest/v1/settings",
-            "/rest/v1/rpc/expire_pending_proposals",
-            "/rest/v1/proposals",
+            "/rest/v1/rpc/list_participant_proposals",
         ]);
         expect(requests.every(request => !new URL(request.url).pathname.includes("/cms-commerce/"))).toBe(true);
     });
