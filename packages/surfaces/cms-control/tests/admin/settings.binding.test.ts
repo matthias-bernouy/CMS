@@ -88,7 +88,21 @@ describe("admin settings binding", () => {
         expect(connectors?.getAttribute("href")).toBe("/admin/settings/connectors");
     });
 
-    test("renders connector providers as its own settings detail page", () => {
+    test("renders Supabase connector settings with a write-only access token", async () => {
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            const href = String(url);
+            if (href.includes("/api/integrations/connector-provider")) {
+                return json({
+                    provider: "supabase",
+                    enabled: true,
+                    projectRef: "abcdefghijklmnopqrst",
+                    accessTokenConfigured: true,
+                    accessToken: "must-not-be-rendered",
+                });
+            }
+            return json({});
+        }) as typeof fetch;
+
         window.history.replaceState(null, "", "/admin/settings/connectors");
         document.head.innerHTML = `<meta name="basePath" content="">`;
         document.body.innerHTML = `
@@ -97,10 +111,24 @@ describe("admin settings binding", () => {
             </cms-binding-core>
         `;
 
+        await waitFor(() => document.querySelector("#connector-provider-form") !== null);
+
         expect(document.querySelector("cms-shell-detail")).not.toBeNull();
         expect(document.querySelector("cms-settings-nav")).not.toBeNull();
         expect(document.querySelector("#settings-form")).toBeNull();
+        const providerForm = document.querySelector("#connector-provider-form");
+        expect(providerForm).not.toBeNull();
+        expect(providerForm?.hasAttribute("cms-source-success-reset")).toBe(false);
         expect(document.body.textContent).toContain("Connector providers");
+        expect(document.body.textContent).toContain("Access token configured");
+        expect(document.body.textContent).toContain("server-side secret store");
+        expect(document.querySelector("p9r-input[name='projectRef']")?.getAttribute("value"))
+            .toBe("abcdefghijklmnopqrst");
+        const token = document.querySelector<HTMLElement>("p9r-input[name='accessToken']");
+        expect(token?.getAttribute("type")).toBe("password");
+        expect(token?.getAttribute("value")).toBeNull();
+        expect(token?.getAttribute("placeholder")).toContain("Leave blank");
+        expect(document.body.innerHTML).not.toContain("must-not-be-rendered");
         expect(document.querySelector("p9r-tabs")).toBeNull();
     });
 

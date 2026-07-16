@@ -1,31 +1,72 @@
+<cms-event-toast event="connector-provider:saved" message="Connector provider saved" type="success"></cms-event-toast>
+
 <w13c-fixed-admin-layout>
     <span slot="title">Settings</span>
     <cms-settings-nav slot="secondary-lateral-nav"></cms-settings-nav>
 
     <p9r-container size="lg">
-        <cms-shell-detail>
-            <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M9 7H5a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h2"></path>
-                    <path d="M15 17h4a2 2 0 0 0 2-2v-2a4 4 0 0 0-4-4h-2"></path>
-                    <path d="M8 12h8"></path>
-                    <path d="M12 8v8"></path>
-                </svg>
-            </a>
-            <span slot="title">Connector providers</span>
+        <div cms-source="{{BASE_PATH}}/api/integrations/connector-provider" cms-reload-on="connector-provider:saved">
+            <template>
+                <cms-shell-detail>
+                    <a slot="back" href="{{BASE_PATH}}/admin/settings" aria-label="Back to settings">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 7H5a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h2"></path>
+                            <path d="M15 17h4a2 2 0 0 0 2-2v-2a4 4 0 0 0-4-4h-2"></path>
+                            <path d="M8 12h8"></path>
+                            <path d="M12 8v8"></path>
+                        </svg>
+                    </a>
+                    <span slot="title">Connector providers</span>
+                    <p9r-button slot="actions" form="connector-provider-form" type="submit" color="primary">Save provider</p9r-button>
 
-            <cms-detail-section slot="main" heading="Connector providers">
-                <cms-empty-state fluid>
-                    <p slot="title">No connector providers configured</p>
-                    <p slot="hint">Supabase and other integration connector providers will be managed here.</p>
-                </cms-empty-state>
-            </cms-detail-section>
+                    <form
+                        id="connector-provider-form"
+                        slot="main"
+                        cms-source="{{BASE_PATH}}/api/integrations/connector-provider as result"
+                        cms-source-trigger="submit"
+                        cms-source-method="POST"
+                        cms-source-publish="connector-provider:saved"
+                        style="display: grid; gap: 16px; margin: 0;"
+                    >
+                        <cms-detail-section heading="Supabase">
+                            <p9r-stack gap="md">
+                                <input type="hidden" name="provider" value="supabase">
+                                <input type="hidden" name="enabled" value="false">
+                                <w13c-checkbox cms-condition="enabled" name="enabled" value="true" checked>Enabled</w13c-checkbox>
+                                <w13c-checkbox cms-condition="!enabled" name="enabled" value="true">Enabled</w13c-checkbox>
+                                <p9r-input
+                                    name="projectRef"
+                                    label="Project reference"
+                                    value="{{ projectRef }}"
+                                    placeholder="abcdefghijklmnopqrst"
+                                ></p9r-input>
+                                <p9r-input
+                                    name="accessToken"
+                                    label="Management API access token"
+                                    type="password"
+                                    autocomplete="new-password"
+                                    placeholder="Leave blank to keep the current token"
+                                    hint="Write-only: saving an empty field keeps the configured token."
+                                ></p9r-input>
+                            </p9r-stack>
+                        </cms-detail-section>
+                    </form>
 
-            <cms-detail-section slot="aside" heading="Scope">
-                <p9r-stack gap="sm">
-                    <span>Connector providers back integration deployment targets such as Supabase projects.</span>
-                </p9r-stack>
-            </cms-detail-section>
-        </cms-shell-detail>
+                    <cms-detail-section slot="aside" heading="Credential status">
+                        <p9r-stack gap="sm">
+                            <strong cms-condition="accessTokenConfigured">Access token configured</strong>
+                            <strong cms-condition="!accessTokenConfigured">Access token missing</strong>
+                            <span>The token is stored in the server-side secret store and is never returned to this page.</span>
+                        </p9r-stack>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Scope">
+                        <p9r-stack gap="sm">
+                            <span>This Supabase project is the deployment target for integrations using the Supabase connector.</span>
+                        </p9r-stack>
+                    </cms-detail-section>
+                </cms-shell-detail>
+            </template>
+        </div>
     </p9r-container>
 </w13c-fixed-admin-layout>

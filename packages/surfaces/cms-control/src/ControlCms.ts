@@ -129,6 +129,10 @@ export class ControlCms {
         return this.state.triggers;
     }
 
+    get identities() {
+        return this.state.identities;
+    }
+
     get sourceOverlays() {
         return this.state.sourceOverlays;
     }
@@ -141,12 +145,19 @@ export class ControlCms {
         return this.state.configuration.integrationConnectorDeployers;
     }
 
+    get integrationConnectorProviders() {
+        return this.state.integrationConnectorProviders;
+    }
+
     get integrationBlocRepository(): CmsRepository | null {
         return this.state.integrationBlocRepository;
     }
 
     get sourceExecutorDeps(): ExecutorDeps {
-        return { resolveSecret: createSecretResolver(this.state.secrets) };
+        return {
+            resolveSecret: createSecretResolver(this.state.secrets),
+            identities: this.state.identities,
+        };
     }
 
     get filesMetadata(): CmsFilesMetadataRepository {

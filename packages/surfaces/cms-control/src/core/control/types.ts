@@ -13,8 +13,10 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { FunctionRepository } from "@bernouy/cms-functions";
+import type { IdentityService } from "@bernouy/cms-identities";
 import type {
     IntegrationConnectorDeployer,
+    IntegrationConnectorProviderRepository,
     IntegrationDefinitionRepository,
     IntegrationInstallationRepository,
 } from "@bernouy/cms-integrations";
@@ -35,10 +37,12 @@ export type ControlCmsOptions = Configuration & {
     integrationCatalog?: IntegrationDefinitionRepository;
     integrationInstallations?: IntegrationInstallationRepository;
     integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
+    integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;
     relations?: RelationRepository;
     functions?: FunctionRepository;
     triggers?: TriggerRepository;
+    identities?: IdentityService;
     sourceOverlays?: SourceOverlayRepository;
     integrationBlocRepository?: CmsRepository;
 };
@@ -66,10 +70,12 @@ export type ControlCmsState = {
     roles: RolesRepository;
     integrationCatalog: IntegrationDefinitionRepository;
     integrationInstallations: IntegrationInstallationRepository | null;
+    integrationConnectorProviders: IntegrationConnectorProviderRepository;
     dashboards: DashboardRepository;
     relations: RelationRepository;
     functions: FunctionRepository | null;
     triggers: TriggerRepository | null;
+    identities: IdentityService;
     sourceOverlays: SourceOverlayRepository | null;
     integrationBlocRepository: CmsRepository | null;
 };
