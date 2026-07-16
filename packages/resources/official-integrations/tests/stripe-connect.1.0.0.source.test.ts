@@ -127,6 +127,10 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(endpoint("getConnectStatus")?.input?.params?.map(param => param.name)).toEqual([
             "marketplaceTermsVersion", "marketplaceTermsHash",
         ]);
+        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.marketplaceTermsAcceptedAt)
+            .toEqual({ type: "string", nullable: true });
+        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.stripeAccountId)
+            .toEqual({ type: "string", nullable: true });
         expect([
             protectedPayment?.input?.body?.properties?.sellerUserId?.semantic?.authority,
             heldPaymentEligibility?.input?.body?.properties?.sellerUserId?.semantic?.authority,
@@ -174,6 +178,32 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(anonymousSourceLookup.status).toBe(404);
         expect(anonymousEdgeLookup.status).toBe(404);
         expect(supportEdgeLookup.status).toBe(404);
+    });
+
+    test("projects nullable status fields for an existing seller account", async () => {
+        const harness = await createHarness();
+        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
+            email: "seller@example.com",
+            country: "FR",
+        }, { userId: "seller-1" }));
+
+        harness.rest.setAccountState("seller-1", { marketplace_terms_accepted_at: null });
+        const termsPending = await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus"));
+        expect(termsPending).toMatchObject({
+            exists: true,
+            connected: true,
+            stripeAccountId: expect.any(String),
+            marketplaceTermsAcceptedAt: null,
+        });
+
+        harness.rest.setAccountState("seller-1", { stripe_account_id: null });
+        const accountPending = await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus"));
+        expect(accountPending).toMatchObject({
+            exists: true,
+            connected: false,
+            stripeAccountId: null,
+            marketplaceTermsAcceptedAt: null,
+        });
     });
 
     test("fails before mutation when Stripe secret and publishable key modes diverge", async () => {
@@ -4377,6 +4407,12 @@ class StripeConnectMock {
 
     setStripeAccountState(userId: string, patch: JsonRecord): void {
         this.stripeAccountState.set(userId, patch);
+    }
+
+    setAccountState(userId: string, patch: JsonRecord): void {
+        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
+        if (!account) throw new Error(`unknown account ${userId}`);
+        this.update(account, patch);
     }
 
     addProviderDispute(chargeId: string, patch: JsonRecord = {}): void {

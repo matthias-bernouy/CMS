@@ -90,6 +90,8 @@ describe("commerce-stripe-payments 1.0.0", () => {
         if (!refundFn || !cancellationFn || !deadlineWorker || !cancellationWorker || !releaseWorker || !refundWorker || !reconciliationWorker) throw new Error("protected financial workers not imported");
         if (!enrollmentFn || !platformDecreaseFn || !submitPriceFn || !protectedOrderFn) throw new Error("seller sale enrollment functions not imported");
         expect(fn.access).toEqual({ mode: "auth" });
+        expect(enrollmentFn.output?.[0]?.body?.properties?.connect?.properties?.stripeAccountId)
+            .toEqual({ type: "string", nullable: true });
         expect((await sources.getEndpoint(makeEndpointUrn("commerce", "prepareProtectedPayment")))?.access)
             .toEqual({ mode: "system" });
         expect(result.artifacts).toEqual([
@@ -1543,6 +1545,29 @@ describe("commerce-stripe-payments 1.0.0", () => {
         expect(enrollment.connect.marketplaceTermsHash).toBeUndefined();
         expect(enrollment.connect.marketplaceTermsAcceptedAt).toBeUndefined();
 
+        const pendingEnrollmentResponse = await executeFunction(enrollmentFn, new Request(
+            "https://cms.test/functions/getSellerSaleEnrollment",
+        ), {
+            sources, identities, user: { id: "seller-subject", role: "user" },
+            deps: { identities, fetchImpl: async (input, init) => {
+                const request = new Request(input, init);
+                if (request.url.startsWith("https://stripe.test/status")) {
+                    return Response.json({
+                        ...connectStatus(),
+                        stripeAccountId: null,
+                        marketplaceTermsAcceptedAt: null,
+                    });
+                }
+                if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
+                throw new Error(`unexpected pending enrollment call: ${request.url}`);
+            } },
+        });
+        expect(pendingEnrollmentResponse.status).toBe(200);
+        expect(await pendingEnrollmentResponse.json()).toMatchObject({
+            connect: { connected: false, stripeAccountId: null },
+            seller: { cmsUserId: "seller-subject" },
+        });
+
         const serializedSubmit = JSON.stringify(submitPriceFn);
         expect(serializedSubmit).toContain("enrollConnectSeller");
         expect(serializedSubmit).toContain("canAcceptHeldPayments");
@@ -2143,7 +2168,7 @@ function stripeSource(): Source {
             exists: { type: "boolean" },
             userId: { type: "string" },
             connected: { type: "boolean" },
-            stripeAccountId: { type: "string" },
+            stripeAccountId: { type: "string", nullable: true },
             stripeAccountApiVersion: { type: "string" },
             onboardingStatus: { type: "string" },
             payoutsEnabled: { type: "boolean" },
@@ -2159,7 +2184,7 @@ function stripeSource(): Source {
             marketplaceTermsCurrentVersionAccepted: { type: "boolean" },
             marketplaceTermsVersion: { type: "string" },
             marketplaceTermsHash: { type: "string" },
-            marketplaceTermsAcceptedAt: { type: "string" },
+            marketplaceTermsAcceptedAt: { type: "string", nullable: true },
             enrollmentStatus: { type: "string" },
             stripeTransfersStatus: { type: "string" },
             bankAccountStatus: { type: "string" },

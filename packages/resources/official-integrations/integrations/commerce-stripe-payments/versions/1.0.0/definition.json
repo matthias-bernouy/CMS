@@ -99,7 +99,7 @@
                                 "userId": { "type": "string", "semantic": { "kind": "user-id", "authority": "cms" } },
                                 "connected": { "type": "boolean" },
                                 "onboardingStatus": { "type": "string" },
-                                "stripeAccountId": { "type": "string" },
+                                "stripeAccountId": { "type": "string", "nullable": true },
                                 "stripeAccountApiVersion": { "type": "string" },
                                 "payoutsEnabled": { "type": "boolean" },
                                 "riskStatus": { "type": "string" },
