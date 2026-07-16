@@ -1,5 +1,12 @@
 import type { EndpointParam, SourceEndpoint } from "../interfaces/Source";
-import { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS } from "../interfaces/Source";
+import type { DataShape } from "../interfaces/DataShape";
+import {
+    COMPUTED_PARAM_REFS,
+    HTTP_METHODS,
+    MAX_SOURCE_ENDPOINT_TIMEOUT_MS,
+    PARAM_INS,
+    RESPONSE_KINDS,
+} from "../interfaces/Source";
 import { isSourceEndpointAccessMode } from "./access";
 import { isForbiddenHeaderName, isValidHeaderName, isValidHeaderValue, MAX_ENDPOINT_HEADERS } from "./headerPolicy";
 import { validateSourceTargetUrl } from "./sourceTargetUrl";
@@ -14,6 +21,7 @@ export function validateEndpoint(endpoint: SourceEndpoint, errors: string[]): vo
     if (!(HTTP_METHODS as readonly string[]).includes(endpoint.method)) {
         errors.push(`invalid method for "${endpoint.urn}": "${endpoint.method}"`);
     }
+    validateTimeout(endpoint, errors);
     validateAccess(endpoint, errors);
     const target = validateSourceTargetUrl(endpoint.targetUrl);
     if (!target.ok) errors.push(`invalid targetUrl for "${endpoint.urn}": ${target.reason}`);
@@ -21,12 +29,64 @@ export function validateEndpoint(endpoint: SourceEndpoint, errors: string[]): vo
     validateResponseKind(endpoint, errors);
     validateHeaders(endpoint, errors);
     validateResponses(endpoint, errors);
+    validateIdentityBindings(endpoint, errors);
+}
+
+function validateTimeout(endpoint: SourceEndpoint, errors: string[]): void {
+    if (endpoint.timeoutMs === undefined) return;
+    if (!Number.isSafeInteger(endpoint.timeoutMs)
+        || endpoint.timeoutMs < 1
+        || endpoint.timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS) {
+        errors.push(
+            `invalid timeoutMs for "${endpoint.urn}": expected an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`,
+        );
+    }
+}
+
+function validateIdentityBindings(endpoint: SourceEndpoint, errors: string[]): void {
+    for (const binding of endpoint.effects?.identityBindings ?? []) {
+        if (!binding.responsePath.trim()) {
+            errors.push(`empty identity binding path for "${endpoint.urn}"`);
+            continue;
+        }
+        const shapes = (endpoint.output ?? []).map(output => shapeAt(output.body, binding.responsePath));
+        if (!shapes.some(shape => shape?.semantic?.kind === "user-id" && shape.semantic.authority)) {
+            errors.push(`identity binding path is not a qualified user-id for "${endpoint.urn}": "${binding.responsePath}"`);
+        }
+    }
+}
+
+function shapeAt(shape: DataShape | undefined, path: string): DataShape | undefined {
+    return path.split(".").filter(Boolean).reduce<DataShape | undefined>((current, part) => {
+        if (!current) return undefined;
+        if (current.type === "array" && /^\d+$/.test(part)) return current.items;
+        return current.type === "object" ? current.properties?.[part] : undefined;
+    }, shape);
 }
 
 function validateAccess(endpoint: SourceEndpoint, errors: string[]): void {
     if (endpoint.access === undefined) return;
     if (!isSourceEndpointAccessMode(endpoint.access.mode)) {
         errors.push(`invalid access mode for "${endpoint.urn}": "${(endpoint.access as { mode?: unknown }).mode}"`);
+    }
+    const roles = (endpoint.access as { roles?: unknown }).roles;
+    if (roles === undefined) return;
+    if (endpoint.access.mode !== "admin") {
+        errors.push(`access roles require admin mode for "${endpoint.urn}"`);
+    }
+    if (!Array.isArray(roles)) {
+        errors.push(`invalid access roles for "${endpoint.urn}": expected an array`);
+        return;
+    }
+    const seen = new Set<string>();
+    for (const [index, role] of roles.entries()) {
+        if (typeof role !== "string" || !role.trim()) {
+            errors.push(`invalid access role for "${endpoint.urn}" at index ${index}: expected a non-empty role id`);
+            continue;
+        }
+        const roleId = role.trim();
+        if (seen.has(roleId)) errors.push(`duplicate access role for "${endpoint.urn}": "${roleId}"`);
+        seen.add(roleId);
     }
 }
 
@@ -101,8 +161,12 @@ function validateHeaderSource(endpoint: SourceEndpoint, header: NonNullable<Sour
 }
 
 function validateResponses(endpoint: SourceEndpoint, errors: string[]): void {
+    if (!endpoint.output?.length) {
+        errors.push(`missing response contract for "${endpoint.urn}"`);
+        return;
+    }
     const seen = new Set<string>();
-    for (const response of endpoint.output ?? []) {
+    for (const response of endpoint.output) {
         if (!isValidResponseStatus(response.status)) errors.push(`invalid response status for "${endpoint.urn}": "${response.status}" (expected an HTTP code or "default")`);
         if (seen.has(response.status)) errors.push(`duplicate response status for "${endpoint.urn}": "${response.status}"`);
         seen.add(response.status);

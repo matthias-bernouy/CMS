@@ -7,7 +7,12 @@ import type { Source } from "cms-sources/interfaces/Source";
 const valid = (): Source => ({
     urn: "urn:shop",
     meta: { name: "Shop" },
-    endpoints: [{ urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" }],
+    endpoints: [{
+        urn: "urn:shop:getCart",
+        method: "GET",
+        targetUrl: "https://api.shop.com/cart",
+        output: [{ status: "200", body: { type: "object" } }],
+    }],
 });
 
 const repo = () => new ValidatingSourceRepository(new InMemorySourceRepository());

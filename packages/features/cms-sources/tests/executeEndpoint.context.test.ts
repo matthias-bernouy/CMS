@@ -41,7 +41,7 @@ describe("executeEndpoint computed params", () => {
 
     test("endpoint with no headers proxies normally", async () => {
         const fetchImpl = okFetch();
-        const response = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
+        const response = await executeEndpoint(ep({ responseKind: "file" }), new Request("http://local/x"), { fetchImpl });
         expect(response.status).toBe(200);
         expect(fetchImpl).toHaveBeenCalledTimes(1);
     });

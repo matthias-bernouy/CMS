@@ -7,6 +7,7 @@ export type BuildUpstream =
 
 export type SourceComputedContext = {
     userID?: string;
+    userRole?: string;
 };
 
 /** The `{name}` placeholder grammar of `targetUrl` — what this module substitutes. */
@@ -108,5 +109,6 @@ function paramValue(
 ): string | null | undefined {
     if (!param.source || param.source.from === "request") return incoming.get(param.name);
     if (param.source.ref === "userID") return computed.userID || undefined;
+    if (param.source.ref === "userRole") return computed.userRole || undefined;
     return undefined;
 }

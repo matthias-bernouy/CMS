@@ -22,7 +22,10 @@ describe("executeEndpoint proxy", () => {
                 "content-length": "607",
             },
         }));
-        const response = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
+        const response = await executeEndpoint(ep({
+            responseKind: "file",
+            output: [{ status: "201" }],
+        }), new Request("http://local/x"), { fetchImpl });
         expect(response.status).toBe(201);
         expect(response.headers.get("content-type")).toBe("application/json");
         expect(response.headers.get("set-cookie")).toBeNull();
@@ -51,7 +54,7 @@ describe("executeEndpoint proxy", () => {
 
     test("upstream body and failures are proxied", async () => {
         const bodyFetch = mock(async () => new Response("hello"));
-        const response = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl: bodyFetch });
+        const response = await executeEndpoint(ep({ responseKind: "file" }), new Request("http://local/x"), { fetchImpl: bodyFetch });
         expect(await response.text()).toBe("hello");
 
         const errorFetch = mock(async () => { throw new Error("ECONNREFUSED"); });
@@ -75,5 +78,27 @@ describe("executeEndpoint proxy", () => {
             throw error;
         });
         expect((await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl })).status).toBe(504);
+    });
+
+    test("honors a bounded endpoint timeout override", async () => {
+        const fetchImpl = mock(async (_input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+            return await new Promise<Response>((_resolve, reject) => {
+                init?.signal?.addEventListener("abort", () => {
+                    const error = new Error("aborted");
+                    error.name = "AbortError";
+                    reject(error);
+                }, { once: true });
+            });
+        });
+
+        const response = await executeEndpoint(
+            ep({ timeoutMs: 5 }),
+            new Request("http://local/x"),
+            { fetchImpl },
+        );
+
+        expect(response.status).toBe(504);
+        expect(await response.text()).toBe("Source Timeout");
+        expect(fetchImpl).toHaveBeenCalledTimes(1);
     });
 });

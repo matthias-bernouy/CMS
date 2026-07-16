@@ -91,5 +91,6 @@ async function secretHeaderValue(name: string, ref: string, prefix: string | und
 
 function computedValue(ref: ComputedParamRef, computed: SourceComputedContext): string | undefined {
     if (ref === "userID") return computed.userID || undefined;
+    if (ref === "userRole") return computed.userRole || undefined;
     return undefined;
 }

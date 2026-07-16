@@ -38,6 +38,20 @@ function walkShape(value: unknown, path: string, depth: number, count: { n: numb
         }
         shape.nullable = v.nullable;
     }
+    if (typeof v.title === "string" && v.title.trim()) shape.title = v.title.trim();
+    if (v.semantic === "user-id") shape.semantic = { kind: "user-id" };
+    else if (typeof v.semantic === "object" && v.semantic !== null && !Array.isArray(v.semantic)) {
+        const semantic = v.semantic as Record<string, unknown>;
+        if (semantic.kind !== "user-id") throw new SourceValidationError(`${path}.semantic.kind`, "must be user-id");
+        shape.semantic = {
+            kind: "user-id",
+            ...(typeof semantic.authority === "string" && semantic.authority.trim()
+                ? { authority: semantic.authority.trim() }
+                : {}),
+        };
+    } else if (v.semantic !== undefined) {
+        throw new SourceValidationError(`${path}.semantic`, "must be user-id or a semantic object");
+    }
 
     if (type === "object" && v.properties != null) {
         if (typeof v.properties !== "object" || Array.isArray(v.properties)) {

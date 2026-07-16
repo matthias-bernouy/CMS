@@ -10,6 +10,9 @@
         "./browser": "./src/exports/browser.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
+    "dependencies": {
+        "@bernouy/cms-identities": "workspace:*"
+    },
     "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3"

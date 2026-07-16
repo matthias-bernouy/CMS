@@ -8,11 +8,33 @@ export type HTTPMethod = typeof HTTP_METHODS[number];
 export const RESPONSE_KINDS = ['json', 'file'] as const;
 export type ResponseKind = typeof RESPONSE_KINDS[number];
 
+/** Default and upper bound for one proxied upstream request. Endpoint-specific
+ * overrides remain bounded so a declarative source cannot hold CMS workers
+ * indefinitely. */
+export const DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS = 15_000;
+export const MAX_SOURCE_ENDPOINT_TIMEOUT_MS = 120_000;
+
 export const SOURCE_ENDPOINT_ACCESS_MODES = ['public', 'auth', 'admin', 'system'] as const;
 export type SourceEndpointAccessMode = typeof SOURCE_ENDPOINT_ACCESS_MODES[number];
 
 export type SourceEndpointAccess = {
     mode: SourceEndpointAccessMode;
+    /** Explicit role allow-list for privileged operator endpoints. When set,
+     *  the endpoint must use `admin` mode and callers are matched by role id. */
+    roles?: string[];
+};
+
+/** Effects declared by an endpoint after a successful response.
+ *
+ * `invalidatesSchema` means that CMS-derived definitions (sources, overlays and
+ * dashboards) must be read again before the admin renders its next state. It
+ * deliberately does not invalidate public-site content or database schemas. */
+export type SourceEndpointEffects = {
+    invalidatesSchema?: true;
+    identityBindings?: Array<{
+        kind: "user";
+        responsePath: string;
+    }>;
 };
 
 /** Where a request header's value comes from.
@@ -37,7 +59,7 @@ export type EndpointHeader = {
 export const PARAM_INS = ['path', 'query', 'header'] as const;
 export type ParamIn = typeof PARAM_INS[number];
 
-export const COMPUTED_PARAM_REFS = ['userID'] as const;
+export const COMPUTED_PARAM_REFS = ['userID', 'userRole'] as const;
 export type ComputedParamRef = typeof COMPUTED_PARAM_REFS[number];
 
 export type ParamValueSource =
@@ -74,7 +96,9 @@ export type SourceEndpoint = {
     urn: string;            // e.g. "urn:source-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
     targetUrl: string;      // e.g. "https://api.example.com/v1/users/{id}"
+    timeoutMs?: number;     // bounded upstream timeout; defaults to 15 seconds
     access?: SourceEndpointAccess;
+    effects?: SourceEndpointEffects;
     responseKind?: ResponseKind;
     mediaType?: string;
 
@@ -99,6 +123,7 @@ export type SourceEndpoint = {
 
 export type Source = {
     urn: string;            // e.g. "urn:source-id"
+    identityAuthority?: string;
     meta?: SourceMeta;
     endpoints: SourceEndpoint[];
 };

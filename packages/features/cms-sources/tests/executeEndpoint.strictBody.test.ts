@@ -78,6 +78,7 @@ describe("executeEndpoint strict JSON bodies", () => {
 function strictEndpoint() {
     return ep({
         method: "POST",
+        output: [{ status: "200" }],
         input: {
             body: {
                 type: "object",

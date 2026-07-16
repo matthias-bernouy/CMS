@@ -4,6 +4,7 @@ export const ep = (urn: string, targetUrl = "https://api.shop.com/x"): SourceEnd
     urn,
     method: "GET",
     targetUrl,
+    output: [{ status: "200" }],
 });
 
 export const source = (over: Partial<Source> = {}): Source => ({

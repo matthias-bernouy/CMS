@@ -52,6 +52,11 @@ describe("parseDataShape", () => {
         expect(out).toEqual({ type: "string" });
     });
 
+    test("preserves a human-readable JSON Schema title", () => {
+        expect(parseDataShape({ type: "string", title: "Product brand" }, "body"))
+            .toEqual({ type: "string", title: "Product brand" });
+    });
+
     test("empty object properties collapse to a bare object", () => {
         expect(parseDataShape({ type: "object", properties: {} }, "body")).toEqual({ type: "object" });
     });

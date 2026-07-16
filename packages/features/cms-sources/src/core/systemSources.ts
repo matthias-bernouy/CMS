@@ -18,6 +18,7 @@ const objectShape = (properties: Record<string, DataShape>, required: string[] =
 
 const subjectShape = objectShape({
     identifier: stringShape(),
+    email:      stringShape(),
     role:       stringShape(),
 });
 
@@ -63,7 +64,7 @@ export const SYSTEM_AUTH_SOURCE: Source = {
             access:    { mode: "public" },
             targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
             meta:      { name: "Sign up" },
-            input:     { body: objectShape({ email: stringShape(), password: stringShape(), displayName: stringShape() }, ["email", "password"]) },
+            input:     { body: objectShape({ email: stringShape(), password: stringShape() }, ["email", "password"]) },
             output:    [{ status: "200", body: okShape }],
         },
         {

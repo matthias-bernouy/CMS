@@ -38,6 +38,16 @@ describe("executeEndpoint headers", () => {
         expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("x-user-id")).toBe("user-123");
     });
 
+    test("computed userRole header uses configured context", async () => {
+        const fetchImpl = okFetch();
+        const endpoint = ep({ headers: [{ name: "X-User-Role", source: { from: "computed", ref: "userRole" } }] });
+        await executeEndpoint(endpoint, new Request("http://local/x"), {
+            fetchImpl,
+            resolveContext: async () => ({ userRole: "finance" }),
+        });
+        expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("x-user-role")).toBe("finance");
+    });
+
     test("computed config header failures stop before fetch", async () => {
         const endpoint = ep({ headers: [{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] });
         const noResolver = okFetch();

@@ -9,7 +9,14 @@ export type {
     ResponseKind,
 } from "../interfaces/Source";
 export type { DataShape } from "../interfaces/DataShape";
-export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS } from "../interfaces/Source";
+export {
+    COMPUTED_PARAM_REFS,
+    DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS,
+    HTTP_METHODS,
+    MAX_SOURCE_ENDPOINT_TIMEOUT_MS,
+    PARAM_INS,
+    RESPONSE_KINDS,
+} from "../interfaces/Source";
 export {
     isValidHeaderName,
     isForbiddenHeaderName,

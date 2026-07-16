@@ -9,9 +9,17 @@ export type {
     Source, SourceEndpoint, HTTPMethod, ParamIn,
     EndpointHeader, HeaderSource, EndpointParam, SourceMeta, EndpointResponse,
     ComputedParamRef, ParamValueSource, ResponseKind,
-    SourceEndpointAccess, SourceEndpointAccessMode,
+    SourceEndpointAccess, SourceEndpointAccessMode, SourceEndpointEffects,
 } from "../interfaces/Source";
-export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS, SOURCE_ENDPOINT_ACCESS_MODES } from "../interfaces/Source";
+export {
+    COMPUTED_PARAM_REFS,
+    DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS,
+    HTTP_METHODS,
+    MAX_SOURCE_ENDPOINT_TIMEOUT_MS,
+    PARAM_INS,
+    RESPONSE_KINDS,
+    SOURCE_ENDPOINT_ACCESS_MODES,
+} from "../interfaces/Source";
 export type { DataShape } from "../interfaces/DataShape";
 export {
     FORBIDDEN_REQUEST_HEADERS, HEADER_NAME_RE, isForbiddenHeaderName, isValidHeaderName,
@@ -78,6 +86,16 @@ export {
     sourceEndpointAccessMode,
 } from "../core/access";
 export { parseDataShape } from "../core/parseDataShape";
+export {
+    DataShapeProjectionError,
+    projectStrictDataShape,
+    type StrictDataShapeProjectionOptions,
+} from "../core/projectStrictDataShape";
+export {
+    safeUpstreamFailureResponse,
+    type SafeUpstreamFailureResponseOptions,
+    type UndeclaredUpstreamStatus,
+} from "../core/upstreamFailure";
 export {
     SourceOverlaySourceRepository,
     applySourceOverlays,

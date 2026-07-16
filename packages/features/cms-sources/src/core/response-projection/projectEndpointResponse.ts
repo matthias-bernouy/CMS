@@ -1,5 +1,6 @@
 import type { SourceEndpoint } from "../../interfaces/Source";
 import { responseHeaders } from "../endpointHeaders";
+import { safeUpstreamFailureResponse } from "../upstreamFailure";
 import { projectDataShape } from "./projectDataShape";
 import { readBoundedJson } from "./readBoundedJson";
 
@@ -114,15 +115,7 @@ function projectedJsonResponse(upstream: Response, value: unknown): Response {
 }
 
 function projectionFailure(head: boolean): Response {
-    const correlationId = crypto.randomUUID();
-    const headers = new Headers({
-        "cache-control": "no-store",
-        "content-type": "application/json; charset=utf-8",
-        "x-content-type-options": "nosniff",
-        "x-correlation-id": correlationId,
-    });
-    const body = head ? null : JSON.stringify({ error: "Upstream request failed", correlationId });
-    return new Response(body, { status: 502, headers });
+    return safeUpstreamFailureResponse(crypto.randomUUID(), { omitBody: head });
 }
 
 function reportLegacyContract(

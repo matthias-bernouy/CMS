@@ -7,6 +7,7 @@ import type {
     ParamValueSource,
     ResponseKind,
     SourceEndpointAccess,
+    SourceEndpointEffects,
     SourceMeta,
 } from "../interfaces/Source";
 
@@ -14,6 +15,7 @@ export type SourceParamDto = {
     name: string;
     in: ParamIn;
     type?: DataShape["type"];
+    semantic?: DataShape["semantic"];
     required?: boolean;
     description?: string;
     source?: ParamValueSource;
@@ -23,7 +25,9 @@ export type SourceEndpointDto = {
     endpointId: string;
     method: HTTPMethod;
     targetUrl: string;
+    timeoutMs?: number;
     access?: SourceEndpointAccess;
+    effects?: SourceEndpointEffects;
     responseKind?: ResponseKind;
     mediaType?: string;
     params: SourceParamDto[];
@@ -35,6 +39,7 @@ export type SourceEndpointDto = {
 
 export type SourceDto = {
     id: string;
+    identityAuthority?: string;
     meta: SourceMeta;
     endpoints: SourceEndpointDto[];
 };

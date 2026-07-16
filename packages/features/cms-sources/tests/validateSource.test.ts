@@ -15,7 +15,37 @@ describe("validateSource", () => {
     test("validates endpoint method and access mode", () => {
         expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), method: "FETCH" as any }] })).some(e => e.includes("invalid method"))).toBe(true);
         expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access: { mode: "public" } }] }))).toEqual([]);
+        expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access: { mode: "admin", roles: ["support", "finance"] } }] }))).toEqual([]);
         expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access: { mode: "visitor" as any } }] })).some(e => e.includes("invalid access mode"))).toBe(true);
+    });
+
+    test("validates bounded endpoint timeout overrides", () => {
+        expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), timeoutMs: 60_000 }] }))).toEqual([]);
+        for (const timeoutMs of [0, 1.5, 120_001, Number.NaN]) {
+            const errors = validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), timeoutMs }] }));
+            expect(errors.some(error => error.includes("invalid timeoutMs"))).toBe(true);
+        }
+    });
+
+    test("validates explicit endpoint access roles", () => {
+        const wrongMode = validateSource(source({ endpoints: [{
+            ...ep("urn:shop:wrongMode"),
+            access: { mode: "auth", roles: ["support"] },
+        }] }));
+        expect(wrongMode.some(error => error.includes("require admin mode"))).toBe(true);
+
+        const malformed = validateSource(source({ endpoints: [{
+            ...ep("urn:shop:malformed"),
+            access: { mode: "admin", roles: ["support", " ", "support"] },
+        }] }));
+        expect(malformed.some(error => error.includes("non-empty role id"))).toBe(true);
+        expect(malformed.some(error => error.includes("duplicate access role"))).toBe(true);
+
+        const nonArray = validateSource(source({ endpoints: [{
+            ...ep("urn:shop:nonArray"),
+            access: { mode: "admin", roles: "finance" } as any,
+        }] }));
+        expect(nonArray.some(error => error.includes("expected an array"))).toBe(true);
     });
 
     test("validates params", () => {
@@ -29,6 +59,7 @@ describe("validateSource", () => {
         const good = { ...ep("urn:shop:x"), input: { params: [
             { name: "user_id", in: "query" as const, source: { from: "computed" as const, ref: "userID" as const }, schema: { type: "string" as const } },
             { name: "X-User-ID", in: "header" as const, source: { from: "computed" as const, ref: "userID" as const }, schema: { type: "string" as const } },
+            { name: "X-User-Role", in: "header" as const, source: { from: "computed" as const, ref: "userRole" as const }, schema: { type: "string" as const } },
         ] } };
         expect(validateSource(source({ endpoints: [good] }))).toEqual([]);
 
@@ -66,6 +97,9 @@ describe("validateSource", () => {
         expect(errors.some(e => e.includes("invalid header prefix"))).toBe(true);
         expect(errors.some(e => e.includes("invalid response status"))).toBe(true);
         expect(errors.some(e => e.includes("duplicate response status"))).toBe(true);
+        expect(validateSource(source({
+            endpoints: [{ ...ep("urn:shop:missingOutput"), output: undefined }],
+        })).some(e => e.includes("missing response contract"))).toBe(true);
     });
 
     test("accepts file endpoints and fully-furnished endpoints", () => {

@@ -90,3 +90,31 @@ describe("executeEndpoint JSON body coercion", () => {
         expect(await new Response(passed.body).text()).toBe(JSON.stringify({ subscribed: "true" }));
     });
 });
+
+describe("executeEndpoint streamed bodies", () => {
+    test("forwards multipart form data with its content type boundary", async () => {
+        const fetchImpl = okFetch();
+        const formData = new FormData();
+        formData.set("file", new File(["avatar"], "avatar.png", { type: "image/png" }));
+        const request = new Request("http://local/x", {
+            method: "POST",
+            body: formData,
+        });
+        const contentType = request.headers.get("content-type");
+
+        await executeEndpoint(ep({ method: "POST" }), request, { fetchImpl });
+
+        const passed = fetchImpl.mock.calls[0]![1] as RequestInit;
+        expect(new Headers(passed.headers).get("content-type")).toBe(contentType);
+        expect(contentType).toStartWith("multipart/form-data; boundary=");
+        expect(passed.body).toBeInstanceOf(ReadableStream);
+
+        const forwarded = await new Response(passed.body, {
+            headers: { "content-type": contentType ?? "" },
+        }).formData();
+        const file = forwarded.get("file");
+        expect(file).toBeInstanceOf(File);
+        expect((file as File).name).toBe("avatar.png");
+        expect(await (file as File).text()).toBe("avatar");
+    });
+});

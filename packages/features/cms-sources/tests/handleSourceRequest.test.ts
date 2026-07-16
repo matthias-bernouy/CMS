@@ -12,7 +12,12 @@ const PREFIX = "/base/.cms/sources/";
 const source: Source = {
     urn: "urn:shop",
     endpoints: [
-        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" },
+        {
+            urn: "urn:shop:getCart",
+            method: "GET",
+            targetUrl: "https://api.shop.com/cart",
+            output: [{ status: "200", body: { type: "object" } }],
+        },
     ],
 };
 
@@ -79,7 +84,8 @@ async function dynamicOverlayHarness() {
     return { repo, fetchImpl, resolveSecret };
 }
 
-const okFetch = () => mock(async (_i: Parameters<typeof fetch>[0], _init?: Parameters<typeof fetch>[1]) => new Response("ok"));
+const okFetch = () => mock(async (_i: Parameters<typeof fetch>[0], _init?: Parameters<typeof fetch>[1]) =>
+    Response.json({ ok: true }));
 
 describe("handleSourceRequest", () => {
     test("null source → 501", async () => {
@@ -112,7 +118,7 @@ describe("handleSourceRequest", () => {
         expect(fetchImpl).toHaveBeenCalledTimes(1);
         expect(fetchImpl.mock.calls[0]![0]).toBe("https://api.shop.com/cart");
         expect(res.status).toBe(200);
-        expect(await res.text()).toBe("ok");
+        expect(await res.json()).toEqual({ ok: true });
     });
 
     test("a denied endpoint grant returns 403 without proxying upstream", async () => {

@@ -8,5 +8,8 @@
             "cms-sources/*": ["./*"]
         }
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../cms-identities" }
+    ]
 }

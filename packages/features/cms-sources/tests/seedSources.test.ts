@@ -18,6 +18,7 @@ const manifest: Source[] = [
                     { name: "latitude",  in: "query", required: true, schema: { type: "number" } },
                     { name: "longitude", in: "query", required: true, schema: { type: "number" } },
                 ] },
+                output: [{ status: "200", body: { type: "object" } }],
             },
         ],
     },
@@ -25,7 +26,12 @@ const manifest: Source[] = [
         urn: "urn:rest-countries",
         meta: { name: "REST Countries" },
         endpoints: [
-            { urn: "urn:rest-countries:byName", method: "GET", targetUrl: "https://restcountries.com/v3.1/name" },
+            {
+                urn: "urn:rest-countries:byName",
+                method: "GET",
+                targetUrl: "https://restcountries.com/v3.1/name",
+                output: [{ status: "200", body: { type: "array", items: { type: "object" } } }],
+            },
         ],
     },
 ];
