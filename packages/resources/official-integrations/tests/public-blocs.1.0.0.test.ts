@@ -8,7 +8,18 @@ const expectedBlocs = new Map([
     ["mondial-relay", ["mondial-relay-picker"]],
     ["newsletter", ["newsletter-subscription"]],
     ["stripe-connect", ["stripe-connect-onboarding"]],
-    ["user-account", ["user-account-form"]],
+    ["commerce-stripe-payments", ["commerce-stripe-payment"]],
+    ["commerce", [
+        "commerce-account-offers",
+        "commerce-account-sales",
+        "commerce-offer-filter",
+        "commerce-offer-list",
+        "commerce-offer-preview",
+        "commerce-offer-price-form",
+        "commerce-sale-detail",
+    ]],
+    ["commerce-negotiation", ["commerce-negotiation-form", "commerce-negotiation-list"]],
+    ["user-account", ["user-account-avatar", "user-account-form"]],
 ]);
 
 describe("public integration blocs 1.0.0", () => {

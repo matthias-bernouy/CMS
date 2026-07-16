@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     importIntegration,
+    InMemoryIntegrationInstallationRepository,
     type IntegrationBlocArtifact,
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
@@ -11,6 +12,7 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository, validateDashboard } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySourceOverlayRepository, InMemorySourceRepository, validateSource } from "@bernouy/cms-sources";
 
 describe("public integrations 1.0.0", () => {
@@ -31,8 +33,8 @@ describe("public integrations 1.0.0", () => {
             dashboardId: "emailer-templates",
             blocTags: [],
             answers: { id: "emailer" },
-            functionName: "cms-emailer",
-            schemas: ["emailer"],
+            functionNames: ["cms-emailer", "cms-broadcast"],
+            schemas: ["emailer", "broadcast"],
             expectedEndpoints: ["listTemplates", "getTemplate", "upsertTemplate", "sendTestEmail", "sendTemplateEmail", "listMessages", "getSettings", "updateSettings"],
         },
         {
@@ -44,18 +46,23 @@ describe("public integrations 1.0.0", () => {
                 id: "stripe-connect",
                 stripeSecretKey: "sk_test_123",
                 stripePublishableKey: "pk_test_123",
+                stripeWebhookSecret: "whsec_test_123",
+                stripeConnectWebhookSecret: "whsec_connect_test_456",
+                stripeConnectV2WebhookSecret: "whsec_connect_v2_test_789",
                 defaultCountry: "FR",
-                defaultCurrency: "EUR",
+                defaultCurrency: "eur",
+                sellerActivityDescription: "Sale of second-hand goods between individuals.",
             },
             functionName: "cms-stripe-connect",
             schemas: ["stripe_connect"],
-            expectedEndpoints: ["getConnectStatus", "createOnboardingSession", "listConnectAccounts", "listPayments"],
+            expectedEndpoints: ["getConnectStatus", "createOnboardingSession", "listProviderPayments"],
+            installsDashboard: false,
         },
         {
             kind: "user-account",
             sourceId: "user-account",
             dashboardId: "user-account-users",
-            blocTags: ["user-account-form"],
+            blocTags: ["user-account-avatar", "user-account-form"],
             answers: { id: "user-account" },
             functionName: "cms-user-account",
             schemas: ["user_account"],
@@ -68,9 +75,15 @@ describe("public integrations 1.0.0", () => {
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
-        expect(dashboard).toBeTruthy();
+        if ("installsDashboard" in scenario && scenario.installsDashboard === false) {
+            expect(dashboard).toBeNull();
+        } else {
+            expect(dashboard).toBeTruthy();
+        }
         expect(harness.deployment?.dataApiSchemas).toEqual(scenario.schemas);
-        expect(harness.deployment?.functions.map(fn => fn.name)).toEqual([scenario.functionName]);
+        expect(harness.deployment?.functions.map(fn => fn.name)).toEqual(
+            "functionNames" in scenario ? scenario.functionNames : [scenario.functionName],
+        );
         expect(harness.importedBlocs.map(bloc => bloc.tag)).toEqual(scenario.blocTags);
 
         const endpointUrns = source?.endpoints.map(endpoint => endpoint.urn) ?? [];
@@ -111,7 +124,7 @@ describe("public integrations 1.0.0", () => {
         }
     });
 
-    test("declares response outputs for every official JSON endpoint", async () => {
+    test("declares response outputs for every official endpoint", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const missing: string[] = [];
 
@@ -120,7 +133,6 @@ describe("public integrations 1.0.0", () => {
             for (const artifact of definition?.artifacts ?? []) {
                 if (artifact.type !== "source") continue;
                 for (const endpoint of artifact.source.endpoints) {
-                    if ((endpoint.responseKind ?? "json") !== "json") continue;
                     if (endpoint.output?.length) continue;
                     missing.push(`${entry.kind}:${artifact.source.id}:${endpoint.endpointId}`);
                 }
@@ -141,6 +153,34 @@ export async function importScenario(kind: string, answers: Record<string, strin
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
     const sourceOverlays = new InMemorySourceOverlayRepository();
+    const functions = new InMemoryFunctionRepository();
+    const installations = new InMemoryIntegrationInstallationRepository();
+    await installations.create({
+        id: "basic-blocs",
+        label: "Basic Blocs",
+        definitionVersion: "1.0.0",
+        status: "success",
+        answersSnapshot: {},
+        secretRefs: {},
+        secretInputs: [],
+        artifacts: [{ type: "bloc", id: "basic-input", action: "created" }],
+        runs: [],
+    });
+    if (kind === "emailer") {
+        await secrets.set("NEWSLETTER_KEY", "newsletter-key");
+        await sources.createSource(newsletterDependencySource());
+        await installations.create({
+            id: "newsletter",
+            label: "Newsletter",
+            definitionVersion: "1.0.0",
+            status: "success",
+            answersSnapshot: { id: "newsletter" },
+            secretRefs: { cmsApiKey: "NEWSLETTER_KEY" },
+            secretInputs: ["cmsApiKey"],
+            artifacts: [{ type: "source", id: "urn:newsletter", action: "created" }],
+            runs: [],
+        });
+    }
     const importedBlocs: IntegrationBlocArtifact[] = [];
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
@@ -164,7 +204,9 @@ export async function importScenario(kind: string, answers: Record<string, strin
             secrets,
             roles,
             dashboards,
+            functions,
             sourceOverlays,
+            installations,
             connectorDeployers: [deployer],
             blocs: {
                 async importBloc(artifact) {
@@ -178,4 +220,36 @@ export async function importScenario(kind: string, answers: Record<string, strin
     );
 
     return { result, sources, sourceOverlays, secrets, dashboards, importedBlocs, deployment };
+}
+
+function newsletterDependencySource() {
+    return {
+        urn: "urn:newsletter",
+        meta: { name: "Newsletter" },
+        endpoints: [{
+            urn: "urn:newsletter:listSubscriptions",
+            method: "GET" as const,
+            targetUrl: "https://newsletter.test/subscriptions",
+            input: {
+                params: [
+                    { name: "subscribed", in: "query" as const, schema: { type: "string" as const } },
+                    { name: "limit", in: "query" as const, schema: { type: "number" as const } },
+                    { name: "offset", in: "query" as const, schema: { type: "number" as const } },
+                ],
+            },
+            output: [{
+                status: "200",
+                body: {
+                    type: "object" as const,
+                    properties: {
+                        subscriptions: {
+                            type: "array" as const,
+                            items: { type: "object" as const, properties: { email: { type: "string" as const } } },
+                        },
+                        total: { type: "number" as const },
+                    },
+                },
+            }],
+        }],
+    };
 }
