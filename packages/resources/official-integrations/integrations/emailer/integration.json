@@ -3,7 +3,7 @@
     "kind": "emailer",
     "label": "Emailer",
     "category": "Messaging",
-    "description": "Manage transactional email templates and send system emails through SMTP.",
+    "description": "Manage transactional templates and bounded Newsletter broadcasts through SMTP.",
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [

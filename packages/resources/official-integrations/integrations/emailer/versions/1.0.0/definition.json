@@ -4,7 +4,7 @@
     "label": "Emailer",
     "version": "1.0.0",
     "category": "Messaging",
-    "description": "Manage transactional email templates and send system emails through SMTP.",
+    "description": "Manage transactional templates and bounded Newsletter broadcasts through SMTP.",
     "icon": {
         "path": "assets/icon.svg"
     },
@@ -36,7 +36,8 @@
             ]
         ],
         "scopes": [
-            "Transactional email template management",
+            "Transactional email templates and system sends",
+            "Direct Emailer template broadcasts to Newsletter subscribers",
             "System-only template email sending",
             "Admin test sends",
             "Delivery audit rows",
@@ -64,23 +65,35 @@
             [
                 "Supabase",
                 "Private emailer schema and Edge Function"
+            ],
+            [
+                "Broadcasts",
+                "Direct Newsletter email broadcasts orchestrated through CMS endpoints"
+            ],
+            [
+                "Supabase",
+                "Private broadcast schema and campaign Edge Function"
             ]
         ],
         "review": [
             "Configure dedicated SMTP credentials in the provider environment with the minimum permissions available.",
             "Call system sends through CMS functions or triggers rather than public pages.",
             "Do not place sensitive data in template samples.",
+            "Durable campaign creation stays unavailable until audience pagination can be orchestrated through Newsletter endpoints without sharing credentials.",
             "Add provider webhooks or bounce processing in a later integration version if delivery state must be authoritative."
         ],
         "sync": [
+            "Validate Newsletter dependency",
             "Validate answers",
             "Generate private API key",
             "Deploy Supabase connector",
             "Install Emailer source",
             "Install Emailer dashboards",
-            "Refresh Sources"
+            "Refresh Sources",
+            "Install broadcast source and safe orchestration functions",
+            "Install campaigns dashboard"
         ],
-        "syncNote": "This integration creates a CMS source backed by a Supabase Edge Function. Supabase stores templates and message audit rows; the SMTP provider sends email."
+        "syncNote": "Emailer owns transactional delivery. Newsletter remains the audience source and is only accessed through its declared CMS endpoints."
     },
     "generatedSecrets": [
         {
@@ -89,6 +102,13 @@
             "generator": "token",
             "bytes": 32,
             "prefix": "cms_em_"
+        },
+        {
+            "name": "broadcastApiKey",
+            "key": "EMAILER_{{env answers.id}}_BROADCAST_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_eb_"
         }
     ],
     "connectors": [
@@ -96,11 +116,15 @@
             "provider": "supabase",
             "root": "connectors/supabase",
             "dataApiSchemas": [
-                "emailer"
+                "emailer",
+                "broadcast"
             ],
             "schemas": [
                 {
                     "path": "schema.sql"
+                },
+                {
+                    "path": "broadcast-schema.sql"
                 }
             ],
             "functions": [
@@ -110,6 +134,17 @@
                     "configPath": "supabase.config.toml",
                     "secrets": {
                         "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}"
+                    }
+                },
+                {
+                    "name": "cms-broadcast",
+                    "directory": "functions/cms-broadcast",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_BROADCAST_API_KEY": "{{generated.broadcastApiKey}}",
+                        "CMS_EMAILER_API_KEY": "{{generated.cmsApiKey}}",
+                        "BROADCAST_TICK_BATCH": "25",
+                        "BROADCAST_MAX_ATTEMPTS": "5"
                     }
                 }
             ]
@@ -485,6 +520,14 @@
                                 "body": {
                                     "type": "object"
                                 }
+                            },
+                            {
+                                "status": "400",
+                                "body": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } },
+                                    "required": ["error"]
+                                }
                             }
                         ]
                     },
@@ -679,6 +722,14 @@
                                 "status": "200",
                                 "body": {
                                     "type": "object"
+                                }
+                            },
+                            {
+                                "status": "400",
+                                "body": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } },
+                                    "required": ["error"]
                                 }
                             }
                         ]
@@ -1222,6 +1273,674 @@
                     }
                 ]
             }
+        },
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}-broadcast",
+                "meta": {
+                    "name": "Newsletter Broadcast",
+                    "description": "Durable newsletter campaign queue backed by Supabase.",
+                    "icon": "send"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listCampaigns",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/campaigns",
+                        "params": [
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getCampaign",
+                        "method": "GET",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/campaign",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "campaign": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "pauseCampaign",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/campaign/pause",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {}
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "campaign": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "cancelCampaign",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/campaign/cancel",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {}
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "campaign": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "retryFailedCampaign",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/campaign/retry-failed",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "required": true,
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {}
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "tick",
+                        "method": "POST",
+                        "access": "admin",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-broadcast/tick",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.broadcastApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {}
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-broadcast-campaigns",
+                "meta": {
+                    "name": "Broadcast Campaigns",
+                    "icon": "send"
+                },
+                "source": "{{answers.id}}-broadcast",
+                "views": [
+                    {
+                        "widget": "w-table",
+                        "id": "campaignsTable",
+                        "title": "Campaigns",
+                        "source": {
+                            "endpoint": "listCampaigns",
+                            "params": {
+                                "limit": "100"
+                            },
+                            "itemsPath": "items",
+                            "totalPath": "total"
+                        },
+                        "rowKey": "id",
+                        "columns": [
+                            {
+                                "id": "templateKey",
+                                "label": "Template",
+                                "path": "templateKey",
+                                "primary": true
+                            },
+                            {
+                                "id": "status",
+                                "label": "Status",
+                                "path": "status"
+                            },
+                            {
+                                "id": "totalCount",
+                                "label": "Total",
+                                "path": "totalCount"
+                            },
+                            {
+                                "id": "sentCount",
+                                "label": "Sent",
+                                "path": "sentCount"
+                            },
+                            {
+                                "id": "failedCount",
+                                "label": "Failed",
+                                "path": "failedCount"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "id": "getNewsletterBroadcastStatus",
+                "method": "POST",
+                "access": {
+                    "mode": "admin"
+                },
+                "meta": {
+                    "name": "Get newsletter broadcast status",
+                    "description": "Read one broadcast campaign status."
+                },
+                "input": {
+                    "body": {
+                        "type": "object",
+                        "properties": {
+                            "campaignId": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "campaignId"
+                        ]
+                    }
+                },
+                "steps": [
+                    {
+                        "id": "campaign",
+                        "call": {
+                            "source": "{{answers.id}}-broadcast",
+                            "endpoint": "getCampaign",
+                            "params": {
+                                "id": "$input.body.campaignId"
+                            }
+                        }
+                    }
+                ],
+                "return": {
+                    "status": 200,
+                    "body": "$steps.campaign"
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "id": "pauseNewsletterBroadcast",
+                "method": "POST",
+                "access": {
+                    "mode": "admin"
+                },
+                "meta": {
+                    "name": "Pause newsletter broadcast",
+                    "description": "Pause one running or scheduled broadcast campaign."
+                },
+                "input": {
+                    "body": {
+                        "type": "object",
+                        "properties": {
+                            "campaignId": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "campaignId"
+                        ]
+                    }
+                },
+                "steps": [
+                    {
+                        "id": "campaign",
+                        "call": {
+                            "source": "{{answers.id}}-broadcast",
+                            "endpoint": "pauseCampaign",
+                            "params": {
+                                "id": "$input.body.campaignId"
+                            },
+                            "body": {}
+                        }
+                    }
+                ],
+                "return": {
+                    "status": 200,
+                    "body": "$steps.campaign"
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "id": "cancelNewsletterBroadcast",
+                "method": "POST",
+                "access": {
+                    "mode": "admin"
+                },
+                "meta": {
+                    "name": "Cancel newsletter broadcast",
+                    "description": "Cancel one non-terminal broadcast campaign."
+                },
+                "input": {
+                    "body": {
+                        "type": "object",
+                        "properties": {
+                            "campaignId": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "campaignId"
+                        ]
+                    }
+                },
+                "steps": [
+                    {
+                        "id": "campaign",
+                        "call": {
+                            "source": "{{answers.id}}-broadcast",
+                            "endpoint": "cancelCampaign",
+                            "params": {
+                                "id": "$input.body.campaignId"
+                            },
+                            "body": {}
+                        }
+                    }
+                ],
+                "return": {
+                    "status": 200,
+                    "body": "$steps.campaign"
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "id": "retryNewsletterBroadcastFailures",
+                "method": "POST",
+                "access": {
+                    "mode": "admin"
+                },
+                "meta": {
+                    "name": "Retry newsletter broadcast failures",
+                    "description": "Move failed recipients back to pending for one campaign."
+                },
+                "input": {
+                    "body": {
+                        "type": "object",
+                        "properties": {
+                            "campaignId": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "campaignId"
+                        ]
+                    }
+                },
+                "steps": [
+                    {
+                        "id": "result",
+                        "call": {
+                            "source": "{{answers.id}}-broadcast",
+                            "endpoint": "retryFailedCampaign",
+                            "params": {
+                                "id": "$input.body.campaignId"
+                            },
+                            "body": {}
+                        }
+                    }
+                ],
+                "return": {
+                    "status": 200,
+                    "body": "$steps.result"
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "id": "sendNewsletterBroadcast",
+                "method": "POST",
+                "access": {
+                    "mode": "admin"
+                },
+                "meta": {
+                    "name": "Send newsletter broadcast",
+                    "description": "Send one Emailer template to the first 25 active newsletter subscribers."
+                },
+                "input": {
+                    "body": {
+                        "type": "object",
+                        "properties": {
+                            "campaignKey": {
+                                "type": "string"
+                            },
+                            "templateKey": {
+                                "type": "string"
+                            },
+                            "data": {
+                                "type": "object"
+                            }
+                        },
+                        "required": [
+                            "campaignKey",
+                            "templateKey"
+                        ]
+                    }
+                },
+                "output": [
+                    {
+                        "status": "200",
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "subscribers": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
+                                "messages": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ui": {
+                    "execute": {
+                        "fields": [
+                            {
+                                "path": "body.campaignKey",
+                                "label": "Campaign key",
+                                "control": "text"
+                            },
+                            {
+                                "path": "body.templateKey",
+                                "label": "Template",
+                                "control": "source-select",
+                                "source": "{{answers.id}}",
+                                "endpoint": "listTemplates",
+                                "params": {
+                                    "status": "active",
+                                    "limit": 100
+                                },
+                                "itemsPath": "items",
+                                "labelPath": "name",
+                                "valuePath": "key"
+                            },
+                            {
+                                "path": "body.data",
+                                "label": "Data",
+                                "control": "json-object",
+                                "seed": {
+                                    "type": "paths",
+                                    "dependsOn": "body.templateKey",
+                                    "source": "{{answers.id}}",
+                                    "endpoint": "getTemplate",
+                                    "params": {
+                                        "key": "$body.templateKey"
+                                    },
+                                    "pathsPath": "requiredTokens",
+                                    "pathNamePath": "name",
+                                    "samplePath": "sample"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "steps": [
+                    {
+                        "id": "subscriptions",
+                        "call": {
+                            "source": "{{dependencies.newsletter.sourceId}}",
+                            "endpoint": "listSubscriptions",
+                            "params": {
+                                "subscribed": "true",
+                                "limit": 25
+                            }
+                        }
+                    },
+                    {
+                        "id": "messages",
+                        "forEach": {
+                            "items": "$steps.subscriptions.subscriptions",
+                            "max": 25,
+                            "steps": [
+                                {
+                                    "id": "message",
+                                    "call": {
+                                        "source": "{{answers.id}}",
+                                        "endpoint": "sendTemplateEmail",
+                                        "body": {
+                                            "key": "$input.body.templateKey",
+                                            "toEmails": [
+                                                "$item.email"
+                                            ],
+                                            "data": "$input.body.data",
+                                            "idempotencyKey": {
+                                                "$concat": [
+                                                    "$input.body.campaignKey",
+                                                    ":",
+                                                    "$item.email"
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ],
+                            "yield": {
+                                "email": "$item.email",
+                                "message": "$steps.message"
+                            }
+                        }
+                    }
+                ],
+                "return": {
+                    "status": 200,
+                    "body": {
+                        "subscribers": "$steps.subscriptions.subscriptions",
+                        "messages": "$steps.messages"
+                    }
+                }
+            }
+        }
+    ],
+    "dependencies": [
+        {
+            "name": "newsletter",
+            "kind": "newsletter"
         }
     ]
 }

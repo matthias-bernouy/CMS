@@ -337,7 +337,7 @@ async function sendRenderedTemplate(
         });
         return publicMessage(message);
     } catch (error) {
-        const message = await insertMessageRow({
+        await insertMessageRow({
             id: crypto.randomUUID(),
             template_key: template.key,
             status: "failed",
@@ -355,7 +355,7 @@ async function sendRenderedTemplate(
             idempotency_key: input.idempotencyKey ?? null,
             sent_at: null,
         });
-        throw new HttpError(502, publicMessage(message).error as string);
+        throw new HttpError(502, "email delivery failed");
     }
 }
 
@@ -402,23 +402,33 @@ function renderTemplate(template: TemplateRow, data: JsonRecord): { subject: str
     }
     return {
         subject: renderString(template.subject, data, "subject"),
-        htmlBody: renderString(template.html_body, data, "htmlBody"),
+        htmlBody: renderString(template.html_body, data, "htmlBody", true),
         textBody: renderString(template.text_body ?? "", data, "textBody"),
     };
 }
 
-function renderString(source: string, data: JsonRecord, field: string): string {
+function renderString(source: string, data: JsonRecord, field: string, escapeHtmlValues = false): string {
     const rendered = source.replace(/{{\s*([^{}]+?)\s*}}/g, (_match, rawName: string) => {
         const name = rawName.trim();
         if (!isTokenName(name)) throw new HttpError(400, `${field} contains an invalid token`);
         const found = lookup(data, name);
         if (!found.found || found.value === null || found.value === undefined) return "";
-        return String(found.value);
+        const value = String(found.value);
+        return escapeHtmlValues ? escapeHtml(value) : value;
     });
     if (rendered.includes("{{") || rendered.includes("}}")) {
         throw new HttpError(400, `${field} contains a malformed token`);
     }
     return rendered;
+}
+
+function escapeHtml(value: string): string {
+    return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
 }
 
 async function templateByKey(key: string): Promise<TemplateRow | null> {

@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import {
     importIntegration,
+    InMemoryIntegrationInstallationRepository,
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
 } from "@bernouy/cms-integrations";
@@ -15,6 +16,7 @@ import {
 } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -62,15 +64,21 @@ describe("emailer 1.0.0 source", () => {
     test("installs source, dashboard, connector, and system send endpoint", async () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:emailer");
+        const broadcastSource = await harness.sources.getSource("urn:emailer-broadcast");
         const templatesDashboard = await harness.dashboards.getDashboard("emailer-templates");
         const settingsDashboard = await harness.dashboards.getDashboard("emailer-settings");
+        const campaignsDashboard = await harness.dashboards.getDashboard("emailer-broadcast-campaigns");
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
+        expect(broadcastSource).toBeTruthy();
+        expect(validateSource(broadcastSource!)).toEqual([]);
         expect(templatesDashboard).toBeTruthy();
         expect(settingsDashboard).toBeTruthy();
+        expect(campaignsDashboard).toBeTruthy();
         expect(validateDashboard(templatesDashboard!, { source })).toEqual([]);
         expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
+        expect(validateDashboard(campaignsDashboard!, { source: broadcastSource })).toEqual([]);
         const dashboardJson = JSON.stringify(templatesDashboard);
         const settingsJson = JSON.stringify(settingsDashboard);
         expect(dashboardJson).toContain("newTemplate");
@@ -79,8 +87,9 @@ describe("emailer 1.0.0 source", () => {
         expect(dashboardJson).not.toContain("textBody");
         expect(dashboardJson).not.toContain("sampleDataJson");
         expect(settingsJson).toContain("emailerSettings");
-        expect(harness.deployment?.dataApiSchemas).toEqual(["emailer"]);
-        expect(harness.deployment?.functions.map(fn => fn.name)).toEqual(["cms-emailer"]);
+        expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
+        expect(harness.deployment?.schemas.map(schema => schema.path)).toEqual(["schema.sql", "broadcast-schema.sql"]);
+        expect(harness.deployment?.functions.map(fn => fn.name)).toEqual(["cms-emailer", "cms-broadcast"]);
         expect(String(harness.deployment?.functions[0]?.secrets?.CMS_EMAILER_API_KEY)).toStartWith("cms_em_");
         expect(harness.deployment?.functions[0]?.secrets).toMatchObject({
             SMTP_HOST: "smtp.example.test",
@@ -91,9 +100,48 @@ describe("emailer 1.0.0 source", () => {
             SMTP_FROM: "no-reply@example.test",
             SMTP_REPLY_TO: "support@example.test",
         });
-        expect(harness.result.secrets?.map(secret => secret.key)).toEqual(["EMAILER_EMAILER_API_KEY"]);
+        expect(harness.deployment?.functions[1]?.secrets).toMatchObject({
+            CMS_EMAILER_API_KEY: expect.stringMatching(/^cms_em_/),
+            CMS_BROADCAST_API_KEY: expect.stringMatching(/^cms_eb_/),
+        });
+        expect(harness.deployment?.functions[1]?.secrets).not.toHaveProperty("CMS_NEWSLETTER_API_KEY");
+        expect(harness.result.secrets?.map(secret => secret.key)).toEqual([
+            "EMAILER_EMAILER_API_KEY",
+            "EMAILER_EMAILER_BROADCAST_API_KEY",
+        ]);
+        for (const id of [
+            "sendNewsletterBroadcast",
+            "getNewsletterBroadcastStatus",
+            "pauseNewsletterBroadcast",
+            "cancelNewsletterBroadcast",
+            "retryNewsletterBroadcastFailures",
+        ]) {
+            expect(await harness.functions.getFunction(id)).toBeTruthy();
+        }
+        expect(await harness.functions.getFunction("startNewsletterBroadcast")).toBeNull();
+        expect(broadcastSource?.endpoints.some(endpoint => endpoint.urn.endsWith(":startCampaign"))).toBe(false);
         const sendEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:emailer:sendTemplateEmail");
         expect(sendEndpoint?.access).toEqual({ mode: "system" });
+    });
+
+    test("does not deploy or retain Newsletter credentials in the broadcast connector", async () => {
+        const definition = await Bun.file(new URL(
+            "../integrations/emailer/versions/1.0.0/definition.json",
+            import.meta.url,
+        )).text();
+        const campaignSource = await Bun.file(new URL(
+            "../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/campaigns.ts",
+            import.meta.url,
+        )).text();
+        const entrypoint = await Bun.file(new URL(
+            "../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/index.ts",
+            import.meta.url,
+        )).text();
+
+        expect(definition).not.toMatch(/dependencies\.newsletter\.(?:connectorSecrets|secrets)/);
+        expect(definition).not.toContain("CMS_NEWSLETTER_API_KEY");
+        expect(campaignSource).not.toContain("CMS_NEWSLETTER_API_KEY");
+        expect(entrypoint).not.toContain("startCampaign");
     });
 
     test("exposes provider settings and template defaults without leaking SMTP secrets", async () => {
@@ -267,6 +315,22 @@ describe("emailer 1.0.0 source", () => {
         expect(await jsonBody(missingToken)).toEqual({ error: "missing required token: user.name" });
     });
 
+    test("escapes dynamic values in HTML while preserving subject and text content", async () => {
+        const harness = await createHarness();
+        await okJson(await sourceJson(harness, "upsertTemplate", welcomeTemplate()));
+
+        const rendered = await okJson(await sourceJson(harness, "renderTemplate", {
+            key: "auth.welcome",
+            data: { user: { name: `<Court & "Serve">'` } },
+        }));
+
+        expect(rendered).toMatchObject({
+            subject: `Welcome <Court & "Serve">'`,
+            htmlBody: "<p>Hello &lt;Court &amp; &quot;Serve&quot;&gt;&#39;</p>",
+            textBody: `Hello <Court & "Serve">'`,
+        });
+    });
+
     test("records failed messages when SMTP delivery fails", async () => {
         const harness = await createHarness();
         await okJson(await sourceJson(harness, "upsertTemplate", welcomeTemplate()));
@@ -283,7 +347,9 @@ describe("emailer 1.0.0 source", () => {
         const messages = await okJson(await sourceRequest(harness, "listMessages", { status: "failed" }));
 
         expect(failed.status).toBe(502);
-        expect(await jsonBody(failed)).toEqual({ error: "smtp offline" });
+        const failure = await jsonBody(failed);
+        expect(failure).toEqual({ error: "email delivery failed" });
+        expect(JSON.stringify(failure)).not.toContain("smtp offline");
         expect(messages.items).toEqual([expect.objectContaining({ status: "failed", error: "smtp offline" })]);
         expect(harness.rest.rows("messages")).toEqual([expect.objectContaining({ status: "failed", error: "smtp offline" })]);
     });
@@ -331,6 +397,21 @@ async function importEmailer() {
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
     const dashboards = new InMemoryDashboardRepository();
+    const functions = new InMemoryFunctionRepository();
+    const installations = new InMemoryIntegrationInstallationRepository();
+    await secrets.set("NEWSLETTER_KEY", "newsletter-key");
+    await sources.createSource(newsletterSource());
+    await installations.create({
+        id: "newsletter",
+        label: "Newsletter",
+        definitionVersion: "1.0.0",
+        status: "success",
+        answersSnapshot: { id: "newsletter" },
+        secretRefs: { cmsApiKey: "NEWSLETTER_KEY" },
+        secretInputs: ["cmsApiKey"],
+        artifacts: [{ type: "source", id: "urn:newsletter", action: "created" }],
+        runs: [],
+    });
     let deployment: IntegrationConnectorDeployment | undefined;
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
@@ -362,6 +443,8 @@ async function importEmailer() {
             secrets,
             roles,
             dashboards,
+            functions,
+            installations,
             connectorDeployers: [deployer],
         },
         {
@@ -374,7 +457,39 @@ async function importEmailer() {
         [definition],
     );
 
-    return { result, sources, secrets, dashboards, deployment };
+    return { result, sources, secrets, dashboards, functions, deployment };
+}
+
+function newsletterSource() {
+    return {
+        urn: "urn:newsletter",
+        meta: { name: "Newsletter" },
+        endpoints: [{
+            urn: "urn:newsletter:listSubscriptions",
+            method: "GET" as const,
+            targetUrl: "https://newsletter.test/subscriptions",
+            input: {
+                params: [
+                    { name: "subscribed", in: "query" as const, schema: { type: "string" as const } },
+                    { name: "limit", in: "query" as const, schema: { type: "number" as const } },
+                    { name: "offset", in: "query" as const, schema: { type: "number" as const } },
+                ],
+            },
+            output: [{
+                status: "200",
+                body: {
+                    type: "object" as const,
+                    properties: {
+                        subscriptions: {
+                            type: "array" as const,
+                            items: { type: "object" as const, properties: { email: { type: "string" as const } } },
+                        },
+                        total: { type: "number" as const },
+                    },
+                },
+            }],
+        }],
+    };
 }
 
 class EmailerRestMock {
