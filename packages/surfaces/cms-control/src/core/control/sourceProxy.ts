@@ -34,11 +34,14 @@ export function mountControlSourceProxy(
     const resolveSecret = createSecretResolver(state.secrets);
     const resolveContext = async (req: Request) => {
         const subject = await state.auth.getSubject(req).catch(() => null);
-        return subject ? { userID: subject.identifier } : {};
+        return subject ? { userID: subject.identifier, userRole: subject.role } : {};
     };
     const authorizeEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
         const subject = await state.auth.getSubject(req).catch(() => null);
         if (!subject) return false;
+        if (endpoint.access?.roles !== undefined) {
+            return endpoint.access.roles.includes(subject.role);
+        }
         if (!sourceEndpointAccessAllows(
             sourceEndpointAccessMode(endpoint),
             controlCallerAccessMode(subject.role),
@@ -49,7 +52,7 @@ export function mountControlSourceProxy(
         const definitions = await state.roles.list();
         return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
     };
-    const sourceDeps = { resolveSecret, resolveContext };
+    const sourceDeps = { resolveSecret, resolveContext, identities: state.identities };
     const overlaySources = state.sources && state.sourceOverlays
         ? new SourceOverlaySourceRepository(state.sources, state.sourceOverlays, { deps: sourceDeps })
         : state.sources;

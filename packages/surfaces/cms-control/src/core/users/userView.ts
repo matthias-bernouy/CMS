@@ -1,7 +1,7 @@
 import type { LocalCredentialStore, TUser } from "@bernouy/cms-auth";
 
 export type UserView = TUser & {
-    displayName: string;
+    label: string;
     email: string;
     provider: string;
     providerLabel: string;
@@ -25,7 +25,7 @@ export async function userView(user: TUser, credentials: LocalCredentialStore): 
     const isVerified = Boolean(verifiedAt);
     return {
         ...user,
-        displayName: displayName(user),
+        label: user.email?.trim() || user.sub,
         email,
         provider: user.provider ?? "external",
         providerLabel: providerLabel(user.provider),
@@ -39,12 +39,6 @@ export async function userView(user: TUser, credentials: LocalCredentialStore): 
         markVerifiedAction: flag(canUseLocalEmailActions && !isVerified),
         passwordResetAction: flag(canUseLocalEmailActions),
     };
-}
-
-function displayName(user: TUser): string {
-    const name = user.displayName?.trim();
-    if (name) return name;
-    return user.email?.trim() || user.sub;
 }
 
 function providerLabel(provider: string | undefined): string {

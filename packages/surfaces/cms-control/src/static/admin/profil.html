@@ -48,25 +48,12 @@
                 <div cms-source="{{BASE_PATH}}/api/profil" cms-reload-on="profil:updated">
                         <p9r-stack gap="lg">
                             <div class="profil-hero">
-                                <p9r-avatar size="xl" color="primary" name="{{ displayName }}"></p9r-avatar>
+                                <p9r-avatar size="xl" color="primary" name="{{ email }}"></p9r-avatar>
                                 <p9r-stack gap="xs" align="center">
-                                    <span class="profil-name">{{ displayName }}</span>
+                                    <span class="profil-name">{{ email }}</span>
                                     <p9r-tag color="primary">{{ roleLabel }}</p9r-tag>
-                                    <span class="profil-email">{{ email }}</span>
                                 </p9r-stack>
                             </div>
-
-                            <p9r-card>
-                                <span slot="header">Account</span>
-                                <form cms-source="{{BASE_PATH}}/api/profil as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="profil:updated" cms-source-success-reset="false">
-                                    <p9r-stack gap="md">
-                                        <p9r-input name="displayName" label="Display name" value="{{ displayName }}" placeholder="Your name"></p9r-input>
-                                        <p9r-stack direction="row" justify="end">
-                                            <p9r-button color="primary" type="submit">Save</p9r-button>
-                                        </p9r-stack>
-                                    </p9r-stack>
-                                </form>
-                            </p9r-card>
 
                             <p9r-card cms-repeat="passwordCard">
                                     <span slot="header">Password</span>

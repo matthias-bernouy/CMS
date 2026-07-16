@@ -6,7 +6,7 @@ import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { assignableRoles } from "cms-control/core/roles/rolesView";
 
 
-/** POST /api/users { email, password, displayName?, role? } — create a local
+/** POST /api/users { email, password, role? } — create a local
  *  (email/password) user by hand. Writes BOTH the credential (authn secret) and
  *  the membership row (authz role) exactly like the login flow would, so the
  *  user can sign in immediately and appears in the list with the chosen role.
@@ -16,9 +16,6 @@ export default async function createUser(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
     const email    = typeof body.email === "string" ? body.email.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
-    const displayName = typeof body.displayName === "string" && body.displayName.trim()
-        ? body.displayName.trim()
-        : undefined;
     const role = typeof body.role === "string" ? body.role : "user";
 
     if (!email)    throw new MissingParam("email");
@@ -30,6 +27,6 @@ export default async function createUser(req: Request, cms: ControlCms) {
     // clear validation error instead of a generic store failure.
     if (await cms.credentials.getByEmail(email)) throw new InvalidParam("email", "already in use");
 
-    const user = await createLocalUser({ credentials: cms.credentials, users: cms.users }, { email, password, displayName, role });
+    const user = await createLocalUser({ credentials: cms.credentials, users: cms.users }, { email, password, role });
     return Response.json(user);
 }

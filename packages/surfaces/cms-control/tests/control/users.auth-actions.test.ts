@@ -92,14 +92,13 @@ describe("admin user auth actions", () => {
         const user = await createLocalUser({ credentials, users: cms.users }, {
             email: "detail@example.com",
             password: "password-1",
-            displayName: "Detail User",
             role: "user",
         });
 
         const res = await listUsers(new Request(`http://control/api/users?sub=${encodeURIComponent(user.sub)}`), cms);
         const row = await res.json() as {
             sub: string;
-            displayName: string;
+            label: string;
             roleLabel: string;
             providerLabel: string;
             emailStatusLabel: string;
@@ -107,7 +106,7 @@ describe("admin user auth actions", () => {
         };
 
         expect(row.sub).toBe(user.sub);
-        expect(row.displayName).toBe("Detail User");
+        expect(row.label).toBe("detail@example.com");
         expect(row.roleLabel).toBe("User");
         expect(row.providerLabel).toBe("Local");
         expect(row.emailStatusLabel).toBe("Verified");

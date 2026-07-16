@@ -3,7 +3,6 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
 
 export type ProfilResponse = {
     logoutUrl:    string;
-    displayName:  string;
     email:        string;
     role:         string;
     roleLabel:    string;
@@ -33,8 +32,7 @@ export default async function profil(req: Request, cms: ControlCms): Promise<Res
 
     const data: ProfilResponse = {
         logoutUrl:    cms.auth.buildLogoutUrl(returnTo),
-        displayName:  user?.displayName ?? subject.displayName ?? "",
-        email:        user?.email ?? "",
+        email:        user?.email ?? subject.email ?? "",
         role,
         roleLabel:    role.charAt(0).toUpperCase() + role.slice(1),
         provider,

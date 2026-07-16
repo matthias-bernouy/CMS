@@ -19,7 +19,7 @@
         <p9r-row cms-repeat="." cms-condition="$source.loaded" href="{{BASE_PATH}}/admin/users/detail?sub={{ subParam }}">
             <p9r-cell>
                 <p9r-stack gap="xs">
-                    <strong>{{ displayName }}</strong>
+                    <strong>{{ label }}</strong>
                     <span>{{ email }}</span>
                 </p9r-stack>
             </p9r-cell>
@@ -42,7 +42,6 @@
         <p9r-stack gap="md">
             <p9r-input name="email" type="email" label="Email" placeholder="user@example.com" required></p9r-input>
             <p9r-input name="password" type="password" label="Password" placeholder="At least 8 characters" required></p9r-input>
-            <p9r-input name="displayName" label="Display name" placeholder="Jane Doe"></p9r-input>
             <div>
                 <label style="display:block;font-size:.8rem;color:var(--text-muted,#666);margin-bottom:.25rem">Role</label>
                 <cms-role-select name="role" value="user" list-url="{{BASE_PATH}}/api/roles/list"></cms-role-select>

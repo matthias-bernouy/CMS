@@ -14,7 +14,7 @@
                             <path d="M8 13h5"></path>
                         </svg>
                     </a>
-                    <span slot="title">{{ displayName }}</span>
+                    <span slot="title">{{ label }}</span>
                     <cms-user-actions
                         slot="actions"
                         base-path="{{BASE_PATH}}"
@@ -41,7 +41,7 @@
 
                     <cms-detail-section slot="aside" heading="Profile">
                         <p9r-stack gap="sm">
-                            <strong>{{ displayName }}</strong>
+                            <strong>{{ label }}</strong>
                             <span>{{ email }}</span>
                             <span>{{ providerLabel }}</span>
                             <span>{{ roleLabel }}</span>

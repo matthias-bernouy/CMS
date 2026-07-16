@@ -2,7 +2,6 @@ import {
     AUTH_ROUTES,
     PUBLIC_AUTH_ROUTES,
     authMethodsHandler,
-    createAuthGuard,
     localLoginHandler,
     localLogoutHandler,
     oidcCallbackHandler,
@@ -19,8 +18,9 @@ import {
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { CMS_FILES_ROUTE, filesPrefix, serveFilesRequest } from "@bernouy/cms-files";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
-import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
+import { renderLoginPage } from "cms-control/core/auth/authPages";
 import { mountControlSourceProxy } from "cms-control/core/control/sourceProxy";
+import { createControlAccessGuard } from "cms-control/core/control/operatorAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/control/types";
 import serveStaticFolder from "cms-control/core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/registerEndpoints/serveApiFolder";
@@ -33,12 +33,7 @@ export function mountControlCmsRoutes(
     apiDir: string,
 ): void {
     const runner = state.runner;
-    const authGuard = createAuthGuard({
-        basePath: cms.basePath,
-        auth: state.auth,
-        requiredRole: "admin",
-        onForbidden: (_req, ctx) => renderForbiddenPage(ctx.basePath, ctx.logoutUrl),
-    });
+    const authGuard = createControlAccessGuard(cms.basePath, state.auth);
     runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
 
     const controlPublicAuth = state.configuration.publicAuth
