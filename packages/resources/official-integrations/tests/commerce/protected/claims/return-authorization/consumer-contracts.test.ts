@@ -23,8 +23,7 @@ describe("claim return authorization consumer contracts", () => {
         expect(actual).toEqual({
             getClaimReturnForMe: [
                 call(commerceSource, "getClaimReturnAuthorization", "$input.params.claimId"),
-                call(deliverySource, "shipments"),
-                call(deliverySource, "shipment"),
+                call(deliverySource, "shipmentForExternalOrder"),
             ],
             setRelayPointForMyClaimReturn: [
                 call(commerceSource, "getClaimReturnAuthorization", "$input.body.claimId"),

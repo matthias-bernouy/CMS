@@ -466,22 +466,23 @@
             "failure": { "status": 403, "error": "Marketplace claim return does not belong to the current user" }
           } },
           { "id": "shipments", "call": {
-            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipments",
-            "params": { "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] }, "limit": 1, "offset": 0 }
+            "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipmentForExternalOrder",
+            "params": { "externalOrderId": { "$concat": ["claim-return:", "$steps.authorization.claimId"] } }
           } },
           { "id": "tracking", "forEach": {
             "items": "$steps.shipments.items", "max": 1,
-            "steps": [{ "id": "shipment", "call": {
-              "source": "{{dependencies.delivery.sourceId}}", "endpoint": "shipment", "params": { "id": "$item.id" }
+            "steps": [{ "assert": {
+              "condition": { "notEquals": ["$item.deliveryRelayLocation", null] },
+              "failure": { "status": 502, "error": "Invalid claim return tracking relay location" }
             } }],
             "yield": {
-              "id": "$steps.shipment.id", "expeditionNumber": "$steps.shipment.expeditionNumber",
-              "status": "$steps.shipment.status", "trackingUrl": "$steps.shipment.trackingUrl",
-              "deliveryRelayLocation": "$steps.shipment.deliveryRelayLocation",
-              "latestEventLabel": "$steps.shipment.latestEventLabel", "latestEventAt": "$steps.shipment.latestEventAt",
-              "carrierAcceptedAt": "$steps.shipment.carrierAcceptedAt",
-              "recipientHandoffAt": "$steps.shipment.recipientHandoffAt",
-              "createdAt": "$steps.shipment.createdAt", "events": "$steps.shipment.events"
+              "id": "$item.id", "expeditionNumber": "$item.expeditionNumber",
+              "status": "$item.status", "trackingUrl": "$item.trackingUrl",
+              "deliveryRelayLocation": "$item.deliveryRelayLocation",
+              "latestEventLabel": "$item.latestEventLabel", "latestEventAt": "$item.latestEventAt",
+              "carrierAcceptedAt": "$item.carrierAcceptedAt",
+              "recipientHandoffAt": "$item.recipientHandoffAt",
+              "createdAt": "$item.createdAt", "events": "$item.events"
             }
           } }
         ],

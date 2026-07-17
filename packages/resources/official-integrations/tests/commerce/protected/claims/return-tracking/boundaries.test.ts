@@ -82,12 +82,11 @@ describe("Commerce Mondial Relay claim return tracking boundaries", () => {
         ["authorization", ["/system/claim/return-authorization"]],
         ["delivery", [
             "/system/claim/return-authorization",
-            "/shipments",
+            "/system/shipment-for-external-order",
         ]],
         ["hydration", [
             "/system/claim/return-authorization",
-            "/shipments",
-            "/shipment",
+            "/system/shipment-for-external-order",
         ]],
     ] as const) {
         test(`normalizes ${point} failure without leaking upstream data`, async () => {

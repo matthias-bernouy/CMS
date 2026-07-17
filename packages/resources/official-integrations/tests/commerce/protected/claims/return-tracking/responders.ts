@@ -30,22 +30,6 @@ export function successfulResponder(
             }
             return Response.json(currentAuthorization);
         }
-        if (path === "/shipments") {
-            return Response.json({
-                items: overrides.empty ? [] : [{
-                    id: currentShipment.id,
-                    status: currentShipment.status,
-                    recipientName: currentShipment.recipientName,
-                    recipientPostalCode: currentShipment.recipientPostalCode,
-                    recipientCity: currentShipment.recipientCity,
-                    createdAt: currentShipment.createdAt,
-                    privateListField: "must not leak",
-                }],
-                limit: 1,
-                offset: 0,
-            });
-        }
-        if (path === "/shipment") return Response.json(currentShipment);
         if (path === "/system/shipment-for-external-order") {
             return Response.json({
                 items: overrides.empty ? [] : [currentShipment],
@@ -67,22 +51,14 @@ export function failingResponder(
             return privateFailure("claim authorization failed");
         }
         if (
-            point === "delivery"
-            && (
-                path === "/shipments"
-                || path === "/system/shipment-for-external-order"
-            )
+            (point === "delivery" || point === "hydration")
+            && path === "/system/shipment-for-external-order"
         ) {
-            return privateFailure("delivery lookup failed");
-        }
-        if (
-            point === "hydration"
-            && (
-                path === "/shipment"
-                || path === "/system/shipment-for-external-order"
-            )
-        ) {
-            return privateFailure("delivery hydration failed");
+            return privateFailure(
+                point === "delivery"
+                    ? "delivery lookup failed"
+                    : "delivery hydration failed",
+            );
         }
         return successfulResponder()(request);
     };

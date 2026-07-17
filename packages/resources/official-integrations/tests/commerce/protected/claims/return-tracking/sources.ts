@@ -75,47 +75,6 @@ export async function claimTrackingSources(): Promise<InMemorySourceRepository> 
     await sources.createSource(source("delivery", [
         get(
             "delivery",
-            "shipments",
-            "https://delivery.test/shipments",
-            [
-                { name: "externalOrderId", type: "string", required: false },
-                { name: "limit", type: "number", required: false },
-                { name: "offset", type: "number", required: false },
-            ],
-            object({
-                items: array(object({
-                    id: string(),
-                    status: string(),
-                    recipientName: string(),
-                    recipientPostalCode: string(),
-                    recipientCity: string(),
-                })),
-                limit: number(),
-                offset: number(),
-            }),
-            { mode: "admin" },
-        ),
-        get(
-            "delivery",
-            "shipment",
-            "https://delivery.test/shipment",
-            [{ name: "id", type: "string", required: false }],
-            object({
-                ...trackingFields,
-                deliveryRelayLocation: string(),
-                externalOrderId: string(true),
-                recipientName: string(),
-                recipientEmail: string(true),
-                recipientPhone: string(true),
-                recipientAddressLine1: string(true),
-                recipientPostalCode: string(),
-                recipientCity: string(),
-                lastError: string(true),
-            }),
-            { mode: "admin" },
-        ),
-        get(
-            "delivery",
             "shipmentForExternalOrder",
             "https://delivery.test/system/shipment-for-external-order",
             [{ name: "externalOrderId", type: "string", required: true }],
