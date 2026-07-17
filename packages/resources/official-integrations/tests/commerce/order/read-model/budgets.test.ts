@@ -30,20 +30,13 @@ describe("commerce current PostgREST read budgets", () => {
         useCompleteOrderResponder();
 
         await expectBudget("/me/order?id=42", { userId: buyerId }, {
-            orders: 1, order_lines: 1, order_events: 1, sellers: 1,
-            protected_order_operations: 1, order_financial_terms: 1, order_fulfillments: 1,
-            order_settlements: 1, marketplace_claims: 1, custom_field_definitions: 1,
+            get_order_detail_read_model: 1,
         });
         await expectBudget("/me/sale?id=42", { userId: sellerUserId }, {
-            sellers: 1, orders: 1, order_lines: 1, order_events: 1,
-            protected_order_operations: 1, order_financial_terms: 1, order_fulfillments: 1,
-            order_settlements: 1, get_order_fulfillment_authorization: 1,
-            custom_field_definitions: 1,
+            get_order_detail_read_model: 1,
         });
         await expectBudget("/admin/order?id=42", {}, {
-            orders: 1, order_lines: 1, order_events: 1, sellers: 1,
-            protected_order_operations: 1, order_financial_terms: 1,
-            order_fulfillments: 1, order_settlements: 1, marketplace_claims: 1,
+            get_order_detail_read_model: 1,
         });
     });
 
@@ -61,6 +54,9 @@ describe("commerce current PostgREST read budgets", () => {
                 return jsonResponse({
                     state: "ok", orders: [], operations: [], definitions: [], total: 4,
                 });
+            }
+            if (resource === "get_order_detail_read_model") {
+                return jsonResponse({ state: "not_found" });
             }
             if (resource === "sellers") {
                 return jsonResponse(url.searchParams.get("cms_user_id") === "eq.missing-seller"
@@ -86,16 +82,22 @@ describe("commerce current PostgREST read budgets", () => {
         await expectBudget("/admin/orders?limit=3&offset=9", {}, {
             list_order_read_model: 1,
         }, { items: [], total: 4, limit: 3, offset: 9 });
-        await expectBudget("/me/order?id=404", { userId: buyerId }, { orders: 1 }, {
+        await expectBudget("/me/order?id=404", { userId: buyerId }, {
+            get_order_detail_read_model: 1,
+        }, {
             error: "order not found",
         }, 404);
-        await expectBudget("/me/sale?id=404", { userId: "missing-seller" }, { sellers: 1 }, {
+        await expectBudget("/me/sale?id=404", { userId: "missing-seller" }, {
+            get_order_detail_read_model: 1,
+        }, {
             error: "sale not found",
         }, 404);
         await expectBudget("/me/sale?id=404", { userId: sellerUserId }, {
-            sellers: 1, orders: 1,
+            get_order_detail_read_model: 1,
         }, { error: "sale not found" }, 404);
-        await expectBudget("/admin/order?id=404", {}, { orders: 1 }, {
+        await expectBudget("/admin/order?id=404", {}, {
+            get_order_detail_read_model: 1,
+        }, {
             error: "order not found",
         }, 404);
     });

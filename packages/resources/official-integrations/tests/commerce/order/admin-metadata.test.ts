@@ -29,8 +29,12 @@ describe("commerce administrator order metadata", () => {
                     state: "ok", orders: [order], operations: [], definitions: [], total: 1,
                 });
             }
-            if (url.pathname.endsWith("/orders")) {
-                return jsonResponse([order], 200, { "content-range": "0-0/1" });
+            if (url.pathname.endsWith("/rpc/get_order_detail_read_model")) {
+                return jsonResponse({
+                    state: "ok", order, lines: [], events: [], seller: null,
+                    operation: null, financial_terms: null, fulfillment: null,
+                    settlement: null, claim: null, authorization: null, definitions: [],
+                });
             }
             if (url.pathname.endsWith("/custom_field_definitions")) {
                 definitionQueries += 1;

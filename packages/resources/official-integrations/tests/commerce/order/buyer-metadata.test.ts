@@ -39,7 +39,7 @@ const expectedEntries = [
 
 describe("commerce buyer order metadata", () => {
     test("returns only enabled public metadata on buyer list and detail responses", async () => {
-        let definitionQueries = 0;
+        let detailQueries = 0;
         setRestResponder(request => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rpc/list_order_read_model")) {
@@ -48,16 +48,9 @@ describe("commerce buyer order metadata", () => {
                     definitions: publicDefinitions, total: 1,
                 });
             }
-            if (url.pathname.endsWith("/orders")) {
-                return jsonResponse([order], 200, { "content-range": "0-0/1" });
-            }
-            if (url.pathname.endsWith("/custom_field_definitions")) {
-                definitionQueries += 1;
-                expect(url.searchParams.get("entity_type")).toBe("eq.order");
-                expect(url.searchParams.get("enabled")).toBe("eq.true");
-                expect(url.searchParams.get("public_readable")).toBe("eq.true");
-                expect(url.searchParams.get("order")).toBe("position.asc,key.asc");
-                return jsonResponse(publicDefinitions);
+            if (url.pathname.endsWith("/rpc/get_order_detail_read_model")) {
+                detailQueries += 1;
+                return jsonResponse(detailEnvelope(publicDefinitions));
             }
             return jsonResponse([]);
         });
@@ -75,7 +68,7 @@ describe("commerce buyer order metadata", () => {
         expect(detail.metadataEntries).toEqual(expectedEntries);
         expect(JSON.stringify({ list, detail })).not.toContain("internalRisk");
         expect(JSON.stringify({ list, detail })).not.toContain("disabledPublic");
-        expect(definitionQueries).toBe(1);
+        expect(detailQueries).toBe(1);
     });
 
     test("closes buyer metadata when no definition is both enabled and public", async () => {
@@ -85,13 +78,6 @@ describe("commerce buyer order metadata", () => {
                 return jsonResponse({
                     state: "ok", orders: [order], operations: [], definitions: [], total: 1,
                 });
-            }
-            if (url.pathname.endsWith("/orders")) {
-                return jsonResponse([order], 200, { "content-range": "0-0/1" });
-            }
-            if (url.pathname.endsWith("/custom_field_definitions")) {
-                expect(url.searchParams.get("enabled")).toBe("eq.true");
-                expect(url.searchParams.get("public_readable")).toBe("eq.true");
             }
             return jsonResponse([]);
         });
@@ -104,3 +90,11 @@ describe("commerce buyer order metadata", () => {
         expect(body.items[0].metadataEntries).toEqual([]);
     });
 });
+
+function detailEnvelope(definitions: Record<string, unknown>[]): Record<string, unknown> {
+    return {
+        state: "ok", order, lines: [], events: [], seller: null, operation: null,
+        financial_terms: null, fulfillment: null, settlement: null, claim: null,
+        authorization: null, definitions,
+    };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
+import { expectRpc, expectSingleRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
 installCommerceTestEnvironment();
 describe("commerce seller sales", () => {
     test("lists only orders owned by the authenticated seller and strips buyer data", async () => {
@@ -51,24 +51,19 @@ describe("commerce seller sales", () => {
         expect(expectRpc("list_order_read_model").body.p_cms_user_id).toBe("not-a-seller");
     });
 
-    test("does not query sale details when the order is not owned by the seller", async () => {
-        let detailQueryReached = false;
+    test("hides a sale not owned by the seller in one read-model call", async () => {
         setRestResponder(request => {
-            const url = new URL(request.url);
-            if (url.pathname.endsWith("/sellers")) return jsonResponse([{ id: 99 }]);
-            if (url.pathname.endsWith("/orders")) {
-                expect(url.searchParams.get("id")).toBe("eq.42");
-                expect(url.searchParams.get("seller_id")).toBe("eq.99");
-                return jsonResponse([]);
-            }
-            detailQueryReached = true;
-            return jsonResponse([]);
+            expect(new URL(request.url).pathname).toEndWith("/rpc/get_order_detail_read_model");
+            return jsonResponse({ state: "not_found" });
         });
 
         const response = await requestCommerce("/me/sale?id=42", { userId: "another-seller" });
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ error: "sale not found" });
-        expect(detailQueryReached).toBe(false);
+        expect(expectSingleRpc("get_order_detail_read_model").body).toEqual({
+            p_scope: "seller", p_cms_user_id: "another-seller",
+            p_id: 42, p_public_id: null,
+        });
     });
 });
 

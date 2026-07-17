@@ -17,12 +17,12 @@ import {
 } from "../routes/offers.ts";
 import { getOfferImageFile, removeOfferImage, reorderOfferImages, replaceOfferImage, uploadOfferImage } from "../routes/offer/media.ts";
 import { estimateOfferPrice } from "../routes/offer/estimate.ts";
-import { createOrder, getOrder } from "../routes/orders.ts";
+import { createOrder } from "../routes/orders.ts";
 import { cancelMyOrder, cancelMySale } from "../routes/order/cancellations.ts";
 import { openMyOrderClaim, respondToMySaleClaim } from "../routes/order/claims.ts";
 import { getClaimEvidenceFile, uploadMyClaimEvidence } from "../routes/order/claim-evidence.ts";
 import { prepareProtectedPayment } from "../routes/order/financials.ts";
-import { getMySale } from "../routes/order/read-model/sales.ts";
+import { getMyOrder, getMySale } from "../routes/order/read-model/details.ts";
 import { listMyOrders, listMySales } from "../routes/order/read-model/lists.ts";
 import { getMySeller, registerMySeller, updateMySeller } from "../routes/sellers.ts";
 
@@ -98,7 +98,7 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/order") {
-        return request.method === "GET" ? await getOrder(request, true) : methodNotAllowed("GET");
+        return request.method === "GET" ? await getMyOrder(request) : methodNotAllowed("GET");
     }
     if (route === "/me/sales") {
         return request.method === "GET" ? await listMySales(request) : methodNotAllowed("GET");

@@ -4,37 +4,7 @@ import { json } from "../core/http.ts";
 import { camelize, integer, isRecord, readJsonObject, requiredText, text } from "../core/records.ts";
 import { one, restJson, rpc } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
-import { publicOrderMetadataDefinitions, withPublicOrderMetadata, withPublicOrderResult } from "../core/order-metadata.ts";
-const orderSelect = "id,public_id,order_number,checkout_group_id,seller_id,buyer_cms_user_id,status,currency,subtotal_amount,shipping_amount,delivery_quoted_at,total_amount,shipping_address,billing_address,metadata,idempotency_key,archived_at,version,created_at,updated_at";
-const orderLineSelect = "id,order_id,offer_id,product_id,variant_id,accepted_proposal_id,title,sku,quantity,unit_amount,total_amount,product_snapshot,variant_snapshot,offer_snapshot,seller_snapshot,created_at";
-export async function getOrder(request: Request, mine: boolean): Promise<Response> {
-    const url = new URL(request.url);
-    const id = integer(url.searchParams.get("id"), "id");
-    const publicId = text(url.searchParams.get("publicId"));
-    if (id === undefined && !publicId) throw new HttpError(400, "id or publicId is required");
-    const row = id !== undefined
-        ? await one("orders", { id }, orderSelect)
-        : await one("orders", { public_id: publicId! }, orderSelect);
-    if (!row || (mine && row.buyer_cms_user_id !== cmsUserId(request))) {
-        throw new HttpError(404, "order not found");
-    }
-    const eventSelect = mine
-        ? "id,order_id,event_type,previous_status,next_status,created_at"
-        : "*";
-    const [lines, events, seller, operation, financialTerms, fulfillment, settlement, claim, definitions] = await Promise.all([
-        restJson<JsonRecord[]>(`order_lines?select=${orderLineSelect}&order_id=eq.${String(row.id)}&order=id.asc`),
-        restJson<JsonRecord[]>(`order_events?select=${eventSelect}&order_id=eq.${String(row.id)}&order=created_at.asc,id.asc`),
-        one("sellers", { id: String(row.seller_id) }, "id,kind,slug,display_name"),
-        one("protected_order_operations", { order_id: String(row.id) }),
-        one("order_financial_terms", { order_id: String(row.id) }, "order_id,delivery_quote_id,merchandise_subtotal_amount,shipping_amount,buyer_protection_fee_amount,seller_commission_amount,buyer_total_amount,seller_proceeds_amount,platform_retained_amount,currency,financial_terms_hash,pricing_locked_at,pay_by_at,financial_revision"),
-        one("order_fulfillments", { order_id: String(row.id) }, "order_id,status,seller_handoff_deadline,scan_grace_deadline,carrier_accepted_at,arrived_at_pickup_point_at,available_for_pickup_at,recipient_handoff_at,recipient_handoff_first_observed_at,claim_window_started_at,claim_by_at,release_eligible_at,blocking_reason,version"),
-        one("order_settlements", { order_id: String(row.id) }, "order_id,status,authorized_seller_amount,total_transferred_amount,total_reversed_amount,total_refunded_amount,seller_reserve_liability_remaining_amount,version"),
-        restJson<JsonRecord[]>(`marketplace_claims?select=id,public_id,reason,status,seller_response_by_at,return_ship_by_at,resolved_at,version,created_at&order_id=eq.${String(row.id)}&order=created_at.desc&limit=1`).then(rows => rows[0] ?? null),
-        mine ? publicOrderMetadataDefinitions() : Promise.resolve([]),
-    ]);
-    const visibleOrder = mine ? withPublicOrderMetadata(row, definitions) : row;
-    return json(camelize({ ...visibleOrder, lines, events, seller, operation, financialTerms, fulfillment, settlement, claim }));
-}
+import { publicOrderMetadataDefinitions, withPublicOrderResult } from "../core/order-metadata.ts";
 
 export async function createOrder(request: Request): Promise<Response> {
     const body = await readJsonObject(request);

@@ -5,13 +5,13 @@ import {
     withPublicOrderMetadata,
 } from "../../../core/order-metadata.ts";
 
-const orderListFields = [
+export const orderFields = [
     "id", "publicId", "orderNumber", "checkoutGroupId", "sellerId",
     "buyerCmsUserId", "status", "currency", "subtotalAmount", "shippingAmount",
     "deliveryQuotedAt", "totalAmount", "shippingAddress", "billingAddress",
     "metadata", "idempotencyKey", "archivedAt", "version", "createdAt", "updatedAt",
 ] as const;
-const saleFields = [
+export const saleFields = [
     "id", "publicId", "orderNumber", "checkoutGroupId", "status", "currency",
     "subtotalAmount", "shippingAmount", "deliveryQuotedAt", "totalAmount",
     "metadata", "version", "createdAt", "updatedAt",
@@ -28,7 +28,7 @@ export function projectOrderListItem(
     publicMetadata: boolean,
 ): JsonRecord {
     const item = {
-        ...safeRecord(row, orderListFields),
+        ...safeRecord(row, orderFields),
         operation: safeOptional(operation, operationListFields),
     };
     return publicMetadata ? withPublicOrderMetadata(item, definitions) : item;

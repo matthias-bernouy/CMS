@@ -7,8 +7,12 @@ import {
     setRestResponder,
 } from "../../../harness";
 import { expectedSellerDetail } from "../fixtures/expected-details";
-import { buyerId, firstOrderPublicId, saleRows, sellerUserId } from "../fixtures/raw";
-import { callsFor, useCompleteOrderResponder } from "../fixtures/responder";
+import { buyerId, firstOrderPublicId, sellerUserId } from "../fixtures/raw";
+import {
+    callsFor,
+    completeDetailEnvelope,
+    useCompleteOrderResponder,
+} from "../fixtures/responder";
 
 installCommerceTestEnvironment();
 
@@ -33,20 +37,21 @@ describe("commerce order and sale detail boundaries", () => {
                 `${route}?id=${largeId}&publicId=invalid`, options,
             );
             expect({ route, status: byId.status }).toEqual({ route, status: 200 });
-            expect(lastOrderQuery().get("id")).toBe(`eq.${largeId}`);
-            expect(lastOrderQuery().get("public_id")).toBeNull();
+            expect(lastDetailBody()).toMatchObject({ p_id: largeId, p_public_id: null });
 
             const response = await requestCommerce(
                 `${route}?publicId=%20${firstOrderPublicId}%20`, options,
             );
             expect({ route, status: response.status }).toEqual({ route, status: 200 });
-            expect(lastOrderQuery().get("public_id")).toBe(`eq.${firstOrderPublicId}`);
+            expect(lastDetailBody()).toMatchObject({
+                p_id: null, p_public_id: firstOrderPublicId,
+            });
         }
     });
 
     test("keeps invalid public ids ahead of buyer identity and on the admin path", async () => {
         setRestResponder(request => {
-            expect(resourceName(request.url)).toBe("orders");
+            expect(resourceName(request.url)).toBe("get_order_detail_read_model");
             return jsonResponse({ message: "invalid input syntax for type uuid: invalid" }, 400);
         });
         for (const route of ["/me/order", "/admin/order"]) {
@@ -62,17 +67,9 @@ describe("commerce order and sale detail boundaries", () => {
     });
 
     test("applies seller ownership to public-id lookups before hydration", async () => {
-        setRestResponder(request => {
-            const url = new URL(request.url);
-            const resource = resourceName(request.url);
-            if (resource === "sellers") return jsonResponse([{ id: 99 }]);
-            if (resource === "orders") {
-                expect(url.searchParams.get("public_id")).toBe(`eq.${firstOrderPublicId}`);
-                expect(url.searchParams.get("seller_id")).toBe("eq.99");
-                return jsonResponse([]);
-            }
-            throw new Error(`Unexpected seller ownership request: ${request.url}`);
-        });
+        setRestResponder(request => resourceName(request.url) === "get_order_detail_read_model"
+            ? jsonResponse({ state: "not_found" })
+            : jsonResponse({ message: "unexpected seller ownership request" }, 500));
 
         const response = await requestCommerce(`/me/sale?publicId=${firstOrderPublicId}`, {
             userId: "other-seller",
@@ -80,7 +77,11 @@ describe("commerce order and sale detail boundaries", () => {
 
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ error: "sale not found" });
-        expect(capturedFetches()).toHaveLength(2);
+        expect(capturedFetches()).toHaveLength(1);
+        expect(lastDetailBody()).toEqual({
+            p_scope: "seller", p_cms_user_id: "other-seller",
+            p_id: null, p_public_id: firstOrderPublicId,
+        });
     });
 
     test("preserves real authorization objects on partially initialized sales", async () => {
@@ -123,26 +124,19 @@ describe("commerce order and sale detail boundaries", () => {
 });
 
 function usePartialSaleResponder(authorization: Record<string, unknown>): void {
-    setRestResponder(request => {
-        const resource = resourceName(request.url);
-        if (resource === "sellers") return jsonResponse([{ id: 17 }]);
-        if (resource === "orders") return jsonResponse([saleRows[0]]);
-        if (resource === "get_order_fulfillment_authorization") return jsonResponse(authorization);
-        if (["order_lines", "order_events", "custom_field_definitions"].includes(resource)) {
-            return jsonResponse([]);
-        }
-        if ([
-            "protected_order_operations", "order_financial_terms",
-            "order_fulfillments", "order_settlements",
-        ].includes(resource)) return jsonResponse([]);
-        throw new Error(`Unexpected partial sale request: ${request.url}`);
-    });
+    setRestResponder(request => resourceName(request.url) === "get_order_detail_read_model"
+        ? jsonResponse({
+            ...completeDetailEnvelope("seller"),
+            lines: [], events: [], operation: null, financial_terms: null,
+            fulfillment: null, settlement: null, authorization, definitions: [],
+        })
+        : jsonResponse({ message: "unexpected partial sale request" }, 500));
 }
 
-function lastOrderQuery(): URLSearchParams {
-    const call = callsFor("orders").at(-1);
-    if (!call) throw new Error("Missing orders request");
-    return new URL(call.url).searchParams;
+function lastDetailBody(): Record<string, unknown> {
+    const call = callsFor("get_order_detail_read_model").at(-1);
+    if (!call) throw new Error("Missing order detail request");
+    return call.body;
 }
 
 function resourceName(url: string): string {

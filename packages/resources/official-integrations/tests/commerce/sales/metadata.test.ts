@@ -27,7 +27,7 @@ const publicDefinitions = [
 
 describe("commerce seller order metadata", () => {
     test("returns only enabled public fields on seller list and detail responses", async () => {
-        let definitionQueries = 0;
+        let detailQueries = 0;
         setRestResponder(request => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rpc/list_order_read_model")) {
@@ -36,17 +36,15 @@ describe("commerce seller order metadata", () => {
                     definitions: publicDefinitions, total: 1,
                 });
             }
-            if (url.pathname.endsWith("/sellers")) return jsonResponse([{ id: 17 }]);
-            if (url.pathname.endsWith("/orders")) return jsonResponse([sale], 200, { "content-range": "0-0/1" });
-            if (url.pathname.endsWith("/custom_field_definitions")) {
-                definitionQueries += 1;
-                expect(url.searchParams.get("entity_type")).toBe("eq.order");
-                expect(url.searchParams.get("enabled")).toBe("eq.true");
-                expect(url.searchParams.get("public_readable")).toBe("eq.true");
-                expect(url.searchParams.get("order")).toBe("position.asc,key.asc");
-                return jsonResponse(publicDefinitions);
+            if (url.pathname.endsWith("/rpc/get_order_detail_read_model")) {
+                detailQueries += 1;
+                return jsonResponse({
+                    state: "ok", order: sale, lines: [], events: [], seller: null,
+                    operation: null, financial_terms: null, fulfillment: null,
+                    settlement: null, claim: null, authorization: null,
+                    definitions: publicDefinitions,
+                });
             }
-            if (url.pathname.endsWith("/rpc/get_order_fulfillment_authorization")) return jsonResponse({});
             return jsonResponse([]);
         });
 
@@ -66,6 +64,6 @@ describe("commerce seller order metadata", () => {
         expect(detail).toMatchObject({ metadata, metadataEntries: entries });
         expect(JSON.stringify({ list, detail })).not.toContain("internalRisk");
         expect(JSON.stringify({ list, detail })).not.toContain("disabledPublic");
-        expect(definitionQueries).toBe(1);
+        expect(detailQueries).toBe(1);
     });
 });

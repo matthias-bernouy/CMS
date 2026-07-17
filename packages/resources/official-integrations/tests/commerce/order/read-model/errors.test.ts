@@ -6,7 +6,6 @@ import {
     requestCommerce,
     setRestResponder,
 } from "../../harness";
-import { orderRows } from "./fixtures/raw";
 import { useCompleteOrderResponder } from "./fixtures/responder";
 
 installCommerceTestEnvironment();
@@ -53,7 +52,9 @@ describe("commerce order and sale read failures", () => {
 
     test("preserves buyer identity timing after the initial order lookup", async () => {
         let existing = true;
-        setRestResponder(() => jsonResponse(existing ? [orderRows[0]] : []));
+        setRestResponder(() => jsonResponse({
+            state: existing ? "identity_required" : "not_found",
+        }));
         const found = await requestCommerce("/me/order?id=42");
         expect({ status: found.status, body: await found.json() }).toEqual({
             status: 401, body: { error: "missing CMS user id" },
@@ -69,11 +70,9 @@ describe("commerce order and sale read failures", () => {
 
     test("preserves invalid public-id errors after seller resolution", async () => {
         let sellerExists = false;
-        setRestResponder(request => {
-            const resource = new URL(request.url).pathname.split("/").at(-1);
-            if (resource === "sellers") return jsonResponse(sellerExists ? [{ id: 17 }] : []);
-            return jsonResponse({ message: "invalid input syntax for type uuid: invalid" }, 400);
-        });
+        setRestResponder(() => sellerExists
+            ? jsonResponse({ message: "invalid input syntax for type uuid: invalid" }, 400)
+            : jsonResponse({ state: "not_found" }));
         const hidden = await requestCommerce("/me/sale?publicId=invalid", { userId: "seller" });
         expect({ status: hidden.status, body: await hidden.json() }).toEqual({
             status: 404, body: { error: "sale not found" },
@@ -92,12 +91,7 @@ describe("commerce order and sale read failures", () => {
             status: 502, body: { error: "orders unavailable" },
         });
 
-        setRestResponder(request => {
-            const resource = new URL(request.url).pathname.split("/").at(-1);
-            if (resource === "orders") return jsonResponse([orderRows[0]]);
-            if (resource === "order_lines") return jsonResponse({ message: "lines unavailable" }, 503);
-            return jsonResponse([]);
-        });
+        setRestResponder(() => jsonResponse({ message: "lines unavailable" }, 503));
         const hydration = await requestCommerce("/admin/order?id=42");
         expect({ status: hydration.status, body: await hydration.json() }).toEqual({
             status: 502, body: { error: "lines unavailable" },
@@ -132,9 +126,7 @@ describe("commerce order and sale read failures", () => {
     });
 
     test("does not disclose a buyer order to another buyer", async () => {
-        setRestResponder(request => new URL(request.url).pathname.endsWith("/orders")
-            ? jsonResponse([orderRows[0]])
-            : jsonResponse({ error: "detail lookup must not run" }, 500));
+        setRestResponder(() => jsonResponse({ state: "not_found" }));
 
         const response = await requestCommerce("/me/order?id=42", { userId: "other-buyer" });
 
@@ -144,22 +136,17 @@ describe("commerce order and sale read failures", () => {
     });
 
     test("does not disclose a seller order to another seller", async () => {
-        setRestResponder(request => {
-            const resource = new URL(request.url).pathname.split("/").at(-1);
-            if (resource === "sellers") return jsonResponse([{ id: 99 }]);
-            if (resource === "orders") return jsonResponse([]);
-            return jsonResponse({ error: "detail lookup must not run" }, 500);
-        });
+        setRestResponder(() => jsonResponse({ state: "not_found" }));
 
         const response = await requestCommerce("/me/sale?id=42", { userId: "other-seller" });
 
         expect(response.status).toBe(404);
         expect(await response.json()).toEqual({ error: "sale not found" });
-        expect(capturedFetches()).toHaveLength(2);
+        expect(capturedFetches()).toHaveLength(1);
     });
 
     test("returns the administrator 404 after one missing-order lookup", async () => {
-        setRestResponder(() => jsonResponse([]));
+        setRestResponder(() => jsonResponse({ state: "not_found" }));
 
         const response = await requestCommerce("/admin/order?id=404");
 

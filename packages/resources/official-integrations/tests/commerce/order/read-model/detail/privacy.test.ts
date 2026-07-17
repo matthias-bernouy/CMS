@@ -20,50 +20,50 @@ import {
     sellerFulfillment,
     settlement,
 } from "../fixtures/projections";
+import { completeDetailEnvelope } from "../fixtures/responder";
 
 installCommerceTestEnvironment();
 
 describe("commerce seller detail privacy", () => {
     test("strips private fields from every seller detail fragment", async () => {
         setRestResponder(request => {
-            const resource = new URL(request.url).pathname.split("/").at(-1);
-            if (resource === "sellers") return jsonResponse([{ id: 17 }]);
-            if (resource === "orders") return jsonResponse([{
-                ...saleRows[0], seller_id: 17, buyer_cms_user_id: "private-buyer-root",
-                shipping_address: { token: "private-shipping" },
-                billing_address: { token: "private-billing" },
-                idempotency_key: "private-idempotency", request_hash: "private-request-hash",
-                archived_at: "private-archive",
-            }]);
-            if (resource === "order_lines") return jsonResponse(lineRows.map(line => ({
-                ...line, seller_id: 17, buyer_secret: "private-line",
-            })));
-            if (resource === "order_events") return jsonResponse(adminEventRows.map(event => ({
-                ...event, private_event: "private-event",
-            })));
-            if (resource === "protected_order_operations") return jsonResponse([{
-                ...operation, provider_payment_id: "private-operation-provider",
-            }]);
-            if (resource === "order_financial_terms") return jsonResponse([{
-                ...sellerFinancialTerms, buyer_total_amount: 11_070,
-                buyer_protection_fee_amount: 620, financial_terms_hash: "private-terms-hash",
-                fee_policy_snapshot: { token: "private-policy" },
-            }]);
-            if (resource === "order_fulfillments") return jsonResponse([{
-                ...sellerFulfillment, provider_reference: "private-fulfillment-provider",
-                arrived_at_pickup_point_at: "private-arrival",
-                available_for_pickup_at: "private-availability",
-            }]);
-            if (resource === "order_settlements") return jsonResponse([{
-                ...settlement, platform_gross_remainder_amount: 2_070,
-                provider_transfer_id: "private-transfer", manual_review_reason: "private-review",
-            }]);
-            if (resource === "get_order_fulfillment_authorization") return jsonResponse({
-                ...authorization, delivery_quote_id: "private-quote",
-                buyer_total_amount: 11_070, financial_terms_hash: "private-auth-hash",
+            expect(new URL(request.url).pathname).toEndWith("/rpc/get_order_detail_read_model");
+            return jsonResponse({
+                ...completeDetailEnvelope("seller"),
+                order: {
+                    ...saleRows[0], seller_id: 17, buyer_cms_user_id: "private-buyer-root",
+                    shipping_address: { token: "private-shipping" },
+                    billing_address: { token: "private-billing" },
+                    idempotency_key: "private-idempotency", request_hash: "private-request-hash",
+                    archived_at: "private-archive",
+                },
+                lines: lineRows.map(line => ({
+                    ...line, seller_id: 17, buyer_secret: "private-line",
+                })),
+                events: adminEventRows.map(event => ({
+                    ...event, private_event: "private-event",
+                })),
+                operation: { ...operation, provider_payment_id: "private-operation-provider" },
+                financial_terms: {
+                    ...sellerFinancialTerms, buyer_total_amount: 11_070,
+                    buyer_protection_fee_amount: 620, financial_terms_hash: "private-terms-hash",
+                    fee_policy_snapshot: { token: "private-policy" },
+                },
+                fulfillment: {
+                    ...sellerFulfillment, provider_reference: "private-fulfillment-provider",
+                    arrived_at_pickup_point_at: "private-arrival",
+                    available_for_pickup_at: "private-availability",
+                },
+                settlement: {
+                    ...settlement, platform_gross_remainder_amount: 2_070,
+                    provider_transfer_id: "private-transfer", manual_review_reason: "private-review",
+                },
+                authorization: {
+                    ...authorization, delivery_quote_id: "private-quote",
+                    buyer_total_amount: 11_070, financial_terms_hash: "private-auth-hash",
+                },
+                definitions: publicDefinitions,
             });
-            if (resource === "custom_field_definitions") return jsonResponse(publicDefinitions);
-            throw new Error(`Unexpected seller privacy request: ${request.url}`);
         });
 
         const response = await requestCommerce("/me/sale?id=42", { userId: sellerUserId });
