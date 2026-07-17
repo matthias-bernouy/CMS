@@ -2,9 +2,11 @@ import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../../core/records.ts";
-import { listRows, one, restJson, rpc } from "../../core/rest.ts";
+import { listRows, one, rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import { publicClaimEvidence } from "./claim-evidence.ts";
+
+export { getClaim } from "./read-model/claims.ts";
 
 const claimSelect = "id,public_id,order_id,buyer_cms_user_id,seller_id,reason,status,description,buyer_requested_amount,resolution_outcome,resolution_buyer_refund_amount,resolution_seller_transfer_amount,resolution_protection_fee_refund_amount,decision_reason,seller_response_by_at,return_ship_by_at,return_delivery_status,return_provider_reference,return_carrier_accepted_at,return_recipient_handoff_at,resolved_at,resolved_by,version,created_at,updated_at";
 
@@ -42,18 +44,6 @@ export async function listClaims(request: Request): Promise<Response> {
     }
     const { rows, total } = await listRows(`marketplace_claims?${params.toString()}`);
     return json({ items: camelize(rows), total, limit, offset });
-}
-
-export async function getClaim(request: Request): Promise<Response> {
-    const id = integer(new URL(request.url).searchParams.get("id"), "id", true)!;
-    const claim = await one("marketplace_claims", { id }, claimSelect);
-    if (!claim) throw new HttpError(404, "claim not found");
-    const [events, evidence, returnEvents] = await Promise.all([
-        restJson<JsonRecord[]>(`marketplace_claim_events?select=*&claim_id=eq.${id}&order=created_at.asc,id.asc`),
-        restJson<JsonRecord[]>(`marketplace_claim_evidence?select=*&claim_id=eq.${id}&order=created_at.asc,id.asc`),
-        restJson<JsonRecord[]>(`marketplace_claim_return_events?select=id,provider_event_id,provider_reference,normalized_status,occurred_at,created_at&claim_id=eq.${id}&order=occurred_at.asc,id.asc`),
-    ]);
-    return json(camelize({ ...claim, events, evidence: evidence.map(publicClaimEvidence), returnEvents }));
 }
 
 export async function listClaimEvidence(request: Request): Promise<Response> {

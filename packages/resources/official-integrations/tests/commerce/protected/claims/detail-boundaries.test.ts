@@ -6,7 +6,14 @@ import {
     requestCommerce,
     setRestResponder,
 } from "../../harness";
-import { claimEvidenceRows, claimEvents, claimReturnEvents, claimRow, useClaimDetailResponder } from "./fixtures";
+import {
+    claimEvidenceRows,
+    claimEvents,
+    claimReadModelEnvelope,
+    claimReturnEvents,
+    claimRow,
+    useClaimDetailResponder,
+} from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -86,6 +93,40 @@ describe("commerce administrator claim detail boundaries", () => {
 
         expect(response.status).toBe(502);
         expect(await response.json()).toEqual({ error: "claim events unavailable" });
+    });
+
+    test("fails closed on malformed private claim envelopes", async () => {
+        const complete = claimReadModelEnvelope();
+        const { id: _claimId, ...claimWithoutId } = claimRow;
+        const { id: _eventId, ...eventWithoutId } = claimEvents[0]!;
+        const { description: _description, ...evidenceWithoutDescription } = claimEvidenceRows[0]!;
+        const { provider_reference: _reference, ...returnEventWithoutReference } = claimReturnEvents[0]!;
+        const cases: unknown[] = [
+            null,
+            [],
+            {},
+            { state: "unknown" },
+            { state: "ok" },
+            { ...complete, claim: claimWithoutId },
+            { ...complete, events: null },
+            { ...complete, events: [null] },
+            { ...complete, events: [eventWithoutId] },
+            { ...complete, evidence: [evidenceWithoutDescription] },
+            { ...complete, return_events: [returnEventWithoutReference] },
+        ];
+
+        for (const value of cases) {
+            setRestResponder(() => jsonResponse(value));
+            const before = capturedFetches().length;
+
+            const response = await requestCommerce("/admin/claim?id=7");
+
+            expect({ status: response.status, body: await response.json() }).toEqual({
+                status: 502,
+                body: { error: "get_marketplace_claim_read_model returned an invalid response" },
+            });
+            expect(capturedFetches().slice(before)).toHaveLength(1);
+        }
     });
 });
 

@@ -1,34 +1,35 @@
 import { describe, expect, test } from "bun:test";
-import { capturedFetches, installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import {
+    capturedFetches,
+    expectSingleRpc,
+    installCommerceTestEnvironment,
+    requestCommerce,
+} from "../../harness";
 import { useClaimDetailResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
 
-describe("commerce current administrator claim detail budgets", () => {
-    test("records four database calls for a complete claim bundle", async () => {
+describe("commerce optimized administrator claim detail budgets", () => {
+    test("loads a complete claim bundle in one database call", async () => {
         useClaimDetailResponder();
 
         const response = await requestCommerce("/admin/claim?id=7");
-        const calls = capturedFetches();
 
         expect(response.status).toBe(200);
-        expect(calls).toHaveLength(4);
-        expect(calls.every(call => new URL(call.url).pathname.startsWith("/rest/v1/"))).toBe(true);
-        expect(calls.map(call => new URL(call.url).searchParams.get("order"))).toEqual([
-            null,
-            "created_at.asc,id.asc",
-            "created_at.asc,id.asc",
-            "occurred_at.asc,id.asc",
-        ]);
+        expect(expectSingleRpc("get_marketplace_claim_read_model").body).toEqual({
+            p_claim_id: 7,
+        });
     });
 
-    test("records one database call for a missing claim", async () => {
+    test("keeps one database call for a missing claim", async () => {
         useClaimDetailResponder({ claim: null });
 
         const response = await requestCommerce("/admin/claim?id=7");
 
         expect(response.status).toBe(404);
-        expect(capturedFetches()).toHaveLength(1);
+        expect(expectSingleRpc("get_marketplace_claim_read_model").body).toEqual({
+            p_claim_id: 7,
+        });
     });
 
     test("performs no database, Storage, or provider call for a local refusal", async () => {

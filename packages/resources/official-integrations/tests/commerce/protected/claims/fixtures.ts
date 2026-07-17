@@ -79,18 +79,15 @@ type Options = {
 };
 
 export function useClaimDetailResponder(options: Options = {}): void {
-    const claim = options.claim === undefined ? claimRow : options.claim;
-    const events = options.events ?? claimEvents;
-    const evidence = options.evidence ?? claimEvidenceRows;
-    const returnEvents = options.returnEvents ?? claimReturnEvents;
     setRestResponder(request => {
         const path = new URL(request.url).pathname;
         if (path.endsWith("/rest/v1/rpc/get_marketplace_claim_read_model")) {
-            return jsonResponse(claim ? {
-                state: "ok", claim, events,
-                evidence: evidence.map(publicEvidenceRow), return_events: returnEvents,
-            } : { state: "not_found" });
+            return jsonResponse(claimReadModelEnvelope(options));
         }
+        const claim = options.claim === undefined ? claimRow : options.claim;
+        const events = options.events ?? claimEvents;
+        const evidence = options.evidence ?? claimEvidenceRows;
+        const returnEvents = options.returnEvents ?? claimReturnEvents;
         if (path.endsWith("/rest/v1/marketplace_claims")) {
             return jsonResponse(claim ? [claim] : []);
         }
@@ -99,6 +96,29 @@ export function useClaimDetailResponder(options: Options = {}): void {
         if (path.endsWith("/rest/v1/marketplace_claim_return_events")) return jsonResponse(returnEvents);
         throw new Error(`unexpected claim detail request ${request.url}`);
     });
+}
+
+export function claimReadModelEnvelope(options: Options = {}): Record<string, unknown> {
+    const claim = options.claim === undefined ? claimRow : options.claim;
+    if (!claim) return { state: "not_found" };
+    const events = options.events ?? claimEvents;
+    const evidence = options.evidence ?? claimEvidenceRows;
+    const returnEvents = options.returnEvents ?? claimReturnEvents;
+    return {
+        state: "ok",
+        claim: { ...claim, future_private_claim_field: "must-not-leak" },
+        events: events.map(event => ({ ...event, future_private_event_field: true })),
+        evidence: evidence.map(item => ({
+            ...publicEvidenceRow(item),
+            submitted_by: item.submitted_by,
+            storage_bucket: item.storage_bucket,
+            storage_path: item.storage_path,
+        })),
+        return_events: returnEvents.map(event => ({
+            ...event,
+            provider_evidence: { future_private_provider_field: true },
+        })),
+    };
 }
 
 export function publicEvidenceRow(value: Record<string, unknown>): Record<string, unknown> {
