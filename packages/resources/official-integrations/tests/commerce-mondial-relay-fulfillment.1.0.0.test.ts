@@ -925,6 +925,13 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
         });
 
         expect(response.status).toBe(200);
+        expect(calls.map(call => call.path)).toEqual([
+            "/claim-return-authorization",
+            "/resolveDeliveryQuote",
+            "/relaySelection",
+            "/claim-return-authorization",
+            "/createShipment",
+        ]);
         expect(calls.find(call => call.path === "/createShipment")?.body).toMatchObject({
             externalOrderId: "claim-return:7",
             deliveryQuoteId: "quote-42",
