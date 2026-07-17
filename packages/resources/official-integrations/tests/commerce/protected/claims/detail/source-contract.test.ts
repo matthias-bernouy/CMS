@@ -9,7 +9,7 @@ type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
 const definitionPath = resolve(
     import.meta.dir,
-    "../../../../integrations/commerce/versions/1.0.0/definition.json",
+    "../../../../../integrations/commerce/versions/1.0.0/definition.json",
 );
 
 describe("commerce claim strict Source contract", () => {

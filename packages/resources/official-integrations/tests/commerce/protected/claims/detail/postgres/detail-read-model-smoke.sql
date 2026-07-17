@@ -2,7 +2,7 @@
 
 begin;
 set local role service_role;
-\ir ../../../order/read-model/postgres/baseline.fixture.sql
+\ir ../../../../order/read-model/postgres/baseline.fixture.sql
 \ir detail.fixture.sql
 
 create function pg_temp.jsonb_keys(p_value jsonb)

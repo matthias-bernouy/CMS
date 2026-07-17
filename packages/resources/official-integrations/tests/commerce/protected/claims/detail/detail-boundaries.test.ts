@@ -5,7 +5,7 @@ import {
     jsonResponse,
     requestCommerce,
     setRestResponder,
-} from "../../harness";
+} from "../../../harness";
 import {
     claimEvidenceRows,
     claimEvents,

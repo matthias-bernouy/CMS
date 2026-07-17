@@ -1,4 +1,9 @@
-import { claimEvidenceRows, claimEvents, claimReturnEvents, claimRow } from "./fixtures";
+import {
+    claimEvidenceRows,
+    claimEvents,
+    claimReturnEvents,
+    claimRow,
+} from "./fixtures";
 
 export function expectedClaimDetail(): Record<string, unknown> {
     return {

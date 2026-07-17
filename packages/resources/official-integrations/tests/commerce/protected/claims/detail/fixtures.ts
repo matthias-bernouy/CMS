@@ -1,4 +1,4 @@
-import { jsonResponse, setRestResponder } from "../../harness";
+import { jsonResponse, setRestResponder } from "../../../harness";
 
 export const claimRow = {
     id: 7,

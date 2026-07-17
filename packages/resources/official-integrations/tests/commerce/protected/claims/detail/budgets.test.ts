@@ -4,7 +4,7 @@ import {
     expectSingleRpc,
     installCommerceTestEnvironment,
     requestCommerce,
-} from "../../harness";
+} from "../../../harness";
 import { useClaimDetailResponder } from "./fixtures";
 
 installCommerceTestEnvironment();

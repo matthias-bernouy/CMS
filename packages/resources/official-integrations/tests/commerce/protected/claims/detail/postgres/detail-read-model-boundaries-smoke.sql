@@ -2,7 +2,7 @@
 
 begin;
 set local role service_role;
-\ir ../../../order/read-model/postgres/baseline.fixture.sql
+\ir ../../../../order/read-model/postgres/baseline.fixture.sql
 \ir detail.fixture.sql
 
 insert into commerce.marketplace_claims (

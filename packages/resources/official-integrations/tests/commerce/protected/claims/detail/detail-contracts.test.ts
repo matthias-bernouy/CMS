@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import {
     claimRow,
     useClaimDetailResponder,
