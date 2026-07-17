@@ -1991,6 +1991,31 @@ function commerceSource(): Source {
                 output: [{ status: "200", body: { type: "object" } }],
             },
             {
+                urn: makeEndpointUrn("commerce", "getPaymentOrderContext"),
+                method: "GET",
+                access: { mode: "system" },
+                targetUrl: "https://commerce.test/system/order/payment-context",
+                headers: [{
+                    name: "x-cms-user-id",
+                    source: { from: "computed", ref: "userID" },
+                }],
+                input: { params: [{
+                    name: "orderId",
+                    in: "query",
+                    required: true,
+                    schema: { type: "number" },
+                }] },
+                output: [{ status: "200", body: {
+                    type: "object",
+                    properties: {
+                        id: { type: "number" },
+                        publicId: { type: "string" },
+                        buyerCmsUserId: { type: "string" },
+                    },
+                    required: ["id", "publicId", "buyerCmsUserId"],
+                } }],
+            },
+            {
                 urn: makeEndpointUrn("commerce", "myOrder"),
                 method: "GET",
                 targetUrl: "https://commerce.test/order",

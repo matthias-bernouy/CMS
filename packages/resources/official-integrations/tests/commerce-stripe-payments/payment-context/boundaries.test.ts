@@ -89,8 +89,8 @@ describe("Commerce Stripe payment workflow boundaries", () => {
                 expectGenericFailure(response);
                 expect(calls.map(call => call.url.pathname)).toEqual(
                     point === "order"
-                        ? ["/me/order"]
-                        : ["/me/order", "/payments/reference"],
+                        ? ["/system/order/payment-context"]
+                        : ["/system/order/payment-context", "/payments/reference"],
                 );
             });
         }
@@ -108,7 +108,7 @@ describe("Commerce Stripe payment workflow boundaries", () => {
             error: "Payment does not exist for this order",
         });
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/me/order",
+            "/system/order/payment-context",
             "/payments/reference",
         ]);
     });
@@ -122,7 +122,7 @@ describe("Commerce Stripe payment workflow boundaries", () => {
 
         expectGenericFailure(response);
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/me/order",
+            "/system/order/payment-context",
             "/payments/reference",
             "/system/order/payment",
         ]);

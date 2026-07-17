@@ -792,8 +792,8 @@
                         "id": "order",
                         "call": {
                             "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "myOrder",
-                            "params": { "id": "$input.params.orderId" }
+                            "endpoint": "getPaymentOrderContext",
+                            "params": { "orderId": "$input.params.orderId" }
                         }
                     },
                     {
@@ -1275,8 +1275,8 @@
                         "id": "order",
                         "call": {
                             "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "myOrder",
-                            "params": { "id": "$input.body.orderId" }
+                            "endpoint": "getPaymentOrderContext",
+                            "params": { "orderId": "$input.body.orderId" }
                         }
                     },
                     {

@@ -28,6 +28,33 @@ const definitionPath = resolve(
 installCommerceTestEnvironment();
 
 describe("commerce response contracts", () => {
+    test("declares the exact actor-scoped payment order context", async () => {
+        const endpoint = (await commerceEndpoints()).find(
+            candidate => candidate.endpointId === "getPaymentOrderContext",
+        );
+        const fields = ["id", "publicId", "buyerCmsUserId"];
+        const body = endpoint?.output?.[0]?.body;
+
+        expect(endpoint).toMatchObject({
+            method: "GET",
+            access: "system",
+            params: [{
+                name: "orderId",
+                in: "query",
+                type: "number",
+                required: true,
+            }],
+        });
+        expect(endpoint?.headers?.map(header => header.name)).toEqual([
+            "authorization",
+            "x-cms-user-id",
+        ]);
+        expect(Object.keys(body?.properties ?? {})).toEqual(fields);
+        expect(body?.required).toEqual(fields);
+        expect(body?.properties?.buyerCmsUserId?.semantic?.authority)
+            .toBe("cms");
+    });
+
     test("declares the exact bounded negotiation context as a system endpoint", async () => {
         const endpoint = (await commerceEndpoints()).find(
             candidate => candidate.endpointId === "getOfferNegotiationContext",

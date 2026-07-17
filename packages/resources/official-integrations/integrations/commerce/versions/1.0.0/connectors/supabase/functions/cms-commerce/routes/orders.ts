@@ -6,6 +6,11 @@ import { one, restJson, rpc } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
 import { publicOrderMetadataDefinitions, withPublicOrderResult } from "../core/order-metadata.ts";
 
+const paymentContextFunctionName = "get_order_payment_context";
+const paymentContextFields = [
+    "id", "public_id", "buyer_cms_user_id",
+] as const;
+
 export async function createOrder(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     for (const key of ["shippingAddress", "billingAddress", "metadata"] as const) {
@@ -67,6 +72,27 @@ export async function getProtectedPaymentSellerContext(request: Request): Promis
     return json(await protectedSellerContext(integer(order.seller_id, "seller id", true)!, buyerCmsUserId));
 }
 
+export async function getOrderPaymentContext(request: Request): Promise<Response> {
+    const orderId = integer(
+        new URL(request.url).searchParams.get("orderId"),
+        "orderId",
+        true,
+    )!;
+    const result = await rpc(paymentContextFunctionName, {
+        p_order_id: orderId,
+        p_buyer_cms_user_id: cmsUserId(request),
+    });
+    if (!isRecord(result) || typeof result.state !== "string") {
+        throw invalidPaymentContext();
+    }
+    if (result.state === "identity_required") {
+        throw new HttpError(401, "missing CMS user id");
+    }
+    if (result.state === "not_found") throw new HttpError(404, "order not found");
+    if (result.state !== "ok") throw invalidPaymentContext();
+    return json(projectPaymentContext(result.context));
+}
+
 async function protectedSellerContext(sellerId: number, buyerCmsUserId: string): Promise<JsonRecord> {
     const seller = await one("sellers", { id: sellerId }, "id,kind,cms_user_id");
     const sellerCmsUserId = text(seller?.cms_user_id);
@@ -75,6 +101,31 @@ async function protectedSellerContext(sellerId: number, buyerCmsUserId: string):
     }
     return { sellerCmsUserId, buyerCmsUserId };
 }
+
+function projectPaymentContext(value: unknown): JsonRecord {
+    if (
+        !isRecord(value)
+        || paymentContextFields.some(field => !Object.hasOwn(value, field))
+        || !Number.isSafeInteger(value.id)
+        || typeof value.public_id !== "string"
+        || typeof value.buyer_cms_user_id !== "string"
+    ) {
+        throw invalidPaymentContext();
+    }
+    return {
+        id: value.id,
+        publicId: value.public_id,
+        buyerCmsUserId: value.buyer_cms_user_id,
+    };
+}
+
+function invalidPaymentContext(): HttpError {
+    return new HttpError(
+        502,
+        `${paymentContextFunctionName} returned an invalid response`,
+    );
+}
+
 function withoutRequestHash(value: unknown): unknown {
     if (!isRecord(value)) return value;
     const response = { ...value };

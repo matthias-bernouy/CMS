@@ -16,7 +16,7 @@ describe("Commerce Stripe payment workflow call budgets", () => {
 
         expect(response.status).toBe(200);
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/me/order",
+            "/system/order/payment-context",
             "/payments/reference",
         ]);
         expect(calls.map(call => call.method)).toEqual(["GET", "GET"]);
@@ -31,7 +31,7 @@ describe("Commerce Stripe payment workflow call budgets", () => {
 
         expect(response.status).toBe(200);
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/me/order",
+            "/system/order/payment-context",
             "/payments/reference",
             "/system/order/payment",
         ]);
