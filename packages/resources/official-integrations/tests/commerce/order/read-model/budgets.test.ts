@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import {
     capturedFetches,
     installCommerceTestEnvironment,
+    jsonResponse,
     requestCommerce,
+    setRestResponder,
 } from "../../harness";
 import { buyerId, sellerUserId } from "./fixtures/raw";
 import { useCompleteOrderResponder } from "./fixtures/responder";
@@ -44,12 +46,56 @@ describe("commerce current PostgREST read budgets", () => {
             order_fulfillments: 1, order_settlements: 1, marketplace_claims: 1,
         });
     });
+
+    test("records empty, missing-actor-profile, and not-found short circuits", async () => {
+        setRestResponder(request => {
+            const url = new URL(request.url);
+            const resource = url.pathname.split("/").at(-1);
+            if (resource === "sellers") {
+                return jsonResponse(url.searchParams.get("cms_user_id") === "eq.missing-seller"
+                    ? []
+                    : [{ id: 17 }]);
+            }
+            if (resource === "orders") {
+                return jsonResponse([], 200, { "content-range": "*/4" });
+            }
+            if (resource === "custom_field_definitions") return jsonResponse([]);
+            throw new Error(`Unexpected empty-budget request: ${request.url}`);
+        });
+
+        await expectBudget("/me/orders?limit=2&offset=8", { userId: buyerId }, {
+            orders: 1, custom_field_definitions: 1,
+        }, { items: [], total: 4, limit: 2, offset: 8 });
+        await expectBudget("/me/sales?limit=7&offset=3", { userId: "missing-seller" }, {
+            sellers: 1,
+        }, { items: [], total: 0, limit: 7, offset: 3 });
+        await expectBudget("/me/sales?limit=7&offset=3", { userId: sellerUserId }, {
+            sellers: 1, orders: 1, custom_field_definitions: 1,
+        }, { items: [], total: 4, limit: 7, offset: 3 });
+        await expectBudget("/admin/orders?limit=3&offset=9", {}, {
+            orders: 1,
+        }, { items: [], total: 4, limit: 3, offset: 9 });
+        await expectBudget("/me/order?id=404", { userId: buyerId }, { orders: 1 }, {
+            error: "order not found",
+        }, 404);
+        await expectBudget("/me/sale?id=404", { userId: "missing-seller" }, { sellers: 1 }, {
+            error: "sale not found",
+        }, 404);
+        await expectBudget("/me/sale?id=404", { userId: sellerUserId }, {
+            sellers: 1, orders: 1,
+        }, { error: "sale not found" }, 404);
+        await expectBudget("/admin/order?id=404", {}, { orders: 1 }, {
+            error: "order not found",
+        }, 404);
+    });
 });
 
 async function expectBudget(
     path: string,
     options: { userId?: string },
     expected: Record<string, number>,
+    expectedBody?: unknown,
+    expectedStatus = 200,
 ): Promise<void> {
     const before = capturedFetches().length;
     const response = await requestCommerce(path, options);
@@ -59,7 +105,8 @@ async function expectBudget(
         calls.filter(call => resourceName(call) === resource).length,
     ]));
 
-    expect({ path, status: response.status }).toEqual({ path, status: 200 });
+    expect({ path, status: response.status }).toEqual({ path, status: expectedStatus });
+    if (expectedBody !== undefined) expect(await response.json()).toEqual(expectedBody);
     expect(actual).toEqual(expected);
     expect(calls).toHaveLength(Object.values(expected).reduce((sum, count) => sum + count, 0));
 }

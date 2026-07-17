@@ -64,4 +64,41 @@ describe("commerce order and sale list read contracts", () => {
         expect(callsFor("custom_field_definitions")).toHaveLength(0);
         expect(capturedFetches()).toHaveLength(2);
     });
+
+    test("preserves status filters, actor scoping, and pagination bounds", async () => {
+        useCompleteOrderResponder();
+
+        const buyer = await requestCommerce(
+            "/me/orders?status=%20active%20&sellerId=99&limit=0&offset=-3",
+            { userId: buyerId },
+        );
+        expect(await buyer.json()).toMatchObject({ limit: 1, offset: 0 });
+        expect(Object.fromEntries(lastOrderQuery())).toMatchObject({
+            buyer_cms_user_id: `eq.${buyerId}`, status: "eq.active", limit: "1", offset: "0",
+        });
+        expect(lastOrderQuery().get("seller_id")).toBeNull();
+
+        const seller = await requestCommerce(
+            "/me/sales?status=%20active%20&limit=101&offset=-2",
+            { userId: sellerUserId },
+        );
+        expect(await seller.json()).toMatchObject({ limit: 100, offset: 0 });
+        expect(Object.fromEntries(lastOrderQuery())).toMatchObject({
+            seller_id: "eq.17", status: "eq.active", limit: "100", offset: "0",
+        });
+
+        const admin = await requestCommerce(
+            "/admin/orders?status=%20active%20&sellerId=17&limit=101&offset=-1",
+        );
+        expect(await admin.json()).toMatchObject({ limit: 100, offset: 0 });
+        expect(Object.fromEntries(lastOrderQuery())).toMatchObject({
+            seller_id: "eq.17", status: "eq.active", limit: "100", offset: "0",
+        });
+    });
 });
+
+function lastOrderQuery(): URLSearchParams {
+    const call = callsFor("orders").at(-1);
+    if (!call) throw new Error("Missing orders request");
+    return new URL(call.url).searchParams;
+}

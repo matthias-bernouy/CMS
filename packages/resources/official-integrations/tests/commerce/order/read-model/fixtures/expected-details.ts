@@ -48,7 +48,8 @@ export const expectedAdminDetail = {
 export const expectedSellerDetail = {
     ...expectedSellerList.items[0],
     operation: {
-        orderId: 42, orderPublicId: "order-public-42", orderNumber: "CO-42", currency: "eur",
+        orderId: 42, orderPublicId: "00000000-0000-4000-8000-000000000042",
+        orderNumber: "CO-42", currency: "eur",
         paymentStatus: "succeeded", fulfillmentStatus: "in_transit", settlementStatus: "held",
         claimStatus: "open", recipientHandoffAt: null, recipientHandoffFirstObservedAt: null,
         claimWindowStartedAt: null, claimByAt: "2026-07-22T12:00:00.000Z",
@@ -77,8 +78,9 @@ export const expectedSellerDetail = {
         sellerReserveLiabilityRemainingAmount: 500, version: 2,
     },
     authorization: {
-        allowed: false, reason: "shipment_not_collected", orderId: 42,
-        orderPublicId: "order-public-42", sellerId: 17, currency: "eur",
+        allowed: false, reason: "fulfillment_not_eligible", orderId: 42,
+        orderPublicId: "00000000-0000-4000-8000-000000000042",
+        sellerId: "seller-user-17", currency: "EUR",
         paymentStatus: "succeeded", fulfillmentStatus: "in_transit",
     },
     lines: expectedSellerLines,

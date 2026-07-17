@@ -1,7 +1,7 @@
 export const seller = { id: 17, kind: "user", slug: "seller-17", display_name: "Seller 17" };
 
 export const operation = {
-    order_id: 42, order_public_id: "order-public-42", order_number: "CO-42",
+    order_id: 42, order_public_id: "00000000-0000-4000-8000-000000000042", order_number: "CO-42",
     buyer_cms_user_id: "buyer-user-42", seller_id: 17, currency: "eur",
     buyer_total_amount: 11_070, seller_proceeds_amount: 9_000, platform_retained_amount: 2_070,
     financial_terms_hash: "terms-hash-42", payment_status: "succeeded",
@@ -56,14 +56,15 @@ export const settlement = {
 };
 
 export const claim = {
-    id: 88, public_id: "claim-public-88", reason: "damaged", status: "open",
+    id: 88, public_id: "20000000-0000-4000-8000-000000000088", reason: "damaged", status: "open",
     seller_response_by_at: "2026-07-15T12:00:00.000Z", return_ship_by_at: null,
     resolved_at: null, version: 1, created_at: "2026-07-14T12:00:00.000Z",
 };
 
 export const authorization = {
-    allowed: false, reason: "shipment_not_collected", order_id: 42,
-    order_public_id: "order-public-42", seller_id: 17, currency: "eur",
+    allowed: false, reason: "fulfillment_not_eligible", order_id: 42,
+    order_public_id: "00000000-0000-4000-8000-000000000042",
+    seller_id: "seller-user-17", currency: "EUR",
     payment_status: "succeeded", fulfillment_status: "in_transit",
     buyer_cms_user_id: "must-not-leak",
 };

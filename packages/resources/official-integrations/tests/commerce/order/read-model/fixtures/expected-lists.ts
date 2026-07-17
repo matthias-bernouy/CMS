@@ -14,15 +14,17 @@ const operation = {
 };
 
 export const expectedFirstAdminOrder = {
-    id: 42, publicId: "order-public-42", orderNumber: "CO-42", checkoutGroupId: "checkout-42",
-    sellerId: 17, buyerCmsUserId: "buyer-user-42", status: "paid", currency: "eur",
+    id: 42, publicId: "00000000-0000-4000-8000-000000000042", orderNumber: "CO-42",
+    checkoutGroupId: "10000000-0000-4000-8000-000000000042",
+    sellerId: 17, buyerCmsUserId: "buyer-user-42", status: "active", currency: "eur",
     subtotalAmount: 10_000, shippingAmount: 450, deliveryQuotedAt: null, totalAmount: 11_070,
     shippingAddress: { recipient: "Buyer", addressLine1: "42 Market St", addressLine2: null },
     billingAddress: { sameAsShipping: true }, idempotencyKey: "checkout-key-42", archivedAt: null,
     version: 3, createdAt: "2026-07-12T12:00:00.000Z", updatedAt: "2026-07-12T12:05:00.000Z",
 };
 const secondOrder = {
-    id: 41, publicId: "order-public-41", orderNumber: "CO-41", checkoutGroupId: "checkout-41",
+    id: 41, publicId: "00000000-0000-4000-8000-000000000041", orderNumber: "CO-41",
+    checkoutGroupId: "10000000-0000-4000-8000-000000000041",
     sellerId: 18, buyerCmsUserId: "buyer-user-42", status: "awaiting_payment", currency: "eur",
     subtotalAmount: 8_000, shippingAmount: 0, deliveryQuotedAt: "2026-07-11T11:02:00.000Z",
     totalAmount: 8_300, shippingAddress: { recipient: "Buyer", addressLine1: "41 Market St" },
@@ -48,13 +50,15 @@ export const expectedAdminList = {
 
 export const expectedSellerList = {
     items: [{
-        id: 42, publicId: "order-public-42", orderNumber: "CO-42", checkoutGroupId: "checkout-42",
-        status: "paid", currency: "eur", subtotalAmount: 10_000, shippingAmount: 450,
+        id: 42, publicId: "00000000-0000-4000-8000-000000000042", orderNumber: "CO-42",
+        checkoutGroupId: "10000000-0000-4000-8000-000000000042",
+        status: "active", currency: "eur", subtotalAmount: 10_000, shippingAmount: 450,
         deliveryQuotedAt: null, totalAmount: 11_070, metadata: expectedFirstPublicMetadata, version: 3,
         createdAt: "2026-07-12T12:00:00.000Z", updatedAt: "2026-07-12T12:05:00.000Z",
         metadataEntries: expectedFirstEntries,
     }, {
-        id: 41, publicId: "order-public-41", orderNumber: "CO-41", checkoutGroupId: "checkout-41",
+        id: 41, publicId: "00000000-0000-4000-8000-000000000041", orderNumber: "CO-41",
+        checkoutGroupId: "10000000-0000-4000-8000-000000000041",
         status: "awaiting_payment", currency: "eur", subtotalAmount: 8_000, shippingAmount: 0,
         deliveryQuotedAt: "2026-07-11T11:02:00.000Z", totalAmount: 8_300,
         metadata: { publicNote: "Front desk" }, version: 2,

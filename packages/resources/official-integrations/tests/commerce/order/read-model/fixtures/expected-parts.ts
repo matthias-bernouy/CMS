@@ -25,7 +25,7 @@ export const expectedBuyerEvents = [{
     nextStatus: "awaiting_payment", createdAt: "2026-07-12T12:00:00.000Z",
 }, {
     id: 202, orderId: 42, eventType: "paid", previousStatus: "awaiting_payment",
-    nextStatus: "paid", createdAt: "2026-07-12T12:03:00.000Z",
+    nextStatus: "active", createdAt: "2026-07-12T12:03:00.000Z",
 }];
 
 export const expectedAdminEvents = expectedBuyerEvents.map((event, index) => ({
@@ -34,7 +34,7 @@ export const expectedAdminEvents = expectedBuyerEvents.map((event, index) => ({
 }));
 
 export const expectedOperation = {
-    orderId: 42, orderPublicId: "order-public-42", orderNumber: "CO-42",
+    orderId: 42, orderPublicId: "00000000-0000-4000-8000-000000000042", orderNumber: "CO-42",
     buyerCmsUserId: "buyer-user-42", sellerId: 17, currency: "eur",
     buyerTotalAmount: 11_070, sellerProceedsAmount: 9_000, platformRetainedAmount: 2_070,
     financialTermsHash: "terms-hash-42", paymentStatus: "succeeded",
@@ -70,7 +70,7 @@ export const expectedSettlement = {
 };
 
 export const expectedClaim = {
-    id: 88, publicId: "claim-public-88", reason: "damaged", status: "open",
+    id: 88, publicId: "20000000-0000-4000-8000-000000000088", reason: "damaged", status: "open",
     sellerResponseByAt: "2026-07-15T12:00:00.000Z", returnShipByAt: null,
     resolvedAt: null, version: 1, createdAt: "2026-07-14T12:00:00.000Z",
 };

@@ -1,5 +1,7 @@
 export const buyerId = "buyer-user-42";
 export const sellerUserId = "seller-user-17";
+export const firstOrderPublicId = "00000000-0000-4000-8000-000000000042";
+export const secondOrderPublicId = "00000000-0000-4000-8000-000000000041";
 
 export const publicDefinitions = [
     { key: "insured", label: "Insured", field_type: "boolean", unit: null },
@@ -8,8 +10,9 @@ export const publicDefinitions = [
 ];
 
 export const orderRows = [{
-    id: 42, public_id: "order-public-42", order_number: "CO-42", checkout_group_id: "checkout-42",
-    seller_id: 17, buyer_cms_user_id: buyerId, status: "paid", currency: "eur",
+    id: 42, public_id: firstOrderPublicId, order_number: "CO-42",
+    checkout_group_id: "10000000-0000-4000-8000-000000000042",
+    seller_id: 17, buyer_cms_user_id: buyerId, status: "active", currency: "eur",
     subtotal_amount: 10_000, shipping_amount: 450, delivery_quoted_at: null, total_amount: 11_070,
     shipping_address: { recipient: "Buyer", addressLine1: "42 Market St", addressLine2: null },
     billing_address: { sameAsShipping: true },
@@ -17,7 +20,8 @@ export const orderRows = [{
     idempotency_key: "checkout-key-42", archived_at: null, version: 3,
     created_at: "2026-07-12T12:00:00.000Z", updated_at: "2026-07-12T12:05:00.000Z",
 }, {
-    id: 41, public_id: "order-public-41", order_number: "CO-41", checkout_group_id: "checkout-41",
+    id: 41, public_id: secondOrderPublicId, order_number: "CO-41",
+    checkout_group_id: "10000000-0000-4000-8000-000000000041",
     seller_id: 18, buyer_cms_user_id: buyerId, status: "awaiting_payment", currency: "eur",
     subtotal_amount: 8_000, shipping_amount: 0, delivery_quoted_at: "2026-07-11T11:02:00.000Z",
     total_amount: 8_300, shipping_address: { recipient: "Buyer", addressLine1: "41 Market St" },
@@ -61,7 +65,7 @@ export const buyerEventRows = [{
     next_status: "awaiting_payment", created_at: "2026-07-12T12:00:00.000Z",
 }, {
     id: 202, order_id: 42, event_type: "paid", previous_status: "awaiting_payment",
-    next_status: "paid", created_at: "2026-07-12T12:03:00.000Z",
+    next_status: "active", created_at: "2026-07-12T12:03:00.000Z",
 }];
 
 export const adminEventRows = buyerEventRows.map((event, index) => ({

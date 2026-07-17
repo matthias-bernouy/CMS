@@ -41,10 +41,83 @@ describe("commerce order and sale read failures", () => {
                 path, status: 400, body: { error: "id or publicId is required" },
             });
         }
-        const invalidId = await requestCommerce("/me/order?id=nope", { userId: "actor" });
+        const invalidId = await requestCommerce(
+            "/me/order?id=nope&publicId=00000000-0000-4000-8000-000000000042",
+            { userId: "actor" },
+        );
         expect({ status: invalidId.status, body: await invalidId.json() }).toEqual({
             status: 400, body: { error: "id must be an integer" },
         });
+        expect(capturedFetches()).toHaveLength(0);
+    });
+
+    test("preserves buyer identity timing after the initial order lookup", async () => {
+        let existing = true;
+        setRestResponder(() => jsonResponse(existing ? [orderRows[0]] : []));
+        const found = await requestCommerce("/me/order?id=42");
+        expect({ status: found.status, body: await found.json() }).toEqual({
+            status: 401, body: { error: "missing CMS user id" },
+        });
+        expect(capturedFetches()).toHaveLength(1);
+        existing = false;
+        const missing = await requestCommerce("/me/order?id=404");
+        expect({ status: missing.status, body: await missing.json() }).toEqual({
+            status: 404, body: { error: "order not found" },
+        });
+        expect(capturedFetches()).toHaveLength(2);
+    });
+
+    test("preserves invalid public-id errors after seller resolution", async () => {
+        let sellerExists = false;
+        setRestResponder(request => {
+            const resource = new URL(request.url).pathname.split("/").at(-1);
+            if (resource === "sellers") return jsonResponse(sellerExists ? [{ id: 17 }] : []);
+            return jsonResponse({ message: "invalid input syntax for type uuid: invalid" }, 400);
+        });
+        const hidden = await requestCommerce("/me/sale?publicId=invalid", { userId: "seller" });
+        expect({ status: hidden.status, body: await hidden.json() }).toEqual({
+            status: 404, body: { error: "sale not found" },
+        });
+        sellerExists = true;
+        const invalid = await requestCommerce("/me/sale?publicId=invalid", { userId: "seller" });
+        expect({ status: invalid.status, body: await invalid.json() }).toEqual({
+            status: 422, body: { error: "invalid input syntax for type uuid: invalid" },
+        });
+    });
+
+    test("preserves initial and hydration failure mappings", async () => {
+        setRestResponder(() => jsonResponse({ message: "orders unavailable" }, 503));
+        const initial = await requestCommerce("/admin/order?id=42");
+        expect({ status: initial.status, body: await initial.json() }).toEqual({
+            status: 502, body: { error: "orders unavailable" },
+        });
+
+        setRestResponder(request => {
+            const resource = new URL(request.url).pathname.split("/").at(-1);
+            if (resource === "orders") return jsonResponse([orderRows[0]]);
+            if (resource === "order_lines") return jsonResponse({ message: "lines unavailable" }, 503);
+            return jsonResponse([]);
+        });
+        const hydration = await requestCommerce("/admin/order?id=42");
+        expect({ status: hydration.status, body: await hydration.json() }).toEqual({
+            status: 502, body: { error: "lines unavailable" },
+        });
+    });
+
+    test("keeps unsupported methods local and advertises the same methods", async () => {
+        const cases = [
+            ["/me/orders", "GET, POST, OPTIONS"],
+            ["/me/order", "GET, OPTIONS"],
+            ["/me/sales", "GET, OPTIONS"],
+            ["/me/sale", "GET, OPTIONS"],
+            ["/admin/orders", "GET, OPTIONS"],
+            ["/admin/order", "GET, OPTIONS"],
+        ] as const;
+        for (const [path, allow] of cases) {
+            const response = await requestCommerce(path, { method: "PUT", userId: "actor" });
+            expect({ path, status: response.status, body: await response.text(), allow: response.headers.get("allow") })
+                .toEqual({ path, status: 405, body: "Method Not Allowed", allow });
+        }
         expect(capturedFetches()).toHaveLength(0);
     });
 
