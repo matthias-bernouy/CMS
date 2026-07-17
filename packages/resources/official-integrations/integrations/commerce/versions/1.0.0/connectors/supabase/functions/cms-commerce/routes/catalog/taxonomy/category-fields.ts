@@ -38,12 +38,11 @@ export async function upsertCategoryField(request: Request): Promise<Response> {
 export async function getOfferFilterSchema(request: Request): Promise<Response> {
     const category = text(new URL(request.url).searchParams.get("category"));
     if (!category) throw new HttpError(400, "category is required");
-    const result = await rpc("offer_filter_schema", { p_category_full_slug: category });
+    const result = await rpc("get_offer_filter_schema_read_model", {
+        p_category_full_slug: category,
+    });
     if (!isRecord(result)) throw new HttpError(404, "category not found");
-    const brands = await restJson<JsonRecord[]>(
-        "brands?select=id,slug,name&status=eq.active&order=name.asc,id.asc&limit=200",
-    );
-    return json({ ...result, brands: camelize(brands) });
+    return json(result);
 }
 
 export async function getCategoryProductFieldSchema(request: Request): Promise<Response> {

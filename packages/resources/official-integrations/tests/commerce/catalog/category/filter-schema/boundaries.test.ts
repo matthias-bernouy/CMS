@@ -6,7 +6,6 @@ import {
     requestCommerce,
     setRestResponder,
 } from "../../../harness";
-import { filterSchema } from "./expected";
 import { useFilterSchemaResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
@@ -23,7 +22,7 @@ describe("commerce offer filter schema boundaries", () => {
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("returns a missing category before the brand read", async () => {
+    test("returns a missing category from the single read model", async () => {
         useFilterSchemaResponder({ schema: null });
 
         const response = await requestCommerce("/offer-filter-schema?category=missing");
@@ -56,23 +55,14 @@ describe("commerce offer filter schema boundaries", () => {
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("preserves failures from the schema and brand reads", async () => {
-        for (const failingCall of [1, 2]) {
-            const start = capturedFetches().length;
-            let calls = 0;
-            setRestResponder(() => {
-                calls += 1;
-                return calls === failingCall
-                    ? jsonResponse({ message: `database failure ${failingCall}` }, 503)
-                    : jsonResponse(filterSchema);
-            });
+    test("preserves database failure mapping from the single read model", async () => {
+        setRestResponder(() => jsonResponse({ message: "database failure" }, 503));
 
-            const response = await requestCommerce("/offer-filter-schema?category=sports%2Ftennis");
+        const response = await requestCommerce("/offer-filter-schema?category=sports%2Ftennis");
 
-            expect(response.status).toBe(502);
-            expect(await response.json()).toEqual({ error: `database failure ${failingCall}` });
-            expect(capturedFetches().slice(start)).toHaveLength(failingCall);
-        }
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({ error: "database failure" });
+        expect(capturedFetches()).toHaveLength(1);
     });
 
     test("preserves routing method refusal without database work", async () => {

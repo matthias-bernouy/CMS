@@ -9,8 +9,8 @@ import { useFilterSchemaResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
 
-describe("commerce offer filter schema baseline budget", () => {
-    test("records the schema RPC followed by the bounded active-brand read", async () => {
+describe("commerce optimized offer filter schema budget", () => {
+    test("loads the schema and bounded active brands in one database call", async () => {
         useFilterSchemaResponder();
 
         const response = await requestCommerce("/offer-filter-schema?category=sports%2Ftennis");
@@ -18,32 +18,22 @@ describe("commerce offer filter schema baseline budget", () => {
 
         expect(response.status).toBe(200);
         expect(calls.map(call => new URL(call.url).pathname.split("/").at(-1))).toEqual([
-            "offer_filter_schema",
-            "brands",
+            "get_offer_filter_schema_read_model",
         ]);
-        expect(expectRpc("offer_filter_schema").body).toEqual({
+        expect(expectRpc("get_offer_filter_schema_read_model").body).toEqual({
             p_category_full_slug: "sports/tennis",
         });
-        const brands = new URL(calls[1]!.url).searchParams;
-        expect(brands.get("select")).toBe("id,slug,name");
-        expect(brands.get("status")).toBe("eq.active");
-        expect(brands.get("order")).toBe("name.asc,id.asc");
-        expect(brands.get("limit")).toBe("200");
     });
 
-    test("uses the secret service-role transport for both baseline reads", async () => {
+    test("uses the secret service-role transport for the private read model", async () => {
         useFilterSchemaResponder();
 
         await requestCommerce("/offer-filter-schema?category=sports%2Ftennis");
-        const [schema, brands] = capturedFetches();
+        const [readModel] = capturedFetches();
 
-        expect(schema!.headers.get("apikey")).toBe("sb_secret_test");
-        expect(schema!.headers.get("authorization")).toBeNull();
-        expect(schema!.headers.get("accept-profile")).toBe("commerce");
-        expect(schema!.headers.get("content-profile")).toBe("commerce");
-        expect(brands!.headers.get("apikey")).toBe("sb_secret_test");
-        expect(brands!.headers.get("authorization")).toBeNull();
-        expect(brands!.headers.get("accept-profile")).toBe("commerce");
-        expect(brands!.headers.get("content-profile")).toBeNull();
+        expect(readModel!.headers.get("apikey")).toBe("sb_secret_test");
+        expect(readModel!.headers.get("authorization")).toBeNull();
+        expect(readModel!.headers.get("accept-profile")).toBe("commerce");
+        expect(readModel!.headers.get("content-profile")).toBe("commerce");
     });
 });

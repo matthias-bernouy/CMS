@@ -4138,6 +4138,44 @@ as $$
     ) end;
 $$;
 
+create or replace function commerce.get_offer_filter_schema_read_model(
+    p_category_full_slug text
+)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+    with filter_schema as materialized (
+        select commerce.offer_filter_schema(p_category_full_slug) value
+    )
+    select case when filter_schema.value is null then null else
+        filter_schema.value || jsonb_build_object(
+            'brands', coalesce((
+                select jsonb_agg(jsonb_build_object(
+                    'id', brand.id,
+                    'slug', brand.slug,
+                    'name', brand.name
+                ) order by brand.name, brand.id)
+                from (
+                    select listed.id, listed.slug, listed.name
+                    from commerce.brands listed
+                    where listed.status = 'active'
+                    order by listed.name, listed.id
+                    limit 200
+                ) brand
+            ), '[]'::jsonb)
+        )
+    end
+    from filter_schema;
+$$;
+
+revoke execute on function commerce.get_offer_filter_schema_read_model(text)
+    from public, anon, authenticated;
+grant execute on function commerce.get_offer_filter_schema_read_model(text)
+    to service_role;
+
 create or replace function commerce.public_metadata_subset(
     p_metadata jsonb,
     p_keys text[]
