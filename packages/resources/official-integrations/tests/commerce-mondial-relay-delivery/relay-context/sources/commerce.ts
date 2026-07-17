@@ -4,7 +4,6 @@ import {
     type Source,
 } from "@bernouy/cms-sources";
 import {
-    array,
     computedUserHeader,
     number,
     object,
@@ -16,60 +15,84 @@ export function commerceSource(): Source {
     return {
         urn: makeSourceUrn("commerce"),
         endpoints: [{
-            urn: makeEndpointUrn("commerce", "myOrder"),
-            method: "GET",
-            targetUrl: "https://commerce.test/order",
-            headers: computedUserHeader(),
-            input: {
-                params: [{ name: "id", in: "query", schema: text() }],
-            },
-            output: [{ status: "200", body: object({
-                publicId: text(),
-                buyerCmsUserId: userId(),
-                status: text(),
-                version: number(),
-                financialTerms: object({ deliveryQuoteId: text() }, true),
-                shippingAddress: object(),
-                lines: array(object()),
-            }) }],
-        }, {
             urn: makeEndpointUrn(
                 "commerce",
-                "getOrderDeliveryQuoteAuthorization",
+                "getOrderDeliverySetupContext",
             ),
             method: "GET",
-            targetUrl: "https://commerce.test/quote-authorization",
+            targetUrl: "https://commerce.test/delivery-setup-context",
             headers: computedUserHeader(),
             input: {
                 params: [{
-                    name: "orderPublicId",
+                    name: "orderId",
                     in: "query",
-                    required: true,
                     schema: text(),
                 }],
             },
             output: [{ status: "200", body: {
                 ...object({
-                    orderId: number(),
-                    orderPublicId: text(),
-                    orderVersion: number(),
-                    status: text(),
+                    order: {
+                        ...object({
+                            publicId: text(),
+                            buyerCmsUserId: userId(),
+                            status: text(),
+                            version: number(),
+                        }),
+                        required: [
+                            "publicId",
+                            "buyerCmsUserId",
+                            "status",
+                            "version",
+                        ],
+                    },
+                    authorization: {
+                        ...object({
+                            buyerCmsUserId: userId(),
+                            status: text(),
+                            orderVersion: number(),
+                            sellerCmsUserId: userId(),
+                            currency: text(),
+                            merchandiseSubtotalMinorAmount: number(),
+                            shippingAddress: object(),
+                        }, true),
+                        required: [
+                            "buyerCmsUserId",
+                            "status",
+                            "orderVersion",
+                            "sellerCmsUserId",
+                            "currency",
+                            "merchandiseSubtotalMinorAmount",
+                            "shippingAddress",
+                        ],
+                    },
+                }),
+                required: ["order", "authorization"],
+            } }],
+        }, {
+            urn: makeEndpointUrn(
+                "commerce",
+                "getOrderDeliverySelectionContext",
+            ),
+            method: "GET",
+            targetUrl: "https://commerce.test/delivery-selection-context",
+            headers: computedUserHeader(),
+            input: {
+                params: [{
+                    name: "orderId",
+                    in: "query",
+                    schema: text(),
+                }],
+            },
+            output: [{ status: "200", body: {
+                ...object({
+                    publicId: text(),
                     buyerCmsUserId: userId(),
-                    sellerCmsUserId: userId(),
-                    currency: text(),
-                    merchandiseSubtotalMinorAmount: number(),
-                    shippingAddress: object(),
+                    deliveryQuoteId: text(true),
                 }),
                 required: [
-                    "orderId",
-                    "orderPublicId",
-                    "orderVersion",
-                    "status",
+                    "publicId",
                     "buyerCmsUserId",
-                    "sellerCmsUserId",
-                    "currency",
-                    "merchandiseSubtotalMinorAmount",
-                    "shippingAddress",
+                    "deliveryQuoteId",
                 ],
             } }],
         }, {

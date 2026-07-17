@@ -92,8 +92,10 @@ describe("setRelayPointForOrder boundaries", () => {
             );
 
             await expectGenericFailure(result.response);
-            expect(paths(result.calls)).toEqual(["/order"]);
-            expect(result.calls[0]?.url.searchParams.get("id")).toBe(
+            expect(paths(result.calls)).toEqual([
+                "/delivery-setup-context",
+            ]);
+            expect(result.calls[0]?.url.searchParams.get("orderId")).toBe(
                 orderId || null,
             );
         }

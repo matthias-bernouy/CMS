@@ -53,39 +53,31 @@
                 "output": [{ "status": "200", "body": { "type": "object" } }],
                 "steps": [
                     {
-                        "id": "order",
+                        "id": "context",
                         "call": {
                             "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "myOrder",
-                            "params": { "id": "$input.body.orderId" }
+                            "endpoint": "getOrderDeliverySetupContext",
+                            "params": { "orderId": "$input.body.orderId" }
                         }
                     },
                     {
                         "assert": {
-                            "condition": { "equals": ["$steps.order.buyerCmsUserId", "$ctx.user.id"] },
+                            "condition": { "equals": ["$steps.context.order.buyerCmsUserId", "$ctx.user.id"] },
                             "failure": { "status": 403, "error": "Order does not belong to the current buyer" }
                         }
                     },
                     {
                         "assert": {
-                            "condition": { "equals": ["$steps.order.status", "awaiting_quote"] },
+                            "condition": { "equals": ["$steps.context.order.status", "awaiting_quote"] },
                             "failure": { "status": 409, "error": "Pickup point can only be changed before order finalization" }
-                        }
-                    },
-                    {
-                        "id": "authorization",
-                        "call": {
-                            "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "getOrderDeliveryQuoteAuthorization",
-                            "params": { "orderPublicId": "$steps.order.publicId" }
                         }
                     },
                     {
                         "assert": {
                             "condition": { "all": [
-                                { "equals": ["$steps.authorization.buyerCmsUserId", "$ctx.user.id"] },
-                                { "equals": ["$steps.authorization.orderVersion", "$steps.order.version"] },
-                                { "equals": ["$steps.authorization.status", "awaiting_quote"] }
+                                { "equals": ["$steps.context.authorization.buyerCmsUserId", "$ctx.user.id"] },
+                                { "equals": ["$steps.context.authorization.orderVersion", "$steps.context.order.version"] },
+                                { "equals": ["$steps.context.authorization.status", "awaiting_quote"] }
                             ] },
                             "failure": { "status": 409, "error": "Order delivery authorization changed" }
                         }
@@ -95,7 +87,7 @@
                         "call": {
                             "source": "{{dependencies.accounts.sourceId}}",
                             "endpoint": "getAccountByUserId",
-                            "params": { "userId": "$steps.authorization.sellerCmsUserId" }
+                            "params": { "userId": "$steps.context.authorization.sellerCmsUserId" }
                         }
                     },
                     {
@@ -104,17 +96,17 @@
                             "source": "{{dependencies.delivery.sourceId}}",
                             "endpoint": "saveRelaySelection",
                             "body": {
-                                "requestKey": { "$concat": ["commerce-order:", "$steps.order.publicId", ":version:", "$steps.order.version", ":relay:", "$input.body.relayLocation"] },
-                                "externalOrderId": "$steps.order.publicId",
-                                "orderVersion": "$steps.order.version",
+                                "requestKey": { "$concat": ["commerce-order:", "$steps.context.order.publicId", ":version:", "$steps.context.order.version", ":relay:", "$input.body.relayLocation"] },
+                                "externalOrderId": "$steps.context.order.publicId",
+                                "orderVersion": "$steps.context.order.version",
                                 "selectedForCmsUserId": "$ctx.user.id",
                                 "relayLocation": "$input.body.relayLocation",
                                 "country": "$input.body.country",
                                 "postalCode": "$input.body.postalCode",
                                 "city": "$input.body.city",
-                                "currency": "$steps.authorization.currency",
-                                "merchandiseSubtotalMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
-                                "recipientSnapshot": "$steps.authorization.shippingAddress",
+                                "currency": "$steps.context.authorization.currency",
+                                "merchandiseSubtotalMinorAmount": "$steps.context.authorization.merchandiseSubtotalMinorAmount",
+                                "recipientSnapshot": "$steps.context.authorization.shippingAddress",
                                 "sellerFulfillmentSnapshot": "$steps.seller"
                             }
                         }
@@ -126,11 +118,11 @@
                             "endpoint": "resolveDeliveryQuote",
                             "body": {
                                 "quoteId": "$steps.selection.quoteId",
-                                "externalOrderId": "$steps.order.publicId",
+                                "externalOrderId": "$steps.context.order.publicId",
                                 "selectedForCmsUserId": "$ctx.user.id",
-                                "orderVersion": "$steps.order.version",
-                                "merchandiseSubtotalMinorAmount": "$steps.authorization.merchandiseSubtotalMinorAmount",
-                                "currency": "$steps.authorization.currency",
+                                "orderVersion": "$steps.context.order.version",
+                                "merchandiseSubtotalMinorAmount": "$steps.context.authorization.merchandiseSubtotalMinorAmount",
+                                "currency": "$steps.context.authorization.currency",
                                 "purpose": "financial_lock"
                             }
                         }
@@ -141,11 +133,11 @@
                             "source": "{{dependencies.commerce.sourceId}}",
                             "endpoint": "lockOrderFinancialTerms",
                             "body": {
-                                "orderPublicId": "$steps.order.publicId",
+                                "orderPublicId": "$steps.context.order.publicId",
                                 "deliveryQuoteId": "$steps.resolvedQuote.quoteId",
                                 "shippingAmount": "$steps.resolvedQuote.shippingAmount",
                                 "currency": "$steps.resolvedQuote.currency",
-                                "expectedVersion": "$steps.order.version"
+                                "expectedVersion": "$steps.context.order.version"
                             }
                         }
                     }
@@ -177,16 +169,16 @@
                 "output": [{ "status": "200", "body": { "type": "object" } }],
                 "steps": [
                     {
-                        "id": "order",
+                        "id": "context",
                         "call": {
                             "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "myOrder",
-                            "params": { "id": "$input.params.orderId" }
+                            "endpoint": "getOrderDeliverySelectionContext",
+                            "params": { "orderId": "$input.params.orderId" }
                         }
                     },
                     {
                         "assert": {
-                            "condition": { "equals": ["$steps.order.buyerCmsUserId", "$ctx.user.id"] },
+                            "condition": { "equals": ["$steps.context.buyerCmsUserId", "$ctx.user.id"] },
                             "failure": { "status": 403, "error": "Order does not belong to the current buyer" }
                         }
                     },
@@ -196,8 +188,8 @@
                             "source": "{{dependencies.delivery.sourceId}}",
                             "endpoint": "deliveryQuote",
                             "params": {
-                                "quoteId": "$steps.order.financialTerms.deliveryQuoteId",
-                                "externalOrderId": "$steps.order.publicId",
+                                "quoteId": "$steps.context.deliveryQuoteId",
+                                "externalOrderId": "$steps.context.publicId",
                                 "selectedForCmsUserId": "$ctx.user.id"
                             }
                         }

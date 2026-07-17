@@ -6,6 +6,7 @@ import type { JsonRecord } from "../../../core/types.ts";
 import { safeRecord } from "./projections.ts";
 
 const functionName = "get_marketplace_claim_read_model";
+const returnAuthorizationFunction = "get_claim_return_authorization_context";
 const claimFields = [
     "id", "publicId", "orderId", "buyerCmsUserId", "sellerId", "reason", "status",
     "description", "buyerRequestedAmount", "resolutionOutcome",
@@ -25,6 +26,22 @@ const evidenceFields = [
 const returnEventFields = [
     "id", "providerEventId", "providerReference", "normalizedStatus", "occurredAt", "createdAt",
 ] as const;
+const returnAuthorizationClaimFields = [
+    "id", "publicId", "buyerCmsUserId", "status", "resolutionOutcome",
+    "returnShipByAt", "returnDeliveryStatus", "returnRecipientHandoffAt", "version",
+] as const;
+const returnAuthorizationOrderFields = ["id", "publicId", "orderNumber"] as const;
+const returnAuthorizationSellerFields = ["id", "cmsUserId"] as const;
+const returnAuthorizationFinancialFields = [
+    "deliveryQuoteId", "merchandiseSubtotalAmount", "currency",
+] as const;
+
+type ReturnAuthorizationContext = {
+    claim: JsonRecord;
+    order: JsonRecord | null;
+    seller: JsonRecord | null;
+    financialTerms: JsonRecord | null;
+};
 
 export async function getClaim(request: Request): Promise<Response> {
     const id = integer(new URL(request.url).searchParams.get("id"), "id", true)!;
@@ -40,17 +57,65 @@ export async function getClaim(request: Request): Promise<Response> {
     });
 }
 
+export async function loadClaimReturnAuthorizationContext(
+    claimId: number,
+): Promise<ReturnAuthorizationContext> {
+    const result = await rpc(returnAuthorizationFunction, { p_claim_id: claimId });
+    if (!isRecord(result) || typeof result.state !== "string") {
+        throw invalidResponse(returnAuthorizationFunction);
+    }
+    if (result.state === "not_found") throw new HttpError(404, "claim not found");
+    if (result.state !== "ok") throw invalidResponse(returnAuthorizationFunction);
+    return {
+        claim: projectRequired(
+            result.claim,
+            returnAuthorizationClaimFields,
+            returnAuthorizationFunction,
+        ),
+        order: projectOptional(
+            result.order,
+            returnAuthorizationOrderFields,
+            returnAuthorizationFunction,
+        ),
+        seller: projectOptional(
+            result.seller,
+            returnAuthorizationSellerFields,
+            returnAuthorizationFunction,
+        ),
+        financialTerms: projectOptional(
+            result.financial_terms,
+            returnAuthorizationFinancialFields,
+            returnAuthorizationFunction,
+        ),
+    };
+}
+
 function projectArray(value: unknown, fields: readonly string[]): JsonRecord[] {
     if (!Array.isArray(value) || !value.every(isRecord)) throw invalidResponse();
     return value.map(row => projectRequired(row, fields));
 }
 
-function projectRequired(row: JsonRecord, fields: readonly string[]): JsonRecord {
+function projectOptional(
+    row: unknown,
+    fields: readonly string[],
+    source: string,
+): JsonRecord | null {
+    return row === null ? null : projectRequired(row, fields, source);
+}
+
+function projectRequired(
+    row: unknown,
+    fields: readonly string[],
+    source = functionName,
+): JsonRecord {
+    if (!isRecord(row)) throw invalidResponse(source);
     const projected = safeRecord(row, fields);
-    if (Object.keys(projected).length !== fields.length) throw invalidResponse();
+    if (Object.keys(projected).length !== fields.length) {
+        throw invalidResponse(source);
+    }
     return projected;
 }
 
-function invalidResponse(): HttpError {
-    return new HttpError(502, `${functionName} returned an invalid response`);
+function invalidResponse(source = functionName): HttpError {
+    return new HttpError(502, `${source} returned an invalid response`);
 }

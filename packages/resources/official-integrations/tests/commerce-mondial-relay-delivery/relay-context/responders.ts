@@ -10,8 +10,7 @@ import {
 } from "./fixtures";
 
 export type FailurePoint =
-    | "order"
-    | "authorization"
+    | "context"
     | "account"
     | "save"
     | "resolve"
@@ -20,7 +19,7 @@ export type FailurePoint =
 
 type Overrides = {
     order?: Record<string, unknown>;
-    authorization?: Record<string, unknown>;
+    authorization?: Record<string, unknown> | null;
     account?: Record<string, unknown>;
     savedQuote?: Record<string, unknown>;
     resolvedQuote?: Record<string, unknown>;
@@ -35,13 +34,30 @@ export function successfulResponder(
         const path = new URL(request.url).pathname;
         const point = pointForPath(path);
         if (overrides.failAt === point) return privateFailure(point);
-        if (path === "/order") {
-            return Response.json({ ...order, ...overrides.order });
-        }
-        if (path === "/quote-authorization") {
+        if (path === "/delivery-setup-context") {
+            const contextOrder = { ...order, ...overrides.order };
             return Response.json({
-                ...authorization,
-                ...overrides.authorization,
+                order: contextOrder,
+                authorization: contextOrder.status !== "awaiting_quote" ||
+                        overrides.authorization === null
+                    ? null
+                    : {
+                        ...authorization,
+                        ...overrides.authorization,
+                    },
+            });
+        }
+        if (path === "/delivery-selection-context") {
+            const contextOrder = { ...finalizedOrder, ...overrides.order };
+            const financialTerms = contextOrder.financialTerms as
+                | Record<string, unknown>
+                | null;
+            return Response.json({
+                publicId: contextOrder.publicId,
+                buyerCmsUserId: contextOrder.buyerCmsUserId,
+                deliveryQuoteId: financialTerms === null
+                    ? null
+                    : financialTerms.deliveryQuoteId,
             });
         }
         if (path === "/account") {
@@ -96,16 +112,16 @@ export function successfulResponder(
 export function successfulGetResponder(
     overrides: Overrides = {},
 ): (request: Request) => Response {
-    return successfulResponder({
-        ...overrides,
-        order: { ...finalizedOrder, ...overrides.order },
-    });
+    return successfulResponder(overrides);
 }
 
 export function selectorResponder(request: Request): Response {
     const url = new URL(request.url);
-    if (url.pathname === "/order") {
-        const id = url.searchParams.get("id");
+    if (
+        url.pathname === "/delivery-setup-context" ||
+        url.pathname === "/delivery-selection-context"
+    ) {
+        const id = url.searchParams.get("orderId");
         if (!id || !/^-?\d+$/.test(id) || !Number.isSafeInteger(Number(id))) {
             return Response.json(
                 { error: "id or publicId is required" },
@@ -124,13 +140,13 @@ function privateFailure(point: FailurePoint): Response {
         error: `${point} failed`,
         shippingAddress: { addressLine1: "7 Private Street" },
         providerPayload: { reference: "private-provider-reference" },
-    }, { status: point === "order" ? 404 : 409 });
+    }, { status: point === "context" ? 404 : 409 });
 }
 
 function pointForPath(path: string): FailurePoint {
     const point = ({
-        "/order": "order",
-        "/quote-authorization": "authorization",
+        "/delivery-setup-context": "context",
+        "/delivery-selection-context": "context",
         "/account": "account",
         "/relay-selection": "save",
         "/resolve": "resolve",

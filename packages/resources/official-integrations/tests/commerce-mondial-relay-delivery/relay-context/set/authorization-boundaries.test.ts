@@ -40,7 +40,7 @@ describe("setRelayPointForOrder boundaries", () => {
         ]).toEqual([
             403,
             { error: "Order does not belong to the current buyer" },
-            ["/order"],
+            ["/delivery-setup-context"],
         ]);
         expect([
             wrongStatus.response.status,
@@ -52,7 +52,7 @@ describe("setRelayPointForOrder boundaries", () => {
                 error:
                     "Pickup point can only be changed before order finalization",
             },
-            ["/order"],
+            ["/delivery-setup-context"],
         ]);
         expect([
             wrongBuyerAndStatus.response.status,
@@ -61,7 +61,7 @@ describe("setRelayPointForOrder boundaries", () => {
         ]).toEqual([
             403,
             { error: "Order does not belong to the current buyer" },
-            ["/order"],
+            ["/delivery-setup-context"],
         ]);
         expect([
             changed.response.status,
@@ -70,7 +70,7 @@ describe("setRelayPointForOrder boundaries", () => {
         ]).toEqual([
             409,
             { error: "Order delivery authorization changed" },
-            ["/order", "/quote-authorization"],
+            ["/delivery-setup-context"],
         ]);
     });
 
@@ -92,8 +92,7 @@ describe("setRelayPointForOrder boundaries", () => {
                 error: "Order delivery authorization changed",
             });
             expect(paths(result.calls)).toEqual([
-                "/order",
-                "/quote-authorization",
+                "/delivery-setup-context",
             ]);
         });
     }
@@ -117,12 +116,13 @@ describe("setRelayPointForOrder boundaries", () => {
         );
 
         await expectGenericFailure(malformedOrder.response);
-        expect(paths(malformedOrder.calls)).toEqual(["/order"]);
+        expect(paths(malformedOrder.calls)).toEqual([
+            "/delivery-setup-context",
+        ]);
         for (const result of [malformedAuthorization, missingSeller]) {
             await expectGenericFailure(result.response);
             expect(paths(result.calls)).toEqual([
-                "/order",
-                "/quote-authorization",
+                "/delivery-setup-context",
             ]);
         }
     });

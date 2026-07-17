@@ -13,7 +13,7 @@ describe("getRelayPointForOrder status independence", () => {
         expect(result.response.status).toBe(200);
         expect(await result.response.json()).toEqual(publicRelayPoint);
         expect(result.calls.map(call => call.url.pathname)).toEqual([
-            "/order",
+            "/delivery-selection-context",
             "/public",
         ]);
     });

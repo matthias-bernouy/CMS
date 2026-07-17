@@ -19,6 +19,10 @@ import {
     reserveOrderShipmentCreation,
 } from "../routes/order/fulfillment.ts";
 import { getClaimReturnAuthorization, recordClaimReturnDelivery } from "../routes/order/claims.ts";
+import {
+    getOrderDeliverySelectionContext,
+    getOrderDeliverySetupContext,
+} from "../routes/order/read-model/contexts.ts";
 import { getOfferNegotiationContext } from "../routes/offer/contexts.ts";
 import { verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
 import { getOrderPaymentContext, getProtectedCheckoutSellerContext, getProtectedPaymentSellerContext } from "../routes/orders.ts";
@@ -36,6 +40,12 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     if (route === "/system/order/financial-terms/lock") return post(request, lockOrderFinancialTerms);
     if (route === "/system/order/delivery-quote/authorization") {
         return request.method === "GET" ? await getOrderDeliveryQuoteAuthorization(request) : methodNotAllowed("GET");
+    }
+    if (route === "/system/order/delivery-setup-context") {
+        return request.method === "GET" ? await getOrderDeliverySetupContext(request) : methodNotAllowed("GET");
+    }
+    if (route === "/system/order/delivery-selection-context") {
+        return request.method === "GET" ? await getOrderDeliverySelectionContext(request) : methodNotAllowed("GET");
     }
     if (route === "/system/order/payment") return post(request, recordOrderPayment);
     if (route === "/system/order/fulfillment") return post(request, recordOrderFulfillment);

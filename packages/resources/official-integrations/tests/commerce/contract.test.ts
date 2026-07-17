@@ -16,7 +16,6 @@ describe("commerce 1.0.0 contract", () => {
         const catalog = await repository.list();
         const definition = await repository.get("commerce");
         if (!definition) throw new Error("commerce definition not found");
-
         const sources = new InMemorySourceRepository(), sourceOverlays = new InMemorySourceOverlayRepository();
         const dashboards = new InMemoryDashboardRepository();
         const secrets = new InMemorySecretStore(), roles = new InMemoryRolesRepository();
@@ -24,7 +23,6 @@ describe("commerce 1.0.0 contract", () => {
         const installations = await installedBasicBlocs();
         let deployment: IntegrationConnectorDeployment | undefined;
         const deployer = connectorDeployer(value => { deployment = value; });
-
         const result = await importIntegration(
             {
                 sources,
@@ -76,7 +74,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-sale-detail",
             "commerce-offer-price-form",
         ]);
-        expect(endpointUrns).toHaveLength(149);
+        expect(endpointUrns).toHaveLength(151);
         expect(endpointUrns).not.toEqual(expect.arrayContaining([
             "urn:commerce:variants",
             "urn:commerce:variant",
@@ -97,6 +95,8 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:getProtectedPaymentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/protected-payment/seller-context`,
             "urn:commerce:getOfferNegotiationContext": `${supabaseUrl}/functions/v1/cms-commerce/system/offer/negotiation-context`,
             "urn:commerce:getPaymentOrderContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/payment-context`,
+            "urn:commerce:getOrderDeliverySetupContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-setup-context`,
+            "urn:commerce:getOrderDeliverySelectionContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-selection-context`,
             "urn:commerce:createOrder": `${supabaseUrl}/functions/v1/cms-commerce/me/orders`,
             "urn:commerce:mySales": `${supabaseUrl}/functions/v1/cms-commerce/me/sales`,
             "urn:commerce:mySale": `${supabaseUrl}/functions/v1/cms-commerce/me/sale`,

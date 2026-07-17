@@ -9,25 +9,21 @@ import { paths } from "./calls";
 
 describe("setRelayPointForOrder boundaries", () => {
     for (const [failure, expectedPaths] of [
-        ["order", ["/order"]],
-        ["authorization", ["/order", "/quote-authorization"]],
-        ["account", ["/order", "/quote-authorization", "/account"]],
+        ["context", ["/delivery-setup-context"]],
+        ["account", ["/delivery-setup-context", "/account"]],
         ["save", [
-            "/order",
-            "/quote-authorization",
+            "/delivery-setup-context",
             "/account",
             "/relay-selection",
         ]],
         ["resolve", [
-            "/order",
-            "/quote-authorization",
+            "/delivery-setup-context",
             "/account",
             "/relay-selection",
             "/resolve",
         ]],
         ["lock", [
-            "/order",
-            "/quote-authorization",
+            "/delivery-setup-context",
             "/account",
             "/relay-selection",
             "/resolve",
@@ -74,8 +70,7 @@ describe("setRelayPointForOrder boundaries", () => {
 
             await expectGenericFailure(result.response);
             expect(paths(result.calls)).toEqual([
-                "/order",
-                "/quote-authorization",
+                "/delivery-setup-context",
                 "/account",
                 "/relay-selection",
             ]);

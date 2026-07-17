@@ -5,7 +5,7 @@ import { camelize, integer, readJsonObject, requiredText, text } from "../../cor
 import { listRows, one, rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import { publicClaimEvidence } from "./claim-evidence.ts";
-import { loadClaimReturnAuthorizationContext } from "./read-model/return-authorization.ts";
+import { loadClaimReturnAuthorizationContext } from "./read-model/claims.ts";
 
 export { getClaim } from "./read-model/claims.ts";
 

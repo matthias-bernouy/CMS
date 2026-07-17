@@ -25,7 +25,7 @@ describe("setRelayPointForOrder contract", () => {
             },
             financialTerms: lockedFinancialTerms,
         });
-        expect(result.calls).toHaveLength(6);
+        expect(result.calls).toHaveLength(5);
     });
 
     test("locks the values returned by quote resolution", async () => {
@@ -42,7 +42,7 @@ describe("setRelayPointForOrder contract", () => {
         );
 
         expect(result.response.status).toBe(200);
-        expect(result.calls[5]?.body).toEqual({
+        expect(result.calls[4]?.body).toEqual({
             orderPublicId,
             deliveryQuoteId: resolvedQuoteId,
             shippingAmount: 475,

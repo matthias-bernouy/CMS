@@ -33,8 +33,7 @@ describe("setRelayPointForOrder contract", () => {
             call.method,
             call.url.pathname,
         ])).toEqual([
-            ["GET", "/order"],
-            ["GET", "/quote-authorization"],
+            ["GET", "/delivery-setup-context"],
             ["GET", "/account"],
             ["POST", "/relay-selection"],
             ["POST", "/resolve"],
@@ -43,14 +42,13 @@ describe("setRelayPointForOrder contract", () => {
         expect(first.calls.map(call => Object.fromEntries(
             call.url.searchParams,
         ))).toEqual([
-            { id: "42" },
-            { orderPublicId },
+            { orderId: "42" },
             { userId: "seller-subject" },
             {},
             {},
             {},
         ]);
-        expect(first.calls[3]?.body).toEqual({
+        expect(first.calls[2]?.body).toEqual({
             requestKey:
                 `commerce-order:${orderPublicId}:version:1:relay:FR-024474`,
             externalOrderId: orderPublicId,
@@ -65,7 +63,7 @@ describe("setRelayPointForOrder contract", () => {
             recipientSnapshot: authorization.shippingAddress,
             sellerFulfillmentSnapshot: sellerAccount,
         });
-        expect(first.calls[4]?.body).toEqual({
+        expect(first.calls[3]?.body).toEqual({
             quoteId: savedQuote.quoteId,
             externalOrderId: orderPublicId,
             selectedForCmsUserId: buyerId,
@@ -74,7 +72,7 @@ describe("setRelayPointForOrder contract", () => {
             currency: "eur",
             purpose: "financial_lock",
         });
-        expect(first.calls[5]?.body).toEqual({
+        expect(first.calls[4]?.body).toEqual({
             orderPublicId,
             deliveryQuoteId: savedQuote.quoteId,
             shippingAmount: 450,
@@ -83,14 +81,12 @@ describe("setRelayPointForOrder contract", () => {
         });
         expect(first.calls.map(call => call.userId)).toEqual([
             buyerId,
-            buyerId,
             null,
             buyerId,
             null,
             buyerId,
         ]);
         expect(first.calls.map(call => call.accountUserId)).toEqual([
-            null,
             null,
             buyerId,
             null,

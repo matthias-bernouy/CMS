@@ -37,7 +37,7 @@ describe("getRelayPointForOrder contract", () => {
             call.url.pathname,
             Object.fromEntries(call.url.searchParams),
         ])).toEqual([
-            ["GET", "/order", { id: "42" }],
+            ["GET", "/delivery-selection-context", { orderId: "42" }],
             ["GET", "/public", {
                 quoteId: savedQuoteId,
                 externalOrderId: orderPublicId,
@@ -45,7 +45,7 @@ describe("getRelayPointForOrder contract", () => {
             }],
         ]);
         expect(second.calls.map(call => call.url.pathname)).toEqual([
-            "/order",
+            "/delivery-selection-context",
             "/public",
         ]);
         expect(second.response.status).toBe(200);
@@ -55,7 +55,6 @@ describe("getRelayPointForOrder contract", () => {
             null,
         ]);
     });
-
     test("keeps missing fields omitted but rejects explicit nulls", async () => {
         const missing = await executeRelay(
             "getRelayPointForOrder",
@@ -101,12 +100,14 @@ describe("getRelayPointForOrder contract", () => {
         expect(await result.response.json()).toEqual({
             error: "Order does not belong to the current buyer",
         });
-        expect(paths(result.calls)).toEqual(["/order"]);
+        expect(paths(result.calls)).toEqual(["/delivery-selection-context"]);
         expect(withoutTerms.response.status).toBe(403);
         expect(await withoutTerms.response.json()).toEqual({
             error: "Order does not belong to the current buyer",
         });
-        expect(paths(withoutTerms.calls)).toEqual(["/order"]);
+        expect(paths(withoutTerms.calls)).toEqual([
+            "/delivery-selection-context",
+        ]);
     });
 
     test("preserves selector failures as generic upstream failures", async () => {
@@ -129,8 +130,8 @@ describe("getRelayPointForOrder contract", () => {
             );
 
             await expectGenericFailure(result.response);
-            expect(paths(result.calls)).toEqual(["/order"]);
-            expect(result.calls[0]?.url.searchParams.get("id")).toBe(
+            expect(paths(result.calls)).toEqual(["/delivery-selection-context"]);
+            expect(result.calls[0]?.url.searchParams.get("orderId")).toBe(
                 new URL(requestUrl).searchParams.get("orderId") || null,
             );
         }
@@ -147,14 +148,16 @@ describe("getRelayPointForOrder contract", () => {
             );
 
             await expectGenericFailure(result.response);
-            expect(paths(result.calls)).toEqual(["/order"]);
+            expect(paths(result.calls)).toEqual([
+                "/delivery-selection-context",
+            ]);
         }
     });
 
     test("stops at Commerce or Delivery and redacts upstream details", async () => {
         const commerce = await executeRelay(
             "getRelayPointForOrder",
-            successfulGetResponder({ failAt: "order" }),
+            successfulGetResponder({ failAt: "context" }),
         );
         const delivery = await executeRelay(
             "getRelayPointForOrder",
@@ -162,9 +165,12 @@ describe("getRelayPointForOrder contract", () => {
         );
 
         await expectGenericFailure(commerce.response);
-        expect(paths(commerce.calls)).toEqual(["/order"]);
+        expect(paths(commerce.calls)).toEqual(["/delivery-selection-context"]);
         await expectGenericFailure(delivery.response);
-        expect(paths(delivery.calls)).toEqual(["/order", "/public"]);
+        expect(paths(delivery.calls)).toEqual([
+            "/delivery-selection-context",
+            "/public",
+        ]);
     });
 });
 
