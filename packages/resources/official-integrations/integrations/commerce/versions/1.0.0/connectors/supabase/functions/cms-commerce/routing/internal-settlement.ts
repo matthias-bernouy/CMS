@@ -19,6 +19,7 @@ import {
     reserveOrderShipmentCreation,
 } from "../routes/order/fulfillment.ts";
 import { getClaimReturnAuthorization, recordClaimReturnDelivery } from "../routes/order/claims.ts";
+import { getOfferNegotiationContext } from "../routes/offer/contexts.ts";
 import { verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
 import { getProtectedCheckoutSellerContext, getProtectedPaymentSellerContext } from "../routes/orders.ts";
 
@@ -26,6 +27,9 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     if (route === "/system/seller/payout-eligibility") return post(request, verifyPendingSellerPayoutEligibility);
     if (route === "/system/protected-checkout/seller-context") return post(request, getProtectedCheckoutSellerContext);
     if (route === "/system/protected-payment/seller-context") return post(request, getProtectedPaymentSellerContext);
+    if (route === "/system/offer/negotiation-context") {
+        return request.method === "GET" ? await getOfferNegotiationContext(request) : methodNotAllowed("GET");
+    }
     if (route === "/system/order/financial-terms/lock") return post(request, lockOrderFinancialTerms);
     if (route === "/system/order/delivery-quote/authorization") {
         return request.method === "GET" ? await getOrderDeliveryQuoteAuthorization(request) : methodNotAllowed("GET");

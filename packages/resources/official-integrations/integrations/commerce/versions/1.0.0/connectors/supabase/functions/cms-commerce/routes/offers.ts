@@ -4,7 +4,7 @@ import { json } from "../core/http.ts";
 import { camelize, integer, readJsonObject, requiredText, text } from "../core/records.ts";
 import { rpc } from "../core/rest.ts";
 import { optionalId, sellerOfferPayload } from "./offer-helpers.ts";
-import { getManagedOfferReadModel } from "./offer/managed-read-model.ts";
+import { getManagedOfferReadModel } from "./offer/contexts.ts";
 import { getPublicOfferReadModel } from "./offer/public-read-model.ts";
 export { listOffers } from "./offer/list.ts";
 

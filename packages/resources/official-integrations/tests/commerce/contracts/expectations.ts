@@ -19,6 +19,7 @@ export const expectedEndpointUrns = [
     "urn:commerce:listMyOffers", "urn:commerce:updateMySeller",
     "urn:commerce:verifyPendingSellerPayoutEligibility",
     "urn:commerce:getProtectedCheckoutSellerContext", "urn:commerce:getProtectedPaymentSellerContext",
+    "urn:commerce:getOfferNegotiationContext",
     "urn:commerce:prepareProtectedPayment", "urn:commerce:getOrderDeliveryQuoteAuthorization", "urn:commerce:lockOrderFinancialTerms",
     "urn:commerce:recordOrderPayment", "urn:commerce:recordOrderSettlement",
     "urn:commerce:pendingOrderRefundAuthorizations", "urn:commerce:pendingPaymentCancellationAuthorizations", "urn:commerce:offerCondition",

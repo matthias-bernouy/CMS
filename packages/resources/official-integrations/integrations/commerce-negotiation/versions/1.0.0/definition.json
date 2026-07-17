@@ -427,16 +427,8 @@
                         "id": "offer",
                         "call": {
                             "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "manageOffer",
-                            "params": { "id": "$input.params.offerId" }
-                        }
-                    },
-                    {
-                        "id": "seller",
-                        "call": {
-                            "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "seller",
-                            "params": { "id": "$steps.offer.sellerId" }
+                            "endpoint": "getOfferNegotiationContext",
+                            "params": { "offerId": "$input.params.offerId" }
                         }
                     },
                     {
@@ -445,12 +437,12 @@
                             "source": "{{answers.id}}",
                             "endpoint": "getProposalPolicy",
                             "params": {
-                                "offerId": "$steps.offer.id",
-                                "offerSlug": "$steps.offer.slug",
-                                "offerTitle": "$steps.offer.title",
-                                "sellerCmsUserId": "$steps.seller.cmsUserId",
-                                "sellerDisplayName": "$steps.seller.displayName",
-                                "referenceAmount": "$steps.offer.acceptedPriceAmount",
+                                "offerId": "$steps.offer.offerId",
+                                "offerSlug": "$steps.offer.offerSlug",
+                                "offerTitle": "$steps.offer.offerTitle",
+                                "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
+                                "sellerDisplayName": "$steps.offer.sellerDisplayName",
+                                "referenceAmount": "$steps.offer.referenceAmount",
                                 "currency": "$steps.offer.currency",
                                 "publicationStatus": "$steps.offer.publicationStatus",
                                 "availability": "$steps.offer.availability"
@@ -490,16 +482,8 @@
                         "id": "offer",
                         "call": {
                             "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "manageOffer",
-                            "params": { "id": "$input.body.offerId" }
-                        }
-                    },
-                    {
-                        "id": "seller",
-                        "call": {
-                            "source": "{{dependencies.commerce.sourceId}}",
-                            "endpoint": "seller",
-                            "params": { "id": "$steps.offer.sellerId" }
+                            "endpoint": "getOfferNegotiationContext",
+                            "params": { "offerId": "$input.body.offerId" }
                         }
                     },
                     {
@@ -508,14 +492,14 @@
                             "source": "{{answers.id}}",
                             "endpoint": "createMyProposal",
                             "body": {
-                                "offerId": "$steps.offer.id",
+                                "offerId": "$steps.offer.offerId",
                                 "amount": "$input.body.amount",
                                 "message": "$input.body.message",
-                                "offerSlug": "$steps.offer.slug",
-                                "offerTitle": "$steps.offer.title",
-                                "sellerCmsUserId": "$steps.seller.cmsUserId",
-                                "sellerDisplayName": "$steps.seller.displayName",
-                                "referenceAmount": "$steps.offer.acceptedPriceAmount",
+                                "offerSlug": "$steps.offer.offerSlug",
+                                "offerTitle": "$steps.offer.offerTitle",
+                                "sellerCmsUserId": "$steps.offer.sellerCmsUserId",
+                                "sellerDisplayName": "$steps.offer.sellerDisplayName",
+                                "referenceAmount": "$steps.offer.referenceAmount",
                                 "currency": "$steps.offer.currency",
                                 "publicationStatus": "$steps.offer.publicationStatus",
                                 "availability": "$steps.offer.availability"

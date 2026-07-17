@@ -10,7 +10,14 @@ import {
 } from "../harness";
 
 type Shape = DataShape;
-type Endpoint = { endpointId: string; output?: Array<{ body?: Shape }> };
+type Endpoint = {
+    endpointId: string;
+    method?: string;
+    access?: string;
+    params?: Array<{ name: string; in: string; type: string; required?: boolean }>;
+    headers?: Array<{ name: string }>;
+    output?: Array<{ body?: Shape }>;
+};
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
 
 const definitionPath = resolve(
@@ -21,6 +28,39 @@ const definitionPath = resolve(
 installCommerceTestEnvironment();
 
 describe("commerce response contracts", () => {
+    test("declares the exact bounded negotiation context as a system endpoint", async () => {
+        const endpoint = (await commerceEndpoints()).find(
+            candidate => candidate.endpointId === "getOfferNegotiationContext",
+        );
+        const fields = [
+            "offerId", "offerSlug", "offerTitle", "sellerCmsUserId",
+            "sellerDisplayName", "referenceAmount", "currency",
+            "publicationStatus", "availability",
+        ];
+        const body = endpoint?.output?.[0]?.body;
+
+        expect(endpoint).toMatchObject({
+            method: "GET",
+            access: "system",
+            params: [{
+                name: "offerId",
+                in: "query",
+                type: "number",
+                required: true,
+            }],
+        });
+        expect(endpoint?.headers?.map(header => header.name)).toEqual([
+            "authorization",
+        ]);
+        expect(Object.keys(body?.properties ?? {})).toEqual(fields);
+        expect(body?.required).toEqual(fields);
+        expect(Object.entries(body?.properties ?? {})
+            .filter(([, shape]) => shape.nullable)
+            .map(([name]) => name))
+            .toEqual(["sellerCmsUserId", "referenceAmount"]);
+        expect(body?.properties?.sellerCmsUserId?.semantic?.authority).toBe("cms");
+    });
+
     test("declares usable fields for every structured JSON response", async () => {
         const endpoints = await commerceEndpoints();
         const violations: string[] = [];

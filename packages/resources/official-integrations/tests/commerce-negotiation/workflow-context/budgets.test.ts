@@ -3,7 +3,7 @@ import { executeNegotiationWorkflow } from "./harness";
 import { successfulResponder } from "./responders";
 
 describe("Commerce negotiation workflow call budgets", () => {
-    test("loads the managed offer and seller before the policy call", async () => {
+    test("loads one bounded Commerce context before the policy call", async () => {
         const { response, calls } = await executeNegotiationWorkflow(
             "getProposalPolicy",
             new Request(
@@ -14,13 +14,12 @@ describe("Commerce negotiation workflow call budgets", () => {
 
         expect(response.status).toBe(200);
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/admin/offer",
-            "/admin/seller",
+            "/system/offer/negotiation-context",
             "/policy",
         ]);
     });
 
-    test("loads the same two Commerce aggregates before proposal creation", async () => {
+    test("loads the same bounded context before proposal creation", async () => {
         const { response, calls } = await executeNegotiationWorkflow(
             "createMyProposal",
             new Request("https://cms.test/functions/createMyProposal", {
@@ -33,8 +32,7 @@ describe("Commerce negotiation workflow call budgets", () => {
 
         expect(response.status).toBe(201);
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/admin/offer",
-            "/admin/seller",
+            "/system/offer/negotiation-context",
             "/proposals",
         ]);
     });

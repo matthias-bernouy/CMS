@@ -113,13 +113,11 @@ describe("commerce negotiation 1.0.0", () => {
         expect(await validateFunction(policyFunction!, { sources })).toEqual([]);
         expect(await validateFunction(createFunction!, { sources })).toEqual([]);
         expect(policyFunction?.steps).toMatchObject([
-            { call: { source: "commerce", endpoint: "manageOffer" } },
-            { call: { source: "commerce", endpoint: "seller" } },
+            { call: { source: "commerce", endpoint: "getOfferNegotiationContext" } },
             { call: { source: "commerce-negotiation", endpoint: "getProposalPolicy" } },
         ]);
         expect(createFunction?.steps).toMatchObject([
-            { call: { source: "commerce", endpoint: "manageOffer" } },
-            { call: { source: "commerce", endpoint: "seller" } },
+            { call: { source: "commerce", endpoint: "getOfferNegotiationContext" } },
             { call: { source: "commerce-negotiation", endpoint: "createMyProposal" } },
         ]);
         expect(source?.endpoints.find(endpoint => endpoint.urn.endsWith(":getProposalPolicy"))?.access)
@@ -332,37 +330,33 @@ function commerceSource(): Source {
         meta: { name: "Commerce" },
         endpoints: [
             {
-                urn: "urn:commerce:manageOffer",
+                urn: "urn:commerce:getOfferNegotiationContext",
                 method: "GET",
-                targetUrl: "https://commerce.test/admin/offer",
+                access: { mode: "system" },
+                targetUrl: "https://commerce.test/system/offer/negotiation-context",
                 input: {
-                    params: [{ name: "id", in: "query", required: true, schema: { type: "string" } }],
+                    params: [{
+                        name: "offerId",
+                        in: "query",
+                        required: true,
+                        schema: { type: "number" },
+                    }],
                 },
                 output: [{
                     status: "200",
                     body: {
                         type: "object",
                         properties: {
-                            id: { type: "number" }, sellerId: { type: "number" }, slug: { type: "string" },
-                            title: { type: "string" }, publicationStatus: { type: "string" },
-                            availability: { type: "string" }, acceptedPriceAmount: { type: "number" },
+                            offerId: { type: "number" },
+                            offerSlug: { type: "string" },
+                            offerTitle: { type: "string" },
+                            sellerCmsUserId: { type: "string", nullable: true },
+                            sellerDisplayName: { type: "string" },
+                            referenceAmount: { type: "number", nullable: true },
                             currency: { type: "string" },
+                            publicationStatus: { type: "string" },
+                            availability: { type: "string" },
                         },
-                    },
-                }],
-            },
-            {
-                urn: "urn:commerce:seller",
-                method: "GET",
-                targetUrl: "https://commerce.test/admin/seller",
-                input: {
-                    params: [{ name: "id", in: "query", required: true, schema: { type: "string" } }],
-                },
-                output: [{
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: { cmsUserId: { type: "string" }, displayName: { type: "string" } },
                     },
                 }],
             },
