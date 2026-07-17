@@ -1,16 +1,37 @@
 import { describe, expect, test } from "bun:test";
-import { expectRpc, expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../harness";
+import {
+    expectRpc,
+    expectSingleRpc,
+    installCommerceTestEnvironment,
+    requestCommerce,
+    setRestResponder,
+} from "../harness";
 
 installCommerceTestEnvironment();
 
 describe("commerce protected C2C financial routes", () => {
     test("loads delivery quote preflight data from Commerce ownership rather than browser input", async () => {
+        setRestResponder(() => Response.json({
+            orderId: 42,
+            shippingAddress: {
+                postal_code: "75001",
+                delivery_notes: { access_code: "A42" },
+            },
+        }));
+
         const response = await requestCommerce(
             "/system/order/delivery-quote/authorization?orderPublicId=d22fe7f0-2df6-45fc-a835-68f67fb9d483",
             { method: "GET", userId: "buyer-17" },
         );
 
         expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({
+            orderId: 42,
+            shippingAddress: {
+                postalCode: "75001",
+                deliveryNotes: { accessCode: "A42" },
+            },
+        });
         expect(expectSingleRpc("get_order_delivery_quote_authorization").body).toEqual({
             p_public_id: "d22fe7f0-2df6-45fc-a835-68f67fb9d483",
             p_buyer_cms_user_id: "buyer-17",
