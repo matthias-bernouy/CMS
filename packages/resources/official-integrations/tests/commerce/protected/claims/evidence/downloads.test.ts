@@ -78,14 +78,14 @@ describe("commerce claim evidence download contracts", () => {
                 options: { claim: { ...activeClaimRow, buyer_cms_user_id: "another-buyer" } },
                 route: "/me/order/claim/evidence",
                 userId: "buyer-evidence-17",
-                expectedCalls: ["marketplace_claim_evidence", "marketplace_claims"],
+                expectedCalls: ["get_claim_evidence_download_context"],
                 error: "claim not found",
             },
             {
                 options: { seller: { cms_user_id: "another-seller" } },
                 route: "/me/sale/claim/evidence",
                 userId: "seller-evidence-4",
-                expectedCalls: ["marketplace_claim_evidence", "marketplace_claims", "sellers"],
+                expectedCalls: ["get_claim_evidence_download_context"],
                 error: "claim not found",
             },
             {
@@ -95,14 +95,14 @@ describe("commerce claim evidence download contracts", () => {
                 },
                 route: "/me/order/claim/evidence",
                 userId: "buyer-evidence-17",
-                expectedCalls: ["marketplace_claim_evidence", "marketplace_claims"],
+                expectedCalls: ["get_claim_evidence_download_context"],
                 error: "claim not found",
             },
             {
                 options: { evidence: { ...evidenceRow, storage_bucket: "public-media" } },
                 route: "/me/order/claim/evidence",
                 userId: "buyer-evidence-17",
-                expectedCalls: ["marketplace_claim_evidence"],
+                expectedCalls: ["get_claim_evidence_download_context"],
                 error: "claim evidence not found",
             },
         ];

@@ -127,7 +127,7 @@ describe("commerce claim evidence upload contracts", () => {
             body: { error: "claim changed during evidence upload" },
         });
         expect(calls.map(callKind)).toEqual([
-            "marketplace_claims", "storage:POST",
+            "get_claim_evidence_upload_context", "storage:POST",
             "attach_marketplace_claim_evidence", "storage:DELETE",
         ]);
         expect(storage).toHaveLength(2);

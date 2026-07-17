@@ -2,16 +2,19 @@ import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { corsHeaders, json } from "../../core/http.ts";
 import { camelize, integer, isRecord, text } from "../../core/records.ts";
-import { one, rpc } from "../../core/rest.ts";
+import { rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import {
     deleteStorageImageBestEffort,
     downloadStorageImage,
     uploadStorageImage,
 } from "../catalog/media-storage.ts";
-
-type ClaimActorKind = "buyer" | "seller";
-type EvidenceScope = ClaimActorKind | "admin";
+import {
+    claimEvidenceDownloadContext,
+    claimEvidenceUploadContext,
+    type ClaimEvidenceActorKind,
+    type ClaimEvidenceScope,
+} from "./read-model/evidence.ts";
 
 const claimEvidenceBucket = "commerce-claim-evidence";
 const maximumEvidenceBytes = 10 * 1024 * 1024;
@@ -23,13 +26,16 @@ const evidenceTypes = new Map([
     ["video/mp4", "mp4"],
 ]);
 
-export async function uploadMyClaimEvidence(request: Request, actorKind: ClaimActorKind): Promise<Response> {
+export async function uploadMyClaimEvidence(
+    request: Request,
+    actorKind: ClaimEvidenceActorKind,
+): Promise<Response> {
     const claimId = requiredQueryInteger(request, "claimId");
     const actorId = cmsUserId(request);
-    const claim = await authorizeClaimActor(claimId, actorKind, actorId);
+    const claim = await claimEvidenceUploadContext(claimId, actorKind, actorId);
     const { file, description } = await readEvidenceUpload(request);
     const extension = evidenceTypes.get(file.type.toLowerCase())!;
-    const path = `claims/${String(claim.public_id)}/${actorKind}/${crypto.randomUUID()}.${extension}`;
+    const path = `claims/${claim.publicId}/${actorKind}/${crypto.randomUUID()}.${extension}`;
     const bytes = new Uint8Array(await file.arrayBuffer());
     assertFileSignature(file.type.toLowerCase(), bytes);
     const sha256 = await digest(bytes);
@@ -56,25 +62,33 @@ export async function uploadMyClaimEvidence(request: Request, actorKind: ClaimAc
     }
 }
 
-export async function getClaimEvidenceFile(request: Request, scope: EvidenceScope): Promise<Response> {
+export async function getClaimEvidenceFile(
+    request: Request,
+    scope: ClaimEvidenceScope,
+): Promise<Response> {
     const evidenceId = requiredQueryInteger(request, "evidenceId");
-    const evidence = await one(
-        "marketplace_claim_evidence",
-        { id: evidenceId },
-        "id,claim_id,storage_bucket,storage_path,mime_type",
+    const actorId = scope === "admin"
+        ? null
+        : (request.headers.get("x-cms-user-id") ?? "").trim() || null;
+    const context = await claimEvidenceDownloadContext(
+        evidenceId,
+        scope,
+        actorId,
     );
-    if (!evidence || evidence.storage_bucket !== claimEvidenceBucket || typeof evidence.storage_path !== "string") {
+    if (context.state === "identity_required") {
+        cmsUserId(request);
+        throw new HttpError(502, "claim evidence authorization returned an invalid response");
+    }
+    const evidence = context.evidence;
+    if (evidence.storageBucket !== claimEvidenceBucket) {
         throw new HttpError(404, "claim evidence not found");
     }
-    if (scope !== "admin") {
-        await authorizeClaimActor(Number(evidence.claim_id), scope, cmsUserId(request));
-    }
-    const stored = await downloadStorageImage(claimEvidenceBucket, evidence.storage_path);
+    const stored = await downloadStorageImage(claimEvidenceBucket, evidence.storagePath);
     const headers = new Headers(corsHeaders);
-    headers.set("content-type", String(evidence.mime_type ?? "application/octet-stream"));
+    headers.set("content-type", evidence.mimeType ?? "application/octet-stream");
     headers.set("cache-control", "private, no-store");
     headers.set("x-content-type-options", "nosniff");
-    headers.set("content-disposition", `attachment; filename="claim-evidence-${evidenceId}.${evidenceExtension(String(evidence.mime_type))}"`);
+    headers.set("content-disposition", `attachment; filename="claim-evidence-${evidenceId}.${evidenceExtension(String(evidence.mimeType))}"`);
     return new Response(stored.body, { status: 200, headers });
 }
 
@@ -91,23 +105,6 @@ export function publicClaimEvidence(value: JsonRecord): JsonRecord {
         metadata: value.metadata,
         created_at: value.created_at ?? value.createdAt,
     }) as JsonRecord;
-}
-
-async function authorizeClaimActor(claimId: number, actorKind: ClaimActorKind, actorId: string): Promise<JsonRecord> {
-    const claim = await one(
-        "marketplace_claims",
-        { id: claimId },
-        "id,public_id,buyer_cms_user_id,seller_id,status",
-    );
-    if (!claim || ["resolved_buyer", "resolved_seller", "resolved_split"].includes(String(claim.status))) {
-        throw new HttpError(404, "claim not found");
-    }
-    if (actorKind === "buyer" && claim.buyer_cms_user_id !== actorId) throw new HttpError(404, "claim not found");
-    if (actorKind === "seller") {
-        const seller = await one("sellers", { id: String(claim.seller_id) }, "cms_user_id");
-        if (!seller || seller.cms_user_id !== actorId) throw new HttpError(404, "claim not found");
-    }
-    return claim;
 }
 
 async function readEvidenceUpload(request: Request): Promise<{ file: File; description: string | null }> {

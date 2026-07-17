@@ -89,15 +89,15 @@ function uploadEnvelope(rows: ReturnType<typeof resolvedRows>, body: Row): Row {
 function downloadEnvelope(rows: ReturnType<typeof resolvedRows>, body: Row): Row {
     const evidence = rows.evidence;
     if (!evidence || evidence.storage_bucket !== "commerce-claim-evidence"
-        || typeof evidence.storage_path !== "string") return { state: "not_found" };
+        || typeof evidence.storage_path !== "string") return { state: "evidence_not_found" };
     if (body.p_scope === "admin") return okDownload(evidence);
     if (body.p_actor_id === null) return { state: "identity_required" };
     const claim = rows.claim;
-    if (!claim || resolvedStatuses.has(String(claim.status))) return { state: "not_found" };
+    if (!claim || resolvedStatuses.has(String(claim.status))) return { state: "claim_not_found" };
     const allowed = body.p_scope === "buyer"
         ? claim.buyer_cms_user_id === body.p_actor_id
         : body.p_scope === "seller" && rows.seller?.cms_user_id === body.p_actor_id;
-    return allowed ? okDownload(evidence) : { state: "not_found" };
+    return allowed ? okDownload(evidence) : { state: "claim_not_found" };
 }
 
 function okDownload(evidence: Row): Row {

@@ -79,7 +79,9 @@ describe("commerce claim evidence access boundaries", () => {
             body: { error: "claim evidence upload must use multipart/form-data" },
             allow: null,
         });
-        expect(resources(capturedFetches().slice(before))).toEqual(["marketplace_claims"]);
+        expect(resources(capturedFetches().slice(before))).toEqual([
+            "get_claim_evidence_upload_context",
+        ]);
     });
 
     test("requires upload identity before database work", async () => {
@@ -102,7 +104,9 @@ describe("commerce claim evidence access boundaries", () => {
         expect(await summary(missing)).toEqual({
             status: 404, body: { error: "claim evidence not found" }, allow: null,
         });
-        expect(resources(capturedFetches())).toEqual(["marketplace_claim_evidence"]);
+        expect(resources(capturedFetches())).toEqual([
+            "get_claim_evidence_download_context",
+        ]);
 
         useEvidenceResponder();
         const before = capturedFetches().length;
@@ -113,7 +117,7 @@ describe("commerce claim evidence access boundaries", () => {
             status: 401, body: { error: "missing CMS user id" }, allow: null,
         });
         expect(resources(capturedFetches().slice(before))).toEqual([
-            "marketplace_claim_evidence",
+            "get_claim_evidence_download_context",
         ]);
     });
 });

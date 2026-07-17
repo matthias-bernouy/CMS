@@ -218,14 +218,11 @@ describe("commerce protected C2C claims and refunds", () => {
     test("uploads buyer evidence privately and strips storage coordinates from the response", async () => {
         setRestResponder(async request => {
             const url = new URL(request.url);
-            if (url.pathname.endsWith("/rest/v1/marketplace_claims")) {
-                return jsonResponse([{
-                    id: 7,
+            if (url.pathname.endsWith("/rest/v1/rpc/get_claim_evidence_upload_context")) {
+                return jsonResponse({
+                    state: "ok",
                     public_id: "3cc94e25-4398-4145-b353-841d81786c79",
-                    buyer_cms_user_id: "buyer-17",
-                    seller_id: 4,
-                    status: "under_review",
-                }]);
+                });
             }
             if (url.pathname.includes("/storage/v1/object/commerce-claim-evidence/")) return new Response(null, { status: 200 });
             if (url.pathname.endsWith("/rest/v1/rpc/attach_marketplace_claim_evidence")) {
@@ -264,14 +261,8 @@ describe("commerce protected C2C claims and refunds", () => {
     test("does not upload claim evidence for another buyer", async () => {
         setRestResponder(request => {
             const url = new URL(request.url);
-            if (url.pathname.endsWith("/rest/v1/marketplace_claims")) {
-                return jsonResponse([{
-                    id: 7,
-                    public_id: "3cc94e25-4398-4145-b353-841d81786c79",
-                    buyer_cms_user_id: "another-buyer",
-                    seller_id: 4,
-                    status: "under_review",
-                }]);
+            if (url.pathname.endsWith("/rest/v1/rpc/get_claim_evidence_upload_context")) {
+                return jsonResponse({ state: "not_found" });
             }
             throw new Error("storage must not be reached for an unauthorized buyer");
         });
@@ -287,16 +278,9 @@ describe("commerce protected C2C claims and refunds", () => {
     test("does not upload claim evidence for another seller", async () => {
         setRestResponder(request => {
             const url = new URL(request.url);
-            if (url.pathname.endsWith("/rest/v1/marketplace_claims")) {
-                return jsonResponse([{
-                    id: 7,
-                    public_id: "3cc94e25-4398-4145-b353-841d81786c79",
-                    buyer_cms_user_id: "buyer-17",
-                    seller_id: 4,
-                    status: "under_review",
-                }]);
+            if (url.pathname.endsWith("/rest/v1/rpc/get_claim_evidence_upload_context")) {
+                return jsonResponse({ state: "not_found" });
             }
-            if (url.pathname.endsWith("/rest/v1/sellers")) return jsonResponse([{ cms_user_id: "another-seller" }]);
             throw new Error("storage must not be reached for an unauthorized seller");
         });
         const form = new FormData();
