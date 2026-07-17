@@ -47,6 +47,11 @@ export async function workflowSources(): Promise<InMemorySourceRepository> {
                             ? "number" as const
                             : "string" as const,
                     }])),
+                    required: [
+                        "offerId", "amount", "offerSlug", "offerTitle",
+                        "sellerCmsUserId", "referenceAmount", "currency",
+                        "publicationStatus", "availability",
+                    ],
                 },
             },
             output: [{ status: "201", body: openObject }],
