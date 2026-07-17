@@ -16,6 +16,12 @@ export async function publicOrderMetadataDefinitions(): Promise<PublicOrderMetad
     const rows = await restJson<JsonRecord[]>(
         "custom_field_definitions?select=key,label,field_type,unit&entity_type=eq.order&public_readable=eq.true&enabled=eq.true&order=position.asc,key.asc",
     );
+    return parsePublicOrderMetadataDefinitions(rows);
+}
+
+export function parsePublicOrderMetadataDefinitions(
+    rows: readonly JsonRecord[],
+): PublicOrderMetadataDefinition[] {
     return rows.flatMap(row => {
         const key = stringValue(row.key);
         const type = stringValue(row.field_type);

@@ -42,6 +42,12 @@ describe("commerce buyer order metadata", () => {
         let definitionQueries = 0;
         setRestResponder(request => {
             const url = new URL(request.url);
+            if (url.pathname.endsWith("/rpc/list_order_read_model")) {
+                return jsonResponse({
+                    state: "ok", orders: [order], operations: [],
+                    definitions: publicDefinitions, total: 1,
+                });
+            }
             if (url.pathname.endsWith("/orders")) {
                 return jsonResponse([order], 200, { "content-range": "0-0/1" });
             }
@@ -69,12 +75,17 @@ describe("commerce buyer order metadata", () => {
         expect(detail.metadataEntries).toEqual(expectedEntries);
         expect(JSON.stringify({ list, detail })).not.toContain("internalRisk");
         expect(JSON.stringify({ list, detail })).not.toContain("disabledPublic");
-        expect(definitionQueries).toBe(2);
+        expect(definitionQueries).toBe(1);
     });
 
     test("closes buyer metadata when no definition is both enabled and public", async () => {
         setRestResponder(request => {
             const url = new URL(request.url);
+            if (url.pathname.endsWith("/rpc/list_order_read_model")) {
+                return jsonResponse({
+                    state: "ok", orders: [order], operations: [], definitions: [], total: 1,
+                });
+            }
             if (url.pathname.endsWith("/orders")) {
                 return jsonResponse([order], 200, { "content-range": "0-0/1" });
             }

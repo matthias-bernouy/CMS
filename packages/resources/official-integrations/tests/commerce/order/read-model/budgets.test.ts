@@ -16,13 +16,13 @@ describe("commerce current PostgREST read budgets", () => {
         useCompleteOrderResponder();
 
         await expectBudget("/me/orders?limit=2&offset=2", { userId: buyerId }, {
-            orders: 1, protected_order_operations: 1, custom_field_definitions: 1,
+            list_order_read_model: 1,
         });
         await expectBudget("/me/sales?limit=2&offset=2", { userId: sellerUserId }, {
-            sellers: 1, orders: 1, custom_field_definitions: 1,
+            list_order_read_model: 1,
         });
         await expectBudget("/admin/orders?limit=2&offset=2", {}, {
-            orders: 1, protected_order_operations: 1,
+            list_order_read_model: 1,
         });
     });
 
@@ -48,9 +48,20 @@ describe("commerce current PostgREST read budgets", () => {
     });
 
     test("records empty, missing-actor-profile, and not-found short circuits", async () => {
-        setRestResponder(request => {
+        setRestResponder(async request => {
             const url = new URL(request.url);
             const resource = url.pathname.split("/").at(-1);
+            if (resource === "list_order_read_model") {
+                const body = await request.json() as Record<string, unknown>;
+                if (body.p_scope === "seller" && body.p_cms_user_id === "missing-seller") {
+                    return jsonResponse({
+                        state: "seller_missing", orders: [], operations: [], definitions: [], total: 0,
+                    });
+                }
+                return jsonResponse({
+                    state: "ok", orders: [], operations: [], definitions: [], total: 4,
+                });
+            }
             if (resource === "sellers") {
                 return jsonResponse(url.searchParams.get("cms_user_id") === "eq.missing-seller"
                     ? []
@@ -64,16 +75,16 @@ describe("commerce current PostgREST read budgets", () => {
         });
 
         await expectBudget("/me/orders?limit=2&offset=8", { userId: buyerId }, {
-            orders: 1, custom_field_definitions: 1,
+            list_order_read_model: 1,
         }, { items: [], total: 4, limit: 2, offset: 8 });
         await expectBudget("/me/sales?limit=7&offset=3", { userId: "missing-seller" }, {
-            sellers: 1,
+            list_order_read_model: 1,
         }, { items: [], total: 0, limit: 7, offset: 3 });
         await expectBudget("/me/sales?limit=7&offset=3", { userId: sellerUserId }, {
-            sellers: 1, orders: 1, custom_field_definitions: 1,
+            list_order_read_model: 1,
         }, { items: [], total: 4, limit: 7, offset: 3 });
         await expectBudget("/admin/orders?limit=3&offset=9", {}, {
-            orders: 1,
+            list_order_read_model: 1,
         }, { items: [], total: 4, limit: 3, offset: 9 });
         await expectBudget("/me/order?id=404", { userId: buyerId }, { orders: 1 }, {
             error: "order not found",

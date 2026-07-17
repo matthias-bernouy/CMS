@@ -2,47 +2,11 @@ import { cmsUserId } from "../core/auth.ts";
 import { HttpError } from "../core/errors.ts";
 import { json } from "../core/http.ts";
 import { camelize, integer, isRecord, readJsonObject, requiredText, text } from "../core/records.ts";
-import { listRows, one, restJson, rpc } from "../core/rest.ts";
+import { one, restJson, rpc } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
 import { publicOrderMetadataDefinitions, withPublicOrderMetadata, withPublicOrderResult } from "../core/order-metadata.ts";
 const orderSelect = "id,public_id,order_number,checkout_group_id,seller_id,buyer_cms_user_id,status,currency,subtotal_amount,shipping_amount,delivery_quoted_at,total_amount,shipping_address,billing_address,metadata,idempotency_key,archived_at,version,created_at,updated_at";
 const orderLineSelect = "id,order_id,offer_id,product_id,variant_id,accepted_proposal_id,title,sku,quantity,unit_amount,total_amount,product_snapshot,variant_snapshot,offer_snapshot,seller_snapshot,created_at";
-const orderOperationListSelect = "order_id,payment_status,fulfillment_status,settlement_status,claim_status,total_refund_requested_amount,updated_at";
-
-export async function listOrders(request: Request, mine: boolean): Promise<Response> {
-    const url = new URL(request.url);
-    const limit = Math.min(Math.max(integer(url.searchParams.get("limit"), "limit") ?? 50, 1), 100);
-    const offset = Math.max(integer(url.searchParams.get("offset"), "offset") ?? 0, 0);
-    const params = new URLSearchParams({
-        select: orderSelect,
-        order: "created_at.desc,id.desc",
-        limit: String(limit),
-        offset: String(offset),
-    });
-    if (mine) params.set("buyer_cms_user_id", `eq.${cmsUserId(request)}`);
-    const status = text(url.searchParams.get("status"));
-    const sellerId = integer(url.searchParams.get("sellerId"), "sellerId");
-    if (status) params.set("status", `eq.${status}`);
-    if (!mine && sellerId !== undefined) params.set("seller_id", `eq.${sellerId}`);
-    const { rows, total } = await listRows(`orders?${params.toString()}`);
-    const orderIds = rows.map(row => integer(row.id, "order id"))
-        .filter((id): id is number => id !== undefined);
-    const [operations, definitions] = await Promise.all([
-        orderIds.length
-            ? restJson<JsonRecord[]>(`protected_order_operations?select=${orderOperationListSelect}&order_id=in.(${orderIds.join(",")})`)
-            : Promise.resolve([]),
-        mine ? publicOrderMetadataDefinitions() : Promise.resolve([]),
-    ]);
-    const operationByOrder = new Map(operations.map(operation => [String(operation.order_id), operation]));
-    const items = rows.map(row => {
-        const item = {
-            ...row,
-            operation: operationByOrder.get(String(row.id)) ?? null,
-        };
-        return mine ? withPublicOrderMetadata(item, definitions) : item;
-    });
-    return json({ items: camelize(items), total, limit, offset });
-}
 export async function getOrder(request: Request, mine: boolean): Promise<Response> {
     const url = new URL(request.url);
     const id = integer(url.searchParams.get("id"), "id");

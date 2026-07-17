@@ -14,12 +14,13 @@ installCommerceTestEnvironment();
 
 describe("commerce order list boundaries", () => {
     test("preserves safe-integer deep offsets and exact totals on empty pages", async () => {
-        setRestResponder(request => {
-            const resource = resourceName(request.url);
-            if (resource === "sellers") return jsonResponse([{ id: 17 }]);
-            if (resource === "orders") return jsonResponse([], 200, { "content-range": "*/4" });
-            if (resource === "custom_field_definitions") return jsonResponse([]);
-            throw new Error(`Unexpected deep-offset request: ${request.url}`);
+        setRestResponder(async request => {
+            if (resourceName(request.url) !== "list_order_read_model") {
+                throw new Error(`Unexpected deep-offset request: ${request.url}`);
+            }
+            return jsonResponse({
+                state: "ok", orders: [], operations: [], definitions: [], total: 4,
+            });
         });
         const offset = 3_000_000_000;
         const cases = [
@@ -34,8 +35,7 @@ describe("commerce order list boundaries", () => {
                 status: 200,
                 body: { items: [], total: 4, limit: 2, offset },
             });
-            expect(new URL(callsFor("orders").at(-1)!.url).searchParams.get("offset"))
-                .toBe(String(offset));
+            expect(callsFor("list_order_read_model").at(-1)!.body.p_offset).toBe(offset);
         }
     });
 
@@ -60,6 +60,7 @@ describe("commerce order list boundaries", () => {
         );
         expect(seller.status).toBe(200);
         expect(await seller.json()).toEqual(expectedSellerList);
+        expect(callsFor("list_order_read_model")[0]!.body.p_seller_id).toBeNull();
     });
 
     test("rejects invalid offsets locally on every list", async () => {
@@ -75,11 +76,11 @@ describe("commerce order list boundaries", () => {
     test("preserves the first upstream failure on each list", async () => {
         setRestResponder(() => jsonResponse({ message: "order list unavailable" }, 503));
         const cases = [
-            ["/me/orders", { userId: buyerId }, "orders"],
-            ["/me/sales", { userId: sellerUserId }, "sellers"],
-            ["/admin/orders", {}, "orders"],
+            ["/me/orders", { userId: buyerId }],
+            ["/me/sales", { userId: sellerUserId }],
+            ["/admin/orders", {}],
         ] as const;
-        for (const [route, options, resource] of cases) {
+        for (const [route, options] of cases) {
             const before = capturedFetches().length;
             const response = await requestCommerce(route, options);
             expect({ route, status: response.status, body: await response.json() }).toEqual({
@@ -87,7 +88,58 @@ describe("commerce order list boundaries", () => {
             });
             const calls = capturedFetches().slice(before);
             expect(calls).toHaveLength(1);
-            expect(resourceName(calls[0]!.url)).toBe(resource);
+            expect(resourceName(calls[0]!.url)).toBe("list_order_read_model");
+        }
+    });
+
+    test("fails closed on malformed internal list envelopes", async () => {
+        const empty = { orders: [], operations: [], definitions: [], total: 0 };
+        const malformed = [
+            null,
+            { ...empty, state: "invalid_scope" },
+            { ...empty, state: "identity_required" },
+            { state: "ok", operations: [], definitions: [], total: 0 },
+            { ...empty, state: "ok", orders: [null] },
+            { ...empty, state: "ok", operations: [null] },
+            { ...empty, state: "ok", definitions: [null] },
+            { ...empty, state: "ok", total: null },
+            { ...empty, state: "ok", total: "0" },
+            { ...empty, state: "ok", total: -1 },
+            { ...empty, state: "ok", total: 1.5 },
+            { ...empty, state: "ok", total: Number.MAX_SAFE_INTEGER + 1 },
+            { ...empty, state: "seller_missing" },
+        ];
+        for (const value of malformed) {
+            setRestResponder(() => jsonResponse(value));
+            const before = capturedFetches().length;
+            const response = await requestCommerce("/me/orders", { userId: buyerId });
+            expect({ status: response.status, body: await response.json() }).toEqual({
+                status: 502,
+                body: { error: "list_order_read_model returned an invalid response" },
+            });
+            expect(capturedFetches().slice(before)).toHaveLength(1);
+        }
+        const scopeViolations = [
+            {
+                route: "/me/sales",
+                options: { userId: sellerUserId },
+                value: { ...empty, state: "ok", operations: [{}] },
+            },
+            {
+                route: "/admin/orders",
+                options: {},
+                value: { ...empty, state: "ok", definitions: [{}] },
+            },
+        ] as const;
+        for (const { route, options, value } of scopeViolations) {
+            setRestResponder(() => jsonResponse(value));
+            const before = capturedFetches().length;
+            const response = await requestCommerce(route, options);
+            expect({ status: response.status, body: await response.json() }).toEqual({
+                status: 502,
+                body: { error: "list_order_read_model returned an invalid response" },
+            });
+            expect(capturedFetches().slice(before)).toHaveLength(1);
         }
     });
 });

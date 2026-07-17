@@ -20,12 +20,22 @@ const sale = {
         disabledPublic: "legacy",
     },
 };
+const publicDefinitions = [
+    { key: "insured", label: "Insured", field_type: "boolean", unit: null, position: 5 },
+    { key: "publicNote", label: "Delivery note", field_type: "string", unit: null, position: 10 },
+];
 
 describe("commerce seller order metadata", () => {
     test("returns only enabled public fields on seller list and detail responses", async () => {
         let definitionQueries = 0;
         setRestResponder(request => {
             const url = new URL(request.url);
+            if (url.pathname.endsWith("/rpc/list_order_read_model")) {
+                return jsonResponse({
+                    state: "ok", orders: [sale], operations: [],
+                    definitions: publicDefinitions, total: 1,
+                });
+            }
             if (url.pathname.endsWith("/sellers")) return jsonResponse([{ id: 17 }]);
             if (url.pathname.endsWith("/orders")) return jsonResponse([sale], 200, { "content-range": "0-0/1" });
             if (url.pathname.endsWith("/custom_field_definitions")) {
@@ -34,10 +44,7 @@ describe("commerce seller order metadata", () => {
                 expect(url.searchParams.get("enabled")).toBe("eq.true");
                 expect(url.searchParams.get("public_readable")).toBe("eq.true");
                 expect(url.searchParams.get("order")).toBe("position.asc,key.asc");
-                return jsonResponse([
-                    { key: "insured", label: "Insured", field_type: "boolean", unit: null, position: 5 },
-                    { key: "publicNote", label: "Delivery note", field_type: "string", unit: null, position: 10 },
-                ]);
+                return jsonResponse(publicDefinitions);
             }
             if (url.pathname.endsWith("/rpc/get_order_fulfillment_authorization")) return jsonResponse({});
             return jsonResponse([]);
@@ -59,6 +66,6 @@ describe("commerce seller order metadata", () => {
         expect(detail).toMatchObject({ metadata, metadataEntries: entries });
         expect(JSON.stringify({ list, detail })).not.toContain("internalRisk");
         expect(JSON.stringify({ list, detail })).not.toContain("disabledPublic");
-        expect(definitionQueries).toBe(2);
+        expect(definitionQueries).toBe(1);
     });
 });

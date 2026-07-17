@@ -1,19 +1,15 @@
 import { cmsUserId } from "../../../core/auth.ts";
 import { HttpError } from "../../../core/errors.ts";
 import { json } from "../../../core/http.ts";
-import { camelize, integer, text } from "../../../core/records.ts";
-import { listRows, one, restJson, rpc } from "../../../core/rest.ts";
+import { integer, text } from "../../../core/records.ts";
+import { one, restJson, rpc } from "../../../core/rest.ts";
 import type { JsonRecord } from "../../../core/types.ts";
-import {
-    publicOrderMetadataDefinitions,
-    type PublicOrderMetadataDefinition,
-    withPublicOrderMetadata,
-} from "../../../core/order-metadata.ts";
+import { publicOrderMetadataDefinitions } from "../../../core/order-metadata.ts";
+import { projectSale, safeOptional, safeRecord } from "./projections.ts";
 
 const saleSelect = "id,public_id,order_number,checkout_group_id,status,currency,subtotal_amount,shipping_amount,delivery_quoted_at,total_amount,metadata,version,created_at,updated_at";
 const lineSelect = "id,order_id,offer_id,product_id,variant_id,accepted_proposal_id,title,sku,quantity,unit_amount,total_amount,product_snapshot,variant_snapshot,offer_snapshot,created_at";
 const eventSelect = "id,order_id,event_type,previous_status,next_status,created_at";
-const saleFields = ["id", "publicId", "orderNumber", "checkoutGroupId", "status", "currency", "subtotalAmount", "shippingAmount", "deliveryQuotedAt", "totalAmount", "metadata", "version", "createdAt", "updatedAt"] as const;
 const lineFields = ["id", "orderId", "offerId", "productId", "variantId", "acceptedProposalId", "title", "sku", "quantity", "unitAmount", "totalAmount", "productSnapshot", "variantSnapshot", "offerSnapshot", "createdAt"] as const;
 const eventFields = ["id", "orderId", "eventType", "previousStatus", "nextStatus", "createdAt"] as const;
 const operationFields = ["orderId", "orderPublicId", "orderNumber", "currency", "paymentStatus", "fulfillmentStatus", "settlementStatus", "claimStatus", "recipientHandoffAt", "recipientHandoffFirstObservedAt", "claimWindowStartedAt", "claimByAt", "releaseEligibleAt", "updatedAt"] as const;
@@ -26,22 +22,6 @@ const financialFields = [
 const fulfillmentFields = ["orderId", "status", "sellerHandoffDeadline", "scanGraceDeadline", "sellerHandoffDeclaredAt", "carrierAcceptedAt", "recipientHandoffAt", "recipientHandoffFirstObservedAt", "claimWindowStartedAt", "claimByAt", "releaseEligibleAt", "blockingReason", "version"] as const;
 const settlementFields = ["orderId", "status", "authorizedSellerAmount", "totalTransferredAmount", "totalReversedAmount", "sellerReserveLiabilityRemainingAmount", "version"] as const;
 const authorizationFields = ["allowed", "reason", "orderId", "orderPublicId", "sellerId", "currency", "paymentStatus", "fulfillmentStatus"] as const;
-
-export async function listMySales(request: Request): Promise<Response> {
-    const url = new URL(request.url);
-    const limit = Math.min(Math.max(integer(url.searchParams.get("limit"), "limit") ?? 50, 1), 100);
-    const offset = Math.max(integer(url.searchParams.get("offset"), "offset") ?? 0, 0);
-    const seller = await currentSeller(request);
-    if (!seller) return json({ items: [], total: 0, limit, offset });
-    const params = new URLSearchParams({ select: saleSelect, seller_id: `eq.${String(seller.id)}`, order: "created_at.desc,id.desc", limit: String(limit), offset: String(offset) });
-    const status = text(url.searchParams.get("status"));
-    if (status) params.set("status", `eq.${status}`);
-    const [{ rows, total }, definitions] = await Promise.all([
-        listRows(`orders?${params.toString()}`),
-        publicOrderMetadataDefinitions(),
-    ]);
-    return json({ items: rows.map(row => saleRecord(row, definitions)), total, limit, offset });
-}
 
 export async function getMySale(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -74,25 +54,9 @@ export async function getMySale(request: Request): Promise<Response> {
         settlement: safeOptional(settlement, settlementFields),
         authorization: safeOptional(authorization as JsonRecord, authorizationFields),
     };
-    return json({ ...saleRecord(row, definitions), ...projection, lines: lines.map(line => safeRecord(line, lineFields)), events: events.map(event => safeRecord(event, eventFields)) });
+    return json({ ...projectSale(row, definitions), ...projection, lines: lines.map(line => safeRecord(line, lineFields)), events: events.map(event => safeRecord(event, eventFields)) });
 }
 
 async function currentSeller(request: Request): Promise<JsonRecord | null> {
     return await one("sellers", { cms_user_id: cmsUserId(request) }, "id");
-}
-
-function saleRecord(
-    row: JsonRecord,
-    definitions: readonly PublicOrderMetadataDefinition[],
-): JsonRecord {
-    return withPublicOrderMetadata(safeRecord(row, saleFields), definitions);
-}
-
-function safeRecord(row: JsonRecord, fields: readonly string[]): JsonRecord {
-    const value = camelize(row) as JsonRecord;
-    return Object.fromEntries(fields.flatMap(field => Object.prototype.hasOwnProperty.call(value, field) ? [[field, value[field]]] : []));
-}
-
-function safeOptional(row: JsonRecord | null, fields: readonly string[]): JsonRecord | null {
-    return row ? safeRecord(row, fields) : null;
 }

@@ -1,33 +1,24 @@
 import { describe, expect, test } from "bun:test";
-import { installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
+import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
 installCommerceTestEnvironment();
 describe("commerce seller sales", () => {
     test("lists only orders owned by the authenticated seller and strips buyer data", async () => {
-        setRestResponder(request => {
+        setRestResponder(async request => {
             const url = new URL(request.url);
-            if (url.pathname.endsWith("/sellers")) {
-                expect(url.searchParams.get("cms_user_id")).toBe("eq.seller-user-17");
-                return jsonResponse([{ id: 17 }]);
-            }
-            if (url.pathname.endsWith("/custom_field_definitions")) {
-                expect(url.searchParams.get("enabled")).toBe("eq.true");
-                expect(url.searchParams.get("public_readable")).toBe("eq.true");
-                return jsonResponse([]);
-            }
-            expect(url.pathname).toEndWith("/orders");
-            expect(url.searchParams.get("seller_id")).toBe("eq.17");
-            expect(url.searchParams.get("status")).toBe("eq.placed");
-            expect(url.searchParams.get("limit")).toBe("8");
-            expect(url.searchParams.get("offset")).toBe("2");
-            expect(url.searchParams.get("select")).not.toContain("buyer_cms_user_id");
-            expect(url.searchParams.get("select")).not.toContain("shipping_address");
-            return jsonResponse([saleRow({
-                buyer_cms_user_id: "buyer-must-not-leak",
-                shipping_address: { addressLine1: "private" },
-                billing_address: { addressLine1: "private" },
-                metadata: { private: true },
-                idempotency_key: "private-key",
-            })], 200, { "content-range": "2-2/5" });
+            expect(url.pathname).toEndWith("/rpc/list_order_read_model");
+            return jsonResponse({
+                state: "ok",
+                orders: [saleRow({
+                    buyer_cms_user_id: "buyer-must-not-leak",
+                    shipping_address: { addressLine1: "private" },
+                    billing_address: { addressLine1: "private" },
+                    metadata: { private: true },
+                    idempotency_key: "private-key",
+                })],
+                operations: [],
+                definitions: [],
+                total: 5,
+            });
         });
 
         const response = await requestCommerce("/me/sales?status=placed&limit=8&offset=2", { userId: "seller-user-17" });
@@ -40,19 +31,24 @@ describe("commerce seller sales", () => {
             createdAt: "2026-07-12T12:00:00.000Z", updatedAt: "2026-07-12T12:05:00.000Z" });
         expect(JSON.stringify(body)).not.toContain("buyer-must-not-leak");
         expect(JSON.stringify(body)).not.toContain("private-key");
+        expect(expectRpc("list_order_read_model").body).toEqual({
+            p_scope: "seller", p_cms_user_id: "seller-user-17", p_status: "placed",
+            p_seller_id: null, p_limit: 8, p_offset: 2,
+        });
     });
 
     test("returns an empty page when the authenticated user has no seller profile", async () => {
-        let orderQueryReached = false;
         setRestResponder(request => {
-            if (new URL(request.url).pathname.endsWith("/orders")) orderQueryReached = true;
-            return jsonResponse([]);
+            expect(new URL(request.url).pathname).toEndWith("/rpc/list_order_read_model");
+            return jsonResponse({
+                state: "seller_missing", orders: [], operations: [], definitions: [], total: 0,
+            });
         });
 
         const response = await requestCommerce("/me/sales?limit=6&offset=0", { userId: "not-a-seller" });
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 6, offset: 0 });
-        expect(orderQueryReached).toBe(false);
+        expect(expectRpc("list_order_read_model").body.p_cms_user_id).toBe("not-a-seller");
     });
 
     test("loads a seller-owned sale with safe lines and events", async () => {

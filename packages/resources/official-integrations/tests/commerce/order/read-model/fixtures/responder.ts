@@ -26,9 +26,12 @@ import {
 } from "./projections";
 
 export function useCompleteOrderResponder(): void {
-    setRestResponder(request => {
+    setRestResponder(async request => {
         const url = new URL(request.url);
         const resource = url.pathname.split("/").at(-1);
+        if (resource === "list_order_read_model") {
+            return listResponse(await request.json() as Record<string, unknown>);
+        }
         if (resource === "orders") return orderResponse(url);
         if (resource === "order_lines") {
             const rows = url.searchParams.get("select")?.includes("seller_snapshot")
@@ -78,4 +81,26 @@ function orderResponse(url: URL): Response {
     const saleProjection = !url.searchParams.get("select")?.includes("seller_id");
     const rows = saleProjection ? saleRows : orderRows;
     return jsonResponse(isDetail ? rows.slice(0, 1) : rows, 200, { "content-range": "2-3/7" });
+}
+
+function listResponse(body: Record<string, unknown>): Response {
+    if (body.p_scope === "buyer") {
+        return jsonResponse({
+            state: "ok", orders: orderRows, operations: operationListRows,
+            definitions: publicDefinitions, total: 7,
+        });
+    }
+    if (body.p_scope === "seller") {
+        return jsonResponse({
+            state: "ok", orders: saleRows, operations: [],
+            definitions: publicDefinitions, total: 7,
+        });
+    }
+    if (body.p_scope === "admin") {
+        return jsonResponse({
+            state: "ok", orders: orderRows, operations: operationListRows,
+            definitions: [], total: 7,
+        });
+    }
+    throw new Error(`Unexpected order list scope: ${String(body.p_scope)}`);
 }

@@ -209,6 +209,11 @@ describe("commerce response contracts", () => {
                     workflow_states: [], media: [], active_price_proposals: [],
                 });
             }
+            if (table === "list_order_read_model") {
+                return jsonResponse({
+                    state: "ok", orders: [], operations: [], definitions: [], total: 0,
+                });
+            }
             const rows: Record<string, unknown[]> = {
                 settings: [{ require_verified_seller: false }],
                 products: [{ id: 1, metadata: {} }],

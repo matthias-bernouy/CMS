@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     capturedFetches,
+    expectRpc,
     installCommerceTestEnvironment,
     requestCommerce,
 } from "../../harness";
@@ -22,14 +23,10 @@ describe("commerce order and sale list read contracts", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual(expectedBuyerList);
-        const query = new URL(callsFor("orders")[0]!.url).searchParams;
-        expect(query.get("buyer_cms_user_id")).toBe(`eq.${buyerId}`);
-        expect(query.get("seller_id")).toBeNull();
-        expect(query.get("order")).toBe("created_at.desc,id.desc");
-        expect(query.get("limit")).toBe("2");
-        expect(query.get("offset")).toBe("2");
-        expect(callsFor("protected_order_operations")).toHaveLength(1);
-        expect(callsFor("custom_field_definitions")).toHaveLength(1);
+        expect(expectRpc("list_order_read_model").body).toEqual({
+            p_scope: "buyer", p_cms_user_id: buyerId, p_status: null,
+            p_seller_id: null, p_limit: 2, p_offset: 2,
+        });
     });
 
     test("preserves the exact seller page and omits buyer-owned and internal fields", async () => {
@@ -40,11 +37,10 @@ describe("commerce order and sale list read contracts", () => {
         expect(response.status).toBe(200);
         const body = await response.json();
         expect(body).toEqual(expectedSellerList);
-        const sellerQuery = new URL(callsFor("sellers")[0]!.url).searchParams;
-        const ordersQuery = new URL(callsFor("orders")[0]!.url).searchParams;
-        expect(sellerQuery.get("cms_user_id")).toBe(`eq.${sellerUserId}`);
-        expect(ordersQuery.get("seller_id")).toBe("eq.17");
-        expect(ordersQuery.get("order")).toBe("created_at.desc,id.desc");
+        expect(expectRpc("list_order_read_model").body).toEqual({
+            p_scope: "seller", p_cms_user_id: sellerUserId, p_status: null,
+            p_seller_id: null, p_limit: 2, p_offset: 2,
+        });
         expect(JSON.stringify(body)).not.toContain(buyerId);
         expect(JSON.stringify(body)).not.toContain("checkout-key-42");
         expect(JSON.stringify(body)).not.toContain("internalRisk");
@@ -57,12 +53,11 @@ describe("commerce order and sale list read contracts", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual(expectedAdminList);
-        const query = new URL(callsFor("orders")[0]!.url).searchParams;
-        expect(query.get("buyer_cms_user_id")).toBeNull();
-        expect(query.get("seller_id")).toBeNull();
-        expect(query.get("order")).toBe("created_at.desc,id.desc");
-        expect(callsFor("custom_field_definitions")).toHaveLength(0);
-        expect(capturedFetches()).toHaveLength(2);
+        expect(expectRpc("list_order_read_model").body).toEqual({
+            p_scope: "admin", p_cms_user_id: null, p_status: null,
+            p_seller_id: null, p_limit: 2, p_offset: 2,
+        });
+        expect(capturedFetches()).toHaveLength(1);
     });
 
     test("preserves status filters, actor scoping, and pagination bounds", async () => {
@@ -73,32 +68,29 @@ describe("commerce order and sale list read contracts", () => {
             { userId: buyerId },
         );
         expect(await buyer.json()).toMatchObject({ limit: 1, offset: 0 });
-        expect(Object.fromEntries(lastOrderQuery())).toMatchObject({
-            buyer_cms_user_id: `eq.${buyerId}`, status: "eq.active", limit: "1", offset: "0",
+        expect(callsFor("list_order_read_model").at(-1)!.body).toEqual({
+            p_scope: "buyer", p_cms_user_id: buyerId, p_status: "active",
+            p_seller_id: null, p_limit: 1, p_offset: 0,
         });
-        expect(lastOrderQuery().get("seller_id")).toBeNull();
 
         const seller = await requestCommerce(
             "/me/sales?status=%20active%20&limit=101&offset=-2",
             { userId: sellerUserId },
         );
         expect(await seller.json()).toMatchObject({ limit: 100, offset: 0 });
-        expect(Object.fromEntries(lastOrderQuery())).toMatchObject({
-            seller_id: "eq.17", status: "eq.active", limit: "100", offset: "0",
+        expect(callsFor("list_order_read_model").at(-1)!.body).toEqual({
+            p_scope: "seller", p_cms_user_id: sellerUserId, p_status: "active",
+            p_seller_id: null, p_limit: 100, p_offset: 0,
         });
 
         const admin = await requestCommerce(
             "/admin/orders?status=%20active%20&sellerId=17&limit=101&offset=-1",
         );
         expect(await admin.json()).toMatchObject({ limit: 100, offset: 0 });
-        expect(Object.fromEntries(lastOrderQuery())).toMatchObject({
-            seller_id: "eq.17", status: "eq.active", limit: "100", offset: "0",
+        expect(callsFor("list_order_read_model").at(-1)!.body).toEqual({
+            p_scope: "admin", p_cms_user_id: null, p_status: "active",
+            p_seller_id: 17, p_limit: 100, p_offset: 0,
         });
+        expect(callsFor("list_order_read_model")).toHaveLength(3);
     });
 });
-
-function lastOrderQuery(): URLSearchParams {
-    const call = callsFor("orders").at(-1);
-    if (!call) throw new Error("Missing orders request");
-    return new URL(call.url).searchParams;
-}

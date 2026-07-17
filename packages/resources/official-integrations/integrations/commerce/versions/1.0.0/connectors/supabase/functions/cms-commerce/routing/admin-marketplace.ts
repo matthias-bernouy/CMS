@@ -2,7 +2,8 @@ import { methodNotAllowed } from "../core/http.ts";
 import { requireCmsAdmin } from "../core/auth.ts";
 import { getOffer, listOffers, reviewOffer, upsertOffer } from "../routes/offers.ts";
 import { getOfferImageFile, removeOfferImage, reorderOfferImages, replaceOfferImage, uploadOfferImage } from "../routes/offer/media.ts";
-import { getOrder, listOrders } from "../routes/orders.ts";
+import { getOrder } from "../routes/orders.ts";
+import { listAdminOrders } from "../routes/order/read-model/lists.ts";
 import { reviewOrderCancellation } from "../routes/order/cancellations.ts";
 import { getClaim, getClaimEvidenceMetadata, listClaimEvidence, listClaims, resolveOrderClaim } from "../routes/order/claims.ts";
 import { getClaimEvidenceFile } from "../routes/order/claim-evidence.ts";
@@ -47,7 +48,7 @@ export async function handleAdminMarketplaceRoute(route: string, request: Reques
         return request.method === "POST" ? await reorderOfferImages(request, "admin") : methodNotAllowed("POST");
     }
     if (route === "/admin/orders") {
-        return request.method === "GET" ? await listOrders(request, false) : methodNotAllowed("GET");
+        return request.method === "GET" ? await listAdminOrders(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/order") {
         return request.method === "GET" ? await getOrder(request, false) : methodNotAllowed("GET");

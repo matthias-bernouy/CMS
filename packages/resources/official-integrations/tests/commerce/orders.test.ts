@@ -70,20 +70,19 @@ describe("commerce order requests", () => {
         expect(await response.json()).toEqual({ error: "order not found" });
     });
 
-    test("enriches order lists with one bounded financial-operation query", async () => {
+    test("enriches order lists with one bounded read-model query", async () => {
         const requestedPaths: string[] = [];
-        setRestResponder(request => {
+        setRestResponder(async request => {
             const url = new URL(request.url);
             requestedPaths.push(`${url.pathname}?${url.searchParams.toString()}`);
-            if (url.pathname.endsWith("/orders")) {
-                return jsonResponse([
+            if (url.pathname.endsWith("/rpc/list_order_read_model")) {
+                return jsonResponse({
+                    state: "ok",
+                    orders: [
                     { id: 12, status: "active", order_number: "ORDER-12", total_amount: 2500, currency: "eur" },
                     { id: 18, status: "awaiting_payment", order_number: "ORDER-18", total_amount: 3100, currency: "eur" },
-                ], 200, { "content-range": "0-1/2" });
-            }
-            if (url.pathname.endsWith("/protected_order_operations")) {
-                expect(url.searchParams.get("order_id")).toBe("in.(12,18)");
-                return jsonResponse([
+                    ],
+                    operations: [
                     {
                         order_id: 12,
                         payment_status: "succeeded",
@@ -92,9 +91,11 @@ describe("commerce order requests", () => {
                         claim_status: null,
                         total_refund_requested_amount: 0,
                     },
-                ]);
+                    ],
+                    definitions: [],
+                    total: 2,
+                });
             }
-            if (url.pathname.endsWith("/custom_field_definitions")) return jsonResponse([]);
             return jsonResponse({ error: "unexpected request" }, 500);
         });
 
@@ -121,7 +122,15 @@ describe("commerce order requests", () => {
                 { id: 18, status: "awaiting_payment", operation: null },
             ],
         });
-        expect(requestedPaths).toHaveLength(3);
+        expect(requestedPaths).toHaveLength(1);
+        expect(expectRpc("list_order_read_model").body).toEqual({
+            p_scope: "buyer",
+            p_cms_user_id: "buyer-user-456",
+            p_status: null,
+            p_seller_id: null,
+            p_limit: 20,
+            p_offset: 0,
+        });
     });
 
     test("uses server-trusted offers instead of client pricing and snapshots", async () => {
