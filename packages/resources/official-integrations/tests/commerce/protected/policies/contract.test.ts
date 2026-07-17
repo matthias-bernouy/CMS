@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const integrationRoot = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0");
+const integrationRoot = resolve(import.meta.dir, "../../../../integrations/commerce/versions/1.0.0");
 
 describe("protected C2C financial policy contract", () => {
     test("derives generic refund allocations and enforces distinct dual approvers", async () => {
@@ -479,8 +479,8 @@ describe("protected C2C financial policy contract", () => {
     });
 
     test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
-        const schema = await Bun.file(new URL("../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url)).text();
-        const definition = await Bun.file(new URL("../../../integrations/commerce/versions/1.0.0/definition.json", import.meta.url)).json() as Record<string, unknown>;
+        const schema = await Bun.file(new URL("../../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url)).text();
+        const definition = await Bun.file(new URL("../../../../integrations/commerce/versions/1.0.0/definition.json", import.meta.url)).json() as Record<string, unknown>;
         const serialized = JSON.stringify(definition);
 
         expect(schema).toContain("'commerce-claim-evidence', 'commerce-claim-evidence', false");

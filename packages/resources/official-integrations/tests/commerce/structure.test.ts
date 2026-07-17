@@ -25,7 +25,7 @@ const exceptionalTestFiles = new Set([
     "protected/platform-liability-smoke.sql",
     "protected/settlement-smoke.sql",
     "protected/delivery-saga-smoke.sql",
-    "protected/policy-contract.test.ts",
+    "protected/policies/contract.test.ts",
     "protected/resolution.test.ts",
     "sales/security.test.ts",
     "blocs/sales-blocs.test.ts",
