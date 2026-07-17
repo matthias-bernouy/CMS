@@ -22,7 +22,7 @@ import { cancelMyOrder, cancelMySale } from "../routes/order/cancellations.ts";
 import { openMyOrderClaim, respondToMySaleClaim } from "../routes/order/claims.ts";
 import { getClaimEvidenceFile, uploadMyClaimEvidence } from "../routes/order/claim-evidence.ts";
 import { prepareProtectedPayment } from "../routes/order/financials.ts";
-import { getMySale, listMySales } from "../routes/order/sales.ts";
+import { getMySale, listMySales } from "../routes/order/read-model/sales.ts";
 import { getMySeller, registerMySeller, updateMySeller } from "../routes/sellers.ts";
 
 export async function handleMarketplaceRoute(route: string, request: Request): Promise<Response | null> {

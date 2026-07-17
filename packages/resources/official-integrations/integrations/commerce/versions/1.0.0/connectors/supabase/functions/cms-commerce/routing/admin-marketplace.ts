@@ -6,7 +6,7 @@ import { getOrder, listOrders } from "../routes/orders.ts";
 import { reviewOrderCancellation } from "../routes/order/cancellations.ts";
 import { getClaim, getClaimEvidenceMetadata, listClaimEvidence, listClaims, resolveOrderClaim } from "../routes/order/claims.ts";
 import { getClaimEvidenceFile } from "../routes/order/claim-evidence.ts";
-import { getProtectedPayment, listCommerceExceptions, listProtectedPayments } from "../routes/order/operations.ts";
+import { getProtectedPayment, listCommerceExceptions, listProtectedPayments } from "../routes/order/read-model/operations.ts";
 import { getRefundRequest, listRefundRequests, requestOrderRefund, reviewOrderRefund } from "../routes/order/refunds.ts";
 import { authorizeOrderRelease } from "../routes/order/settlements.ts";
 import { authorizePlatformPayoutLiabilityDecrease } from "../routes/order/financials.ts";
