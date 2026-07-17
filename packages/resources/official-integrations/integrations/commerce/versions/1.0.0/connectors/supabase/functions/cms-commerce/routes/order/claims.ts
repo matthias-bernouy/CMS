@@ -5,6 +5,7 @@ import { camelize, integer, readJsonObject, requiredText, text } from "../../cor
 import { listRows, one, rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 import { publicClaimEvidence } from "./claim-evidence.ts";
+import { loadClaimReturnAuthorizationContext } from "./read-model/return-authorization.ts";
 
 export { getClaim } from "./read-model/claims.ts";
 
@@ -75,42 +76,33 @@ export async function getClaimEvidenceMetadata(request: Request): Promise<Respon
 
 export async function getClaimReturnAuthorization(request: Request): Promise<Response> {
     const claimId = integer(new URL(request.url).searchParams.get("claimId"), "claimId", true)!;
-    const claim = await one(
-        "marketplace_claims",
-        { id: claimId },
-        "id,public_id,order_id,buyer_cms_user_id,seller_id,status,resolution_outcome,return_ship_by_at,return_delivery_status,return_recipient_handoff_at,version",
-    );
-    if (!claim) throw new HttpError(404, "claim not found");
-    const [order, seller, financialTerms] = await Promise.all([
-        one("orders", { id: String(claim.order_id) }, "id,public_id,order_number,status,shipping_address"),
-        one("sellers", { id: String(claim.seller_id) }, "id,cms_user_id"),
-        one("order_financial_terms", { order_id: String(claim.order_id) }, "delivery_quote_id,merchandise_subtotal_amount,currency"),
-    ]);
-    if (!order || !seller || !text(seller.cms_user_id)) {
+    const { claim, order, seller, financialTerms } =
+        await loadClaimReturnAuthorizationContext(claimId);
+    if (!order || !seller || !text(seller.cmsUserId)) {
         throw new HttpError(409, "claim return participants are incomplete");
     }
-    const deadline = Date.parse(text(claim.return_ship_by_at) ?? "");
+    const deadline = Date.parse(text(claim.returnShipByAt) ?? "");
     const deadlinePassed = Number.isFinite(deadline) && deadline <= Date.now();
     const awaitingReturn = claim.status === "return_required"
-        && claim.resolution_outcome === "return_required"
-        && !claim.return_recipient_handoff_at;
+        && claim.resolutionOutcome === "return_required"
+        && !claim.returnRecipientHandoffAt;
     return json(camelize({
         allowed: awaitingReturn && !deadlinePassed,
         reason: !awaitingReturn ? "claim_not_awaiting_return" : deadlinePassed ? "return_ship_deadline_passed" : "authorized",
         claimId: claim.id,
-        claimPublicId: claim.public_id,
+        claimPublicId: claim.publicId,
         claimStatus: claim.status,
         claimVersion: claim.version,
-        returnShipByAt: claim.return_ship_by_at,
-        returnDeliveryStatus: claim.return_delivery_status,
+        returnShipByAt: claim.returnShipByAt,
+        returnDeliveryStatus: claim.returnDeliveryStatus,
         orderId: order.id,
-        orderPublicId: order.public_id,
-        orderNumber: order.order_number,
-        buyerCmsUserId: claim.buyer_cms_user_id,
+        orderPublicId: order.publicId,
+        orderNumber: order.orderNumber,
+        buyerCmsUserId: claim.buyerCmsUserId,
         sellerId: seller.id,
-        sellerCmsUserId: seller.cms_user_id,
-        deliveryQuoteId: financialTerms?.delivery_quote_id,
-        merchandiseSubtotalMinorAmount: financialTerms?.merchandise_subtotal_amount,
+        sellerCmsUserId: seller.cmsUserId,
+        deliveryQuoteId: financialTerms?.deliveryQuoteId,
+        merchandiseSubtotalMinorAmount: financialTerms?.merchandiseSubtotalAmount,
         currency: financialTerms?.currency,
     }));
 }
