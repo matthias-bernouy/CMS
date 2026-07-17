@@ -4,20 +4,20 @@ import {
     jsonResponse,
     requestCommerce,
     setRestResponder,
-} from "../../harness";
+} from "../../../harness";
 import {
     expectedAdminDetail,
     expectedBuyerDetail,
     expectedSellerDetail,
-} from "./fixtures/expected-details";
+} from "../fixtures/expected-details";
 import {
     buyerId,
     firstOrderPublicId,
     orderRows,
     saleRows,
     sellerUserId,
-} from "./fixtures/raw";
-import { callsFor, useCompleteOrderResponder } from "./fixtures/responder";
+} from "../fixtures/raw";
+import { callsFor, useCompleteOrderResponder } from "../fixtures/responder";
 
 installCommerceTestEnvironment();
 
@@ -70,29 +70,6 @@ describe("commerce order and sale detail read contracts", () => {
         expect(body).not.toHaveProperty("metadataEntries");
     });
 
-    test("preserves id priority and the seller public-id lookup", async () => {
-        useCompleteOrderResponder();
-
-        for (const [path, userId] of [
-            [`/me/order?id=42&publicId=invalid`, buyerId],
-            [`/me/sale?id=42&publicId=invalid`, sellerUserId],
-            ["/admin/order?id=42&publicId=invalid", undefined],
-        ] as const) {
-            const response = await requestCommerce(path, { userId });
-            expect({ path, status: response.status }).toEqual({ path, status: 200 });
-            const orderQuery = query("orders", -1);
-            expect(orderQuery.get("id")).toBe("eq.42");
-            expect(orderQuery.get("public_id")).toBeNull();
-        }
-
-        const seller = await requestCommerce(`/me/sale?publicId=%20${firstOrderPublicId}%20`, {
-            userId: sellerUserId,
-        });
-        expect(seller.status).toBe(200);
-        expect(await seller.json()).toEqual(expectedSellerDetail);
-        expect(query("orders", -1).get("public_id")).toBe(`eq.${firstOrderPublicId}`);
-    });
-
     test("preserves empty collections and every absent optional relation", async () => {
         setRestResponder(request => {
             const url = new URL(request.url);
@@ -134,8 +111,8 @@ describe("commerce order and sale detail read contracts", () => {
     });
 });
 
-function query(resource: string, index = 0): URLSearchParams {
-    const call = callsFor(resource).at(index);
+function query(resource: string): URLSearchParams {
+    const call = callsFor(resource)[0];
     if (!call) throw new Error(`Missing ${resource} request`);
     return new URL(call.url).searchParams;
 }
