@@ -2,9 +2,11 @@ import { describe, expect, test } from "bun:test";
 import {
     capturedFetches,
     installCommerceTestEnvironment,
+    jsonResponse,
     requestCommerce,
+    setRestResponder,
 } from "../../../harness";
-import { useC2cPolicyResponder } from "./fixtures";
+import { c2cReadModelEnvelope, useC2cPolicyResponder } from "./fixtures";
 import { componentRows } from "./raw";
 
 installCommerceTestEnvironment();
@@ -71,17 +73,36 @@ describe("commerce protected C2C policy read boundaries", () => {
         }
     });
 
-    test("preserves initial and hydration PostgREST failure mappings", async () => {
-        for (const failure of [
-            { resource: "settings", message: "settings lookup unavailable" },
-            { resource: "fee_policy_components", message: "components unavailable" },
-        ]) {
-            useC2cPolicyResponder({ failure });
+    test("preserves historical upstream failure messages", async () => {
+        for (const message of ["settings lookup unavailable", "components unavailable"]) {
+            useC2cPolicyResponder({ failure: { message } });
             const response = await requestCommerce("/admin/c2c-policies");
 
             expect({ status: response.status, body: await response.json() }).toEqual({
                 status: 502,
-                body: { error: failure.message },
+                body: { error: message },
+            });
+        }
+    });
+
+    test("fails closed on malformed private read-model envelopes", async () => {
+        const complete = c2cReadModelEnvelope();
+        for (const value of [
+            null,
+            {},
+            { state: "unexpected" },
+            { state: "ok" },
+            { ...complete, settings: {} },
+            { ...complete, components: [null] },
+        ]) {
+            setRestResponder(() => jsonResponse(value));
+            const response = await requestCommerce("/admin/c2c-policies");
+
+            expect({ status: response.status, body: await response.json() }).toEqual({
+                status: 502,
+                body: {
+                    error: "get_c2c_policy_configuration_read_model returned an invalid response",
+                },
             });
         }
     });

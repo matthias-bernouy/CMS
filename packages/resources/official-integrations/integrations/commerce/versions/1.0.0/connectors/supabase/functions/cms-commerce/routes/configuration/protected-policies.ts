@@ -2,58 +2,8 @@ import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
 import { booleanValue, camelize, integer, readJsonObject, text } from "../../core/records.ts";
-import { one, restJson, rpc } from "../../core/rest.ts";
+import { rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
-
-const settingsSelect = "id,mode,default_currency,active_c2c_fee_policy_id,active_c2c_protection_policy_id,active_c2c_seller_risk_policy_id,version,updated_at";
-
-export async function getC2cPolicies(): Promise<Response> {
-    const settings = await one("settings", { id: "default" }, settingsSelect);
-    if (!settings) throw new HttpError(500, "commerce settings are missing");
-    const [feePolicy, protectionPolicy, sellerRiskPolicy, components, subsidyOverrides] = await Promise.all([
-        one("fee_policies", { id: String(settings.active_c2c_fee_policy_id) }),
-        one("protection_policies", { id: String(settings.active_c2c_protection_policy_id) }),
-        one("seller_risk_policies", { id: String(settings.active_c2c_seller_risk_policy_id) }),
-        restJson<JsonRecord[]>(`fee_policy_components?select=*&fee_policy_id=eq.${String(settings.active_c2c_fee_policy_id)}&order=position.asc,id.asc`),
-        restJson<JsonRecord[]>(`financial_subsidy_overrides?select=*&fee_policy_id=eq.${String(settings.active_c2c_fee_policy_id)}&order=created_at.desc`),
-    ]);
-    if (!feePolicy || !protectionPolicy || !sellerRiskPolicy) {
-        throw new HttpError(500, "active protected C2C policy revision is incomplete");
-    }
-    const publicSettings = camelize(settings) as JsonRecord;
-    const publicFeePolicy = camelize(feePolicy) as JsonRecord;
-    const publicProtectionPolicy = camelize(protectionPolicy) as JsonRecord;
-    const publicSellerRiskPolicy = camelize(sellerRiskPolicy) as JsonRecord;
-    const publicComponents = camelize(components) as JsonRecord[];
-    const publicSubsidyOverrides = camelize(subsidyOverrides) as JsonRecord[];
-    const buyerProtection = publicComponents.find(component => component.componentKey === "buyer_protection");
-    const sellerCommission = publicComponents.find(component => component.componentKey === "seller_commission");
-    if (!buyerProtection || !sellerCommission) {
-        throw new HttpError(500, "active protected C2C fee components are incomplete");
-    }
-    return json({
-        settings: publicSettings,
-        activePolicy: {
-            id: publicFeePolicy.id,
-            policyKey: publicFeePolicy.policyKey,
-            version: publicFeePolicy.version,
-            name: publicFeePolicy.name,
-            status: publicFeePolicy.status,
-            currency: publicFeePolicy.currency,
-            fee: publicFeePolicy,
-            buyerProtection,
-            sellerCommission,
-            protection: publicProtectionPolicy,
-            sellerRisk: publicSellerRiskPolicy,
-            subsidy: publicSubsidyOverrides[0] ?? null,
-        },
-        feePolicy: publicFeePolicy,
-        protectionPolicy: publicProtectionPolicy,
-        sellerRiskPolicy: publicSellerRiskPolicy,
-        components: publicComponents,
-        subsidyOverrides: publicSubsidyOverrides,
-    });
-}
 
 export async function createC2cPolicyRevision(request: Request): Promise<Response> {
     const body = await readJsonObject(request);

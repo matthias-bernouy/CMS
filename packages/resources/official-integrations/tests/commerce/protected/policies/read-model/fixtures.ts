@@ -9,6 +9,7 @@ import {
 } from "./raw";
 
 type Row = Record<string, unknown>;
+const functionName = "get_c2c_policy_configuration_read_model";
 type Options = {
     settings?: Row | null;
     feePolicy?: Row | null;
@@ -16,33 +17,19 @@ type Options = {
     sellerRiskPolicy?: Row | null;
     components?: Row[];
     subsidies?: Row[];
-    failure?: { resource: string; message: string; status?: number };
+    failure?: { message: string; status?: number };
 };
 
 export function useC2cPolicyResponder(options: Options = {}): void {
-    const rows = resolvedRows(options);
     setRestResponder(request => {
         const resource = new URL(request.url).pathname.split("/").at(-1)!;
-        if (resource === "get_c2c_policy_configuration_read_model") {
-            if (options.failure) {
-                return jsonResponse({ message: options.failure.message }, options.failure.status ?? 503);
-            }
-            return jsonResponse(c2cReadModelEnvelope(options));
+        if (resource !== functionName) {
+            throw new Error(`unexpected C2C policy request ${request.url}`);
         }
-        if (options.failure?.resource === resource) {
+        if (options.failure) {
             return jsonResponse({ message: options.failure.message }, options.failure.status ?? 503);
         }
-        if (resource === "settings") return jsonResponse(rows.settings ? [rows.settings] : []);
-        if (resource === "fee_policies") return jsonResponse(rows.feePolicy ? [rows.feePolicy] : []);
-        if (resource === "protection_policies") {
-            return jsonResponse(rows.protectionPolicy ? [rows.protectionPolicy] : []);
-        }
-        if (resource === "seller_risk_policies") {
-            return jsonResponse(rows.sellerRiskPolicy ? [rows.sellerRiskPolicy] : []);
-        }
-        if (resource === "fee_policy_components") return jsonResponse(rows.components);
-        if (resource === "financial_subsidy_overrides") return jsonResponse(rows.subsidies);
-        throw new Error(`unexpected C2C policy request ${request.url}`);
+        return jsonResponse(c2cReadModelEnvelope(options));
     });
 }
 

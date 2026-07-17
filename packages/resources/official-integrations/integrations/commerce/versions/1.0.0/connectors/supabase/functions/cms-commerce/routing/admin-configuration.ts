@@ -19,7 +19,8 @@ import {
     upsertWorkflowState,
     upsertWorkflowTransition,
 } from "../routes/offer-workflow.ts";
-import { createC2cPolicyRevision, getC2cPolicies } from "../routes/configuration/protected-policies.ts";
+import { createC2cPolicyRevision } from "../routes/configuration/protected-policies.ts";
+import { getC2cPolicies } from "../routes/configuration/read-model/policies.ts";
 
 export async function handleAdminConfigurationRoute(route: string, request: Request): Promise<Response | null> {
     if (route === "/admin/settings") {

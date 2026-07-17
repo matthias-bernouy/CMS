@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
     capturedFetches,
+    expectSingleRpc,
     installCommerceTestEnvironment,
     requestCommerce,
 } from "../../../harness";
@@ -8,23 +9,15 @@ import { useC2cPolicyResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
 
-describe("commerce current protected C2C policy read budgets", () => {
-    test("records six database calls and the exact historical orders", async () => {
+describe("commerce optimized protected C2C policy read budgets", () => {
+    test("loads the complete protected configuration in one database call", async () => {
         useC2cPolicyResponder();
 
         const response = await requestCommerce("/admin/c2c-policies");
-        const calls = capturedFetches();
-        const resources = calls.map(call => new URL(call.url).pathname.split("/").at(-1));
+        const readModel = expectSingleRpc("get_c2c_policy_configuration_read_model");
 
         expect(response.status).toBe(200);
-        expect(calls).toHaveLength(6);
-        expect(resources).toEqual([
-            "settings", "fee_policies", "protection_policies", "seller_risk_policies",
-            "fee_policy_components", "financial_subsidy_overrides",
-        ]);
-        expect(new URL(calls[4]!.url).searchParams.get("order")).toBe("position.asc,id.asc");
-        expect(new URL(calls[5]!.url).searchParams.get("order")).toBe("created_at.desc");
-        expect(calls.every(call => new URL(call.url).pathname.startsWith("/rest/v1/"))).toBe(true);
+        expect(readModel.body).toEqual({});
     });
 
     test("records one database call for missing settings", async () => {
