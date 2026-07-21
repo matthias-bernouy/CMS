@@ -31,12 +31,11 @@ import {
     relaySelectionRow,
     deliveryQuoteRow,
     latestDeliveryQuoteRow,
-    reserveShipment,
+    reserveShipmentCreation,
     settingsRow,
     upsertSettingsRow,
     shipmentEvents,
     shipmentRowByExternalOrderId,
-    shipmentRowWithRequestByIdempotencyKey,
     shipmentRowByExpedition,
     shipmentWithEventsRowByExpedition,
     shipmentWithEventsRowByExternalOrderId,
@@ -167,47 +166,14 @@ async function createShipment(request: Request): Promise<Response> {
     const quotePurpose = stringValue(body.quotePurpose) || "fulfillment";
     const quoteExternalOrderId = stringValue(body.quoteExternalOrderId) || payload.externalOrderId;
     const selectedForCmsUserId = stringValue(body.selectedForCmsUserId);
-    const quote = deliveryQuoteId ? await deliveryQuoteRow(deliveryQuoteId) : null;
-    if (!payload.externalOrderId.startsWith("claim-return:") && !quote) {
-        throw new HttpError(409, "an exact immutable delivery quote is required before shipment creation");
-    }
-    if (deliveryQuoteId && (!quote
-        || quote.external_order_id !== quoteExternalOrderId
-        || quote.selected_for_cms_user_id !== selectedForCmsUserId)) {
-        throw new HttpError(409, "shipment delivery quote binding is invalid");
-    }
-    if (quote) {
-        const mainFulfillment = quotePurpose === "fulfillment";
-        if (mainFulfillment && quoteExternalOrderId !== payload.externalOrderId) {
-            throw new HttpError(409, "main shipment delivery quote belongs to another order");
-        }
-        if (mainFulfillment && (quote.relay_location !== payload.deliveryRelayLocation
-            || quote.weight_grams !== payload.weightGrams
-            || quote.merchandise_subtotal_minor_amount !== payload.declaredValueMinorAmount
-            || String(quote.currency).toUpperCase() !== payload.declaredCurrency)) {
-            throw new HttpError(409, "shipment financial or relay input does not match the immutable quote");
-        }
-        const expectedSender = quotePurpose === "claim_return"
-            ? quote.recipient_snapshot : quote.seller_fulfillment_snapshot;
-        const expectedRecipient = quotePurpose === "claim_return"
-            ? quote.seller_fulfillment_snapshot : quote.recipient_snapshot;
-        if (!sameFulfillmentAddress(payload.sender, expectedSender)
-            || !sameFulfillmentAddress(payload.recipient, expectedRecipient)) {
-            throw new HttpError(409, "shipment address input does not match the immutable quote snapshot");
-        }
-    } else {
-        const boundSelection = await relaySelectionRow(payload.externalOrderId);
-        if (boundSelection && String(boundSelection.relay_location) !== payload.deliveryRelayLocation) {
-            throw new HttpError(409, "shipment relay does not match the immutable server selection");
-        }
-    }
     const idempotencyKey = payload.externalOrderId || payload.id;
+    const observedAt = new Date().toISOString();
     const reservation = {
         id: payload.id,
         external_order_id: payload.externalOrderId || undefined,
         idempotency_key: idempotencyKey,
         status: "creating",
-        provider_call_started_at: new Date().toISOString(),
+        provider_call_started_at: observedAt,
         creation_manual_review_at: null,
         seller_cms_user_id: sellerCmsUserId,
         delivery_quote_id: deliveryQuoteId || undefined,
@@ -245,28 +211,31 @@ async function createShipment(request: Request): Promise<Response> {
         raw_response: {},
         created_by: request.headers.get("x-cms-user-id")?.trim() || undefined,
     };
-
-    let row = await reserveShipment(reservation);
-    if (!row) {
-        row = await shipmentRowWithRequestByIdempotencyKey(idempotencyKey);
-        if (!row) throw new HttpError(409, "shipment creation reservation was not acquired");
-        if (!sameJson(row.raw_request, payload.raw)) {
-            throw new HttpError(409, "idempotency key was already used with a different shipment payload");
-        }
-        if (row.status === "failed") {
-            const retryReservation: JsonRecord = { ...reservation };
-            delete retryReservation.id;
-            delete retryReservation.idempotency_key;
-            row = await updateShipment(String(row.id), {
-                ...retryReservation,
-                status: "creating",
-                last_error: null,
-                provider_call_started_at: new Date().toISOString(),
-            }, "failed");
-            if (!row) throw new HttpError(409, "shipment creation is already being retried");
-        } else {
-            return await existingShipmentResponse(row);
-        }
+    const result = await reserveShipmentCreation({
+        reservation,
+        quoteCheck: {
+            externalOrderId: payload.externalOrderId,
+            deliveryRelayLocation: payload.deliveryRelayLocation,
+            weightGrams: payload.weightGrams,
+            declaredValueMinorAmount: payload.declaredValueMinorAmount,
+            declaredCurrency: payload.declaredCurrency,
+            sender: payload.sender,
+            recipient: payload.recipient,
+        },
+        quotePurpose,
+        quoteExternalOrderId,
+        selectedForCmsUserId,
+        observedAt,
+    });
+    const row = isRecord(result.shipment) ? result.shipment : null;
+    if (!row) throw new HttpError(409, "shipment creation reservation was not acquired");
+    if (result.outcome === "replay") return shipmentReplayResponse(row);
+    if (result.outcome === "creating") return await existingCreatingShipmentResponse(row);
+    if (result.outcome === "unknown") {
+        throw new HttpError(409, "shipment creation outcome is unknown and requires reconciliation");
+    }
+    if (result.outcome !== "provider_required") {
+        throw new HttpError(409, "shipment creation reservation was not acquired");
     }
 
     try {
@@ -300,25 +269,7 @@ async function createShipment(request: Request): Promise<Response> {
     }
 }
 
-async function existingShipmentResponse(row: JsonRecord): Promise<Response> {
-    if (row.status === "creating") {
-        const startedAt = Date.parse(String(row.provider_call_started_at ?? ""));
-        if (Number.isFinite(startedAt) && Date.now() - startedAt >= 20 * 60_000) {
-            await updateShipment(String(row.id), {
-                status: "unknown",
-                creation_manual_review_at: new Date().toISOString(),
-                last_error: "shipment creation lease expired before a provider outcome was attached",
-            }, "creating").catch(() => null);
-            throw new HttpError(409, "shipment creation outcome is unknown and requires administrator recovery");
-        }
-        throw new HttpError(409, "shipment creation is already in progress");
-    }
-    if (row.status === "unknown") {
-        throw new HttpError(409, "shipment creation outcome is unknown and requires reconciliation");
-    }
-    if (row.status === "failed") {
-        throw new HttpError(409, "shipment creation failed and can be retried");
-    }
+function shipmentReplayResponse(row: JsonRecord): Response {
     return json({
         ok: true,
         id: row.id,
@@ -330,26 +281,17 @@ async function existingShipmentResponse(row: JsonRecord): Promise<Response> {
     });
 }
 
-function sameJson(left: unknown, right: unknown): boolean {
-    return stableJson(left) === stableJson(right);
-}
-
-function stableJson(value: unknown): string {
-    if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
-    if (value && typeof value === "object") {
-        const entries = Object.entries(value as JsonRecord).sort(([left], [right]) => left.localeCompare(right));
-        return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
+async function existingCreatingShipmentResponse(row: JsonRecord): Promise<Response> {
+    const startedAt = Date.parse(String(row.provider_call_started_at ?? ""));
+    if (Number.isFinite(startedAt) && Date.now() - startedAt >= 20 * 60_000) {
+        await updateShipment(String(row.id), {
+            status: "unknown",
+            creation_manual_review_at: new Date().toISOString(),
+            last_error: "shipment creation lease expired before a provider outcome was attached",
+        }, "creating").catch(() => null);
+        throw new HttpError(409, "shipment creation outcome is unknown and requires administrator recovery");
     }
-    return JSON.stringify(value) ?? "null";
-}
-
-function sameFulfillmentAddress(actual: unknown, expected: unknown): boolean {
-    if (!isRecord(actual) || !isRecord(expected)) return false;
-    const fields = [
-        "name", "firstName", "lastName", "phone", "addressLine1", "addressLine2",
-        "addressLine3", "postalCode", "city", "country", "email",
-    ];
-    return fields.every(field => stringValue(actual[field]) === stringValue(expected[field]));
+    throw new HttpError(409, "shipment creation is already in progress");
 }
 
 async function settings(request: Request): Promise<Response> {

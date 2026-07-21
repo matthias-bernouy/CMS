@@ -39,14 +39,6 @@ export async function shipmentRowByExternalOrderId(externalOrderId: string): Pro
     return await getOne("shipments", { external_order_id: externalOrderId }, shipmentSelect());
 }
 
-export async function shipmentRowByIdempotencyKey(idempotencyKey: string): Promise<JsonRecord | null> {
-    return await getOne("shipments", { idempotency_key: idempotencyKey }, shipmentSelect());
-}
-
-export async function shipmentRowWithRequestByIdempotencyKey(idempotencyKey: string): Promise<JsonRecord | null> {
-    return await getOne("shipments", { idempotency_key: idempotencyKey }, `${shipmentSelect()},raw_request`);
-}
-
 export async function shipmentEvents(shipmentId: string): Promise<JsonRecord[]> {
     return await restJson<JsonRecord[]>(
         `shipment_events?shipment_id=eq.${encodeURIComponent(shipmentId)}&select=${encodeURIComponent(eventSelect())}&order=occurred_at.desc.nullslast,created_at.desc`,
@@ -194,6 +186,28 @@ export async function reserveDeliveryQuote(row: JsonRecord): Promise<JsonRecord>
     });
 }
 
+export async function reserveShipmentCreation(input: {
+    reservation: JsonRecord;
+    quoteCheck: JsonRecord;
+    quotePurpose: string;
+    quoteExternalOrderId: string;
+    selectedForCmsUserId: string;
+    observedAt: string;
+}): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/reserve_shipment_creation", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_reservation: input.reservation,
+            p_quote_check: input.quoteCheck,
+            p_quote_purpose: input.quotePurpose,
+            p_quote_external_order_id: input.quoteExternalOrderId,
+            p_selected_for_cms_user_id: input.selectedForCmsUserId,
+            p_observed_at: input.observedAt,
+        }),
+    });
+}
+
 export async function markStaleShipmentCreationsUnknown(limit: number): Promise<JsonRecord[]> {
     return await restJson<JsonRecord[]>("rpc/mark_stale_shipment_creations_unknown", {
         method: "POST",
@@ -269,21 +283,6 @@ export async function upsertSettingsRow(row: JsonRecord): Promise<JsonRecord> {
         },
     );
     return rows[0] ?? next;
-}
-
-export async function reserveShipment(row: JsonRecord): Promise<JsonRecord | null> {
-    const rows = await restJson<JsonRecord[]>(
-        `shipments?on_conflict=idempotency_key&select=${encodeURIComponent(shipmentSelect())}`,
-        {
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-                prefer: "resolution=ignore-duplicates,return=representation",
-            },
-            body: JSON.stringify(row),
-        },
-    );
-    return rows[0] ?? null;
 }
 
 export async function updateShipment(

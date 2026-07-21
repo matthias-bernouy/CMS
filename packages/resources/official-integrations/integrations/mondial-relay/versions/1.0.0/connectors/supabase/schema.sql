@@ -456,6 +456,440 @@ create trigger enforce_shipment_relay_binding
 before insert on delivery.shipments
 for each row execute function delivery.enforce_shipment_relay_binding();
 
+create or replace function delivery.shipment_address_matches(
+    p_actual jsonb,
+    p_expected jsonb
+)
+returns boolean
+language plpgsql
+immutable
+security invoker
+set search_path = ''
+as $$
+declare
+    v_field text;
+    v_actual text;
+    v_expected text;
+begin
+    if pg_catalog.jsonb_typeof(p_actual) is distinct from 'object'
+        or pg_catalog.jsonb_typeof(p_expected) is distinct from 'object'
+    then
+        return false;
+    end if;
+    foreach v_field in array array[
+        'name', 'firstName', 'lastName', 'phone', 'addressLine1', 'addressLine2',
+        'addressLine3', 'postalCode', 'city', 'country', 'email'
+    ] loop
+        v_actual := case pg_catalog.jsonb_typeof(p_actual->v_field)
+            when 'string' then pg_catalog.btrim(p_actual->>v_field)
+            when 'number' then p_actual->>v_field
+            else '' end;
+        v_expected := case pg_catalog.jsonb_typeof(p_expected->v_field)
+            when 'string' then pg_catalog.btrim(p_expected->>v_field)
+            when 'number' then p_expected->>v_field
+            else '' end;
+        if v_actual is distinct from v_expected then return false; end if;
+    end loop;
+    return true;
+end;
+$$;
+
+create or replace function delivery.shipment_reservation_matches(
+    p_candidate delivery.shipments,
+    p_check jsonb
+)
+returns boolean
+language sql
+immutable
+security invoker
+set search_path = ''
+as $$
+    select
+        p_candidate.status = 'creating'
+        and p_candidate.external_order_id is not distinct from p_check->>'externalOrderId'
+        and p_candidate.delivery_relay_number is not distinct from p_check->>'deliveryRelayLocation'
+        and p_candidate.delivery_relay_country is not distinct from
+            pg_catalog.upper(pg_catalog.left(p_check->>'deliveryRelayLocation', 2))
+        and p_candidate.weight_grams is not distinct from (p_check->>'weightGrams')::integer
+        and p_candidate.declared_value_minor_amount
+            is not distinct from (p_check->>'declaredValueMinorAmount')::bigint
+        and p_candidate.declared_currency is not distinct from p_check->>'declaredCurrency'
+        and coalesce(p_candidate.sender_name, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'name', ''))
+        and coalesce(p_candidate.sender_email, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'email', ''))
+        and coalesce(p_candidate.sender_phone, '') = coalesce(
+            nullif(pg_catalog.btrim(coalesce(p_check->'sender'->>'phone', '')), ''),
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'mobile', ''))
+        )
+        and coalesce(p_candidate.sender_address_line1, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'addressLine1', ''))
+        and coalesce(p_candidate.sender_address_line2, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'addressLine2', ''))
+        and coalesce(p_candidate.sender_address_line3, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'addressLine3', ''))
+        and coalesce(p_candidate.sender_postal_code, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'postalCode', ''))
+        and coalesce(p_candidate.sender_city, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'city', ''))
+        and coalesce(p_candidate.sender_country, '') =
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'country', ''))
+        and coalesce(p_candidate.recipient_name, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'name', ''))
+        and coalesce(p_candidate.recipient_email, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'email', ''))
+        and coalesce(p_candidate.recipient_phone, '') = coalesce(
+            nullif(pg_catalog.btrim(coalesce(p_check->'recipient'->>'phone', '')), ''),
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'mobile', ''))
+        )
+        and coalesce(p_candidate.recipient_address_line1, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'addressLine1', ''))
+        and coalesce(p_candidate.recipient_address_line2, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'addressLine2', ''))
+        and coalesce(p_candidate.recipient_address_line3, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'addressLine3', ''))
+        and coalesce(p_candidate.recipient_postal_code, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'postalCode', ''))
+        and coalesce(p_candidate.recipient_city, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'city', ''))
+        and coalesce(p_candidate.recipient_country, '') =
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'country', ''))
+$$;
+
+create or replace function delivery.normalize_shipment_reservation(
+    p_candidate delivery.shipments,
+    p_check jsonb,
+    p_reservation jsonb
+)
+returns delivery.shipments
+language plpgsql
+immutable
+security invoker
+set search_path = ''
+as $$
+begin
+    if not p_reservation ? 'sender_email' then
+        p_candidate.sender_email := nullif(pg_catalog.btrim(coalesce(p_check->'sender'->>'email', '')), '');
+    end if;
+    if not p_reservation ? 'sender_phone' then
+        p_candidate.sender_phone := nullif(coalesce(
+            nullif(pg_catalog.btrim(coalesce(p_check->'sender'->>'phone', '')), ''),
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'mobile', ''))
+        ), '');
+    end if;
+    if not p_reservation ? 'sender_address_line2' then
+        p_candidate.sender_address_line2 := nullif(
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'addressLine2', '')), ''
+        );
+    end if;
+    if not p_reservation ? 'sender_address_line3' then
+        p_candidate.sender_address_line3 := nullif(
+            pg_catalog.btrim(coalesce(p_check->'sender'->>'addressLine3', '')), ''
+        );
+    end if;
+    if not p_reservation ? 'recipient_email' then
+        p_candidate.recipient_email := nullif(pg_catalog.btrim(coalesce(p_check->'recipient'->>'email', '')), '');
+    end if;
+    if not p_reservation ? 'recipient_phone' then
+        p_candidate.recipient_phone := nullif(coalesce(
+            nullif(pg_catalog.btrim(coalesce(p_check->'recipient'->>'phone', '')), ''),
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'mobile', ''))
+        ), '');
+    end if;
+    if not p_reservation ? 'recipient_address_line2' then
+        p_candidate.recipient_address_line2 := nullif(
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'addressLine2', '')), ''
+        );
+    end if;
+    if not p_reservation ? 'recipient_address_line3' then
+        p_candidate.recipient_address_line3 := nullif(
+            pg_catalog.btrim(coalesce(p_check->'recipient'->>'addressLine3', '')), ''
+        );
+    end if;
+    return p_candidate;
+end;
+$$;
+
+create or replace function delivery.shipment_creation_result(
+    p_outcome text,
+    p_shipment delivery.shipments
+)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+    select pg_catalog.jsonb_build_object(
+        'outcome', p_outcome,
+        'shipment', pg_catalog.jsonb_build_object(
+            'id', p_shipment.id,
+            'status', p_shipment.status,
+            'provider_call_started_at', p_shipment.provider_call_started_at,
+            'expedition_number', p_shipment.expedition_number,
+            'tracking_url', p_shipment.tracking_url,
+            'created_at', p_shipment.created_at
+        )
+    )
+$$;
+
+create or replace function delivery.retry_shipment_creation(
+    p_existing_id text,
+    p_reservation jsonb,
+    p_observed_at timestamptz
+)
+returns delivery.shipments
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+    v_candidate delivery.shipments%rowtype;
+    v_existing delivery.shipments%rowtype;
+begin
+    select shipment.* into v_existing
+    from delivery.shipments shipment
+    where shipment.id = p_existing_id;
+    if not found then
+        raise exception 'conflict: shipment creation is already being retried';
+    end if;
+    v_candidate := pg_catalog.jsonb_populate_record(v_existing, p_reservation);
+    update delivery.shipments shipment set
+        external_order_id = v_candidate.external_order_id,
+        status = 'creating', last_error = null,
+        provider_call_started_at = p_observed_at,
+        creation_manual_review_at = v_candidate.creation_manual_review_at,
+        seller_cms_user_id = v_candidate.seller_cms_user_id,
+        delivery_quote_id = v_candidate.delivery_quote_id,
+        label_format = v_candidate.label_format,
+        mode_collection = v_candidate.mode_collection,
+        mode_delivery = v_candidate.mode_delivery,
+        delivery_relay_country = v_candidate.delivery_relay_country,
+        delivery_relay_number = v_candidate.delivery_relay_number,
+        sender_name = v_candidate.sender_name,
+        sender_email = v_candidate.sender_email,
+        sender_phone = v_candidate.sender_phone,
+        sender_address_line1 = v_candidate.sender_address_line1,
+        sender_address_line2 = v_candidate.sender_address_line2,
+        sender_address_line3 = v_candidate.sender_address_line3,
+        sender_postal_code = v_candidate.sender_postal_code,
+        sender_city = v_candidate.sender_city,
+        sender_country = v_candidate.sender_country,
+        recipient_name = v_candidate.recipient_name,
+        recipient_email = v_candidate.recipient_email,
+        recipient_phone = v_candidate.recipient_phone,
+        recipient_address_line1 = v_candidate.recipient_address_line1,
+        recipient_address_line2 = v_candidate.recipient_address_line2,
+        recipient_address_line3 = v_candidate.recipient_address_line3,
+        recipient_postal_code = v_candidate.recipient_postal_code,
+        recipient_city = v_candidate.recipient_city,
+        recipient_country = v_candidate.recipient_country,
+        weight_grams = v_candidate.weight_grams,
+        declared_value_minor_amount = v_candidate.declared_value_minor_amount,
+        declared_currency = v_candidate.declared_currency,
+        package_count = v_candidate.package_count,
+        length_cm = v_candidate.length_cm,
+        instructions = v_candidate.instructions,
+        metadata = v_candidate.metadata,
+        raw_request = v_candidate.raw_request,
+        raw_response = v_candidate.raw_response,
+        created_by = v_candidate.created_by
+    where shipment.id = p_existing_id and shipment.status = 'failed'
+    returning shipment.* into v_existing;
+    if not found then
+        raise exception 'conflict: shipment creation is already being retried';
+    end if;
+    return v_existing;
+end;
+$$;
+
+revoke execute on function delivery.shipment_address_matches(jsonb, jsonb)
+    from public, anon, authenticated;
+grant execute on function delivery.shipment_address_matches(jsonb, jsonb)
+    to service_role;
+revoke execute on function delivery.shipment_reservation_matches(delivery.shipments, jsonb)
+    from public, anon, authenticated;
+grant execute on function delivery.shipment_reservation_matches(delivery.shipments, jsonb)
+    to service_role;
+revoke execute on function delivery.normalize_shipment_reservation(delivery.shipments, jsonb, jsonb)
+    from public, anon, authenticated;
+grant execute on function delivery.normalize_shipment_reservation(delivery.shipments, jsonb, jsonb)
+    to service_role;
+revoke execute on function delivery.shipment_creation_result(text, delivery.shipments)
+    from public, anon, authenticated;
+grant execute on function delivery.shipment_creation_result(text, delivery.shipments)
+    to service_role;
+revoke execute on function delivery.retry_shipment_creation(text, jsonb, timestamptz)
+    from public, anon, authenticated;
+grant execute on function delivery.retry_shipment_creation(text, jsonb, timestamptz)
+    to service_role;
+
+create or replace function delivery.reserve_shipment_creation(
+    p_reservation jsonb,
+    p_quote_check jsonb,
+    p_quote_purpose text,
+    p_quote_external_order_id text,
+    p_selected_for_cms_user_id text,
+    p_observed_at timestamptz
+)
+returns jsonb
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+    v_candidate delivery.shipments%rowtype;
+    v_existing delivery.shipments%rowtype;
+    v_quote delivery.delivery_quotes%rowtype;
+    v_selection delivery.relay_selections%rowtype;
+    v_expected_sender jsonb;
+    v_expected_recipient jsonb;
+    v_delivery_quote_id text;
+    v_external_order_id text;
+    v_has_quote boolean := false;
+begin
+    if pg_catalog.jsonb_typeof(p_reservation) is distinct from 'object'
+        or pg_catalog.jsonb_typeof(p_quote_check) is distinct from 'object'
+    then
+        raise exception 'validation: shipment reservation context is invalid';
+    end if;
+    v_delivery_quote_id := p_reservation->>'delivery_quote_id';
+    v_external_order_id := p_reservation->>'external_order_id';
+
+    if v_delivery_quote_id is not null then
+        select quote.* into v_quote
+        from delivery.delivery_quotes quote
+        where quote.quote_id = v_delivery_quote_id;
+        v_has_quote := found;
+    end if;
+    if v_external_order_id !~ '^claim-return:' and not v_has_quote then
+        raise exception 'conflict: an exact immutable delivery quote is required before shipment creation';
+    end if;
+    if v_delivery_quote_id is not null and (
+        not v_has_quote
+        or v_quote.external_order_id is distinct from p_quote_external_order_id
+        or v_quote.selected_for_cms_user_id is distinct from p_selected_for_cms_user_id
+    ) then
+        raise exception 'conflict: shipment delivery quote binding is invalid';
+    end if;
+
+    if v_has_quote then
+        if p_quote_purpose = 'fulfillment'
+            and p_quote_external_order_id is distinct from p_quote_check->>'externalOrderId'
+        then
+            raise exception 'conflict: main shipment delivery quote belongs to another order';
+        end if;
+        if p_quote_purpose = 'fulfillment' and (
+            v_quote.relay_location is distinct from p_quote_check->>'deliveryRelayLocation'
+            or v_quote.weight_grams is distinct from (p_quote_check->>'weightGrams')::numeric
+            or v_quote.merchandise_subtotal_minor_amount
+                is distinct from (p_quote_check->>'declaredValueMinorAmount')::numeric
+            or pg_catalog.upper(v_quote.currency)
+                is distinct from p_quote_check->>'declaredCurrency'
+        ) then
+            raise exception 'conflict: shipment financial or relay input does not match the immutable quote';
+        end if;
+
+        v_expected_sender := case when p_quote_purpose = 'claim_return'
+            then v_quote.recipient_snapshot else v_quote.seller_fulfillment_snapshot end;
+        v_expected_recipient := case when p_quote_purpose = 'claim_return'
+            then v_quote.seller_fulfillment_snapshot else v_quote.recipient_snapshot end;
+        if not delivery.shipment_address_matches(p_quote_check->'sender', v_expected_sender)
+            or not delivery.shipment_address_matches(p_quote_check->'recipient', v_expected_recipient)
+        then
+            raise exception 'conflict: shipment address input does not match the immutable quote snapshot';
+        end if;
+    else
+        select selection.* into v_selection
+        from delivery.relay_selections selection
+        where selection.external_order_id = v_external_order_id;
+        if found and v_selection.relay_location
+            is distinct from p_quote_check->>'deliveryRelayLocation'
+        then
+            raise exception 'conflict: shipment relay does not match the immutable server selection';
+        end if;
+    end if;
+
+    v_candidate := pg_catalog.jsonb_populate_record(null::delivery.shipments, p_reservation);
+    v_candidate := delivery.normalize_shipment_reservation(v_candidate, p_quote_check, p_reservation);
+    v_candidate.provider_call_started_at := p_observed_at;
+    if not delivery.shipment_reservation_matches(v_candidate, p_quote_check) then
+        raise exception 'conflict: shipment reservation does not match validated quote context';
+    end if;
+
+    insert into delivery.shipments (
+        id, external_order_id, idempotency_key, status, provider_call_started_at,
+        creation_manual_review_at, seller_cms_user_id, delivery_quote_id,
+        label_format, mode_collection, mode_delivery, delivery_relay_country,
+        delivery_relay_number, sender_name, sender_email, sender_phone,
+        sender_address_line1, sender_address_line2, sender_address_line3,
+        sender_postal_code, sender_city, sender_country, recipient_name,
+        recipient_email, recipient_phone, recipient_address_line1,
+        recipient_address_line2, recipient_address_line3, recipient_postal_code,
+        recipient_city, recipient_country, weight_grams,
+        declared_value_minor_amount, declared_currency, package_count, length_cm,
+        instructions, metadata, raw_request, raw_response, created_by
+    ) values (
+        v_candidate.id, v_candidate.external_order_id, v_candidate.idempotency_key,
+        v_candidate.status, v_candidate.provider_call_started_at,
+        v_candidate.creation_manual_review_at, v_candidate.seller_cms_user_id,
+        v_candidate.delivery_quote_id, v_candidate.label_format,
+        v_candidate.mode_collection, v_candidate.mode_delivery,
+        v_candidate.delivery_relay_country, v_candidate.delivery_relay_number,
+        v_candidate.sender_name, v_candidate.sender_email, v_candidate.sender_phone,
+        v_candidate.sender_address_line1, v_candidate.sender_address_line2,
+        v_candidate.sender_address_line3, v_candidate.sender_postal_code,
+        v_candidate.sender_city, v_candidate.sender_country, v_candidate.recipient_name,
+        v_candidate.recipient_email, v_candidate.recipient_phone,
+        v_candidate.recipient_address_line1, v_candidate.recipient_address_line2,
+        v_candidate.recipient_address_line3, v_candidate.recipient_postal_code,
+        v_candidate.recipient_city, v_candidate.recipient_country,
+        v_candidate.weight_grams, v_candidate.declared_value_minor_amount,
+        v_candidate.declared_currency, v_candidate.package_count,
+        v_candidate.length_cm, v_candidate.instructions, v_candidate.metadata,
+        v_candidate.raw_request, v_candidate.raw_response, v_candidate.created_by
+    ) on conflict (idempotency_key) do nothing
+    returning * into v_existing;
+
+    if found then
+        return delivery.shipment_creation_result('provider_required', v_existing);
+    end if;
+
+    select shipment.* into v_existing
+    from delivery.shipments shipment
+    where shipment.idempotency_key = v_candidate.idempotency_key;
+    if not found then
+        raise exception 'conflict: shipment creation reservation was not acquired';
+    end if;
+    if v_existing.raw_request is distinct from v_candidate.raw_request then
+        raise exception 'conflict: idempotency key was already used with a different shipment payload';
+    end if;
+
+    if v_existing.status = 'failed' then
+        v_existing := delivery.retry_shipment_creation(
+            v_existing.id, p_reservation, p_observed_at
+        );
+        return delivery.shipment_creation_result('provider_required', v_existing);
+    end if;
+
+    if v_existing.status = 'creating' then
+        return delivery.shipment_creation_result('creating', v_existing);
+    end if;
+
+    return delivery.shipment_creation_result(
+        case when v_existing.status = 'unknown' then 'unknown' else 'replay' end,
+        v_existing
+    );
+end;
+$$;
+
+revoke execute on function delivery.reserve_shipment_creation(jsonb, jsonb, text, text, text, timestamptz)
+    from public, anon, authenticated;
+grant execute on function delivery.reserve_shipment_creation(jsonb, jsonb, text, text, text, timestamptz)
+    to service_role;
+
 -- ---------------------------------------------------------------------------
 -- Operational settings
 -- ---------------------------------------------------------------------------
