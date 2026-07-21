@@ -15,7 +15,10 @@ type Endpoint = {
     method?: string;
     access?: string;
     params?: Array<{ name: string; in: string; type: string; required?: boolean }>;
-    headers?: Array<{ name: string }>;
+    headers?: Array<{
+        name: string;
+        source?: { from: string; ref: string; prefix?: string };
+    }>;
     output?: Array<{ body?: Shape }>;
 };
 type Definition = { artifacts: Array<{ source?: { endpoints: Endpoint[] } }> };
@@ -28,31 +31,57 @@ const definitionPath = resolve(
 installCommerceTestEnvironment();
 
 describe("commerce response contracts", () => {
-    test("declares the exact actor-scoped payment order context", async () => {
-        const endpoint = (await commerceEndpoints()).find(
-            candidate => candidate.endpointId === "getPaymentOrderContext",
-        );
+    test("declares the exact actor-scoped buyer order contexts", async () => {
+        const endpoints = await commerceEndpoints();
         const fields = ["id", "publicId", "buyerCmsUserId"];
-        const body = endpoint?.output?.[0]?.body;
+        const contracts = [
+            {
+                id: "getPaymentOrderContext",
+                param: { type: "number", required: true },
+                required: fields,
+            },
+            {
+                id: "getOrderFulfillmentBuyerContext",
+                param: { type: "string" },
+                required: undefined,
+            },
+        ];
 
-        expect(endpoint).toMatchObject({
-            method: "GET",
-            access: "system",
-            params: [{
+        for (const contract of contracts) {
+            const endpoint = endpoints.find(
+                candidate => candidate.endpointId === contract.id,
+            );
+            const body = endpoint?.output?.[0]?.body;
+            expect(endpoint).toMatchObject({
+                method: "GET",
+                access: "system",
+            });
+            expect(endpoint?.params).toEqual([{
                 name: "orderId",
                 in: "query",
-                type: "number",
-                required: true,
-            }],
-        });
-        expect(endpoint?.headers?.map(header => header.name)).toEqual([
-            "authorization",
-            "x-cms-user-id",
-        ]);
-        expect(Object.keys(body?.properties ?? {})).toEqual(fields);
-        expect(body?.required).toEqual(fields);
-        expect(body?.properties?.buyerCmsUserId?.semantic?.authority)
-            .toBe("cms");
+                ...contract.param,
+            }]);
+            expect(endpoint?.headers).toEqual([
+                {
+                    name: "authorization",
+                    source: {
+                        from: "secret",
+                        ref: "{{secrets.cmsApiKey}}",
+                        prefix: "Bearer ",
+                    },
+                },
+                {
+                    name: "x-cms-user-id",
+                    source: { from: "computed", ref: "userID" },
+                },
+            ]);
+            expect(Object.keys(body?.properties ?? {})).toEqual(fields);
+            expect(body?.required).toEqual(contract.required);
+            expect(body?.properties?.buyerCmsUserId?.semantic).toEqual({
+                kind: "user-id",
+                authority: "cms",
+            });
+        }
     });
 
     test("declares the exact bounded negotiation context as a system endpoint", async () => {

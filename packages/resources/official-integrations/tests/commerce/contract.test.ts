@@ -74,7 +74,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-sale-detail",
             "commerce-offer-price-form",
         ]);
-        expect(endpointUrns).toHaveLength(151);
+        expect(endpointUrns).toHaveLength(152);
         expect(endpointUrns).not.toEqual(expect.arrayContaining([
             "urn:commerce:variants",
             "urn:commerce:variant",
@@ -95,6 +95,7 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:getProtectedPaymentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/protected-payment/seller-context`,
             "urn:commerce:getOfferNegotiationContext": `${supabaseUrl}/functions/v1/cms-commerce/system/offer/negotiation-context`,
             "urn:commerce:getPaymentOrderContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/payment-context`,
+            "urn:commerce:getOrderFulfillmentBuyerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/payment-context`,
             "urn:commerce:getOrderDeliverySetupContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-setup-context`,
             "urn:commerce:getOrderDeliverySelectionContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-selection-context`,
             "urn:commerce:createOrder": `${supabaseUrl}/functions/v1/cms-commerce/me/orders`,
@@ -119,10 +120,6 @@ describe("commerce 1.0.0 contract", () => {
         expect(negotiationContext?.access).toEqual({ mode: "system" });
         expect(negotiationContext?.output?.[0]?.body?.properties?.sellerCmsUserId?.semantic?.authority)
             .toBe("cms");
-        const paymentOrderContext = source?.endpoints.find(endpoint =>
-            endpoint.urn === "urn:commerce:getPaymentOrderContext");
-        expect(paymentOrderContext?.access).toEqual({ mode: "system" });
-        expect(paymentOrderContext?.output?.[0]?.body?.properties?.buyerCmsUserId?.semantic?.authority).toBe("cms");
         const deliveryAuthorization = source?.endpoints.find(
             endpoint => endpoint.urn === "urn:commerce:getOrderDeliveryQuoteAuthorization",
         )?.output?.[0]?.body;

@@ -27,7 +27,9 @@ describe("buyer shipment context boundaries", () => {
         expect(await response.json()).toEqual({
             error: "Order does not belong to the current buyer",
         });
-        expect(calls.map(call => call.url.pathname)).toEqual(["/myOrder"]);
+        expect(calls.map(call => call.url.pathname)).toEqual([
+            "/system/order/payment-context",
+        ]);
     });
 
     test("preserves incomplete Commerce context behavior", async () => {
@@ -45,7 +47,7 @@ describe("buyer shipment context boundaries", () => {
             error: "Order does not belong to the current buyer",
         });
         expect(missingBuyer.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
         ]);
         expect(missingId.response.status).toBe(200);
         const missingIdBody = await missingId.response.json();
@@ -75,8 +77,10 @@ describe("buyer shipment context boundaries", () => {
             );
 
             await expectGenericFailure(response);
-            expect(calls.map(call => call.url.pathname)).toEqual(["/myOrder"]);
-            expect(calls[0]?.url.searchParams.get("id")).toBe(
+            expect(calls.map(call => call.url.pathname)).toEqual([
+                "/system/order/payment-context",
+            ]);
+            expect(calls[0]?.url.searchParams.get("orderId")).toBe(
                 new URL(request.url).searchParams.get("orderId") || null,
             );
         }
@@ -92,11 +96,11 @@ describe("buyer shipment context boundaries", () => {
 
         await expectGenericFailure(commerce.response);
         expect(commerce.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
         ]);
         await expectGenericFailure(delivery.response);
         expect(delivery.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
             "/shipmentForExternalOrder",
         ]);
     });
@@ -116,7 +120,7 @@ describe("buyer shipment context boundaries", () => {
 
         await expectGenericFailure(missingPublicId.response);
         expect(missingPublicId.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
         ]);
         await expectGenericFailure(nonArray.response);
         expect(missingShipmentId.response.status).toBe(403);
@@ -124,7 +128,7 @@ describe("buyer shipment context boundaries", () => {
             error: "Forbidden",
         });
         expect(missingShipmentId.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
             "/shipmentForExternalOrder",
         ]);
     });
@@ -154,7 +158,7 @@ describe("buyer shipment context boundaries", () => {
             error: 'forEach "tracking" exceeds max items',
         });
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
             "/shipmentForExternalOrder",
         ]);
     });

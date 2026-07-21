@@ -48,14 +48,17 @@ function commerceSource(): Source {
         urn: makeSourceUrn("commerce"),
         meta: { name: "Commerce" },
         endpoints: [{
-            urn: makeEndpointUrn("commerce", "myOrder"),
+            urn: makeEndpointUrn(
+                "commerce",
+                "getOrderFulfillmentBuyerContext",
+            ),
             method: "GET",
-            access: { mode: "auth" },
-            targetUrl: "https://commerce.test/myOrder",
+            access: { mode: "system" },
+            targetUrl: "https://commerce.test/system/order/payment-context",
             headers: computedUserHeader(),
             input: {
                 params: [{
-                    name: "id",
+                    name: "orderId",
                     in: "query",
                     schema: text(),
                 }],
@@ -66,11 +69,6 @@ function commerceSource(): Source {
                     id: number(),
                     publicId: text(),
                     buyerCmsUserId: text(),
-                    shippingAddress: object(),
-                    billingAddress: object(),
-                    metadata: object(),
-                    lines: array(object()),
-                    financialTerms: object(),
                 }),
             }],
         }],

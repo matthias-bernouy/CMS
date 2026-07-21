@@ -12,9 +12,9 @@ export function successfulBuyerResponder(
 ): (request: Request) => Response {
     return request => {
         const url = new URL(request.url);
-        if (url.pathname === "/myOrder") {
+        if (url.pathname === "/system/order/payment-context") {
             if (overrides.failAt === "commerce") return privateFailure();
-            if (!validOrderSelector(url.searchParams.get("id"))) {
+            if (!validOrderSelector(url.searchParams.get("orderId"))) {
                 return Response.json(
                     { error: "Order not found", privateId: "private-order" },
                     { status: 404 },

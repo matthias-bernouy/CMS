@@ -50,7 +50,12 @@ describe("buyer shipment context contract", () => {
             Object.fromEntries(call.url.searchParams),
             call.userId,
         ])).toEqual([
-            ["GET", "/myOrder", { id: "42" }, buyerId],
+            [
+                "GET",
+                "/system/order/payment-context",
+                { orderId: "42" },
+                buyerId,
+            ],
             [
                 "GET",
                 "/shipmentForExternalOrder",
@@ -73,7 +78,7 @@ describe("buyer shipment context contract", () => {
             shipments: [],
         });
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
             "/shipmentForExternalOrder",
         ]);
     });
@@ -102,11 +107,11 @@ describe("buyer shipment context contract", () => {
         expect(first.response.status).toBe(200);
         expect(second.response.status).toBe(200);
         expect(first.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
             "/shipmentForExternalOrder",
         ]);
         expect(second.calls.map(call => call.url.pathname)).toEqual([
-            "/myOrder",
+            "/system/order/payment-context",
             "/shipmentForExternalOrder",
         ]);
     });

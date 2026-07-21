@@ -52,8 +52,8 @@
             "id": "order",
             "call": {
               "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "myOrder",
-              "params": { "id": "$input.params.orderId" }
+              "endpoint": "getOrderFulfillmentBuyerContext",
+              "params": { "orderId": "$input.params.orderId" }
             }
           },
           {
