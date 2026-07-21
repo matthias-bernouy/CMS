@@ -54,8 +54,7 @@ export function registerProviderTransferContextContracts(
                     ["POST", "rpc/apply_payment_provider_projection"],
                     ["POST", "rpc/read_provider_transfer_reconciliation_context"],
                     ["PATCH", "transfers"],
-                    ["GET", "payments"],
-                    ["GET", "refunds"],
+                    ["POST", "rpc/read_payment_reconciliation_local_context"],
                     ["POST", "rpc/read_payment_reconciliation_ledger"],
                     ["PATCH", "payments"],
                 ]);
