@@ -16,38 +16,54 @@ export class RichTextRangeCommands {
 
     saveSelection = (): void => {
         const selection = this._selection();
-        if (!selection || selection.rangeCount === 0) return;
+        if (!selection || selection.rangeCount === 0) {
+            return;
+        }
         const range = selection.getRangeAt(0);
-        if (!this._editor().contains(range.commonAncestorContainer)) return;
+        if (!this._editor().contains(range.commonAncestorContainer)) {
+            return;
+        }
         this._savedRange = range.cloneRange();
     };
 
     restoreSelection(): void {
-        if (!this._savedRange) return;
+        if (!this._savedRange) {
+            return;
+        }
         const selection = this._selection();
-        if (!selection) return;
+        if (!selection) {
+            return;
+        }
         selection.removeAllRanges();
         selection.addRange(this._savedRange);
     }
 
     toggleRange(tagName: string): void {
-        if (this.unwrapMatchingRange(tagName)) return;
+        if (this.unwrapMatchingRange(tagName)) {
+            return;
+        }
         this.wrapRange(tagName);
     }
 
     wrapRange(tagName: string, attributes: Record<string, string> = {}): void {
         const range = this.getUsableRange();
-        if (!range || range.collapsed) return;
+        if (!range || range.collapsed) {
+            return;
+        }
 
         this.setSavedRange(wrapRangeContents(range, tagName, attributes));
     }
 
     unwrapMatchingRange(tagName: string, predicate: (element: HTMLElement) => boolean = () => true): boolean {
         const range = this.getUsableRange();
-        if (!range) return false;
+        if (!range) {
+            return false;
+        }
 
         const wrapper = findRangeWrapper(this._editor(), range, tagName, predicate);
-        if (!wrapper) return false;
+        if (!wrapper) {
+            return false;
+        }
 
         this.setSavedRange(unwrapElement(this._editor(), wrapper));
         return true;
@@ -75,19 +91,28 @@ export class RichTextRangeCommands {
     }
 
     stepTextSize(direction: "decrease" | "increase"): boolean {
-        if (!this.hasSelectedRange()) return false;
+        if (!this.hasSelectedRange()) {
+            return false;
+        }
 
         const range = this.getUsableRange();
-        if (!range) return false;
+        if (!range) {
+            return false;
+        }
 
         const wrapper = findRangeWrapper(this._editor(), range, "span", (element) => element.style.fontSize !== "");
-        const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize as typeof TEXT_SIZE_STEPS[number]) : 1;
+        const currentIndex = wrapper
+            ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize as (typeof TEXT_SIZE_STEPS)[number])
+            : 1;
         const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
-        const nextIndex = direction === "increase"
-            ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1)
-            : Math.max(0, fallbackIndex - 1);
+        const nextIndex =
+            direction === "increase"
+                ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1)
+                : Math.max(0, fallbackIndex - 1);
 
-        if (wrapper) this.setSavedRange(unwrapElement(this._editor(), wrapper));
+        if (wrapper) {
+            this.setSavedRange(unwrapElement(this._editor(), wrapper));
+        }
         this.wrapRange("span", { style: `font-size: ${TEXT_SIZE_STEPS[nextIndex]!}` });
         return true;
     }
@@ -98,10 +123,14 @@ export class RichTextRangeCommands {
         }
 
         const selection = this._selection();
-        if (!selection || selection.rangeCount === 0) return null;
+        if (!selection || selection.rangeCount === 0) {
+            return null;
+        }
 
         const range = selection.getRangeAt(0);
-        if (!this._editor().contains(range.commonAncestorContainer)) return null;
+        if (!this._editor().contains(range.commonAncestorContainer)) {
+            return null;
+        }
 
         return range.cloneRange();
     }
@@ -109,5 +138,4 @@ export class RichTextRangeCommands {
     private setSavedRange(range: Range): void {
         this._savedRange = range.cloneRange();
     }
-
 }

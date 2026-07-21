@@ -11,14 +11,9 @@ import type { TriggerRepository } from "../../interfaces/TriggerRepository";
 
 const DEFAULT_TRIGGER_TIMEOUT_MS = 5_000;
 
-export type TriggerRunOutcome =
-    | { ok: true }
-    | { ok: false; error: string };
+export type TriggerRunOutcome = { ok: true } | { ok: false; error: string };
 
-export async function runOneTrigger(
-    trigger: TriggerRecord,
-    options: RunTriggersOptions,
-): Promise<TriggerRunOutcome> {
+export async function runOneTrigger(trigger: TriggerRecord, options: RunTriggersOptions): Promise<TriggerRunOutcome> {
     const vars = triggerVars({
         endpoint: options.endpoint,
         request: options.request,
@@ -34,13 +29,17 @@ export async function runOneTrigger(
         }
 
         const fn = await options.functions.getFunction(trigger.function.id);
-        if (!fn) throw new Error(`function not found: ${trigger.function.id}`);
+        if (!fn) {
+            throw new Error(`function not found: ${trigger.function.id}`);
+        }
 
         const response = await withTimeout(
             executeFunction(fn, functionRequest(trigger, vars, fn.method), functionOptions(options)),
             options.timeoutMs ?? DEFAULT_TRIGGER_TIMEOUT_MS,
         );
-        if (!response.ok) throw new Error(await responseError(response));
+        if (!response.ok) {
+            throw new Error(await responseError(response));
+        }
 
         await recordRun(options.triggers, trigger.id, { status: "ok" });
         return { ok: true };
@@ -60,10 +59,16 @@ function functionOptions(options: RunTriggersOptions): ExecuteFunctionOptions {
     };
 }
 
-function functionRequest(trigger: TriggerRecord, vars: Parameters<typeof resolveTriggerReference>[1], method: string): Request {
+function functionRequest(
+    trigger: TriggerRecord,
+    vars: Parameters<typeof resolveTriggerReference>[1],
+    method: string,
+): Request {
     const url = new URL("https://cms.trigger/internal");
     for (const [key, value] of Object.entries(resolveParams(trigger.function.params, vars))) {
-        if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+        if (value !== undefined && value !== null && value !== "") {
+            url.searchParams.set(key, String(value));
+        }
     }
 
     const body = resolveFunctionValue(trigger.function.body, vars, resolveTriggerReference);
@@ -78,10 +83,12 @@ function resolveParams(
     value: Record<string, TriggerValue> | undefined,
     vars: Parameters<typeof resolveTriggerReference>[1],
 ): Record<string, unknown> {
-    return Object.fromEntries(Object.entries(value ?? {}).map(([key, item]) => [
-        key,
-        resolveFunctionValue(item, vars, resolveTriggerReference),
-    ]));
+    return Object.fromEntries(
+        Object.entries(value ?? {}).map(([key, item]) => [
+            key,
+            resolveFunctionValue(item, vars, resolveTriggerReference),
+        ]),
+    );
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -94,7 +101,9 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
             }),
         ]);
     } finally {
-        if (timer) clearTimeout(timer);
+        if (timer) {
+            clearTimeout(timer);
+        }
     }
 }
 
@@ -118,6 +127,8 @@ async function recordRun(
 async function responseError(response: Response): Promise<string> {
     const text = await response.text().catch(() => "");
     const trimmed = text.trim();
-    if (!trimmed) return `function returned ${response.status}`;
+    if (!trimmed) {
+        return `function returned ${response.status}`;
+    }
     return trimmed.length > 200 ? `${trimmed.slice(0, 200)}...` : trimmed;
 }

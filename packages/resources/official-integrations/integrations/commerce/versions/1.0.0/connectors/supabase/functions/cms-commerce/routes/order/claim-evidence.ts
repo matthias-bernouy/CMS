@@ -4,11 +4,7 @@ import { corsHeaders, json } from "../../core/http.ts";
 import { camelize, integer, isRecord, text } from "../../core/records.ts";
 import { rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
-import {
-    deleteStorageImageBestEffort,
-    downloadStorageImage,
-    uploadStorageImage,
-} from "../catalog/media-storage.ts";
+import { deleteStorageImageBestEffort, downloadStorageImage, uploadStorageImage } from "../catalog/media-storage.ts";
 import {
     claimEvidenceDownloadContext,
     claimEvidenceUploadContext,
@@ -26,10 +22,7 @@ const evidenceTypes = new Map([
     ["video/mp4", "mp4"],
 ]);
 
-export async function uploadMyClaimEvidence(
-    request: Request,
-    actorKind: ClaimEvidenceActorKind,
-): Promise<Response> {
+export async function uploadMyClaimEvidence(request: Request, actorKind: ClaimEvidenceActorKind): Promise<Response> {
     const claimId = requiredQueryInteger(request, "claimId");
     const actorId = cmsUserId(request);
     const claim = await claimEvidenceUploadContext(claimId, actorKind, actorId);
@@ -54,7 +47,9 @@ export async function uploadMyClaimEvidence(
             p_description: description,
             p_metadata: { upload: "edge_multipart_v1" },
         });
-        if (!isRecord(value)) throw new HttpError(502, "claim evidence persistence returned an invalid response");
+        if (!isRecord(value)) {
+            throw new HttpError(502, "claim evidence persistence returned an invalid response");
+        }
         return json(publicClaimEvidence(value), 201);
     } catch (error) {
         await deleteStorageImageBestEffort(claimEvidenceBucket, path);
@@ -62,19 +57,10 @@ export async function uploadMyClaimEvidence(
     }
 }
 
-export async function getClaimEvidenceFile(
-    request: Request,
-    scope: ClaimEvidenceScope,
-): Promise<Response> {
+export async function getClaimEvidenceFile(request: Request, scope: ClaimEvidenceScope): Promise<Response> {
     const evidenceId = requiredQueryInteger(request, "evidenceId");
-    const actorId = scope === "admin"
-        ? null
-        : (request.headers.get("x-cms-user-id") ?? "").trim() || null;
-    const context = await claimEvidenceDownloadContext(
-        evidenceId,
-        scope,
-        actorId,
-    );
+    const actorId = scope === "admin" ? null : (request.headers.get("x-cms-user-id") ?? "").trim() || null;
+    const context = await claimEvidenceDownloadContext(evidenceId, scope, actorId);
     if (context.state === "identity_required") {
         cmsUserId(request);
         throw new HttpError(502, "claim evidence authorization returned an invalid response");
@@ -88,7 +74,10 @@ export async function getClaimEvidenceFile(
     headers.set("content-type", evidence.mimeType ?? "application/octet-stream");
     headers.set("cache-control", "private, no-store");
     headers.set("x-content-type-options", "nosniff");
-    headers.set("content-disposition", `attachment; filename="claim-evidence-${evidenceId}.${evidenceExtension(String(evidence.mimeType))}"`);
+    headers.set(
+        "content-disposition",
+        `attachment; filename="claim-evidence-${evidenceId}.${evidenceExtension(String(evidence.mimeType))}"`,
+    );
     return new Response(stored.body, { status: 200, headers });
 }
 
@@ -118,39 +107,58 @@ async function readEvidenceUpload(request: Request): Promise<{ file: File; descr
         throw new HttpError(400, "invalid multipart body");
     }
     const file = form.get("file");
-    if (!(file instanceof File)) throw new HttpError(400, "file is required");
-    if (file.size <= 0) throw new HttpError(400, "file is empty");
-    if (file.size > maximumEvidenceBytes) throw new HttpError(413, "claim evidence file is too large");
-    if (!evidenceTypes.has(file.type.toLowerCase())) throw new HttpError(400, "unsupported claim evidence file type");
+    if (!(file instanceof File)) {
+        throw new HttpError(400, "file is required");
+    }
+    if (file.size <= 0) {
+        throw new HttpError(400, "file is empty");
+    }
+    if (file.size > maximumEvidenceBytes) {
+        throw new HttpError(413, "claim evidence file is too large");
+    }
+    if (!evidenceTypes.has(file.type.toLowerCase())) {
+        throw new HttpError(400, "unsupported claim evidence file type");
+    }
     const description = text(form.get("description"));
-    if (description && description.length > 1000) throw new HttpError(400, "description is too long");
+    if (description && description.length > 1000) {
+        throw new HttpError(400, "description is too long");
+    }
     return { file, description: description ?? null };
 }
 
 function assertFileSignature(mimeType: string, bytes: Uint8Array): void {
     const ascii = (start: number, end: number) => new TextDecoder().decode(bytes.slice(start, end));
-    const matches = mimeType === "image/jpeg"
-        ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
-        : mimeType === "image/png"
-        ? bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((byte, index) => bytes[index] === byte)
-        : mimeType === "image/webp"
-        ? ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP"
-        : mimeType === "application/pdf"
-        ? ascii(0, 5) === "%PDF-"
-        : mimeType === "video/mp4"
-        ? bytes.length >= 12 && ascii(4, 8) === "ftyp"
-        : false;
-    if (!matches) throw new HttpError(400, "claim evidence content does not match its declared file type");
+    const matches =
+        mimeType === "image/jpeg"
+            ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
+            : mimeType === "image/png"
+              ? bytes.length >= 8 &&
+                [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((byte, index) => bytes[index] === byte)
+              : mimeType === "image/webp"
+                ? ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP"
+                : mimeType === "application/pdf"
+                  ? ascii(0, 5) === "%PDF-"
+                  : mimeType === "video/mp4"
+                    ? bytes.length >= 12 && ascii(4, 8) === "ftyp"
+                    : false;
+    if (!matches) {
+        throw new HttpError(400, "claim evidence content does not match its declared file type");
+    }
 }
 
 function requiredQueryInteger(request: Request, name: string): number {
     const value = integer(new URL(request.url).searchParams.get(name), name, true)!;
-    if (value <= 0) throw new HttpError(400, `${name} must be positive`);
+    if (value <= 0) {
+        throw new HttpError(400, `${name} must be positive`);
+    }
     return value;
 }
 
 function safeFileName(value: string): string {
-    const safe = value.replace(/[\\/\u0000-\u001f\u007f]/g, "_").trim().slice(0, 255);
+    const safe = value
+        .replace(/[\\/\u0000-\u001f\u007f]/g, "_")
+        .trim()
+        .slice(0, 255);
     return safe || "evidence";
 }
 
@@ -160,5 +168,7 @@ function evidenceExtension(mimeType: string): string {
 
 async function digest(bytes: Uint8Array): Promise<string> {
     const buffer = await crypto.subtle.digest("SHA-256", bytes);
-    return Array.from(new Uint8Array(buffer)).map(byte => byte.toString(16).padStart(2, "0")).join("");
+    return Array.from(new Uint8Array(buffer))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
 }

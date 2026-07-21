@@ -21,11 +21,15 @@ export function resolveBrowserImport(
     const owner = packageByRoot.find((pkg) => isPathInside(file, pkg.root));
     if (owner) {
         const aliases = resolvePackageAliasImports(owner, specifier, sourceFiles);
-        if (aliases.length > 0) return aliases;
+        if (aliases.length > 0) {
+            return aliases;
+        }
     }
 
     const workspaceImport = parseWorkspaceSpecifier(specifier, packageByName);
-    if (!workspaceImport) return [];
+    if (!workspaceImport) {
+        return [];
+    }
     const subpath = workspaceImport.subpath ? `./${workspaceImport.subpath}` : ".";
     return declaredExportTargets(workspaceImport.pkg.manifest.exports, subpath)
         .map((target) => resolveExportSourceTarget(workspaceImport.pkg, target, sourceFiles))
@@ -40,20 +44,21 @@ export function resolvePackageAliasImports(
     const resolvedAliases: string[] = [];
     for (const alias of owner.pathAliases) {
         const wildcard = matchPattern(alias.pattern, specifier);
-        if (wildcard === undefined) continue;
+        if (wildcard === undefined) {
+            continue;
+        }
         for (const target of alias.targets) {
             const aliasedTarget = target.includes("*") ? target.replaceAll("*", wildcard) : target;
             const resolved = resolveSourcePath(resolve(alias.baseDir, aliasedTarget), sourceFiles);
-            if (resolved) resolvedAliases.push(resolved);
+            if (resolved) {
+                resolvedAliases.push(resolved);
+            }
         }
     }
     return [...new Set(resolvedAliases)];
 }
 
-export function resolveSourcePath(
-    base: string,
-    sourceFiles: ReadonlySet<string>,
-): string | undefined {
+export function resolveSourcePath(base: string, sourceFiles: ReadonlySet<string>): string | undefined {
     const emittedExtension = extname(base);
     const sourceStem = new Set([".js", ".jsx", ".mjs", ".cjs"]).has(emittedExtension)
         ? base.slice(0, -emittedExtension.length)
@@ -73,10 +78,14 @@ export function resolveExportSourceTarget(
     sourceFiles: ReadonlySet<string>,
 ): string | undefined {
     const direct = resolveSourcePath(resolve(pkg.root, target), sourceFiles);
-    if (direct) return direct;
+    if (direct) {
+        return direct;
+    }
 
     const normalizedTarget = normalizeRelativePath(target);
-    if (!normalizedTarget.startsWith("dist/")) return undefined;
+    if (!normalizedTarget.startsWith("dist/")) {
+        return undefined;
+    }
     const generatedRelative = normalizedTarget.slice("dist/".length);
     const extension = extname(generatedRelative);
     const sourceRelative = extension ? generatedRelative.slice(0, -extension.length) : generatedRelative;

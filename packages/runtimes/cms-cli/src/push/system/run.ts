@@ -8,13 +8,9 @@ import { fetchRemoteSystem, projectRemote, flatten, postSystem } from "./apply";
 
 export type RunSystemFlags = { force: boolean; yes: boolean; dryRun: boolean };
 
-export async function runSystem(
-    adminBase: URL,
-    token:     string,
-    flags:     RunSystemFlags,
-): Promise<number> {
+export async function runSystem(adminBase: URL, token: string, flags: RunSystemFlags): Promise<number> {
     const config = await loadPushConfig(process.cwd());
-    const force  = flags.force || config.forcePushDefault;
+    const force = flags.force || config.forcePushDefault;
 
     const local = await scanSystem(config.siteDir);
     if (!local) {
@@ -22,10 +18,12 @@ export async function runSystem(
         return 0;
     }
 
-    if (!await checkPageRefs(adminBase, token, config.siteDir, local, force)) return 1;
+    if (!(await checkPageRefs(adminBase, token, config.siteDir, local, force))) {
+        return 1;
+    }
 
-    const state      = await loadState(config.siteDir);
-    const remote     = await fetchRemoteSystem(adminBase, token);
+    const state = await loadState(config.siteDir);
+    const remote = await fetchRemoteSystem(adminBase, token);
     const remoteHash = canonicalSystemHash(projectRemote(local.payload, remote));
 
     if (!force && detectConflict(state, "system", remoteHash)) {
@@ -40,7 +38,7 @@ export async function runSystem(
         console.log("→ system: would push (changed).");
         return 0;
     }
-    if (!await confirm("Push system?", flags.yes)) {
+    if (!(await confirm("Push system?", flags.yes))) {
         console.log("→ Aborted.");
         return 0;
     }
@@ -56,21 +54,29 @@ export async function runSystem(
 }
 
 async function checkPageRefs(
-    adminBase: URL, token: string, siteDir: string, local: LocalSystem, force: boolean,
+    adminBase: URL,
+    token: string,
+    siteDir: string,
+    local: LocalSystem,
+    force: boolean,
 ): Promise<boolean> {
-    if (local.pageRefs.length === 0) return true;
+    if (local.pageRefs.length === 0) {
+        return true;
+    }
 
-    const [remoteList, localPages] = await Promise.all([
-        fetchRemoteList(adminBase, token),
-        scanPages(siteDir),
-    ]);
-    const remote = new Set(remoteList.map(p => p.path));
-    const known  = new Set(localPages.map(p => p.path));
+    const [remoteList, localPages] = await Promise.all([fetchRemoteList(adminBase, token), scanPages(siteDir)]);
+    const remote = new Set(remoteList.map((p) => p.path));
+    const known = new Set(localPages.map((p) => p.path));
 
     let errors = 0;
     for (const ref of local.pageRefs) {
-        if (remote.has(ref))      continue;
-        if (known.has(ref))       { console.warn(`⚠ system references page "${ref}" — present locally but not yet on remote.`); continue; }
+        if (remote.has(ref)) {
+            continue;
+        }
+        if (known.has(ref)) {
+            console.warn(`⚠ system references page "${ref}" — present locally but not yet on remote.`);
+            continue;
+        }
         console.error(`✖ system references page "${ref}" — missing on remote and locally.`);
         errors++;
     }

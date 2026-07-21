@@ -38,7 +38,9 @@ export function sanitizeSvgTree(root: SanitizableElement): void {
             }
             if (SVG_URL_ATTRS.has(lower)) {
                 const value = el.getAttribute(name);
-                if (value && !isSafeSvgUrl(value)) el.removeAttribute(name);
+                if (value && !isSafeSvgUrl(value)) {
+                    el.removeAttribute(name);
+                }
             }
         }
     }
@@ -46,7 +48,9 @@ export function sanitizeSvgTree(root: SanitizableElement): void {
 
 function isSafeSvgUrl(value: string): boolean {
     const v = value.replace(/[\u0000-\u0020]/g, "").toLowerCase();
-    if (v.startsWith("data:image/svg")) return false;
+    if (v.startsWith("data:image/svg")) {
+        return false;
+    }
     return (
         v.startsWith("#") ||
         (v.startsWith("/") && !v.startsWith("//")) ||

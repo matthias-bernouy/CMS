@@ -6,7 +6,12 @@ import type { AnalyticsEvent } from "../interfaces/AnalyticsEvent";
 
 /** Assemble a pageview `AnalyticsEvent` from the request + response facts —
  *  the collection rule of the analytics feature, shared by any serving surface. */
-export async function buildPageViewEvent(req: Request, status: number, durationMs: number, secret: string): Promise<AnalyticsEvent> {
+export async function buildPageViewEvent(
+    req: Request,
+    status: number,
+    durationMs: number,
+    secret: string,
+): Promise<AnalyticsEvent> {
     const url = new URL(req.url);
     const ua = req.headers.get("user-agent") ?? "";
     const { device, browser } = classifyUserAgent(ua);
@@ -29,14 +34,18 @@ export async function buildPageViewEvent(req: Request, status: number, durationM
  *  proxy itself, so prefer the first X-Forwarded-For hop; fall back to the peer. */
 function clientIp(req: Request): string {
     const xff = req.headers.get("x-forwarded-for");
-    if (xff) return xff.split(",")[0]!.trim();
+    if (xff) {
+        return xff.split(",")[0]!.trim();
+    }
     return getRequestIP(req) ?? "";
 }
 
 /** External referer → referrerHost; same-origin referer → fromPath (internal nav). */
 function referer(req: Request, url: URL): { referrerHost?: string; fromPath?: string } {
     const ref = req.headers.get("referer");
-    if (!ref) return {};
+    if (!ref) {
+        return {};
+    }
     try {
         const host = req.headers.get("host") ?? url.host;
         const r = new URL(ref);

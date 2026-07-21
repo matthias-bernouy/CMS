@@ -1,10 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type {
-    IntegrationConnectorProvider,
-    IntegrationConnectorProviderRepository,
-} from "@bernouy/cms-integrations";
+import type { IntegrationConnectorProvider, IntegrationConnectorProviderRepository } from "@bernouy/cms-integrations";
 
 const CONNECTOR_PROVIDERS_FILE = ".p9r/connector-providers.json";
 
@@ -17,16 +14,19 @@ export class LocalFsIntegrationConnectorProviderRepository implements Integratio
     }
 
     async get(provider: "supabase"): Promise<IntegrationConnectorProvider | null> {
-        const found = (await this.readAll()).find(candidate => candidate.provider === provider);
+        const found = (await this.readAll()).find((candidate) => candidate.provider === provider);
         return found ? copyProvider(found) : null;
     }
 
     async upsert(provider: IntegrationConnectorProvider): Promise<IntegrationConnectorProvider> {
         const providers = await this.readAll();
         const next = copyProvider(provider);
-        const index = providers.findIndex(candidate => candidate.provider === provider.provider);
-        if (index >= 0) providers[index] = next;
-        else providers.push(next);
+        const index = providers.findIndex((candidate) => candidate.provider === provider.provider);
+        if (index >= 0) {
+            providers[index] = next;
+        } else {
+            providers.push(next);
+        }
         await this.writeAll(providers);
         return copyProvider(next);
     }
@@ -36,7 +36,9 @@ export class LocalFsIntegrationConnectorProviderRepository implements Integratio
         try {
             source = await readFile(this.file, "utf-8");
         } catch (error) {
-            if (isNotFoundError(error)) return [];
+            if (isNotFoundError(error)) {
+                return [];
+            }
             throw error;
         }
 
@@ -66,9 +68,9 @@ function parseProvider(value: unknown, file: string, index: number): Integration
     }
     const provider = value as Record<string, unknown>;
     if (
-        provider.provider !== "supabase"
-        || typeof provider.enabled !== "boolean"
-        || typeof provider.projectRef !== "string"
+        provider.provider !== "supabase" ||
+        typeof provider.enabled !== "boolean" ||
+        typeof provider.projectRef !== "string"
     ) {
         throw new Error(`Invalid connector provider settings in ${file}: entry ${index} is not a Supabase provider`);
     }

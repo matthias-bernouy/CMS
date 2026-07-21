@@ -6,10 +6,21 @@
  * cms-control editor.
  */
 export type {
-    Source, SourceEndpoint, HTTPMethod, ParamIn,
-    EndpointHeader, HeaderSource, EndpointParam, SourceMeta, EndpointResponse,
-    ComputedParamRef, ParamValueSource, ResponseKind,
-    SourceEndpointAccess, SourceEndpointAccessMode, SourceEndpointEffects,
+    Source,
+    SourceEndpoint,
+    HTTPMethod,
+    ParamIn,
+    EndpointHeader,
+    HeaderSource,
+    EndpointParam,
+    SourceMeta,
+    EndpointResponse,
+    ComputedParamRef,
+    ParamValueSource,
+    ResponseKind,
+    SourceEndpointAccess,
+    SourceEndpointAccessMode,
+    SourceEndpointEffects,
 } from "../interfaces/Source";
 export {
     COMPUTED_PARAM_REFS,
@@ -22,8 +33,13 @@ export {
 } from "../interfaces/Source";
 export type { DataShape } from "../interfaces/DataShape";
 export {
-    FORBIDDEN_REQUEST_HEADERS, HEADER_NAME_RE, isForbiddenHeaderName, isValidHeaderName,
-    isValidHeaderValue, MAX_ENDPOINT_HEADERS, MAX_HEADER_VALUE_LENGTH,
+    FORBIDDEN_REQUEST_HEADERS,
+    HEADER_NAME_RE,
+    isForbiddenHeaderName,
+    isValidHeaderName,
+    isValidHeaderValue,
+    MAX_ENDPOINT_HEADERS,
+    MAX_HEADER_VALUE_LENGTH,
 } from "../core/headerPolicy";
 
 export type {
@@ -61,7 +77,12 @@ export { CompositeSourceRepository } from "../core/CompositeSourceRepository";
 
 // ── Core (pure logic) ──
 export {
-    parseUrn, makeSourceUrn, makeEndpointUrn, sourceUrnOf, isSourceUrn, isEndpointUrn,
+    parseUrn,
+    makeSourceUrn,
+    makeEndpointUrn,
+    sourceUrnOf,
+    isSourceUrn,
+    isEndpointUrn,
     type ParsedUrn,
 } from "../core/urn";
 export {

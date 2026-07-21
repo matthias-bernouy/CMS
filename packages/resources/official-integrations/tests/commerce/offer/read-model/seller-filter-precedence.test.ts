@@ -18,12 +18,14 @@ const sellerReadModelRpc = "list_seller_offers_read_model";
 
 describe("commerce seller offer filter precedence", () => {
     test("returns the empty page before interpreting an invalid product id without a seller", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             expect(resourceName(request)).toBe(sellerReadModelRpc);
-            return jsonResponse(sellerBundle({
-                seller_exists: false,
-                workflow_states: [],
-            }));
+            return jsonResponse(
+                sellerBundle({
+                    seller_exists: false,
+                    workflow_states: [],
+                }),
+            );
         });
 
         const response = await requestCommerce("/me/offers?productId=not-an-integer", {
@@ -44,10 +46,9 @@ describe("commerce seller offer filter precedence", () => {
     test("rejects status before interpreting an invalid product id for an existing seller", async () => {
         useSellerResponder({ status_valid: false });
 
-        const response = await requestCommerce(
-            "/me/offers?status=unknown&productId=not-an-integer",
-            { userId: "seller-user-123" },
-        );
+        const response = await requestCommerce("/me/offers?status=unknown&productId=not-an-integer", {
+            userId: "seller-user-123",
+        });
 
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "status is invalid" });
@@ -65,8 +66,8 @@ describe("commerce seller offer filter precedence", () => {
         useSellerResponder();
 
         const response = await requestCommerce(
-            "/me/offers?status=archived&q=Blade&publicationStatus=paused"
-                + "&workflowState=changes_requested&conditionCode=used&productId=42",
+            "/me/offers?status=archived&q=Blade&publicationStatus=paused" +
+                "&workflowState=changes_requested&conditionCode=used&productId=42",
             { userId: "seller-user-123" },
         );
 
@@ -106,9 +107,11 @@ describe("commerce seller offer filter precedence", () => {
 
     test("surfaces the product bigint cast error before the variant cast error", async () => {
         const message = 'invalid input syntax for type bigint: "not-an-integer"';
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const resource = resourceName(request);
-            if (resource === sellerReadModelRpc) return jsonResponse({ message }, 400);
+            if (resource === sellerReadModelRpc) {
+                return jsonResponse({ message }, 400);
+            }
             throw new Error(`Unexpected seller offer request: ${request.url}`);
         });
 
@@ -128,15 +131,18 @@ describe("commerce seller offer filter precedence", () => {
             p_limit: 50,
             p_offset: 0,
         });
-        expect(Object.keys(rpcBody()).indexOf("p_product_id"))
-            .toBeLessThan(Object.keys(rpcBody()).indexOf("p_variant_id"));
+        expect(Object.keys(rpcBody()).indexOf("p_product_id")).toBeLessThan(
+            Object.keys(rpcBody()).indexOf("p_variant_id"),
+        );
     });
 });
 
 function useSellerResponder(overrides: Record<string, unknown> = {}): void {
-    setRestResponder(request => {
+    setRestResponder((request) => {
         const resource = resourceName(request);
-        if (resource === sellerReadModelRpc) return jsonResponse(sellerBundle(overrides));
+        if (resource === sellerReadModelRpc) {
+            return jsonResponse(sellerBundle(overrides));
+        }
         throw new Error(`Unexpected seller offer request: ${request.url}`);
     });
 }
@@ -160,7 +166,7 @@ function rpcBody(): Record<string, unknown> {
 }
 
 function resources(): string[] {
-    return capturedFetches().map(call => resourceName(call));
+    return capturedFetches().map((call) => resourceName(call));
 }
 
 function resourceName(request: Request | { url: string }): string {

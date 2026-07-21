@@ -31,16 +31,16 @@ export function buildIntegrationCatalogue(input: {
     category: string;
     basePath: string;
 }): IntegrationCatalogueView {
-    const installed = new Set(input.installations.map(installation => installation.id));
+    const installed = new Set(input.installations.map((installation) => installation.id));
     const available = input.definitions
-        .filter(definition => !installed.has(definition.kind))
+        .filter((definition) => !installed.has(definition.kind))
         .sort((left, right) => left.label.localeCompare(right.label));
-    const categories = Array.from(new Set(available.map(definition => categoryLabel(definition)))).sort();
+    const categories = Array.from(new Set(available.map((definition) => categoryLabel(definition)))).sort();
     const query = input.query.trim().toLowerCase();
     const category = input.category.trim();
     const items = available
-        .filter(definition => matches(definition, query, category))
-        .map(definition => catalogueItem(definition, input.basePath));
+        .filter((definition) => matches(definition, query, category))
+        .map((definition) => catalogueItem(definition, input.basePath));
 
     return {
         items,
@@ -66,8 +66,12 @@ function catalogueItem(definition: IntegrationDefinition, basePath: string): Int
 
 function matches(definition: IntegrationDefinition, query: string, category: string): boolean {
     const categoryMatch = !category || category === categoryLabel(definition);
-    if (!categoryMatch) return false;
-    if (!query) return true;
+    if (!categoryMatch) {
+        return false;
+    }
+    if (!query) {
+        return true;
+    }
     return [definition.kind, definition.label, definition.category, definition.description]
         .join(" ")
         .toLowerCase()
@@ -79,33 +83,33 @@ function categoryLabel(definition: IntegrationDefinition): string {
 }
 
 function artifactLabels(definition: IntegrationDefinition): string[] {
-    const types = Array.from(new Set((definition.artifacts ?? []).map(artifact => artifact.type)));
+    const types = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
     return types.length ? types.map(typeLabel) : ["No artifacts"];
 }
 
 function badgeLabels(labels: string[]): IntegrationCatalogueBadge[] {
-    const visible = labels.slice(0, 4).map(label => ({ label, className: "badge" }));
+    const visible = labels.slice(0, 4).map((label) => ({ label, className: "badge" }));
     const remaining = labels.length - visible.length;
-    return remaining > 0
-        ? [...visible, { label: `+${remaining} others`, className: "badge badge-muted" }]
-        : visible;
+    return remaining > 0 ? [...visible, { label: `+${remaining} others`, className: "badge badge-muted" }] : visible;
 }
 
 function typeLabel(type: string): string {
-    if (type === "sourceOverlay") return "Source overlay";
+    if (type === "sourceOverlay") {
+        return "Source overlay";
+    }
     return type[0]!.toUpperCase() + type.slice(1);
 }
 
 function iconHtml(definition: IntegrationDefinition, basePath: string): string {
-    const icon = definition.icon?.path
-        ? imageIconHtml(definition, definition.icon.path, basePath)
-        : fallbackIconSvg();
+    const icon = definition.icon?.path ? imageIconHtml(definition, definition.icon.path, basePath) : fallbackIconSvg();
     return `<span class="integration-icon" aria-hidden="true">${icon}</span>`;
 }
 
 function imageIconHtml(definition: IntegrationDefinition, path: string, basePath: string): string {
     const params = new URLSearchParams({ kind: definition.kind, path });
-    if (definition.version) params.set("version", definition.version);
+    if (definition.version) {
+        params.set("version", definition.version);
+    }
     const src = `${basePath}/api/integrations/asset?${params.toString()}`;
     return `<img src="${escapeAttr(src)}" alt="" decoding="async">`;
 }

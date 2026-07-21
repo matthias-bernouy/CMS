@@ -21,19 +21,25 @@ describe("GET /api/editor/sources source overlays", () => {
     test("lists overlay fields for editor bindings", async () => {
         const gateway = new InMemorySourceRepository();
         const sourceOverlays = new InMemorySourceOverlayRepository();
-        await seedSources(gateway, [{
-            urn: "urn:user-account",
-            endpoints: [{
-                urn: "urn:user-account:getAccount",
-                method: "GET",
-                access: { mode: "auth" },
-                targetUrl: "https://api.example.com/account",
-                output: [{
-                    status: "200",
-                    body: { type: "object", properties: { userId: { type: "string" } } },
-                }],
-            }],
-        }]);
+        await seedSources(gateway, [
+            {
+                urn: "urn:user-account",
+                endpoints: [
+                    {
+                        urn: "urn:user-account:getAccount",
+                        method: "GET",
+                        access: { mode: "auth" },
+                        targetUrl: "https://api.example.com/account",
+                        output: [
+                            {
+                                status: "200",
+                                body: { type: "object", properties: { userId: { type: "string" } } },
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]);
         await sourceOverlays.upsertOverlay({
             id: "user-account-extra-fields",
             sourceId: "user-account",
@@ -45,7 +51,7 @@ describe("GET /api/editor/sources source overlays", () => {
             basePath: "/cms",
             sources: new SourceOverlaySourceRepository(gateway, sourceOverlays),
         } as unknown as ControlCms);
-        const body = await response.json() as EditorSourceDto[];
+        const body = (await response.json()) as EditorSourceDto[];
 
         expect(body[0]?.fields).toContainEqual({
             path: "metadata",

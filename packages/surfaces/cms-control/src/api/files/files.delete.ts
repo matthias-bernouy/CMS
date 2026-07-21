@@ -7,7 +7,9 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
 export default async function deleteFile(req: Request, cms: ControlCms) {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
-    if (!id) throw new MissingParam("id");
+    if (!id) {
+        throw new MissingParam("id");
+    }
     const recursive = url.searchParams.get("recursive") === "true";
     await deleteFileTree(cms.filesMetadata, cms.filesBlob, id, recursive);
     return new Response(null, { status: 204 });

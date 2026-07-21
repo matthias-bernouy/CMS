@@ -1,25 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
-import {
-    orderId,
-    selectionRoute,
-    setupRoute,
-    useRpcResult,
-    userId,
-} from "./fixtures";
+import { capturedFetches, installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { orderId, selectionRoute, setupRoute, useRpcResult, userId } from "./fixtures";
 
 installCommerceTestEnvironment();
 
 describe("commerce delivery context boundaries", () => {
     test("rejects invalid access, methods, identities, and selectors locally", async () => {
-        const routes = [
-            "/system/order/delivery-setup-context",
-            "/system/order/delivery-selection-context",
-        ];
+        const routes = ["/system/order/delivery-setup-context", "/system/order/delivery-selection-context"];
         for (const route of routes) {
             const responses = await Promise.all([
                 requestCommerce(`${route}?orderId=${orderId}`, {
@@ -75,25 +62,21 @@ describe("commerce delivery context boundaries", () => {
 
     test("preserves every safe integer at both RPC boundaries", async () => {
         useRpcResult({ state: "not_found" });
-        const routes = [
-            "/system/order/delivery-setup-context",
-            "/system/order/delivery-selection-context",
-        ];
+        const routes = ["/system/order/delivery-setup-context", "/system/order/delivery-selection-context"];
         for (const route of routes) {
             for (const id of [0, -1, Number.MAX_SAFE_INTEGER]) {
-                const response = await requestCommerce(
-                    `${route}?orderId=${id}`,
-                    { userId: `  ${userId}  ` },
-                );
+                const response = await requestCommerce(`${route}?orderId=${id}`, { userId: `  ${userId}  ` });
                 expect(response.status).toBe(404);
             }
         }
 
-        expect(capturedFetches().map(call => call.body)).toEqual(
-            routes.flatMap(() => [0, -1, Number.MAX_SAFE_INTEGER].map(id => ({
-                p_order_id: id,
-                p_buyer_cms_user_id: userId,
-            }))),
+        expect(capturedFetches().map((call) => call.body)).toEqual(
+            routes.flatMap(() =>
+                [0, -1, Number.MAX_SAFE_INTEGER].map((id) => ({
+                    p_order_id: id,
+                    p_buyer_cms_user_id: userId,
+                })),
+            ),
         );
     });
 
@@ -101,8 +84,7 @@ describe("commerce delivery context boundaries", () => {
         const cases = [
             [setupRoute, "identity_required", 401, "missing CMS user id"],
             [setupRoute, "not_found", 404, "order not found"],
-            [setupRoute, "seller_unavailable", 409,
-                "protected delivery requires a C2C user seller"],
+            [setupRoute, "seller_unavailable", 409, "protected delivery requires a C2C user seller"],
             [selectionRoute, "identity_required", 401, "missing CMS user id"],
             [selectionRoute, "not_found", 404, "order not found"],
         ] as const;
@@ -114,10 +96,7 @@ describe("commerce delivery context boundaries", () => {
 
             const response = await requestCommerce(route, { userId });
 
-            expect(await responseBody(response)).toEqual([
-                status,
-                { error },
-            ]);
+            expect(await responseBody(response)).toEqual([status, { error }]);
         }
     });
 
@@ -126,10 +105,7 @@ describe("commerce delivery context boundaries", () => {
 
         const response = await requestCommerce(setupRoute, { userId });
 
-        expect(await responseBody(response)).toEqual([
-            502,
-            { error: "delivery context unavailable" },
-        ]);
+        expect(await responseBody(response)).toEqual([502, { error: "delivery context unavailable" }]);
         expect(capturedFetches()).toHaveLength(1);
     });
 });
@@ -137,8 +113,6 @@ describe("commerce delivery context boundaries", () => {
 async function responseBody(response: Response): Promise<[number, unknown]> {
     return [
         response.status,
-        response.headers.get("content-type")?.includes("json")
-            ? await response.json()
-            : await response.text(),
+        response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text(),
     ];
 }

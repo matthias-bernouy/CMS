@@ -35,17 +35,20 @@ function scopeExecutorDeps(
     const scoped: ExecutorDeps = { ...deps };
     const originalResolveContext = deps?.resolveContext;
     const contextCache = new Map<string, Promise<SourceComputedContext>>();
-    scoped.resolveContext = request => memoizePromise(contextCache, "context", async () => ({
-        ...(originalResolveContext ? await originalResolveContext(request) : {}),
-        ...(user?.id ? { userID: user.id } : {}),
-        ...(user?.role ? { userRole: user.role } : {}),
-    }));
+    scoped.resolveContext = (request) =>
+        memoizePromise(contextCache, "context", async () => ({
+            ...(originalResolveContext ? await originalResolveContext(request) : {}),
+            ...(user?.id ? { userID: user.id } : {}),
+            ...(user?.role ? { userRole: user.role } : {}),
+        }));
 
     if (deps?.resolveSecret) {
         const secretCache = new Map<string, Promise<string | undefined>>();
-        scoped.resolveSecret = ref => memoizePromise(secretCache, ref, () => deps.resolveSecret!(ref));
+        scoped.resolveSecret = (ref) => memoizePromise(secretCache, ref, () => deps.resolveSecret!(ref));
     }
-    if (identities) scoped.identities = identities;
+    if (identities) {
+        scoped.identities = identities;
+    }
     return scoped;
 }
 
@@ -72,15 +75,25 @@ class ExecutionSourceRepository implements SourceRepository {
 
     constructor(private readonly inner: SourceRepository) {
         if (inner.getEndpointForAuthorization) {
-            this.getEndpointForAuthorization = urn => inner.getEndpointForAuthorization!(urn);
+            this.getEndpointForAuthorization = (urn) => inner.getEndpointForAuthorization!(urn);
         }
     }
 
-    createSource(source: Source): Promise<Source> { return this.inner.createSource(source); }
-    updateSource(source: Source): Promise<Source | null> { return this.inner.updateSource(source); }
-    deleteSource(urn: string): Promise<boolean> { return this.inner.deleteSource(urn); }
-    getSource(urn: string): Promise<Source | null> { return this.inner.getSource(urn); }
-    getAllSources(): Promise<Source[]> { return this.inner.getAllSources(); }
+    createSource(source: Source): Promise<Source> {
+        return this.inner.createSource(source);
+    }
+    updateSource(source: Source): Promise<Source | null> {
+        return this.inner.updateSource(source);
+    }
+    deleteSource(urn: string): Promise<boolean> {
+        return this.inner.deleteSource(urn);
+    }
+    getSource(urn: string): Promise<Source | null> {
+        return this.inner.getSource(urn);
+    }
+    getAllSources(): Promise<Source[]> {
+        return this.inner.getAllSources();
+    }
 
     getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         return memoizePromise(this.endpoints, urn, () => this.inner.getEndpoint(urn));
@@ -98,9 +111,9 @@ class ExecutionIdentityResolver implements IdentityResolver {
     constructor(private readonly inner: IdentityResolver) {}
 
     resolve(alias: IdentityAlias, targetAuthority: string): Promise<IdentityValue | null> {
-        return memoizePromise(this.resolutions, identityKey(alias, targetAuthority), () => (
-            this.inner.resolve(alias, targetAuthority)
-        ));
+        return memoizePromise(this.resolutions, identityKey(alias, targetAuthority), () =>
+            this.inner.resolve(alias, targetAuthority),
+        );
     }
 
     clearResolutions(): void {
@@ -124,11 +137,5 @@ class ExecutionIdentityService extends ExecutionIdentityResolver implements Iden
 }
 
 function identityKey(alias: IdentityAlias, targetAuthority: string): string {
-    return JSON.stringify([
-        alias.authority,
-        alias.kind,
-        typeof alias.value,
-        alias.value,
-        targetAuthority,
-    ]);
+    return JSON.stringify([alias.authority, alias.kind, typeof alias.value, alias.value, targetAuthority]);
 }

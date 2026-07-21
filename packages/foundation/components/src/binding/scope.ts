@@ -26,9 +26,9 @@
 
 export type Scope = {
     /** Implicit current value — bare `{{ title }}` reads `value.title`. */
-    value?:  unknown;
+    value?: unknown;
     /** Named bindings — `{{ line.x }}` reads `vars.line.x`. */
-    vars?:   Record<string, unknown>;
+    vars?: Record<string, unknown>;
     /** Enclosing frame; lookup walks up when the head segment misses here. */
     parent?: Scope;
 };
@@ -44,12 +44,16 @@ const NOT_FOUND: Lookup = { found: false, value: undefined };
 export function lookup(scope: Scope, path: string): Lookup {
     // `.` is the current context itself — the implicit value of this frame.
     // Used by `cms-repeat="."` (iterate the payload directly) and `{{ . }}`.
-    if (path === ".") return { found: true, value: scope.value };
-    if (path === "value") return { found: true, value: implicitValue(scope) };
+    if (path === ".") {
+        return { found: true, value: scope.value };
+    }
+    if (path === "value") {
+        return { found: true, value: implicitValue(scope) };
+    }
 
-    const dot  = path.indexOf(".");
+    const dot = path.indexOf(".");
     const head = dot === -1 ? path : path.slice(0, dot);
-    const rest = dot === -1 ? ""   : path.slice(dot + 1);
+    const rest = dot === -1 ? "" : path.slice(dot + 1);
 
     for (let frame: Scope | undefined = scope; frame; frame = frame.parent) {
         if (frame.vars && head in frame.vars) {
@@ -71,7 +75,9 @@ export function lookup(scope: Scope, path: string): Lookup {
  */
 function implicitValue(scope: Scope): unknown {
     const v = scope.value;
-    if (isObject(v) && "value" in v) return (v as Record<string, unknown>).value;
+    if (isObject(v) && "value" in v) {
+        return (v as Record<string, unknown>).value;
+    }
     return v;
 }
 
@@ -81,10 +87,14 @@ function implicitValue(scope: Scope): unknown {
  * Array indices and `length` resolve naturally (`items.0.name`, `items.length`).
  */
 function descend(value: unknown, rest: string): unknown {
-    if (rest === "") return value;
+    if (rest === "") {
+        return value;
+    }
     let cur = value;
     for (const key of rest.split(".")) {
-        if (cur == null) return undefined;
+        if (cur == null) {
+            return undefined;
+        }
         cur = (cur as Record<string, unknown>)[key];
     }
     return cur;

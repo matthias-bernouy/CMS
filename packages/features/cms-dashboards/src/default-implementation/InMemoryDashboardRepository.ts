@@ -19,7 +19,9 @@ export class InMemoryDashboardRepository implements DashboardRepository {
     }
 
     async updateDashboard(dashboard: Dashboard): Promise<Dashboard | null> {
-        if (!this.dashboards.has(dashboard.id)) return null;
+        if (!this.dashboards.has(dashboard.id)) {
+            return null;
+        }
         this.dashboards.set(dashboard.id, structuredClone(dashboard));
         return structuredClone(dashboard);
     }
@@ -35,11 +37,11 @@ export class InMemoryDashboardRepository implements DashboardRepository {
 
     async getDashboardsForSource(sourceId: string): Promise<Dashboard[]> {
         return Array.from(this.dashboards.values())
-            .filter(dashboard => dashboard.source === sourceId)
-            .map(dashboard => structuredClone(dashboard));
+            .filter((dashboard) => dashboard.source === sourceId)
+            .map((dashboard) => structuredClone(dashboard));
     }
 
     async getAllDashboards(): Promise<Dashboard[]> {
-        return Array.from(this.dashboards.values(), dashboard => structuredClone(dashboard));
+        return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
     }
 }

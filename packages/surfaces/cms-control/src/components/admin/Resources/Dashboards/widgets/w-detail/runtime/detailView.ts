@@ -14,9 +14,15 @@ export class DetailView {
     }
 
     refresh(previous: WDetailData, next: WDetailData): void {
-        if (previous.title !== next.title) setText(this.root, "[data-title]", next.title);
-        if (!sameActions(previous.actions, next.actions)) this.renderActions(next.actions);
-        if (!sameSectionFields(previous.main, next.main)) this.renderSections(this.query("[data-main]"), next.main);
+        if (previous.title !== next.title) {
+            setText(this.root, "[data-title]", next.title);
+        }
+        if (!sameActions(previous.actions, next.actions)) {
+            this.renderActions(next.actions);
+        }
+        if (!sameSectionFields(previous.main, next.main)) {
+            this.renderSections(this.query("[data-main]"), next.main);
+        }
         if (!sameSectionFields(previous.aside, next.aside)) {
             this.renderSections(this.query("[data-aside]"), next.aside, "compact");
         }
@@ -27,17 +33,22 @@ export class DetailView {
     }
 
     private renderSections(root: HTMLElement, sections: WDetailSection[], density?: string): void {
-        root.replaceChildren(...sections.map(section => this.renderSection(section, density)));
+        root.replaceChildren(...sections.map((section) => this.renderSection(section, density)));
         root.hidden = sections.length === 0;
     }
 
     private renderSection(section: WDetailSection, density?: string): HTMLElement {
         const node = this.template("section");
         node.setAttribute("heading", section.title);
-        if (section.description) node.setAttribute("description", section.description);
-        if (density) node.setAttribute("density", density);
-        node.querySelector<HTMLElement>("[data-fields]")!
-            .replaceChildren(...section.fields.map(field => this.renderField(field)));
+        if (section.description) {
+            node.setAttribute("description", section.description);
+        }
+        if (density) {
+            node.setAttribute("density", density);
+        }
+        node.querySelector<HTMLElement>("[data-fields]")!.replaceChildren(
+            ...section.fields.map((field) => this.renderField(field)),
+        );
         return node;
     }
 
@@ -64,10 +75,12 @@ export function applyLookupOption(
     value: unknown,
     option: { value: string; label: string },
 ): void {
-    const existing = Array.from(control.querySelectorAll<HTMLOptionElement>("option"))
-        .find(item => item.value === option.value);
-    if (existing) existing.textContent = option.label;
-    else {
+    const existing = Array.from(control.querySelectorAll<HTMLOptionElement>("option")).find(
+        (item) => item.value === option.value,
+    );
+    if (existing) {
+        existing.textContent = option.label;
+    } else {
         const element = document.createElement("option");
         element.value = option.value;
         element.textContent = option.label;
@@ -85,18 +98,28 @@ function sameActions(current: WDetailData["actions"], next: WDetailData["actions
 }
 
 function sameSectionFields(current: WDetailSection[], next: WDetailSection[]): boolean {
-    if (current.length !== next.length) return false;
+    if (current.length !== next.length) {
+        return false;
+    }
     return current.every((section, sectionIndex) => {
         const nextSection = next[sectionIndex];
-        return nextSection !== undefined
-            && section.fields.length === nextSection.fields.length
-            && section.fields.every((field, fieldIndex) => sameFieldShape(field, nextSection.fields[fieldIndex]));
+        return (
+            nextSection !== undefined &&
+            section.fields.length === nextSection.fields.length &&
+            section.fields.every((field, fieldIndex) => sameFieldShape(field, nextSection.fields[fieldIndex]))
+        );
     });
 }
 
 function sameFieldShape(current: WDetailField, next: WDetailField | undefined): boolean {
-    if (!next || current.id !== next.id || current.input !== next.input) return false;
-    if (current.input !== "schema" && next.input !== "schema") return true;
-    return current.schemaStatus === next.schemaStatus
-        && JSON.stringify(current.schemaDefinitions) === JSON.stringify(next.schemaDefinitions);
+    if (!next || current.id !== next.id || current.input !== next.input) {
+        return false;
+    }
+    if (current.input !== "schema" && next.input !== "schema") {
+        return true;
+    }
+    return (
+        current.schemaStatus === next.schemaStatus &&
+        JSON.stringify(current.schemaDefinitions) === JSON.stringify(next.schemaDefinitions)
+    );
 }

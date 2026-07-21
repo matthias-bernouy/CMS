@@ -17,13 +17,25 @@ describe("image optimization — full pipeline", () => {
         const sourceBlob = new InMemoryCmsFilesBlob();
         const variantStore = new InMemoryCmsFilesBlob();
 
-        const png = new Uint8Array(await sharp({ create: { width: 1000, height: 600, channels: 3, background: { r: 30, g: 90, b: 160 } } }).png().toBuffer());
+        const png = new Uint8Array(
+            await sharp({ create: { width: 1000, height: 600, channels: 3, background: { r: 30, g: 90, b: 160 } } })
+                .png()
+                .toBuffer(),
+        );
         const hash = sha256Hex(png);
-        const file = await files.createFile({ name: "hero.png", parentId: null, size: png.byteLength, mimeType: "image/png", contentHash: hash });
+        const file = await files.createFile({
+            name: "hero.png",
+            parentId: null,
+            size: png.byteLength,
+            mimeType: "image/png",
+            contentHash: hash,
+        });
         await sourceBlob.put(file.id, png);
 
         const renderImg = async () => {
-            const { document } = parseHTML(`<!DOCTYPE html><html><body><img src="/.cms/files/by-id/${file.id}"></body></html>`);
+            const { document } = parseHTML(
+                `<!DOCTYPE html><html><body><img src="/.cms/files/by-id/${file.id}"></body></html>`,
+            );
             const unoptimized = await injectMediaVersions(document as unknown as Document, { files, variantStore });
             const img = document.querySelector("img")!;
             return { srcset: img.getAttribute("srcset"), src: img.getAttribute("src"), unoptimized };
@@ -36,14 +48,18 @@ describe("image optimization — full pipeline", () => {
         expect(cold.unoptimized).toEqual([file.id]);
 
         // 2) the background worker generates the ladder (real sharp)
-        await optimizePageImages({ metadata: files, sourceBlob, variantStore }, cold.unoptimized, [320, 640, 960, 1280]);
+        await optimizePageImages(
+            { metadata: files, sourceBlob, variantStore },
+            cold.unoptimized,
+            [320, 640, 960, 1280],
+        );
 
         // 3) warm render: now a responsive srcset, capped at the 1000px source
         const warm = await renderImg();
         expect(warm.unoptimized).toEqual([]);
         expect(warm.srcset).toContain(`/.cms/img/${file.id}/320.webp?v=${hash} 320w`);
         expect(warm.srcset).toContain(`/.cms/img/${file.id}/960.webp?v=${hash} 960w`);
-        expect(warm.srcset).toContain("1000w");        // 1280 rung collapsed onto the source width
+        expect(warm.srcset).toContain("1000w"); // 1280 rung collapsed onto the source width
         expect(warm.srcset).not.toContain("1280w");
 
         // 4) serve one srcset candidate → a real WebP, smaller than the source

@@ -1,36 +1,23 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    expectRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { capturedFetches, expectRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useEvidenceResponder } from "./fixtures";
-import {
-    activeClaimRow,
-    attachedEvidence,
-    evidenceContents,
-    evidenceForm,
-} from "./raw";
+import { activeClaimRow, attachedEvidence, evidenceContents, evidenceForm } from "./raw";
 
 installCommerceTestEnvironment();
 
 describe("commerce claim evidence upload contracts", () => {
     test("preserves the exact private buyer upload response and Storage request", async () => {
         useEvidenceResponder();
-        const response = await requestCommerce(
-            `/me/order/claim/evidence?claimId=${activeClaimRow.id}`,
-            {
-                userId: "buyer-evidence-17",
-                formData: evidenceForm({
-                    description: "  Opening proof  ",
-                    filename: "folder/proof.pdf",
-                }),
-            },
-        );
+        const response = await requestCommerce(`/me/order/claim/evidence?claimId=${activeClaimRow.id}`, {
+            userId: "buyer-evidence-17",
+            formData: evidenceForm({
+                description: "  Opening proof  ",
+                filename: "folder/proof.pdf",
+            }),
+        });
         const body = await response.json();
         const calls = capturedFetches();
-        const storage = calls.find(call => call.url.includes("/storage/v1/object/"))!;
+        const storage = calls.find((call) => call.url.includes("/storage/v1/object/"))!;
         const attach = expectRpc("attach_marketplace_claim_evidence");
         const storagePath = objectPath(storage.url);
 
@@ -54,9 +41,7 @@ describe("commerce claim evidence upload contracts", () => {
         expect(storage.headers.get("cache-control")).toBe("31536000");
         expect(storage.headers.get("content-type")).toBe("application/pdf");
         expect(storage.headers.get("x-upsert")).toBe("false");
-        expect(storagePath).toMatch(new RegExp(
-            `^claims/${activeClaimRow.public_id}/buyer/[0-9a-f-]+\\.pdf$`,
-        ));
+        expect(storagePath).toMatch(new RegExp(`^claims/${activeClaimRow.public_id}/buyer/[0-9a-f-]+\\.pdf$`));
         expect(attach.body).toEqual({
             p_claim_id: activeClaimRow.id,
             p_submitted_by_kind: "buyer",
@@ -74,13 +59,10 @@ describe("commerce claim evidence upload contracts", () => {
 
     test("keeps the seller actor and nullable description through persistence", async () => {
         useEvidenceResponder();
-        const response = await requestCommerce(
-            `/me/sale/claim/evidence?claimId=${activeClaimRow.id}`,
-            {
-                userId: "seller-evidence-4",
-                formData: evidenceForm({ description: null }),
-            },
-        );
+        const response = await requestCommerce(`/me/sale/claim/evidence?claimId=${activeClaimRow.id}`, {
+            userId: "seller-evidence-4",
+            formData: evidenceForm({ description: null }),
+        });
         const body = await response.json();
         const attach = expectRpc("attach_marketplace_claim_evidence");
 
@@ -112,23 +94,22 @@ describe("commerce claim evidence upload contracts", () => {
                 message: "claim changed during evidence upload",
             },
         });
-        const response = await requestCommerce(
-            `/me/order/claim/evidence?claimId=${activeClaimRow.id}`,
-            {
-                userId: "buyer-evidence-17",
-                formData: evidenceForm(),
-            },
-        );
+        const response = await requestCommerce(`/me/order/claim/evidence?claimId=${activeClaimRow.id}`, {
+            userId: "buyer-evidence-17",
+            formData: evidenceForm(),
+        });
         const calls = capturedFetches();
-        const storage = calls.filter(call => call.url.includes("/storage/v1/object/"));
+        const storage = calls.filter((call) => call.url.includes("/storage/v1/object/"));
 
         expect({ status: response.status, body: await response.json() }).toEqual({
             status: 502,
             body: { error: "claim changed during evidence upload" },
         });
         expect(calls.map(callKind)).toEqual([
-            "get_claim_evidence_upload_context", "storage:POST",
-            "attach_marketplace_claim_evidence", "storage:DELETE",
+            "get_claim_evidence_upload_context",
+            "storage:POST",
+            "attach_marketplace_claim_evidence",
+            "storage:DELETE",
         ]);
         expect(storage).toHaveLength(2);
         expect(storage[1]!.url).toBe(storage[0]!.url);
@@ -137,10 +118,7 @@ describe("commerce claim evidence upload contracts", () => {
 
 function objectPath(url: string): string {
     const marker = "/storage/v1/object/commerce-claim-evidence/";
-    return new URL(url).pathname.slice(marker.length)
-        .split("/")
-        .map(decodeURIComponent)
-        .join("/");
+    return new URL(url).pathname.slice(marker.length).split("/").map(decodeURIComponent).join("/");
 }
 
 function callKind(call: { url: string; method: string }): string {

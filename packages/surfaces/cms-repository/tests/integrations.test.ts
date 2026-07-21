@@ -12,13 +12,15 @@ describe("@bernouy/cms-repository integration routes", () => {
         });
 
         const list = await json(await runner.handle("/api/integrations"));
-        expect(list).toEqual([{
-            kind: "demo",
-            label: "Demo",
-            stable: "1.0.0",
-            latest: "1.0.0",
-            versions: ["1.0.0"],
-        }]);
+        expect(list).toEqual([
+            {
+                kind: "demo",
+                label: "Demo",
+                stable: "1.0.0",
+                latest: "1.0.0",
+                versions: ["1.0.0"],
+            },
+        ]);
 
         const definition = await json(await runner.handle("/api/integrations/definition?kind=demo"));
         expect(definition.kind).toBe("demo");
@@ -64,38 +66,53 @@ class TestRunner implements Partial<Runner> {
     async handle(path: string): Promise<Response> {
         const pathname = new URL(path, "http://localhost").pathname;
         const handler = this.routes.get(`GET ${pathname}`);
-        if (!handler) throw new Error(`missing handler for ${pathname}`);
+        if (!handler) {
+            throw new Error(`missing handler for ${pathname}`);
+        }
         return handler(new Request(`http://localhost${path}`)) as Promise<Response>;
     }
 }
 
 function testCatalog(): IntegrationDefinitionRepository {
     return {
-        list: async () => [{
-            kind: "demo",
-            label: "Demo",
-            stable: "1.0.0",
-            latest: "1.0.0",
-            versions: ["1.0.0"],
-        }],
-        getIndex: async kind => kind === "demo" ? {
-            kind: "demo",
-            label: "Demo",
-            stable: "1.0.0",
-            latest: "1.0.0",
-            versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
-        } : null,
-        listVersions: async () => [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
-        get: async kind => kind === "demo" ? {
-            kind: "demo",
-            label: "Demo",
-            version: "1.0.0",
-            icon: { path: "assets/icon.svg" },
-            inputs: [],
-        } : null,
-        getAsset: async (kind, version, path) => kind === "demo" && version === "1.0.0" && path === "assets/icon.svg"
-            ? { bytes: new TextEncoder().encode("<svg></svg>"), contentType: "image/svg+xml; charset=utf-8" }
-            : null,
+        list: async () => [
+            {
+                kind: "demo",
+                label: "Demo",
+                stable: "1.0.0",
+                latest: "1.0.0",
+                versions: ["1.0.0"],
+            },
+        ],
+        getIndex: async (kind) =>
+            kind === "demo"
+                ? {
+                      kind: "demo",
+                      label: "Demo",
+                      stable: "1.0.0",
+                      latest: "1.0.0",
+                      versions: [
+                          { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+                      ],
+                  }
+                : null,
+        listVersions: async () => [
+            { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+        ],
+        get: async (kind) =>
+            kind === "demo"
+                ? {
+                      kind: "demo",
+                      label: "Demo",
+                      version: "1.0.0",
+                      icon: { path: "assets/icon.svg" },
+                      inputs: [],
+                  }
+                : null,
+        getAsset: async (kind, version, path) =>
+            kind === "demo" && version === "1.0.0" && path === "assets/icon.svg"
+                ? { bytes: new TextEncoder().encode("<svg></svg>"), contentType: "image/svg+xml; charset=utf-8" }
+                : null,
     };
 }
 

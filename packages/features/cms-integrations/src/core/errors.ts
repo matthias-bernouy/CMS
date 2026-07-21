@@ -15,7 +15,10 @@ export class MissingIntegrationParam extends Error {
 }
 
 export class IntegrationRuntimeError extends Error {
-    constructor(message: string, readonly status = 500) {
+    constructor(
+        message: string,
+        readonly status = 500,
+    ) {
         super(message);
         this.name = "IntegrationRuntimeError";
     }

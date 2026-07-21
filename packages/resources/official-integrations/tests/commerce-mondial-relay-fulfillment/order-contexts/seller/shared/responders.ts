@@ -1,11 +1,5 @@
 import { shipment } from "../../shared/fixtures";
-import {
-    fulfillment,
-    handoff,
-    labelAuthorization,
-    labelCapability,
-    sellerSale,
-} from "./fixtures";
+import { fulfillment, handoff, labelAuthorization, labelCapability, sellerSale } from "./fixtures";
 
 type Reply = unknown | Response;
 
@@ -18,10 +12,8 @@ export type SellerReplies = {
     fulfillment?: Reply;
 };
 
-export function sellerResponder(
-    replies: SellerReplies = {},
-): (request: Request) => Response {
-    return request => {
+export function sellerResponder(replies: SellerReplies = {}): (request: Request) => Response {
+    return (request) => {
         const pathname = new URL(request.url).pathname;
         if (pathname === "/sellerContext") {
             return response(replies.sale ?? sellerSale);
@@ -31,9 +23,8 @@ export function sellerResponder(
         }
         if (pathname === "/labelSellerContext") {
             return response(
-                replies.authorization
-                    ?? replies.sale
-                    ?? {
+                replies.authorization ??
+                    replies.sale ?? {
                         publicId: sellerSale.publicId,
                         allowed: labelAuthorization.allowed,
                         sellerCmsUserId: labelAuthorization.sellerCmsUserId,
@@ -54,6 +45,8 @@ export function sellerResponder(
 }
 
 function response(value: Reply, status = 200): Response {
-    if (value instanceof Response) return value;
+    if (value instanceof Response) {
+        return value;
+    }
     return Response.json(value, { status });
 }

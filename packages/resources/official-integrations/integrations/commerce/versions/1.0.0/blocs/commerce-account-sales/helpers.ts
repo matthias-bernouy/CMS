@@ -15,7 +15,9 @@ export function positiveInteger(value, fallback) {
 
 export function formatMoney(amount, currency, locale = "fr-FR") {
     const value = Number(amount);
-    if (!Number.isSafeInteger(value)) return "—";
+    if (!Number.isSafeInteger(value)) {
+        return "—";
+    }
     try {
         return new Intl.NumberFormat(locale, {
             style: "currency",
@@ -28,7 +30,9 @@ export function formatMoney(amount, currency, locale = "fr-FR") {
 
 export function formatDate(value, locale = "fr-FR") {
     const date = new Date(String(value || ""));
-    if (Number.isNaN(date.getTime())) return "Date indisponible";
+    if (Number.isNaN(date.getTime())) {
+        return "Date indisponible";
+    }
     return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(date);
 }
 
@@ -45,7 +49,9 @@ export function saleDetailUrl(base, sale, parameter = "orderId") {
         );
     }
     const url = new URL(base, "https://cms.invalid");
-    if (values.id) url.searchParams.set(parameter, values.id);
+    if (values.id) {
+        url.searchParams.set(parameter, values.id);
+    }
     return `${url.pathname}${url.search}${url.hash}`;
 }
 

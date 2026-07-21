@@ -15,7 +15,7 @@
 export type BlocGroups = {
     /** group id → its bloc tags (sorted, deterministic). The id IS the sorted
      *  tags joined by "-", so it is stable as long as the membership is. */
-    groups:     Map<string, string[]>;
+    groups: Map<string, string[]>;
     /** bloc tag → the id of the group it belongs to. */
     tagToGroup: Map<string, string>;
 };
@@ -30,7 +30,10 @@ export function groupBlocsBySignature(pageBlocSets: string[][]): BlocGroups {
     pageBlocSets.forEach((tags, pageIdx) => {
         for (const tag of new Set(tags)) {
             let sig = signatureOf.get(tag);
-            if (!sig) { sig = new Set<number>(); signatureOf.set(tag, sig); }
+            if (!sig) {
+                sig = new Set<number>();
+                signatureOf.set(tag, sig);
+            }
             sig.add(pageIdx);
         }
     });
@@ -40,18 +43,23 @@ export function groupBlocsBySignature(pageBlocSets: string[][]): BlocGroups {
     for (const [tag, sig] of signatureOf) {
         const sigKey = [...sig].sort((a, b) => a - b).join(",");
         const bucket = buckets.get(sigKey);
-        if (bucket) bucket.push(tag);
-        else buckets.set(sigKey, [tag]);
+        if (bucket) {
+            bucket.push(tag);
+        } else {
+            buckets.set(sigKey, [tag]);
+        }
     }
 
     // 3. each bucket → a group keyed on its sorted tags (deterministic).
-    const groups     = new Map<string, string[]>();
+    const groups = new Map<string, string[]>();
     const tagToGroup = new Map<string, string>();
     for (const tags of buckets.values()) {
-        const sorted  = tags.sort();
+        const sorted = tags.sort();
         const groupId = sorted.join("-");
         groups.set(groupId, sorted);
-        for (const tag of sorted) tagToGroup.set(tag, groupId);
+        for (const tag of sorted) {
+            tagToGroup.set(tag, groupId);
+        }
     }
 
     return { groups, tagToGroup };

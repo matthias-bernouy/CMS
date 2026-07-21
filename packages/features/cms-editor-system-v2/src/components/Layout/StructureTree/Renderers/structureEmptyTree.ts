@@ -14,7 +14,9 @@ export function renderEmptyStructureTree(context: EmptyStructureTreeContext): HT
     button.textContent = context.defaultTemplates.length > 0 ? "Use default template" : "Add block";
     button.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (context.useDefaultTemplate(context.defaultTemplates)) return;
+        if (context.useDefaultTemplate(context.defaultTemplates)) {
+            return;
+        }
         context.openRootPicker();
     });
     empty.append("No editable elements", button);

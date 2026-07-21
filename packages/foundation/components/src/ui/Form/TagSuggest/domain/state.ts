@@ -1,7 +1,7 @@
-import { announce } from '../compute';
-import { renderTags, renderSuggestions, hideSuggestions } from './render';
-import { filterSuggestions } from './selection';
-import type { Suggestion } from '../types';
+import { announce } from "../compute";
+import { renderTags, renderSuggestions, hideSuggestions } from "./render";
+import { filterSuggestions } from "./selection";
+import type { Suggestion } from "../types";
 
 export interface TagState {
     _tags: string[];
@@ -22,13 +22,18 @@ const view = (host: HTMLElement) => host as unknown as HTMLElement & TagState;
 
 export const select = (host: HTMLElement, raw: string) => {
     const h = view(host);
-    const mode = host.getAttribute('mode') || 'multiple';
+    const mode = host.getAttribute("mode") || "multiple";
     const trimmed = raw.trim();
-    if (!trimmed || !h._input) return;
+    if (!trimmed || !h._input) {
+        return;
+    }
 
-    if (mode === 'multiple') {
-        if (!h._tags.includes(trimmed)) { h._tags.push(trimmed); announce(h._liveRegion, `${trimmed} added`); }
-        h._input.value = '';
+    if (mode === "multiple") {
+        if (!h._tags.includes(trimmed)) {
+            h._tags.push(trimmed);
+            announce(h._liveRegion, `${trimmed} added`);
+        }
+        h._input.value = "";
     } else {
         h._tags = [trimmed];
         h._input.value = trimmed;
@@ -50,17 +55,24 @@ export const liveSelectSingle = (host: HTMLElement, raw: string) => {
     const trimmed = raw.trim();
     h._tags = trimmed ? [trimmed] : [];
     h._internals.setFormValue(h.value);
-    if (h._silent) return;
-    host.dispatchEvent(new CustomEvent('change', {
-        bubbles: true, composed: true,
-        detail: { value: h.value, tags: [...h._tags] },
-    }));
+    if (h._silent) {
+        return;
+    }
+    host.dispatchEvent(
+        new CustomEvent("change", {
+            bubbles: true,
+            composed: true,
+            detail: { value: h.value, tags: [...h._tags] },
+        }),
+    );
 };
 
 export const removeTagAt = (host: HTMLElement, index: number) => {
     const h = view(host);
     const removed = h._tags[index];
-    if (removed === undefined) return;
+    if (removed === undefined) {
+        return;
+    }
     h._tags.splice(index, 1);
     announce(h._liveRegion, `${removed} removed`);
     update(host);
@@ -69,7 +81,9 @@ export const removeTagAt = (host: HTMLElement, index: number) => {
 
 export const removeLastTag = (host: HTMLElement) => {
     const h = view(host);
-    if (h._tags.length === 0) return;
+    if (h._tags.length === 0) {
+        return;
+    }
     removeTagAt(host, h._tags.length - 1);
 };
 
@@ -77,22 +91,27 @@ export const update = (host: HTMLElement) => {
     const h = view(host);
     renderTagList(host);
     h._internals.setFormValue(h.value);
-    if (h._silent) return;
-    host.dispatchEvent(new CustomEvent('change', {
-        bubbles: true, composed: true,
-        detail: { value: h.value, tags: [...h._tags] },
-    }));
+    if (h._silent) {
+        return;
+    }
+    host.dispatchEvent(
+        new CustomEvent("change", {
+            bubbles: true,
+            composed: true,
+            detail: { value: h.value, tags: [...h._tags] },
+        }),
+    );
 };
 
 export const renderTagList = (host: HTMLElement) => {
     const h = view(host);
-    renderTags(h._display, host.getAttribute('mode') || 'multiple', h._tags, (i) => removeTagAt(host, i));
+    renderTags(h._display, host.getAttribute("mode") || "multiple", h._tags, (i) => removeTagAt(host, i));
 };
 
 export const refreshSuggestions = (host: HTMLElement, query: string) => {
     const h = view(host);
-    const mode = host.getAttribute('mode') || 'multiple';
-    const current = mode === 'multiple' ? h._tags : [];
+    const mode = host.getAttribute("mode") || "multiple";
+    const current = mode === "multiple" ? h._tags : [];
     h._suggestions = filterSuggestions(h._allSuggestions, current, query);
     h._activeIndex = -1;
     renderList(host);

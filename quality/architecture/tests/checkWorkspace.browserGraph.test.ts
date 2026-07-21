@@ -13,7 +13,9 @@ describe("browser import graph", () => {
             "packages/features/shared/src/index.ts": "export const shared = true;\n",
             "packages/features/shared/src/safe.ts": "export { unsafe } from './unsafe';\n",
             "packages/features/shared/src/unsafe.ts": [
-                "import { readFile } from 'node:fs';", "export const unsafe = readFile;", "",
+                "import { readFile } from 'node:fs';",
+                "export const unsafe = readFile;",
+                "",
             ].join("\n"),
             "packages/features/ui/package.json": manifest("@fixture/ui", {
                 dependencies: { "@fixture/shared": "workspace:*" },
@@ -34,7 +36,9 @@ describe("browser import graph", () => {
             }),
             "packages/features/shared/src/index.ts": "export const shared = true;\n",
             "packages/features/shared/src/contracts.ts": [
-                "import { readFile } from 'node:fs';", "export type Contract = typeof readFile;", "",
+                "import { readFile } from 'node:fs';",
+                "export type Contract = typeof readFile;",
+                "",
             ].join("\n"),
             "packages/features/ui/package.json": manifest("@fixture/ui", {
                 dependencies: { "@fixture/shared": "workspace:*" },
@@ -43,7 +47,8 @@ describe("browser import graph", () => {
             "packages/features/ui/src/index.ts": "export const ui = true;\n",
             "packages/features/ui/src/components.ts": [
                 "type Contract = import('@fixture/shared/contracts').Contract;",
-                "export const component: Contract | undefined = undefined;", "",
+                "export const component: Contract | undefined = undefined;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
@@ -58,7 +63,9 @@ describe("browser import graph", () => {
             "packages/features/ui/src/index.ts": "export const ui = true;\n",
             "packages/features/ui/src/browser.ts": "export { unsafe } from './unsafe.js';\n",
             "packages/features/ui/src/unsafe.ts": [
-                "import { readFile } from 'fs/promises';", "export const unsafe = readFile;", "",
+                "import { readFile } from 'fs/promises';",
+                "export const unsafe = readFile;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });

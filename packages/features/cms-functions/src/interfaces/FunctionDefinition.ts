@@ -2,13 +2,7 @@ import type { DataShape, EndpointResponse, HTTPMethod, SourceEndpointAccess, Sou
 
 export type FunctionExpression = string;
 
-export type FunctionValue =
-    | null
-    | string
-    | number
-    | boolean
-    | FunctionValue[]
-    | { [key: string]: FunctionValue };
+export type FunctionValue = null | string | number | boolean | FunctionValue[] | { [key: string]: FunctionValue };
 
 export type FunctionEndpointInput = {
     params?: Record<string, DataShape>;
@@ -55,16 +49,16 @@ export type FunctionForEach = {
 
 export type FunctionStep =
     | {
-        id: string;
-        call: FunctionCall;
-    }
+          id: string;
+          call: FunctionCall;
+      }
     | {
-        id: string;
-        forEach: FunctionForEach;
-    }
+          id: string;
+          forEach: FunctionForEach;
+      }
     | {
-        assert: FunctionAssert;
-    };
+          assert: FunctionAssert;
+      };
 
 export type FunctionReturn = {
     status?: number;
@@ -73,36 +67,36 @@ export type FunctionReturn = {
 
 export type FunctionExecuteField =
     | {
-        control: "text";
-        path: string;
-        label?: string;
-    }
+          control: "text";
+          path: string;
+          label?: string;
+      }
     | {
-        control: "source-select";
-        path: string;
-        label?: string;
-        source: string;
-        endpoint: string;
-        params?: Record<string, FunctionValue>;
-        itemsPath?: string;
-        labelPath?: string;
-        valuePath?: string;
-    }
+          control: "source-select";
+          path: string;
+          label?: string;
+          source: string;
+          endpoint: string;
+          params?: Record<string, FunctionValue>;
+          itemsPath?: string;
+          labelPath?: string;
+          valuePath?: string;
+      }
     | {
-        control: "json-object";
-        path: string;
-        label?: string;
-        seed?: {
-            type: "paths";
-            dependsOn?: string;
-            source: string;
-            endpoint: string;
-            params?: Record<string, FunctionValue>;
-            pathsPath: string;
-            pathNamePath?: string;
-            samplePath?: string;
-        };
-    };
+          control: "json-object";
+          path: string;
+          label?: string;
+          seed?: {
+              type: "paths";
+              dependsOn?: string;
+              source: string;
+              endpoint: string;
+              params?: Record<string, FunctionValue>;
+              pathsPath: string;
+              pathNamePath?: string;
+              samplePath?: string;
+          };
+      };
 
 export type FunctionExecuteUi = {
     fields?: FunctionExecuteField[];

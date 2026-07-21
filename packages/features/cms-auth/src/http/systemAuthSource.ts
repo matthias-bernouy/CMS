@@ -10,7 +10,7 @@ import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
 
 type SystemSourceEndpoint = {
-    urn:       string;
+    urn: string;
     targetUrl: string;
 };
 
@@ -28,7 +28,9 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
         case "/logout":
             return cfg.local.logoutJson();
         case "/signup": {
-            if (cfg.allowSignup === false) return privateAuthResponse("not_found", { status: 404 });
+            if (cfg.allowSignup === false) {
+                return privateAuthResponse("not_found", { status: 404 });
+            }
             const body = await readJsonObject(req);
             await signupLocalUser(cfg, {
                 email: requiredString(body, "email"),
@@ -80,7 +82,9 @@ function parseSystemAuthTarget(endpoint: SystemSourceEndpoint): string {
     return target;
 }
 
-function isKnownTarget(target: string): target is
+function isKnownTarget(
+    target: string,
+): target is
     | "/me"
     | "/login"
     | "/logout"
@@ -111,7 +115,9 @@ async function readJsonObject(req: Request): Promise<Record<string, unknown>> {
 
 function requiredString(body: Record<string, unknown>, field: string): string {
     const value = body[field];
-    if (typeof value !== "string" || !value) throw new AuthValidationError(field, "required");
+    if (typeof value !== "string" || !value) {
+        throw new AuthValidationError(field, "required");
+    }
     return value;
 }
 

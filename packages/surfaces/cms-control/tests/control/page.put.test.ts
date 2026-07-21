@@ -8,10 +8,14 @@ function makeSystem(opts: { existing?: TPage | null } = {}) {
     const cms: any = {
         repository: {
             getPageById: async (_id: string) => opts.existing ?? null,
-            updatePage: async (page: TPage) => { updateCalls.push(page); },
+            updatePage: async (page: TPage) => {
+                updateCalls.push(page);
+            },
         },
         cache: {
-            delete: (key: string) => { deleteSpy.push(key); },
+            delete: (key: string) => {
+                deleteSpy.push(key);
+            },
         },
     };
     return { cms, updateCalls, deleteSpy };
@@ -38,26 +42,24 @@ const existingPage: TPage = {
 describe("PUT /api/page (update)", () => {
     test("throws when id is missing", async () => {
         const { cms } = makeSystem();
-        await expect(putPage(makeRequest({ title: "T", path: "/a" }), cms))
-            .rejects.toThrow(/Missing param id/);
+        await expect(putPage(makeRequest({ title: "T", path: "/a" }), cms)).rejects.toThrow(/Missing param id/);
     });
 
     test("throws when title is missing", async () => {
         const { cms } = makeSystem();
-        await expect(putPage(makeRequest({ id: "x", path: "/a" }), cms))
-            .rejects.toThrow(/Missing param title/);
+        await expect(putPage(makeRequest({ id: "x", path: "/a" }), cms)).rejects.toThrow(/Missing param title/);
     });
 
     test("throws when path is missing", async () => {
         const { cms } = makeSystem();
-        await expect(putPage(makeRequest({ id: "x", title: "T" }), cms))
-            .rejects.toThrow(/Missing param path/);
+        await expect(putPage(makeRequest({ id: "x", title: "T" }), cms)).rejects.toThrow(/Missing param path/);
     });
 
     test("throws when target page does not exist", async () => {
         const { cms, updateCalls } = makeSystem({ existing: null });
-        await expect(putPage(makeRequest({ id: "missing", title: "T", path: "/a" }), cms))
-            .rejects.toThrow(/Unknown page id/);
+        await expect(putPage(makeRequest({ id: "missing", title: "T", path: "/a" }), cms)).rejects.toThrow(
+            /Unknown page id/,
+        );
         expect(updateCalls).toHaveLength(0);
     });
 
@@ -73,7 +75,7 @@ describe("PUT /api/page (update)", () => {
                 visible: true,
                 tags: ["a", "b"],
             }),
-            cms
+            cms,
         );
         expect(res.ok).toBe(true);
         expect(updateCalls).toHaveLength(1);
@@ -85,10 +87,7 @@ describe("PUT /api/page (update)", () => {
         expect(updated.description).toBe("published desc");
         expect(updated.visible).toBe(true);
         expect(updated.tags).toEqual(["a", "b"]);
-        expect(deleteSpy).toEqual([
-            P9R_CACHE.page("/draft"),
-            P9R_CACHE.page("/published"),
-        ]);
+        expect(deleteSpy).toEqual([P9R_CACHE.page("/draft"), P9R_CACHE.page("/published")]);
     });
 
     test("invalidates the page once when path stays the same", async () => {
@@ -100,11 +99,10 @@ describe("PUT /api/page (update)", () => {
                 path: "/draft",
                 content: "<p>updated</p>",
             }),
-            cms
+            cms,
         );
 
         expect(res.ok).toBe(true);
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
     });
-
 });

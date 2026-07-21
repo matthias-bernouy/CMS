@@ -38,7 +38,9 @@ export class MongoTriggerRepository implements TriggerRepository {
         try {
             await this.triggers.insertOne(toDoc(trigger) as OptionalUnlessRequiredId<TriggerDoc>);
         } catch (error) {
-            if (isDuplicateKey(error)) throw new DuplicateTriggerError(trigger.id);
+            if (isDuplicateKey(error)) {
+                throw new DuplicateTriggerError(trigger.id);
+            }
             throw error;
         }
         return structuredClone(trigger);
@@ -46,11 +48,7 @@ export class MongoTriggerRepository implements TriggerRepository {
 
     async updateTrigger(trigger: TriggerRecord): Promise<TriggerRecord | null> {
         const { id: _id, ...rest } = trigger;
-        const doc = await this.triggers.findOneAndReplace(
-            { _id },
-            rest,
-            { returnDocument: "after" },
-        );
+        const doc = await this.triggers.findOneAndReplace({ _id }, rest, { returnDocument: "after" });
         return fromDoc(doc);
     }
 
@@ -65,38 +63,39 @@ export class MongoTriggerRepository implements TriggerRepository {
 
     async getAllTriggers(): Promise<TriggerRecord[]> {
         const docs = await this.triggers.find().toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        return docs.map((doc) => fromDoc(doc)!);
     }
 
     async findEndpointTriggers(source: string, endpoint: string): Promise<TriggerRecord[]> {
-        const docs = await this.triggers.find({
-            enabled: true,
-            "event.kind": "endpoint",
-            "event.phase": { $in: ["request", "response"] },
-            $or: [
-                { "event.source": source, "event.endpoint": endpoint },
-                { "event.source": source, "event.endpoint": { $exists: false } },
-                { "event.source": { $exists: false }, "event.endpoint": endpoint },
-                { "event.source": { $exists: false }, "event.endpoint": { $exists: false } },
-            ],
-        }, { hint: ENDPOINT_TRIGGER_INDEX }).toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        const docs = await this.triggers
+            .find(
+                {
+                    enabled: true,
+                    "event.kind": "endpoint",
+                    "event.phase": { $in: ["request", "response"] },
+                    $or: [
+                        { "event.source": source, "event.endpoint": endpoint },
+                        { "event.source": source, "event.endpoint": { $exists: false } },
+                        { "event.source": { $exists: false }, "event.endpoint": endpoint },
+                        { "event.source": { $exists: false }, "event.endpoint": { $exists: false } },
+                    ],
+                },
+                { hint: ENDPOINT_TRIGGER_INDEX },
+            )
+            .toArray();
+        return docs.map((doc) => fromDoc(doc)!);
     }
 
     async setEnabled(id: string, enabled: boolean): Promise<TriggerRecord | null> {
-        return fromDoc(await this.triggers.findOneAndUpdate(
-            { _id: id },
-            { $set: { enabled } },
-            { returnDocument: "after" },
-        ));
+        return fromDoc(
+            await this.triggers.findOneAndUpdate({ _id: id }, { $set: { enabled } }, { returnDocument: "after" }),
+        );
     }
 
     async recordRun(id: string, lastRun: TriggerLastRun): Promise<TriggerRecord | null> {
-        return fromDoc(await this.triggers.findOneAndUpdate(
-            { _id: id },
-            { $set: { lastRun } },
-            { returnDocument: "after" },
-        ));
+        return fromDoc(
+            await this.triggers.findOneAndUpdate({ _id: id }, { $set: { lastRun } }, { returnDocument: "after" }),
+        );
     }
 }
 
@@ -106,7 +105,9 @@ function toDoc(trigger: TriggerRecord): TriggerDoc {
 }
 
 function fromDoc(doc: TriggerDoc | null): TriggerRecord | null {
-    if (!doc) return null;
+    if (!doc) {
+        return null;
+    }
     const { _id, ...rest } = doc;
     return { id: _id, ...rest };
 }

@@ -13,10 +13,12 @@ export const profileFields = [
 export class PublicError extends Error {}
 
 export function stripeEnrollmentComplete(connect) {
-    return connect?.accountStatus === "active"
-        && connect?.stripeAccountApiVersion === "v2"
-        && connect?.applicationControlledRecipient === true
-        && connect?.stripeTermsStatus === "accepted";
+    return (
+        connect?.accountStatus === "active" &&
+        connect?.stripeAccountApiVersion === "v2" &&
+        connect?.applicationControlledRecipient === true &&
+        connect?.stripeTermsStatus === "accepted"
+    );
 }
 
 export function comparableProfileValue(field, value) {
@@ -30,9 +32,15 @@ export function validEmail(value) {
 
 export function profileFieldReady(field, value) {
     const normalized = textValue(value);
-    if (!normalized) return false;
-    if (field === "email") return validEmail(normalized);
-    if (field === "countryCode") return normalized.toUpperCase() === "FR";
+    if (!normalized) {
+        return false;
+    }
+    if (field === "email") {
+        return validEmail(normalized);
+    }
+    if (field === "countryCode") {
+        return normalized.toUpperCase() === "FR";
+    }
     if (field === "birthDate") {
         try {
             parseDate(normalized);
@@ -46,7 +54,9 @@ export function profileFieldReady(field, value) {
 
 export function parseDate(value) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (!match) throw new PublicError("La date de naissance doit respecter le format AAAA-MM-JJ.");
+    if (!match) {
+        throw new PublicError("La date de naissance doit respecter le format AAAA-MM-JJ.");
+    }
     const year = Number(match[1]);
     const month = Number(match[2]);
     const day = Number(match[3]);

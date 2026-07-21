@@ -14,9 +14,15 @@ export function secretRefGlobalPattern(): RegExp {
 }
 
 export function secretKeyError(key: string): string | null {
-    if (key.length === 0) return "secret key is required";
-    if (!SECRET_KEY_PATTERN.test(key)) return `secret key must match ${SECRET_KEY_PATTERN_DESCRIPTION} (env-var style)`;
-    if (key.length > SECRET_KEY_MAX_LENGTH) return `secret key too long; max ${SECRET_KEY_MAX_LENGTH} characters`;
+    if (key.length === 0) {
+        return "secret key is required";
+    }
+    if (!SECRET_KEY_PATTERN.test(key)) {
+        return `secret key must match ${SECRET_KEY_PATTERN_DESCRIPTION} (env-var style)`;
+    }
+    if (key.length > SECRET_KEY_MAX_LENGTH) {
+        return `secret key too long; max ${SECRET_KEY_MAX_LENGTH} characters`;
+    }
     return null;
 }
 

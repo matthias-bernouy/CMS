@@ -10,15 +10,25 @@ export type ConnectorProviderUpdateDto = {
 
 export function parseConnectorProviderUpdateDto(body: Record<string, unknown>): ConnectorProviderUpdateDto {
     const provider = last(body.provider);
-    if (provider === undefined || provider === null || provider === "") throw new MissingParam("provider");
-    if (provider !== "supabase") throw new InvalidParam("provider", "must be supabase");
+    if (provider === undefined || provider === null || provider === "") {
+        throw new MissingParam("provider");
+    }
+    if (provider !== "supabase") {
+        throw new InvalidParam("provider", "must be supabase");
+    }
 
-    if (!("enabled" in body)) throw new MissingParam("enabled");
+    if (!("enabled" in body)) {
+        throw new MissingParam("enabled");
+    }
     const enabled = asBoolean(body.enabled, "enabled");
 
     const projectRef = last(body.projectRef);
-    if (projectRef === undefined || projectRef === null) throw new MissingParam("projectRef");
-    if (typeof projectRef !== "string") throw new InvalidParam("projectRef", "must be a string");
+    if (projectRef === undefined || projectRef === null) {
+        throw new MissingParam("projectRef");
+    }
+    if (typeof projectRef !== "string") {
+        throw new InvalidParam("projectRef", "must be a string");
+    }
 
     const accessToken = last(body.accessToken);
     if (accessToken !== undefined && typeof accessToken !== "string") {
@@ -35,11 +45,19 @@ export function parseConnectorProviderUpdateDto(body: Record<string, unknown>): 
 
 function asBoolean(raw: unknown, name: string): boolean {
     const value = last(raw);
-    if (typeof value === "boolean") return value;
-    if (typeof value !== "string") throw new InvalidParam(name, "must be a boolean");
+    if (typeof value === "boolean") {
+        return value;
+    }
+    if (typeof value !== "string") {
+        throw new InvalidParam(name, "must be a boolean");
+    }
     const normalized = value.trim().toLowerCase();
-    if (["1", "true", "on", "yes"].includes(normalized)) return true;
-    if (["0", "false", "off", "no", ""].includes(normalized)) return false;
+    if (["1", "true", "on", "yes"].includes(normalized)) {
+        return true;
+    }
+    if (["0", "false", "off", "no", ""].includes(normalized)) {
+        return false;
+    }
     throw new InvalidParam(name, "must be a boolean");
 }
 

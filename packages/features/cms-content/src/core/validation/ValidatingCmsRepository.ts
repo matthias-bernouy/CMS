@@ -1,5 +1,9 @@
 import type {
-    CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery,
+    CmsRepository,
+    BlocListItemResponse,
+    PageLink,
+    PageMeta,
+    PagesQuery,
 } from "cms-content/interfaces/CmsRepository";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
@@ -30,7 +34,9 @@ export class ValidatingCmsRepository implements CmsRepository {
 
     async updatePage(page: Partial<TPage>): Promise<void> {
         const valid = validatePagePatch(page);
-        if (valid.content !== undefined) await assertContentRefsExist(this.inner, valid.content);
+        if (valid.content !== undefined) {
+            await assertContentRefsExist(this.inner, valid.content);
+        }
         return this.inner.updatePage(valid);
     }
 
@@ -42,39 +48,89 @@ export class ValidatingCmsRepository implements CmsRepository {
 
     async updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
         const valid = validateTemplatePatch(data);
-        if (valid.content !== undefined) await assertContentRefsExist(this.inner, valid.content);
+        if (valid.content !== undefined) {
+            await assertContentRefsExist(this.inner, valid.content);
+        }
         return this.inner.updateTemplate(id, valid);
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
-    createBloc(bloc: TBloc): Promise<TBloc>  { return this.inner.createBloc(bloc); }
-    replaceBloc(bloc: TBloc): Promise<TBloc> { return this.inner.replaceBloc(bloc); }
-    getBlocsJS()              { return this.inner.getBlocsJS(); }
-    getBlocsList(): Promise<BlocListItemResponse[]> { return this.inner.getBlocsList(); }
-    getBlocViewJS(htmlTag: string) { return this.inner.getBlocViewJS(htmlTag); }
-    getBlocSource(htmlTag: string) { return this.inner.getBlocSource(htmlTag); }
+    createBloc(bloc: TBloc): Promise<TBloc> {
+        return this.inner.createBloc(bloc);
+    }
+    replaceBloc(bloc: TBloc): Promise<TBloc> {
+        return this.inner.replaceBloc(bloc);
+    }
+    getBlocsJS() {
+        return this.inner.getBlocsJS();
+    }
+    getBlocsList(): Promise<BlocListItemResponse[]> {
+        return this.inner.getBlocsList();
+    }
+    getBlocViewJS(htmlTag: string) {
+        return this.inner.getBlocViewJS(htmlTag);
+    }
+    getBlocSource(htmlTag: string) {
+        return this.inner.getBlocSource(htmlTag);
+    }
 
     // ── Pass-through: page reads + non-content writes ──────────────────────
-    getPage(path: string)    { return this.inner.getPage(path); }
-    getAllPages()            { return this.inner.getAllPages(); }
-    getPublishedPage(path: string) { return this.inner.getPublishedPage(path); }
-    getPublishedPages()      { return this.inner.getPublishedPages(); }
-    getPageById(id: string)  { return this.inner.getPageById(id); }
-    deletePage(id: string)   { return this.inner.deletePage(id); }
-    getLinks(): Promise<PageLink[]> { return this.inner.getLinks(); }
-    getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]> { return this.inner.getPagesMetadata(opts); }
-    getTemplatesMetadata()   { return this.inner.getTemplatesMetadata(); }
-    getTagCounts()           { return this.inner.getTagCounts(); }
-    getCategoryCounts(resource: "templates") { return this.inner.getCategoryCounts(resource); }
+    getPage(path: string) {
+        return this.inner.getPage(path);
+    }
+    getAllPages() {
+        return this.inner.getAllPages();
+    }
+    getPublishedPage(path: string) {
+        return this.inner.getPublishedPage(path);
+    }
+    getPublishedPages() {
+        return this.inner.getPublishedPages();
+    }
+    getPageById(id: string) {
+        return this.inner.getPageById(id);
+    }
+    deletePage(id: string) {
+        return this.inner.deletePage(id);
+    }
+    getLinks(): Promise<PageLink[]> {
+        return this.inner.getLinks();
+    }
+    getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]> {
+        return this.inner.getPagesMetadata(opts);
+    }
+    getTemplatesMetadata() {
+        return this.inner.getTemplatesMetadata();
+    }
+    getTagCounts() {
+        return this.inner.getTagCounts();
+    }
+    getCategoryCounts(resource: "templates") {
+        return this.inner.getCategoryCounts(resource);
+    }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
-    getSystem(): Promise<TSystem> { return this.inner.getSystem(); }
-    updateSystem(system: Partial<TSystem>): Promise<TSystem> { return this.inner.updateSystem(validateSettingsPatch(system)); }
+    getSystem(): Promise<TSystem> {
+        return this.inner.getSystem();
+    }
+    updateSystem(system: Partial<TSystem>): Promise<TSystem> {
+        return this.inner.updateSystem(validateSettingsPatch(system));
+    }
 
     // ── Pass-through: template reads + deletes ─────────────────────────────
-    getTemplateById(id: string)               { return this.inner.getTemplateById(id); }
-    getTemplateByIdentifier(identifier: string){ return this.inner.getTemplateByIdentifier(identifier); }
-    getAllTemplates()                          { return this.inner.getAllTemplates(); }
-    getTemplateCategories()                    { return this.inner.getTemplateCategories(); }
-    deleteTemplate(id: string)                 { return this.inner.deleteTemplate(id); }
+    getTemplateById(id: string) {
+        return this.inner.getTemplateById(id);
+    }
+    getTemplateByIdentifier(identifier: string) {
+        return this.inner.getTemplateByIdentifier(identifier);
+    }
+    getAllTemplates() {
+        return this.inner.getAllTemplates();
+    }
+    getTemplateCategories() {
+        return this.inner.getTemplateCategories();
+    }
+    deleteTemplate(id: string) {
+        return this.inner.deleteTemplate(id);
+    }
 }

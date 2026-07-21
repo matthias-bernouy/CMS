@@ -4,5 +4,5 @@
  * JSON serializations. Anything else (including absent) → false.
  */
 export function coerceVisible(value: unknown): boolean {
-    return value === true || value === 'on' || value === 'true';
+    return value === true || value === "on" || value === "true";
 }

@@ -11,7 +11,6 @@ import { showToast } from "@bernouy/components";
  * user copies the token.
  */
 class CmsTokenCreate extends HTMLElement {
-
     private _token = "";
 
     connectedCallback() {
@@ -22,24 +21,39 @@ class CmsTokenCreate extends HTMLElement {
         this.closest("p9r-modal")?.addEventListener("open", () => this._reset());
     }
 
-    private _q(sel: string) { return this.querySelector(sel) as HTMLElement; }
-    private get _api()  { return this.getAttribute("api")  ?? "/api/pats"; }
-    private get _emit() { return this.getAttribute("emit") ?? "pat:changed"; }
+    private _q(sel: string) {
+        return this.querySelector(sel) as HTMLElement;
+    }
+    private get _api() {
+        return this.getAttribute("api") ?? "/api/pats";
+    }
+    private get _emit() {
+        return this.getAttribute("emit") ?? "pat:changed";
+    }
 
     private async _create() {
         const input = this._q('[data-role="name"]') as HTMLElement & { value: string };
         const name = (input.value ?? "").trim();
-        if (!name) { input.setAttribute("invalid", ""); (input as unknown as HTMLElement).focus?.(); return; }
+        if (!name) {
+            input.setAttribute("invalid", "");
+            (input as unknown as HTMLElement).focus?.();
+            return;
+        }
         input.removeAttribute("invalid");
 
         const btn = this._q('[data-role="create"]');
         btn.setAttribute("disabled", "");
         try {
             const res = await fetch(this._api, {
-                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }),
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name }),
             });
-            if (!res.ok) { showToast("Could not create token", { type: "error" }); return; }
-            const { token } = await res.json() as { token: string };
+            if (!res.ok) {
+                showToast("Could not create token", { type: "error" });
+                return;
+            }
+            const { token } = (await res.json()) as { token: string };
             this._token = token;
             (this._q('[data-role="token"]') as HTMLElement & { value: string }).value = token;
             this._q('[data-role="form"]').hidden = true;

@@ -39,7 +39,7 @@ export async function upsertRole(roles: RolesRepository, dto: RoleDto): Promise<
         saved = {
             ...existing,
             grants: dto.grants,
-            ...(existing.builtin ? {} : { label: dto.label }),   // built-in labels are fixed
+            ...(existing.builtin ? {} : { label: dto.label }), // built-in labels are fixed
         };
     } else {
         if (!ROLE_ID_RE.test(dto.id)) {
@@ -58,11 +58,17 @@ export async function upsertRole(roles: RolesRepository, dto: RoleDto): Promise<
  * left holding a vanished role).
  */
 export async function deleteRole(roles: RolesRepository, users: RoleHolderCounter, id: string): Promise<void> {
-    if (id === ADMIN_ROLE) throw new RoleValidationError("id", "the admin super-role cannot be deleted");
+    if (id === ADMIN_ROLE) {
+        throw new RoleValidationError("id", "the admin super-role cannot be deleted");
+    }
 
     const def = await roles.get(id);
-    if (!def)        throw new RoleValidationError("id", "unknown role");
-    if (def.builtin) throw new RoleValidationError("id", "built-in roles cannot be deleted");
+    if (!def) {
+        throw new RoleValidationError("id", "unknown role");
+    }
+    if (def.builtin) {
+        throw new RoleValidationError("id", "built-in roles cannot be deleted");
+    }
 
     const holders = await users.list({ role: id });
     if (holders.total > 0) {

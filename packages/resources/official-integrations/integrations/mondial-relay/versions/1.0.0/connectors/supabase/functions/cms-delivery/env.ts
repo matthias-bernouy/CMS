@@ -9,7 +9,9 @@ export function envDefault(name: string, fallback: string): string {
 
 export function requiredEnv(name: string): string {
     const value = envText(name);
-    if (!value) throw new Error(`${name} is required`);
+    if (!value) {
+        throw new Error(`${name} is required`);
+    }
     return value;
 }
 

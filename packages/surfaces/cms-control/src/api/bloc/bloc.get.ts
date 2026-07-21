@@ -17,7 +17,9 @@ import { generateBlocEntry, P9R_CACHE } from "@bernouy/cms-content";
 export default async function BlocGet(req: Request, cms: ControlCms) {
     const url = new URL(req.url);
     const tag = url.searchParams.get("tag");
-    if (!tag) return Response.error();
+    if (!tag) {
+        return Response.error();
+    }
 
     return cachedResponseAsync(
         req,

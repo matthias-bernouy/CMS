@@ -3,12 +3,13 @@ import { resolveSecretRefs, SecretNotFound, InMemorySecretStore } from "@bernouy
 
 async function makeStore(entries: Record<string, string>) {
     const s = new InMemorySecretStore();
-    for (const [k, v] of Object.entries(entries)) await s.set(k, v);
+    for (const [k, v] of Object.entries(entries)) {
+        await s.set(k, v);
+    }
     return s;
 }
 
 describe("resolveSecretRefs", () => {
-
     test("no-op on a string without any ${} pattern", async () => {
         const s = await makeStore({});
         expect(await resolveSecretRefs("plain text", s)).toBe("plain text");
@@ -27,14 +28,19 @@ describe("resolveSecretRefs", () => {
 
     test("substitutes multiple distinct references in one string", async () => {
         const s = await makeStore({ USER: "alice", PASS: "p4ss" });
-        expect(await resolveSecretRefs("https://${USER}:${PASS}@host", s))
-            .toBe("https://alice:p4ss@host");
+        expect(await resolveSecretRefs("https://${USER}:${PASS}@host", s)).toBe("https://alice:p4ss@host");
     });
 
     test("substitutes repeated references via the cache (single store hit)", async () => {
         const s = await makeStore({ KEY: "v" });
         let calls = 0;
-        const tracked = { ...s, get: async (k: string) => { calls++; return s.get(k); } } as typeof s;
+        const tracked = {
+            ...s,
+            get: async (k: string) => {
+                calls++;
+                return s.get(k);
+            },
+        } as typeof s;
         expect(await resolveSecretRefs("${KEY}-${KEY}-${KEY}", tracked)).toBe("v-v-v");
         expect(calls).toBe(1);
     });
@@ -58,7 +64,7 @@ describe("resolveSecretRefs", () => {
     test("ignores patterns that don't match the strict key regex", async () => {
         // Lowercase, hyphens, leading digit, empty — none should be considered refs
         const s = await makeStore({ A: "x" });
-        expect(await resolveSecretRefs("${lowercase}",  s)).toBe("${lowercase}");
+        expect(await resolveSecretRefs("${lowercase}", s)).toBe("${lowercase}");
         expect(await resolveSecretRefs("${KEY-WITH-DASH}", s)).toBe("${KEY-WITH-DASH}");
         expect(await resolveSecretRefs("${1LEADING_DIGIT}", s)).toBe("${1LEADING_DIGIT}");
         expect(await resolveSecretRefs("${}", s)).toBe("${}");

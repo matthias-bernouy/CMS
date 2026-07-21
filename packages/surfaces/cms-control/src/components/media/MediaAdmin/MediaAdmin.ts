@@ -13,14 +13,18 @@ type FormFieldEl = HTMLElement & { value: string };
  * Header buttons use a custom multipart POST to `/api/files/upload`.
  */
 export class MediaAdmin extends HTMLElement {
-
     private _grid: GridMedia | null = null;
     private _fileInput: HTMLInputElement | null = null;
     private _wired = false;
 
     connectedCallback() {
-        if (!this.firstElementChild) this._render();
-        if (!this._wired) { this._wire(); this._wired = true; }
+        if (!this.firstElementChild) {
+            this._render();
+        }
+        if (!this._wired) {
+            this._wire();
+            this._wired = true;
+        }
     }
 
     private _render() {
@@ -33,17 +37,26 @@ export class MediaAdmin extends HTMLElement {
 
         this.querySelector('[data-action="upload"]')?.addEventListener("click", () => this._fileInput?.click());
         this._fileInput?.addEventListener("change", () => this._handleUpload());
-        this.querySelector('[data-action="create-folder"]')?.addEventListener("click", () => this._handleCreateFolder());
+        this.querySelector('[data-action="create-folder"]')?.addEventListener("click", () =>
+            this._handleCreateFolder(),
+        );
         this.querySelector('[data-role="folder-name"]')?.addEventListener("keydown", (e) => {
-            if ((e as KeyboardEvent).key === "Enter") { e.preventDefault(); this._handleCreateFolder(); }
+            if ((e as KeyboardEvent).key === "Enter") {
+                e.preventDefault();
+                this._handleCreateFolder();
+            }
         });
     }
 
     private async _handleUpload() {
         const files = this._fileInput?.files;
-        if (!files || files.length === 0) return;
+        if (!files || files.length === 0) {
+            return;
+        }
         await uploadFiles(files, this._currentFolder());
-        if (this._fileInput) this._fileInput.value = "";
+        if (this._fileInput) {
+            this._fileInput.value = "";
+        }
         this._grid?.refresh();
     }
 
@@ -51,10 +64,16 @@ export class MediaAdmin extends HTMLElement {
         const button = this.querySelector('[data-action="create-folder"]');
         const input = this.querySelector('[data-role="folder-name"]') as FormFieldEl | null;
         const name = input?.value?.trim();
-        if (!name) return;
+        if (!name) {
+            return;
+        }
         const ok = await createFolder(name, this._currentFolder());
-        if (!ok) return;
-        if (input) input.value = "";
+        if (!ok) {
+            return;
+        }
+        if (input) {
+            input.value = "";
+        }
         button?.dispatchEvent(new BubblesEvent("form:success"));
         this._grid?.refresh();
     }
@@ -64,4 +83,6 @@ export class MediaAdmin extends HTMLElement {
     }
 }
 
-if (!customElements.get("cms-media-admin")) customElements.define("cms-media-admin", MediaAdmin);
+if (!customElements.get("cms-media-admin")) {
+    customElements.define("cms-media-admin", MediaAdmin);
+}

@@ -1,18 +1,11 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import type {
-    DataScope,
-    EditorCatalog,
-    EditorCatalogEntry,
-} from "@bernouy/cms-content/editor";
+import type { DataScope, EditorCatalog, EditorCatalogEntry } from "@bernouy/cms-content/editor";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
 import type { TopBarSourceStateChangeDetail, TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
-import {
-    applyParamSyncSetting,
-    paramSyncSettings,
-} from "../src/components/Layout/Shell/Domain/Settings/paramSync";
+import { applyParamSyncSetting, paramSyncSettings } from "../src/components/Layout/Shell/Domain/Settings/paramSync";
 import type { ShellControllerParts } from "../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
 import type { ShellState } from "../src/components/Layout/Shell/Controller/Core/Services/shellState";
 import type { EditorStructureNode } from "../src/runtime";
@@ -54,13 +47,13 @@ function installDom(): void {
 }
 
 const workspaceDomGlobals = {
-    document:              globalThis.document,
-    customElements:        globalThis.customElements,
-    Element:               globalThis.Element,
-    HTMLElement:           globalThis.HTMLElement,
-    CustomEvent:           globalThis.CustomEvent,
-    Event:                 globalThis.Event,
-    Node:                  globalThis.Node,
+    document: globalThis.document,
+    customElements: globalThis.customElements,
+    Element: globalThis.Element,
+    HTMLElement: globalThis.HTMLElement,
+    CustomEvent: globalThis.CustomEvent,
+    Event: globalThis.Event,
+    Node: globalThis.Node,
     requestAnimationFrame: globalThis.requestAnimationFrame,
 };
 
@@ -68,14 +61,16 @@ afterAll(() => {
     Object.assign(globalThis, workspaceDomGlobals);
 });
 
-const dynamicDataScopes: DataScope[] = [{
-    name: "plans",
-    label: "Plans",
-    fields: [
-        { path: "title", type: "string" },
-        { path: "meta", type: "object", children: [{ path: "category", type: "string" }] },
-    ],
-}];
+const dynamicDataScopes: DataScope[] = [
+    {
+        name: "plans",
+        label: "Plans",
+        fields: [
+            { path: "title", type: "string" },
+            { path: "meta", type: "object", children: [{ path: "category", type: "string" }] },
+        ],
+    },
+];
 
 async function defineTextControls(): Promise<void> {
     const { TextInput } = await import("../src/components/Controls/Fields/TextInput/TextInput");
@@ -92,43 +87,42 @@ async function defineTextControls(): Promise<void> {
 }
 
 function openDynamicDataPicker(control: HTMLElement): void {
-    control.shadowRoot!
-        .querySelector<HTMLButtonElement>(".dynamic-data-tool")!
-        .dispatchEvent(new Event("pointerdown", {
-            bubbles:    true,
+    control.shadowRoot!.querySelector<HTMLButtonElement>(".dynamic-data-tool")!.dispatchEvent(
+        new Event("pointerdown", {
+            bubbles: true,
             cancelable: true,
-        }));
+        }),
+    );
 }
 
 describe("Shell", () => {
     test("block picker filters blocks by category and inserts from details", async () => {
         installDom();
 
-        const {
-            BLOCK_PICKER_SELECT_EVENT,
-            BlockPickerModal,
-        } = await import("../src/components/Layout/BlockPickerModal/BlockPickerModal");
+        const { BLOCK_PICKER_SELECT_EVENT, BlockPickerModal } = await import(
+            "../src/components/Layout/BlockPickerModal/BlockPickerModal"
+        );
 
         class DemoEditor {
-            constructor(readonly target: HTMLElement) { }
+            constructor(readonly target: HTMLElement) {}
         }
 
         const card: EditorCatalogEntry = {
-            tag:         "p9r-card",
-            label:       "Card",
+            tag: "p9r-card",
+            label: "Card",
             description: "Groups content.",
-            category:    "Layout",
+            category: "Layout",
             subCategory: "Content",
-            bloc:        HTMLElement as unknown as CustomElementConstructor,
-            editor:      DemoEditor as unknown as new (target: HTMLElement) => Editor,
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: DemoEditor as unknown as new (target: HTMLElement) => Editor,
         };
         const paragraph: EditorCatalogEntry = {
-            tag:         "p",
-            label:       "Paragraph",
+            tag: "p",
+            label: "Paragraph",
             description: "Rich text.",
-            category:    "Text",
-            bloc:        HTMLElement as unknown as CustomElementConstructor,
-            editor:      DemoEditor as unknown as new (target: HTMLElement) => Editor,
+            category: "Text",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: DemoEditor as unknown as new (target: HTMLElement) => Editor,
         };
         const picker = new BlockPickerModal();
         const selected: string[] = [];
@@ -137,16 +131,22 @@ describe("Shell", () => {
         });
         document.body.append(picker);
 
-        picker.open([{
-            label: "Content",
-            options: [
-                { entry: card, slotLabel: "Content" },
-                { entry: paragraph, slotLabel: "Content" },
+        picker.open(
+            [
+                {
+                    label: "Content",
+                    options: [
+                        { entry: card, slotLabel: "Content" },
+                        { entry: paragraph, slotLabel: "Content" },
+                    ],
+                },
             ],
-        }], "Container");
+            "Container",
+        );
 
-        const categoryButton = Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".categories .filter"))
-            .find(button => button.textContent?.includes("Text"));
+        const categoryButton = Array.from(
+            picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".categories .filter"),
+        ).find((button) => button.textContent?.includes("Text"));
         categoryButton?.click();
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
@@ -157,10 +157,9 @@ describe("Shell", () => {
     test("block picker supports template source items", async () => {
         installDom();
 
-        const {
-            BLOCK_PICKER_SELECT_EVENT,
-            BlockPickerModal,
-        } = await import("../src/components/Layout/BlockPickerModal/BlockPickerModal");
+        const { BLOCK_PICKER_SELECT_EVENT, BlockPickerModal } = await import(
+            "../src/components/Layout/BlockPickerModal/BlockPickerModal"
+        );
 
         const picker = new BlockPickerModal();
         let selectedContent = "";
@@ -170,20 +169,27 @@ describe("Shell", () => {
         });
         document.body.append(picker);
 
-        picker.open([{
-            label: "Content",
-            options: [{
-                item: {
-                    kind:        "template",
-                    id:          "tpl-1",
-                    label:       "Hero template",
-                    description: "Reusable hero.",
-                    category:    "Marketing",
-                    content:     "<section></section>",
+        picker.open(
+            [
+                {
+                    label: "Content",
+                    options: [
+                        {
+                            item: {
+                                kind: "template",
+                                id: "tpl-1",
+                                label: "Hero template",
+                                description: "Reusable hero.",
+                                category: "Marketing",
+                                content: "<section></section>",
+                            },
+                            slotLabel: "Content",
+                        },
+                    ],
                 },
-                slotLabel: "Content",
-            }],
-        }], "Container");
+            ],
+            "Container",
+        );
 
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(2)")!.click();
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
@@ -195,22 +201,21 @@ describe("Shell", () => {
     test("block picker selects media source directly", async () => {
         installDom();
 
-        const {
-            BLOCK_PICKER_SELECT_EVENT,
-            BlockPickerModal,
-        } = await import("../src/components/Layout/BlockPickerModal/BlockPickerModal");
+        const { BLOCK_PICKER_SELECT_EVENT, BlockPickerModal } = await import(
+            "../src/components/Layout/BlockPickerModal/BlockPickerModal"
+        );
 
         class DemoEditor {
-            constructor(readonly target: HTMLElement) { }
+            constructor(readonly target: HTMLElement) {}
         }
 
         const card: EditorCatalogEntry = {
-            tag:         "p9r-card",
-            label:       "Card",
+            tag: "p9r-card",
+            label: "Card",
             description: "Groups content.",
-            category:    "Layout",
-            bloc:        HTMLElement as unknown as CustomElementConstructor,
-            editor:      DemoEditor as unknown as new (target: HTMLElement) => Editor,
+            category: "Layout",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: DemoEditor as unknown as new (target: HTMLElement) => Editor,
         };
         const picker = new BlockPickerModal();
         const selected: string[] = [];
@@ -219,22 +224,27 @@ describe("Shell", () => {
         });
         document.body.append(picker);
 
-        picker.open([{
-            label: "Image",
-            options: [
-                { entry: card, slotLabel: "Image" },
+        picker.open(
+            [
                 {
-                    item: {
-                        kind:        "media",
-                        label:       "Media",
-                        description: "Choose a file from the CMS library.",
-                        category:    "Media",
-                        accept:      ["image"],
-                    },
-                    slotLabel: "Image",
+                    label: "Image",
+                    options: [
+                        { entry: card, slotLabel: "Image" },
+                        {
+                            item: {
+                                kind: "media",
+                                label: "Media",
+                                description: "Choose a file from the CMS library.",
+                                category: "Media",
+                                accept: ["image"],
+                            },
+                            slotLabel: "Image",
+                        },
+                    ],
                 },
             ],
-        }], "Media feature");
+            "Media feature",
+        );
 
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(3)")!.click();
 
@@ -248,12 +258,14 @@ describe("Shell", () => {
 
         class CardEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label:   "Header",
-                    slot:    "header",
-                    max:     1,
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Header",
+                        slot: "header",
+                        max: 1,
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
@@ -262,31 +274,31 @@ describe("Shell", () => {
         const node: EditorStructureNode = {
             editor,
             target,
-            tag:      "demo-card",
-            label:    "Card",
-            badges:   [],
+            tag: "demo-card",
+            label: "Card",
+            badges: [],
             children: [],
         };
         const tree = new StructureTree();
         document.body.append(tree);
         tree.setInsertItems([
             {
-                kind:    "template",
-                id:      "multi-root",
-                label:   "Multi root",
+                kind: "template",
+                id: "multi-root",
+                label: "Multi root",
                 content: "<p>One</p><p>Two</p>",
             },
             {
-                kind:    "template",
-                id:      "single-root",
-                label:   "Single root",
+                kind: "template",
+                id: "single-root",
+                label: "Single root",
                 content: "<p>One</p>",
             },
         ]);
         tree.setStructure([node], null);
 
         const groups = tree.controller.childGroups(node);
-        const optionIds = groups.flatMap(group => group.options.map(option => option.item?.id));
+        const optionIds = groups.flatMap((group) => group.options.map((option) => option.item?.id));
 
         expect(optionIds).toContain("single-root");
         expect(optionIds).not.toContain("multi-root");
@@ -299,11 +311,13 @@ describe("Shell", () => {
 
         class AlbumEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Images",
-                    slot: "images",
-                    accepts: [{ kind: "media" as const, accept: ["image" as const] }],
-                }];
+                return [
+                    {
+                        label: "Images",
+                        slot: "images",
+                        accepts: [{ kind: "media" as const, accept: ["image" as const] }],
+                    },
+                ];
             }
         }
 
@@ -347,11 +361,13 @@ describe("Shell", () => {
 
         class ContainerEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Content",
-                    max: 1,
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Content",
+                        max: 1,
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
@@ -379,18 +395,20 @@ describe("Shell", () => {
         };
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setInsertItems([{
-            kind: "template",
-            id: "replacement",
-            label: "Replacement",
-            content: "<demo-child>Replacement</demo-child>",
-        }]);
+        tree.setInsertItems([
+            {
+                kind: "template",
+                id: "replacement",
+                label: "Replacement",
+                content: "<demo-child>Replacement</demo-child>",
+            },
+        ]);
         tree.setStructure([parentNode], null);
 
         const groups = tree.controller.replaceGroups(childNode);
 
         expect(groups[0]!.disabledReason).toBeUndefined();
-        expect(groups[0]!.options.map(option => option.item?.id)).toContain("replacement");
+        expect(groups[0]!.options.map((option) => option.item?.id)).toContain("replacement");
     });
 
     test("structure tree ignores delete shortcuts from shadow editable controls", async () => {
@@ -398,16 +416,16 @@ describe("Shell", () => {
 
         const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const target = document.createElement("demo-card");
         const editor = new CardEditor(target);
         const node: EditorStructureNode = {
             editor,
             target,
-            tag:      "demo-card",
-            label:    "Card",
-            badges:   [],
+            tag: "demo-card",
+            label: "Card",
+            badges: [],
             children: [],
         };
         const tree = new StructureTree();
@@ -425,10 +443,10 @@ describe("Shell", () => {
 
         let prevented = false;
         tree.controller.onDocumentKeydown({
-            key:          "Delete",
-            ctrlKey:      false,
-            metaKey:      false,
-            target:       host,
+            key: "Delete",
+            ctrlKey: false,
+            metaKey: false,
+            target: host,
             preventDefault: () => {
                 prevented = true;
             },
@@ -444,40 +462,43 @@ describe("Shell", () => {
 
         const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const target = document.createElement("demo-card");
         const editor = new CardEditor(target);
         const node: EditorStructureNode = {
             editor,
             target,
-            tag:      "demo-card",
-            label:    "Card",
-            badges:   [],
+            tag: "demo-card",
+            label: "Card",
+            badges: [],
             children: [],
         };
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setDataSources([{
-            label: "Plans",
-            url: "/api/plans",
-            method: "GET",
-            provider: "plans-api",
-            providerLabel: "Plans API",
-            description: "Available pricing plans.",
-            params: [
-                { name: "q", in: "query", required: true, type: "string", description: "Search query." },
-                { name: "limit", in: "query", type: "number" },
-            ],
-            fields: [{ path: "items", type: "array" }],
-        }, {
-            label: "Create plan",
-            url: "/api/plans",
-            method: "POST",
-            provider: "plans-api",
-            providerLabel: "Plans API",
-            fields: [],
-        }]);
+        tree.setDataSources([
+            {
+                label: "Plans",
+                url: "/api/plans",
+                method: "GET",
+                provider: "plans-api",
+                providerLabel: "Plans API",
+                description: "Available pricing plans.",
+                params: [
+                    { name: "q", in: "query", required: true, type: "string", description: "Search query." },
+                    { name: "limit", in: "query", type: "number" },
+                ],
+                fields: [{ path: "items", type: "array" }],
+            },
+            {
+                label: "Create plan",
+                url: "/api/plans",
+                method: "POST",
+                provider: "plans-api",
+                providerLabel: "Plans API",
+                fields: [],
+            },
+        ]);
         tree.setStructure([node], editor);
 
         let detail: StructureTreeActionDetail | undefined;
@@ -507,10 +528,9 @@ describe("Shell", () => {
         methodFilter.options[5]!.setAttribute("selected", "");
         methodFilter.setAttribute("value", "all");
         methodFilter.dispatchEvent(new Event("change", { bubbles: true }));
-        expect(Array.from(picker.shadowRoot!.querySelectorAll(".source .name")).map(source => source.textContent)).toEqual([
-            "Plans",
-            "Create plan",
-        ]);
+        expect(
+            Array.from(picker.shadowRoot!.querySelectorAll(".source .name")).map((source) => source.textContent),
+        ).toEqual(["Plans", "Create plan"]);
         methodFilter.options[5]!.removeAttribute("selected");
         methodFilter.options[5]!.selected = false;
         methodFilter.options[1]!.removeAttribute("selected");
@@ -547,7 +567,7 @@ describe("Shell", () => {
 
         const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const target = document.createElement("demo-card");
         target.setAttribute("cms-source", "/api/plans");
@@ -555,19 +575,21 @@ describe("Shell", () => {
         const node: EditorStructureNode = {
             editor,
             target,
-            tag:      "demo-card",
-            label:    "Card",
-            badges:   [],
+            tag: "demo-card",
+            label: "Card",
+            badges: [],
             children: [],
         };
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setDataSources([{
-            label: "Plans",
-            url: "/api/plans",
-            method: "GET",
-            fields: [{ path: "items", type: "array" }],
-        }]);
+        tree.setDataSources([
+            {
+                label: "Plans",
+                url: "/api/plans",
+                method: "GET",
+                fields: [{ path: "items", type: "array" }],
+            },
+        ]);
         tree.setStructure([node], editor);
 
         let detail: StructureTreeActionDetail | undefined;
@@ -591,7 +613,7 @@ describe("Shell", () => {
 
         const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const target = document.createElement("demo-card");
         target.setAttribute("cms-source", "/api/plans?q=#{address}&limit=5 as plans");
@@ -600,28 +622,31 @@ describe("Shell", () => {
         const node: EditorStructureNode = {
             editor,
             target,
-            tag:      "demo-card",
-            label:    "Card",
-            badges:   ["Source"],
+            tag: "demo-card",
+            label: "Card",
+            badges: ["Source"],
             children: [],
         };
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setDataSources([{
-            label: "Other",
-            url: "/api/other",
-            method: "GET",
-            fields: [],
-        }, {
-            label: "Plans",
-            url: "/api/plans",
-            method: "GET",
-            fields: [{ path: "items", type: "array" }],
-            params: [
-                { name: "q", in: "query", required: true, type: "string" },
-                { name: "limit", in: "query", type: "number" },
-            ],
-        }]);
+        tree.setDataSources([
+            {
+                label: "Other",
+                url: "/api/other",
+                method: "GET",
+                fields: [],
+            },
+            {
+                label: "Plans",
+                url: "/api/plans",
+                method: "GET",
+                fields: [{ path: "items", type: "array" }],
+                params: [
+                    { name: "q", in: "query", required: true, type: "string" },
+                    { name: "limit", in: "query", type: "number" },
+                ],
+            },
+        ]);
         tree.setStructure([node], editor);
 
         let detail: StructureTreeActionDetail | undefined;
@@ -636,8 +661,8 @@ describe("Shell", () => {
         expect(picker.shadowRoot!.querySelector<HTMLSelectElement>(".source-trigger")!.selectedIndex).toBe(1);
 
         const rows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row"));
-        const qRow = rows.find(row => row.dataset.paramName === "q")!;
-        const limitRow = rows.find(row => row.dataset.paramName === "limit")!;
+        const qRow = rows.find((row) => row.dataset.paramName === "q")!;
+        const limitRow = rows.find((row) => row.dataset.paramName === "limit")!;
         expect(qRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(0);
         expect(qRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("address");
         expect(limitRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(1);
@@ -666,20 +691,23 @@ describe("Shell", () => {
 
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setInsertItems([{
-            kind:        "template",
-            id:          "tpl-default",
-            label:       "Default layout",
-            category:    "Layouts",
-            description: "Default page layout.",
-            content:     "<main></main>",
-        }, {
-            kind:        "template",
-            id:          "tpl-other",
-            label:       "Other layout",
-            category:    "Other",
-            content:     "<section></section>",
-        }]);
+        tree.setInsertItems([
+            {
+                kind: "template",
+                id: "tpl-default",
+                label: "Default layout",
+                category: "Layouts",
+                description: "Default page layout.",
+                content: "<main></main>",
+            },
+            {
+                kind: "template",
+                id: "tpl-other",
+                label: "Other layout",
+                category: "Other",
+                content: "<section></section>",
+            },
+        ]);
         tree.setDefaultTemplateSelection({ category: "Layouts" });
         tree.setStructure([], null);
 
@@ -700,10 +728,9 @@ describe("Shell", () => {
     test("repeat picker emits selected array and alias", async () => {
         installDom();
 
-        const {
-            REPEAT_PICKER_SELECT_EVENT,
-            RepeatPicker,
-        } = await import("../src/components/Layout/RepeatPicker/RepeatPicker");
+        const { REPEAT_PICKER_SELECT_EVENT, RepeatPicker } = await import(
+            "../src/components/Layout/RepeatPicker/RepeatPicker"
+        );
 
         const picker = new RepeatPicker();
         document.body.append(picker);
@@ -713,37 +740,47 @@ describe("Shell", () => {
             detail = (event as CustomEvent<{ path: string; alias: string }>).detail;
         });
 
-        picker.open([{
-            name: "data",
-            label: "Plans",
-            fields: [{
-                path: "features",
-                type: "array",
-                children: [
-                    { path: "name", type: "string" },
+        picker.open([
+            {
+                name: "data",
+                label: "Plans",
+                fields: [
                     {
-                        path: "geometry",
-                        type: "object",
-                        children: [{
-                            path: "coordinates",
-                            type: "array",
-                            children: [{ path: ".", type: "number" }],
-                        }],
+                        path: "features",
+                        type: "array",
+                        children: [
+                            { path: "name", type: "string" },
+                            {
+                                path: "geometry",
+                                type: "object",
+                                children: [
+                                    {
+                                        path: "coordinates",
+                                        type: "array",
+                                        children: [{ path: ".", type: "number" }],
+                                    },
+                                ],
+                            },
+                        ],
                     },
                 ],
-            }],
-        }, {
-            name: "data",
-            label: "Plans",
-            fields: [{
-                path: "features",
-                type: "array",
-                children: [{ path: "name", type: "string" }],
-            }],
-        }]);
+            },
+            {
+                name: "data",
+                label: "Plans",
+                fields: [
+                    {
+                        path: "features",
+                        type: "array",
+                        children: [{ path: "name", type: "string" }],
+                    },
+                ],
+            },
+        ]);
         expect(picker.shadowRoot!.querySelectorAll(".array")).toHaveLength(1);
-        const fieldPaths = Array.from(picker.shadowRoot!.querySelectorAll(".field-path"))
-            .map(item => item.textContent);
+        const fieldPaths = Array.from(picker.shadowRoot!.querySelectorAll(".field-path")).map(
+            (item) => item.textContent,
+        );
         expect(fieldPaths).toContain("geometry");
         expect(fieldPaths).toContain("coordinates");
         picker.shadowRoot!.querySelector<HTMLInputElement>(".alias")!.value = "plan";
@@ -758,10 +795,7 @@ describe("Shell", () => {
     test("topbar emits full and bleed viewport changes", async () => {
         installDom();
 
-        const {
-            TOPBAR_VIEWPORT_CHANGE_EVENT,
-            TopBar,
-        } = await import("../src/components/Layout/TopBar/TopBar");
+        const { TOPBAR_VIEWPORT_CHANGE_EVENT, TopBar } = await import("../src/components/Layout/TopBar/TopBar");
 
         const topbar = new TopBar();
         document.body.append(topbar);
@@ -775,10 +809,7 @@ describe("Shell", () => {
         topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="full"]')!.click();
         topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')!.click();
 
-        expect(events).toEqual([
-            { viewport: "full" },
-            { viewport: "bleed" },
-        ]);
+        expect(events).toEqual([{ viewport: "full" }, { viewport: "bleed" }]);
     });
 
     test("topbar defaults to bleed viewport", async () => {
@@ -790,19 +821,29 @@ describe("Shell", () => {
         document.body.append(topbar);
 
         expect(topbar.viewport).toBe("bleed");
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')?.classList.contains("active")).toBe(true);
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')?.getAttribute("aria-pressed")).toBe("true");
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="desktop"]')?.getAttribute("aria-pressed")).toBe("false");
+        expect(
+            topbar
+                .shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')
+                ?.classList.contains("active"),
+        ).toBe(true);
+        expect(
+            topbar
+                .shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')
+                ?.getAttribute("aria-pressed"),
+        ).toBe("true");
+        expect(
+            topbar
+                .shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="desktop"]')
+                ?.getAttribute("aria-pressed"),
+        ).toBe("false");
     });
 
     test("topbar defaults source preview state to loading and emits changes", async () => {
         installDom();
 
-        const {
-            TOPBAR_SOURCE_STATE_CHANGE_EVENT,
-            TOPBAR_VIEW_RELOAD_EVENT,
-            TopBar,
-        } = await import("../src/components/Layout/TopBar/TopBar");
+        const { TOPBAR_SOURCE_STATE_CHANGE_EVENT, TOPBAR_VIEW_RELOAD_EVENT, TopBar } = await import(
+            "../src/components/Layout/TopBar/TopBar"
+        );
 
         const topbar = new TopBar();
         document.body.append(topbar);
@@ -819,20 +860,36 @@ describe("Shell", () => {
 
         expect(topbar.sourceState).toBe("loading");
         expect(topbar.getAttribute("mode")).toBe("edit");
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="loading"]')?.getAttribute("aria-pressed")).toBe("true");
+        expect(
+            topbar
+                .shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="loading"]')
+                ?.getAttribute("aria-pressed"),
+        ).toBe("true");
         expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')?.disabled).toBe(true);
 
-        (topbar as unknown as { _setSourceState(sourceState: "error", emit: boolean): void })
-            ._setSourceState("error", true);
+        (topbar as unknown as { _setSourceState(sourceState: "error", emit: boolean): void })._setSourceState(
+            "error",
+            true,
+        );
 
         expect(topbar.sourceState).toBe("error");
         expect(events).toEqual([{ sourceState: "error" }]);
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="loading"]')?.getAttribute("aria-pressed")).toBe("false");
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="error"]')?.getAttribute("aria-pressed")).toBe("true");
+        expect(
+            topbar
+                .shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="loading"]')
+                ?.getAttribute("aria-pressed"),
+        ).toBe("false");
+        expect(
+            topbar
+                .shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="error"]')
+                ?.getAttribute("aria-pressed"),
+        ).toBe("true");
 
         topbar.mode = "view";
         expect(topbar.getAttribute("mode")).toBe("view");
-        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')?.disabled).toBe(false);
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')?.disabled).toBe(
+            false,
+        );
         topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')!.click();
         expect(reloads).toBe(1);
     });
@@ -846,8 +903,8 @@ describe("Shell", () => {
         document.body.append(topbar);
 
         topbar.setNavigation({
-            backHref:      "/cms/admin/templates",
-            backLabel:     "Templates",
+            backHref: "/cms/admin/templates",
+            backLabel: "Templates",
             settingsLabel: "Template settings",
         });
 
@@ -873,17 +930,16 @@ describe("Shell", () => {
     test("topbar emits delete document action", async () => {
         installDom();
 
-        const {
-            TOPBAR_DELETE_EVENT,
-            TopBar,
-        } = await import("../src/components/Layout/TopBar/TopBar");
+        const { TOPBAR_DELETE_EVENT, TopBar } = await import("../src/components/Layout/TopBar/TopBar");
 
         const topbar = new TopBar();
         document.body.append(topbar);
         topbar.connectedCallback();
 
         let count = 0;
-        topbar.addEventListener(TOPBAR_DELETE_EVENT, () => { count++; });
+        topbar.addEventListener(TOPBAR_DELETE_EVENT, () => {
+            count++;
+        });
         topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="delete"]')!.click();
 
         expect(count).toBe(1);
@@ -921,7 +977,9 @@ describe("Shell", () => {
         expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Templates");
         expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Template settings");
         expect(shell.shadowRoot!.querySelector("#page-settings-title")!.textContent).toBe("Template settings");
-        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe("Configure template metadata.");
+        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe(
+            "Configure template metadata.",
+        );
         expect(shell.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent).toBe("Identifier");
         expect(shell.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent).toBe("Category");
         expect(shell.shadowRoot!.querySelector('[data-page-field="path"]')!.hasAttribute("disabled")).toBe(true);
@@ -933,7 +991,7 @@ describe("Shell", () => {
 
         const { Shell } = await import("../src/exports");
 
-        class ParagraphEditor extends Editor { }
+        class ParagraphEditor extends Editor {}
 
         const { document: frameDocument } = parseHTML(`
             <!DOCTYPE html>
@@ -950,12 +1008,14 @@ describe("Shell", () => {
 
         const shell = new Shell();
         document.body.append(shell);
-        shell.setCatalog([{
-            tag:    "p",
-            label:  "Paragraph",
-            bloc:   HTMLElement as unknown as CustomElementConstructor,
-            editor: ParagraphEditor,
-        }]);
+        shell.setCatalog([
+            {
+                tag: "p",
+                label: "Paragraph",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ParagraphEditor,
+            },
+        ]);
 
         let renderedStructure: EditorStructureNode[] | undefined;
         const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
@@ -970,9 +1030,9 @@ describe("Shell", () => {
         expect(renderedStructure).toEqual([]);
 
         shellParts(shell).mutations.addRoot({
-            kind:    "template",
-            id:      "tpl-default",
-            label:   "Default template",
+            kind: "template",
+            id: "tpl-default",
+            label: "Default template",
             content: "<main></main>",
         });
 
@@ -1027,21 +1087,25 @@ describe("Shell", () => {
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
 
-        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:source-state-change", {
-            bubbles: true,
-            composed: true,
-            detail: { sourceState: "empty" },
-        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:source-state-change", {
+                bubbles: true,
+                composed: true,
+                detail: { sourceState: "empty" },
+            }),
+        );
         expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("empty");
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
 
-        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
-            bubbles: true,
-            composed: true,
-            detail: { mode: "view" },
-        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:editor-mode-change", {
+                bubbles: true,
+                composed: true,
+                detail: { mode: "view" },
+            }),
+        );
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("empty");
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
@@ -1092,7 +1156,9 @@ describe("Shell", () => {
 
         shellParts(shell).commands.syncViewFrameContent();
 
-        expect(viewFrameDocument.querySelector("[data-cms-content]")?.innerHTML).toBe(`<input name="search" cms-param-sync="search">`);
+        expect(viewFrameDocument.querySelector("[data-cms-content]")?.innerHTML).toBe(
+            `<input name="search" cms-param-sync="search">`,
+        );
         expect(calls).toEqual(["stop", "start"]);
     });
 
@@ -1113,10 +1179,12 @@ describe("Shell", () => {
             reloads += 1;
         };
 
-        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:view-reload", {
-            bubbles: true,
-            composed: true,
-        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:view-reload", {
+                bubbles: true,
+                composed: true,
+            }),
+        );
 
         expect(reloads).toBe(1);
     });
@@ -1152,11 +1220,21 @@ describe("Shell", () => {
 
         const css = frameDocument.getElementById("cms-editor-binding-preview-style")?.textContent ?? "";
         expect(css).toContain(`${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loading"])`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$sources."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loading"])`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loaded"])`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".empty"])`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".error"])`);
+        expect(css).toContain(
+            `[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loading"])`,
+        );
+        expect(css).toContain(
+            `[${CMS_BINDING_ATTRIBUTES.condition}^="$sources."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loading"])`,
+        );
+        expect(css).toContain(
+            `[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loaded"])`,
+        );
+        expect(css).toContain(
+            `[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".empty"])`,
+        );
+        expect(css).toContain(
+            `[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".error"])`,
+        );
     });
 
     test("shell does not serialize binding preview attributes from the frame core", async () => {
@@ -1179,8 +1257,7 @@ describe("Shell", () => {
 
         setShellFrameDocument(shell, frameDocument);
 
-        expect(shellParts(shell).commands.getContentHtml())
-            .toBe("<p>Hello</p>");
+        expect(shellParts(shell).commands.getContentHtml()).toBe("<p>Hello</p>");
     });
 
     test("shell saves editor frame content without leaving view mode", async () => {
@@ -1217,11 +1294,13 @@ describe("Shell", () => {
         shell.loadDocument({ root, contentRoot });
         setShellFrameDocument(shell, frameDocument);
 
-        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
-            bubbles: true,
-            composed: true,
-            detail: { mode: "view" },
-        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:editor-mode-change", {
+                bubbles: true,
+                composed: true,
+                detail: { mode: "view" },
+            }),
+        );
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
 
         let savedContent = "";
@@ -1232,7 +1311,9 @@ describe("Shell", () => {
 
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(shell.shadowRoot!.querySelector("cms-editor-v2-canvas")?.getAttribute("mode")).toBe("view");
-        expect(savedContent).toBe(`<section cms-source="/api/plans"><p>Authored</p><p cms-condition="$source.loading">Loading</p></section>`);
+        expect(savedContent).toBe(
+            `<section cms-source="/api/plans"><p>Authored</p><p cms-condition="$source.loading">Loading</p></section>`,
+        );
     });
 
     test("shell keeps the editor runtime stable when switching between view and edit", async () => {
@@ -1268,16 +1349,20 @@ describe("Shell", () => {
             originalLoadDocument(documentArg, selectedTarget);
         }) as Shell["loadDocument"];
 
-        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
-            bubbles: true,
-            composed: true,
-            detail: { mode: "view" },
-        }));
-        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
-            bubbles: true,
-            composed: true,
-            detail: { mode: "edit" },
-        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:editor-mode-change", {
+                bubbles: true,
+                composed: true,
+                detail: { mode: "view" },
+            }),
+        );
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(
+            new CustomEvent("editor-v2:editor-mode-change", {
+                bubbles: true,
+                composed: true,
+                detail: { mode: "edit" },
+            }),
+        );
         await Promise.resolve();
 
         expect(reloads).toBe(0);
@@ -1314,23 +1399,29 @@ describe("Shell", () => {
         const shell = new Shell();
         document.body.append(shell);
         shell.connectedCallback();
-        shell.setCatalog([{
-            tag: "p",
-            label: "Paragraph",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: ParagraphEditor,
-        }]);
+        shell.setCatalog([
+            {
+                tag: "p",
+                label: "Paragraph",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ParagraphEditor,
+            },
+        ]);
         shell.loadDocument({ root, contentRoot });
 
         const runtime = shellState(shell).runtime!;
         const editor = runtime.getEditor(paragraph);
-        if (!editor) throw new Error("Missing paragraph editor.");
+        if (!editor) {
+            throw new Error("Missing paragraph editor.");
+        }
 
-        shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree")!.dispatchEvent(new CustomEvent("editor-v2:select-editor", {
-            bubbles: true,
-            composed: true,
-            detail: { editor },
-        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree")!.dispatchEvent(
+            new CustomEvent("editor-v2:select-editor", {
+                bubbles: true,
+                composed: true,
+                detail: { editor },
+            }),
+        );
 
         expect(didScrollFrameTarget).toBe(true);
     });
@@ -1387,9 +1478,7 @@ describe("Shell", () => {
 
         canvas.setAttribute("frame-url", "/cms/api/editor/frame?type=template&id=t1");
 
-        expect(calls).toEqual([
-            "/cms/api/editor/frame?type=template&id=t1",
-        ]);
+        expect(calls).toEqual(["/cms/api/editor/frame?type=template&id=t1"]);
         expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?type=template&id=t1");
     });
 
@@ -1410,7 +1499,7 @@ describe("Shell", () => {
         const editorDom = parseHTML("<!doctype html><html><body><form></form></body></html>");
         Object.defineProperty(editorFrame, "contentDocument", {
             configurable: true,
-            value:        editorDom.document,
+            value: editorDom.document,
         });
         editorFrame.dispatchEvent(new Event("load"));
 
@@ -1421,7 +1510,7 @@ describe("Shell", () => {
         const viewDom = parseHTML("<!doctype html><html><body><form></form></body></html>");
         Object.defineProperty(viewFrame, "contentDocument", {
             configurable: true,
-            value:        viewDom.document,
+            value: viewDom.document,
         });
         viewFrame.dispatchEvent(new Event("load"));
 
@@ -1435,9 +1524,9 @@ describe("Shell", () => {
 
         const { Shell } = await import("../src/exports");
 
-        class DemoBloc extends HTMLElement { }
+        class DemoBloc extends HTMLElement {}
         class DemoEditor {
-            constructor(readonly target: HTMLElement) { }
+            constructor(readonly target: HTMLElement) {}
         }
 
         const catalog: EditorCatalog = [
@@ -1467,13 +1556,12 @@ describe("Shell", () => {
         contentRoot.setAttribute("data-cms-content", "");
         contentRoot.innerHTML = `<demo-bloc cms-ready><p>Content</p></demo-bloc>`;
         const frameDocument = {
-            querySelector: (selector: string) => selector === "[data-cms-content]" ? contentRoot : null,
+            querySelector: (selector: string) => (selector === "[data-cms-content]" ? contentRoot : null),
         };
 
         setShellFrameDocument(shell, frameDocument);
 
-        expect(shellParts(shell).commands.getContentHtml())
-            .toBe(`<demo-bloc><p>Content</p></demo-bloc>`);
+        expect(shellParts(shell).commands.getContentHtml()).toBe(`<demo-bloc><p>Content</p></demo-bloc>`);
     });
 
     test("inserts template fragments into selected content slots", async () => {
@@ -1483,14 +1571,16 @@ describe("Shell", () => {
 
         class ContainerEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label:   "Content",
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Content",
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
-        class ParagraphEditor extends Editor { }
+        class ParagraphEditor extends Editor {}
 
         const { document: frameDocument } = parseHTML(`
             <!DOCTYPE html>
@@ -1517,15 +1607,15 @@ describe("Shell", () => {
         structureTree.setStructure = () => undefined;
         shell.setCatalog([
             {
-                tag:    "demo-container",
-                label:  "Container",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-container",
+                label: "Container",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ContainerEditor,
             },
             {
-                tag:    "p",
-                label:  "Paragraph",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "p",
+                label: "Paragraph",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ParagraphEditor,
             },
         ]);
@@ -1534,16 +1624,20 @@ describe("Shell", () => {
 
         const runtime = shellState(shell).runtime!;
         const parentEditor = runtime.getEditor(container);
-        if (!parentEditor) throw new Error("Missing container editor.");
+        if (!parentEditor) {
+            throw new Error("Missing container editor.");
+        }
 
         shellParts(shell).mutations.addChild(parentEditor, {
-            kind:    "template",
-            id:      "tpl-hero",
-            label:   "Hero template",
+            kind: "template",
+            id: "tpl-hero",
+            label: "Hero template",
             content: `<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
         });
 
-        expect(container.innerHTML).toBe(`<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`);
+        expect(container.innerHTML).toBe(
+            `<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
+        );
     });
 
     test("inserts catalog block default content", async () => {
@@ -1553,10 +1647,12 @@ describe("Shell", () => {
 
         class ContainerEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Content",
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Content",
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
@@ -1584,24 +1680,29 @@ describe("Shell", () => {
         };
         structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
-        shell.setCatalog([{
-            tag: "demo-container",
-            label: "Container",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: ContainerEditor,
-        }, {
-            tag: "demo-card",
-            label: "Card",
-            defaultContent: `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: CardEditor,
-        }]);
+        shell.setCatalog([
+            {
+                tag: "demo-container",
+                label: "Container",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ContainerEditor,
+            },
+            {
+                tag: "demo-card",
+                label: "Card",
+                defaultContent: `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: CardEditor,
+            },
+        ]);
         setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
         const runtime = shellState(shell).runtime!;
         const containerEditor = runtime.getEditor(container);
-        if (!containerEditor) throw new Error("Missing container editor.");
+        if (!containerEditor) {
+            throw new Error("Missing container editor.");
+        }
 
         shellParts(shell).mutations.addChild(containerEditor, {
             kind: "block",
@@ -1614,7 +1715,9 @@ describe("Shell", () => {
             },
         });
 
-        expect(container.innerHTML).toBe(`<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`);
+        expect(container.innerHTML).toBe(
+            `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
+        );
     });
 
     test("keeps default content block root as the structure parent", async () => {
@@ -1624,17 +1727,20 @@ describe("Shell", () => {
 
         class FigureEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label:   "Image",
-                    slot:    "image",
-                    max:     1,
-                    accepts: [{ kind: "any-component" as const }],
-                }, {
-                    label:   "Caption",
-                    slot:    "caption",
-                    max:     1,
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Image",
+                        slot: "image",
+                        max: 1,
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                    {
+                        label: "Caption",
+                        slot: "caption",
+                        max: 1,
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
@@ -1659,23 +1765,27 @@ describe("Shell", () => {
         };
         structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
-        shell.setCatalog([{
-            tag: "demo-figure",
-            label: "Figure",
-            defaultContent: `<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`,
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: FigureEditor,
-        }, {
-            tag: "img",
-            label: "Image",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: Editor,
-        }, {
-            tag: "p",
-            label: "Paragraph",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: Editor,
-        }]);
+        shell.setCatalog([
+            {
+                tag: "demo-figure",
+                label: "Figure",
+                defaultContent: `<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`,
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: FigureEditor,
+            },
+            {
+                tag: "img",
+                label: "Image",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: Editor,
+            },
+            {
+                tag: "p",
+                label: "Paragraph",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: Editor,
+            },
+        ]);
         setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
@@ -1693,18 +1803,19 @@ describe("Shell", () => {
         const runtime = shellState(shell).runtime!;
         const structure = runtime.getStructure();
 
-        expect(contentRoot.innerHTML).toBe(`<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`);
-        expect(structure.map(node => node.label)).toEqual(["Figure"]);
-        expect(structure[0]?.children.map(node => node.label)).toEqual(["Image", "Paragraph"]);
+        expect(contentRoot.innerHTML).toBe(
+            `<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`,
+        );
+        expect(structure.map((node) => node.label)).toEqual(["Figure"]);
+        expect(structure[0]?.children.map((node) => node.label)).toEqual(["Image", "Paragraph"]);
     });
 
     test("ignores native rich text input events without a value detail", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_CONTENT_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
         if (!customElements.get("cms-editor-v2-rich-text-editor")) {
             customElements.define("cms-editor-v2-rich-text-editor", class extends HTMLElement {});
         }
@@ -1715,22 +1826,30 @@ describe("Shell", () => {
             events.push((event as CustomEvent<{ value: string }>).detail.value);
         });
 
-        view.setSettings([], {
-            format: "richtext",
-            bold:   true,
-        }, "Initial");
+        view.setSettings(
+            [],
+            {
+                format: "richtext",
+                bold: true,
+            },
+            "Initial",
+        );
 
         const control = view.shadowRoot!.querySelector("cms-editor-v2-rich-text-editor")!;
 
-        control.dispatchEvent(new Event("input", {
-            bubbles:  true,
-            composed: true,
-        }));
-        control.dispatchEvent(new CustomEvent("input", {
-            bubbles:  true,
-            composed: true,
-            detail:   { value: "Updated" },
-        }));
+        control.dispatchEvent(
+            new Event("input", {
+                bubbles: true,
+                composed: true,
+            }),
+        );
+        control.dispatchEvent(
+            new CustomEvent("input", {
+                bubbles: true,
+                composed: true,
+                detail: { value: "Updated" },
+            }),
+        );
 
         expect(events).toEqual(["Updated"]);
     });
@@ -1741,48 +1860,50 @@ describe("Shell", () => {
         const { SettingsView } = await import("../src/components/Settings/SettingsView/SettingsView");
         const view = new SettingsView();
 
-        const settings = (mode: "auto" | "columns") => [{
-            kind: "self" as const,
-            label: "Grid",
-            settings: [
-                {
-                    type: "segmented" as const,
-                    label: "Mode",
-                    attribute: "mode",
-                    defaultValue: mode,
-                    options: [
-                        { label: "Auto", value: "auto" },
-                        { label: "Columns", value: "columns" },
-                    ],
-                },
-                {
-                    type: "select" as const,
-                    label: "Minimum item width",
-                    attribute: "min",
-                    defaultValue: "md",
-                    options: [{ label: "Medium", value: "md" }],
-                    visibleWhen: { attribute: "mode", equals: "auto" },
-                },
-                {
-                    type: "select" as const,
-                    label: "Columns",
-                    attribute: "columns",
-                    defaultValue: "3",
-                    options: [{ label: "3 columns", value: "3" }],
-                    visibleWhen: { attribute: "mode", equals: "columns" },
-                },
-            ],
-        }];
+        const settings = (mode: "auto" | "columns") => [
+            {
+                kind: "self" as const,
+                label: "Grid",
+                settings: [
+                    {
+                        type: "segmented" as const,
+                        label: "Mode",
+                        attribute: "mode",
+                        defaultValue: mode,
+                        options: [
+                            { label: "Auto", value: "auto" },
+                            { label: "Columns", value: "columns" },
+                        ],
+                    },
+                    {
+                        type: "select" as const,
+                        label: "Minimum item width",
+                        attribute: "min",
+                        defaultValue: "md",
+                        options: [{ label: "Medium", value: "md" }],
+                        visibleWhen: { attribute: "mode", equals: "auto" },
+                    },
+                    {
+                        type: "select" as const,
+                        label: "Columns",
+                        attribute: "columns",
+                        defaultValue: "3",
+                        options: [{ label: "3 columns", value: "3" }],
+                        visibleWhen: { attribute: "mode", equals: "columns" },
+                    },
+                ],
+            },
+        ];
 
         view.setSettings(settings("auto"));
-        expect([...view.shadowRoot!.querySelectorAll("cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
-            "Minimum item width",
-        ]);
+        expect(
+            [...view.shadowRoot!.querySelectorAll("cms-editor-v2-select")].map((el) => el.getAttribute("label")),
+        ).toEqual(["Minimum item width"]);
 
         view.setSettings(settings("columns"));
-        expect([...view.shadowRoot!.querySelectorAll("cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
-            "Columns",
-        ]);
+        expect(
+            [...view.shadowRoot!.querySelectorAll("cms-editor-v2-select")].map((el) => el.getAttribute("label")),
+        ).toEqual(["Columns"]);
     });
 
     test("settings view renders visible row children inline", async () => {
@@ -1791,61 +1912,69 @@ describe("Shell", () => {
         const { SettingsView } = await import("../src/components/Settings/SettingsView/SettingsView");
         const view = new SettingsView();
 
-        const settings = (mode: "auto" | "columns" | "manual") => [{
-            kind: "self" as const,
-            label: "Grid",
-            settings: [
-                {
-                    type: "segmented" as const,
-                    label: "Mode",
-                    attribute: "mode",
-                    defaultValue: mode,
-                    options: [
-                        { label: "Auto", value: "auto" },
-                        { label: "Columns", value: "columns" },
-                        { label: "Manual", value: "manual" },
-                    ],
-                },
-                {
-                    type: "row" as const,
-                    label: "Sizing",
-                    settings: [
-                        {
-                            type: "select" as const,
-                            label: "X",
-                            ariaLabel: "Minimum item width",
-                            attribute: "min",
-                            defaultValue: "md",
-                            options: [{ label: "Medium", value: "md" }],
-                            visibleWhen: { attribute: "mode", equals: "auto" },
-                        },
-                        {
-                            type: "select" as const,
-                            label: "Columns",
-                            attribute: "columns",
-                            defaultValue: "3",
-                            options: [{ label: "3 columns", value: "3" }],
-                            visibleWhen: { attribute: "mode", equals: "columns" },
-                        },
-                    ],
-                },
-            ],
-        }];
+        const settings = (mode: "auto" | "columns" | "manual") => [
+            {
+                kind: "self" as const,
+                label: "Grid",
+                settings: [
+                    {
+                        type: "segmented" as const,
+                        label: "Mode",
+                        attribute: "mode",
+                        defaultValue: mode,
+                        options: [
+                            { label: "Auto", value: "auto" },
+                            { label: "Columns", value: "columns" },
+                            { label: "Manual", value: "manual" },
+                        ],
+                    },
+                    {
+                        type: "row" as const,
+                        label: "Sizing",
+                        settings: [
+                            {
+                                type: "select" as const,
+                                label: "X",
+                                ariaLabel: "Minimum item width",
+                                attribute: "min",
+                                defaultValue: "md",
+                                options: [{ label: "Medium", value: "md" }],
+                                visibleWhen: { attribute: "mode", equals: "auto" },
+                            },
+                            {
+                                type: "select" as const,
+                                label: "Columns",
+                                attribute: "columns",
+                                defaultValue: "3",
+                                options: [{ label: "3 columns", value: "3" }],
+                                visibleWhen: { attribute: "mode", equals: "columns" },
+                            },
+                        ],
+                    },
+                ],
+            },
+        ];
 
         view.setSettings(settings("auto"));
         expect(view.shadowRoot!.querySelector(".setting-row")?.classList.contains("setting-row-labeled")).toBe(true);
         expect(view.shadowRoot!.querySelector(".setting-row-label")?.textContent).toBe("Sizing");
-        expect([...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
-            "X",
-        ]);
-        expect([...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map(el => el.getAttribute("aria-label"))).toEqual([
-            "Minimum item width",
-        ]);
+        expect(
+            [...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map((el) =>
+                el.getAttribute("label"),
+            ),
+        ).toEqual(["X"]);
+        expect(
+            [...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map((el) =>
+                el.getAttribute("aria-label"),
+            ),
+        ).toEqual(["Minimum item width"]);
 
         view.setSettings(settings("columns"));
-        expect([...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
-            "Columns",
-        ]);
+        expect(
+            [...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map((el) =>
+                el.getAttribute("label"),
+            ),
+        ).toEqual(["Columns"]);
 
         view.setSettings(settings("manual"));
         expect(view.shadowRoot!.querySelector(".setting-row")).toBeNull();
@@ -1857,75 +1986,84 @@ describe("Shell", () => {
         const { SettingsView } = await import("../src/components/Settings/SettingsView/SettingsView");
         const view = new SettingsView();
 
-        view.setSettings([{
-            kind: "self",
-            label: "Layout",
-            settings: [{
-                type: "segmented",
-                label: "Flow",
-                ariaLabel: "Layout",
-                attribute: "layout",
-                defaultValue: "column",
-                display: "icon",
-                labelDisplay: "hidden",
-                options: [
-                    { label: "None", value: "none", icon: "layout-none", ariaLabel: "No layout" },
-                    { label: "Column", value: "column", icon: "layout-column" },
+        view.setSettings([
+            {
+                kind: "self",
+                label: "Layout",
+                settings: [
+                    {
+                        type: "segmented",
+                        label: "Flow",
+                        ariaLabel: "Layout",
+                        attribute: "layout",
+                        defaultValue: "column",
+                        display: "icon",
+                        labelDisplay: "hidden",
+                        options: [
+                            { label: "None", value: "none", icon: "layout-none", ariaLabel: "No layout" },
+                            { label: "Column", value: "column", icon: "layout-column" },
+                        ],
+                    },
                 ],
-            }],
-        }]);
+            },
+        ]);
 
-        const buttons = Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>("cms-editor-v2-segmented-control button"));
-        const labels = Array.from(view.shadowRoot!.querySelectorAll(".field-label")).map(label => label.textContent);
+        const buttons = Array.from(
+            view.shadowRoot!.querySelectorAll<HTMLButtonElement>("cms-editor-v2-segmented-control button"),
+        );
+        const labels = Array.from(view.shadowRoot!.querySelectorAll(".field-label")).map((label) => label.textContent);
         expect(labels).not.toContain("Flow");
-        expect(view.shadowRoot!.querySelector("cms-editor-v2-segmented-control")?.getAttribute("aria-label")).toBe("Layout");
-        expect(buttons.map(button => button.textContent)).toEqual(["", ""]);
-        expect(buttons.map(button => button.ariaLabel)).toEqual(["No layout", "Column"]);
-        expect(buttons.map(button => button.querySelector("svg") !== null)).toEqual([true, true]);
+        expect(view.shadowRoot!.querySelector("cms-editor-v2-segmented-control")?.getAttribute("aria-label")).toBe(
+            "Layout",
+        );
+        expect(buttons.map((button) => button.textContent)).toEqual(["", ""]);
+        expect(buttons.map((button) => button.ariaLabel)).toEqual(["No layout", "Column"]);
+        expect(buttons.map((button) => button.querySelector("svg") !== null)).toEqual([true, true]);
     });
 
     test("settings view emits attribute cleanup rules for setting values", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
         const view = new SettingsView();
         let detail: { value: string | boolean; attributes?: Record<string, string | boolean | null> } | undefined;
         view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
             detail = (event as CustomEvent<typeof detail>).detail;
         });
 
-        view.setSettings([{
-            kind: "self",
-            label: "Grid",
-            settings: [
-                {
-                    type: "segmented",
-                    label: "Mode",
-                    attribute: "mode",
-                    defaultValue: "auto",
-                    options: [
-                        { label: "Auto", value: "auto" },
-                        { label: "Columns", value: "columns" },
-                    ],
-                    attributesOnValue: [
-                        { value: "auto", attributes: { columns: null } },
-                        { value: "columns", attributes: { min: null } },
-                    ],
-                },
-            ],
-        }]);
+        view.setSettings([
+            {
+                kind: "self",
+                label: "Grid",
+                settings: [
+                    {
+                        type: "segmented",
+                        label: "Mode",
+                        attribute: "mode",
+                        defaultValue: "auto",
+                        options: [
+                            { label: "Auto", value: "auto" },
+                            { label: "Columns", value: "columns" },
+                        ],
+                        attributesOnValue: [
+                            { value: "auto", attributes: { columns: null } },
+                            { value: "columns", attributes: { min: null } },
+                        ],
+                    },
+                ],
+            },
+        ]);
 
         Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>("button"))
-            .find(button => button.value === "columns")!
+            .find((button) => button.value === "columns")!
             .click();
 
         expect(detail?.value).toBe("columns");
         expect(detail?.attributes).toEqual({
             mode: "columns",
-            min:  null,
+            min: null,
         });
     });
 
@@ -1937,19 +2075,25 @@ describe("Shell", () => {
         const editor = new RichTextEditor();
         editor.setAttribute("label", "Rich text");
         editor.setAttribute("capability", JSON.stringify({ format: "richtext", dynamic: true }));
-        editor.setAttribute("data-scopes", JSON.stringify([{
-            name: "plans",
-            label: "Plans",
-            fields: [
-                { path: "title", type: "string" },
-                { path: "meta", type: "object", children: [{ path: "category", type: "string" }] },
-                { path: "items", type: "array", children: [{ path: "price", type: "number" }] },
-            ],
-        }, {
-            name: "plan",
-            label: "plan",
-            fields: [{ path: "price", type: "number" }],
-        }]));
+        editor.setAttribute(
+            "data-scopes",
+            JSON.stringify([
+                {
+                    name: "plans",
+                    label: "Plans",
+                    fields: [
+                        { path: "title", type: "string" },
+                        { path: "meta", type: "object", children: [{ path: "category", type: "string" }] },
+                        { path: "items", type: "array", children: [{ path: "price", type: "number" }] },
+                    ],
+                },
+                {
+                    name: "plan",
+                    label: "plan",
+                    fields: [{ path: "price", type: "number" }],
+                },
+            ]),
+        );
         document.body.append(editor);
         editor.connectedCallback();
 
@@ -1971,7 +2115,7 @@ describe("Shell", () => {
 
         expect(prompted).toBe(false);
         expect(picker.hidden).toBe(false);
-        expect(options.map(option => option.dataset.path)).toEqual([
+        expect(options.map((option) => option.dataset.path)).toEqual([
             "plans.title",
             "plans.meta.category",
             "plan.price",
@@ -1982,10 +2126,9 @@ describe("Shell", () => {
         installDom();
         await defineTextControls();
 
-        const {
-            SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_CONTENT_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         const events: Array<{ value: string; format: string }> = [];
@@ -1994,10 +2137,17 @@ describe("Shell", () => {
         });
         document.body.append(view);
 
-        view.setSettings([], {
-            format:  "text",
-            dynamic: true,
-        }, "Hello ", "settings", [], dynamicDataScopes);
+        view.setSettings(
+            [],
+            {
+                format: "text",
+                dynamic: true,
+            },
+            "Hello ",
+            "settings",
+            [],
+            dynamicDataScopes,
+        );
 
         const control = view.shadowRoot!.querySelector<HTMLElement>("cms-editor-v2-text-input")!;
         const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
@@ -2014,10 +2164,9 @@ describe("Shell", () => {
         installDom();
         await defineTextControls();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         const values: string[] = [];
@@ -2026,16 +2175,27 @@ describe("Shell", () => {
         });
         document.body.append(view);
 
-        view.setSettings([{
-            kind: "self",
-            label: "Image",
-            settings: [{
-                type: "text",
-                label: "Alt text",
-                attribute: "alt",
-                defaultValue: "Plan ",
-            }],
-        }], null, "", "settings", [], dynamicDataScopes);
+        view.setSettings(
+            [
+                {
+                    kind: "self",
+                    label: "Image",
+                    settings: [
+                        {
+                            type: "text",
+                            label: "Alt text",
+                            attribute: "alt",
+                            defaultValue: "Plan ",
+                        },
+                    ],
+                },
+            ],
+            null,
+            "",
+            "settings",
+            [],
+            dynamicDataScopes,
+        );
 
         const control = view.shadowRoot!.querySelector<HTMLElement>("cms-editor-v2-text-input")!;
         const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
@@ -2052,10 +2212,9 @@ describe("Shell", () => {
         installDom();
         await defineTextControls();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         const values: string[] = [];
@@ -2064,16 +2223,27 @@ describe("Shell", () => {
         });
         document.body.append(view);
 
-        view.setSettings([{
-            kind: "self",
-            label: "Copy",
-            settings: [{
-                type: "textarea",
-                label: "Description",
-                attribute: "description",
-                defaultValue: "Category: ",
-            }],
-        }], null, "", "settings", [], dynamicDataScopes);
+        view.setSettings(
+            [
+                {
+                    kind: "self",
+                    label: "Copy",
+                    settings: [
+                        {
+                            type: "textarea",
+                            label: "Description",
+                            attribute: "description",
+                            defaultValue: "Category: ",
+                        },
+                    ],
+                },
+            ],
+            null,
+            "",
+            "settings",
+            [],
+            dynamicDataScopes,
+        );
 
         const control = view.shadowRoot!.querySelector<HTMLElement>("cms-editor-v2-textarea")!;
         const textarea = control.shadowRoot!.querySelector<HTMLTextAreaElement>("textarea")!;
@@ -2081,7 +2251,7 @@ describe("Shell", () => {
 
         openDynamicDataPicker(control);
         const options = Array.from(control.shadowRoot!.querySelectorAll<HTMLButtonElement>(".data-option"));
-        options.find(option => option.dataset.path === "plans.meta.category")!.click();
+        options.find((option) => option.dataset.path === "plans.meta.category")!.click();
 
         expect(textarea.value).toBe("Category: {{ plans.meta.category }}");
         expect(values).toEqual(["Category: {{ plans.meta.category }}"]);
@@ -2094,12 +2264,15 @@ describe("Shell", () => {
         const calls: string[] = [];
         globalThis.fetch = (async (url: string | URL | Request) => {
             calls.push(String(url));
-            return new Response(JSON.stringify([
-                { title: "Pricing", path: "/pricing" },
-                { title: "About", path: "/about" },
-            ]), {
-                headers: { "Content-Type": "application/json" },
-            });
+            return new Response(
+                JSON.stringify([
+                    { title: "Pricing", path: "/pricing" },
+                    { title: "About", path: "/about" },
+                ]),
+                {
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }) as typeof fetch;
 
         const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
@@ -2110,7 +2283,7 @@ describe("Shell", () => {
         });
         document.body.append(control);
         control.connectedCallback();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(calls).toEqual(["/cms/api/page/links"]);
 
@@ -2138,22 +2311,25 @@ describe("Shell", () => {
         const calls: string[] = [];
         globalThis.fetch = (async (url: string | URL | Request) => {
             calls.push(String(url));
-            return new Response(JSON.stringify({
-                items: [
-                    { id: "folder-1", name: "Documents", parentId: null, type: "folder" },
-                    {
-                        id:          "file 1",
-                        name:        "Guide.pdf",
-                        parentId:    null,
-                        type:        "file",
-                        size:        1200,
-                        mimeType:    "application/pdf",
-                        contentHash: "hash",
-                    },
-                ],
-            }), {
-                headers: { "Content-Type": "application/json" },
-            });
+            return new Response(
+                JSON.stringify({
+                    items: [
+                        { id: "folder-1", name: "Documents", parentId: null, type: "folder" },
+                        {
+                            id: "file 1",
+                            name: "Guide.pdf",
+                            parentId: null,
+                            type: "file",
+                            size: 1200,
+                            mimeType: "application/pdf",
+                            contentHash: "hash",
+                        },
+                    ],
+                }),
+                {
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }) as typeof fetch;
 
         const { FilesCenter } = await import("../src/components/Controls/Pickers/FilesCenter/FilesCenter");
@@ -2165,12 +2341,13 @@ describe("Shell", () => {
         document.body.append(center);
         center.connectedCallback();
         center.show();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(calls.at(0)).toBe("/cms/api/files?accept=folder%2Cfile&sortBy=name&limit=10000");
 
-        const file = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"))
-            .find(button => button.textContent?.includes("Guide.pdf"))!;
+        const file = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item")).find((button) =>
+            button.textContent?.includes("Guide.pdf"),
+        )!;
         file.click();
         center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
 
@@ -2181,26 +2358,30 @@ describe("Shell", () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
 
-        globalThis.fetch = (async () => new Response(JSON.stringify({
-            items: [
-                { id: "one", name: "One.png", parentId: null, type: "file", mimeType: "image/png" },
-                { id: "two", name: "Two.png", parentId: null, type: "file", mimeType: "image/png" },
-                { id: "three", name: "Three.png", parentId: null, type: "file", mimeType: "image/png" },
-            ],
-        }), {
-            headers: { "Content-Type": "application/json" },
-        })) as typeof fetch;
+        globalThis.fetch = (async () =>
+            new Response(
+                JSON.stringify({
+                    items: [
+                        { id: "one", name: "One.png", parentId: null, type: "file", mimeType: "image/png" },
+                        { id: "two", name: "Two.png", parentId: null, type: "file", mimeType: "image/png" },
+                        { id: "three", name: "Three.png", parentId: null, type: "file", mimeType: "image/png" },
+                    ],
+                }),
+                {
+                    headers: { "Content-Type": "application/json" },
+                },
+            )) as typeof fetch;
 
         const { FilesCenter } = await import("../src/components/Controls/Pickers/FilesCenter/FilesCenter");
         const center = new FilesCenter();
         const selected: string[][] = [];
         center.addEventListener("select-files", (event) => {
-            selected.push((event as CustomEvent<{ files: { src: string }[] }>).detail.files.map(file => file.src));
+            selected.push((event as CustomEvent<{ files: { src: string }[] }>).detail.files.map((file) => file.src));
         });
         document.body.append(center);
         center.connectedCallback();
         center.show({ multiple: true, maxSelection: 2 });
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         const items = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"));
         items[0]!.click();
@@ -2208,10 +2389,7 @@ describe("Shell", () => {
         items[2]!.click();
         center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
 
-        expect(selected).toEqual([[
-            "/cms/.cms/files/by-id/one",
-            "/cms/.cms/files/by-id/two",
-        ]]);
+        expect(selected).toEqual([["/cms/.cms/files/by-id/one", "/cms/.cms/files/by-id/two"]]);
     });
 
     test("page link media mode opens the files center", async () => {
@@ -2225,17 +2403,22 @@ describe("Shell", () => {
                     headers: { "Content-Type": "application/json" },
                 });
             }
-            return new Response(JSON.stringify({
-                items: [{
-                    id:       "hero",
-                    name:     "Hero.png",
-                    parentId: null,
-                    type:     "file",
-                    mimeType: "image/png",
-                }],
-            }), {
-                headers: { "Content-Type": "application/json" },
-            });
+            return new Response(
+                JSON.stringify({
+                    items: [
+                        {
+                            id: "hero",
+                            name: "Hero.png",
+                            parentId: null,
+                            type: "file",
+                            mimeType: "image/png",
+                        },
+                    ],
+                }),
+                {
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }) as typeof fetch;
 
         const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
@@ -2247,13 +2430,14 @@ describe("Shell", () => {
         });
         document.body.append(control);
         control.connectedCallback();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
-        const mediaTab = Array.from(control.shadowRoot!.querySelectorAll<HTMLButtonElement>(".tabs button"))
-            .find(button => button.textContent === "Media")!;
+        const mediaTab = Array.from(control.shadowRoot!.querySelectorAll<HTMLButtonElement>(".tabs button")).find(
+            (button) => button.textContent === "Media",
+        )!;
         mediaTab.click();
         control.shadowRoot!.querySelector<HTMLButtonElement>(".file-button")!.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         const center = document.body.querySelector("cms-editor-v2-files-center")!;
         center.shadowRoot!.querySelector<HTMLButtonElement>(".item")!.click();
@@ -2280,7 +2464,9 @@ describe("Shell", () => {
         expect(control.shadowRoot!.querySelector<HTMLElement>(".tabs")!.hidden).toBe(true);
         expect(control.shadowRoot!.querySelector(".file-title")?.textContent).toBe("Image");
         expect(control.shadowRoot!.querySelector<HTMLElement>(".file-value")!.hidden).toBe(true);
-        expect(control.shadowRoot!.querySelector<HTMLImageElement>(".file-preview img")?.getAttribute("src")).toBe("/cms/.cms/files/by-id/hero");
+        expect(control.shadowRoot!.querySelector<HTMLImageElement>(".file-preview img")?.getAttribute("src")).toBe(
+            "/cms/.cms/files/by-id/hero",
+        );
         expect(control.shadowRoot!.querySelector<HTMLElement>(".target")!.hidden).toBe(true);
     });
 
@@ -2288,37 +2474,43 @@ describe("Shell", () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
 
-        globalThis.fetch = (async () => new Response(JSON.stringify({
-            items: [
+        globalThis.fetch = (async () =>
+            new Response(
+                JSON.stringify({
+                    items: [
+                        {
+                            id: "photo",
+                            name: "Photo.png",
+                            parentId: null,
+                            type: "file",
+                            mimeType: "image/png",
+                        },
+                        {
+                            id: "logo",
+                            name: "Logo.svg",
+                            parentId: null,
+                            type: "file",
+                            mimeType: "image/svg+xml",
+                        },
+                    ],
+                }),
                 {
-                    id:       "photo",
-                    name:     "Photo.png",
-                    parentId: null,
-                    type:     "file",
-                    mimeType: "image/png",
+                    headers: { "Content-Type": "application/json" },
                 },
-                {
-                    id:       "logo",
-                    name:     "Logo.svg",
-                    parentId: null,
-                    type:     "file",
-                    mimeType: "image/svg+xml",
-                },
-            ],
-        }), {
-            headers: { "Content-Type": "application/json" },
-        })) as typeof fetch;
+            )) as typeof fetch;
 
         const { Shell } = await import("../src/exports");
 
         class FigureEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Cover",
-                    slot: "cover",
-                    max: 1,
-                    accepts: [{ kind: "media" as const, accept: ["svg" as const] }],
-                }];
+                return [
+                    {
+                        label: "Cover",
+                        slot: "cover",
+                        max: 1,
+                        accepts: [{ kind: "media" as const, accept: ["svg" as const] }],
+                    },
+                ];
             }
         }
 
@@ -2344,29 +2536,37 @@ describe("Shell", () => {
         };
         structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
-        shell.setCatalog([{
-            tag: "demo-figure",
-            label: "Figure",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: FigureEditor,
-        }]);
+        shell.setCatalog([
+            {
+                tag: "demo-figure",
+                label: "Figure",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: FigureEditor,
+            },
+        ]);
         setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
         const runtime = shellState(shell).runtime!;
         const figureEditor = runtime.getEditor(figure);
-        if (!figureEditor) throw new Error("Missing figure editor.");
+        if (!figureEditor) {
+            throw new Error("Missing figure editor.");
+        }
 
-        shellParts(shell).mutations.addChild(figureEditor, {
-            kind: "media",
-            label: "Media",
-            accept: ["svg"],
-        }, "cover");
-        await new Promise(resolve => setTimeout(resolve, 0));
+        shellParts(shell).mutations.addChild(
+            figureEditor,
+            {
+                kind: "media",
+                label: "Media",
+                accept: ["svg"],
+            },
+            "cover",
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         const center = document.body.querySelector("cms-editor-v2-files-center")!;
         const items = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"));
-        expect(items.map(item => item.textContent)).toEqual(["Logo.svgimage/svg+xml"]);
+        expect(items.map((item) => item.textContent)).toEqual(["Logo.svgimage/svg+xml"]);
 
         items[0]!.click();
         center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
@@ -2388,26 +2588,32 @@ describe("Shell", () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
 
-        globalThis.fetch = (async () => new Response(JSON.stringify({
-            items: [
-                { id: "one", name: "One.png", parentId: null, type: "file", mimeType: "image/png" },
-                { id: "two", name: "Two.png", parentId: null, type: "file", mimeType: "image/png" },
-                { id: "three", name: "Three.png", parentId: null, type: "file", mimeType: "image/png" },
-            ],
-        }), {
-            headers: { "Content-Type": "application/json" },
-        })) as typeof fetch;
+        globalThis.fetch = (async () =>
+            new Response(
+                JSON.stringify({
+                    items: [
+                        { id: "one", name: "One.png", parentId: null, type: "file", mimeType: "image/png" },
+                        { id: "two", name: "Two.png", parentId: null, type: "file", mimeType: "image/png" },
+                        { id: "three", name: "Three.png", parentId: null, type: "file", mimeType: "image/png" },
+                    ],
+                }),
+                {
+                    headers: { "Content-Type": "application/json" },
+                },
+            )) as typeof fetch;
 
         const { Shell } = await import("../src/exports");
 
         class GalleryEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Images",
-                    slot: "image",
-                    max: 3,
-                    accepts: [{ kind: "media" as const, accept: ["image" as const] }],
-                }];
+                return [
+                    {
+                        label: "Images",
+                        slot: "image",
+                        max: 3,
+                        accepts: [{ kind: "media" as const, accept: ["image" as const] }],
+                    },
+                ];
             }
         }
 
@@ -2436,30 +2642,39 @@ describe("Shell", () => {
         };
         structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
-        shell.setCatalog([{
-            tag: "demo-gallery",
-            label: "Gallery",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: GalleryEditor,
-        }, {
-            tag: "img",
-            label: "Image",
-            bloc: HTMLElement as unknown as CustomElementConstructor,
-            editor: Editor,
-        }]);
+        shell.setCatalog([
+            {
+                tag: "demo-gallery",
+                label: "Gallery",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: GalleryEditor,
+            },
+            {
+                tag: "img",
+                label: "Image",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: Editor,
+            },
+        ]);
         setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
         const runtime = shellState(shell).runtime!;
         const galleryEditor = runtime.getEditor(gallery);
-        if (!galleryEditor) throw new Error("Missing gallery editor.");
+        if (!galleryEditor) {
+            throw new Error("Missing gallery editor.");
+        }
 
-        shellParts(shell).mutations.addChild(galleryEditor, {
-            kind: "media",
-            label: "Media",
-            accept: ["image"],
-        }, "image");
-        await new Promise(resolve => setTimeout(resolve, 0));
+        shellParts(shell).mutations.addChild(
+            galleryEditor,
+            {
+                kind: "media",
+                label: "Media",
+                accept: ["image"],
+            },
+            "image",
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         const center = document.body.querySelector("cms-editor-v2-files-center")!;
         const items = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"));
@@ -2469,28 +2684,26 @@ describe("Shell", () => {
         center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
 
         const images = Array.from(gallery.querySelectorAll("img"));
-        expect(images.map(image => image.getAttribute("src"))).toEqual([
+        expect(images.map((image) => image.getAttribute("src"))).toEqual([
             null,
             "/cms/.cms/files/by-id/one",
             "/cms/.cms/files/by-id/two",
         ]);
-        expect(images.map(image => image.getAttribute("slot"))).toEqual(["image", "image", "image"]);
+        expect(images.map((image) => image.getAttribute("slot"))).toEqual(["image", "image", "image"]);
     });
 
     test("settings view emits page-link setting changes", async () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
 
-        globalThis.fetch = (async () => new Response(JSON.stringify([
-            { title: "Contact", path: "/contact" },
-        ]), {
-            headers: { "Content-Type": "application/json" },
-        })) as typeof fetch;
+        globalThis.fetch = (async () =>
+            new Response(JSON.stringify([{ title: "Contact", path: "/contact" }]), {
+                headers: { "Content-Type": "application/json" },
+            })) as typeof fetch;
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
         const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
         if (!customElements.get("cms-editor-v2-page-link")) {
             customElements.define("cms-editor-v2-page-link", class extends PageLink {});
@@ -2503,24 +2716,26 @@ describe("Shell", () => {
         });
         document.body.append(view);
 
-        view.setSettings([{
-            kind: "self",
-            label: "Link",
-            settings: [{
-                type: "page-link",
-                label: "CTA link",
-                attribute: "href",
-                defaultValue: "",
-                allowPage: true,
-                allowExternal: true,
-            }],
-        }]);
-        await new Promise(resolve => setTimeout(resolve, 0));
+        view.setSettings([
+            {
+                kind: "self",
+                label: "Link",
+                settings: [
+                    {
+                        type: "page-link",
+                        label: "CTA link",
+                        attribute: "href",
+                        defaultValue: "",
+                        allowPage: true,
+                        allowExternal: true,
+                    },
+                ],
+            },
+        ]);
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
-        view.shadowRoot!
-            .querySelector("cms-editor-v2-page-link")!
-            .shadowRoot!
-            .querySelector<HTMLButtonElement>(".page-option")!
+        view.shadowRoot!.querySelector("cms-editor-v2-page-link")!
+            .shadowRoot!.querySelector<HTMLButtonElement>(".page-option")!
             .click();
 
         expect(values).toEqual(["/contact"]);
@@ -2529,10 +2744,9 @@ describe("Shell", () => {
     test("settings view emits endpoint-picker setting changes with method attributes", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         const events: Array<{
@@ -2540,71 +2754,91 @@ describe("Shell", () => {
             attributes?: Record<string, string | boolean | null>;
         }> = [];
         view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
-            const detail = (event as CustomEvent<{
-                value: string | boolean;
-                attributes?: Record<string, string | boolean | null>;
-            }>).detail;
+            const detail = (
+                event as CustomEvent<{
+                    value: string | boolean;
+                    attributes?: Record<string, string | boolean | null>;
+                }>
+            ).detail;
             events.push({
-                value:      detail.value,
+                value: detail.value,
                 attributes: detail.attributes,
             });
         });
         document.body.append(view);
 
-        view.setSettings([{
-            kind: "self",
-            label: "Action",
-            settings: [{
-                type: "endpoint-picker",
-                label: "Submit endpoint",
-                attribute: "target",
-                methodAttribute: "method",
-                methods: ["POST"],
-                defaultMethod: "POST",
-            }],
-        }], null, "", "settings", [], [], [{
-            label:       "Current user",
-            url:         "/cms/.cms/sources/system-auth/me",
-            method:      "GET",
-            provider:    "system-auth",
-            providerUrn: "urn:system-auth",
-            endpointUrn: "urn:system-auth:me",
-            fields:      [],
-        }, {
-            label:       "Log in",
-            url:         "/cms/.cms/sources/system-auth/login",
-            method:      "POST",
-            provider:    "system-auth",
-            providerUrn: "urn:system-auth",
-            endpointUrn: "urn:system-auth:login",
-            fields:      [],
-        }]);
+        view.setSettings(
+            [
+                {
+                    kind: "self",
+                    label: "Action",
+                    settings: [
+                        {
+                            type: "endpoint-picker",
+                            label: "Submit endpoint",
+                            attribute: "target",
+                            methodAttribute: "method",
+                            methods: ["POST"],
+                            defaultMethod: "POST",
+                        },
+                    ],
+                },
+            ],
+            null,
+            "",
+            "settings",
+            [],
+            [],
+            [
+                {
+                    label: "Current user",
+                    url: "/cms/.cms/sources/system-auth/me",
+                    method: "GET",
+                    provider: "system-auth",
+                    providerUrn: "urn:system-auth",
+                    endpointUrn: "urn:system-auth:me",
+                    fields: [],
+                },
+                {
+                    label: "Log in",
+                    url: "/cms/.cms/sources/system-auth/login",
+                    method: "POST",
+                    provider: "system-auth",
+                    providerUrn: "urn:system-auth",
+                    endpointUrn: "urn:system-auth:login",
+                    fields: [],
+                },
+            ],
+        );
 
         view.shadowRoot!.querySelector<HTMLButtonElement>(".endpoint-button")!.click();
 
         const picker = view.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         const sources = Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".source"));
-        expect(sources.map(source => source.textContent)).toEqual(["POSTLog inNo description./cms/.cms/sources/system-auth/login"]);
+        expect(sources.map((source) => source.textContent)).toEqual([
+            "POSTLog inNo description./cms/.cms/sources/system-auth/login",
+        ]);
 
         sources[0]!.click();
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
-        expect(events).toEqual([{
-            value:      "/cms/.cms/sources/system-auth/login",
-            attributes: {
-                target: "/cms/.cms/sources/system-auth/login",
-                method: "POST",
+        expect(events).toEqual([
+            {
+                value: "/cms/.cms/sources/system-auth/login",
+                attributes: {
+                    target: "/cms/.cms/sources/system-auth/login",
+                    method: "POST",
+                },
             },
-        }]);
+        ]);
     });
 
     test("settings view emits source body attributes for endpoint-picker source bindings", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         const events: Array<{
@@ -2612,38 +2846,54 @@ describe("Shell", () => {
             attributes?: Record<string, string | boolean | null>;
         }> = [];
         view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
-            const detail = (event as CustomEvent<{
-                value: string | boolean;
-                attributes?: Record<string, string | boolean | null>;
-            }>).detail;
+            const detail = (
+                event as CustomEvent<{
+                    value: string | boolean;
+                    attributes?: Record<string, string | boolean | null>;
+                }>
+            ).detail;
             events.push({
-                value:      detail.value,
+                value: detail.value,
                 attributes: detail.attributes,
             });
         });
         document.body.append(view);
 
-        view.setSettings([{
-            kind: "self",
-            label: "Form",
-            settings: [{
-                type: "endpoint-picker",
-                label: "Submit source",
-                attribute: CMS_BINDING_ATTRIBUTES.source,
-                methodAttribute: CMS_BINDING_ATTRIBUTES.sourceMethod,
-                defaultMethod: "POST",
-                methods: ["POST"],
-            }],
-        }], null, "", "settings", [], [], [{
-            label:  "Log in",
-            url:    "/login",
-            method: "POST",
-            body: {
-                contentType: "application/json",
-                fields: [{ path: "returnTo", type: "string" }],
-            },
-            fields: [],
-        }]);
+        view.setSettings(
+            [
+                {
+                    kind: "self",
+                    label: "Form",
+                    settings: [
+                        {
+                            type: "endpoint-picker",
+                            label: "Submit source",
+                            attribute: CMS_BINDING_ATTRIBUTES.source,
+                            methodAttribute: CMS_BINDING_ATTRIBUTES.sourceMethod,
+                            defaultMethod: "POST",
+                            methods: ["POST"],
+                        },
+                    ],
+                },
+            ],
+            null,
+            "",
+            "settings",
+            [],
+            [],
+            [
+                {
+                    label: "Log in",
+                    url: "/login",
+                    method: "POST",
+                    body: {
+                        contentType: "application/json",
+                        fields: [{ path: "returnTo", type: "string" }],
+                    },
+                    fields: [],
+                },
+            ],
+        );
 
         view.shadowRoot!.querySelector<HTMLButtonElement>(".endpoint-button")!.click();
 
@@ -2665,17 +2915,19 @@ describe("Shell", () => {
     test("renders disabled settings as disabled controls", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
         if (!customElements.get("cms-editor-v2-text-input")) {
-            customElements.define("cms-editor-v2-text-input", class extends HTMLElement {
-                constructor() {
-                    super();
-                    this.attachShadow({ mode: "open" }).innerHTML = "<input>";
-                }
-            });
+            customElements.define(
+                "cms-editor-v2-text-input",
+                class extends HTMLElement {
+                    constructor() {
+                        super();
+                        this.attachShadow({ mode: "open" }).innerHTML = "<input>";
+                    }
+                },
+            );
         }
 
         const view = new SettingsView();
@@ -2707,9 +2959,11 @@ describe("Shell", () => {
         expect(input.disabled).toBe(true);
 
         input.value = "changed";
-        input.dispatchEvent(new Event("input", {
-            bubbles: true,
-        }));
+        input.dispatchEvent(
+            new Event("input", {
+                bubbles: true,
+            }),
+        );
 
         expect(emitted).toBe(false);
     });
@@ -2717,10 +2971,9 @@ describe("Shell", () => {
     test("renders disabled segmented settings as disabled buttons", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         let emitted = false;
@@ -2748,9 +3001,11 @@ describe("Shell", () => {
             },
         ]);
 
-        const buttons = Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>("cms-editor-v2-segmented-control button"));
+        const buttons = Array.from(
+            view.shadowRoot!.querySelectorAll<HTMLButtonElement>("cms-editor-v2-segmented-control button"),
+        );
 
-        expect(buttons.map(button => button.disabled)).toEqual([true, true]);
+        expect(buttons.map((button) => button.disabled)).toEqual([true, true]);
         buttons[1]?.click();
         expect(emitted).toBe(false);
     });
@@ -2758,10 +3013,9 @@ describe("Shell", () => {
     test("settings view emits raw color values through the configured attribute", async () => {
         installDom();
 
-        const {
-            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
-            SettingsView,
-        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { SETTINGS_VIEW_SETTING_CHANGE_EVENT, SettingsView } = await import(
+            "../src/components/Settings/SettingsView/SettingsView"
+        );
 
         const view = new SettingsView();
         const events: Array<{
@@ -2769,32 +3023,40 @@ describe("Shell", () => {
             attributes?: Record<string, string | boolean | null>;
         }> = [];
         view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
-            const detail = (event as CustomEvent<{
-                value: string | boolean;
-                attributes?: Record<string, string | boolean | null>;
-            }>).detail;
+            const detail = (
+                event as CustomEvent<{
+                    value: string | boolean;
+                    attributes?: Record<string, string | boolean | null>;
+                }>
+            ).detail;
             events.push({
-                value:      detail.value,
+                value: detail.value,
                 attributes: detail.attributes,
             });
         });
 
-        view.setThemeTokens([{
-            label: "Primary",
-            variable: "primary-base",
-            category: "Colors · Brand",
-        }]);
+        view.setThemeTokens([
+            {
+                label: "Primary",
+                variable: "primary-base",
+                category: "Colors · Brand",
+            },
+        ]);
 
-        view.setSettings([{
-            kind: "self",
-            label: "Appearance",
-            settings: [{
-                type: "color",
-                label: "Background",
-                attribute: "background",
-                defaultValue: "#eef5d8",
-            }],
-        }]);
+        view.setSettings([
+            {
+                kind: "self",
+                label: "Appearance",
+                settings: [
+                    {
+                        type: "color",
+                        label: "Background",
+                        attribute: "background",
+                        defaultValue: "#eef5d8",
+                    },
+                ],
+            },
+        ]);
 
         const picker = view.shadowRoot!.querySelector<HTMLInputElement>(".color-custom-picker")!;
         picker.value = "#123456";
@@ -2824,25 +3086,26 @@ describe("Shell", () => {
     test("canvas emits a background click outside the page frame", async () => {
         installDom();
 
-        const {
-            CANVAS_BACKGROUND_CLICK_EVENT,
-            Canvas,
-        } = await import("../src/components/Layout/Canvas/Canvas");
+        const { CANVAS_BACKGROUND_CLICK_EVENT, Canvas } = await import("../src/components/Layout/Canvas/Canvas");
 
         const canvas = new Canvas();
         const events: Event[] = [];
-        canvas.addEventListener(CANVAS_BACKGROUND_CLICK_EVENT, event => events.push(event));
+        canvas.addEventListener(CANVAS_BACKGROUND_CLICK_EVENT, (event) => events.push(event));
         document.body.append(canvas);
         canvas.connectedCallback();
 
-        canvas.shadowRoot!.querySelector(".canvas")!.dispatchEvent(new Event("click", {
-            bubbles:  true,
-            composed: true,
-        }));
-        canvas.shadowRoot!.querySelector(".page")!.dispatchEvent(new Event("click", {
-            bubbles:  true,
-            composed: true,
-        }));
+        canvas.shadowRoot!.querySelector(".canvas")!.dispatchEvent(
+            new Event("click", {
+                bubbles: true,
+                composed: true,
+            }),
+        );
+        canvas.shadowRoot!.querySelector(".page")!.dispatchEvent(
+            new Event("click", {
+                bubbles: true,
+                composed: true,
+            }),
+        );
 
         expect(events).toHaveLength(1);
     });
@@ -2852,7 +3115,7 @@ describe("Shell", () => {
 
         const { Shell } = await import("../src/components/Layout/Shell/Shell");
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const shell = new Shell();
         const target = document.createElement("demo-card");
@@ -2868,26 +3131,30 @@ describe("Shell", () => {
 
         const { Shell } = await import("../src/components/Layout/Shell/Shell");
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const shell = new Shell();
         const target = document.createElement("demo-card");
         const editor = new CardEditor(target);
 
-        shellParts(shell).mutations.setSource(editor, { label: "Plans", url: "/api/plans", fields: [] }, {
-            url: "/api/plans",
-            alias: "plans",
-            params: {
-                q: { from: "queryParam", name: "address" },
-                limit: { from: "raw", value: "5" },
+        shellParts(shell).mutations.setSource(
+            editor,
+            { label: "Plans", url: "/api/plans", fields: [] },
+            {
+                url: "/api/plans",
+                alias: "plans",
+                params: {
+                    q: { from: "queryParam", name: "address" },
+                    limit: { from: "raw", value: "5" },
+                },
+                body: {
+                    returnTo: { from: "queryParam", name: "returnTo" },
+                    token: { from: "state", name: "auth.token" },
+                },
+                trigger: "submit",
+                method: "POST",
             },
-            body: {
-                returnTo: { from: "queryParam", name: "returnTo" },
-                token: { from: "state", name: "auth.token" },
-            },
-            trigger: "submit",
-            method: "POST",
-        });
+        );
 
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
         expect(JSON.parse(target.getAttribute("cms-source-body") ?? "{}")).toEqual({
@@ -2899,11 +3166,15 @@ describe("Shell", () => {
 
         const searchTarget = document.createElement("demo-search");
         const searchEditor = new CardEditor(searchTarget);
-        shellParts(shell).mutations.setSource(searchEditor, { label: "Search", url: "/api/search", method: "GET", fields: [] }, {
-            url: "/api/search",
-            trigger: "submit",
-            method: "GET",
-        });
+        shellParts(shell).mutations.setSource(
+            searchEditor,
+            { label: "Search", url: "/api/search", method: "GET", fields: [] },
+            {
+                url: "/api/search",
+                trigger: "submit",
+                method: "GET",
+            },
+        );
 
         expect(searchTarget.getAttribute("cms-source")).toBe("/api/search");
         expect(searchTarget.hasAttribute("cms-source-body")).toBe(false);
@@ -2921,7 +3192,7 @@ describe("Shell", () => {
         const section = paramSyncSettings(editor);
 
         expect(section?.label).toBe("Query params");
-        expect(section?.settings.map(setting => [setting.attribute, setting.defaultValue])).toEqual([
+        expect(section?.settings.map((setting) => [setting.attribute, setting.defaultValue])).toEqual([
             ["__cms-param-sync-enabled", false],
         ]);
 
@@ -2930,7 +3201,7 @@ describe("Shell", () => {
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("search");
 
         const enabledSection = paramSyncSettings(editor);
-        expect(enabledSection?.settings.map(setting => [setting.attribute, setting.defaultValue])).toEqual([
+        expect(enabledSection?.settings.map((setting) => [setting.attribute, setting.defaultValue])).toEqual([
             ["__cms-param-sync-enabled", true],
             ["__cms-param-sync-use-name", true],
         ]);
@@ -2953,7 +3224,7 @@ describe("Shell", () => {
 
         applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "q");
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("q");
-        expect(paramSyncSettings(editor)?.settings.map(setting => setting.attribute)).toEqual([
+        expect(paramSyncSettings(editor)?.settings.map((setting) => setting.attribute)).toEqual([
             "__cms-param-sync-enabled",
             "__cms-param-sync-use-name",
             "__cms-param-sync-name",
@@ -2967,11 +3238,13 @@ describe("Shell", () => {
 
         class ContainerEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Content",
-                    max: 1,
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Content",
+                        max: 1,
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
@@ -3000,16 +3273,16 @@ describe("Shell", () => {
         document.body.append(shell);
         shell.setCatalog([
             {
-                tag:    "demo-container",
-                label:  "Container",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-container",
+                label: "Container",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ContainerEditor,
             },
             {
-                tag:            "p",
-                label:          "Paragraph",
-                bloc:           HTMLElement as unknown as CustomElementConstructor,
-                editor:         ParagraphEditor,
+                tag: "p",
+                label: "Paragraph",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ParagraphEditor,
                 defaultContent: "<p>Empty message</p>",
             },
         ]);
@@ -3019,8 +3292,12 @@ describe("Shell", () => {
         const runtime = shellState(shell).runtime!;
         const parentEditor = runtime.getEditor(container);
         const paragraphEditor = runtime.getEditor(paragraph);
-        if (!parentEditor) throw new Error("Missing container editor.");
-        if (!paragraphEditor) throw new Error("Missing paragraph editor.");
+        if (!parentEditor) {
+            throw new Error("Missing container editor.");
+        }
+        if (!paragraphEditor) {
+            throw new Error("Missing paragraph editor.");
+        }
 
         shellParts(shell).mutations.setSourceStatusCondition(paragraphEditor, parentEditor, "empty");
 
@@ -3061,21 +3338,21 @@ describe("Shell", () => {
         document.body.append(shell);
         shell.setCatalog([
             {
-                tag:    "demo-outer",
-                label:  "Outer",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-outer",
+                label: "Outer",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: SourceEditor,
             },
             {
-                tag:    "demo-inner",
-                label:  "Inner",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-inner",
+                label: "Inner",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: SourceEditor,
             },
             {
-                tag:    "demo-child",
-                label:  "Child",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-child",
+                label: "Child",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ChildEditor,
             },
         ]);
@@ -3085,8 +3362,12 @@ describe("Shell", () => {
         const runtime = shellState(shell).runtime!;
         const outerEditor = runtime.getEditor(outer);
         const childEditor = runtime.getEditor(child);
-        if (!outerEditor) throw new Error("Missing outer editor.");
-        if (!childEditor) throw new Error("Missing child editor.");
+        if (!outerEditor) {
+            throw new Error("Missing outer editor.");
+        }
+        if (!childEditor) {
+            throw new Error("Missing child editor.");
+        }
 
         shellParts(shell).mutations.setSourceStatusCondition(childEditor, outerEditor, "error");
 
@@ -3134,9 +3415,9 @@ describe("Shell", () => {
         const shell = new Shell();
         document.body.append(shell);
 
-        shellParts(shell).mutations.setCondition(childEditor, "plan.status == \"active\"");
+        shellParts(shell).mutations.setCondition(childEditor, 'plan.status == "active"');
 
-        expect(child.getAttribute("cms-condition")).toBe("plan.status == \"active\"");
+        expect(child.getAttribute("cms-condition")).toBe('plan.status == "active"');
     });
 
     test("shell preserves source status conditions when replacing children", async () => {
@@ -3150,10 +3431,12 @@ describe("Shell", () => {
 
         class ContainerEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Content",
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Content",
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
@@ -3180,16 +3463,16 @@ describe("Shell", () => {
         document.body.append(shell);
         shell.setCatalog([
             {
-                tag:    "demo-container",
-                label:  "Container",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-container",
+                label: "Container",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: ContainerEditor,
             },
             {
-                tag:            "demo-child",
-                label:          "Child",
-                bloc:           HTMLElement as unknown as CustomElementConstructor,
-                editor:         ChildEditor,
+                tag: "demo-child",
+                label: "Child",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ChildEditor,
                 defaultContent: "<demo-child>New empty</demo-child>",
             },
         ]);
@@ -3198,15 +3481,17 @@ describe("Shell", () => {
 
         const runtime = shellState(shell).runtime!;
         const childEditor = runtime.getEditor(container.querySelector("demo-child") as HTMLElement);
-        if (!childEditor) throw new Error("Missing child editor.");
+        if (!childEditor) {
+            throw new Error("Missing child editor.");
+        }
 
         shellParts(shell).mutations.replaceEditor(childEditor, {
             kind: "block",
             entry: {
-                tag:            "demo-child",
-                label:          "Child",
-                bloc:           HTMLElement as unknown as CustomElementConstructor,
-                editor:         ChildEditor,
+                tag: "demo-child",
+                label: "Child",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: ChildEditor,
                 defaultContent: "<demo-child>New empty</demo-child>",
             },
         });
@@ -3254,13 +3539,13 @@ describe("Shell", () => {
 
         tree.controller.menus.openContextMenu(childNode, 0, 0);
         const buttons = Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"));
-        expect(buttons.filter(button => button.textContent?.startsWith("Show when"))).toHaveLength(0);
-        buttons.find(button => button.textContent === "Add condition")!.click();
+        expect(buttons.filter((button) => button.textContent?.startsWith("Show when"))).toHaveLength(0);
+        buttons.find((button) => button.textContent === "Add condition")!.click();
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
         expect(picker.shadowRoot!.querySelector(".source-name")?.textContent).toBe("Source: Plans endpoint");
         const emptyInput = Array.from(picker.shadowRoot!.querySelectorAll("label"))
-            .find(label => label.textContent === "empty")!
+            .find((label) => label.textContent === "empty")!
             .querySelector<HTMLInputElement>("input")!;
         emptyInput.checked = true;
         emptyInput.dispatchEvent(new Event("change"));
@@ -3324,19 +3609,23 @@ describe("Shell", () => {
         tree.setStructure([outerNode], null);
 
         tree.controller.menus.openContextMenu(childNode, 0, 0);
-        tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item")
-            .forEach(button => {
-                if (button.textContent === "Add condition") button.click();
-            });
+        tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item").forEach((button) => {
+            if (button.textContent === "Add condition") {
+                button.click();
+            }
+        });
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
-        expect(Array.from(picker.shadowRoot!.querySelectorAll(".source-title")).map(title => title.textContent))
-            .toEqual(["Inner source", "Outer source"]);
+        expect(
+            Array.from(picker.shadowRoot!.querySelectorAll(".source-title")).map((title) => title.textContent),
+        ).toEqual(["Inner source", "Outer source"]);
 
         const sources = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>(".source"));
-        const outerSource = sources.find(source => source.querySelector(".source-title")?.textContent === "Outer source")!;
+        const outerSource = sources.find(
+            (source) => source.querySelector(".source-title")?.textContent === "Outer source",
+        )!;
         const outerError = Array.from(outerSource.querySelectorAll("label"))
-            .find(label => label.textContent === "error")!
+            .find((label) => label.textContent === "error")!
             .querySelector<HTMLInputElement>("input")!;
         outerError.checked = true;
         outerError.dispatchEvent(new Event("change"));
@@ -3361,24 +3650,38 @@ describe("Shell", () => {
         const child = document.createElement("demo-child");
         source.append(child);
         const sourceNode: EditorStructureNode = {
-            editor: new SourceEditor(source), target: source, tag: "demo-source", label: "Source", badges: [], children: [],
+            editor: new SourceEditor(source),
+            target: source,
+            tag: "demo-source",
+            label: "Source",
+            badges: [],
+            children: [],
         };
         const childNode: EditorStructureNode = {
-            editor: new ChildEditor(child), target: child, tag: "demo-child", label: "Child", badges: [], children: [],
+            editor: new ChildEditor(child),
+            target: child,
+            tag: "demo-child",
+            label: "Child",
+            badges: [],
+            children: [],
         };
         sourceNode.children = [childNode];
         const tree = new StructureTree();
         let detail: StructureTreeActionDetail | undefined;
-        tree.addEventListener("editor-v2:structure-action", event => { detail = (event as CustomEvent<StructureTreeActionDetail>).detail; });
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
         document.body.append(tree);
         tree.setStructure([sourceNode], null);
 
         tree.controller.menus.openContextMenu(childNode, 0, 0);
         Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"))
-            .find(button => button.textContent === "Add condition")!.click();
+            .find((button) => button.textContent === "Add condition")!
+            .click();
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
         Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".mode"))
-            .find(button => button.textContent === "Data field")!.click();
+            .find((button) => button.textContent === "Data field")!
+            .click();
         picker.shadowRoot!.querySelector<HTMLSelectElement>(".field-operator")!.selectedIndex = 2;
         picker.shadowRoot!.querySelector<HTMLSelectElement>(".field-operator")!.dispatchEvent(new Event("change"));
         const valueInput = picker.shadowRoot!.querySelector<HTMLInputElement>(".field-value")!;
@@ -3423,11 +3726,15 @@ describe("Shell", () => {
         tree.setStructure([parentNode], null);
         tree.shadowRoot!.querySelector<HTMLButtonElement>(".toggle")!.click();
 
-        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).not.toContain("Child");
+        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map((label) => label.textContent)).not.toContain(
+            "Child",
+        );
 
         tree.setStructure([parentNode], childEditor, [], { scrollSelectedIntoView: true });
 
-        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).toContain("Child");
+        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map((label) => label.textContent)).toContain(
+            "Child",
+        );
     });
 
     test("structure tree condition modal hides nested source status conditions for the same source", async () => {
@@ -3476,10 +3783,11 @@ describe("Shell", () => {
         tree.setStructure([sourceNode], null);
 
         tree.controller.menus.openContextMenu(childNode, 0, 0);
-        tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item")
-            .forEach(button => {
-                if (button.textContent === "Add condition") button.click();
-            });
+        tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item").forEach((button) => {
+            if (button.textContent === "Add condition") {
+                button.click();
+            }
+        });
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
         expect(picker.shadowRoot!.querySelector(".empty")?.textContent).toBe("No source available.");
@@ -3503,9 +3811,9 @@ describe("Shell", () => {
         const node: EditorStructureNode = {
             editor,
             target,
-            tag:      "demo-bloc",
-            label:    "Demo",
-            badges:   [],
+            tag: "demo-bloc",
+            label: "Demo",
+            badges: [],
             children: [],
         };
         const tree = new StructureTree();
@@ -3521,7 +3829,7 @@ describe("Shell", () => {
             didScroll = true;
         };
         tree.setStructure([node], editor, [], { scrollSelectedIntoView: true });
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(didScroll).toBe(true);
     });
@@ -3547,7 +3855,9 @@ describe("Shell", () => {
         }
 
         expect(source.getAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe("/api/plans as plans");
-        expect(source.querySelector("article")?.getAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe("plans.items as plan");
+        expect(source.querySelector("article")?.getAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe(
+            "plans.items as plan",
+        );
         expect(source.querySelector("h2")?.textContent).toBe("{{ plan.title }}");
     });
 
@@ -3558,7 +3868,10 @@ describe("Shell", () => {
 
         const source = document.createElement("section");
         source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
-        source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceBody, JSON.stringify({ token: { from: "state", name: "auth.token" } }));
+        source.setAttribute(
+            CMS_BINDING_ATTRIBUTES.sourceBody,
+            JSON.stringify({ token: { from: "state", name: "auth.token" } }),
+        );
         source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceId, "plans");
         source.innerHTML = `
             <article cms-repeat="items as plan" cms-condition="plan.visible" title="Plan {{ plan.title }}">
@@ -3589,7 +3902,9 @@ describe("Shell", () => {
         expect(article.querySelector("h2")?.textContent).toBe("");
         expect(article.querySelector("p")?.textContent).toBe("{{ unrelated.label }}");
         expect(source.querySelector(".empty")?.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe(false);
-        expect(source.querySelector(".featured-empty")?.getAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe("$sources.featured.empty");
+        expect(source.querySelector(".featured-empty")?.getAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe(
+            "$sources.featured.empty",
+        );
     });
 
     test("shell cleans repeat bindings from child editors when removing a source", async () => {
@@ -3599,14 +3914,16 @@ describe("Shell", () => {
 
         class GridEditor extends Editor {
             protected override contentSlots() {
-                return [{
-                    label: "Content",
-                    accepts: [{ kind: "any-component" as const }],
-                }];
+                return [
+                    {
+                        label: "Content",
+                        accepts: [{ kind: "any-component" as const }],
+                    },
+                ];
             }
         }
 
-        class CardEditor extends Editor { }
+        class CardEditor extends Editor {}
 
         const { document: frameDocument } = parseHTML(`
             <!DOCTYPE html>
@@ -3635,15 +3952,15 @@ describe("Shell", () => {
         document.body.append(shell);
         shell.setCatalog([
             {
-                tag:    "demo-grid",
-                label:  "Grid",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-grid",
+                label: "Grid",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: GridEditor,
             },
             {
-                tag:    "demo-card",
-                label:  "Card",
-                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                tag: "demo-card",
+                label: "Card",
+                bloc: HTMLElement as unknown as CustomElementConstructor,
                 editor: CardEditor,
             },
         ]);
@@ -3652,7 +3969,9 @@ describe("Shell", () => {
 
         const runtime = shellState(shell).runtime!;
         const gridEditor = runtime.getEditor(grid);
-        if (!gridEditor) throw new Error("Missing grid editor.");
+        if (!gridEditor) {
+            throw new Error("Missing grid editor.");
+        }
 
         const originalConfirm = globalThis.confirm;
         globalThis.confirm = (() => true) as typeof globalThis.confirm;

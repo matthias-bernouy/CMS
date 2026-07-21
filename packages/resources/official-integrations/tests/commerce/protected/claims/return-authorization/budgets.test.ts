@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { capturedFetches, expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useReturnAuthorizationResponder } from "./fixtures";
 import { claimId, claimRow } from "./raw";
 
@@ -53,9 +48,7 @@ describe("commerce optimized claim return authorization call budgets", () => {
     });
 
     test("performs no database, Storage, or provider call for a local refusal", async () => {
-        const response = await requestCommerce(
-            "/system/claim/return-authorization?claimId=invalid",
-        );
+        const response = await requestCommerce("/system/claim/return-authorization?claimId=invalid");
 
         expect(response.status).toBe(400);
         expect(capturedFetches()).toHaveLength(0);

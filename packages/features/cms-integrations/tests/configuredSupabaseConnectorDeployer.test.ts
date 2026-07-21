@@ -70,16 +70,19 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
             secrets,
         });
 
-        await expect(deployer.deploy(emptyDeployment(), emptyContext()))
-            .rejects.toThrow("Supabase connector provider is not configured");
+        await expect(deployer.deploy(emptyDeployment(), emptyContext())).rejects.toThrow(
+            "Supabase connector provider is not configured",
+        );
 
         await providerRepository.upsert({ provider: "supabase", enabled: false, projectRef: "project-one" });
-        await expect(deployer.deploy(emptyDeployment(), emptyContext()))
-            .rejects.toThrow("Supabase connector provider is disabled");
+        await expect(deployer.deploy(emptyDeployment(), emptyContext())).rejects.toThrow(
+            "Supabase connector provider is disabled",
+        );
 
         await providerRepository.upsert({ provider: "supabase", enabled: true, projectRef: "   " });
-        await expect(deployer.deploy(emptyDeployment(), emptyContext()))
-            .rejects.toThrow("Supabase connector provider project reference is not configured");
+        await expect(deployer.deploy(emptyDeployment(), emptyContext())).rejects.toThrow(
+            "Supabase connector provider project reference is not configured",
+        );
     });
 
     test("rejects a missing reserved access token", async () => {
@@ -94,8 +97,9 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
             secrets: new InMemorySecretStore(),
         });
 
-        await expect(deployer.deploy(emptyDeployment(), emptyContext()))
-            .rejects.toThrow("Supabase connector provider access token is not configured");
+        await expect(deployer.deploy(emptyDeployment(), emptyContext())).rejects.toThrow(
+            "Supabase connector provider access token is not configured",
+        );
     });
 
     test("does not expose access-token values through configuration or deployment errors", async () => {
@@ -109,7 +113,9 @@ describe("ConfiguredSupabaseConnectorDeployer", () => {
             integrationsRoot: ".",
             providerRepository,
             secrets: {
-                get: async () => { throw new Error(`vault rejected ${sensitiveToken}`); },
+                get: async () => {
+                    throw new Error(`vault rejected ${sensitiveToken}`);
+                },
             },
         });
 

@@ -6,10 +6,10 @@ import { defaultSystem } from "@bernouy/cms-content";
 describe("parseSettingsUpdateDto — system pages", () => {
     test("coerces all system page paths to page references", () => {
         const dto = parseSettingsUpdateDto({
-            "site.notFound":    "/not-found",
-            "site.forbidden":   "/forbidden",
+            "site.notFound": "/not-found",
+            "site.forbidden": "/forbidden",
             "site.serverError": "/error",
-            "site.login":       "/sign-in",
+            "site.login": "/sign-in",
         });
 
         expect(dto.site?.notFound).toEqual({ path: "/not-found" });
@@ -66,7 +66,9 @@ describe("parseSettingsUpdateDto — security section (parsing)", () => {
     });
 
     test("rejects a non-string body value", () => {
-        expect(() => parseSettingsUpdateDto({ "security.connectExtras": 42 as unknown as string })).toThrow(InvalidParam);
+        expect(() => parseSettingsUpdateDto({ "security.connectExtras": 42 as unknown as string })).toThrow(
+            InvalidParam,
+        );
     });
 
     test("only sets connectExtras when only that key is present (partial update)", () => {
@@ -81,7 +83,10 @@ describe("parseSettingsUpdateDto — security section (parsing)", () => {
     });
 
     test("treats connectExtras and mediaExtras independently", () => {
-        const dto = parseSettingsUpdateDto({ "security.connectExtras": "https://api.x.com", "security.mediaExtras": "https://cdn.x.com" });
+        const dto = parseSettingsUpdateDto({
+            "security.connectExtras": "https://api.x.com",
+            "security.mediaExtras": "https://cdn.x.com",
+        });
         expect(dto.security?.connectExtras).toEqual(["https://api.x.com"]);
         expect(dto.security?.mediaExtras).toEqual(["https://cdn.x.com"]);
     });
@@ -98,43 +103,43 @@ describe("parseSettingsUpdateDto — security section (parsing)", () => {
 describe("parseSettingsUpdateDto — email section", () => {
     test("parses runtime SMTP settings from dotted form fields", () => {
         const dto = parseSettingsUpdateDto({
-            "email.enabled":                "true",
-            "email.fromEmail":              "no-reply@example.com",
-            "email.fromName":               "CMS",
-            "email.replyTo":                "support@example.com",
-            "email.transport":              "smtp",
-            "email.smtp.host":              "smtp.example.com",
-            "email.smtp.port":              "465",
-            "email.smtp.secure":            "true",
-            "email.smtp.username":          "postmaster@example.com",
+            "email.enabled": "true",
+            "email.fromEmail": "no-reply@example.com",
+            "email.fromName": "CMS",
+            "email.replyTo": "support@example.com",
+            "email.transport": "smtp",
+            "email.smtp.host": "smtp.example.com",
+            "email.smtp.port": "465",
+            "email.smtp.secure": "true",
+            "email.smtp.username": "postmaster@example.com",
             "email.smtp.passwordSecretRef": "${SMTP_PASSWORD}",
             "email.templates.emailVerification.subject": "Verify {{siteName}}",
-            "email.templates.emailVerification.html":    "<a href=\"{{actionUrl}}\">Verify</a>",
-            "email.templates.passwordReset.subject":     "Reset {{siteName}}",
-            "email.templates.passwordReset.html":        "<a href=\"{{actionUrl}}\">Reset</a>",
+            "email.templates.emailVerification.html": '<a href="{{actionUrl}}">Verify</a>',
+            "email.templates.passwordReset.subject": "Reset {{siteName}}",
+            "email.templates.passwordReset.html": '<a href="{{actionUrl}}">Reset</a>',
         });
 
         expect(dto.email).toEqual({
-            enabled:   true,
+            enabled: true,
             fromEmail: "no-reply@example.com",
-            fromName:  "CMS",
-            replyTo:   "support@example.com",
+            fromName: "CMS",
+            replyTo: "support@example.com",
             transport: "smtp",
-            smtp:      {
-                host:              "smtp.example.com",
-                port:              465,
-                secure:            true,
-                username:          "postmaster@example.com",
+            smtp: {
+                host: "smtp.example.com",
+                port: 465,
+                secure: true,
+                username: "postmaster@example.com",
                 passwordSecretRef: "${SMTP_PASSWORD}",
             },
             templates: {
                 emailVerification: {
                     subject: "Verify {{siteName}}",
-                    html:    "<a href=\"{{actionUrl}}\">Verify</a>",
+                    html: '<a href="{{actionUrl}}">Verify</a>',
                 },
                 passwordReset: {
                     subject: "Reset {{siteName}}",
-                    html:    "<a href=\"{{actionUrl}}\">Reset</a>",
+                    html: '<a href="{{actionUrl}}">Reset</a>',
                 },
             },
         });
@@ -142,7 +147,7 @@ describe("parseSettingsUpdateDto — email section", () => {
 
     test("parses checkbox false values", () => {
         const dto = parseSettingsUpdateDto({
-            "email.enabled":     "false",
+            "email.enabled": "false",
             "email.smtp.secure": "false",
         });
 
@@ -153,7 +158,7 @@ describe("parseSettingsUpdateDto — email section", () => {
 
     test("parses checkbox fallback arrays from duplicated form fields", () => {
         const dto = parseSettingsUpdateDto({
-            "email.enabled":     ["false", "true"],
+            "email.enabled": ["false", "true"],
             "email.smtp.secure": ["false", "true"],
         });
 

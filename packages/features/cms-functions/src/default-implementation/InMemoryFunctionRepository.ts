@@ -6,13 +6,17 @@ export class InMemoryFunctionRepository implements FunctionRepository {
     private readonly functions = new Map<string, CmsFunction>();
 
     async createFunction(fn: CmsFunction): Promise<CmsFunction> {
-        if (this.functions.has(fn.id)) throw new DuplicateFunctionError(fn.id);
+        if (this.functions.has(fn.id)) {
+            throw new DuplicateFunctionError(fn.id);
+        }
         this.functions.set(fn.id, structuredClone(fn));
         return structuredClone(fn);
     }
 
     async updateFunction(fn: CmsFunction): Promise<CmsFunction | null> {
-        if (!this.functions.has(fn.id)) return null;
+        if (!this.functions.has(fn.id)) {
+            return null;
+        }
         this.functions.set(fn.id, structuredClone(fn));
         return structuredClone(fn);
     }
@@ -27,6 +31,6 @@ export class InMemoryFunctionRepository implements FunctionRepository {
     }
 
     async getAllFunctions(): Promise<CmsFunction[]> {
-        return Array.from(this.functions.values(), fn => structuredClone(fn));
+        return Array.from(this.functions.values(), (fn) => structuredClone(fn));
     }
 }

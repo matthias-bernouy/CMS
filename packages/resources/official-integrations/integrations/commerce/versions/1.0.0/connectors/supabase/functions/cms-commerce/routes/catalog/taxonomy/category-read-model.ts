@@ -21,11 +21,17 @@ export async function getCategoryReadModel(
         p_category_id: categoryId,
         p_full_slug: fullSlug,
     });
-    if (isRecord(result) && result.state === "not_found") return null;
-    if (!isRecord(result) || result.state !== "ok" || !isRecord(result.category)
-        || (result.parent !== null && !isRecord(result.parent))
-        || !Array.isArray(result.category_fields)
-        || !(result.category_fields as unknown[]).every(isRecord)) {
+    if (isRecord(result) && result.state === "not_found") {
+        return null;
+    }
+    if (
+        !isRecord(result) ||
+        result.state !== "ok" ||
+        !isRecord(result.category) ||
+        (result.parent !== null && !isRecord(result.parent)) ||
+        !Array.isArray(result.category_fields) ||
+        !(result.category_fields as unknown[]).every(isRecord)
+    ) {
         throw new HttpError(502, "get_category_read_model returned an invalid response");
     }
     return {

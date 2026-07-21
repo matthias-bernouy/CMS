@@ -52,49 +52,70 @@ export async function fetchTracking(expeditionNumber: string): Promise<TrackingR
     }
     const source = await response.text();
     if (!response.ok) {
-        throw new ProviderStatusError(502, `Mondial Relay tracking returned HTTP ${response.status}`, trackingContext(false));
+        throw new ProviderStatusError(
+            502,
+            `Mondial Relay tracking returned HTTP ${response.status}`,
+            trackingContext(false),
+        );
     }
     const statusCode = xmlTag(source, "STAT");
-    if (!statusCode) throw new ProviderStatusError(502, "Mondial Relay tracking returned an invalid response", trackingContext(false));
+    if (!statusCode) {
+        throw new ProviderStatusError(
+            502,
+            "Mondial Relay tracking returned an invalid response",
+            trackingContext(false),
+        );
+    }
     if (!["80", "81", "82", "83"].includes(statusCode)) {
-        throw new ProviderStatusError(502, `Mondial Relay tracking returned status ${statusCode}`, trackingContext(true, statusCode));
+        throw new ProviderStatusError(
+            502,
+            `Mondial Relay tracking returned status ${statusCode}`,
+            trackingContext(true, statusCode),
+        );
     }
     const label = [xmlTag(source, "Libelle01"), xmlTag(source, "Libelle02")].filter(Boolean).join(" ");
-    const events = xmlBlocks(source, "Tracing").map(block => ({
-        event_label: xmlTag(block, "Libelle"),
-        event_date: frenchDate(xmlTag(block, "Date")),
-        event_time: xmlTag(block, "Heure") || undefined,
-        location: xmlTag(block, "Emplacement") || undefined,
-        relay_number: xmlTag(block, "Relais_Num") || undefined,
-        relay_country: xmlTag(block, "Relais_Pays") || undefined,
-        raw_event: {
-            label: xmlTag(block, "Libelle"),
-            date: xmlTag(block, "Date"),
-            time: xmlTag(block, "Heure"),
-            location: xmlTag(block, "Emplacement"),
-        },
-    })).filter(event => event.event_label).map(event => {
-        const occurredAt = providerOccurredAt(event);
-        const candidateStatus = normalizeTrackingLabel(String(event.event_label));
-        const normalizedStatus = !occurredAt && (candidateStatus === "collected_by_recipient" || candidateStatus === "carrier_accepted")
-            ? null
-            : candidateStatus;
-        return {
-            ...event,
-            normalized_status: normalizedStatus ?? undefined,
-            occurred_at: occurredAt ?? undefined,
-            provider_event_key: trackingEventKey(expeditionNumber, event),
-        };
-    });
+    const events = xmlBlocks(source, "Tracing")
+        .map((block) => ({
+            event_label: xmlTag(block, "Libelle"),
+            event_date: frenchDate(xmlTag(block, "Date")),
+            event_time: xmlTag(block, "Heure") || undefined,
+            location: xmlTag(block, "Emplacement") || undefined,
+            relay_number: xmlTag(block, "Relais_Num") || undefined,
+            relay_country: xmlTag(block, "Relais_Pays") || undefined,
+            raw_event: {
+                label: xmlTag(block, "Libelle"),
+                date: xmlTag(block, "Date"),
+                time: xmlTag(block, "Heure"),
+                location: xmlTag(block, "Emplacement"),
+            },
+        }))
+        .filter((event) => event.event_label)
+        .map((event) => {
+            const occurredAt = providerOccurredAt(event);
+            const candidateStatus = normalizeTrackingLabel(String(event.event_label));
+            const normalizedStatus =
+                !occurredAt && (candidateStatus === "collected_by_recipient" || candidateStatus === "carrier_accepted")
+                    ? null
+                    : candidateStatus;
+            return {
+                ...event,
+                normalized_status: normalizedStatus ?? undefined,
+                occurred_at: occurredAt ?? undefined,
+                provider_event_key: trackingEventKey(expeditionNumber, event),
+            };
+        });
     const summaryCandidate = normalizeTrackingLabel(label);
-    const summaryStatus = summaryCandidate === "collected_by_recipient" || summaryCandidate === "carrier_accepted"
-        ? null
-        : summaryCandidate;
+    const summaryStatus =
+        summaryCandidate === "collected_by_recipient" || summaryCandidate === "carrier_accepted"
+            ? null
+            : summaryCandidate;
     const status = events
-        .filter(event => event.normalized_status)
+        .filter((event) => event.normalized_status)
         .sort(compareEvents)
-        .reduce((current, event) => statusAfterObservation(current, String(event.normalized_status)),
-            summaryStatus ?? fallbackTrackingStatus(statusCode));
+        .reduce(
+            (current, event) => statusAfterObservation(current, String(event.normalized_status)),
+            summaryStatus ?? fallbackTrackingStatus(statusCode),
+        );
     return {
         status,
         statusCode,

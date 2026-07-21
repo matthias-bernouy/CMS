@@ -5,8 +5,8 @@ export type VariantFormat = "webp";
 
 export type VariantSpec = {
     /** Target width in px. Never upscales past the source's intrinsic width. */
-    width:    number;
-    format:   VariantFormat;
+    width: number;
+    format: VariantFormat;
     /** Encoder quality (1–100). Defaults to 75. */
     quality?: number;
 };
@@ -20,7 +20,10 @@ export type VariantSpec = {
  * `sharp` is lazy-imported so this module stays cheap to load: only the code
  * paths that actually generate (the worker / a cache miss) pull in libvips.
  */
-export async function generateImageVariant(source: Uint8Array, spec: VariantSpec): Promise<{ bytes: Uint8Array; width: number; height: number }> {
+export async function generateImageVariant(
+    source: Uint8Array,
+    spec: VariantSpec,
+): Promise<{ bytes: Uint8Array; width: number; height: number }> {
     const sharp = (await import("sharp")).default;
     const { data, info } = await sharp(source)
         .resize({ width: spec.width, withoutEnlargement: true })
@@ -62,9 +65,14 @@ export function manifestKey(contentHash: string): string {
 
 export async function readManifest(store: CmsFilesBlobStore, contentHash: string): Promise<VariantManifest | null> {
     const blob = await store.get(manifestKey(contentHash));
-    if (!blob) return null;
-    try { return JSON.parse(await new Response(blob).text()) as VariantManifest; }
-    catch { return null; }
+    if (!blob) {
+        return null;
+    }
+    try {
+        return JSON.parse(await new Response(blob).text()) as VariantManifest;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -82,17 +90,21 @@ export async function ensureVariants(
     ladder: number[],
 ): Promise<VariantManifest> {
     const existing = await readManifest(store, contentHash);
-    if (existing) return existing;
+    if (existing) {
+        return existing;
+    }
 
-    const dims = new Map<number, number>();    // actual width → actual height
+    const dims = new Map<number, number>(); // actual width → actual height
     for (const rung of ladder) {
         const { bytes, width, height } = await generateImageVariant(source, { width: rung, format: "webp" });
-        if (dims.has(width)) continue;          // ladder rung past the source → same bytes, skip
+        if (dims.has(width)) {
+            continue; // ladder rung past the source → same bytes, skip
+        }
         dims.set(width, height);
         await store.put(variantKey(contentHash, { width, format: "webp" }), bytes);
     }
     const widths = [...dims.keys()].sort((a, b) => a - b);
-    const maxW   = widths[widths.length - 1];   // largest variant carries the source's aspect ratio
+    const maxW = widths[widths.length - 1]; // largest variant carries the source's aspect ratio
     const manifest: VariantManifest = {
         format: "webp",
         widths,

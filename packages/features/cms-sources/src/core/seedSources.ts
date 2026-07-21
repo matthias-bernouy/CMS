@@ -17,20 +17,21 @@ export type SeedResult = { created: string[]; skipped: string[] };
  *
  * Uses only the `SourceRepository` INTERFACE (injection) — no impl.
  */
-export async function seedSources(
-    repo: SourceRepository,
-    sources: Source[],
-): Promise<SeedResult> {
+export async function seedSources(repo: SourceRepository, sources: Source[]): Promise<SeedResult> {
     // 1) Validation — nothing created if the manifest is invalid.
     const problems: string[] = [];
 
-    const urns = sources.map(p => p.urn);
+    const urns = sources.map((p) => p.urn);
     const dupes = [...new Set(urns.filter((u, i) => urns.indexOf(u) !== i))];
-    if (dupes.length > 0) problems.push(`duplicate source urns: ${dupes.join(", ")}`);
+    if (dupes.length > 0) {
+        problems.push(`duplicate source urns: ${dupes.join(", ")}`);
+    }
 
     for (const source of sources) {
         const errors = validateSource(source);
-        if (errors.length > 0) problems.push(`"${source.urn}" : ${errors.join(" ; ")}`);
+        if (errors.length > 0) {
+            problems.push(`"${source.urn}" : ${errors.join(" ; ")}`);
+        }
     }
 
     if (problems.length > 0) {

@@ -17,18 +17,22 @@ export function createSchemaControl(field: WDetailField): HTMLElement {
         return root;
     }
     const values = recordValue(field.value);
-    root.append(...definitions.map(definition => schemaRow(definition, values[definition.id])));
+    root.append(...definitions.map((definition) => schemaRow(definition, values[definition.id])));
     return root;
 }
 
 export function readSchemaControlValue(field: WDetailField, control: HTMLElement): Record<string, unknown> {
     const result = recordValue(field.value);
-    if (field.schemaStatus !== "ready") return result;
-    const definitions = new Map((field.schemaDefinitions ?? []).map(definition => [definition.id, definition]));
+    if (field.schemaStatus !== "ready") {
+        return result;
+    }
+    const definitions = new Map((field.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
     for (const element of Array.from(control.querySelectorAll<HTMLElement>("[data-schema-key]"))) {
         const key = element.dataset.schemaKey ?? "";
         const definition = definitions.get(key);
-        if (!definition || element.dataset.schemaDirty !== "true") continue;
+        if (!definition || element.dataset.schemaDirty !== "true") {
+            continue;
+        }
         result[key] = readSchemaValue(definition, element);
     }
     return result;
@@ -64,8 +68,10 @@ function schemaInput(definition: WDetailSchemaDefinition, value: unknown): HTMLE
         const selected = textValue(value);
         input.setAttribute("label", definition.label);
         input.setAttribute("value", selected);
-        if (definition.required) input.setAttribute("required", "");
-        input.replaceChildren(...definition.options.map(option => optionElement(option, selected)));
+        if (definition.required) {
+            input.setAttribute("required", "");
+        }
+        input.replaceChildren(...definition.options.map((option) => optionElement(option, selected)));
         input.value = selected;
         return input;
     }
@@ -73,32 +79,43 @@ function schemaInput(definition: WDetailSchemaDefinition, value: unknown): HTMLE
     input.setAttribute("label", definition.label);
     input.setAttribute("type", definition.type === "number" ? "number" : "text");
     input.setAttribute("value", textValue(value));
-    if (definition.required) input.setAttribute("required", "");
+    if (definition.required) {
+        input.setAttribute("required", "");
+    }
     input.value = textValue(value);
     return input;
 }
 
 function readSchemaValue(definition: WDetailSchemaDefinition, control: HTMLElement): unknown {
-    if (definition.type === "boolean" && control instanceof HTMLInputElement) return control.checked;
-    if (!isValueControl(control)) return undefined;
-    if (definition.type !== "number" || control.value === "") return control.value;
+    if (definition.type === "boolean" && control instanceof HTMLInputElement) {
+        return control.checked;
+    }
+    if (!isValueControl(control)) {
+        return undefined;
+    }
+    if (definition.type !== "number" || control.value === "") {
+        return control.value;
+    }
     const value = Number(control.value);
     return Number.isFinite(value) ? value : "";
 }
 
 function markDirty(event: Event): void {
     const control = (event.target as Element | null)?.closest<HTMLElement>("[data-schema-key]");
-    if (control) control.dataset.schemaDirty = "true";
+    if (control) {
+        control.dataset.schemaDirty = "true";
+    }
 }
 
 function statusMessage(status: WDetailField["schemaStatus"] | "empty"): HTMLElement {
     const message = document.createElement("span");
     message.className = `detail-schema-status detail-schema-status-${status ?? "loading"}`;
-    message.textContent = status === "error"
-        ? "Dynamic fields are temporarily unavailable. Existing values are preserved."
-        : status === "empty"
-            ? "No dynamic fields are configured."
-            : "Loading dynamic fields…";
+    message.textContent =
+        status === "error"
+            ? "Dynamic fields are temporarily unavailable. Existing values are preserved."
+            : status === "empty"
+              ? "No dynamic fields are configured."
+              : "Loading dynamic fields…";
     return message;
 }
 

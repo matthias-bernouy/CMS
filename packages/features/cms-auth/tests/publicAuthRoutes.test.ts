@@ -73,13 +73,13 @@ describe("public auth routes", () => {
             expect(loggedIn.status).toBe(200);
             const cookie = sessionCookie(loggedIn);
             expect(cookie).toContain("site-session=");
-            expect((await loggedIn.json() as { subject: { email: string; role: string } }).subject).toMatchObject({
+            expect(((await loggedIn.json()) as { subject: { email: string; role: string } }).subject).toMatchObject({
                 email: "a@x.com",
                 role: "user",
             });
 
             const me = await server.request("GET", "/me", { headers: { cookie } });
-            expect((await me.json() as { subject: { email: string; role: string } | null }).subject).toMatchObject({
+            expect(((await me.json()) as { subject: { email: string; role: string } | null }).subject).toMatchObject({
                 email: "a@x.com",
                 role: "user",
             });
@@ -95,14 +95,18 @@ describe("public auth routes", () => {
     test("signup skips verification when email delivery is disabled", async () => {
         const { server, credentials } = setup({ emailer: disabledEmailer() });
         try {
-            expect((await post(server, "/signup", {
-                email:    "disabled@x.com",
-                password: "password-1",
-            })).status).toBe(200);
+            expect(
+                (
+                    await post(server, "/signup", {
+                        email: "disabled@x.com",
+                        password: "password-1",
+                    })
+                ).status,
+            ).toBe(200);
             expect((await credentials.getByEmail("disabled@x.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
 
             const loggedIn = await post(server, "/login", {
-                email:    "disabled@x.com",
+                email: "disabled@x.com",
                 password: "password-1",
             });
             expect(loggedIn.status).toBe(200);
@@ -131,7 +135,9 @@ describe("public auth routes", () => {
             expect(emailer.sent[1]!.text).toContain("http://site.test/auth/reset-password?token=");
 
             const token = tokenFrom(emailer.sent[1]!.text);
-            expect((await post(server, "/password/reset/confirm", { token, password: "new-password" })).status).toBe(200);
+            expect((await post(server, "/password/reset/confirm", { token, password: "new-password" })).status).toBe(
+                200,
+            );
             expect((await credentials.getByEmail("reset@x.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
 
             expect((await post(server, "/login", { email: "reset@x.com", password: "old-password" })).status).toBe(401);
@@ -191,9 +197,13 @@ function post(server: TestServer, path: string, body: unknown): Promise<Response
 
 function tokenFrom(text: string): string {
     const match = /https?:\/\/\S+/.exec(text);
-    if (!match) throw new Error(`missing URL in ${text}`);
+    if (!match) {
+        throw new Error(`missing URL in ${text}`);
+    }
     const token = new URL(match[0]).searchParams.get("token");
-    if (!token) throw new Error(`missing token in ${match[0]}`);
+    if (!token) {
+        throw new Error(`missing token in ${match[0]}`);
+    }
     return token;
 }
 
@@ -204,7 +214,7 @@ function sessionCookie(res: Response): string {
 function disabledEmailer(): Emailer {
     return {
         isEnabled: async () => false,
-        send:      async () => {
+        send: async () => {
             throw new EmailConfigurationError("Email delivery is disabled.", "disabled");
         },
     };

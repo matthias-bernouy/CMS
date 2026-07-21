@@ -18,19 +18,22 @@ export class TextControlDynamicData {
             closeButton: () => HTMLButtonElement;
         },
     ) {
-        this._picker = new DynamicDataPickerController({
-            picker:      () => this._refs.picker(),
-            search:      () => this._refs.search(),
-            list:        () => this._refs.list(),
-            closeButton: () => this._refs.closeButton(),
-            rawScopes:   () => this._refs.host().getAttribute("data-scopes"),
-        }, {
-            saveSelection:    this.saveSelection,
-            restoreSelection: this.restoreSelection,
-            insertText:       (text) => this.insertText(text),
-            focusControl:     () => this._refs.control().focus(),
-            finish:           this.emitInput,
-        });
+        this._picker = new DynamicDataPickerController(
+            {
+                picker: () => this._refs.picker(),
+                search: () => this._refs.search(),
+                list: () => this._refs.list(),
+                closeButton: () => this._refs.closeButton(),
+                rawScopes: () => this._refs.host().getAttribute("data-scopes"),
+            },
+            {
+                saveSelection: this.saveSelection,
+                restoreSelection: this.restoreSelection,
+                insertText: (text) => this.insertText(text),
+                focusControl: () => this._refs.control().focus(),
+                finish: this.emitInput,
+            },
+        );
     }
 
     connect(): void {
@@ -58,14 +61,18 @@ export class TextControlDynamicData {
         const enabled = this._refs.host().hasAttribute("data-scopes") && !this._refs.host().hasAttribute("disabled");
         this._refs.button().hidden = !enabled;
         this._refs.button().disabled = !enabled;
-        if (!enabled) this._refs.picker().hidden = true;
+        if (!enabled) {
+            this._refs.picker().hidden = true;
+        }
         this.saveSelection();
     }
 
     private readonly openPicker = (event: Event): void => {
         event.preventDefault();
         event.stopPropagation();
-        if (this._refs.button().disabled) return;
+        if (this._refs.button().disabled) {
+            return;
+        }
         this._picker.open();
     };
 
@@ -90,8 +97,10 @@ export class TextControlDynamicData {
     }
 
     private readonly emitInput = (): void => {
-        this._refs.control().dispatchEvent(new Event("input", {
-            bubbles: true,
-        }));
+        this._refs.control().dispatchEvent(
+            new Event("input", {
+                bubbles: true,
+            }),
+        );
     };
 }

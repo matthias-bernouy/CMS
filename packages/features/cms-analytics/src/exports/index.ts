@@ -14,7 +14,11 @@ export type {
 
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
-export { ValidatingAnalyticsStore, validateAnalyticsEvent, AnalyticsValidationError } from "../core/ValidatingAnalyticsStore";
+export {
+    ValidatingAnalyticsStore,
+    validateAnalyticsEvent,
+    AnalyticsValidationError,
+} from "../core/ValidatingAnalyticsStore";
 
 // ── HTTP API (mount in an app's admin-guarded group) ──
 export {

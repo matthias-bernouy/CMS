@@ -11,8 +11,8 @@ export type FunctionCatalogSource = {
 export async function functionCatalog(cms: ControlCms): Promise<FunctionCatalogSource[]> {
     const sources = await cms.sources.getAllSources();
     return sources
-        .filter(source => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN)
-        .map(source => {
+        .filter((source) => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN)
+        .map((source) => {
             const dto = sourceToDto(source);
             return {
                 id: parseUrn(source.urn)?.source ?? dto.id,

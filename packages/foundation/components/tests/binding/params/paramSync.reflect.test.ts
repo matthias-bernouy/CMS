@@ -4,10 +4,32 @@ import { PARAMS_CHANGE_EVENT } from "../../../src/binding/params";
 
 let writtenUrls: string[] = [];
 const realReplace = history.replaceState.bind(history);
-afterEach(() => { history.replaceState = realReplace; location.href = "http://localhost/"; document.body.replaceChildren(); writtenUrls = []; });
-function spyReplaceState() { history.replaceState = ((_s: unknown, _t: unknown, url: string) => writtenUrls.push(url)) as typeof history.replaceState; }
-function input(attrs: Record<string, string>): HTMLInputElement { const el = document.createElement("input"); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); document.body.appendChild(el); return el; }
-async function waitFor(p: () => boolean, tries = 40) { for (let i = 0; i < tries; i++) { if (p()) return; await new Promise((r) => setTimeout(r, 20)); } }
+afterEach(() => {
+    history.replaceState = realReplace;
+    location.href = "http://localhost/";
+    document.body.replaceChildren();
+    writtenUrls = [];
+});
+function spyReplaceState() {
+    history.replaceState = ((_s: unknown, _t: unknown, url: string) =>
+        writtenUrls.push(url)) as typeof history.replaceState;
+}
+function input(attrs: Record<string, string>): HTMLInputElement {
+    const el = document.createElement("input");
+    for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+    }
+    document.body.appendChild(el);
+    return el;
+}
+async function waitFor(p: () => boolean, tries = 40) {
+    for (let i = 0; i < tries; i++) {
+        if (p()) {
+            return;
+        }
+        await new Promise((r) => setTimeout(r, 20));
+    }
+}
 
 describe("ParamSync — seed from param on start", () => {
     test("populates the control from an existing param", () => {
@@ -57,7 +79,8 @@ describe("ParamSync — param → value (two-way)", () => {
 
         // a source populates the options later
         const o = document.createElement("option");
-        o.value = "Histoire"; o.textContent = "Histoire";
+        o.value = "Histoire";
+        o.textContent = "Histoire";
         sel.appendChild(o);
 
         await waitFor(() => sel.value === "Histoire");

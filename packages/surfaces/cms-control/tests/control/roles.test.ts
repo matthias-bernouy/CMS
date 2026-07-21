@@ -37,10 +37,11 @@ describe("parseRoleDto", () => {
     });
 
     test("accepts a known CMS permission and a gateway urn", () => {
-        const dto = parseRoleDto({ id: "x", label: "X", grants: [
-            { permission: cmsPermission("users", "view") },
-            { permission: "urn:stripe:getInvoice" },
-        ] });
+        const dto = parseRoleDto({
+            id: "x",
+            label: "X",
+            grants: [{ permission: cmsPermission("users", "view") }, { permission: "urn:stripe:getInvoice" }],
+        });
         expect(dto.grants).toEqual([
             { permission: cmsPermission("users", "view") },
             { permission: "urn:stripe:getInvoice" },
@@ -48,9 +49,13 @@ describe("parseRoleDto", () => {
     });
 
     test("rejects conditional grants until an evaluator exists", () => {
-        expect(() => parseRoleDto({ id: "x", label: "X", grants: [
-            { permission: cmsPermission("users", "view"), condition: { foo: 1 } },
-        ] })).toThrow(InvalidParam);
+        expect(() =>
+            parseRoleDto({
+                id: "x",
+                label: "X",
+                grants: [{ permission: cmsPermission("users", "view"), condition: { foo: 1 } }],
+            }),
+        ).toThrow(InvalidParam);
     });
 });
 
@@ -85,7 +90,11 @@ describe("manageableRoles", () => {
 
     test("custom role is deletable and reflects its grant count", async () => {
         const { cms, roles } = makeCms();
-        await seedRole(roles, { id: "editor", label: "Editor", grants: [{ permission: cmsPermission("pages", "edit") }] });
+        await seedRole(roles, {
+            id: "editor",
+            label: "Editor",
+            grants: [{ permission: cmsPermission("pages", "edit") }],
+        });
         const row = (await manageableRoles(cms)).find((r) => r.id === "editor")!;
         expect(row.hideDelete).toBe("");
         expect(row.permissions).toBe("1");

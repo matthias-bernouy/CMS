@@ -3,11 +3,11 @@ import type { CoverageBaseline, CoverageMetric, PackageCoverage } from "../types
 
 function assertMetric(metric: CoverageMetric, label: string): void {
     if (
-        !Number.isSafeInteger(metric.covered)
-        || !Number.isSafeInteger(metric.total)
-        || metric.covered < 0
-        || metric.total < 0
-        || metric.covered > metric.total
+        !Number.isSafeInteger(metric.covered) ||
+        !Number.isSafeInteger(metric.total) ||
+        metric.covered < 0 ||
+        metric.total < 0 ||
+        metric.covered > metric.total
     ) {
         throw new Error(`Invalid coverage metric for ${label}`);
     }
@@ -33,18 +33,24 @@ function assertSourceFiles(coverage: PackageCoverage, label: string): void {
         throw new Error(`${label} lists a source file as both covered and uncovered`);
     }
     if (
-        coverage.files.covered !== coverage.coveredSourceFiles.length
-        || coverage.files.total !== coverage.coveredSourceFiles.length + coverage.uncoveredSourceFiles.length
+        coverage.files.covered !== coverage.coveredSourceFiles.length ||
+        coverage.files.total !== coverage.coveredSourceFiles.length + coverage.uncoveredSourceFiles.length
     ) {
         throw new Error(`${label}.files does not match its exact source-file lists`);
     }
 }
 
 export function validateBaseline(value: unknown): asserts value is CoverageBaseline {
-    if (!value || typeof value !== "object") throw new Error("Coverage baseline must be an object");
+    if (!value || typeof value !== "object") {
+        throw new Error("Coverage baseline must be an object");
+    }
     const baseline = value as Partial<CoverageBaseline>;
-    if (baseline.schemaVersion !== 1) throw new Error("Unsupported coverage baseline schema");
-    if (typeof baseline.bunVersion !== "string") throw new Error("Coverage baseline has no Bun version");
+    if (baseline.schemaVersion !== 1) {
+        throw new Error("Unsupported coverage baseline schema");
+    }
+    if (typeof baseline.bunVersion !== "string") {
+        throw new Error("Coverage baseline has no Bun version");
+    }
     if (!baseline.packages || typeof baseline.packages !== "object") {
         throw new Error("Coverage baseline has no package map");
     }

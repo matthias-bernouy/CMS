@@ -30,12 +30,16 @@ export async function runFunctionSteps(
             if (failure?.status && failure.status >= 500) {
                 throw new FunctionExecutionError("Function assertion failed", failure.status);
             }
-            if (failure) return failure;
+            if (failure) {
+                return failure;
+            }
             continue;
         }
         if ("forEach" in step) {
             const failure = await executeForEach(step.id, step.forEach, vars, options, definition, budget);
-            if (failure) return failure;
+            if (failure) {
+                return failure;
+            }
             continue;
         }
         if (budget.calls >= MAX_FUNCTION_CALLS) {
@@ -66,20 +70,25 @@ async function executeForEach(
         );
     }
     const items = resolveFunctionValue(loop.items, vars);
-    if (!Array.isArray(items)) throw new FunctionExecutionError(`forEach "${id}" items must be an array`, 400);
-    if (items.length > loop.max) throw new FunctionExecutionError(`forEach "${id}" exceeds max items`, 400);
+    if (!Array.isArray(items)) {
+        throw new FunctionExecutionError(`forEach "${id}" items must be an array`, 400);
+    }
+    if (items.length > loop.max) {
+        throw new FunctionExecutionError(`forEach "${id}" exceeds max items`, 400);
+    }
 
     const results: unknown[] = [];
     const resultBudget: ResultBudget = {
         bytes: loop.continueOnError === true ? 2 : 0,
-        maxBytes: loop.continueOnError === true
-            ? options.maxResponseBytes ?? MAX_FUNCTION_RESPONSE_BYTES
-            : Number.POSITIVE_INFINITY,
+        maxBytes:
+            loop.continueOnError === true
+                ? (options.maxResponseBytes ?? MAX_FUNCTION_RESPONSE_BYTES)
+                : Number.POSITIVE_INFINITY,
     };
     assertResultBudget(id, resultBudget);
     const innerCallIds = loop.steps
         .filter((step): step is Extract<FunctionStep, { call: FunctionCall }> => "call" in step)
-        .map(step => step.id);
+        .map((step) => step.id);
 
     for (const [index, item] of items.entries()) {
         const childVars: FunctionRuntimeVars = {
@@ -92,11 +101,15 @@ async function executeForEach(
         try {
             const failure = await runFunctionSteps(loop.steps, childVars, options, definition, budget);
             if (failure) {
-                if (loop.continueOnError !== true) return failure;
+                if (loop.continueOnError !== true) {
+                    return failure;
+                }
                 needsRecovery = true;
             }
         } catch (error) {
-            if (loop.continueOnError !== true || !isRecoverableForEachError(error)) throw error;
+            if (loop.continueOnError !== true || !isRecoverableForEachError(error)) {
+                throw error;
+            }
             needsRecovery = true;
         }
         if (needsRecovery) {
@@ -110,12 +123,19 @@ async function executeForEach(
                 results,
                 resultBudget,
             );
-            if (failure) return failure;
+            if (failure) {
+                return failure;
+            }
             continue;
         }
-        pushForEachResult(id, results, loop.yield === undefined
-            ? Object.fromEntries(innerCallIds.map(stepId => [stepId, childVars.steps?.[stepId]]))
-            : resolveFunctionValue(loop.yield, childVars), resultBudget);
+        pushForEachResult(
+            id,
+            results,
+            loop.yield === undefined
+                ? Object.fromEntries(innerCallIds.map((stepId) => [stepId, childVars.steps?.[stepId]]))
+                : resolveFunctionValue(loop.yield, childVars),
+            resultBudget,
+        );
     }
 
     vars.steps ??= {};
@@ -137,7 +157,9 @@ async function recoverForEachItem(
         throw new FunctionExecutionError("A continuing forEach error requires onError steps", 500);
     }
     const failure = await runFunctionSteps(loop.onError, vars, options, definition, budget);
-    if (failure) return failure;
+    if (failure) {
+        return failure;
+    }
     const errorYield = loop.errorYield === undefined ? { failed: true } : loop.errorYield;
     pushForEachResult(id, results, resolveFunctionValue(errorYield, vars), resultBudget);
     return undefined;
@@ -165,7 +187,9 @@ function assertResultBudget(id: string, budget: ResultBudget): void {
 }
 
 function assertFailureResponse(assertion: FunctionAssert, vars: FunctionRuntimeVars): Response | undefined {
-    if (evaluateCondition(assertion.condition, vars)) return undefined;
+    if (evaluateCondition(assertion.condition, vars)) {
+        return undefined;
+    }
     const failure = assertion.failure ?? {};
     return json({ error: failure.error ?? "Forbidden" }, failure.status ?? 403);
 }

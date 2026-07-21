@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 
 import { Card } from "../src/ui/Card/Card";
 
-if (!customElements.get("p9r-card-test")) customElements.define("p9r-card-test", Card);
+if (!customElements.get("p9r-card-test")) {
+    customElements.define("p9r-card-test", Card);
+}
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 

@@ -46,21 +46,25 @@ function setup() {
     return { cms, users, credentials, emailer };
 }
 
-const req = (body: Record<string, unknown>) => new Request("http://control/api/users/action", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-});
+const req = (body: Record<string, unknown>) =>
+    new Request("http://control/api/users/action", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+    });
 
 describe("admin user auth actions", () => {
     test("resends verification and marks email verified for local users", async () => {
         const { cms, credentials, emailer } = setup();
-        const user = await createLocalUser({ credentials, users: cms.users }, {
-            email: "ada@example.com",
-            password: "password-1",
-            role: "user",
-            emailVerified: false,
-        });
+        const user = await createLocalUser(
+            { credentials, users: cms.users },
+            {
+                email: "ada@example.com",
+                password: "password-1",
+                role: "user",
+                emailVerified: false,
+            },
+        );
 
         expect((await resendVerification(req({ sub: user.sub }), cms)).status).toBe(200);
         expect(emailer.sent).toHaveLength(1);
@@ -72,31 +76,37 @@ describe("admin user auth actions", () => {
 
     test("sends password reset and exposes verification status in users list", async () => {
         const { cms, credentials, emailer } = setup();
-        const user = await createLocalUser({ credentials, users: cms.users }, {
-            email: "reset@example.com",
-            password: "password-1",
-            role: "user",
-        });
+        const user = await createLocalUser(
+            { credentials, users: cms.users },
+            {
+                email: "reset@example.com",
+                password: "password-1",
+                role: "user",
+            },
+        );
 
         expect((await sendReset(req({ sub: user.sub }), cms)).status).toBe(200);
         expect(emailer.sent).toHaveLength(1);
         expect(emailer.sent[0]!.text).toContain("http://control.test/auth/reset-password?token=");
 
         const res = await listUsers(new Request("http://control/api/users"), cms);
-        const rows = await res.json() as Array<{ sub: string; emailVerifiedAt: string | null }>;
+        const rows = (await res.json()) as Array<{ sub: string; emailVerifiedAt: string | null }>;
         expect(rows.find((row) => row.sub === user.sub)?.emailVerifiedAt).toBeTruthy();
     });
 
     test("returns one enriched user for the detail view", async () => {
         const { cms, credentials } = setup();
-        const user = await createLocalUser({ credentials, users: cms.users }, {
-            email: "detail@example.com",
-            password: "password-1",
-            role: "user",
-        });
+        const user = await createLocalUser(
+            { credentials, users: cms.users },
+            {
+                email: "detail@example.com",
+                password: "password-1",
+                role: "user",
+            },
+        );
 
         const res = await listUsers(new Request(`http://control/api/users?sub=${encodeURIComponent(user.sub)}`), cms);
-        const row = await res.json() as {
+        const row = (await res.json()) as {
             sub: string;
             label: string;
             roleLabel: string;

@@ -5,17 +5,19 @@ import type { TriggerRepository } from "@bernouy/cms-triggers";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { SourceOverlayRepository, SourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import type {
-    IntegrationAnswerValue,
-    IntegrationDefinition,
-} from "./Integration";
+import type { IntegrationAnswerValue, IntegrationDefinition } from "./Integration";
 import type { IntegrationInstallationRepository } from "./IntegrationInstallationRepository";
-import type {
-    IntegrationConnectorDeployer,
-    IntegrationConnectorDeployResult,
-} from "./IntegrationConnectorDeployer";
+import type { IntegrationConnectorDeployer, IntegrationConnectorDeployResult } from "./IntegrationConnectorDeployer";
 
-export type IntegrationArtifactType = "source" | "function" | "trigger" | "dashboard" | "bloc" | "sourceOverlay" | "relation" | "dashboardRelation";
+export type IntegrationArtifactType =
+    | "source"
+    | "function"
+    | "trigger"
+    | "dashboard"
+    | "bloc"
+    | "sourceOverlay"
+    | "relation"
+    | "dashboardRelation";
 
 export type IntegrationArtifactAction = "created" | "updated" | "skipped";
 

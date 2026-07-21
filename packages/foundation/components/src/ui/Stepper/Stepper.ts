@@ -1,12 +1,11 @@
 import { Component } from "@bernouy/components/base";
 
-import template from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import template from "./template.html" with { type: "text" };
+import css from "./style.css" with { type: "text" };
 
 export class Stepper extends Component {
-
     static get observedAttributes() {
-        return ['current', 'orientation'];
+        return ["current", "orientation"];
     }
 
     constructor() {
@@ -25,31 +24,42 @@ export class Stepper extends Component {
     }
 
     get current(): number {
-        const n = parseInt(this.getAttribute('current') ?? '', 10);
+        const n = parseInt(this.getAttribute("current") ?? "", 10);
         return Number.isFinite(n) ? n : 0;
     }
 
-    set current(v: number) { this.setAttribute('current', String(v)); }
+    set current(v: number) {
+        this.setAttribute("current", String(v));
+    }
 
     private _steps(): HTMLElement[] {
-        return Array.from(this.querySelectorAll('p9r-step')) as HTMLElement[];
+        return Array.from(this.querySelectorAll("p9r-step")) as HTMLElement[];
     }
 
     private _sync() {
-        const orientation = this.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal';
+        const orientation = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal";
         const current = this.current;
         const steps = this._steps();
         steps.forEach((step, i) => {
-            step.setAttribute('data-index', String(i + 1));
-            step.setAttribute('orientation', orientation);
+            step.setAttribute("data-index", String(i + 1));
+            step.setAttribute("orientation", orientation);
             const isLast = i === steps.length - 1;
-            if (isLast) step.setAttribute('last', '');
-            else step.removeAttribute('last');
+            if (isLast) {
+                step.setAttribute("last", "");
+            } else {
+                step.removeAttribute("last");
+            }
 
-            if (step.hasAttribute('state')) return;
-            if (i < current)        step.setAttribute('data-state', 'completed');
-            else if (i === current) step.setAttribute('data-state', 'active');
-            else                    step.setAttribute('data-state', 'pending');
+            if (step.hasAttribute("state")) {
+                return;
+            }
+            if (i < current) {
+                step.setAttribute("data-state", "completed");
+            } else if (i === current) {
+                step.setAttribute("data-state", "active");
+            } else {
+                step.setAttribute("data-state", "pending");
+            }
         });
     }
 }

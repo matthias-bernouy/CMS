@@ -24,24 +24,24 @@ export function createShellControllerServices(
 ) {
     let events: ShellEvents;
     const mutations = new ShellMutations({
-        frameDocument:          () => frames.frameDocument,
-        editorDocument:         () => state.editorDocument,
-        runtime:                () => state.runtime,
-        insertItems:            () => state.insertItems,
-        repeatPicker:           () => refs.repeatPicker,
-        findStructureNodeLabel: editor => renderSync.findStructureNodeLabel(editor),
+        frameDocument: () => frames.frameDocument,
+        editorDocument: () => state.editorDocument,
+        runtime: () => state.runtime,
+        insertItems: () => state.insertItems,
+        repeatPicker: () => refs.repeatPicker,
+        findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
         isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
-        loadDocument:           (document, selectedTarget = null) => host.loadDocument(document, selectedTarget),
-        syncViewFrameContent:   () => renderSync.syncViewFrameContent(),
+        loadDocument: (document, selectedTarget = null) => host.loadDocument(document, selectedTarget),
+        syncViewFrameContent: () => renderSync.syncViewFrameContent(),
     });
     const selection = new ShellSelection({
-        runtime:              () => state.runtime,
-        settings:             () => refs.settings,
-        dataSources:          () => state.dataSources,
-        settingsMode:         () => state.settingsMode,
-        stateSessions:        () => stateSessions,
-        highlight:            () => highlight,
-        renderStructure:      options => renderSync.renderStructure(options),
+        runtime: () => state.runtime,
+        settings: () => refs.settings,
+        dataSources: () => state.dataSources,
+        settingsMode: () => state.settingsMode,
+        stateSessions: () => stateSessions,
+        highlight: () => highlight,
+        renderStructure: (options) => renderSync.renderStructure(options),
         syncViewFrameContent: () => renderSync.syncViewFrameContent(),
     });
     const sync = new ShellSync({
@@ -57,8 +57,8 @@ export function createShellControllerServices(
         selection,
         renderSync,
         frameClickHandler: () => events.onFrameClick,
-        saveEventName:    "editor-v2:save-document",
-        deleteEventName:  "editor-v2:delete-document",
+        saveEventName: "editor-v2:save-document",
+        deleteEventName: "editor-v2:delete-document",
     });
     events = new ShellEvents({
         state,
@@ -67,7 +67,7 @@ export function createShellControllerServices(
         commands,
         renderSync,
         highlight,
-        frameClickTarget: event => eventElement(event),
+        frameClickTarget: (event) => eventElement(event),
     });
     return {
         mutations,

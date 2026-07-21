@@ -88,14 +88,14 @@ describe("BindingRuntime — deactivate / resume (editor pause)", () => {
 
         const rt = new BindingRuntime(root);
         rt.start();
-        await waitFor(() => text(root.querySelector("p")) === "Ada");   // live render
+        await waitFor(() => text(root.querySelector("p")) === "Ada"); // live render
 
         rt.deactivate();
         await settle();
-        expect(text(root.querySelector("p"))).toBe("{{ name }}");        // authored template restored
-        expect(src.hasAttribute("cms-ready")).toBe(true);                // revealed — cloak won't hide it
-        expect(rt.size).toBe(0);                                         // torn down
-        expect(rt.isStopped).toBe(true);                                 // single-use
+        expect(text(root.querySelector("p"))).toBe("{{ name }}"); // authored template restored
+        expect(src.hasAttribute("cms-ready")).toBe(true); // revealed — cloak won't hide it
+        expect(rt.size).toBe(0); // torn down
+        expect(rt.isStopped).toBe(true); // single-use
 
         // Resume = a FRESH runtime (the editor's startRuntime): re-discovers the
         // restored template and renders it with data again.
@@ -136,7 +136,9 @@ describe("BindingRuntime — deactivate / resume (editor pause)", () => {
 
 describe("clearRuntimeStamps", () => {
     test("removes cms-ready from root + subtree, leaving authored directives intact", () => {
-        const root = el(`<div cms-ready><div cms-source="/x" cms-ready><span cms-repeat="items">{{ name }}</span></div></div>`);
+        const root = el(
+            `<div cms-ready><div cms-source="/x" cms-ready><span cms-repeat="items">{{ name }}</span></div></div>`,
+        );
         clearRuntimeStamps(root);
         expect(root.hasAttribute("cms-ready")).toBe(false);
         const src = root.querySelector("[cms-source]")!;

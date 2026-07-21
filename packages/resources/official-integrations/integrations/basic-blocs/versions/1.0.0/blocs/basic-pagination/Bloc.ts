@@ -36,7 +36,9 @@ export class BasicPagination extends Component {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     get page() {
@@ -75,8 +77,11 @@ export class BasicPagination extends Component {
             .replaceAll("{total}", String(this.total));
         this.style.setProperty("--basic-pagination-justify", justifyValue(this.getAttribute("justify")));
         const textColor = this.getAttribute("text-color")?.trim();
-        if (textColor) this.style.setProperty("--basic-pagination-color", textColor);
-        else this.style.removeProperty("--basic-pagination-color");
+        if (textColor) {
+            this.style.setProperty("--basic-pagination-color", textColor);
+        } else {
+            this.style.removeProperty("--basic-pagination-color");
+        }
         for (const button of [this.previousButton, this.nextButton]) {
             copyAttribute(this, button, "accent-color");
             copyAttribute(this, button, "button-background-color", "background-color");
@@ -87,25 +92,35 @@ export class BasicPagination extends Component {
 
     changePage(page) {
         const nextPage = Math.min(Math.max(page, 1), this.pageCount);
-        if (nextPage === this.page) return;
+        if (nextPage === this.page) {
+            return;
+        }
         this.page = nextPage;
-        this.dispatchEvent(new CustomEvent("basic-pagination:change", {
-            bubbles: true,
-            composed: true,
-            detail: {
-                page: nextPage,
-                limit: this.pageSize,
-                offset: (nextPage - 1) * this.pageSize,
-            },
-        }));
+        this.dispatchEvent(
+            new CustomEvent("basic-pagination:change", {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    page: nextPage,
+                    limit: this.pageSize,
+                    offset: (nextPage - 1) * this.pageSize,
+                },
+            }),
+        );
     }
 
     onPrevious = () => this.changePage(this.page - 1);
     onNext = () => this.changePage(this.page + 1);
 
-    get previousButton() { return this.shadowRoot.querySelector("[data-previous]"); }
-    get nextButton() { return this.shadowRoot.querySelector("[data-next]"); }
-    get summaryElement() { return this.shadowRoot.querySelector("[data-summary]"); }
+    get previousButton() {
+        return this.shadowRoot.querySelector("[data-previous]");
+    }
+    get nextButton() {
+        return this.shadowRoot.querySelector("[data-next]");
+    }
+    get summaryElement() {
+        return this.shadowRoot.querySelector("[data-summary]");
+    }
 }
 
 function positiveInteger(value, fallback) {
@@ -119,16 +134,25 @@ function nonNegativeInteger(value, fallback) {
 }
 
 function justifyValue(value) {
-    if (value === "start") return "flex-start";
-    if (value === "center") return "center";
-    if (value === "end") return "flex-end";
+    if (value === "start") {
+        return "flex-start";
+    }
+    if (value === "center") {
+        return "center";
+    }
+    if (value === "end") {
+        return "flex-end";
+    }
     return "space-between";
 }
 
 function copyAttribute(source, target, sourceName, targetName = sourceName) {
     const value = source.getAttribute(sourceName)?.trim();
-    if (value) target.setAttribute(targetName, value);
-    else target.removeAttribute(targetName);
+    if (value) {
+        target.setAttribute(targetName, value);
+    } else {
+        target.removeAttribute(targetName);
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", BasicPagination);

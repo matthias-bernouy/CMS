@@ -2,13 +2,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { percentage } from "../policy/comparison";
 import { parseLcov } from "./lcov";
-import {
-    isPackageSourceFile,
-    normalizePath,
-    REPOSITORY_ROOT,
-    repositoryPath,
-    shouldSkipDirectory,
-} from "../paths";
+import { isPackageSourceFile, normalizePath, REPOSITORY_ROOT, repositoryPath, shouldSkipDirectory } from "../paths";
 import { assertEveryPackageHasTests } from "../policy/policy";
 import type { CoveragePackage, PackageCoverage } from "../types";
 
@@ -17,7 +11,9 @@ async function pathExists(path: string): Promise<boolean> {
         await stat(path);
         return true;
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            return false;
+        }
         throw error;
     }
 }
@@ -26,13 +22,17 @@ async function collectSourceFiles(root: string, packagePath: string): Promise<Se
     const sourceFiles = new Set<string>();
     async function visit(directory: string): Promise<void> {
         for (const entry of await readdir(directory, { withFileTypes: true })) {
-            if (entry.isDirectory() && shouldSkipDirectory(entry.name)) continue;
+            if (entry.isDirectory() && shouldSkipDirectory(entry.name)) {
+                continue;
+            }
             const absolutePath = join(directory, entry.name);
             if (entry.isDirectory()) {
                 await visit(absolutePath);
             } else {
                 const path = repositoryPath(absolutePath);
-                if (isPackageSourceFile(path, packagePath)) sourceFiles.add(path);
+                if (isPackageSourceFile(path, packagePath)) {
+                    sourceFiles.add(path);
+                }
             }
         }
     }
@@ -43,10 +43,14 @@ async function collectSourceFiles(root: string, packagePath: string): Promise<Se
 export async function discoverPackages(): Promise<CoveragePackage[]> {
     const packages: CoveragePackage[] = [];
     for (const layer of await readdir(join(REPOSITORY_ROOT, "packages"), { withFileTypes: true })) {
-        if (!layer.isDirectory()) continue;
+        if (!layer.isDirectory()) {
+            continue;
+        }
         const layerPath = join(REPOSITORY_ROOT, "packages", layer.name);
         for (const entry of await readdir(layerPath, { withFileTypes: true })) {
-            if (!entry.isDirectory()) continue;
+            if (!entry.isDirectory()) {
+                continue;
+            }
             const packageRoot = join(layerPath, entry.name);
             const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")) as {
                 name?: unknown;
@@ -66,24 +70,24 @@ export async function discoverPackages(): Promise<CoveragePackage[]> {
     return sortedPackages;
 }
 
-export async function measurePackage(
-    packageInfo: CoveragePackage,
-    temporaryRoot: string,
-): Promise<PackageCoverage> {
+export async function measurePackage(packageInfo: CoveragePackage, temporaryRoot: string): Promise<PackageCoverage> {
     const outputDirectory = join(temporaryRoot, packageInfo.name.replace(/[^a-z0-9]+/gi, "-"));
-    const testProcess = Bun.spawn([
-        process.execPath,
-        "test",
-        `${packageInfo.path}/tests`,
-        "--coverage",
-        "--coverage-reporter=lcov",
-        `--coverage-dir=${outputDirectory}`,
-    ], {
-        cwd: REPOSITORY_ROOT,
-        env: { ...process.env, CI: "true" },
-        stdout: "pipe",
-        stderr: "pipe",
-    });
+    const testProcess = Bun.spawn(
+        [
+            process.execPath,
+            "test",
+            `${packageInfo.path}/tests`,
+            "--coverage",
+            "--coverage-reporter=lcov",
+            `--coverage-dir=${outputDirectory}`,
+        ],
+        {
+            cwd: REPOSITORY_ROOT,
+            env: { ...process.env, CI: "true" },
+            stdout: "pipe",
+            stderr: "pipe",
+        },
+    );
     const stdout = new Response(testProcess.stdout).text();
     const stderr = new Response(testProcess.stderr).text();
     const exitCode = await testProcess.exited;
@@ -113,8 +117,9 @@ export function coverageReport(packages: Record<string, PackageCoverage>): strin
     const rows = [
         "| Package | Files | Lines | Functions |",
         "|---|---:|---:|---:|",
-        ...Object.entries(packages).map(([name, coverage]) =>
-            `| ${name} | ${percentage(coverage.files)} | ${percentage(coverage.lines)} | ${percentage(coverage.functions)} |`
+        ...Object.entries(packages).map(
+            ([name, coverage]) =>
+                `| ${name} | ${percentage(coverage.files)} | ${percentage(coverage.lines)} | ${percentage(coverage.functions)} |`,
         ),
     ];
     return ["## Per-package coverage", "", ...rows, ""].join("\n");

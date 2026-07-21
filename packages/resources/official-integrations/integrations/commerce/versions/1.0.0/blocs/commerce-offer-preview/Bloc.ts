@@ -28,7 +28,9 @@ export class CommerceOfferPreview extends Component {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     sync() {
@@ -41,10 +43,16 @@ export class CommerceOfferPreview extends Component {
             this.navigation.removeAttribute("aria-label");
         }
         const target = this.getAttribute("target")?.trim();
-        if (target) this.navigation.setAttribute("target", target);
-        else this.navigation.removeAttribute("target");
-        if (target === "_blank") this.navigation.setAttribute("rel", "noopener noreferrer");
-        else this.navigation.removeAttribute("rel");
+        if (target) {
+            this.navigation.setAttribute("target", target);
+        } else {
+            this.navigation.removeAttribute("target");
+        }
+        if (target === "_blank") {
+            this.navigation.setAttribute("rel", "noopener noreferrer");
+        } else {
+            this.navigation.removeAttribute("rel");
+        }
 
         const price = formatMoney(
             this.getAttribute("amount"),
@@ -64,8 +72,11 @@ export class CommerceOfferPreview extends Component {
             ["text-color", "--commerce-offer-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
     }
 
@@ -90,7 +101,9 @@ export class CommerceOfferPreview extends Component {
 function formatMoney(rawAmount, rawCurrency, rawLocale) {
     const amount = Number(rawAmount);
     const currency = rawCurrency?.trim().toUpperCase();
-    if (!Number.isFinite(amount) || !currency) return "";
+    if (!Number.isFinite(amount) || !currency) {
+        return "";
+    }
     try {
         return new Intl.NumberFormat(rawLocale?.trim() || undefined, {
             style: "currency",

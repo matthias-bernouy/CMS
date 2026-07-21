@@ -24,14 +24,12 @@ function makeRequest(body: Record<string, unknown>) {
 describe("POST /api/page (create)", () => {
     test("throws when title is missing", async () => {
         const { cms } = makeSystem();
-        await expect(postPage(makeRequest({ path: "/about" }), cms))
-            .rejects.toThrow(/Missing param title/);
+        await expect(postPage(makeRequest({ path: "/about" }), cms)).rejects.toThrow(/Missing param title/);
     });
 
     test("throws when path is missing", async () => {
         const { cms } = makeSystem();
-        await expect(postPage(makeRequest({ title: "About" }), cms))
-            .rejects.toThrow(/Missing param path/);
+        await expect(postPage(makeRequest({ title: "About" }), cms)).rejects.toThrow(/Missing param path/);
     });
 
     test("happy path: calls insertPage and returns ok", async () => {
@@ -40,5 +38,4 @@ describe("POST /api/page (create)", () => {
         expect(res.ok).toBe(true);
         expect(insertCalls).toEqual([{ path: "/about", title: "About" }]);
     });
-
 });

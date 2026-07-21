@@ -21,7 +21,9 @@ function captureServeOptions(start: (runner: BunRunner) => void): CapturedServeO
     try {
         start(runner);
         runner.stop();
-        if (!captured) throw new Error("Bun.serve was not called");
+        if (!captured) {
+            throw new Error("Bun.serve was not called");
+        }
         return captured;
     } finally {
         runner.stop();

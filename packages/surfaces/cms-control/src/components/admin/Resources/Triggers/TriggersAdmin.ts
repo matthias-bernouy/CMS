@@ -35,7 +35,7 @@ export class TriggersAdmin extends HTMLElement {
     }
 
     private renderRows(triggers: TriggerListItem[]): void {
-        this.rows?.replaceChildren(...triggers.map(trigger => this.row(trigger)));
+        this.rows?.replaceChildren(...triggers.map((trigger) => this.row(trigger)));
     }
 
     private row(trigger: TriggerListItem): HTMLTableRowElement {
@@ -75,12 +75,17 @@ export class TriggersAdmin extends HTMLElement {
     }
 }
 
-if (!customElements.get("cms-triggers-admin")) customElements.define("cms-triggers-admin", TriggersAdmin);
+if (!customElements.get("cms-triggers-admin")) {
+    customElements.define("cms-triggers-admin", TriggersAdmin);
+}
 
 function cell(content: Node | string): HTMLTableCellElement {
     const td = document.createElement("td");
-    if (typeof content === "string") td.textContent = content;
-    else td.append(content);
+    if (typeof content === "string") {
+        td.textContent = content;
+    } else {
+        td.append(content);
+    }
     return td;
 }
 
@@ -99,15 +104,17 @@ function textBlock(primary: string, secondary: string): HTMLElement {
 function lastRun(trigger: TriggerListItem): HTMLElement {
     const badge = document.createElement("span");
     badge.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
-    badge.textContent = trigger.lastRun
-        ? `${trigger.lastRun.status} - ${formatDate(trigger.lastRun.at)}`
-        : "Never";
-    if (trigger.lastRun?.error) badge.title = trigger.lastRun.error;
+    badge.textContent = trigger.lastRun ? `${trigger.lastRun.status} - ${formatDate(trigger.lastRun.at)}` : "Never";
+    if (trigger.lastRun?.error) {
+        badge.title = trigger.lastRun.error;
+    }
     return badge;
 }
 
 function formatDate(value: string): string {
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
 }

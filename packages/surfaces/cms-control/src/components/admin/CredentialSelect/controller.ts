@@ -3,8 +3,12 @@ import { secretKeyToRef, secretRefToKey } from "@bernouy/cms-secrets";
 import { fetchKeys } from "./flows";
 
 /** Storage `${KEY}` ↔ display `KEY`. */
-export function refToDisplay(ref: string): string  { return secretRefToKey(ref) ?? ""; }
-export function keyToRef   (key: string): string   { return secretKeyToRef(key); }
+export function refToDisplay(ref: string): string {
+    return secretRefToKey(ref) ?? "";
+}
+export function keyToRef(key: string): string {
+    return secretKeyToRef(key);
+}
 
 export function setValue(host: CredentialSelect, ref: string): void {
     host._value = ref;
@@ -14,7 +18,7 @@ export function setValue(host: CredentialSelect, ref: string): void {
     const has = ref !== "";
     host._refs.trigger.classList.toggle("has-value", has);
     host._refs.clearBtn.style.display = has ? "flex" : "none";
-    host._refs.list.querySelectorAll<HTMLElement>(".option").forEach(li => {
+    host._refs.list.querySelectorAll<HTMLElement>(".option").forEach((li) => {
         li.classList.toggle("selected", li.dataset.key === display);
     });
 }
@@ -29,7 +33,9 @@ export function openPanel(host: CredentialSelect): void {
 }
 
 export function closePanel(host: CredentialSelect): void {
-    if (host._refs.panel.matches(":popover-open")) host._refs.panel.hidePopover();
+    if (host._refs.panel.matches(":popover-open")) {
+        host._refs.panel.hidePopover();
+    }
     host._refs.trigger.classList.remove("open");
     host._isOpen = false;
     host._refs.search.value = "";
@@ -44,8 +50,8 @@ export function closePanel(host: CredentialSelect): void {
 function positionPanel(host: CredentialSelect): void {
     const r = host._refs.trigger.getBoundingClientRect();
     const p = host._refs.panel;
-    p.style.top   = `${r.bottom + 4}px`;
-    p.style.left  = `${r.left}px`;
+    p.style.top = `${r.bottom + 4}px`;
+    p.style.left = `${r.left}px`;
     p.style.width = `${r.width}px`;
     p.style.position = "fixed";
 }
@@ -58,7 +64,7 @@ export async function refreshList(host: CredentialSelect): Promise<void> {
 
 export function renderList(host: CredentialSelect, keys: string[]): void {
     const selected = refToDisplay(host._value);
-    host._refs.list.replaceChildren(...keys.map(k => buildOption(k, k === selected)));
+    host._refs.list.replaceChildren(...keys.map((k) => buildOption(k, k === selected)));
 }
 
 function buildOption(key: string, selected: boolean): HTMLLIElement {

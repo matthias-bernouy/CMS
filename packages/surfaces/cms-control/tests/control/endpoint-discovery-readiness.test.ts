@@ -77,11 +77,13 @@ describe("Control endpoint discovery readiness", () => {
         const started = deferred();
         const release = deferred();
         const finished = deferred();
-        const scan = spyOn(Bun.Glob.prototype, "scan").mockImplementation(() => (async function* () {
-            started.resolve();
-            await release.promise;
-            finished.resolve();
-        })());
+        const scan = spyOn(Bun.Glob.prototype, "scan").mockImplementation(() =>
+            (async function* () {
+                started.resolve();
+                await release.promise;
+                finished.resolve();
+            })(),
+        );
 
         let readySettled = false;
         try {
@@ -110,22 +112,30 @@ describe("Control endpoint discovery readiness", () => {
         const release = deferred();
         const finished = deferred();
         let throwFailure = true;
-        const scan = spyOn(Bun.Glob.prototype, "scan").mockImplementation(() => (async function* () {
-            started.resolve();
-            await release.promise;
-            try {
-                if (throwFailure) throw failure;
-            } finally {
-                finished.resolve();
-            }
-        })());
+        const scan = spyOn(Bun.Glob.prototype, "scan").mockImplementation(() =>
+            (async function* () {
+                started.resolve();
+                await release.promise;
+                try {
+                    if (throwFailure) {
+                        throw failure;
+                    }
+                } finally {
+                    finished.resolve();
+                }
+            })(),
+        );
 
         try {
             const cms = createControl();
             let readySettled = false;
             void cms.ready.then(
-                () => { readySettled = true; },
-                () => { readySettled = true; },
+                () => {
+                    readySettled = true;
+                },
+                () => {
+                    readySettled = true;
+                },
             );
 
             await started.promise;
@@ -135,7 +145,9 @@ describe("Control endpoint discovery readiness", () => {
             // unhandled rejection in that known-broken case; the target
             // implementation keeps `ready` pending here and receives the
             // sentinel rejection below.
-            if (readySettled) throwFailure = false;
+            if (readySettled) {
+                throwFailure = false;
+            }
             release.resolve();
 
             await expect(cms.ready).rejects.toBe(failure);

@@ -5,11 +5,19 @@ import { parseAccessTemplate } from "../common";
 
 export function parseFunctionTemplate(value: Record<string, unknown>, name: string): FunctionDto {
     const id = text(value.id);
-    if (!id) throw new MissingIntegrationParam(`${name}.id`);
+    if (!id) {
+        throw new MissingIntegrationParam(`${name}.id`);
+    }
     const method = text(value.method);
-    if (!method) throw new MissingIntegrationParam(`${name}.method`);
-    if (!Array.isArray(value.steps)) throw new IntegrationInputError(`${name}.steps`, "must be an array");
-    if (!isRecord(value.return)) throw new IntegrationInputError(`${name}.return`, "must be an object");
+    if (!method) {
+        throw new MissingIntegrationParam(`${name}.method`);
+    }
+    if (!Array.isArray(value.steps)) {
+        throw new IntegrationInputError(`${name}.steps`, "must be an array");
+    }
+    if (!isRecord(value.return)) {
+        throw new IntegrationInputError(`${name}.return`, "must be an object");
+    }
     return {
         id,
         method: method as FunctionDto["method"],

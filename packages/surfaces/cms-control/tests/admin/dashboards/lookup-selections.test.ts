@@ -13,12 +13,19 @@ describe("dashboard local lookup selections", () => {
         const requests: Request[] = [];
         globalThis.fetch = respondingWith({ items: [] }, requests);
 
-        const options = await detailLookupOptions("commerce", detailWidget([lookupField({
-            selected: "$resource.product",
-        })]), {
-            productId: "product-1",
-            product: { id: "product-1", title: "Racket" },
-        }, { productId: "product-1" });
+        const options = await detailLookupOptions(
+            "commerce",
+            detailWidget([
+                lookupField({
+                    selected: "$resource.product",
+                }),
+            ]),
+            {
+                productId: "product-1",
+                product: { id: "product-1", title: "Racket" },
+            },
+            { productId: "product-1" },
+        );
 
         expect(options.productId).toEqual([{ value: "product-1", label: "Racket" }]);
         expect(requests).toHaveLength(1);
@@ -32,11 +39,18 @@ describe("dashboard local lookup selections", () => {
             return new Response("temporarily unavailable", { status: 503 });
         }) as typeof fetch;
 
-        const options = await detailLookupOptions("commerce", detailWidget([lookupField({
-            selected: "$resource.product",
-        })]), {
-            product: { id: "product-1", title: "Racket" },
-        }, { productId: "product-1" });
+        const options = await detailLookupOptions(
+            "commerce",
+            detailWidget([
+                lookupField({
+                    selected: "$resource.product",
+                }),
+            ]),
+            {
+                product: { id: "product-1", title: "Racket" },
+            },
+            { productId: "product-1" },
+        );
 
         expect(options.productId).toEqual([{ value: "product-1", label: "Racket" }]);
         expect(requests).toHaveLength(1);
@@ -51,12 +65,17 @@ describe("dashboard local lookup selections", () => {
         field.path = "tagIds";
         field.type = "tokens";
 
-        const options = await detailLookupOptions("commerce", detailWidget([field]), {
-            selectedTags: [
-                { id: "tag-a", title: "Snapshot A" },
-                { id: "tag-b", title: "Snapshot B" },
-            ],
-        }, { tagIds: ["tag-a", "tag-b"] });
+        const options = await detailLookupOptions(
+            "commerce",
+            detailWidget([field]),
+            {
+                selectedTags: [
+                    { id: "tag-a", title: "Snapshot A" },
+                    { id: "tag-b", title: "Snapshot B" },
+                ],
+            },
+            { tagIds: ["tag-a", "tag-b"] },
+        );
 
         expect(options.tagIds).toEqual([
             { value: "tag-a", label: "Fresh A" },
@@ -70,23 +89,35 @@ describe("dashboard local lookup selections", () => {
         const fields = [
             lookupField({ selected: "$resource.wrongProduct" }),
             { ...lookupField({ selected: "$resource.unlabeledProduct" }), id: "otherId", path: "otherId" },
-            { ...lookupField(), id: "legacyId", path: "legacyId", lookup: {
-                ...lookupField().lookup!,
-                selected: { endpoint: "product", params: { id: "$value" } },
-            } },
+            {
+                ...lookupField(),
+                id: "legacyId",
+                path: "legacyId",
+                lookup: {
+                    ...lookupField().lookup!,
+                    selected: { endpoint: "product", params: { id: "$value" } },
+                },
+            },
         ] as DashboardField[];
 
-        const options = await detailLookupOptions("commerce", detailWidget(fields), {
-            wrongProduct: { id: "other", title: "Wrong" },
-            unlabeledProduct: { id: "product-2" },
-        }, { productId: "product-1", otherId: "product-2", legacyId: "product-3" });
+        const options = await detailLookupOptions(
+            "commerce",
+            detailWidget(fields),
+            {
+                wrongProduct: { id: "other", title: "Wrong" },
+                unlabeledProduct: { id: "product-2" },
+            },
+            { productId: "product-1", otherId: "product-2", legacyId: "product-3" },
+        );
 
         expect(options).toEqual({ productId: [], otherId: [], legacyId: [] });
         expect(requests).toHaveLength(3);
     });
 });
 
-function lookupField(overrides: Record<string, unknown> = {}): Extract<DashboardField, { type: "combobox" | "tokens" }> {
+function lookupField(
+    overrides: Record<string, unknown> = {},
+): Extract<DashboardField, { type: "combobox" | "tokens" }> {
     return {
         id: "productId",
         label: "Product",

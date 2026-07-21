@@ -18,6 +18,10 @@ export function isMediaControl(control: HTMLElement): control is MediaControl {
 }
 
 function mediaValue(value: WDetailField["value"]): DashboardMediaItem[] {
-    if (!Array.isArray(value)) return [];
-    return value.filter((item): item is DashboardMediaItem => Boolean(item) && typeof item === "object" && "url" in item);
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return value.filter(
+        (item): item is DashboardMediaItem => Boolean(item) && typeof item === "object" && "url" in item,
+    );
 }

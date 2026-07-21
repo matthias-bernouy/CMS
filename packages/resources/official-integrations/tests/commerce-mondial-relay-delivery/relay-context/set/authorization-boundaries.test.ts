@@ -33,24 +33,15 @@ describe("setRelayPointForOrder boundaries", () => {
             }),
         );
 
-        expect([
-            wrongBuyer.response.status,
-            await wrongBuyer.response.json(),
-            paths(wrongBuyer.calls),
-        ]).toEqual([
+        expect([wrongBuyer.response.status, await wrongBuyer.response.json(), paths(wrongBuyer.calls)]).toEqual([
             403,
             { error: "Order does not belong to the current buyer" },
             ["/delivery-setup-context"],
         ]);
-        expect([
-            wrongStatus.response.status,
-            await wrongStatus.response.json(),
-            paths(wrongStatus.calls),
-        ]).toEqual([
+        expect([wrongStatus.response.status, await wrongStatus.response.json(), paths(wrongStatus.calls)]).toEqual([
             409,
             {
-                error:
-                    "Pickup point can only be changed before order finalization",
+                error: "Pickup point can only be changed before order finalization",
             },
             ["/delivery-setup-context"],
         ]);
@@ -58,16 +49,8 @@ describe("setRelayPointForOrder boundaries", () => {
             wrongBuyerAndStatus.response.status,
             await wrongBuyerAndStatus.response.json(),
             paths(wrongBuyerAndStatus.calls),
-        ]).toEqual([
-            403,
-            { error: "Order does not belong to the current buyer" },
-            ["/delivery-setup-context"],
-        ]);
-        expect([
-            changed.response.status,
-            await changed.response.json(),
-            paths(changed.calls),
-        ]).toEqual([
+        ]).toEqual([403, { error: "Order does not belong to the current buyer" }, ["/delivery-setup-context"]]);
+        expect([changed.response.status, await changed.response.json(), paths(changed.calls)]).toEqual([
             409,
             { error: "Order delivery authorization changed" },
             ["/delivery-setup-context"],
@@ -91,9 +74,7 @@ describe("setRelayPointForOrder boundaries", () => {
             expect(await result.response.json()).toEqual({
                 error: "Order delivery authorization changed",
             });
-            expect(paths(result.calls)).toEqual([
-                "/delivery-setup-context",
-            ]);
+            expect(paths(result.calls)).toEqual(["/delivery-setup-context"]);
         });
     }
 
@@ -116,14 +97,10 @@ describe("setRelayPointForOrder boundaries", () => {
         );
 
         await expectGenericFailure(malformedOrder.response);
-        expect(paths(malformedOrder.calls)).toEqual([
-            "/delivery-setup-context",
-        ]);
+        expect(paths(malformedOrder.calls)).toEqual(["/delivery-setup-context"]);
         for (const result of [malformedAuthorization, missingSeller]) {
             await expectGenericFailure(result.response);
-            expect(paths(result.calls)).toEqual([
-                "/delivery-setup-context",
-            ]);
+            expect(paths(result.calls)).toEqual(["/delivery-setup-context"]);
         }
     });
 });

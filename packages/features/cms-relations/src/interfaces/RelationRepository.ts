@@ -9,7 +9,9 @@ export interface RelationRepository {
     getAllRelations(): Promise<CmsRelation[]>;
 
     createDashboardRelationProjection(projection: DashboardRelationProjection): Promise<DashboardRelationProjection>;
-    updateDashboardRelationProjection(projection: DashboardRelationProjection): Promise<DashboardRelationProjection | null>;
+    updateDashboardRelationProjection(
+        projection: DashboardRelationProjection,
+    ): Promise<DashboardRelationProjection | null>;
     deleteDashboardRelationProjection(id: string): Promise<boolean>;
     getDashboardRelationProjection(id: string): Promise<DashboardRelationProjection | null>;
     getDashboardRelationProjectionsForDashboard(dashboardId: string): Promise<DashboardRelationProjection[]>;

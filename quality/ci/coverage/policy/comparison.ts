@@ -3,13 +3,19 @@ import { normalizePath } from "../paths";
 import type { CoverageBaseline, CoverageMetric, PackageCoverage } from "../types";
 
 export function percentage(metric: CoverageMetric): string {
-    if (metric.total === 0) return "n/a";
+    if (metric.total === 0) {
+        return "n/a";
+    }
     return `${((metric.covered / metric.total) * 100).toFixed(2)}%`;
 }
 
 export function isCoverageRegression(baseline: CoverageMetric, actual: CoverageMetric): boolean {
-    if (baseline.total === 0) return false;
-    if (actual.total === 0) return baseline.covered > 0;
+    if (baseline.total === 0) {
+        return false;
+    }
+    if (actual.total === 0) {
+        return baseline.covered > 0;
+    }
     return actual.covered * baseline.total < baseline.covered * actual.total;
 }
 
@@ -53,12 +59,13 @@ export function compareExactPackageCoverage(
     actual: PackageCoverage,
     label: string,
 ): string[] {
-    const exact = expected.path === actual.path
-        && JSON.stringify(expected.coveredSourceFiles) === JSON.stringify(actual.coveredSourceFiles)
-        && JSON.stringify(expected.uncoveredSourceFiles) === JSON.stringify(actual.uncoveredSourceFiles)
-        && (["files", "functions", "lines"] as const).every(
-            (metric) => expected[metric].covered === actual[metric].covered
-                && expected[metric].total === actual[metric].total,
+    const exact =
+        expected.path === actual.path &&
+        JSON.stringify(expected.coveredSourceFiles) === JSON.stringify(actual.coveredSourceFiles) &&
+        JSON.stringify(expected.uncoveredSourceFiles) === JSON.stringify(actual.uncoveredSourceFiles) &&
+        (["files", "functions", "lines"] as const).every(
+            (metric) =>
+                expected[metric].covered === actual[metric].covered && expected[metric].total === actual[metric].total,
         );
     return exact ? [] : [`${label}: committed coverage must exactly match the measured package snapshot`];
 }
@@ -70,11 +77,15 @@ function findRenamedPackage(
 ): [string, PackageCoverage] | undefined {
     const normalizedPath = normalizePath(expectedPath);
     const samePath = Object.entries(actual.packages).find(([, coverage]) => coverage.path === normalizedPath);
-    if (samePath) return samePath;
+    if (samePath) {
+        return samePath;
+    }
 
     const expectedManifest = `${normalizedPath}/package.json`;
     for (const [destination, source] of renamedSources) {
-        if (source !== expectedManifest || !destination.endsWith("/package.json")) continue;
+        if (source !== expectedManifest || !destination.endsWith("/package.json")) {
+            continue;
+        }
         const destinationPath = destination.slice(0, -"/package.json".length);
         return Object.entries(actual.packages).find(([, coverage]) => coverage.path === destinationPath);
     }
@@ -98,16 +109,17 @@ export function compareCoverageBaselines(
             }
             continue;
         }
-        const comparisonLabel = renamedPackage && !actual.packages[name]
-            ? `${label}/${name} -> ${renamedPackage[0]}`
-            : `${label}/${name}`;
-        regressions.push(...comparePackageCoverage(
-            expectedCoverage,
-            actualCoverage,
-            comparisonLabel,
-            allowedCoveredRemovals,
-            renamedSources,
-        ));
+        const comparisonLabel =
+            renamedPackage && !actual.packages[name] ? `${label}/${name} -> ${renamedPackage[0]}` : `${label}/${name}`;
+        regressions.push(
+            ...comparePackageCoverage(
+                expectedCoverage,
+                actualCoverage,
+                comparisonLabel,
+                allowedCoveredRemovals,
+                renamedSources,
+            ),
+        );
     }
     return regressions;
 }

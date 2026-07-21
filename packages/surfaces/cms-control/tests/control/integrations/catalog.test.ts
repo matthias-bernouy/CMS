@@ -24,12 +24,13 @@ describe("GET /api/integrations/list", () => {
         };
         const { cms } = makeCms([localDefinition]);
 
-        const body = await (await getIntegrations(
-            new Request("http://localhost/cms/api/integrations/list"),
-            cms,
-        )).json();
+        const body = await (
+            await getIntegrations(new Request("http://localhost/cms/api/integrations/list"), cms)
+        ).json();
 
-        expect(body.filter((item: IntegrationDefinition) => item.kind === "test-secret-source")).toEqual([localDefinition]);
+        expect(body.filter((item: IntegrationDefinition) => item.kind === "test-secret-source")).toEqual([
+            localDefinition,
+        ]);
     });
 
     test("keeps valid definitions when one catalog entry fails to load", async () => {
@@ -45,16 +46,19 @@ describe("GET /api/integrations/list", () => {
             ],
             getIndex: async () => null,
             listVersions: async () => [],
-            get: async kind => {
-                if (kind === "broken") throw new Error("broken definition");
+            get: async (kind) => {
+                if (kind === "broken") {
+                    throw new Error("broken definition");
+                }
                 return kind === "valid" ? validDefinition : null;
             },
         };
 
-        const body = await (await getIntegrations(
-            new Request("http://localhost/cms/api/integrations/list"),
-            { integrationCatalog } as any,
-        )).json();
+        const body = await (
+            await getIntegrations(new Request("http://localhost/cms/api/integrations/list"), {
+                integrationCatalog,
+            } as any)
+        ).json();
 
         expect(body).toEqual([validDefinition]);
     });
@@ -70,9 +74,7 @@ describe("GET /api/integrations/catalogue", () => {
             version: "1.0.0",
             icon: { path: "assets/icon.svg" },
             inputs: [],
-            artifacts: [
-                { type: "source", source: { id: "products", meta: { name: "Products" }, endpoints: [] } },
-            ],
+            artifacts: [{ type: "source", source: { id: "products", meta: { name: "Products" }, endpoints: [] } }],
         };
         const newsletter: IntegrationDefinition = {
             kind: "newsletter",
@@ -95,16 +97,18 @@ describe("GET /api/integrations/catalogue", () => {
         expect(body.count).toBe(1);
         expect(body.hasItems).toBe(true);
         expect(body.categories).toEqual(["Commerce", "Marketing"]);
-        expect(body.items).toEqual([expect.objectContaining({
-            kind: "products",
-            label: "Products",
-            category: "Commerce",
-            setupUrl: "/cms/admin/integrations?setup=products",
-            badges: [
-                { label: "Commerce", className: "badge" },
-                { label: "Source", className: "badge" },
-            ],
-        })]);
+        expect(body.items).toEqual([
+            expect.objectContaining({
+                kind: "products",
+                label: "Products",
+                category: "Commerce",
+                setupUrl: "/cms/admin/integrations?setup=products",
+                badges: [
+                    { label: "Commerce", className: "badge" },
+                    { label: "Source", className: "badge" },
+                ],
+            }),
+        ]);
         expect(body.items[0].iconHtml).toContain('class="integration-icon"');
         expect(body.items[0].iconHtml).toContain("/cms/api/integrations/asset?kind=products");
     });
@@ -118,15 +122,17 @@ describe("GET /api/integrations/catalogue", () => {
         };
         const { cms } = makeCms([TEST_SECRET_SOURCE_DEFINITION, spare]);
 
-        await postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "installed-source", apiKey: "sk_test" },
-        }), cms);
-
-        const body = await (await getIntegrationCatalogue(
-            new Request("http://localhost/cms/api/integrations/catalogue"),
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "installed-source", apiKey: "sk_test" },
+            }),
             cms,
-        )).json();
+        );
+
+        const body = await (
+            await getIntegrationCatalogue(new Request("http://localhost/cms/api/integrations/catalogue"), cms)
+        ).json();
 
         expect(body.total).toBe(1);
         expect(body.items.map((item: { kind: string }) => item.kind)).toEqual(["spare"]);

@@ -50,7 +50,7 @@ export async function writeRelationsWithRollback<T>(
                 artifacts.push({ type: "relation", id: write.relation.id, action: "created" });
             }
         }
-        return operation ? await operation(artifacts) : artifacts as T;
+        return operation ? await operation(artifacts) : (artifacts as T);
     } catch (error) {
         await rollbackRelations(relationRepository, completed);
         throw error;
@@ -63,8 +63,11 @@ async function rollbackRelations(
 ): Promise<void> {
     for (const write of completed.reverse()) {
         try {
-            if (write.previous) await relationRepository.updateRelation(write.previous);
-            else await relationRepository.deleteRelation(write.relation.id);
+            if (write.previous) {
+                await relationRepository.updateRelation(write.previous);
+            } else {
+                await relationRepository.deleteRelation(write.relation.id);
+            }
         } catch {
             // Best-effort rollback: keep restoring remaining relations.
         }
@@ -94,7 +97,10 @@ export async function writeDashboardRelationProjectionsWithRollback<T>(
             if (write.previous) {
                 const updated = await relationRepository.updateDashboardRelationProjection(write.projection);
                 if (!updated) {
-                    throw new IntegrationRuntimeError(`dashboard relation projection disappeared during import: ${id}`, 409);
+                    throw new IntegrationRuntimeError(
+                        `dashboard relation projection disappeared during import: ${id}`,
+                        409,
+                    );
                 }
                 completed.push(write);
                 artifacts.push({ type: "dashboardRelation", id, action: "updated" });
@@ -104,7 +110,7 @@ export async function writeDashboardRelationProjectionsWithRollback<T>(
                 artifacts.push({ type: "dashboardRelation", id, action: "created" });
             }
         }
-        return operation ? await operation(artifacts) : artifacts as T;
+        return operation ? await operation(artifacts) : (artifacts as T);
     } catch (error) {
         await rollbackDashboardRelationProjections(relationRepository, completed);
         throw error;
@@ -117,8 +123,13 @@ async function rollbackDashboardRelationProjections(
 ): Promise<void> {
     for (const write of completed.reverse()) {
         try {
-            if (write.previous) await relationRepository.updateDashboardRelationProjection(write.previous);
-            else await relationRepository.deleteDashboardRelationProjection(dashboardRelationProjectionId(write.projection));
+            if (write.previous) {
+                await relationRepository.updateDashboardRelationProjection(write.previous);
+            } else {
+                await relationRepository.deleteDashboardRelationProjection(
+                    dashboardRelationProjectionId(write.projection),
+                );
+            }
         } catch {
             // Best-effort rollback: keep restoring remaining projections.
         }

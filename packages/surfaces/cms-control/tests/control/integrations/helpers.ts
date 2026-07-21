@@ -4,10 +4,7 @@ import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import type {
-    IntegrationDefinition,
-    IntegrationDefinitionRepository,
-} from "@bernouy/cms-integrations";
+import type { IntegrationDefinition, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 export {
     TEST_SECRET_SOURCE_DEFINITION,
     manualSourceDefinition,
@@ -49,21 +46,20 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
     };
 }
 
-export function integrationDefinitionRepository(
-    definitions: IntegrationDefinition[],
-): IntegrationDefinitionRepository {
+export function integrationDefinitionRepository(definitions: IntegrationDefinition[]): IntegrationDefinitionRepository {
     return {
-        list: async () => definitions.map(definition => ({
-            kind: definition.kind,
-            label: definition.label,
-            ...(definition.version ? { stable: definition.version, latest: definition.version } : {}),
-            versions: definition.version ? [definition.version] : [],
-        })),
+        list: async () =>
+            definitions.map((definition) => ({
+                kind: definition.kind,
+                label: definition.label,
+                ...(definition.version ? { stable: definition.version, latest: definition.version } : {}),
+                versions: definition.version ? [definition.version] : [],
+            })),
         getIndex: async () => null,
         listVersions: async () => [],
         get: async (kind: string, version?: string) =>
-            definitions.find(definition =>
-                definition.kind === kind && (!version || definition.version === version)
+            definitions.find(
+                (definition) => definition.kind === kind && (!version || definition.version === version),
             ) ?? null,
     };
 }

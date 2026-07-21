@@ -21,35 +21,39 @@ export function makeResponseRow(
     onChange: () => void,
     onRemove: () => void,
 ): ResponseRowHandle {
-    const row = document.createElement('p9r-stack');
-    row.setAttribute('gap', 'sm');
-    row.dataset.role = 'response-row';
+    const row = document.createElement("p9r-stack");
+    row.setAttribute("gap", "sm");
+    row.dataset.role = "response-row";
 
     // ── Status + remove on one line ──
-    const head = document.createElement('p9r-stack');
-    head.setAttribute('direction', 'row');
-    head.setAttribute('gap', 'sm');
-    head.setAttribute('align', 'center');
+    const head = document.createElement("p9r-stack");
+    head.setAttribute("direction", "row");
+    head.setAttribute("gap", "sm");
+    head.setAttribute("align", "center");
 
     const status = makeStatusField(seed.status, onChange);
 
     const remove = makeIconButton(ICON_X, {
-        ariaLabel: 'Remove response',
+        ariaLabel: "Remove response",
         onClick: onRemove,
     });
     head.append(status.element, remove);
 
     // ── Body tree below ──
     const tree = makeDataShapeTree(seed.body, onChange, {
-        define: '+ Define body', remove: 'Remove body', root: 'Body type',
+        define: "+ Define body",
+        remove: "Remove body",
+        root: "Body type",
     });
-    tree.element.dataset.role = 'response-body';
+    tree.element.dataset.role = "response-body";
 
     row.append(head, tree.element);
 
     const read = (): EndpointResponse | null => {
         const s = status.read();
-        if (!s) return null;
+        if (!s) {
+            return null;
+        }
         const body = tree.read();
         return {
             status: s,

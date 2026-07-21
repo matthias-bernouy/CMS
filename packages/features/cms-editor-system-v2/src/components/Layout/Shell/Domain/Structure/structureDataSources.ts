@@ -14,6 +14,8 @@ export function syncStructureTreeDataSources(
 
     customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
         const upgradedTree = root.querySelector("cms-editor-v2-structure-tree");
-        if (isStructureTree(upgradedTree)) upgradedTree.setDataSources(dataSources);
+        if (isStructureTree(upgradedTree)) {
+            upgradedTree.setDataSources(dataSources);
+        }
     });
 }

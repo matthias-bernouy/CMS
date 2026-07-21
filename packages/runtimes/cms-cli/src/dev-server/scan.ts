@@ -36,9 +36,7 @@ export type DevBloc = {
     configurationPath?: string;
 };
 
-const EXCLUDED = new Set([
-    "node_modules", "dist", ".git", "tmp", ".p9r-dev", ".cache", "build",
-]);
+const EXCLUDED = new Set(["node_modules", "dist", ".git", "tmp", ".p9r-dev", ".cache", "build"]);
 
 export type ScanOptions = {
     /** Suppress warnings about skipped folders. Used by the polling loop which
@@ -54,25 +52,39 @@ export async function scanDevBlocs(root: string, options: ScanOptions = {}): Pro
 
 async function walk(dir: string, results: DevBloc[], options: ScanOptions) {
     let entries: string[];
-    try { entries = await readdir(dir); }
-    catch { return; }
+    try {
+        entries = await readdir(dir);
+    } catch {
+        return;
+    }
 
     if (entries.includes("manifest.json")) {
         const manifest = await parseManifest(join(dir, "manifest.json"), options);
         if (manifest) {
             const bloc = toDevBloc(dir, manifest, options);
-            if (bloc) results.push(bloc);
+            if (bloc) {
+                results.push(bloc);
+            }
         }
     }
 
-    await Promise.all(entries.map(async (entry) => {
-        if (EXCLUDED.has(entry) || entry.startsWith(".")) return;
-        const full = join(dir, entry);
-        let stats;
-        try { stats = await stat(full); }
-        catch { return; }
-        if (stats.isDirectory()) await walk(full, results, options);
-    }));
+    await Promise.all(
+        entries.map(async (entry) => {
+            if (EXCLUDED.has(entry) || entry.startsWith(".")) {
+                return;
+            }
+            const full = join(dir, entry);
+            let stats;
+            try {
+                stats = await stat(full);
+            } catch {
+                return;
+            }
+            if (stats.isDirectory()) {
+                await walk(full, results, options);
+            }
+        }),
+    );
 }
 
 async function parseManifest(path: string, options: ScanOptions): Promise<BlocManifest | null> {
@@ -82,14 +94,16 @@ async function parseManifest(path: string, options: ScanOptions): Promise<BlocMa
         if ("default-group" in parsed) {
             throw new Error(
                 `manifest.json field "default-group" is no longer supported — ` +
-                `the group is derived from the parent folder name. ` +
-                `Drop the line and place the bloc under blocs/<group>/<tag>/ ` +
-                `(re-running \`p9r pull\` does both automatically).`,
+                    `the group is derived from the parent folder name. ` +
+                    `Drop the line and place the bloc under blocs/<group>/<tag>/ ` +
+                    `(re-running \`p9r pull\` does both automatically).`,
             );
         }
         return parsed;
     } catch (e) {
-        if (!options.quiet) console.warn(`[scan] Failed to parse ${path}: ${e instanceof Error ? e.message : e}`);
+        if (!options.quiet) {
+            console.warn(`[scan] Failed to parse ${path}: ${e instanceof Error ? e.message : e}`);
+        }
         return null;
     }
 }
@@ -97,11 +111,15 @@ async function parseManifest(path: string, options: ScanOptions): Promise<BlocMa
 function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions): DevBloc | null {
     const tag = manifest["default-tag"];
     if (!tag) {
-        if (!options.quiet) console.warn(`[scan] Skipping ${folder}: manifest has no "default-tag"`);
+        if (!options.quiet) {
+            console.warn(`[scan] Skipping ${folder}: manifest has no "default-tag"`);
+        }
         return null;
     }
     if (tag === "tag-name") {
-        if (!options.quiet) console.warn(`[scan] Skipping ${folder}: "default-tag" is still the placeholder "tag-name"`);
+        if (!options.quiet) {
+            console.warn(`[scan] Skipping ${folder}: "default-tag" is still the placeholder "tag-name"`);
+        }
         return null;
     }
 
@@ -110,7 +128,7 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         if (!options.quiet) {
             console.warn(
                 `[scan] Skipping ${folder}: loose bloc at the root of blocs/ — ` +
-                `move it under blocs/<group>/<tag>/ (or blocs/_uncategorized/<tag>/).`,
+                    `move it under blocs/<group>/<tag>/ (or blocs/_uncategorized/<tag>/).`,
             );
         }
         return null;
@@ -123,7 +141,7 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
     const entry = blocRel ? join(folder, blocRel) : undefined;
     const editorEntry = editorRel ? join(folder, editorRel) : undefined;
 
-    const templatePath      = entry ? join(dirname(entry), "template.html") : join(folder, "template.html");
+    const templatePath = entry ? join(dirname(entry), "template.html") : join(folder, "template.html");
     const configurationPath = editorEntry ? join(dirname(editorEntry), "configuration.html") : undefined;
 
     return {
@@ -133,9 +151,9 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         label: manifest.meta?.title || basename(folder),
         group: folderToCategory(parentName),
         description: manifest.meta?.description || "",
-        ...(entry                                      ? { entry }                                      : {}),
-        ...(editorEntry                                ? { editorEntry }                              : {}),
-        ...(existsSync(templatePath)                   ? { templatePath }                             : {}),
-        ...(configurationPath && existsSync(configurationPath) ? { configurationPath }                : {}),
+        ...(entry ? { entry } : {}),
+        ...(editorEntry ? { editorEntry } : {}),
+        ...(existsSync(templatePath) ? { templatePath } : {}),
+        ...(configurationPath && existsSync(configurationPath) ? { configurationPath } : {}),
     };
 }

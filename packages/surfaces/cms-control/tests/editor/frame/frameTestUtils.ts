@@ -1,10 +1,12 @@
-export function cmsWithPage(page: {
-    id: string;
-    path: string;
-    title: string;
-    description: string;
-    content: string;
-} | null) {
+export function cmsWithPage(
+    page: {
+        id: string;
+        path: string;
+        title: string;
+        description: string;
+        content: string;
+    } | null,
+) {
     const requestedIds: string[] = [];
     const requestedPaths: string[] = [];
     const cms = {
@@ -23,14 +25,16 @@ export function cmsWithPage(page: {
     return { cms, requestedIds, requestedPaths };
 }
 
-export function cmsWithReusableDocument(document: {
-    id: string;
-    identifier: string;
-    name: string;
-    description: string;
-    category: string;
-    content: string;
-} | null) {
+export function cmsWithReusableDocument(
+    document: {
+        id: string;
+        identifier: string;
+        name: string;
+        description: string;
+        category: string;
+        content: string;
+    } | null,
+) {
     const requestedIds: string[] = [];
     const cms = {
         repository: {

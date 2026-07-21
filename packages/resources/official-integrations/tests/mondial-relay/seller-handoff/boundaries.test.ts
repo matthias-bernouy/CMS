@@ -7,34 +7,22 @@ describe("Mondial Relay seller handoff boundaries", () => {
     test("rejects an empty order before database or provider work", async () => {
         const database = useDatabase();
 
-        await expectFailure(
-            declareSellerHandoff("", "seller-42"),
-            400,
-            "externalOrderId is required",
-        );
+        await expectFailure(declareSellerHandoff("", "seller-42"), 400, "externalOrderId is required");
         expect(database.calls).toEqual([]);
     });
 
     test("rejects an empty seller before database or provider work", async () => {
         const database = useDatabase();
 
-        await expectFailure(
-            declareSellerHandoff("order-42", ""),
-            400,
-            "seller CMS user id is required",
-        );
+        await expectFailure(declareSellerHandoff("order-42", ""), 400, "seller CMS user id is required");
         expect(database.calls).toEqual([]);
     });
 
     test("preserves the missing-shipment response through one RPC", async () => {
         const database = useDatabase({ row: null });
 
-        await expectFailure(
-            declareSellerHandoff("missing-order", "seller-42"),
-            404,
-            "shipment not found",
-        );
-        expect(database.calls.map(call => call.method)).toEqual(["POST"]);
+        await expectFailure(declareSellerHandoff("missing-order", "seller-42"), 404, "shipment not found");
+        expect(database.calls.map((call) => call.method)).toEqual(["POST"]);
     });
 
     test("preserves every current-state refusal without writing", async () => {
@@ -52,7 +40,7 @@ describe("Mondial Relay seller handoff boundaries", () => {
                 409,
                 "seller handoff cannot be declared for the current shipment state",
             );
-            expect(database.calls.map(call => call.method)).toEqual(["POST"]);
+            expect(database.calls.map((call) => call.method)).toEqual(["POST"]);
         }
     });
 
@@ -64,9 +52,7 @@ describe("Mondial Relay seller handoff boundaries", () => {
             409,
             "shipment state changed while declaring seller handoff",
         );
-        expect(database.calls.map(call => call.method)).toEqual([
-            "POST",
-        ]);
+        expect(database.calls.map((call) => call.method)).toEqual(["POST"]);
     });
 
     test("redacts an unexpected database failure", async () => {
@@ -83,20 +69,12 @@ describe("Mondial Relay seller handoff boundaries", () => {
     test("hides a shipment owned by another seller", async () => {
         const database = useDatabase();
 
-        await expectFailure(
-            declareSellerHandoff("order-42", "seller-other"),
-            404,
-            "shipment not found",
-        );
-        expect(database.calls.map(call => call.method)).toEqual(["POST"]);
+        await expectFailure(declareSellerHandoff("order-42", "seller-other"), 404, "shipment not found");
+        expect(database.calls.map((call) => call.method)).toEqual(["POST"]);
     });
 });
 
-async function expectFailure(
-    promise: Promise<unknown>,
-    status: number,
-    message: string,
-): Promise<void> {
+async function expectFailure(promise: Promise<unknown>, status: number, message: string): Promise<void> {
     try {
         await promise;
         throw new Error("expected seller handoff to fail");

@@ -19,7 +19,9 @@ export function setupRename(s: ShadowRoot, callbacks: RenameCallbacks) {
 
     const apply = () => {
         const name = input.value.trim();
-        if (!name || !currentItem) return;
+        if (!name || !currentItem) {
+            return;
+        }
         const id = currentItem.id;
         hide();
         callbacks.onApply(id, name);
@@ -27,10 +29,18 @@ export function setupRename(s: ShadowRoot, callbacks: RenameCallbacks) {
 
     confirmBtn.addEventListener("click", apply);
     cancelBtn.addEventListener("click", hide);
-    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) hide(); });
+    backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) {
+            hide();
+        }
+    });
     input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") apply();
-        if (e.key === "Escape") hide();
+        if (e.key === "Enter") {
+            apply();
+        }
+        if (e.key === "Escape") {
+            hide();
+        }
     });
 
     return {
@@ -38,7 +48,10 @@ export function setupRename(s: ShadowRoot, callbacks: RenameCallbacks) {
             currentItem = item;
             input.value = item.label;
             backdrop.classList.add("visible");
-            requestAnimationFrame(() => { input.focus(); input.select(); });
-        }
+            requestAnimationFrame(() => {
+                input.focus();
+                input.select();
+            });
+        },
     };
 }

@@ -64,11 +64,7 @@ export const successfulInput = {
     sellerTermsAccepted: true,
 };
 
-export function connectStatus(options: {
-    enrolled?: boolean;
-    currentTermsAccepted?: boolean;
-    userId?: string;
-} = {}) {
+export function connectStatus(options: { enrolled?: boolean; currentTermsAccepted?: boolean; userId?: string } = {}) {
     const enrolled = options.enrolled ?? false;
     const currentTermsAccepted = options.currentTermsAccepted ?? false;
     return {
@@ -82,11 +78,11 @@ export function connectStatus(options: {
         marketplaceTermsCurrentVersionAccepted: currentTermsAccepted,
         ...(enrolled
             ? {
-                marketplaceTermsAcceptedAt: "2026-07-13T09:00:00.000Z",
-                stripeAccountId: "acct_seller_price",
-                stripeAccountApiVersion: "v2",
-                riskStatus: "standard",
-            }
+                  marketplaceTermsAcceptedAt: "2026-07-13T09:00:00.000Z",
+                  stripeAccountId: "acct_seller_price",
+                  stripeAccountApiVersion: "v2",
+                  riskStatus: "standard",
+              }
             : {}),
         enrollmentStatus: enrolled ? "enrolled" : "not_started",
         onboardingStatus: "not_started",

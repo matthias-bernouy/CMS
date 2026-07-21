@@ -1,12 +1,5 @@
-import type {
-    BlockPickerItem,
-    BlockPickerOption,
-    BlockPickerSlotGroup,
-} from "../../BlockPickerModal/BlockPickerModal";
-import type {
-    PendingPickerAction,
-    StructureTreeAction,
-} from "../State/structureTreeTypes";
+import type { BlockPickerItem, BlockPickerOption, BlockPickerSlotGroup } from "../../BlockPickerModal/BlockPickerModal";
+import type { PendingPickerAction, StructureTreeAction } from "../State/structureTreeTypes";
 
 export type StructureBlockPickerContext = {
     emitAction(action: StructureTreeAction, item?: BlockPickerItem, slot?: string): void;
@@ -31,11 +24,9 @@ export function openPickerOrEmitSingleMedia(
 }
 
 export function singleEnabledOption(groups: BlockPickerSlotGroup[]): BlockPickerOption | null {
-    const options = groups
-        .filter(group => !group.disabledReason)
-        .flatMap(group => group.options);
+    const options = groups.filter((group) => !group.disabledReason).flatMap((group) => group.options);
 
-    return options.length === 1 ? options[0] ?? null : null;
+    return options.length === 1 ? (options[0] ?? null) : null;
 }
 
 export function useDefaultTemplate(
@@ -43,7 +34,9 @@ export function useDefaultTemplate(
     groups: BlockPickerSlotGroup[],
     context: StructureBlockPickerContext,
 ): boolean {
-    if (templates.length === 0) return false;
+    if (templates.length === 0) {
+        return false;
+    }
     if (templates.length === 1) {
         context.emitAction("add-root", templates[0]);
         return true;

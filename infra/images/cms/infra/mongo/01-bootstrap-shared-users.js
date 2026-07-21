@@ -5,9 +5,13 @@
 
 function requiredEnv(name) {
     const raw = process.env[name];
-    if (typeof raw !== "string") throw new Error(`${name} must be set`);
+    if (typeof raw !== "string") {
+        throw new Error(`${name} must be set`);
+    }
     const value = raw.trim();
-    if (!value) throw new Error(`${name} must be set`);
+    if (!value) {
+        throw new Error(`${name} must be set`);
+    }
     return value;
 }
 
@@ -29,11 +33,7 @@ function requiredHexSecret(name) {
 
 function assertOnlyRole(user, username, expectedRole) {
     const roles = user.roles ?? [];
-    if (
-        roles.length !== 1
-        || roles[0].role !== expectedRole
-        || roles[0].db !== "admin"
-    ) {
+    if (roles.length !== 1 || roles[0].role !== expectedRole || roles[0].db !== "admin") {
         throw new Error(`${username} must have only the ${expectedRole}@admin role`);
     }
 }

@@ -24,7 +24,7 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
 
     constructor(config: string | HttpIntegrationDefinitionRepositoryConfig) {
         this.baseUrl = typeof config === "string" ? config : config.baseUrl;
-        this.fetchImpl = typeof config === "string" ? fetch : config.fetch ?? fetch;
+        this.fetchImpl = typeof config === "string" ? fetch : (config.fetch ?? fetch);
         this.headers = typeof config === "string" ? undefined : config.headers;
     }
 
@@ -44,14 +44,17 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
 
     async get(kind: string, version?: string): Promise<IntegrationDefinition | null> {
         const params = new URLSearchParams({ kind });
-        if (version) params.set("version", version);
+        if (version) {
+            params.set("version", version);
+        }
         const value = await this.getJsonOrNull(`/api/integrations/definition?${params.toString()}`);
-        if (!value) return null;
+        if (!value) {
+            return null;
+        }
         const definition = parseIntegrationDefinition(value);
         assertDefinitionIdentity(definition, kind, version);
-        return await hydrateDefinitionIconAssets(
-            definition,
-            path => this.readAsset(kind, definition.version ?? version, path, SVG_ICON_MAX_BYTES),
+        return await hydrateDefinitionIconAssets(definition, (path) =>
+            this.readAsset(kind, definition.version ?? version, path, SVG_ICON_MAX_BYTES),
         );
     }
 
@@ -66,23 +69,35 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
         maxBytes?: number,
     ): Promise<IntegrationAsset | null> {
         const params = new URLSearchParams({ kind, path });
-        if (version) params.set("version", version);
+        if (version) {
+            params.set("version", version);
+        }
         const response = await this.fetchPath(`/api/integrations/asset?${params.toString()}`);
-        if (response.status === 404) return null;
-        if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        if (response.status === 404) {
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        }
         return responseAsset(response, maxBytes);
     }
 
     private async getJson(path: string): Promise<unknown> {
         const response = await this.fetchPath(path);
-        if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        if (!response.ok) {
+            throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        }
         return response.json();
     }
 
     private async getJsonOrNull(path: string): Promise<unknown | null> {
         const response = await this.fetchPath(path);
-        if (response.status === 404) return null;
-        if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        if (response.status === 404) {
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
+        }
         return response.json();
     }
 
@@ -103,7 +118,9 @@ function repositoryUrl(baseUrl: string, path: string): URL {
 
 function requestHeaders(headers: HeadersInit | undefined): Headers {
     const result = new Headers(headers);
-    if (!result.has("accept")) result.set("accept", "application/json");
+    if (!result.has("accept")) {
+        result.set("accept", "application/json");
+    }
     return result;
 }
 

@@ -30,7 +30,10 @@ export async function writeDashboardsWithRollback<T>(
             if (write.previous) {
                 const updated = await dashboardRepository.updateDashboard(write.dashboard);
                 if (!updated) {
-                    throw new IntegrationRuntimeError(`dashboard disappeared during import: ${write.dashboard.id}`, 409);
+                    throw new IntegrationRuntimeError(
+                        `dashboard disappeared during import: ${write.dashboard.id}`,
+                        409,
+                    );
                 }
                 completed.push(write);
                 artifacts.push({ type: "dashboard", id: write.dashboard.id, action: "updated" });
@@ -40,7 +43,7 @@ export async function writeDashboardsWithRollback<T>(
                 artifacts.push({ type: "dashboard", id: write.dashboard.id, action: "created" });
             }
         }
-        return operation ? await operation(artifacts) : artifacts as T;
+        return operation ? await operation(artifacts) : (artifacts as T);
     } catch (error) {
         await rollbackDashboards(dashboardRepository, completed);
         throw error;
@@ -53,8 +56,11 @@ async function rollbackDashboards(
 ): Promise<void> {
     for (const write of completed.reverse()) {
         try {
-            if (write.previous) await dashboardRepository.updateDashboard(write.previous);
-            else await dashboardRepository.deleteDashboard(write.dashboard.id);
+            if (write.previous) {
+                await dashboardRepository.updateDashboard(write.previous);
+            } else {
+                await dashboardRepository.deleteDashboard(write.dashboard.id);
+            }
         } catch {
             // Best-effort rollback: keep restoring remaining dashboards.
         }

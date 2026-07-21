@@ -11,7 +11,7 @@ installCommerceTestEnvironment();
 
 describe("commerce offer requests", () => {
     test("includes only public product custom fields in public offer details", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/get_public_offer_read_model")) {
                 return jsonResponse(publicOfferDetailReadModel());
             }
@@ -43,26 +43,28 @@ describe("commerce offer requests", () => {
             variant: null,
             priceRule: null,
             priceProposals: [],
-            media: [{
-                id: 8,
-                mediaId: 12,
-                sortOrder: 0,
-                isMain: true,
-                media: {
-                    id: 12,
-                    storageBucket: "commerce-media",
-                    storagePath: "offers/91/photo.jpg",
-                    alt: "Front",
-                    url: "",
+            media: [
+                {
+                    id: 8,
+                    mediaId: 12,
+                    sortOrder: 0,
+                    isMain: true,
+                    media: {
+                        id: 12,
+                        storageBucket: "commerce-media",
+                        storagePath: "offers/91/photo.jpg",
+                        alt: "Front",
+                        url: "",
+                    },
                 },
-            }],
+            ],
             mainImageMediaId: "12",
         });
         expect(expectSingleRpc("get_public_offer_read_model").body).toEqual({ p_offer_id: 91 });
     });
 
     test("hides an active offer whose seller is not verified when verification is required", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/get_public_offer_read_model")) {
                 return jsonResponse({ candidate_exists: true, settings_available: true, offer: null });
             }
@@ -111,9 +113,14 @@ describe("commerce offer requests", () => {
     });
 
     test("maps validation price errors to 422", async () => {
-        setRestResponder(() => jsonResponse({
-            message: "validation: price must be between 11000 and 15000",
-        }, 400));
+        setRestResponder(() =>
+            jsonResponse(
+                {
+                    message: "validation: price must be between 11000 and 15000",
+                },
+                400,
+            ),
+        );
 
         const response = await requestCommerce("/me/offer/price?id=91", {
             userId: "seller-user-123",

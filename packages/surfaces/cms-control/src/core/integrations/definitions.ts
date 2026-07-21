@@ -9,13 +9,15 @@ export async function listIntegrationDefinitions(
     repository: IntegrationDefinitionRepository,
 ): Promise<IntegrationDefinition[]> {
     const summaries = await repository.list();
-    const definitions = await Promise.all(summaries.map(async (summary) => {
-        try {
-            return await repository.get(summary.kind);
-        } catch {
-            return null;
-        }
-    }));
+    const definitions = await Promise.all(
+        summaries.map(async (summary) => {
+            try {
+                return await repository.get(summary.kind);
+            } catch {
+                return null;
+            }
+        }),
+    );
     return integrationRegistry(compact(definitions));
 }
 
@@ -24,7 +26,9 @@ export async function definitionsForImport(
     body: Record<string, unknown>,
 ): Promise<IntegrationDefinition[]> {
     const kind = text(body.kind);
-    if (!kind) return [];
+    if (!kind) {
+        return [];
+    }
     const definition = await repository.get(kind, text(body.version));
     return definition ? [definition] : [];
 }
@@ -36,7 +40,9 @@ export async function definitionsForRerun(
     body: Record<string, unknown>,
 ): Promise<IntegrationDefinition[]> {
     const installation = await installations.get(integrationId);
-    if (!installation) return [];
+    if (!installation) {
+        return [];
+    }
     const definition = await repository.get(installation.id, text(body.version));
     return definition ? [definition] : [];
 }

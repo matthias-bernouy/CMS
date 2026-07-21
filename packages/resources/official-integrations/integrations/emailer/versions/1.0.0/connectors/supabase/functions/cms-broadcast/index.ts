@@ -5,17 +5,33 @@ import { tick } from "./tick.ts";
 
 Deno.serve(async (request) => {
     try {
-        if (request.method === "OPTIONS") return optionsResponse();
+        if (request.method === "OPTIONS") {
+            return optionsResponse();
+        }
         requireCmsRequest(request);
 
         const route = routePath(request);
-        if (route === "/health") return await withMethod(request, "GET", () => health());
-        if (route === "/tick") return await withMethod(request, "POST", () => tick());
-        if (route === "/campaigns") return await campaignsRoute(request);
-        if (route === "/campaign") return await withMethod(request, "GET", () => getCampaign(request));
-        if (route === "/campaign/pause") return await withMethod(request, "POST", () => setCampaignStatus(request, "paused"));
-        if (route === "/campaign/cancel") return await withMethod(request, "POST", () => setCampaignStatus(request, "canceled"));
-        if (route === "/campaign/retry-failed") return await withMethod(request, "POST", () => retryFailed(request));
+        if (route === "/health") {
+            return await withMethod(request, "GET", () => health());
+        }
+        if (route === "/tick") {
+            return await withMethod(request, "POST", () => tick());
+        }
+        if (route === "/campaigns") {
+            return await campaignsRoute(request);
+        }
+        if (route === "/campaign") {
+            return await withMethod(request, "GET", () => getCampaign(request));
+        }
+        if (route === "/campaign/pause") {
+            return await withMethod(request, "POST", () => setCampaignStatus(request, "paused"));
+        }
+        if (route === "/campaign/cancel") {
+            return await withMethod(request, "POST", () => setCampaignStatus(request, "canceled"));
+        }
+        if (route === "/campaign/retry-failed") {
+            return await withMethod(request, "POST", () => retryFailed(request));
+        }
 
         return json({ error: "not found" }, 404);
     } catch (error) {
@@ -24,7 +40,9 @@ Deno.serve(async (request) => {
 });
 
 async function campaignsRoute(request: Request): Promise<Response> {
-    if (request.method === "GET") return listCampaigns(request);
+    if (request.method === "GET") {
+        return listCampaigns(request);
+    }
     return new Response("Method Not Allowed", {
         status: 405,
         headers: { allow: "GET, OPTIONS" },

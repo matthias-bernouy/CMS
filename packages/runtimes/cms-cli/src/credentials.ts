@@ -15,7 +15,7 @@ import { join } from "node:path";
 export type CredentialEntry = {
     cmsUrl: string;
     /** A CMS Personal Access Token (`pat_...`). */
-    token:  string;
+    token: string;
 };
 
 type Store = { version: 1; entries: Record<string, CredentialEntry> };
@@ -29,8 +29,12 @@ function normalize(url: string): string {
 async function readStore(): Promise<Store> {
     try {
         const parsed = JSON.parse(await Bun.file(STORE_PATH).text()) as Store;
-        if (parsed && parsed.version === 1 && parsed.entries) return parsed;
-    } catch { /* missing / unreadable / corrupt → empty store */ }
+        if (parsed && parsed.version === 1 && parsed.entries) {
+            return parsed;
+        }
+    } catch {
+        /* missing / unreadable / corrupt → empty store */
+    }
     return { version: 1, entries: {} };
 }
 

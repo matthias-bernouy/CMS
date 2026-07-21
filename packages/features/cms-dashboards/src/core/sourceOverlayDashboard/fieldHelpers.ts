@@ -1,8 +1,4 @@
-import {
-    sourceOverlayFieldPath,
-    type SourceOverlayEditableScope,
-    type SourceOverlayField,
-} from "@bernouy/cms-sources";
+import { sourceOverlayFieldPath, type SourceOverlayEditableScope, type SourceOverlayField } from "@bernouy/cms-sources";
 import type { DashboardField } from "../../interfaces/Dashboard";
 
 export function dashboardField(
@@ -16,17 +12,23 @@ export function dashboardField(
         path: joinedPath(pathPrefix, sourceOverlayFieldPath(field)),
         ...(field.required ? { required: true } : {}),
     };
-    if (options.readonly) return { ...base, type: "readonly" };
-    if (field.type === "boolean" && !field.multiple) return { ...base, type: "checkbox" };
-    if (field.type === "number" && !field.multiple) return { ...base, type: "number" };
+    if (options.readonly) {
+        return { ...base, type: "readonly" };
+    }
+    if (field.type === "boolean" && !field.multiple) {
+        return { ...base, type: "checkbox" };
+    }
+    if (field.type === "number" && !field.multiple) {
+        return { ...base, type: "number" };
+    }
     if (field.multiple) {
         return field.options === undefined
             ? { ...base, type: "tokens" }
-            : { ...base, type: "tokens", options: field.options.map(option => ({ ...option })) };
+            : { ...base, type: "tokens", options: field.options.map((option) => ({ ...option })) };
     }
     return field.options === undefined
         ? { ...base, type: "text" }
-        : { ...base, type: "select", options: field.options.map(option => ({ ...option })) };
+        : { ...base, type: "select", options: field.options.map((option) => ({ ...option })) };
 }
 
 export function overlayFieldId(field: SourceOverlayField, pathPrefix = ""): string {
@@ -36,8 +38,9 @@ export function overlayFieldId(field: SourceOverlayField, pathPrefix = ""): stri
 }
 
 export function normalizedTargetPath(path: string | undefined): string {
-    return (path ?? "").split(".")
-        .map(part => part.trim().replace(/\[\]$/, ""))
+    return (path ?? "")
+        .split(".")
+        .map((part) => part.trim().replace(/\[\]$/, ""))
         .filter(Boolean)
         .join(".");
 }
@@ -50,7 +53,11 @@ export function editableFields(
     fields: readonly SourceOverlayField[],
     editable: SourceOverlayEditableScope | undefined,
 ): SourceOverlayField[] {
-    if (editable === "self") return fields.filter(field => field.selfEditable !== false);
-    if (editable === "admin") return fields.filter(field => field.adminEditable !== false);
-    return fields.filter(field => field.selfEditable !== false || field.adminEditable !== false);
+    if (editable === "self") {
+        return fields.filter((field) => field.selfEditable !== false);
+    }
+    if (editable === "admin") {
+        return fields.filter((field) => field.adminEditable !== false);
+    }
+    return fields.filter((field) => field.selfEditable !== false || field.adminEditable !== false);
 }

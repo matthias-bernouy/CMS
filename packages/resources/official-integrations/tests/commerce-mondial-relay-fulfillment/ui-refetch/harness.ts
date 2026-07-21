@@ -66,7 +66,9 @@ export async function createBloc(
 
 export function snapshot(bloc: TestFulfillmentBloc) {
     const root = bloc.shadowRoot;
-    if (!root) throw new Error("expected fulfillment shadow root");
+    if (!root) {
+        throw new Error("expected fulfillment shadow root");
+    }
     const text = (selector: string) => root.querySelector(selector)?.textContent ?? "";
     const hidden = (selector: string) => (root.querySelector(selector) as HTMLElement | null)?.hidden;
     return {
@@ -85,13 +87,15 @@ export function snapshot(bloc: TestFulfillmentBloc) {
 }
 
 async function defineBloc(): Promise<void> {
-    if (customElements.get(tag)) return;
-    Object.assign((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}, { Component });
+    if (customElements.get(tag)) {
+        return;
+    }
+    Object.assign(((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}), { Component });
     const files = await readdir(blocDirectory);
     const view = await readFile(resolve(blocDirectory, "Bloc.ts"), "utf8");
     const editor = await readFile(resolve(blocDirectory, "BlocEditor.ts"), "utf8");
     const source: Record<string, string> = {};
-    for (const file of files.filter(name => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
+    for (const file of files.filter((name) => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
         source[file] = Buffer.from(await readFile(resolve(blocDirectory, file))).toString("base64");
     }
     const compiled = await prepare_bloc(

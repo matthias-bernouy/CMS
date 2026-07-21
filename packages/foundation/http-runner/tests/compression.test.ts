@@ -6,11 +6,23 @@ class MemCache implements Cache {
     store = new Map<string, CacheEntry>();
     getCalls = 0;
     setCalls = 0;
-    get(k: string) { this.getCalls++; return this.store.get(k) ?? null; }
-    set(k: string, v: CacheEntry) { this.setCalls++; this.store.set(k, v); }
-    delete(k: string) { this.store.delete(k); }
+    get(k: string) {
+        this.getCalls++;
+        return this.store.get(k) ?? null;
+    }
+    set(k: string, v: CacheEntry) {
+        this.setCalls++;
+        this.store.set(k, v);
+    }
+    delete(k: string) {
+        this.store.delete(k);
+    }
     deleteMatching(p: (k: string) => boolean) {
-        for (const k of this.store.keys()) if (p(k)) this.store.delete(k);
+        for (const k of this.store.keys()) {
+            if (p(k)) {
+                this.store.delete(k);
+            }
+        }
     }
 }
 
@@ -39,8 +51,14 @@ describe("compress", () => {
 
 function bytesEqual(a: ArrayBuffer, b: Uint8Array): boolean {
     const av = new Uint8Array(a);
-    if (av.length !== b.length) return false;
-    for (let i = 0; i < av.length; i++) if (av[i] !== b[i]) return false;
+    if (av.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < av.length; i++) {
+        if (av[i] !== b[i]) {
+            return false;
+        }
+    }
     return true;
 }
 
@@ -75,7 +93,10 @@ describe("cachedResponse — encoding negotiation", () => {
     test("caches the generated entry across calls", () => {
         const cache = new MemCache();
         let generateCalls = 0;
-        const gen = () => { generateCalls++; return compress("x", "text/plain"); };
+        const gen = () => {
+            generateCalls++;
+            return compress("x", "text/plain");
+        };
 
         cachedResponse(reqWithAccept(null), "k", cache, gen);
         cachedResponse(reqWithAccept("br"), "k", cache, gen);
@@ -104,8 +125,12 @@ describe("cachedResponse — encoding negotiation", () => {
 
     test("rejects statuses that cannot carry a body", () => {
         const cache = new MemCache();
-        expect(() => cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 204 })).toThrow(RangeError);
-        expect(() => cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 304 })).toThrow(RangeError);
+        expect(() => cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 204 })).toThrow(
+            RangeError,
+        );
+        expect(() => cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 304 })).toThrow(
+            RangeError,
+        );
     });
 
     test("rejects bodyless custom status before conditional handling", () => {
@@ -151,8 +176,8 @@ describe("CSP header — opt-out", () => {
 
     test("non-HTML responses never carry a CSP header (regardless of flag)", () => {
         const cache = new MemCache();
-        const txt  = () => compress("hello", "text/plain");
-        const res  = cachedResponse(reqWithAccept(null), "k", cache, txt);
+        const txt = () => compress("hello", "text/plain");
+        const res = cachedResponse(reqWithAccept(null), "k", cache, txt);
         expect(res.headers.get("Content-Security-Policy")).toBeNull();
     });
 });
@@ -190,8 +215,8 @@ describe("CSP header — extras", () => {
 
     test("extras are ignored on non-HTML responses", () => {
         const cache = new MemCache();
-        const txt  = () => compress("hello", "text/plain");
-        const res  = cachedResponse(reqWithAccept(null), "k", cache, txt, undefined, {
+        const txt = () => compress("hello", "text/plain");
+        const res = cachedResponse(reqWithAccept(null), "k", cache, txt, undefined, {
             cspExtras: { connectExtras: ["https://cdn.example.com"], mediaExtras: [] },
         });
         expect(res.headers.get("Content-Security-Policy")).toBeNull();

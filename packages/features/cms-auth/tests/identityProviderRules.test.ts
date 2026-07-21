@@ -43,7 +43,9 @@ describe("identity provider rules", () => {
     test("refuses to remove or disable the last admin login path", async () => {
         const stores = await setup();
         await expect(deleteIdentityProvider(stores, "oidc")).resolves.toBe(true);
-        await expect(updateIdentityProvider(stores, "local", { enabled: false })).rejects.toMatchObject({ field: "enabled" });
+        await expect(updateIdentityProvider(stores, "local", { enabled: false })).rejects.toMatchObject({
+            field: "enabled",
+        });
     });
 
     test("allows builtin toggle when another admin login path remains", async () => {
@@ -55,7 +57,8 @@ describe("identity provider rules", () => {
 
     test("refuses to edit builtin provider fields", async () => {
         const stores = await setup();
-        await expect(updateIdentityProvider(stores, "local", { displayName: "Local Login" }))
-            .rejects.toMatchObject({ field: "id" });
+        await expect(updateIdentityProvider(stores, "local", { displayName: "Local Login" })).rejects.toMatchObject({
+            field: "id",
+        });
     });
 });

@@ -226,9 +226,8 @@ class BasicSelect extends HTMLElement {
 
     connectedCallback() {
         this.upgradeProperty("value");
-        this.presentationQuery = this.ownerDocument.defaultView?.matchMedia?.(
-            "(hover: none) and (pointer: coarse)",
-        ) ?? null;
+        this.presentationQuery =
+            this.ownerDocument.defaultView?.matchMedia?.("(hover: none) and (pointer: coarse)") ?? null;
         this.addPresentationQueryListener();
         this.control.addEventListener("click", this.onControlClick);
         this.control.addEventListener("keydown", this.onControlKeydown);
@@ -271,9 +270,10 @@ class BasicSelect extends HTMLElement {
     }
 
     attributeChangedCallback(name) {
-        if (!this.isConnected) return;
-        const restorePresentationFocus = ["multiple", "presentation"].includes(name) &&
-            Boolean(this.focusedControl);
+        if (!this.isConnected) {
+            return;
+        }
+        const restorePresentationFocus = ["multiple", "presentation"].includes(name) && Boolean(this.focusedControl);
         if (name === "value") {
             this.requestedValues = this.normalizeValues(this.getAttribute("value"));
             this.applyValues(this.requestedValues);
@@ -296,14 +296,14 @@ class BasicSelect extends HTMLElement {
     }
 
     get value() {
-        return this.multiple
-            ? [...this.selectedValuesState]
-            : (this.selectedValuesState[0] ?? "");
+        return this.multiple ? [...this.selectedValuesState] : (this.selectedValuesState[0] ?? "");
     }
 
     set value(value) {
         this.requestedValues = this.normalizeValues(value);
-        if (this.isConnected) this.applyValues(this.requestedValues);
+        if (this.isConnected) {
+            this.applyValues(this.requestedValues);
+        }
     }
 
     get name() {
@@ -332,7 +332,9 @@ class BasicSelect extends HTMLElement {
         this.labelElement.hidden = !this.labelElement.textContent;
         this.hintElement.textContent = this.getAttribute("hint") || "";
         this.hintElement.hidden = !this.hintElement.textContent;
-        if (this.disabled && this.open) this.closeListbox(false);
+        if (this.disabled && this.open) {
+            this.closeListbox(false);
+        }
         this.control.setAttribute("aria-expanded", String(this.open));
         this.nativeControl.multiple = this.multiple;
         this.nativeControl.required = this.hasAttribute("required");
@@ -364,7 +366,9 @@ class BasicSelect extends HTMLElement {
     }
 
     addPresentationQueryListener() {
-        if (!this.presentationQuery) return;
+        if (!this.presentationQuery) {
+            return;
+        }
         if (typeof this.presentationQuery.addEventListener === "function") {
             this.presentationQuery.addEventListener("change", this.onPresentationQueryChange);
         } else {
@@ -373,7 +377,9 @@ class BasicSelect extends HTMLElement {
     }
 
     removePresentationQueryListener() {
-        if (!this.presentationQuery) return;
+        if (!this.presentationQuery) {
+            return;
+        }
         if (typeof this.presentationQuery.removeEventListener === "function") {
             this.presentationQuery.removeEventListener("change", this.onPresentationQueryChange);
         } else {
@@ -383,7 +389,9 @@ class BasicSelect extends HTMLElement {
 
     resolvePresentation() {
         const requested = (this.getAttribute("presentation") || "auto").trim().toLowerCase();
-        if (requested === "native" || requested === "custom") return requested;
+        if (requested === "native" || requested === "custom") {
+            return requested;
+        }
         return this.presentationQuery?.matches && !this.multiple ? "native" : "custom";
     }
 
@@ -391,12 +399,13 @@ class BasicSelect extends HTMLElement {
         const next = this.resolvePresentation();
         const previous = this.activePresentation;
         const focused = this.focusedControl;
-        const shouldRestoreFocus = forceRestoreFocus || Boolean(
-            previous && focused &&
-            (this.customShell.contains(focused) || this.nativeShell.contains(focused)),
-        );
+        const shouldRestoreFocus =
+            forceRestoreFocus ||
+            Boolean(previous && focused && (this.customShell.contains(focused) || this.nativeShell.contains(focused)));
 
-        if (next !== previous && this.open) this.closeListbox(false);
+        if (next !== previous && this.open) {
+            this.closeListbox(false);
+        }
         this.activePresentation = next;
         this.setAttribute("data-resolved-presentation", next);
         this.customShell.hidden = next !== "custom";
@@ -408,7 +417,9 @@ class BasicSelect extends HTMLElement {
 
         if (next !== previous && shouldRestoreFocus) {
             queueMicrotask(() => {
-                if (this.isConnected) this.activeControl.focus({ preventScroll: true });
+                if (this.isConnected) {
+                    this.activeControl.focus({ preventScroll: true });
+                }
             });
         }
     }
@@ -421,16 +432,17 @@ class BasicSelect extends HTMLElement {
             ["text-color", "--cms-input-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.fieldElement.style.setProperty(property, value);
-            else this.fieldElement.style.removeProperty(property);
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
         }
     }
 
     rebuild = () => {
         const previousValues = this.requestedValues ?? [...this.selectedValuesState];
-        this.optionModels = Array.from(
-            this.querySelectorAll(":scope > basic-option"),
-        ).map((source, index) => ({
+        this.optionModels = Array.from(this.querySelectorAll(":scope > basic-option")).map((source, index) => ({
             source,
             index,
             value: source.getAttribute("value") ?? source.textContent.trim(),
@@ -441,12 +453,17 @@ class BasicSelect extends HTMLElement {
 
         if (!this.defaultsCaptured && this.requestedValues === undefined) {
             const explicitValue = this.getAttribute("value");
-            if (explicitValue !== null) this.requestedValues = this.normalizeValues(explicitValue);
-            else {
-                const authored = this.optionModels.filter(option => option.selected).map(option => option.value);
+            if (explicitValue !== null) {
+                this.requestedValues = this.normalizeValues(explicitValue);
+            } else {
+                const authored = this.optionModels.filter((option) => option.selected).map((option) => option.value);
                 this.requestedValues = authored.length
-                    ? (this.multiple ? authored : authored.slice(0, 1))
-                    : (!this.multiple && this.optionModels.length ? [this.optionModels[0].value] : []);
+                    ? this.multiple
+                        ? authored
+                        : authored.slice(0, 1)
+                    : !this.multiple && this.optionModels.length
+                      ? [this.optionModels[0].value]
+                      : [];
             }
         }
 
@@ -459,21 +476,30 @@ class BasicSelect extends HTMLElement {
             return this.multiple ? values.filter(Boolean) : values.slice(0, 1);
         }
         const raw = String(value ?? "").trim();
-        if (!this.multiple) return [raw];
-        if (!raw) return [];
+        if (!this.multiple) {
+            return [raw];
+        }
+        if (!raw) {
+            return [];
+        }
         try {
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+            if (Array.isArray(parsed)) {
+                return parsed.map(String).filter(Boolean);
+            }
         } catch {
             // Comma-separated values are convenient in authored HTML.
         }
-        return raw.split(",").map(item => item.trim()).filter(Boolean);
+        return raw
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
     }
 
     applyValues(values) {
         const requested = this.multiple ? values : values.slice(0, 1);
-        const available = new Set(this.optionModels.map(option => option.value));
-        this.selectedValuesState = requested.filter(value => available.has(value));
+        const available = new Set(this.optionModels.map((option) => option.value));
+        this.selectedValuesState = requested.filter((value) => available.has(value));
         this.renderValue();
         this.renderOptions();
         this.updateFormValue();
@@ -481,9 +507,7 @@ class BasicSelect extends HTMLElement {
 
     renderValue() {
         const selected = new Set(this.selectedValuesState);
-        const labels = this.optionModels
-            .filter(option => selected.has(option.value))
-            .map(option => option.label);
+        const labels = this.optionModels.filter((option) => selected.has(option.value)).map((option) => option.label);
         const placeholder = this.getAttribute("placeholder") || "Select an option";
         this.valueElement.textContent = labels.length ? labels.join(", ") : placeholder;
         this.valueElement.dataset.placeholder = String(labels.length === 0);
@@ -491,19 +515,21 @@ class BasicSelect extends HTMLElement {
 
     renderOptions() {
         const selected = new Set(this.selectedValuesState);
-        this.listbox.replaceChildren(...this.optionModels.map((option, index) => {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.className = "option";
-            button.dataset.index = String(index);
-            button.setAttribute("role", "option");
-            button.setAttribute("aria-selected", String(selected.has(option.value)));
-            button.disabled = option.disabled || this.disabled;
-            button.textContent = option.label;
-            return button;
-        }));
+        this.listbox.replaceChildren(
+            ...this.optionModels.map((option, index) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "option";
+                button.dataset.index = String(index);
+                button.setAttribute("role", "option");
+                button.setAttribute("aria-selected", String(selected.has(option.value)));
+                button.disabled = option.disabled || this.disabled;
+                button.textContent = option.label;
+                return button;
+            }),
+        );
 
-        const nativeOptions = this.optionModels.map(option => {
+        const nativeOptions = this.optionModels.map((option) => {
             const element = document.createElement("option");
             element.value = option.value;
             element.textContent = option.label;
@@ -524,14 +550,14 @@ class BasicSelect extends HTMLElement {
         }
         this.nativeControl.replaceChildren(...nativeOptions);
         if (this.multiple) {
-            for (const option of this.nativeControl.options)
+            for (const option of this.nativeControl.options) {
                 option.selected = selected.has(option.value);
+            }
         } else {
-            const selectedIndex = Array.from(this.nativeControl.options)
-                .findIndex(option => selected.has(option.value));
-            this.nativeControl.selectedIndex = selectedIndex >= 0
-                ? selectedIndex
-                : emptySelectionIndex;
+            const selectedIndex = Array.from(this.nativeControl.options).findIndex((option) =>
+                selected.has(option.value),
+            );
+            this.nativeControl.selectedIndex = selectedIndex >= 0 ? selectedIndex : emptySelectionIndex;
         }
     }
 
@@ -541,88 +567,109 @@ class BasicSelect extends HTMLElement {
             this.internals.setFormValue(null);
         } else if (this.multiple) {
             const data = new FormData();
-            for (const value of values) data.append(this.name, value);
+            for (const value of values) {
+                data.append(this.name, value);
+            }
             this.internals.setFormValue(data);
         } else {
             this.internals.setFormValue(values[0]);
         }
 
-        const missing = this.hasAttribute("required") &&
-            (values.length === 0 || values.every(value => value === ""));
+        const missing = this.hasAttribute("required") && (values.length === 0 || values.every((value) => value === ""));
         const exposeInvalidity = !this.disabled && this.showValidation && missing;
         this.control.setAttribute("aria-invalid", String(exposeInvalidity));
         this.nativeControl.setAttribute("aria-invalid", String(exposeInvalidity));
-        if (this.disabled || !missing) this.internals.setValidity({});
-        else this.internals.setValidity(
-            { valueMissing: true },
-            "Select an option.",
-            this.activeControl,
-        );
-        this.errorElement.textContent = this.showValidation && missing
-            ? "Select an option."
-            : "";
+        if (this.disabled || !missing) {
+            this.internals.setValidity({});
+        } else {
+            this.internals.setValidity({ valueMissing: true }, "Select an option.", this.activeControl);
+        }
+        this.errorElement.textContent = this.showValidation && missing ? "Select an option." : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }
 
     openListbox(direction = 1) {
-        if (this.activePresentation !== "custom" || this.disabled || this.optionModels.length === 0) return;
+        if (this.activePresentation !== "custom" || this.disabled || this.optionModels.length === 0) {
+            return;
+        }
         this.open = true;
         this.toggleAttribute("data-open", true);
         this.listbox.hidden = false;
         this.control.setAttribute("aria-expanded", "true");
-        const selectedIndex = this.optionModels.findIndex(option =>
-            this.selectedValuesState.includes(option.value) && !option.disabled
+        const selectedIndex = this.optionModels.findIndex(
+            (option) => this.selectedValuesState.includes(option.value) && !option.disabled,
         );
-        this.activeIndex = selectedIndex >= 0
-            ? selectedIndex
-            : this.nextEnabledIndex(direction > 0 ? -1 : this.optionModels.length, direction);
+        this.activeIndex =
+            selectedIndex >= 0
+                ? selectedIndex
+                : this.nextEnabledIndex(direction > 0 ? -1 : this.optionModels.length, direction);
         queueMicrotask(() => this.focusOption(this.activeIndex));
     }
 
     closeListbox(restoreFocus = true) {
-        if (!this.open) return;
+        if (!this.open) {
+            return;
+        }
         this.open = false;
         this.toggleAttribute("data-open", false);
         this.listbox.hidden = true;
         this.control.setAttribute("aria-expanded", "false");
-        if (restoreFocus) this.control.focus();
+        if (restoreFocus) {
+            this.control.focus();
+        }
     }
 
     selectIndex(index) {
         const option = this.optionModels[index];
-        if (!option || option.disabled || this.disabled) return;
+        if (!option || option.disabled || this.disabled) {
+            return;
+        }
         if (this.multiple) {
             const values = new Set(this.selectedValuesState);
-            if (values.has(option.value)) values.delete(option.value);
-            else values.add(option.value);
+            if (values.has(option.value)) {
+                values.delete(option.value);
+            } else {
+                values.add(option.value);
+            }
             this.requestedValues = [...values];
         } else {
             this.requestedValues = [option.value];
         }
         this.applyValues(this.requestedValues);
         this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-        if (!this.multiple) this.closeListbox(true);
-        else this.focusOption(index);
+        if (!this.multiple) {
+            this.closeListbox(true);
+        } else {
+            this.focusOption(index);
+        }
     }
 
     nextEnabledIndex(start, direction) {
-        if (!this.optionModels.length) return -1;
+        if (!this.optionModels.length) {
+            return -1;
+        }
         let index = start;
         for (let count = 0; count < this.optionModels.length; count++) {
             index = (index + direction + this.optionModels.length) % this.optionModels.length;
-            if (!this.optionModels[index].disabled) return index;
+            if (!this.optionModels[index].disabled) {
+                return index;
+            }
         }
         return -1;
     }
 
     focusOption(index) {
-        if (index < 0) return;
+        if (index < 0) {
+            return;
+        }
         this.activeIndex = index;
         this.listbox.querySelector(`[data-index="${index}"]`)?.focus();
     }
 
     upgradeProperty(name) {
-        if (!Object.prototype.hasOwnProperty.call(this, name)) return;
+        if (!Object.prototype.hasOwnProperty.call(this, name)) {
+            return;
+        }
         const value = this[name];
         delete this[name];
         this[name] = value;
@@ -651,26 +698,33 @@ class BasicSelect extends HTMLElement {
         this.updateFormValue();
     };
 
-    onNativeInput = event => {
+    onNativeInput = (event) => {
         event.stopPropagation();
     };
 
-    onNativeChange = event => {
+    onNativeChange = (event) => {
         event.stopPropagation();
-        if (this.activePresentation !== "native" || this.disabled) return;
+        if (this.activePresentation !== "native" || this.disabled) {
+            return;
+        }
         this.requestedValues = this.multiple
-            ? Array.from(this.nativeControl.selectedOptions, option => option.value)
-            : (this.nativeControl.selectedIndex < 0 ? [] : [this.nativeControl.value]);
+            ? Array.from(this.nativeControl.selectedOptions, (option) => option.value)
+            : this.nativeControl.selectedIndex < 0
+              ? []
+              : [this.nativeControl.value];
         this.applyValues(this.requestedValues);
         this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     };
 
     onControlClick = () => {
-        if (this.open) this.closeListbox(false);
-        else this.openListbox(1);
+        if (this.open) {
+            this.closeListbox(false);
+        } else {
+            this.openListbox(1);
+        }
     };
 
-    onControlKeydown = event => {
+    onControlKeydown = (event) => {
         if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
             event.preventDefault();
             const direction = ["ArrowUp", "End"].includes(event.key) ? -1 : 1;
@@ -681,13 +735,15 @@ class BasicSelect extends HTMLElement {
         }
     };
 
-    onOptionClick = event => {
+    onOptionClick = (event) => {
         const option = event.target.closest(".option");
-        if (!option) return;
+        if (!option) {
+            return;
+        }
         this.selectIndex(Number(option.dataset.index));
     };
 
-    onOptionKeydown = event => {
+    onOptionKeydown = (event) => {
         if (event.key === "Escape") {
             event.preventDefault();
             this.closeListbox(true);
@@ -702,20 +758,24 @@ class BasicSelect extends HTMLElement {
             this.selectIndex(this.activeIndex);
             return;
         }
-        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+            return;
+        }
         event.preventDefault();
-        if (event.key === "Home") this.activeIndex = this.nextEnabledIndex(-1, 1);
-        else if (event.key === "End") this.activeIndex = this.nextEnabledIndex(0, -1);
-        else this.activeIndex = this.nextEnabledIndex(
-            this.activeIndex,
-            event.key === "ArrowDown" ? 1 : -1,
-        );
+        if (event.key === "Home") {
+            this.activeIndex = this.nextEnabledIndex(-1, 1);
+        } else if (event.key === "End") {
+            this.activeIndex = this.nextEnabledIndex(0, -1);
+        } else {
+            this.activeIndex = this.nextEnabledIndex(this.activeIndex, event.key === "ArrowDown" ? 1 : -1);
+        }
         this.focusOption(this.activeIndex);
     };
 
-    onDocumentPointerDown = event => {
-        if (this.open && !event.composedPath().includes(this))
+    onDocumentPointerDown = (event) => {
+        if (this.open && !event.composedPath().includes(this)) {
             this.closeListbox(false);
+        }
     };
 
     onInvalid = () => {

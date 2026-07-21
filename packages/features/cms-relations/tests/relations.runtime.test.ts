@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { resolveRelationPage } from "@bernouy/cms-relations";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import {
-    offersSource,
-    productOffersRelation,
-} from "./helpers/relationFixtures";
+import { offersSource, productOffersRelation } from "./helpers/relationFixtures";
 
 describe("@bernouy/cms-relations runtime", () => {
     test("resolves a reference relation page through the target endpoint", async () => {
@@ -51,14 +48,19 @@ describe("@bernouy/cms-relations runtime", () => {
         relation.page!.maxLimit = 25;
         const seen: string[] = [];
 
-        const result = await resolveRelationPage(relation, { id: "product-100" }, { limit: 999 }, {
-            sources,
-            fetchImpl: async (input) => {
-                const url = new URL(String(input));
-                seen.push(url.searchParams.toString());
-                return Response.json({ items: [], total: 0 });
+        const result = await resolveRelationPage(
+            relation,
+            { id: "product-100" },
+            { limit: 999 },
+            {
+                sources,
+                fetchImpl: async (input) => {
+                    const url = new URL(String(input));
+                    seen.push(url.searchParams.toString());
+                    return Response.json({ items: [], total: 0 });
+                },
             },
-        });
+        );
 
         expect(seen).toEqual(["productId=product-100&limit=25"]);
         expect(result.limit).toBe(25);
@@ -71,14 +73,19 @@ describe("@bernouy/cms-relations runtime", () => {
         relation.page!.offsetParam = undefined;
         const seen: string[] = [];
 
-        const result = await resolveRelationPage(relation, { id: "product-100" }, { limit: 10, offset: 20 }, {
-            sources,
-            fetchImpl: async (input) => {
-                const url = new URL(String(input));
-                seen.push(url.searchParams.toString());
-                return Response.json({ items: [], total: 0 });
+        const result = await resolveRelationPage(
+            relation,
+            { id: "product-100" },
+            { limit: 10, offset: 20 },
+            {
+                sources,
+                fetchImpl: async (input) => {
+                    const url = new URL(String(input));
+                    seen.push(url.searchParams.toString());
+                    return Response.json({ items: [], total: 0 });
+                },
             },
-        });
+        );
 
         expect(seen).toEqual(["productId=product-100&limit=10"]);
         expect(result).toEqual({ items: [], total: 0, limit: 10 });
@@ -95,14 +102,19 @@ describe("@bernouy/cms-relations runtime", () => {
         };
         relation.page!.offsetParam = undefined;
 
-        const result = await resolveRelationPage(relation, { id: "product-100" }, { limit: 10, offset: -1 }, {
-            sources,
-            fetchImpl: async (input) => {
-                const url = new URL(String(input));
-                expect(url.searchParams.toString()).toBe("productId=product-100&limit=10&offset=0");
-                return Response.json({ items: [], total: 0 });
+        const result = await resolveRelationPage(
+            relation,
+            { id: "product-100" },
+            { limit: 10, offset: -1 },
+            {
+                sources,
+                fetchImpl: async (input) => {
+                    const url = new URL(String(input));
+                    expect(url.searchParams.toString()).toBe("productId=product-100&limit=10&offset=0");
+                    return Response.json({ items: [], total: 0 });
+                },
             },
-        });
+        );
 
         expect(result.offset).toBe(0);
     });

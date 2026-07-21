@@ -31,14 +31,18 @@ describe("Commerce seller blocs", () => {
         expect(shippingAmount({ shippingAmount: 450 })).toBe(450);
         expect(shippingAmount({ shippingAmount: 999, financialTerms: { shippingAmount: 450 } })).toBe(450);
         expect(Number.isNaN(shippingAmount({ subtotalAmount: 11000, totalAmount: 12070 }))).toBe(true);
-        expect(sellerProceedsAmount({
-            totalAmount: 12_070,
-            financialTerms: { sellerProceedsAmount: 10_450 },
-        })).toBe(10_450);
-        expect(sellerMerchandiseAmount({
-            subtotalAmount: 12_000,
-            financialTerms: { merchandiseSubtotalAmount: 11_000 },
-        })).toBe(11_000);
+        expect(
+            sellerProceedsAmount({
+                totalAmount: 12_070,
+                financialTerms: { sellerProceedsAmount: 10_450 },
+            }),
+        ).toBe(10_450);
+        expect(
+            sellerMerchandiseAmount({
+                subtotalAmount: 12_000,
+                financialTerms: { merchandiseSubtotalAmount: 11_000 },
+            }),
+        ).toBe(11_000);
         expect(sellerCommissionAmount({ financialTerms: { sellerCommissionAmount: 220 } })).toBe(220);
         expect(platformShippingShareAmount({ financialTerms: { platformShippingShareAmount: 450 } })).toBe(450);
         expect(sellerShippingShareAmount({ financialTerms: { sellerShippingShareAmount: 0 } })).toBe(0);
@@ -48,22 +52,32 @@ describe("Commerce seller blocs", () => {
         expect(conditionLabel("very_good")).toBe("Très bon état");
         expect(variantLabel({ options: [{ axisLabel: "Grip", valueLabel: "L1" }] })).toBe("Grip : L1");
         expect(saleStatusDefaults.active).toBe("À expédier");
-        expect(salePresentationStatus({
-            status: "active",
-            fulfillment: { status: "seller_handoff_declared" },
-        })).toBe("seller_handoff_declared");
-        expect(saleStatusDefaults[salePresentationStatus({
-            status: "active",
-            fulfillment: { status: "seller_handoff_declared" },
-        })]).toBe("Dépôt déclaré");
-        expect(salePresentationStatus({
-            status: "active",
-            fulfillment: { status: "carrier_accepted" },
-        })).toBe("carrier_accepted");
-        expect(salePresentationStatus({
-            status: "cancelled",
-            fulfillment: { status: "seller_handoff_declared" },
-        })).toBe("cancelled");
+        expect(
+            salePresentationStatus({
+                status: "active",
+                fulfillment: { status: "seller_handoff_declared" },
+            }),
+        ).toBe("seller_handoff_declared");
+        expect(
+            saleStatusDefaults[
+                salePresentationStatus({
+                    status: "active",
+                    fulfillment: { status: "seller_handoff_declared" },
+                })
+            ],
+        ).toBe("Dépôt déclaré");
+        expect(
+            salePresentationStatus({
+                status: "active",
+                fulfillment: { status: "carrier_accepted" },
+            }),
+        ).toBe("carrier_accepted");
+        expect(
+            salePresentationStatus({
+                status: "cancelled",
+                fulfillment: { status: "seller_handoff_declared" },
+            }),
+        ).toBe("cancelled");
     });
 
     test("compiles an authenticated sales list from the expected Commerce endpoint", async () => {
@@ -83,7 +97,7 @@ describe("Commerce seller blocs", () => {
         const lines = { replaceChildren: (..._children: unknown[]) => undefined };
         const host = {
             locale: "fr-FR",
-            root: { querySelector: (selector: string) => selector === "[data-order-status]" ? status : lines },
+            root: { querySelector: (selector: string) => (selector === "[data-order-status]" ? status : lines) },
             setText: (selector: string, value: string) => values.set(selector, value),
             statusLabel: () => "À traiter",
             text: (_attribute: string, fallback: string) => fallback,
@@ -150,11 +164,11 @@ describe("Commerce seller blocs", () => {
         expect(compiled.viewSource).toContain("sellerProceedsAmount(order)");
         expect(compiled.viewSource).toContain("salePresentationStatus(order)");
         expect(compiled.viewJS).toContain("commerce-fulfillment:updated");
-        expect(compiled.viewSource).not.toContain('formatMoney(order.totalAmount, order.currency');
+        expect(compiled.viewSource).not.toContain("formatMoney(order.totalAmount, order.currency");
         expect(compiled.viewJS).toContain("Montant net à recevoir");
         expect(compiled.viewJS).toContain("Commission Courtside");
         expect(compiled.viewJS).toContain("Prise en charge par Courtside");
-        expect(compiled.viewJS).not.toContain("data-back action=\"link\"");
+        expect(compiled.viewJS).not.toContain('data-back action="link"');
         expect(compiled.viewSource).not.toContain("getShipmentForMySale");
         expect(compiled.viewSource).not.toContain("createShipmentForMySale");
         expect(compiled.editorSource).toContain('slot: "fulfillment"');
@@ -168,7 +182,7 @@ async function compile(tag: string) {
     const view = await readFile(resolve(directory, "Bloc.ts"), "utf8");
     const editor = await readFile(resolve(directory, "BlocEditor.ts"), "utf8");
     const source: Record<string, string> = {};
-    for (const file of files.filter(name => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
+    for (const file of files.filter((name) => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
         const content = await readFile(resolve(directory, file));
         source[file] = Buffer.from(content).toString("base64");
     }

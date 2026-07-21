@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    executeFunction,
-    type CmsFunction,
-    type FunctionExecutionFailure,
-} from "@bernouy/cms-functions";
+import { executeFunction, type CmsFunction, type FunctionExecutionFailure } from "@bernouy/cms-functions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 
 describe("function failure observability", () => {
@@ -11,32 +7,38 @@ describe("function failure observability", () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:payments",
-            endpoints: [{
-                urn: "urn:payments:createPayment",
-                method: "POST",
-                targetUrl: "https://payments.test/create",
-                output: [
-                    { status: "200", body: { type: "object" } },
-                    {
-                        status: "503",
-                        body: {
-                            type: "object",
-                            properties: { error: { type: "string" } },
+            endpoints: [
+                {
+                    urn: "urn:payments:createPayment",
+                    method: "POST",
+                    targetUrl: "https://payments.test/create",
+                    output: [
+                        { status: "200", body: { type: "object" } },
+                        {
+                            status: "503",
+                            body: {
+                                type: "object",
+                                properties: { error: { type: "string" } },
+                            },
                         },
-                    },
-                ],
-            }],
+                    ],
+                },
+            ],
         });
         const failures: FunctionExecutionFailure[] = [];
         const response = await executeFunction(callFunction(), request(), {
             sources,
             includeCallErrorDetails: true,
-            reportFailure: failure => failures.push(failure),
+            reportFailure: (failure) => failures.push(failure),
             deps: {
-                fetchImpl: async () => Response.json({
-                    error: "provider failed",
-                    secret: "must-not-be-observable",
-                }, { status: 503 }),
+                fetchImpl: async () =>
+                    Response.json(
+                        {
+                            error: "provider failed",
+                            secret: "must-not-be-observable",
+                        },
+                        { status: 503 },
+                    ),
             },
         });
 
@@ -48,16 +50,18 @@ describe("function failure observability", () => {
             error: "Function execution failed",
             correlationId,
         });
-        expect(failures).toEqual([{
-            kind: "function_execution_failure",
-            correlationId,
-            functionId: "createPaymentForOrder",
-            status: 502,
-            stepId: "createPayment",
-            source: "payments",
-            endpoint: "createPayment",
-            callStatus: 503,
-        }]);
+        expect(failures).toEqual([
+            {
+                kind: "function_execution_failure",
+                correlationId,
+                functionId: "createPaymentForOrder",
+                status: 502,
+                stepId: "createPayment",
+                source: "payments",
+                endpoint: "createPayment",
+                callStatus: 503,
+            },
+        ]);
         expect(JSON.stringify(failures)).not.toContain("provider failed");
         expect(JSON.stringify(failures)).not.toContain("must-not-be-observable");
     });
@@ -70,7 +74,7 @@ describe("function failure observability", () => {
         const failures: FunctionExecutionFailure[] = [];
         const response = await executeFunction(callFunction(), request(), {
             sources,
-            reportFailure: failure => failures.push(failure),
+            reportFailure: (failure) => failures.push(failure),
         });
 
         expect(response.status).toBe(500);
@@ -79,34 +83,42 @@ describe("function failure observability", () => {
             error: "Function execution failed",
             correlationId,
         });
-        expect(failures).toEqual([{
-            kind: "function_execution_failure",
-            correlationId,
-            functionId: "createPaymentForOrder",
-            status: 500,
-            stepId: "createPayment",
-            source: "payments",
-            endpoint: "createPayment",
-        }]);
+        expect(failures).toEqual([
+            {
+                kind: "function_execution_failure",
+                correlationId,
+                functionId: "createPaymentForOrder",
+                status: 500,
+                stepId: "createPayment",
+                source: "payments",
+                endpoint: "createPayment",
+            },
+        ]);
         expect(JSON.stringify(failures)).not.toContain("repository secret");
     });
 
     test("correlates a server assertion without inventing call context", async () => {
         const failures: FunctionExecutionFailure[] = [];
-        const response = await executeFunction({
-            id: "serverGuard",
-            method: "POST",
-            steps: [{
-                assert: {
-                    condition: { equals: [true, false] },
-                    failure: { status: 503, error: "internal provider detail" },
-                },
-            }],
-            return: { body: { ok: true } },
-        }, request(), {
-            sources: new InMemorySourceRepository(),
-            reportFailure: failure => failures.push(failure),
-        });
+        const response = await executeFunction(
+            {
+                id: "serverGuard",
+                method: "POST",
+                steps: [
+                    {
+                        assert: {
+                            condition: { equals: [true, false] },
+                            failure: { status: 503, error: "internal provider detail" },
+                        },
+                    },
+                ],
+                return: { body: { ok: true } },
+            },
+            request(),
+            {
+                sources: new InMemorySourceRepository(),
+                reportFailure: (failure) => failures.push(failure),
+            },
+        );
 
         expect(response.status).toBe(503);
         const correlationId = response.headers.get("x-correlation-id");
@@ -114,28 +126,34 @@ describe("function failure observability", () => {
             error: "Function execution failed",
             correlationId,
         });
-        expect(failures).toEqual([{
-            kind: "function_execution_failure",
-            correlationId,
-            functionId: "serverGuard",
-            status: 503,
-        }]);
+        expect(failures).toEqual([
+            {
+                kind: "function_execution_failure",
+                correlationId,
+                functionId: "serverGuard",
+                status: 503,
+            },
+        ]);
     });
 
     test("correlates an explicit server-error return", async () => {
         const failures: FunctionExecutionFailure[] = [];
-        const response = await executeFunction({
-            id: "temporarilyUnavailable",
-            method: "POST",
-            steps: [],
-            return: {
-                status: 503,
-                body: { error: "private availability reason" },
+        const response = await executeFunction(
+            {
+                id: "temporarilyUnavailable",
+                method: "POST",
+                steps: [],
+                return: {
+                    status: 503,
+                    body: { error: "private availability reason" },
+                },
             },
-        }, request(), {
-            sources: new InMemorySourceRepository(),
-            reportFailure: failure => failures.push(failure),
-        });
+            request(),
+            {
+                sources: new InMemorySourceRepository(),
+                reportFailure: (failure) => failures.push(failure),
+            },
+        );
 
         expect(response.status).toBe(503);
         const correlationId = response.headers.get("x-correlation-id");
@@ -143,35 +161,43 @@ describe("function failure observability", () => {
             error: "Function execution failed",
             correlationId,
         });
-        expect(failures).toEqual([{
-            kind: "function_execution_failure",
-            correlationId,
-            functionId: "temporarilyUnavailable",
-            status: 503,
-        }]);
+        expect(failures).toEqual([
+            {
+                kind: "function_execution_failure",
+                correlationId,
+                functionId: "temporarilyUnavailable",
+                status: 503,
+            },
+        ]);
         expect(JSON.stringify(failures)).not.toContain("private availability reason");
     });
 
     test("does not let a failing reporter change the safe response", async () => {
-        const response = await executeFunction({
-            id: "invalidOutput",
-            method: "POST",
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: { id: { type: "string" } },
-                    required: ["id"],
-                },
-            }],
-            steps: [],
-            return: { body: { id: 42 } },
-        }, request(), {
-            sources: new InMemorySourceRepository(),
-            reportFailure: () => {
-                throw new Error("logging unavailable");
+        const response = await executeFunction(
+            {
+                id: "invalidOutput",
+                method: "POST",
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: { id: { type: "string" } },
+                            required: ["id"],
+                        },
+                    },
+                ],
+                steps: [],
+                return: { body: { id: 42 } },
             },
-        });
+            request(),
+            {
+                sources: new InMemorySourceRepository(),
+                reportFailure: () => {
+                    throw new Error("logging unavailable");
+                },
+            },
+        );
 
         expect(response.status).toBe(500);
         expect(await response.json()).toEqual({
@@ -185,10 +211,12 @@ function callFunction(): CmsFunction {
     return {
         id: "createPaymentForOrder",
         method: "POST",
-        steps: [{
-            id: "createPayment",
-            call: { source: "payments", endpoint: "createPayment" },
-        }],
+        steps: [
+            {
+                id: "createPayment",
+                call: { source: "payments", endpoint: "createPayment" },
+            },
+        ],
         return: { body: "$steps.createPayment" },
     };
 }

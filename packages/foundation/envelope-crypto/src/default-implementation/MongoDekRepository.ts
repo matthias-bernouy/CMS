@@ -9,8 +9,8 @@ import type { DekRepository, DekRecord } from "envelope-crypto/interfaces/DekRep
  * blob, for `OvhOkmsKekProvider` the JWE token returned by OVH.
  */
 export type CmsDekDocument = {
-    _id:       string;
-    wrapped:   string;
+    _id: string;
+    wrapped: string;
     createdAt: Date;
     rotatedAt: Date | null;
 };
@@ -23,35 +23,40 @@ export type CmsDekDocument = {
  * `EnvelopeSecretCrypto`) serves the whole platform.
  */
 export class MongoDekRepository implements DekRepository {
-
     private readonly _collection: Collection<CmsDekDocument>;
     private _indexesReadyPromise: Promise<void> | null;
 
     constructor(collection: Collection<CmsDekDocument>, config: { createIndexes?: boolean } = {}) {
         this._collection = collection;
-        this._indexesReadyPromise = config.createIndexes === false
-            ? null
-            : this._ensureIndexes().catch((e) => { this._indexesReadyPromise = null; throw e; });
+        this._indexesReadyPromise =
+            config.createIndexes === false
+                ? null
+                : this._ensureIndexes().catch((e) => {
+                      this._indexesReadyPromise = null;
+                      throw e;
+                  });
     }
 
     private async _ensureIndexes(): Promise<void> {
-        const indexes: IndexDescription[] = [
-            { key: { createdAt: -1 }, name: "createdAt" },
-        ];
+        const indexes: IndexDescription[] = [{ key: { createdAt: -1 }, name: "createdAt" }];
         await this._collection.createIndexes(indexes);
     }
 
     private async _ready(): Promise<void> {
-        if (this._indexesReadyPromise) await this._indexesReadyPromise;
+        if (this._indexesReadyPromise) {
+            await this._indexesReadyPromise;
+        }
     }
 
     async get(scopeId: string): Promise<DekRecord | null> {
         await this._ready();
         const doc = await this._collection.findOne({ _id: scopeId });
-        if (!doc) return null;
+        if (!doc) {
+            return null;
+        }
         return {
-            scopeId:   doc._id,
-            wrapped:   doc.wrapped,
+            scopeId: doc._id,
+            wrapped: doc.wrapped,
             createdAt: doc.createdAt,
             rotatedAt: doc.rotatedAt,
         };
@@ -63,17 +68,21 @@ export class MongoDekRepository implements DekRepository {
         // writer's row is returned untouched instead of being overwritten.
         const winner = await this._collection.findOneAndUpdate(
             { _id: record.scopeId },
-            { $setOnInsert: {
-                wrapped:   record.wrapped,
-                createdAt: record.createdAt,
-                rotatedAt: record.rotatedAt,
-            } },
+            {
+                $setOnInsert: {
+                    wrapped: record.wrapped,
+                    createdAt: record.createdAt,
+                    rotatedAt: record.rotatedAt,
+                },
+            },
             { upsert: true, returnDocument: "after" },
         );
-        if (!winner) throw new Error(`MongoDekRepository: create("${record.scopeId}") returned no document.`);
+        if (!winner) {
+            throw new Error(`MongoDekRepository: create("${record.scopeId}") returned no document.`);
+        }
         return {
-            scopeId:   winner._id,
-            wrapped:   winner.wrapped,
+            scopeId: winner._id,
+            wrapped: winner.wrapped,
             createdAt: winner.createdAt,
             rotatedAt: winner.rotatedAt,
         };

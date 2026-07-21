@@ -6,9 +6,9 @@ import type { PushState } from "cms-cli/push/shared/state";
 function page(path: string, hash: string): LocalPage {
     return {
         path,
-        file:        `pages${path === "/" ? "/index" : path}.html`,
+        file: `pages${path === "/" ? "/index" : path}.html`,
         frontmatter: { title: "", description: "", visible: true, tags: [] },
-        content:     "",
+        content: "",
         hash,
     };
 }
@@ -46,7 +46,8 @@ describe("classifyPages", () => {
 
     test("flags as `conflict` when remote drifted from lastSeenRemote", async () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "page:/about": { hash: "old", lastSeenRemote: "old" } },
         };
         const out = await classifyPages(
@@ -61,7 +62,8 @@ describe("classifyPages", () => {
 
     test("--force bypasses the conflict check", async () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "page:/about": { hash: "old", lastSeenRemote: "old" } },
         };
         const out = await classifyPages(

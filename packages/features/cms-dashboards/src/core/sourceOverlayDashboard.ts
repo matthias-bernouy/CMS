@@ -7,14 +7,16 @@ export function applyDashboardSourceOverlays(
     dashboard: DashboardDto,
     overlays: readonly SourceOverlay[],
 ): DashboardDto {
-    const relevant = overlays.filter(overlay =>
-        overlay.sourceId === dashboard.source
-        && (overlay.fields.length || overlay.dashboardFields?.length),
+    const relevant = overlays.filter(
+        (overlay) =>
+            overlay.sourceId === dashboard.source && (overlay.fields.length || overlay.dashboardFields?.length),
     );
-    if (!relevant.length) return structuredClone(dashboard);
+    if (!relevant.length) {
+        return structuredClone(dashboard);
+    }
 
     const next = structuredClone(dashboard);
-    next.views = next.views.map(widget => applyWidgetSourceOverlays(widget, relevant, dashboard.id));
+    next.views = next.views.map((widget) => applyWidgetSourceOverlays(widget, relevant, dashboard.id));
     return next;
 }
 
@@ -24,14 +26,17 @@ function applyWidgetSourceOverlays(
     dashboardId: string,
 ): DashboardWidget {
     if (widget.widget === "w-section") {
-        return { ...widget, children: widget.children.map(child => applyWidgetSourceOverlays(child, overlays, dashboardId)) };
+        return {
+            ...widget,
+            children: widget.children.map((child) => applyWidgetSourceOverlays(child, overlays, dashboardId)),
+        };
     }
     if (widget.widget === "w-tabs") {
         return {
             ...widget,
-            tabs: widget.tabs.map(tab => ({
+            tabs: widget.tabs.map((tab) => ({
                 ...tab,
-                children: tab.children.map(child => applyWidgetSourceOverlays(child, overlays, dashboardId)),
+                children: tab.children.map((child) => applyWidgetSourceOverlays(child, overlays, dashboardId)),
             })),
         };
     }

@@ -65,15 +65,17 @@ describe("cms functions foreach recovery validation", () => {
     test("enforces GET purity in the recovery branch", async () => {
         const sources = await productSources();
         const fn = recoveringProductsFunction();
-        recoveryLoop(fn).onError = [{
-            id: "recover",
-            call: {
-                source: "products",
-                endpoint: "updateProduct",
-                params: { productId: "$item.id" },
-                body: { title: "Recovery" },
+        recoveryLoop(fn).onError = [
+            {
+                id: "recover",
+                call: {
+                    source: "products",
+                    endpoint: "updateProduct",
+                    params: { productId: "$item.id" },
+                    body: { title: "Recovery" },
+                },
             },
-        }];
+        ];
 
         expect(await validateFunction(fn, { sources })).toContain(
             "function.steps.0.forEach.onError.0.call cannot call POST from a GET function",

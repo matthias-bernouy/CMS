@@ -9,7 +9,7 @@ import type { IdentityProvider, LoginMethod } from "cms-auth/interfaces/Identity
  */
 export function toLoginMethod(p: IdentityProvider, authBasePath: string): LoginMethod {
     const base: LoginMethod = {
-        id:          p.id,
+        id: p.id,
         displayName: p.displayName,
         ...(p.icon ? { icon: p.icon } : {}),
     };

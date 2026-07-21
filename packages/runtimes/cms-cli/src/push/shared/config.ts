@@ -10,7 +10,7 @@ export type PushConfig = {
 };
 
 const DEFAULT_SITE_DIR = "site";
-const CONFIG_FILE      = "p9r.config.json";
+const CONFIG_FILE = "p9r.config.json";
 
 type RawConfig = {
     siteDir?: unknown;
@@ -25,12 +25,10 @@ export async function loadPushConfig(cwd: string): Promise<PushConfig> {
     const configPath = join(cwd, CONFIG_FILE);
     const raw = existsSync(configPath) ? await readRaw(configPath) : {};
 
-    const siteDirRaw = typeof raw.siteDir === "string" && raw.siteDir.trim()
-        ? raw.siteDir.trim()
-        : DEFAULT_SITE_DIR;
+    const siteDirRaw = typeof raw.siteDir === "string" && raw.siteDir.trim() ? raw.siteDir.trim() : DEFAULT_SITE_DIR;
 
     return {
-        siteDir:          isAbsolute(siteDirRaw) ? siteDirRaw : resolve(cwd, siteDirRaw),
+        siteDir: isAbsolute(siteDirRaw) ? siteDirRaw : resolve(cwd, siteDirRaw),
         forcePushDefault: raw.forcePushDefault === true,
     };
 }

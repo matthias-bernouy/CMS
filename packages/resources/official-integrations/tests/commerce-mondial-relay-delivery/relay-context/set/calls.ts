@@ -12,5 +12,5 @@ export function callSnapshot(call: CapturedCall) {
 }
 
 export function paths(calls: Array<{ url: URL }>): string[] {
-    return calls.map(call => call.url.pathname);
+    return calls.map((call) => call.url.pathname);
 }

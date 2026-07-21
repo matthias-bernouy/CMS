@@ -6,17 +6,12 @@ describe("Commerce negotiation workflow call budgets", () => {
     test("loads one bounded Commerce context before the policy call", async () => {
         const { response, calls } = await executeNegotiationWorkflow(
             "getProposalPolicy",
-            new Request(
-                "https://cms.test/functions/getProposalPolicy?offerId=42",
-            ),
+            new Request("https://cms.test/functions/getProposalPolicy?offerId=42"),
             successfulResponder,
         );
 
         expect(response.status).toBe(200);
-        expect(calls.map(call => call.url.pathname)).toEqual([
-            "/system/offer/negotiation-context",
-            "/policy",
-        ]);
+        expect(calls.map((call) => call.url.pathname)).toEqual(["/system/offer/negotiation-context", "/policy"]);
     });
 
     test("loads the same bounded context before proposal creation", async () => {
@@ -31,9 +26,6 @@ describe("Commerce negotiation workflow call budgets", () => {
         );
 
         expect(response.status).toBe(201);
-        expect(calls.map(call => call.url.pathname)).toEqual([
-            "/system/offer/negotiation-context",
-            "/proposals",
-        ]);
+        expect(calls.map((call) => call.url.pathname)).toEqual(["/system/offer/negotiation-context", "/proposals"]);
     });
 });

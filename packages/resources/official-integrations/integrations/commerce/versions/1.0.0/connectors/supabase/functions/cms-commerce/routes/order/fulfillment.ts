@@ -19,10 +19,7 @@ export async function recordOrderFulfillment(request: Request): Promise<Response
 }
 
 export async function getOrderFulfillmentAuthorization(request: Request): Promise<Response> {
-    const orderPublicId = requiredText(
-        new URL(request.url).searchParams.get("orderPublicId"),
-        "orderPublicId",
-    );
+    const orderPublicId = requiredText(new URL(request.url).searchParams.get("orderPublicId"), "orderPublicId");
     const result = await rpc("get_order_fulfillment_authorization", {
         p_order_public_id: orderPublicId,
     });
@@ -55,8 +52,8 @@ export async function completeOrderShipmentCreation(request: Request): Promise<R
         p_claim_token: requiredText(body.claimToken, "claimToken"),
         p_provider_reference: requiredText(body.providerReference, "providerReference"),
         p_provider_shipment_id: text(body.providerShipmentId) ?? null,
-        p_provider_snapshot: typeof body.providerSnapshot === "object" && body.providerSnapshot !== null
-            ? body.providerSnapshot : {},
+        p_provider_snapshot:
+            typeof body.providerSnapshot === "object" && body.providerSnapshot !== null ? body.providerSnapshot : {},
     });
     return json(camelize(result));
 }
@@ -78,8 +75,8 @@ export async function recoverOrderShipmentCreation(request: Request): Promise<Re
         p_order_public_id: requiredText(body.orderPublicId, "orderPublicId"),
         p_provider_reference: requiredText(body.providerReference, "providerReference"),
         p_provider_shipment_id: requiredText(body.providerShipmentId, "providerShipmentId"),
-        p_provider_snapshot: typeof body.providerSnapshot === "object" && body.providerSnapshot !== null
-            ? body.providerSnapshot : {},
+        p_provider_snapshot:
+            typeof body.providerSnapshot === "object" && body.providerSnapshot !== null ? body.providerSnapshot : {},
         p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
         p_reason: requiredText(body.reason, "reason"),
@@ -112,8 +109,8 @@ export async function completeOrderShipmentCancellation(request: Request): Promi
         p_claim_token: requiredText(body.claimToken, "claimToken"),
         p_provider_status: requiredText(body.providerStatus, "providerStatus"),
         p_provider_reference: text(body.providerReference) ?? null,
-        p_provider_snapshot: typeof body.providerSnapshot === "object" && body.providerSnapshot !== null
-            ? body.providerSnapshot : {},
+        p_provider_snapshot:
+            typeof body.providerSnapshot === "object" && body.providerSnapshot !== null ? body.providerSnapshot : {},
     });
     return json(camelize(result));
 }

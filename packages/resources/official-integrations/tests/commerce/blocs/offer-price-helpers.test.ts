@@ -31,17 +31,21 @@ describe("commerce offer price helpers", () => {
     });
 
     test("keeps the complete Stripe enrollment contract explicit", () => {
-        expect(stripeEnrollmentComplete({
-            accountStatus: "active",
-            stripeAccountApiVersion: "v2",
-            applicationControlledRecipient: true,
-            stripeTermsStatus: "accepted",
-        })).toBe(true);
-        expect(stripeEnrollmentComplete({
-            accountStatus: "active",
-            stripeAccountApiVersion: "v1",
-            applicationControlledRecipient: true,
-            stripeTermsStatus: "accepted",
-        })).toBe(false);
+        expect(
+            stripeEnrollmentComplete({
+                accountStatus: "active",
+                stripeAccountApiVersion: "v2",
+                applicationControlledRecipient: true,
+                stripeTermsStatus: "accepted",
+            }),
+        ).toBe(true);
+        expect(
+            stripeEnrollmentComplete({
+                accountStatus: "active",
+                stripeAccountApiVersion: "v1",
+                applicationControlledRecipient: true,
+                stripeTermsStatus: "accepted",
+            }),
+        ).toBe(false);
     });
 });

@@ -33,7 +33,7 @@ export async function writeSourceOverlaysWithRollback<T>(
                 action: write.previous ? "updated" : "created",
             });
         }
-        return operation ? await operation(artifacts) : artifacts as T;
+        return operation ? await operation(artifacts) : (artifacts as T);
     } catch (error) {
         await rollbackSourceOverlays(repository, completed);
         throw error;
@@ -46,8 +46,11 @@ async function rollbackSourceOverlays(
 ): Promise<void> {
     for (const write of completed.reverse()) {
         try {
-            if (write.previous) await repository.upsertOverlay(write.previous);
-            else await repository.deleteOverlay(write.overlay.id);
+            if (write.previous) {
+                await repository.upsertOverlay(write.previous);
+            } else {
+                await repository.deleteOverlay(write.overlay.id);
+            }
         } catch {
             // Best-effort rollback: keep restoring remaining overlays.
         }

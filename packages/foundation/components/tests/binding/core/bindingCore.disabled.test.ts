@@ -2,7 +2,11 @@ import { describe, test, expect, beforeAll, afterEach } from "bun:test";
 import { BindingCore, BINDING_CORE_TAG, BINDING_DISABLED_ATTR } from "../../../src/binding/bindingCore";
 import { text, waitFor, settle, respond, resetDom } from "../testUtils";
 
-beforeAll(() => { if (!customElements.get(BINDING_CORE_TAG)) customElements.define(BINDING_CORE_TAG, BindingCore); });
+beforeAll(() => {
+    if (!customElements.get(BINDING_CORE_TAG)) {
+        customElements.define(BINDING_CORE_TAG, BindingCore);
+    }
+});
 afterEach(resetDom);
 
 describe("<cms-binding-core> — disabled scope", () => {

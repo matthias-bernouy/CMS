@@ -34,9 +34,11 @@ describe("commerce protected C2C policy read contracts", () => {
         const response = await requestCommerce("/admin/c2c-policies");
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual(expectedC2cPolicyResponse({
-            feePolicy,
-            subsidies: [],
-        }));
+        expect(await response.json()).toEqual(
+            expectedC2cPolicyResponse({
+                feePolicy,
+                subsidies: [],
+            }),
+        );
     });
 });

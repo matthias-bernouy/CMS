@@ -8,17 +8,20 @@ import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
  * theme/blocs/pages is immediately visible without manual invalidation.
  */
 export class InMemoryCache implements Cache {
-
     private readonly store = new Map<string, CacheEntry>();
     private readonly isDev = process.env.MODE === "DEV";
 
     get(key: string): CacheEntry | null {
-        if (this.isDev) return null;
+        if (this.isDev) {
+            return null;
+        }
         return this.store.get(key) ?? null;
     }
 
     set(key: string, value: CacheEntry): void {
-        if (this.isDev) return;
+        if (this.isDev) {
+            return;
+        }
         this.store.set(key, value);
     }
 
@@ -28,7 +31,9 @@ export class InMemoryCache implements Cache {
 
     deleteMatching(predicate: (key: string) => boolean): void {
         for (const key of this.store.keys()) {
-            if (predicate(key)) this.store.delete(key);
+            if (predicate(key)) {
+                this.store.delete(key);
+            }
         }
     }
 }

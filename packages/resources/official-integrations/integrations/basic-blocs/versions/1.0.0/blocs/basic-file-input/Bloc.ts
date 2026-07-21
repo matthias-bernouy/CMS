@@ -143,7 +143,9 @@ class BasicFileInput extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     formResetCallback() {
@@ -196,11 +198,15 @@ class BasicFileInput extends HTMLElement {
 
         for (const name of ["accept", "capture"]) {
             const value = this.getAttribute(name);
-            if (value === null) this.input.removeAttribute(name);
-            else this.input.setAttribute(name, value);
+            if (value === null) {
+                this.input.removeAttribute(name);
+            } else {
+                this.input.setAttribute(name, value);
+            }
         }
-        for (const name of ["disabled", "multiple", "required"])
+        for (const name of ["disabled", "multiple", "required"]) {
             this.input.toggleAttribute(name, this.hasAttribute(name));
+        }
 
         this.syncFileName();
         this.syncSelectedPreview();
@@ -216,25 +222,30 @@ class BasicFileInput extends HTMLElement {
             ["text-color", "--cms-file-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.fieldElement.style.setProperty(property, value);
-            else this.fieldElement.style.removeProperty(property);
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
         }
     }
 
     syncFileName() {
         const files = Array.from(this.input.files || []);
         this.fileNameElement.textContent = files.length
-            ? files.map(file => file.name).join(", ")
+            ? files.map((file) => file.name).join(", ")
             : this.getAttribute("empty-label") || "No file selected";
     }
 
     syncSelectedPreview() {
-        const file = this.hasAttribute("multiple")
-            ? null
-            : (this.input.files?.[0] || null);
-        if (file === this.previewedFile) return;
+        const file = this.hasAttribute("multiple") ? null : this.input.files?.[0] || null;
+        if (file === this.previewedFile) {
+            return;
+        }
         this.clearSelectedPreview();
-        if (!file?.type.startsWith("image/") || typeof URL.createObjectURL !== "function") return;
+        if (!file?.type.startsWith("image/") || typeof URL.createObjectURL !== "function") {
+            return;
+        }
         this.previewedFile = file;
         this.previewUrl = URL.createObjectURL(file);
         this.selectedPreviewElement.style.backgroundImage = `url(${this.previewUrl})`;
@@ -243,7 +254,9 @@ class BasicFileInput extends HTMLElement {
     }
 
     clearSelectedPreview() {
-        if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+        if (this.previewUrl) {
+            URL.revokeObjectURL(this.previewUrl);
+        }
         this.previewUrl = "";
         this.previewedFile = null;
         this.selectedPreviewElement.style.removeProperty("background-image");
@@ -253,8 +266,7 @@ class BasicFileInput extends HTMLElement {
 
     syncPreview = () => {
         this.previewElement.hidden =
-            this.selectedPreviewElement.hidden &&
-            this.previewSlot.assignedElements().length === 0;
+            this.selectedPreviewElement.hidden && this.previewSlot.assignedElements().length === 0;
     };
 
     updateFormValue() {
@@ -263,7 +275,9 @@ class BasicFileInput extends HTMLElement {
             this.internals.setFormValue(null);
         } else if (this.hasAttribute("multiple")) {
             const data = new FormData();
-            for (const file of files) data.append(this.name, file);
+            for (const file of files) {
+                data.append(this.name, file);
+            }
             this.internals.setFormValue(data);
         } else {
             this.internals.setFormValue(files[0]);
@@ -272,15 +286,9 @@ class BasicFileInput extends HTMLElement {
         if (this.disabled || this.input.validity.valid) {
             this.internals.setValidity({});
         } else {
-            this.internals.setValidity(
-                this.input.validity,
-                this.input.validationMessage,
-                this.input,
-            );
+            this.internals.setValidity(this.input.validity, this.input.validationMessage, this.input);
         }
-        this.errorElement.textContent = this.showValidation
-            ? this.input.validationMessage || ""
-            : "";
+        this.errorElement.textContent = this.showValidation ? this.input.validationMessage || "" : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }
 

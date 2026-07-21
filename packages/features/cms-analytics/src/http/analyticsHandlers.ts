@@ -2,10 +2,10 @@ import type { AnalyticsStore } from "../interfaces/AnalyticsStore";
 import { parseRange } from "../core/parseRange";
 
 export const ANALYTICS_ROUTES = {
-    summary:    "/analytics/summary",
+    summary: "/analytics/summary",
     timeseries: "/analytics/timeseries",
-    topPages:   "/analytics/top-pages",
-    breakdown:  "/analytics/breakdown",
+    topPages: "/analytics/top-pages",
+    breakdown: "/analytics/breakdown",
 } as const;
 
 export async function analyticsSummaryHandler(store: AnalyticsStore, req: Request): Promise<Response> {

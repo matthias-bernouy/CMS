@@ -9,8 +9,11 @@ describe("browser adapter boundaries", () => {
         const root = await createWorkspace({
             "packages/features/domain/package.json": manifest("@fixture/domain", {
                 exports: {
-                    ".": "./src/index.ts", "./fs": "./src/fs.ts", "./http": "./src/http.ts",
-                    "./mongo": "./src/mongo.ts", "./supabase": "./src/supabase.ts",
+                    ".": "./src/index.ts",
+                    "./fs": "./src/fs.ts",
+                    "./http": "./src/http.ts",
+                    "./mongo": "./src/mongo.ts",
+                    "./supabase": "./src/supabase.ts",
                 },
             }),
             "packages/features/domain/src/index.ts": "export const domain = true;\n",
@@ -29,14 +32,20 @@ describe("browser adapter boundaries", () => {
                 "export { supabase } from '@fixture/domain/supabase';",
                 "import { readJsonBody } from 'fixture-web/core/http/readJsonBody';",
                 "import { externalClient } from '@acme/sdk/http/client';",
-                "void readJsonBody;", "void externalClient;", "",
+                "void readJsonBody;",
+                "void externalClient;",
+                "",
             ].join("\n"),
             "packages/surfaces/web/src/browser.ts": [
                 "import { externalClient } from '@acme/sdk/http/client';",
-                "export { value } from './browserHelper';", "void externalClient;", "",
+                "export { value } from './browserHelper';",
+                "void externalClient;",
+                "",
             ].join("\n"),
             "packages/surfaces/web/src/browserHelper.ts": [
-                "import { readFile } from 'fs/promises';", "export const value = readFile;", "",
+                "import { readFile } from 'fs/promises';",
+                "export const value = readFile;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
@@ -50,13 +59,19 @@ describe("browser adapter boundaries", () => {
             "packages/features/cms-auth/package.json": manifest("@fixture/cms-auth", {
                 exports: { ".": "./src/exports/index.ts", "./components": "./src/exports/components.ts" },
             }),
-            "packages/features/cms-auth/tsconfig.json": `${JSON.stringify({
-                compilerOptions: { baseUrl: "./src", paths: { "cms-auth/*": ["./*"] } },
-            }, null, 2)}\n`,
+            "packages/features/cms-auth/tsconfig.json": `${JSON.stringify(
+                {
+                    compilerOptions: { baseUrl: "./src", paths: { "cms-auth/*": ["./*"] } },
+                },
+                null,
+                2,
+            )}\n`,
             "packages/features/cms-auth/src/exports/index.ts": "export const auth = true;\n",
             "packages/features/cms-auth/src/exports/components.ts": "export { unsafe } from 'cms-auth/core/unsafe';\n",
             "packages/features/cms-auth/src/core/unsafe.ts": [
-                "import { readFile } from 'node:fs';", "export const unsafe = readFile;", "",
+                "import { readFile } from 'node:fs';",
+                "export const unsafe = readFile;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
@@ -71,7 +86,9 @@ describe("browser adapter boundaries", () => {
             }),
             "packages/foundation/components/src/index.ts": "export { unsafe } from './unsafe';\n",
             "packages/foundation/components/src/unsafe.ts": [
-                "import { readFile } from 'fs/promises';", "export const unsafe = readFile;", "",
+                "import { readFile } from 'fs/promises';",
+                "export const unsafe = readFile;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });

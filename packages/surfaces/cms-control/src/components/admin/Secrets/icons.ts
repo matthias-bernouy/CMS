@@ -5,8 +5,10 @@ import { ICON_EYE, ICON_SAVE, ICON_TRASH } from "cms-control/components/icons";
 const ICONS: Record<string, string> = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
 
 export function injectIcons(root: ParentNode): void {
-    root.querySelectorAll<HTMLElement>('[data-icon]').forEach(el => {
+    root.querySelectorAll<HTMLElement>("[data-icon]").forEach((el) => {
         const name = el.dataset.icon!;
-        if (ICONS[name]) el.innerHTML = ICONS[name];
+        if (ICONS[name]) {
+            el.innerHTML = ICONS[name];
+        }
     });
 }

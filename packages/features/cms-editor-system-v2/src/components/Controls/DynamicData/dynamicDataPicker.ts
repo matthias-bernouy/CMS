@@ -3,7 +3,7 @@ import type { DynamicDataOption } from "./dynamicDataOptions";
 export function matchingDynamicDataOptions(options: DynamicDataOption[], query: string): DynamicDataOption[] {
     const normalized = query.trim().toLowerCase();
     return normalized
-        ? options.filter(option => `${option.label} ${option.path}`.toLowerCase().includes(normalized))
+        ? options.filter((option) => `${option.label} ${option.path}`.toLowerCase().includes(normalized))
         : options;
 }
 

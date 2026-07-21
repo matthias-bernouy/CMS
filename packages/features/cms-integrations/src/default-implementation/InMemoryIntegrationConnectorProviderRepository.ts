@@ -11,7 +11,9 @@ export class InMemoryIntegrationConnectorProviderRepository implements Integrati
     }
 
     async get(provider: IntegrationConnectorProvider["provider"]): Promise<IntegrationConnectorProvider | null> {
-        if (provider !== this.configuredProvider?.provider) return null;
+        if (provider !== this.configuredProvider?.provider) {
+            return null;
+        }
         return copy(this.configuredProvider);
     }
 

@@ -18,7 +18,9 @@ export function optionsResponse(): Response {
 }
 
 export function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+        return json({ error: error.message }, error.status);
+    }
     console.error(error);
     return json({ error: "internal error" }, 500);
 }
@@ -27,11 +29,17 @@ export function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
     const marker = "/cms-broadcast";
     const index = pathname.indexOf(marker);
-    if (index === -1) return pathname || "/";
+    if (index === -1) {
+        return pathname || "/";
+    }
     return pathname.slice(index + marker.length) || "/";
 }
 
-export async function withMethod(request: Request, method: string, handler: () => Promise<Response>): Promise<Response> {
+export async function withMethod(
+    request: Request,
+    method: string,
+    handler: () => Promise<Response>,
+): Promise<Response> {
     if (request.method !== method) {
         return new Response("Method Not Allowed", {
             status: 405,

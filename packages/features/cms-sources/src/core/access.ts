@@ -18,7 +18,12 @@ export function sourceEndpointAccessMode(endpoint: Pick<SourceEndpoint, "access"
     return endpoint.access?.mode ?? DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE;
 }
 
-export function sourceEndpointAccessAllows(endpointMode: SourceEndpointAccessMode, callerMode: SourceEndpointAccessMode): boolean {
-    if (endpointMode === "system") return callerMode === "system";
+export function sourceEndpointAccessAllows(
+    endpointMode: SourceEndpointAccessMode,
+    callerMode: SourceEndpointAccessMode,
+): boolean {
+    if (endpointMode === "system") {
+        return callerMode === "system";
+    }
     return ACCESS_RANK[callerMode] >= ACCESS_RANK[endpointMode];
 }

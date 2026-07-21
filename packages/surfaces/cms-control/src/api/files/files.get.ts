@@ -10,16 +10,26 @@ export default async function listFiles(req: Request, cms: ControlCms) {
 
     const opts: FilesListOptions = {};
     const accept = q.get("accept");
-    if (accept) opts.accept = accept.split(",").filter(Boolean) as FilesItemType[];
+    if (accept) {
+        opts.accept = accept.split(",").filter(Boolean) as FilesItemType[];
+    }
     const search = q.get("search");
-    if (search) opts.search = search;
+    if (search) {
+        opts.search = search;
+    }
     const sortBy = q.get("sortBy");
-    if (sortBy) opts.sortBy = sortBy as FilesListOptions["sortBy"];
+    if (sortBy) {
+        opts.sortBy = sortBy as FilesListOptions["sortBy"];
+    }
     const sortOrder = q.get("sortOrder");
-    if (sortOrder === "asc" || sortOrder === "desc") opts.sortOrder = sortOrder;
+    if (sortOrder === "asc" || sortOrder === "desc") {
+        opts.sortOrder = sortOrder;
+    }
     const page = q.get("page");
     const limit = q.get("limit");
-    if (page && limit) opts.pagination = { page: Number(page), limit: Number(limit) };
+    if (page && limit) {
+        opts.pagination = { page: Number(page), limit: Number(limit) };
+    }
 
     // The admin addresses bytes by opaque id (`cmsFilesIdUrl(item.id)`), so the
     // listing no longer carries a readable per-file path — no id→path round-trip.

@@ -11,9 +11,9 @@ import { overlay, source } from "./helpers/sourceOverlayFixtures";
 describe("source overlays", () => {
     test("adds extra fields to input and output endpoint shapes", () => {
         const enriched = applySourceOverlays(source, [overlay]);
-        const getAccount = enriched.endpoints.find(endpoint => endpoint.urn.endsWith(":getAccount"))!;
-        const listAccounts = enriched.endpoints.find(endpoint => endpoint.urn.endsWith(":listAccounts"))!;
-        const updateAccount = enriched.endpoints.find(endpoint => endpoint.urn.endsWith(":updateAccount"))!;
+        const getAccount = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":getAccount"))!;
+        const listAccounts = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":listAccounts"))!;
+        const updateAccount = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":updateAccount"))!;
 
         expect(getAccount.output?.[0]?.body).toMatchObject({
             properties: {
@@ -52,12 +52,14 @@ describe("source overlays", () => {
     });
 
     test("represents multiple overlay fields as arrays in direct and list outputs", () => {
-        const enriched = applySourceOverlays(source, [{
-            ...overlay,
-            fields: [{ id: "company", label: "Company", type: "string", multiple: true }],
-        }]);
-        const getAccount = enriched.endpoints.find(endpoint => endpoint.urn.endsWith(":getAccount"))!;
-        const listAccounts = enriched.endpoints.find(endpoint => endpoint.urn.endsWith(":listAccounts"))!;
+        const enriched = applySourceOverlays(source, [
+            {
+                ...overlay,
+                fields: [{ id: "company", label: "Company", type: "string", multiple: true }],
+            },
+        ]);
+        const getAccount = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":getAccount"))!;
+        const listAccounts = enriched.endpoints.find((endpoint) => endpoint.urn.endsWith(":listAccounts"))!;
 
         const expected = {
             type: "array",
@@ -65,8 +67,9 @@ describe("source overlays", () => {
             title: "Company",
         };
         expect(getAccount.output?.[0]?.body?.properties?.metadata?.properties?.company).toEqual(expected);
-        expect(listAccounts.output?.[0]?.body?.properties?.accounts?.items
-            ?.properties?.metadata?.properties?.company).toEqual(expected);
+        expect(
+            listAccounts.output?.[0]?.body?.properties?.accounts?.items?.properties?.metadata?.properties?.company,
+        ).toEqual(expected);
     });
 
     test("wraps a source repository without changing writes", async () => {
@@ -110,9 +113,13 @@ describe("source overlays", () => {
 
         const repo = new SourceOverlaySourceRepository(inner, overlays, {
             deps: {
-                fetchImpl: async () => new Response(JSON.stringify({
-                    fields: [{ id: "company", label: "Company", type: "string" }],
-                }), { headers: { "content-type": "application/json" } }),
+                fetchImpl: async () =>
+                    new Response(
+                        JSON.stringify({
+                            fields: [{ id: "company", label: "Company", type: "string" }],
+                        }),
+                        { headers: { "content-type": "application/json" } },
+                    ),
             },
         });
 
@@ -138,19 +145,25 @@ describe("source overlays", () => {
             ],
         };
         let requestedUrl = "";
-        const [materialized] = await materializeSourceOverlays(sourceWithFields, [{
-            ...overlay,
-            fieldSource: {
-                endpointId: "listExtraFields",
-                params: { entityType: "product" },
+        const [materialized] = await materializeSourceOverlays(
+            sourceWithFields,
+            [
+                {
+                    ...overlay,
+                    fieldSource: {
+                        endpointId: "listExtraFields",
+                        params: { entityType: "product" },
+                    },
+                    fields: [],
+                },
+            ],
+            {
+                fetchImpl: async (request) => {
+                    requestedUrl = String(request);
+                    return Response.json({ fields: [{ id: "brand", label: "Brand", type: "string" }] });
+                },
             },
-            fields: [],
-        }], {
-            fetchImpl: async request => {
-                requestedUrl = String(request);
-                return Response.json({ fields: [{ id: "brand", label: "Brand", type: "string" }] });
-            },
-        });
+        );
 
         expect(new URL(requestedUrl).searchParams.get("entityType")).toBe("product");
         expect(materialized?.fields[0]?.id).toBe("brand");
@@ -169,35 +182,46 @@ describe("source overlays", () => {
                 },
             ],
         };
-        const [materialized] = await materializeSourceOverlays(sourceWithFields, [{
-            ...overlay,
-            fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
-            fields: [],
-        }], {
-            fetchImpl: async () => Response.json({
-                fields: [{
-                    id: "accountStatus",
-                    label: "Account status",
-                    type: "string",
-                    choices: [
-                        { value: "pending", label: "Pending", subtitle: "Waiting for review" },
-                        { value: "active", label: "Active" },
-                    ],
-                }],
-            }),
-        });
-        expect(materialized?.fields).toEqual([{
-            id: "accountStatus",
-            label: "Account status",
-            type: "string",
-            options: [
-                { value: "pending", label: "Pending", subtitle: "Waiting for review" },
-                { value: "active", label: "Active" },
+        const [materialized] = await materializeSourceOverlays(
+            sourceWithFields,
+            [
+                {
+                    ...overlay,
+                    fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                    fields: [],
+                },
             ],
-        }]);
-        const outputShape = applySourceOverlays(sourceWithFields, [materialized!])
-            .endpoints.find(endpoint => endpoint.urn.endsWith(":getAccount"))
-            ?.output?.[0]?.body;
+            {
+                fetchImpl: async () =>
+                    Response.json({
+                        fields: [
+                            {
+                                id: "accountStatus",
+                                label: "Account status",
+                                type: "string",
+                                choices: [
+                                    { value: "pending", label: "Pending", subtitle: "Waiting for review" },
+                                    { value: "active", label: "Active" },
+                                ],
+                            },
+                        ],
+                    }),
+            },
+        );
+        expect(materialized?.fields).toEqual([
+            {
+                id: "accountStatus",
+                label: "Account status",
+                type: "string",
+                options: [
+                    { value: "pending", label: "Pending", subtitle: "Waiting for review" },
+                    { value: "active", label: "Active" },
+                ],
+            },
+        ]);
+        const outputShape = applySourceOverlays(sourceWithFields, [materialized!]).endpoints.find((endpoint) =>
+            endpoint.urn.endsWith(":getAccount"),
+        )?.output?.[0]?.body;
         expect(outputShape?.properties?.metadata?.properties?.accountStatus).toEqual({
             type: "string",
             title: "Account status",

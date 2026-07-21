@@ -12,7 +12,9 @@ afterEach(async () => {
 
 function git(repository: string, args: string[]): void {
     const result = Bun.spawnSync(["git", ...args], { cwd: repository, stdout: "pipe", stderr: "pipe" });
-    if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+    if (result.exitCode !== 0) {
+        throw new Error(result.stderr.toString());
+    }
 }
 
 test("coverage policy reads the baseline from its legacy location during migration", async () => {
@@ -24,18 +26,17 @@ test("coverage policy reads the baseline from its legacy location during migrati
 
     const legacyPath = join(repository, "quality/ci/coverage-baseline.json");
     await mkdir(dirname(legacyPath), { recursive: true });
-    await writeFile(legacyPath, JSON.stringify({
-        schemaVersion: 1,
-        bunVersion: "1.3.14",
-        packages: {},
-    }));
+    await writeFile(
+        legacyPath,
+        JSON.stringify({
+            schemaVersion: 1,
+            bunVersion: "1.3.14",
+            packages: {},
+        }),
+    );
     git(repository, ["add", "--all"]);
     git(repository, ["commit", "--quiet", "--message", "legacy coverage baseline"]);
 
-    const baseline = readReferenceBaseline(
-        "HEAD",
-        repository,
-        join(repository, "quality/ci/coverage/baseline.json"),
-    );
+    const baseline = readReferenceBaseline("HEAD", repository, join(repository, "quality/ci/coverage/baseline.json"));
     expect(baseline?.bunVersion).toBe("1.3.14");
 });

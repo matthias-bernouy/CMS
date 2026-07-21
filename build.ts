@@ -13,7 +13,9 @@
 async function run(cmd: string[], cwd?: string): Promise<void> {
     const proc = Bun.spawn(cmd, { stdout: "inherit", stderr: "inherit", cwd });
     const exit = await proc.exited;
-    if (exit !== 0) throw new Error(`${cmd.join(" ")} (cwd=${cwd ?? "."}) exited with ${exit}`);
+    if (exit !== 0) {
+        throw new Error(`${cmd.join(" ")} (cwd=${cwd ?? "."}) exited with ${exit}`);
+    }
 }
 
 await run(["bun", "run", "build"], "packages/foundation/components");

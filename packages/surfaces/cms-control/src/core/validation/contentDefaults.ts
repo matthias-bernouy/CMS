@@ -6,8 +6,14 @@ export const DEFAULT_TEMPLATE_CONTENT = "<p></p>";
  *  Pure HTTP-shape coercion; the rules (charset, length, dedupe) live in the
  *  cms-content validator applied at write time. */
 export function coerceTags(raw: unknown): string[] {
-    if (!raw) return [];
-    if (Array.isArray(raw)) return raw.map((v) => String(v));
-    if (typeof raw === "string") return raw.split(",");
+    if (!raw) {
+        return [];
+    }
+    if (Array.isArray(raw)) {
+        return raw.map((v) => String(v));
+    }
+    if (typeof raw === "string") {
+        return raw.split(",");
+    }
     return [];
 }

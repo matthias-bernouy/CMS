@@ -140,7 +140,11 @@ export async function recordOrderStripeDispute(request: Request): Promise<Respon
 }
 
 function optionalObject(value: unknown, name: string): Record<string, unknown> {
-    if (value === undefined || value === null) return {};
-    if (!isRecord(value)) throw new HttpError(400, `${name} must be an object`);
+    if (value === undefined || value === null) {
+        return {};
+    }
+    if (!isRecord(value)) {
+        throw new HttpError(400, `${name} must be an object`);
+    }
     return value;
 }

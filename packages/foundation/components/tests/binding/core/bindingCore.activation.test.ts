@@ -2,7 +2,11 @@ import { describe, test, expect, beforeAll, afterEach } from "bun:test";
 import { BindingCore, BINDING_CORE_TAG } from "../../../src/binding/bindingCore";
 import { text, waitFor, respond, routes, resetDom } from "../testUtils";
 
-beforeAll(() => { if (!customElements.get(BINDING_CORE_TAG)) customElements.define(BINDING_CORE_TAG, BindingCore); });
+beforeAll(() => {
+    if (!customElements.get(BINDING_CORE_TAG)) {
+        customElements.define(BINDING_CORE_TAG, BindingCore);
+    }
+});
 afterEach(resetDom);
 
 describe("<cms-binding-core> — cloak", () => {
@@ -25,8 +29,14 @@ describe("<cms-binding-core> — activation", () => {
 
     test("nested sources work inside the core", async () => {
         routes({
-            "/outer": () => ({ ok: true, status: 200, text: async () => JSON.stringify({ inner: "/inner" }) } as unknown as Response),
-            "/inner": () => ({ ok: true, status: 200, text: async () => JSON.stringify({ msg: "deep" }) } as unknown as Response),
+            "/outer": () =>
+                ({
+                    ok: true,
+                    status: 200,
+                    text: async () => JSON.stringify({ inner: "/inner" }),
+                }) as unknown as Response,
+            "/inner": () =>
+                ({ ok: true, status: 200, text: async () => JSON.stringify({ msg: "deep" }) }) as unknown as Response,
         });
         document.body.innerHTML = `
             <${BINDING_CORE_TAG}>

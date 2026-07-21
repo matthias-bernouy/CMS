@@ -35,8 +35,12 @@ describe("runIntegrations", () => {
         spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
             const url = String(input);
             calls.push(url);
-            if (url.endsWith("/api/integrations/installations")) return Response.json([]);
-            if (url.endsWith("/api/integrations/list")) return Response.json(definitions);
+            if (url.endsWith("/api/integrations/installations")) {
+                return Response.json([]);
+            }
+            if (url.endsWith("/api/integrations/list")) {
+                return Response.json(definitions);
+            }
             if (url.endsWith("/api/integrations/import") && init?.method === "POST") {
                 posted.push((JSON.parse(String(init.body)) as { kind: string }).kind);
                 return Response.json({});
@@ -44,11 +48,9 @@ describe("runIntegrations", () => {
             return new Response("not found", { status: 404 });
         });
 
-        const code = await withQuietConsole(() => runIntegrations(
-            new URL("https://cms.example/"),
-            "token",
-            { force: false, yes: true, dryRun: false },
-        ));
+        const code = await withQuietConsole(() =>
+            runIntegrations(new URL("https://cms.example/"), "token", { force: false, yes: true, dryRun: false }),
+        );
 
         expect(code).toBe(0);
         expect(calls).toContain("https://cms.example/api/integrations/list");
@@ -60,10 +62,13 @@ function makeProject(files: Record<string, unknown>): string {
     const cwd = mkdtempSync(join(tmpdir(), "p9r-integrations-run-"));
     const integrationsDir = join(cwd, "site", "integrations");
     mkdirSync(integrationsDir, { recursive: true });
-    writeFileSync(join(cwd, "p9r.config.json"), JSON.stringify({
-        siteDir: "site",
-        forcePushDefault: false,
-    }));
+    writeFileSync(
+        join(cwd, "p9r.config.json"),
+        JSON.stringify({
+            siteDir: "site",
+            forcePushDefault: false,
+        }),
+    );
     for (const [file, value] of Object.entries(files)) {
         writeFileSync(join(integrationsDir, file), JSON.stringify(value));
     }

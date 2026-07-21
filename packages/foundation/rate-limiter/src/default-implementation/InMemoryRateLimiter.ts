@@ -7,7 +7,6 @@ import type { RateLimiter, RateLimitResult, RateLimitPolicy } from "rate-limiter
  * Expired windows are recreated lazily on the next `hit`.
  */
 export class InMemoryRateLimiter implements RateLimiter {
-
     private _windows = new Map<string, { count: number; resetAt: number }>();
 
     constructor(private readonly policy: RateLimitPolicy) {}
@@ -20,7 +19,9 @@ export class InMemoryRateLimiter implements RateLimiter {
             return { allowed: true };
         }
         w.count++;
-        if (w.count <= this.policy.limit) return { allowed: true };
+        if (w.count <= this.policy.limit) {
+            return { allowed: true };
+        }
         return { allowed: false, retryAfterSeconds: Math.ceil((w.resetAt - now) / 1000) };
     }
 

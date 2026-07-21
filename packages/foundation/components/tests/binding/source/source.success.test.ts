@@ -91,7 +91,7 @@ describe("Source — success", () => {
             return {
                 ok: true,
                 status: 200,
-                text: async () => call === 1 ? JSON.stringify({ name: "Ada" }) : JSON.stringify([]),
+                text: async () => (call === 1 ? JSON.stringify({ name: "Ada" }) : JSON.stringify([])),
             } as unknown as Response;
         }) as unknown as typeof fetch;
         const src = el(`

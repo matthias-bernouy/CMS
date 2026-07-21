@@ -2,24 +2,19 @@ import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export type EntityKey =
-    | `page:${string}`
-    | `template:${string}`
-    | `file:${string}`
-    | `integration:${string}`
-    | "system";
+export type EntityKey = `page:${string}` | `template:${string}` | `file:${string}` | `integration:${string}` | "system";
 
 export type EntityState = {
     /** Hash of the local payload at last successful push/pull. */
-    hash:           string;
+    hash: string;
     /** Hash of the remote payload at last successful push/pull. */
     lastSeenRemote: string;
 };
 
 export type PushState = {
-    tenant:     string;
+    tenant: string;
     lastPulled: string;
-    entities:   Partial<Record<EntityKey, EntityState>>;
+    entities: Partial<Record<EntityKey, EntityState>>;
 };
 
 const STATE_FILE = ".p9r-state.json";
@@ -32,13 +27,15 @@ const EMPTY: PushState = { tenant: "", lastPulled: "", entities: {} };
  */
 export async function loadState(siteDir: string): Promise<PushState> {
     const path = join(siteDir, STATE_FILE);
-    if (!existsSync(path)) return { ...EMPTY };
+    if (!existsSync(path)) {
+        return { ...EMPTY };
+    }
     try {
         const raw = JSON.parse(await readFile(path, "utf-8")) as Partial<PushState>;
         return {
-            tenant:     typeof raw.tenant     === "string" ? raw.tenant     : "",
+            tenant: typeof raw.tenant === "string" ? raw.tenant : "",
             lastPulled: typeof raw.lastPulled === "string" ? raw.lastPulled : "",
-            entities:   raw.entities && typeof raw.entities === "object" ? raw.entities : {},
+            entities: raw.entities && typeof raw.entities === "object" ? raw.entities : {},
         };
     } catch {
         return { ...EMPTY };
@@ -55,13 +52,13 @@ export async function saveState(siteDir: string, state: PushState): Promise<void
  * last saw — typically because someone edited the page via the UI between
  * two pushes. `--force` bypasses the check.
  */
-export function detectConflict(
-    state: PushState,
-    key: EntityKey,
-    remoteHash: string | null,
-): boolean {
+export function detectConflict(state: PushState, key: EntityKey, remoteHash: string | null): boolean {
     const seen = state.entities[key]?.lastSeenRemote;
-    if (!seen) return false;          // never pushed → not a conflict
-    if (remoteHash === null) return false; // remote gone → caller treats as new
+    if (!seen) {
+        return false; // never pushed → not a conflict
+    }
+    if (remoteHash === null) {
+        return false; // remote gone → caller treats as new
+    }
     return seen !== remoteHash;
 }

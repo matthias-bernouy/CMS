@@ -1,8 +1,6 @@
 import { DuplicateIntegrationInstallationError } from "../core/errors";
 import { trimIntegrationRuns } from "../core/installation/runRetention";
-import type {
-    IntegrationInstallation,
-} from "../interfaces/IntegrationInstallation";
+import type { IntegrationInstallation } from "../interfaces/IntegrationInstallation";
 import type {
     IntegrationInstallationCreate,
     IntegrationInstallationRepository,
@@ -12,8 +10,9 @@ export class InMemoryIntegrationInstallationRepository implements IntegrationIns
     private readonly installations = new Map<string, IntegrationInstallation>();
 
     async list(): Promise<IntegrationInstallation[]> {
-        return Array.from(this.installations.values(), copy)
-            .sort((left, right) => right.updatedAt.getTime() - left.updatedAt.getTime());
+        return Array.from(this.installations.values(), copy).sort(
+            (left, right) => right.updatedAt.getTime() - left.updatedAt.getTime(),
+        );
     }
 
     async get(id: string): Promise<IntegrationInstallation | null> {
@@ -22,7 +21,9 @@ export class InMemoryIntegrationInstallationRepository implements IntegrationIns
     }
 
     async create(input: IntegrationInstallationCreate): Promise<IntegrationInstallation> {
-        if (this.installations.has(input.id)) throw new DuplicateIntegrationInstallationError(input.id);
+        if (this.installations.has(input.id)) {
+            throw new DuplicateIntegrationInstallationError(input.id);
+        }
         const now = new Date();
         const installation: IntegrationInstallation = {
             ...input,

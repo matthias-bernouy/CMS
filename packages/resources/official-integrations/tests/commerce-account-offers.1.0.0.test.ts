@@ -39,42 +39,57 @@ describe("commerce account offers 1.0.0", () => {
 
     test("provides transparent public offer list and editable offer preview blocs", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        if (!definition) throw new Error("commerce definition not found");
-        const artifacts = definition.artifacts?.filter(item => (
-            item.type === "bloc" && ["commerce-offer-list", "commerce-offer-preview"].includes(item.bloc.tag)
-        )) ?? [];
+        if (!definition) {
+            throw new Error("commerce definition not found");
+        }
+        const artifacts =
+            definition.artifacts?.filter(
+                (item) =>
+                    item.type === "bloc" && ["commerce-offer-list", "commerce-offer-preview"].includes(item.bloc.tag),
+            ) ?? [];
         expect(artifacts).toHaveLength(2);
 
         const compiled = new Map<string, Awaited<ReturnType<typeof prepare_bloc>>>();
         for (const artifact of artifacts) {
-            if (artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) continue;
-            compiled.set(artifact.bloc.tag, await prepare_bloc(
-                new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
-                new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "text/typescript" }),
-                artifact.bloc.name,
-                artifact.bloc.group ?? "Commerce",
-                artifact.bloc.description ?? "",
+            if (artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) {
+                continue;
+            }
+            compiled.set(
                 artifact.bloc.tag,
-                artifact.bloc.source,
-            ));
+                await prepare_bloc(
+                    new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+                    new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "text/typescript" }),
+                    artifact.bloc.name,
+                    artifact.bloc.group ?? "Commerce",
+                    artifact.bloc.description ?? "",
+                    artifact.bloc.tag,
+                    artifact.bloc.source,
+                ),
+            );
         }
 
         const list = compiled.get("commerce-offer-list");
         const preview = compiled.get("commerce-offer-preview");
-        const listArtifact = artifacts.find(item => item.type === "bloc" && item.bloc.tag === "commerce-offer-list");
-        const listDefault = listArtifact?.type === "bloc"
-            ? Buffer.from(listArtifact.bloc.source?.["default.html"] ?? "", "base64").toString("utf-8")
-            : "";
-        const previewArtifact = artifacts.find(item => item.type === "bloc" && item.bloc.tag === "commerce-offer-preview");
-        const previewStyles = previewArtifact?.type === "bloc"
-            ? Buffer.from(previewArtifact.bloc.source?.["style.css"] ?? "", "base64").toString("utf-8")
-            : "";
+        const listArtifact = artifacts.find((item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-list");
+        const listDefault =
+            listArtifact?.type === "bloc"
+                ? Buffer.from(listArtifact.bloc.source?.["default.html"] ?? "", "base64").toString("utf-8")
+                : "";
+        const previewArtifact = artifacts.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-preview",
+        );
+        const previewStyles =
+            previewArtifact?.type === "bloc"
+                ? Buffer.from(previewArtifact.bloc.source?.["style.css"] ?? "", "base64").toString("utf-8")
+                : "";
         const listViewSource = listArtifact?.type === "bloc" ? declaredBlocViewSources(listArtifact.bloc) : "";
-        const listEditorSource = listArtifact?.type === "bloc" ? listArtifact.bloc.editorJS ?? "" : "";
+        const listEditorSource = listArtifact?.type === "bloc" ? (listArtifact.bloc.editorJS ?? "") : "";
         const previewViewSource = previewArtifact?.type === "bloc" ? declaredBlocViewSources(previewArtifact.bloc) : "";
-        const previewEditorSource = previewArtifact?.type === "bloc" ? previewArtifact.bloc.editorJS ?? "" : "";
+        const previewEditorSource = previewArtifact?.type === "bloc" ? (previewArtifact.bloc.editorJS ?? "") : "";
         expect(listViewSource).toContain('this.setAttribute("cms-source", source)');
-        expect(listViewSource).toContain('host.querySelectorAll("[cms-param-sync], [data-commerce-param][data-url-param]")');
+        expect(listViewSource).toContain(
+            'host.querySelectorAll("[cms-param-sync], [data-commerce-param][data-url-param]")',
+        );
         expect(list?.viewJS).toContain("basic-pagination:change");
         expect(listViewSource).toContain('host.getAttribute("grid-min") || "md"');
         expect(listViewSource).toContain('host.getAttribute("grid-max") || "xl"');
@@ -97,9 +112,11 @@ describe("commerce account offers 1.0.0", () => {
         expect(previewEditorSource).toContain('attribute: "stretch"');
         expect(previewStyles).toContain(':host([stretch]:not([stretch="false"]))');
 
-        const source = definition.artifacts?.find(item => item.type === "source");
-        if (!source || source.type !== "source") throw new Error("commerce source not found");
-        const endpoint = source.source.endpoints.find(item => item.endpointId === "offers");
+        const source = definition.artifacts?.find((item) => item.type === "source");
+        if (!source || source.type !== "source") {
+            throw new Error("commerce source not found");
+        }
+        const endpoint = source.source.endpoints.find((item) => item.endpointId === "offers");
         const publicOffersBody = endpoint?.output?.[0]?.body;
         expect(publicOffersBody).toMatchObject({
             type: "object",
@@ -120,7 +137,9 @@ describe("commerce account offers 1.0.0", () => {
                 },
             },
         });
-        if (publicOffersBody?.type !== "object") throw new Error("public offers output is not an object");
+        if (publicOffersBody?.type !== "object") {
+            throw new Error("public offers output is not an object");
+        }
         const publicOfferShape = publicOffersBody.properties?.items;
         if (publicOfferShape?.type !== "array" || publicOfferShape.items?.type !== "object") {
             throw new Error("public offer item output is missing");
@@ -132,8 +151,12 @@ describe("commerce account offers 1.0.0", () => {
 
     test("compiles as a configurable Light DOM composition backed by listMyOffers", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        if (!definition) throw new Error("commerce definition not found");
-        const artifact = definition.artifacts?.find(item => item.type === "bloc" && item.bloc.tag === "commerce-account-offers");
+        if (!definition) {
+            throw new Error("commerce definition not found");
+        }
+        const artifact = definition.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-account-offers",
+        );
         if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) {
             throw new Error("commerce-account-offers sources not found");
         }
@@ -149,10 +172,19 @@ describe("commerce account offers 1.0.0", () => {
         );
         const resolveUsage = createBlocUsageResolver(
             [
-                "basic-button", "basic-card", "basic-grid", "basic-option", "basic-pagination",
-                "basic-select", "basic-skeleton", "basic-stack", "basic-toast", "commerce-account-offers", "img",
-            ].map(id => ({ id })),
-            { getBlocViewJS: async tag => tag === "commerce-account-offers" ? compiled.viewJS : null },
+                "basic-button",
+                "basic-card",
+                "basic-grid",
+                "basic-option",
+                "basic-pagination",
+                "basic-select",
+                "basic-skeleton",
+                "basic-stack",
+                "basic-toast",
+                "commerce-account-offers",
+                "img",
+            ].map((id) => ({ id })),
+            { getBlocViewJS: async (tag) => (tag === "commerce-account-offers" ? compiled.viewJS : null) },
         );
         const viewSource = declaredBlocViewSources(artifact.bloc);
         const editorSource = artifact.bloc.editorJS;
@@ -174,7 +206,9 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS).toContain('data-display-amount="{{ offer.sellerDisplayPriceAmount }}"');
         expect(compiled.viewJS).not.toContain('data-amount="{{ offer.acceptedPriceAmount }}"');
         expect(compiled.viewJS).toContain('replaceAll("{slug}"');
-        expect(compiled.viewJS).toContain('<basic-stack direction="row" justify-content="space-between" align-items="end" wrap="true"');
+        expect(compiled.viewJS).toContain(
+            '<basic-stack direction="row" justify-content="space-between" align-items="end" wrap="true"',
+        );
         expect(compiled.viewJS).toContain('accessible-label="Filtrer par statut"');
         expect(compiled.viewJS).toContain('data-empty-state cms-condition="total == 0"');
         expect(compiled.viewJS).toContain('cms-condition="total > limit"');
@@ -185,18 +219,32 @@ describe("commerce account offers 1.0.0", () => {
         expect(editorSource).toContain('attribute: "image-fit"');
         expect(editorSource).toContain('attribute: "label-action-required"');
         expect(editorSource).toContain('color("Card background", "card-background-color")');
-        expect(await resolveUsage("<commerce-account-offers></commerce-account-offers>"))
-            .toEqual([
-                "basic-button", "basic-card", "basic-grid", "basic-option", "basic-pagination",
-                "basic-select", "basic-skeleton", "basic-stack", "basic-toast", "commerce-account-offers", "img",
-            ]);
+        expect(await resolveUsage("<commerce-account-offers></commerce-account-offers>")).toEqual([
+            "basic-button",
+            "basic-card",
+            "basic-grid",
+            "basic-option",
+            "basic-pagination",
+            "basic-select",
+            "basic-skeleton",
+            "basic-stack",
+            "basic-toast",
+            "commerce-account-offers",
+            "img",
+        ]);
 
-        const source = definition.artifacts?.find(item => item.type === "source");
-        if (!source || source.type !== "source") throw new Error("commerce source not found");
-        const endpoint = source.source.endpoints.find(item => item.endpointId === "listMyOffers");
+        const source = definition.artifacts?.find((item) => item.type === "source");
+        if (!source || source.type !== "source") {
+            throw new Error("commerce source not found");
+        }
+        const endpoint = source.source.endpoints.find((item) => item.endpointId === "listMyOffers");
         expect(endpoint?.access).toEqual({ mode: "auth" });
-        expect(endpoint?.params?.map(param => param.name)).toEqual([
-            "status", "publicationStatus", "workflowState", "limit", "offset",
+        expect(endpoint?.params?.map((param) => param.name)).toEqual([
+            "status",
+            "publicationStatus",
+            "workflowState",
+            "limit",
+            "offset",
         ]);
         expect(endpoint?.output?.[0]?.body).toMatchObject({
             type: "object",
@@ -217,10 +265,11 @@ describe("commerce account offers 1.0.0", () => {
                 offset: { type: "number" },
             },
         });
-        const manageEndpoint = source.source.endpoints.find(item => item.endpointId === "manageOffers");
-        const manageItems = manageEndpoint?.output?.[0]?.body?.type === "object"
-            ? manageEndpoint.output[0].body.properties?.items
-            : undefined;
+        const manageEndpoint = source.source.endpoints.find((item) => item.endpointId === "manageOffers");
+        const manageItems =
+            manageEndpoint?.output?.[0]?.body?.type === "object"
+                ? manageEndpoint.output[0].body.properties?.items
+                : undefined;
         if (manageItems?.type !== "array" || manageItems.items?.type !== "object") {
             throw new Error("admin offer list output is missing");
         }
@@ -229,8 +278,12 @@ describe("commerce account offers 1.0.0", () => {
 
     test("provides a seller price form backed by the offer price workflow", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("commerce");
-        if (!definition) throw new Error("commerce definition not found");
-        const artifact = definition.artifacts?.find(item => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form");
+        if (!definition) {
+            throw new Error("commerce definition not found");
+        }
+        const artifact = definition.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "commerce-offer-price-form",
+        );
         if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) {
             throw new Error("commerce-offer-price-form sources not found");
         }
@@ -245,13 +298,21 @@ describe("commerce account offers 1.0.0", () => {
             artifact.bloc.source,
         );
         const defaultContent = Buffer.from(artifact.bloc.source?.["default.html"] ?? "", "base64").toString("utf-8");
-        const manifest = JSON.parse(Buffer.from(artifact.bloc.source?.["manifest.json"] ?? "", "base64").toString("utf-8"));
+        const manifest = JSON.parse(
+            Buffer.from(artifact.bloc.source?.["manifest.json"] ?? "", "base64").toString("utf-8"),
+        );
         const resolveUsage = createBlocUsageResolver(
             [
-                "basic-button", "basic-card", "basic-grid", "basic-input", "basic-skeleton",
-                "basic-stack", "basic-toast", "commerce-offer-price-form",
-            ].map(id => ({ id })),
-            { getBlocViewJS: async tag => tag === "commerce-offer-price-form" ? compiled.viewJS : null },
+                "basic-button",
+                "basic-card",
+                "basic-grid",
+                "basic-input",
+                "basic-skeleton",
+                "basic-stack",
+                "basic-toast",
+                "commerce-offer-price-form",
+            ].map((id) => ({ id })),
+            { getBlocViewJS: async (tag) => (tag === "commerce-offer-price-form" ? compiled.viewJS : null) },
         );
         const viewSource = declaredBlocViewSources(artifact.bloc);
         const editorSource = artifact.bloc.editorJS;
@@ -288,7 +349,9 @@ describe("commerce account offers 1.0.0", () => {
         expect(compiled.viewJS).toContain("conditions vendeur Courtside");
         expect(compiled.viewJS).toContain("Les informations renseignées sont traitées");
         expect(compiled.viewJS).toContain("Consulter l’avis de confidentialité");
-        expect(compiled.viewJS).toContain("Tu dois accepter les conditions vendeur Courtside et l’accord Stripe pour continuer.");
+        expect(compiled.viewJS).toContain(
+            "Tu dois accepter les conditions vendeur Courtside et l’accord Stripe pour continuer.",
+        );
         expect(compiled.viewJS).toContain("Tu dois accepter les conditions vendeur Courtside pour continuer.");
         expect(compiled.viewJS).toContain("sessionStorage.setItem");
         expect(compiled.viewJS).not.toContain("history.pushState");
@@ -326,15 +389,24 @@ describe("commerce account offers 1.0.0", () => {
         expect(defaultContent).toContain("Replace the privacy notice placeholder URL before production publication.");
         expect(manifest.meta.description).toContain("privacy information separately");
         expect(manifest.meta.description).toContain("placeholder");
-        expect(await resolveUsage("<commerce-offer-price-form></commerce-offer-price-form>"))
-            .toEqual([
-                "basic-button", "basic-card", "basic-grid", "basic-input", "basic-skeleton",
-                "basic-stack", "basic-toast", "commerce-offer-price-form",
-            ]);
+        expect(await resolveUsage("<commerce-offer-price-form></commerce-offer-price-form>")).toEqual([
+            "basic-button",
+            "basic-card",
+            "basic-grid",
+            "basic-input",
+            "basic-skeleton",
+            "basic-stack",
+            "basic-toast",
+            "commerce-offer-price-form",
+        ]);
 
-        const source = definition.artifacts?.find(item => item.type === "source");
-        if (!source || source.type !== "source") throw new Error("commerce source not found");
-        expect(source.source.endpoints.find(item => item.endpointId === "myOffer")?.access).toEqual({ mode: "auth" });
-        expect(source.source.endpoints.find(item => item.endpointId === "submitMyOfferPrice")?.access).toEqual({ mode: "auth" });
+        const source = definition.artifacts?.find((item) => item.type === "source");
+        if (!source || source.type !== "source") {
+            throw new Error("commerce source not found");
+        }
+        expect(source.source.endpoints.find((item) => item.endpointId === "myOffer")?.access).toEqual({ mode: "auth" });
+        expect(source.source.endpoints.find((item) => item.endpointId === "submitMyOfferPrice")?.access).toEqual({
+            mode: "auth",
+        });
     });
 });

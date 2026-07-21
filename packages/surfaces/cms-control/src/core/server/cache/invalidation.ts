@@ -12,13 +12,17 @@ import { cmsFilesByIdRef } from "@bernouy/cms-files";
  */
 export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: string): Promise<void> {
     const pages = await cms.repository.getAllPages();
-    if (pages.length === 0) return;
+    if (pages.length === 0) {
+        return;
+    }
 
     const blocList = await cms.repository.getBlocsList();
     const resolveUsage = createBlocUsageResolver(blocList, cms.repository);
-    const usages = await Promise.all(pages.map(page => resolveUsage(page.content)));
+    const usages = await Promise.all(pages.map((page) => resolveUsage(page.content)));
     pages.forEach((page, index) => {
-        if (usages[index]?.includes(blocTag)) cms.cache.delete(P9R_CACHE.page(page.path));
+        if (usages[index]?.includes(blocTag)) {
+            cms.cache.delete(P9R_CACHE.page(page.path));
+        }
     });
 }
 
@@ -26,7 +30,7 @@ export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
     cms.cache.delete(P9R_CACHE.bloc(blocTag));
     cms.cache.delete(P9R_CACHE.EDITOR_SCRIPT);
     cms.cache.delete(P9R_CACHE.EDITOR_VIEW_SCRIPT);
-    cms.cache.deleteMatching(key => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
+    cms.cache.deleteMatching((key) => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
 }
 
 export function invalidateUpdatedPage(cms: ControlCms, previousPath: string, nextPath: string): void {
@@ -67,5 +71,5 @@ export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: st
  * / `<script>` tags, so they all must be re-rendered.
  */
 export function invalidateAllPages(cms: ControlCms): void {
-    cms.cache.deleteMatching(key => key.startsWith("page:"));
+    cms.cache.deleteMatching((key) => key.startsWith("page:"));
 }

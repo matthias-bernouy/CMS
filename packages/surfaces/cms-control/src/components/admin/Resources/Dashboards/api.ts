@@ -52,9 +52,7 @@ export function currentSelection(): DashboardSelection {
 }
 
 export function defaultDashboardSource(groups: DashboardListResponse): string {
-    return groups.find(group => group.dashboards.length > 0)?.source.id
-        ?? groups[0]?.source.id
-        ?? "";
+    return groups.find((group) => group.dashboards.length > 0)?.source.id ?? groups[0]?.source.id ?? "";
 }
 
 export function replaceSelectionUrl(selection: DashboardSelection): void {
@@ -67,8 +65,12 @@ export function pushSelectionUrl(selection: DashboardSelection): void {
 
 function selectionUrl(selection: DashboardSelection): string {
     const params = new URLSearchParams();
-    if (selection.source) params.set("source", selection.source);
-    if (selection.dashboard) params.set("dashboard", selection.dashboard);
+    if (selection.source) {
+        params.set("source", selection.source);
+    }
+    if (selection.dashboard) {
+        params.set("dashboard", selection.dashboard);
+    }
     if (selection.collection && selection.row) {
         params.set("collection", selection.collection);
         params.set("row", selection.row);
@@ -91,6 +93,8 @@ export async function fetchDashboardUsers(): Promise<DashboardUserOption[]> {
 
 async function getJson<T>(url: string): Promise<T> {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
     return response.json() as Promise<T>;
 }

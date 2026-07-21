@@ -14,7 +14,9 @@ export function checkManifestLayerDependencies(
     for (const pkg of packages) {
         for (const dependency of workspaceDependencies(pkg.manifest)) {
             const target = packageByName.get(dependency);
-            if (!target || layerRank(pkg.layer) >= layerRank(target.layer)) continue;
+            if (!target || layerRank(pkg.layer) >= layerRank(target.layer)) {
+                continue;
+            }
             violations.push({
                 kind: "reversed-layer-dependency",
                 file: `${pkg.relativeRoot}/package.json`,
@@ -31,11 +33,16 @@ export function checkWorkspaceCycles(
 ): void {
     const edges = new Map<string, string[]>();
     for (const pkg of packages) {
-        edges.set(pkg.name, workspaceDependencies(pkg.manifest).filter((name) => packageByName.has(name)));
+        edges.set(
+            pkg.name,
+            workspaceDependencies(pkg.manifest).filter((name) => packageByName.has(name)),
+        );
     }
     const state = createCycleState();
     for (const pkg of packages) {
-        if (!state.indexes.has(pkg.name)) visitDependency(pkg.name, edges, state, violations);
+        if (!state.indexes.has(pkg.name)) {
+            visitDependency(pkg.name, edges, state, violations);
+        }
     }
 }
 
@@ -77,7 +84,9 @@ function visitDependency(
             state.lowLinks.set(name, Math.min(state.lowLinks.get(name)!, state.indexes.get(target)!));
         }
     }
-    if (state.lowLinks.get(name) !== state.indexes.get(name)) return;
+    if (state.lowLinks.get(name) !== state.indexes.get(name)) {
+        return;
+    }
     reportCycle(popComponent(name, state), edges, violations);
 }
 
@@ -98,7 +107,9 @@ function reportCycle(
     violations: ArchitectureViolation[],
 ): void {
     const selfCycle = component.length === 1 && (edges.get(component[0]!) ?? []).includes(component[0]!);
-    if (component.length <= 1 && !selfCycle) return;
+    if (component.length <= 1 && !selfCycle) {
+        return;
+    }
     violations.push({
         kind: "workspace-cycle",
         message: `workspace dependency cycle: ${component.sort().join(" -> ")}`,
@@ -106,11 +117,13 @@ function reportCycle(
 }
 
 export function workspaceDependencies(manifest: PackageManifest): string[] {
-    return [...new Set([
-        ...Object.keys(manifest.dependencies ?? {}),
-        ...Object.keys(manifest.optionalDependencies ?? {}),
-        ...Object.keys(manifest.peerDependencies ?? {}),
-    ])].sort();
+    return [
+        ...new Set([
+            ...Object.keys(manifest.dependencies ?? {}),
+            ...Object.keys(manifest.optionalDependencies ?? {}),
+            ...Object.keys(manifest.peerDependencies ?? {}),
+        ]),
+    ].sort();
 }
 
 export function layerRank(layer: WorkspaceLayer): number {

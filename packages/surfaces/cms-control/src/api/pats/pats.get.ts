@@ -7,15 +7,19 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
  *  `cms-source` consumer (no client-side date formatting). */
 export default async function listPats(req: Request, cms: ControlCms) {
     const subject = await cms.auth.getSubject(req);
-    if (!subject) throw new MissingParam("session");
+    if (!subject) {
+        throw new MissingParam("session");
+    }
 
     const pats = await cms.pats.list(subject.identifier);
-    return Response.json(pats.map((p) => ({
-        id:            p.id,
-        name:          p.name,
-        createdLabel:  fmt(p.createdAt),
-        lastUsedLabel: p.lastUsedAt ? fmt(p.lastUsedAt) : "Not yet",
-    })));
+    return Response.json(
+        pats.map((p) => ({
+            id: p.id,
+            name: p.name,
+            createdLabel: fmt(p.createdAt),
+            lastUsedLabel: p.lastUsedAt ? fmt(p.lastUsedAt) : "Not yet",
+        })),
+    );
 }
 
 function fmt(d: Date): string {

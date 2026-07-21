@@ -30,7 +30,7 @@ function worker(functionId: string, initialDelayMs: number, intervalMs: number, 
         functionId,
         initialDelayMs,
         intervalMs,
-        body: context => ({
+        body: (context) => ({
             runKey: `cms-runtime:${context.functionId}:${context.startedAt}:${context.runId}`,
             limit,
         }),

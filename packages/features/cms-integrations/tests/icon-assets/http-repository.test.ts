@@ -6,10 +6,12 @@ describe("HTTP integration icon assets", () => {
         const calls: string[] = [];
         const repository = new HttpIntegrationDefinitionRepository({
             baseUrl: "https://repo.example.test",
-            fetch: async input => {
+            fetch: async (input) => {
                 const url = input instanceof URL ? input : new URL(String(input));
                 calls.push(`${url.pathname}${url.search}`);
-                if (url.pathname.endsWith("/definition")) return Response.json(definition());
+                if (url.pathname.endsWith("/definition")) {
+                    return Response.json(definition());
+                }
                 if (url.pathname.endsWith("/asset")) {
                     return new Response('<svg viewBox="0 0 24 24"></svg>', {
                         headers: { "content-type": "image/svg+xml; charset=utf-8" },
@@ -33,9 +35,11 @@ describe("HTTP integration icon assets", () => {
         let assetCalls = 0;
         const repository = new HttpIntegrationDefinitionRepository({
             baseUrl: "https://repo.example.test",
-            fetch: async input => {
+            fetch: async (input) => {
                 const url = input instanceof URL ? input : new URL(String(input));
-                if (url.pathname.endsWith("/asset")) assetCalls += 1;
+                if (url.pathname.endsWith("/asset")) {
+                    assetCalls += 1;
+                }
                 return Response.json(definition('<svg viewBox="0 0 24 24"></svg>'));
             },
         });
@@ -52,16 +56,24 @@ describe("HTTP integration icon assets", () => {
     test("stops reading a streamed icon response at the byte limit", async () => {
         let cancelled = false;
         let chunksRead = 0;
-        const repository = repositoryWithAsset(() => new Response(new ReadableStream({
-            pull(controller) {
-                chunksRead += 1;
-                controller.enqueue(new Uint8Array(10_000).fill(120));
-                if (chunksRead === 10) controller.close();
-            },
-            cancel() {
-                cancelled = true;
-            },
-        }), { headers: { "content-type": "image/svg+xml" } }));
+        const repository = repositoryWithAsset(
+            () =>
+                new Response(
+                    new ReadableStream({
+                        pull(controller) {
+                            chunksRead += 1;
+                            controller.enqueue(new Uint8Array(10_000).fill(120));
+                            if (chunksRead === 10) {
+                                controller.close();
+                            }
+                        },
+                        cancel() {
+                            cancelled = true;
+                        },
+                    }),
+                    { headers: { "content-type": "image/svg+xml" } },
+                ),
+        );
 
         await expect(repository.get("remote-icons")).rejects.toThrow(/exceeds 32000 bytes/);
         expect(chunksRead).toBeLessThan(10);
@@ -69,12 +81,15 @@ describe("HTTP integration icon assets", () => {
     });
 
     test("rejects an oversized content length before decoding the icon", async () => {
-        const repository = repositoryWithAsset(() => new Response("<svg></svg>", {
-            headers: {
-                "content-length": "32001",
-                "content-type": "image/svg+xml",
-            },
-        }));
+        const repository = repositoryWithAsset(
+            () =>
+                new Response("<svg></svg>", {
+                    headers: {
+                        "content-length": "32001",
+                        "content-type": "image/svg+xml",
+                    },
+                }),
+        );
 
         await expect(repository.get("remote-icons")).rejects.toThrow(/exceeds 32000 bytes/);
     });
@@ -108,8 +123,7 @@ describe("HTTP integration icon assets", () => {
             assetCalls += 1;
             return new Response("<svg></svg>");
         });
-        await expect(repositoryWithWrongVersion.get("remote-icons", "1.0.0"))
-            .rejects.toThrow(/returned version/);
+        await expect(repositoryWithWrongVersion.get("remote-icons", "1.0.0")).rejects.toThrow(/returned version/);
         expect(assetCalls).toBe(0);
     });
 
@@ -118,15 +132,12 @@ describe("HTTP integration icon assets", () => {
         let maxInFlight = 0;
         const multipleIcons = {
             ...definition(),
-            artifacts: [
-                sourceArtifact("first", "assets/first.svg"),
-                sourceArtifact("second", "assets/second.svg"),
-            ],
+            artifacts: [sourceArtifact("first", "assets/first.svg"), sourceArtifact("second", "assets/second.svg")],
         };
         const repository = repositoryWithAsset(async () => {
             inFlight += 1;
             maxInFlight = Math.max(maxInFlight, inFlight);
-            await new Promise<void>(resolve => setTimeout(resolve, 0));
+            await new Promise<void>((resolve) => setTimeout(resolve, 0));
             inFlight -= 1;
             return new Response("<svg></svg>", { headers: { "content-type": "image/svg+xml" } });
         }, multipleIcons);
@@ -143,10 +154,14 @@ function repositoryWithAsset(
 ): HttpIntegrationDefinitionRepository {
     return new HttpIntegrationDefinitionRepository({
         baseUrl: "https://repo.example.test",
-        fetch: async input => {
+        fetch: async (input) => {
             const url = input instanceof URL ? input : new URL(String(input));
-            if (url.pathname.endsWith("/definition")) return Response.json(definitionValue);
-            if (url.pathname.endsWith("/asset")) return asset();
+            if (url.pathname.endsWith("/definition")) {
+                return Response.json(definitionValue);
+            }
+            if (url.pathname.endsWith("/asset")) {
+                return asset();
+            }
             return Response.json({}, { status: 404 });
         },
     });

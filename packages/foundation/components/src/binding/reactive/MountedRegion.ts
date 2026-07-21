@@ -13,11 +13,15 @@ export class MountedRegion {
     ) {}
 
     update(scope: Scope): void {
-        for (const site of this.sites) site.update(scope);
+        for (const site of this.sites) {
+            site.update(scope);
+        }
     }
 
     unmount(): void {
-        for (const site of this.sites) site.unmount?.();
+        for (const site of this.sites) {
+            site.unmount?.();
+        }
         removeInclusive(this.start, this.end);
     }
 }
@@ -26,11 +30,15 @@ export class MountedInPlaceRegion {
     constructor(private readonly sites: LiveBindingSite[]) {}
 
     update(scope: Scope): void {
-        for (const site of this.sites) site.update(scope);
+        for (const site of this.sites) {
+            site.update(scope);
+        }
     }
 
     unmount(): void {
-        for (const site of this.sites) site.unmount?.();
+        for (const site of this.sites) {
+            site.unmount?.();
+        }
     }
 }
 
@@ -45,7 +53,9 @@ export function clearBetween(start: Node, end: Node): void {
 
 function removeInclusive(start: Node, end: Node): void {
     const parent = start.parentNode;
-    if (!parent) return;
+    if (!parent) {
+        return;
+    }
 
     let node: Node | null = start;
     while (node) {

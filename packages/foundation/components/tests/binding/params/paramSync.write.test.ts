@@ -4,10 +4,32 @@ import { PARAMS_CHANGE_EVENT } from "../../../src/binding/params";
 
 let writtenUrls: string[] = [];
 const realReplace = history.replaceState.bind(history);
-afterEach(() => { history.replaceState = realReplace; location.href = "http://localhost/"; document.body.replaceChildren(); writtenUrls = []; });
-function spyReplaceState() { history.replaceState = ((_s: unknown, _t: unknown, url: string) => writtenUrls.push(url)) as typeof history.replaceState; }
-function input(attrs: Record<string, string>): HTMLInputElement { const el = document.createElement("input"); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); document.body.appendChild(el); return el; }
-async function waitFor(p: () => boolean, tries = 40) { for (let i = 0; i < tries; i++) { if (p()) return; await new Promise((r) => setTimeout(r, 20)); } }
+afterEach(() => {
+    history.replaceState = realReplace;
+    location.href = "http://localhost/";
+    document.body.replaceChildren();
+    writtenUrls = [];
+});
+function spyReplaceState() {
+    history.replaceState = ((_s: unknown, _t: unknown, url: string) =>
+        writtenUrls.push(url)) as typeof history.replaceState;
+}
+function input(attrs: Record<string, string>): HTMLInputElement {
+    const el = document.createElement("input");
+    for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+    }
+    document.body.appendChild(el);
+    return el;
+}
+async function waitFor(p: () => boolean, tries = 40) {
+    for (let i = 0; i < tries; i++) {
+        if (p()) {
+            return;
+        }
+        await new Promise((r) => setTimeout(r, 20));
+    }
+}
 
 describe("ParamSync — key resolution", () => {
     test("uses the attribute value as the key", () => {
@@ -50,9 +72,12 @@ describe("ParamSync — value → param", () => {
         const el = input({ "cms-param-sync": "search" });
         const ps = new ParamSync(el);
         ps.start();
-        el.value = "a"; el.dispatchEvent(new Event("input"));
-        el.value = "ab"; el.dispatchEvent(new Event("input"));
-        el.value = "abc"; el.dispatchEvent(new Event("input"));
+        el.value = "a";
+        el.dispatchEvent(new Event("input"));
+        el.value = "ab";
+        el.dispatchEvent(new Event("input"));
+        el.value = "abc";
+        el.dispatchEvent(new Event("input"));
         expect(writtenUrls.length).toBe(0); // nothing yet
         await waitFor(() => writtenUrls.length > 0);
         expect(writtenUrls.length).toBe(1);
@@ -62,7 +87,9 @@ describe("ParamSync — value → param", () => {
 
     test("fires the change event so #{}-sources reload", () => {
         let fired = 0;
-        const onChange = () => { fired++; };
+        const onChange = () => {
+            fired++;
+        };
         document.addEventListener(PARAMS_CHANGE_EVENT, onChange);
         const el = input({ "cms-param-sync": "tag" });
         const ps = new ParamSync(el);

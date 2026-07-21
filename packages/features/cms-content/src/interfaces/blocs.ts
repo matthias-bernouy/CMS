@@ -12,4 +12,4 @@ export type TBloc = {
      * `site/blocs/<tag>/`.
      */
     source?: Record<string, string>;
-}
+};

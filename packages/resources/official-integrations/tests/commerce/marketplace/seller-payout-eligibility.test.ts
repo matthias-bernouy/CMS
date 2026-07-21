@@ -12,19 +12,21 @@ installCommerceTestEnvironment();
 
 describe("seller payout eligibility verification", () => {
     test("binds the narrow system transition to the current CMS user", async () => {
-        setRestResponder(request => request.url.includes("/rpc/verify_pending_seller_payout_eligibility")
-            ? jsonResponse({
-                seller: {
-                    id: 184,
-                    cms_user_id: "seller-subject",
-                    verification_status: "verified",
-                    verified_by: "system:payout-eligibility",
-                    version: 2,
-                },
-                transitioned: true,
-                idempotentReplay: false,
-            })
-            : jsonResponse({ error: "unexpected request" }, 500));
+        setRestResponder((request) =>
+            request.url.includes("/rpc/verify_pending_seller_payout_eligibility")
+                ? jsonResponse({
+                      seller: {
+                          id: 184,
+                          cms_user_id: "seller-subject",
+                          verification_status: "verified",
+                          verified_by: "system:payout-eligibility",
+                          version: 2,
+                      },
+                      transitioned: true,
+                      idempotentReplay: false,
+                  })
+                : jsonResponse({ error: "unexpected request" }, 500),
+        );
 
         const response = await requestCommerce("/system/seller/payout-eligibility", {
             userId: "seller-subject",

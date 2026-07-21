@@ -1,17 +1,7 @@
 import { DASHBOARD_ICONS, type DashboardIconName } from "./icons/catalog";
 
 const SVG_MAX_LENGTH = 8_000;
-const ALLOWED_TAGS = new Set([
-    "svg",
-    "g",
-    "path",
-    "circle",
-    "rect",
-    "line",
-    "polyline",
-    "polygon",
-    "ellipse",
-]);
+const ALLOWED_TAGS = new Set(["svg", "g", "path", "circle", "rect", "line", "polyline", "polygon", "ellipse"]);
 const ALLOWED_ATTRS = new Set([
     "aria-hidden",
     "class",
@@ -42,17 +32,31 @@ const ALLOWED_ATTRS = new Set([
     "y2",
 ]);
 
-export function appendIconSlot(host: HTMLElement, svg: string | undefined, icon: string | undefined, fallback: DashboardIconName): void {
+export function appendIconSlot(
+    host: HTMLElement,
+    svg: string | undefined,
+    icon: string | undefined,
+    fallback: DashboardIconName,
+): void {
     const element = createIcon(svg, icon, fallback);
-    if (!element) return;
+    if (!element) {
+        return;
+    }
     element.setAttribute("slot", "icon");
     host.append(element);
 }
 
-export function renderIcon(target: HTMLElement, svg: string | undefined, icon: string | undefined, fallback: DashboardIconName): void {
+export function renderIcon(
+    target: HTMLElement,
+    svg: string | undefined,
+    icon: string | undefined,
+    fallback: DashboardIconName,
+): void {
     target.replaceChildren();
     const element = createIcon(svg, icon, fallback);
-    if (element) target.append(element);
+    if (element) {
+        target.append(element);
+    }
 }
 
 function createIcon(svg: string | undefined, icon: string | undefined, fallback: DashboardIconName): SVGElement | null {
@@ -61,22 +65,32 @@ function createIcon(svg: string | undefined, icon: string | undefined, fallback:
     const template = document.createElement("template");
     template.innerHTML = source.trim();
     const element = template.content.firstElementChild;
-    if (!element || element.tagName.toLowerCase() !== "svg") return null;
+    if (!element || element.tagName.toLowerCase() !== "svg") {
+        return null;
+    }
     element.setAttribute("aria-hidden", "true");
     element.setAttribute("focusable", "false");
     return element as SVGElement;
 }
 
 function sanitizeSvg(value: string | undefined): string | null {
-    if (!value || value.length > SVG_MAX_LENGTH) return null;
+    if (!value || value.length > SVG_MAX_LENGTH) {
+        return null;
+    }
     const doc = new DOMParser().parseFromString(value, "image/svg+xml");
-    if (doc.querySelector("parsererror")) return null;
+    if (doc.querySelector("parsererror")) {
+        return null;
+    }
     const root = doc.documentElement;
-    if (!root || root.tagName.toLowerCase() !== "svg") return null;
+    if (!root || root.tagName.toLowerCase() !== "svg") {
+        return null;
+    }
 
     for (const element of [root, ...Array.from(root.querySelectorAll("*"))]) {
         const tag = element.tagName.toLowerCase();
-        if (!ALLOWED_TAGS.has(tag)) return null;
+        if (!ALLOWED_TAGS.has(tag)) {
+            return null;
+        }
         for (const attr of Array.from(element.attributes)) {
             const name = attr.name.toLowerCase();
             const attrValue = attr.value.toLowerCase();
@@ -96,5 +110,5 @@ function sanitizeSvg(value: string | undefined): string | null {
 }
 
 function toIconName(value: string | undefined): DashboardIconName | undefined {
-    return value && value in DASHBOARD_ICONS ? value as DashboardIconName : undefined;
+    return value && value in DASHBOARD_ICONS ? (value as DashboardIconName) : undefined;
 }

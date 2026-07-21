@@ -4,11 +4,11 @@ import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 
 export async function findPagesReferencingBloc(reader: ContentReader, blocTag: string): Promise<TPage[]> {
     const tagRe = new RegExp(`<${escapeRegex(blocTag)}(\\s|>|/)`, "i");
-    return findPagesReferencingPredicate(reader, content => tagRe.test(content));
+    return findPagesReferencingPredicate(reader, (content) => tagRe.test(content));
 }
 
 export async function findPagesReferencingText(reader: ContentReader, ref: string): Promise<TPage[]> {
-    return findPagesReferencingPredicate(reader, content => content.includes(ref));
+    return findPagesReferencingPredicate(reader, (content) => content.includes(ref));
 }
 
 async function findPagesReferencingPredicate(
@@ -16,5 +16,5 @@ async function findPagesReferencingPredicate(
     matches: (content: string) => boolean,
 ): Promise<TPage[]> {
     const pages = await reader.getAllPages();
-    return pages.filter(page => matches(page.content ?? ""));
+    return pages.filter((page) => matches(page.content ?? ""));
 }

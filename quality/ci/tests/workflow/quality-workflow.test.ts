@@ -8,12 +8,14 @@ const deterministicBuildPath = resolve(import.meta.dir, "../../determinism/deter
 const repositoryShapePath = resolve(import.meta.dir, "../../repository-shape/check.ts");
 
 async function readQualityConfiguration(): Promise<string> {
-    return (await Promise.all([
-        readFile(workflowPath, "utf8"),
-        readFile(setupActionPath, "utf8"),
-        readFile(deterministicBuildPath, "utf8"),
-        readFile(repositoryShapePath, "utf8"),
-    ])).join("\n");
+    return (
+        await Promise.all([
+            readFile(workflowPath, "utf8"),
+            readFile(setupActionPath, "utf8"),
+            readFile(deterministicBuildPath, "utf8"),
+            readFile(repositoryShapePath, "utf8"),
+        ])
+    ).join("\n");
 }
 
 test("quality workflow pins external actions and the secret scanner", async () => {
@@ -23,7 +25,9 @@ test("quality workflow pins external actions and the secret scanner", async () =
     expect(workflow).toContain("actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2");
     expect(configuration).toContain("oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
     expect(workflow).toContain("GITLEAKS_VERSION: 8.30.1");
-    expect(workflow).toContain("GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb");
+    expect(workflow).toContain(
+        "GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+    );
     expect(workflow).toContain("actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2");
     expect(configuration).not.toMatch(/uses:\s+[^\s]+@(main|master|v\d+)\s*$/m);
     const actionReferences = [...configuration.matchAll(/uses:\s+[^\s]+@([^\s]+)/g)].flatMap((match) =>

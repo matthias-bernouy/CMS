@@ -7,7 +7,9 @@ export function relationDetailSectionElement(widget: RelationTableWidget): HTMLE
     const section = document.createElement("cms-detail-section");
     section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
     section.setAttribute("heading", widget.title ?? "Related items");
-    if (widget.placement === "aside") section.setAttribute("density", "compact");
+    if (widget.placement === "aside") {
+        section.setAttribute("density", "compact");
+    }
     section.append(relationTableElement(widget));
     return section;
 }

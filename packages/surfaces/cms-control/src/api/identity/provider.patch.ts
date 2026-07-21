@@ -10,15 +10,29 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
  *   - a provider can't be disabled if no admin could sign in afterwards. */
 export default async function patchProvider(req: Request, cms: ControlCms) {
     const b = await readJsonBody(req);
-    if (typeof b.id !== "string" || !b.id) throw new MissingParam("id");
+    if (typeof b.id !== "string" || !b.id) {
+        throw new MissingParam("id");
+    }
 
     const patch: IdentityProviderPatch = {};
-    if (b.enabled !== undefined)               patch.enabled = b.enabled === true || b.enabled === "true";
-    if (typeof b.displayName === "string")     patch.displayName = b.displayName;
-    if (typeof b.issuer === "string")          patch.issuer = b.issuer;
-    if (typeof b.clientId === "string")        patch.clientId = b.clientId;
-    if (typeof b.clientSecretRef === "string") patch.clientSecretRef = b.clientSecretRef;
-    if (typeof b.scopes === "string")          patch.scopes = b.scopes.split(/[,\s]+/).filter(Boolean);
+    if (b.enabled !== undefined) {
+        patch.enabled = b.enabled === true || b.enabled === "true";
+    }
+    if (typeof b.displayName === "string") {
+        patch.displayName = b.displayName;
+    }
+    if (typeof b.issuer === "string") {
+        patch.issuer = b.issuer;
+    }
+    if (typeof b.clientId === "string") {
+        patch.clientId = b.clientId;
+    }
+    if (typeof b.clientSecretRef === "string") {
+        patch.clientSecretRef = b.clientSecretRef;
+    }
+    if (typeof b.scopes === "string") {
+        patch.scopes = b.scopes.split(/[,\s]+/).filter(Boolean);
+    }
 
     return Response.json(await updateIdentityProvider(cms, b.id, patch));
 }

@@ -10,7 +10,9 @@ import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
  */
 export async function recordPageView(req: Request, delivery: DeliveryCms): Promise<Response> {
     const store = delivery.analytics;
-    if (!store) return handlePageRequest(req, delivery);
+    if (!store) {
+        return handlePageRequest(req, delivery);
+    }
 
     const t0 = Date.now();
     const res = await handlePageRequest(req, delivery);

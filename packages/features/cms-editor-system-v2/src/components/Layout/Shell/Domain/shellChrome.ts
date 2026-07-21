@@ -14,9 +14,27 @@ export type ShellChromeDefaults = {
 
 export function shellResourceChromeDefaults(resource: string): ShellChromeDefaults {
     if (resource === "template") {
-        return chromeDefaults("Templates", "/admin/templates", "Template settings", "Configure template metadata.", "Identifier", "Category", "Status", "Description");
+        return chromeDefaults(
+            "Templates",
+            "/admin/templates",
+            "Template settings",
+            "Configure template metadata.",
+            "Identifier",
+            "Category",
+            "Status",
+            "Description",
+        );
     }
-    return chromeDefaults("Pages", "/admin/pages", "Page settings", "Configure page-level metadata and routing.", "Path", "Tags", "Status", "SEO description");
+    return chromeDefaults(
+        "Pages",
+        "/admin/pages",
+        "Page settings",
+        "Configure page-level metadata and routing.",
+        "Path",
+        "Tags",
+        "Status",
+        "SEO description",
+    );
 }
 
 export function applyShellChromeLabels(
@@ -27,8 +45,8 @@ export function applyShellChromeLabels(
     pageField: <T extends HTMLElement>(name: string) => T,
 ): void {
     topBar.setNavigation({
-        backHref:      host.getAttribute("back-href") ?? defaults.backHref,
-        backLabel:     host.getAttribute("back-label") ?? defaults.backLabel,
+        backHref: host.getAttribute("back-href") ?? defaults.backHref,
+        backLabel: host.getAttribute("back-label") ?? defaults.backLabel,
         settingsLabel: host.getAttribute("settings-label") ?? defaults.settingsLabel,
     });
 

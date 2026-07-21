@@ -8,17 +8,22 @@ import { validateSteps } from "./validation/validateSteps";
 
 export type { ValidateFunctionOptions } from "./validation/state";
 
-export async function validateFunction(
-    fn: CmsFunction,
-    options: ValidateFunctionOptions = {},
-): Promise<string[]> {
+export async function validateFunction(fn: CmsFunction, options: ValidateFunctionOptions = {}): Promise<string[]> {
     const errors: string[] = [];
     const maxCalls = options.maxCalls ?? MAX_FUNCTION_CALLS;
-    if (!isId(fn.id)) errors.push("function.id must be a simple id");
-    if (!["GET", "POST", "PUT", "DELETE", "PATCH"].includes(fn.method)) errors.push("function.method is not supported");
+    if (!isId(fn.id)) {
+        errors.push("function.id must be a simple id");
+    }
+    if (!["GET", "POST", "PUT", "DELETE", "PATCH"].includes(fn.method)) {
+        errors.push("function.method is not supported");
+    }
     validateAccess(fn, errors);
-    if (!Array.isArray(fn.steps)) errors.push("function.steps must be an array");
-    if (!fn.return) errors.push("function.return is required");
+    if (!Array.isArray(fn.steps)) {
+        errors.push("function.steps must be an array");
+    }
+    if (!fn.return) {
+        errors.push("function.return is required");
+    }
 
     const state: ValidationState = {
         fn,
@@ -31,7 +36,9 @@ export async function validateFunction(
     const steps = Array.isArray(fn.steps) ? fn.steps : [];
     const callCount = await validateSteps(steps, "function.steps", state, false);
 
-    if (callCount > maxCalls) errors.push(`function call budget exceeds max (${callCount}, max ${maxCalls})`);
+    if (callCount > maxCalls) {
+        errors.push(`function call budget exceeds max (${callCount}, max ${maxCalls})`);
+    }
     if (fn.return) {
         validateReferences(fn.return, "function.return", state, false);
         if (fn.return.status !== undefined && (fn.return.status < 200 || fn.return.status > 599)) {
@@ -42,6 +49,10 @@ export async function validateFunction(
 }
 
 function validateAccess(fn: CmsFunction, errors: string[]): void {
-    if (fn.access === undefined) return;
-    if (!isSourceEndpointAccessMode(fn.access.mode)) errors.push("function.access.mode is not supported");
+    if (fn.access === undefined) {
+        return;
+    }
+    if (!isSourceEndpointAccessMode(fn.access.mode)) {
+        errors.push("function.access.mode is not supported");
+    }
 }

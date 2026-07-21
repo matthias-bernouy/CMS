@@ -28,20 +28,24 @@ describe("SourceOverlaySourceRepository endpoint lookup", () => {
                     urn: "urn:accounts:getAccountFields",
                     method: "GET",
                     targetUrl: "https://api.example.com/account-fields",
-                    headers: [{
-                        name: "Authorization",
-                        source: { from: "secret", ref: "${ACCOUNT_FIELDS_KEY}" },
-                    }],
+                    headers: [
+                        {
+                            name: "Authorization",
+                            source: { from: "secret", ref: "${ACCOUNT_FIELDS_KEY}" },
+                        },
+                    ],
                     output: [{ status: "200", body: { type: "object" } }],
                 },
                 {
                     urn: "urn:accounts:listAccountFields",
                     method: "GET",
                     targetUrl: "https://api.example.com/list-fields",
-                    headers: [{
-                        name: "Authorization",
-                        source: { from: "secret", ref: "${LIST_FIELDS_KEY}" },
-                    }],
+                    headers: [
+                        {
+                            name: "Authorization",
+                            source: { from: "secret", ref: "${LIST_FIELDS_KEY}" },
+                        },
+                    ],
                     output: [{ status: "200", body: { type: "object" } }],
                 },
             ],

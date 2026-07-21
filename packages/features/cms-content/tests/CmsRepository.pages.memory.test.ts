@@ -5,9 +5,9 @@ import { countValues, InMemoryCmsRepository, isPublishedPage } from "@bernouy/cm
 async function seeded() {
     const repo = new InMemoryCmsRepository();
     const rows = [
-        { path: "/about",   title: "About us", tags: ["company"], visible: true },
-        { path: "/blog",    title: "Blog",     tags: ["news"],    visible: false },
-        { path: "/contact", title: "Contact",  tags: ["company"], visible: true },
+        { path: "/about", title: "About us", tags: ["company"], visible: true },
+        { path: "/blog", title: "Blog", tags: ["news"], visible: false },
+        { path: "/contact", title: "Contact", tags: ["company"], visible: true },
     ];
     for (const r of rows) {
         await repo.insertPage(r.path, r.title);
@@ -17,7 +17,7 @@ async function seeded() {
     return repo;
 }
 
-const titles = (rows: { title: string }[]) => rows.map(r => r.title);
+const titles = (rows: { title: string }[]) => rows.map((r) => r.title);
 
 describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     test("defaults to title asc, all pages", async () => {
@@ -27,7 +27,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
 
     test("search matches title OR path, case-insensitive", async () => {
         const repo = await seeded();
-        expect(titles(await repo.getPagesMetadata({ search: "BLO" }))).toEqual(["Blog"]);      // title
+        expect(titles(await repo.getPagesMetadata({ search: "BLO" }))).toEqual(["Blog"]); // title
         expect(titles(await repo.getPagesMetadata({ search: "/cont" }))).toEqual(["Contact"]); // path
     });
 
@@ -44,7 +44,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
 
     test("sorts by path desc", async () => {
         const rows = await (await seeded()).getPagesMetadata({ sortBy: "path", sortOrder: "desc" });
-        expect(rows.map(r => r.path)).toEqual(["/contact", "/blog", "/about"]);
+        expect(rows.map((r) => r.path)).toEqual(["/contact", "/blog", "/about"]);
     });
 
     test("published helper accepts only strict visible true", () => {

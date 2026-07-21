@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    importIntegration,
-    parseIntegrationDefinition,
-} from "@bernouy/cms-integrations";
+import { importIntegration, parseIntegrationDefinition } from "@bernouy/cms-integrations";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
@@ -46,24 +43,20 @@ describe("@bernouy/cms-integrations access grants", () => {
             ],
         });
 
-        await importIntegration(
-            { sources, functions, roles, secrets },
-            { kind: "shop", answers: {}, options: {} },
-            [definition],
-        );
+        await importIntegration({ sources, functions, roles, secrets }, { kind: "shop", answers: {}, options: {} }, [
+            definition,
+        ]);
         await importIntegration(
             { sources, functions, roles, secrets },
             { kind: "shop", answers: {}, options: { force: true } },
             [definition],
         );
 
-        expect((await roles.get(PUBLIC_ROLE))?.grants.map(grant => grant.permission).sort()).toEqual([
+        expect((await roles.get(PUBLIC_ROLE))?.grants.map((grant) => grant.permission).sort()).toEqual([
             "urn:shop:catalog",
             "urn:system-functions:checkout",
         ]);
-        expect((await roles.get(USER_ROLE))?.grants.map(grant => grant.permission)).toEqual([
-            "urn:shop:myOrders",
-        ]);
+        expect((await roles.get(USER_ROLE))?.grants.map((grant) => grant.permission)).toEqual(["urn:shop:myOrders"]);
         expect((await sources.getEndpoint("urn:shop:protectedOperations"))?.access).toEqual({ mode: "admin" });
     });
 
@@ -72,18 +65,24 @@ describe("@bernouy/cms-integrations access grants", () => {
             kind: "shop",
             label: "Shop",
             inputs: [],
-            artifacts: [{
-                type: "source",
-                source: {
-                    id: "shop",
-                    meta: { name: "Shop" },
-                    endpoints: [endpoint("protectedOperations", access as any)],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "shop",
+                        meta: { name: "Shop" },
+                        endpoints: [endpoint("protectedOperations", access as any)],
+                    },
                 },
-            }],
+            ],
         });
 
-        expect(() => parseIntegrationDefinition(definition({ mode: "auth", roles: ["custom"] }))).toThrow(/no longer supported/);
-        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["custom"] }))).toThrow(/no longer supported/);
+        expect(() => parseIntegrationDefinition(definition({ mode: "auth", roles: ["custom"] }))).toThrow(
+            /no longer supported/,
+        );
+        expect(() => parseIntegrationDefinition(definition({ mode: "admin", roles: ["custom"] }))).toThrow(
+            /no longer supported/,
+        );
     });
 });
 

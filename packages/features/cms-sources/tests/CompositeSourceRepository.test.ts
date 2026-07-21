@@ -7,9 +7,7 @@ import type { Source } from "cms-sources/interfaces/Source";
 const source = (urn = "urn:shop"): Source => ({
     urn,
     meta: { name: "Shop" },
-    endpoints: [
-        { urn: `${urn}:getCart`, method: "GET", targetUrl: "https://api.shop.com/cart" },
-    ],
+    endpoints: [{ urn: `${urn}:getCart`, method: "GET", targetUrl: "https://api.shop.com/cart" }],
 });
 
 describe("CompositeSourceRepository", () => {
@@ -19,7 +17,7 @@ describe("CompositeSourceRepository", () => {
         const repo = new CompositeSourceRepository(inner, [SYSTEM_AUTH_SOURCE]);
 
         const sources = await repo.getAllSources();
-        expect(sources.map(p => p.urn)).toEqual([SYSTEM_AUTH_SOURCE_URN, "urn:shop"]);
+        expect(sources.map((p) => p.urn)).toEqual([SYSTEM_AUTH_SOURCE_URN, "urn:shop"]);
     });
 
     test("resolves system sources and endpoints without persisting them", async () => {
@@ -44,6 +42,6 @@ describe("CompositeSourceRepository", () => {
         await inner.createSource(source("urn:system-legacy"));
         const repo = new CompositeSourceRepository(inner, [SYSTEM_AUTH_SOURCE]);
 
-        expect((await repo.getAllSources()).map(p => p.urn)).toEqual([SYSTEM_AUTH_SOURCE_URN]);
+        expect((await repo.getAllSources()).map((p) => p.urn)).toEqual([SYSTEM_AUTH_SOURCE_URN]);
     });
 });

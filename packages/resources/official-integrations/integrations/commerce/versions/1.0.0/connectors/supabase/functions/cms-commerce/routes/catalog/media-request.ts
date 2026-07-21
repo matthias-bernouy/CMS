@@ -6,7 +6,9 @@ export function requiredQueryId(request: Request, name: string, fallback?: strin
     const params = new URL(request.url).searchParams;
     const value = params.get(name) ?? (fallback ? params.get(fallback) : null);
     const id = integer(value, name, true)!;
-    if (id <= 0) throw new HttpError(400, `${name} must be positive`);
+    if (id <= 0) {
+        throw new HttpError(400, `${name} must be positive`);
+    }
     return id;
 }
 
@@ -24,9 +26,15 @@ export async function readCommerceImage(request: Request): Promise<File> {
     }
 
     const file = formData.get("file");
-    if (!(file instanceof File)) throw new HttpError(400, "file is required");
-    if (file.size <= 0) throw new HttpError(400, "file is empty");
-    if (file.size > maxProductImageBytes) throw new HttpError(413, "file is too large");
+    if (!(file instanceof File)) {
+        throw new HttpError(400, "file is required");
+    }
+    if (file.size <= 0) {
+        throw new HttpError(400, "file is empty");
+    }
+    if (file.size > maxProductImageBytes) {
+        throw new HttpError(413, "file is too large");
+    }
     if (!productImageTypes.has(file.type.toLowerCase())) {
         throw new HttpError(400, "file must be a JPEG, PNG, WebP, GIF, or AVIF image");
     }
@@ -35,13 +43,19 @@ export async function readCommerceImage(request: Request): Promise<File> {
 
 export async function readMediaIds(request: Request): Promise<number[]> {
     const body = await readJsonObject(request);
-    if (!Array.isArray(body.mediaIds)) throw new HttpError(400, "mediaIds must be an array");
+    if (!Array.isArray(body.mediaIds)) {
+        throw new HttpError(400, "mediaIds must be an array");
+    }
     const ids = body.mediaIds.map((value, index) => {
         const id = integer(value, `mediaIds[${index}]`, true)!;
-        if (id <= 0) throw new HttpError(400, `mediaIds[${index}] must be positive`);
+        if (id <= 0) {
+            throw new HttpError(400, `mediaIds[${index}] must be positive`);
+        }
         return id;
     });
-    if (new Set(ids).size !== ids.length) throw new HttpError(400, "mediaIds must be unique");
+    if (new Set(ids).size !== ids.length) {
+        throw new HttpError(400, "mediaIds must be unique");
+    }
     return ids;
 }
 
@@ -55,7 +69,9 @@ export function offerImagePath(offerId: number, file: File): string {
 
 function commerceImagePath(owner: "products" | "offers", ownerId: number, file: File): string {
     const extension = productImageTypes.get(file.type.toLowerCase());
-    if (!extension) throw new HttpError(400, "unsupported image content type");
+    if (!extension) {
+        throw new HttpError(400, "unsupported image content type");
+    }
     const date = new Date().toISOString().slice(0, 10);
     return `${owner}/${ownerId}/${date}/${crypto.randomUUID()}${extension}`;
 }

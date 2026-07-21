@@ -45,11 +45,19 @@ let activeEnv: Record<string, string> = {};
 let activeFetch: typeof fetch = realFetch;
 let edgeHandler: EdgeHandler | undefined;
 
-(globalThis as { Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown } }).Deno = {
+(
+    globalThis as {
+        Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown };
+    }
+).Deno = {
     env: { get: (key) => activeEnv[key] },
     serve(handler) {
         edgeHandler = handler;
-        return { shutdown() { /* test stub */ } };
+        return {
+            shutdown() {
+                /* test stub */
+            },
+        };
     },
 };
 globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
@@ -88,8 +96,11 @@ describe("emailer 1.0.0 source", () => {
         expect(dashboardJson).not.toContain("sampleDataJson");
         expect(settingsJson).toContain("emailerSettings");
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
-        expect(harness.deployment?.schemas.map(schema => schema.path)).toEqual(["schema.sql", "broadcast-schema.sql"]);
-        expect(harness.deployment?.functions.map(fn => fn.name)).toEqual(["cms-emailer", "cms-broadcast"]);
+        expect(harness.deployment?.schemas.map((schema) => schema.path)).toEqual([
+            "schema.sql",
+            "broadcast-schema.sql",
+        ]);
+        expect(harness.deployment?.functions.map((fn) => fn.name)).toEqual(["cms-emailer", "cms-broadcast"]);
         expect(String(harness.deployment?.functions[0]?.secrets?.CMS_EMAILER_API_KEY)).toStartWith("cms_em_");
         expect(harness.deployment?.functions[0]?.secrets).toMatchObject({
             SMTP_HOST: "smtp.example.test",
@@ -105,7 +116,7 @@ describe("emailer 1.0.0 source", () => {
             CMS_BROADCAST_API_KEY: expect.stringMatching(/^cms_eb_/),
         });
         expect(harness.deployment?.functions[1]?.secrets).not.toHaveProperty("CMS_NEWSLETTER_API_KEY");
-        expect(harness.result.secrets?.map(secret => secret.key)).toEqual([
+        expect(harness.result.secrets?.map((secret) => secret.key)).toEqual([
             "EMAILER_EMAILER_API_KEY",
             "EMAILER_EMAILER_BROADCAST_API_KEY",
         ]);
@@ -119,24 +130,27 @@ describe("emailer 1.0.0 source", () => {
             expect(await harness.functions.getFunction(id)).toBeTruthy();
         }
         expect(await harness.functions.getFunction("startNewsletterBroadcast")).toBeNull();
-        expect(broadcastSource?.endpoints.some(endpoint => endpoint.urn.endsWith(":startCampaign"))).toBe(false);
-        const sendEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:emailer:sendTemplateEmail");
+        expect(broadcastSource?.endpoints.some((endpoint) => endpoint.urn.endsWith(":startCampaign"))).toBe(false);
+        const sendEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:emailer:sendTemplateEmail");
         expect(sendEndpoint?.access).toEqual({ mode: "system" });
     });
 
     test("does not deploy or retain Newsletter credentials in the broadcast connector", async () => {
-        const definition = await Bun.file(new URL(
-            "../integrations/emailer/versions/1.0.0/definition.json",
-            import.meta.url,
-        )).text();
-        const campaignSource = await Bun.file(new URL(
-            "../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/campaigns.ts",
-            import.meta.url,
-        )).text();
-        const entrypoint = await Bun.file(new URL(
-            "../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/index.ts",
-            import.meta.url,
-        )).text();
+        const definition = await Bun.file(
+            new URL("../integrations/emailer/versions/1.0.0/definition.json", import.meta.url),
+        ).text();
+        const campaignSource = await Bun.file(
+            new URL(
+                "../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/campaigns.ts",
+                import.meta.url,
+            ),
+        ).text();
+        const entrypoint = await Bun.file(
+            new URL(
+                "../integrations/emailer/versions/1.0.0/connectors/supabase/functions/cms-broadcast/index.ts",
+                import.meta.url,
+            ),
+        ).text();
 
         expect(definition).not.toMatch(/dependencies\.newsletter\.(?:connectorSecrets|secrets)/);
         expect(definition).not.toContain("CMS_NEWSLETTER_API_KEY");
@@ -173,25 +187,29 @@ describe("emailer 1.0.0 source", () => {
 
     test("updates provider SMTP settings without exposing the saved password", async () => {
         const harness = await createHarness();
-        const updated = await okJson(await sourceJson(harness, "updateSettings", {
-            smtpHost: "smtp.saved.test",
-            smtpPort: "2525",
-            smtpSecure: "true",
-            smtpUser: "saved-user",
-            smtpPassword: "saved-password",
-            defaultFrom: "saved@example.test",
-            defaultReplyTo: "reply@example.test",
-        }));
+        const updated = await okJson(
+            await sourceJson(harness, "updateSettings", {
+                smtpHost: "smtp.saved.test",
+                smtpPort: "2525",
+                smtpSecure: "true",
+                smtpUser: "saved-user",
+                smtpPassword: "saved-password",
+                defaultFrom: "saved@example.test",
+                defaultReplyTo: "reply@example.test",
+            }),
+        );
         const settingsAfterUpdate = await okJson(await sourceRequest(harness, "getSettings"));
-        const afterBlankPasswordSave = await okJson(await sourceJson(harness, "updateSettings", {
-            smtpHost: "smtp.saved.test",
-            smtpPort: "2525",
-            smtpSecure: "true",
-            smtpUser: "saved-user",
-            smtpPassword: "",
-            defaultFrom: "saved@example.test",
-            defaultReplyTo: "reply@example.test",
-        }));
+        const afterBlankPasswordSave = await okJson(
+            await sourceJson(harness, "updateSettings", {
+                smtpHost: "smtp.saved.test",
+                smtpPort: "2525",
+                smtpSecure: "true",
+                smtpUser: "saved-user",
+                smtpPassword: "",
+                defaultFrom: "saved@example.test",
+                defaultReplyTo: "reply@example.test",
+            }),
+        );
         const settings = await okJson(await sourceRequest(harness, "getSettings"));
 
         expect(updated).toMatchObject({
@@ -207,7 +225,11 @@ describe("emailer 1.0.0 source", () => {
         expect(updated).toEqual(settingsAfterUpdate);
         expect(afterBlankPasswordSave).toMatchObject({ smtpPassword: "", smtpPasswordConfigured: "configured" });
         expect(afterBlankPasswordSave).toEqual(settings);
-        expect(settings).toMatchObject({ smtpHost: "smtp.saved.test", smtpPassword: "", smtpPasswordConfigured: "configured" });
+        expect(settings).toMatchObject({
+            smtpHost: "smtp.saved.test",
+            smtpPassword: "",
+            smtpPasswordConfigured: "configured",
+        });
         expect(harness.rest.rows("settings")[0]).toMatchObject({
             smtp_host: "smtp.saved.test",
             smtp_port: 2525,
@@ -230,36 +252,44 @@ describe("emailer 1.0.0 source", () => {
         };
 
         const saved = await okJson(await sourceJson(harness, "upsertTemplate", welcomeTemplate()));
-        const created = await okJson(await sourceJson(harness, "upsertTemplate", {
-            key: "billing.receipt",
-            name: "Receipt email",
-            status: "draft",
-            subject: "Receipt {{ order.number }}",
-            htmlBody: "<p>Receipt {{ order.number }}</p>",
-            requiredTokens: [
-                { name: "order.number", description: "Order number", sample: "A-100" },
-            ],
-        }));
+        const created = await okJson(
+            await sourceJson(harness, "upsertTemplate", {
+                key: "billing.receipt",
+                name: "Receipt email",
+                status: "draft",
+                subject: "Receipt {{ order.number }}",
+                htmlBody: "<p>Receipt {{ order.number }}</p>",
+                requiredTokens: [{ name: "order.number", description: "Order number", sample: "A-100" }],
+            }),
+        );
         const listed = await okJson(await sourceRequest(harness, "listTemplates", { q: "welcome" }));
         const fetched = await okJson(await sourceRequest(harness, "getTemplate", { key: "auth.welcome" }));
-        const rendered = await okJson(await sourceJson(harness, "renderTemplate", {
-            key: "auth.welcome",
-            data: { user: { name: "Bea" } },
-        }));
-        const testMessage = await okJson(await sourceJson(harness, "sendTestEmail", {
-            key: "auth.welcome",
-            toEmail: "TEST@Example.COM",
-        }));
-        const createdTestMessage = await okJson(await sourceJson(harness, "sendTestEmail", {
-            key: "billing.receipt",
-            toEmail: "receipt@example.test",
-        }));
-        const systemMessage = await okJson(await sourceJson(harness, "sendTemplateEmail", {
-            key: "auth.welcome",
-            toEmails: ["buyer@example.test"],
-            data: { user: { name: "Bea" } },
-            idempotencyKey: "welcome-1",
-        }));
+        const rendered = await okJson(
+            await sourceJson(harness, "renderTemplate", {
+                key: "auth.welcome",
+                data: { user: { name: "Bea" } },
+            }),
+        );
+        const testMessage = await okJson(
+            await sourceJson(harness, "sendTestEmail", {
+                key: "auth.welcome",
+                toEmail: "TEST@Example.COM",
+            }),
+        );
+        const createdTestMessage = await okJson(
+            await sourceJson(harness, "sendTestEmail", {
+                key: "billing.receipt",
+                toEmail: "receipt@example.test",
+            }),
+        );
+        const systemMessage = await okJson(
+            await sourceJson(harness, "sendTemplateEmail", {
+                key: "auth.welcome",
+                toEmails: ["buyer@example.test"],
+                data: { user: { name: "Bea" } },
+                idempotencyKey: "welcome-1",
+            }),
+        );
         const messages = await okJson(await sourceRequest(harness, "listMessages", { status: "sent" }));
         const archived = await okJson(await sourceJson(harness, "archiveTemplate", {}, { key: "auth.welcome" }));
         const fetchedAfterArchive = await okJson(await sourceRequest(harness, "getTemplate", { key: "auth.welcome" }));
@@ -277,7 +307,11 @@ describe("emailer 1.0.0 source", () => {
         });
         expect(testMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-1" });
         expect(createdTestMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-2" });
-        expect(systemMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-3", idempotencyKey: "welcome-1" });
+        expect(systemMessage).toMatchObject({
+            status: "sent",
+            providerMessageId: "smtp-3",
+            idempotencyKey: "welcome-1",
+        });
         expect(messages.total).toBe(3);
         expect(archived).toEqual(fetchedAfterArchive);
         expect(sent).toHaveLength(3);
@@ -325,10 +359,12 @@ describe("emailer 1.0.0 source", () => {
         const harness = await createHarness();
         await okJson(await sourceJson(harness, "upsertTemplate", welcomeTemplate()));
 
-        const rendered = await okJson(await sourceJson(harness, "renderTemplate", {
-            key: "auth.welcome",
-            data: { user: { name: `<Court & "Serve">'` } },
-        }));
+        const rendered = await okJson(
+            await sourceJson(harness, "renderTemplate", {
+                key: "auth.welcome",
+                data: { user: { name: `<Court & "Serve">'` } },
+            }),
+        );
 
         expect(rendered).toMatchObject({
             subject: `Welcome <Court & "Serve">'`,
@@ -357,7 +393,9 @@ describe("emailer 1.0.0 source", () => {
         expect(failure).toEqual({ error: "email delivery failed" });
         expect(JSON.stringify(failure)).not.toContain("smtp offline");
         expect(messages.items).toEqual([expect.objectContaining({ status: "failed", error: "smtp offline" })]);
-        expect(harness.rest.rows("messages")).toEqual([expect.objectContaining({ status: "failed", error: "smtp offline" })]);
+        expect(harness.rest.rows("messages")).toEqual([
+            expect.objectContaining({ status: "failed", error: "smtp offline" }),
+        ]);
     });
 });
 
@@ -385,19 +423,23 @@ async function createHarness() {
                 }
                 return await handler(request);
             } catch (error) {
-                return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
+                return new Response(error instanceof Error ? (error.stack ?? error.message) : String(error), {
+                    status: 599,
+                });
             }
         },
         async resolveSecret(ref: string): Promise<string | undefined> {
             const key = secretRefToKey(ref) ?? ref;
-            return await base.secrets.get(key) ?? undefined;
+            return (await base.secrets.get(key)) ?? undefined;
         },
     };
 }
 
 async function importEmailer() {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("emailer");
-    if (!definition) throw new Error("emailer definition not found");
+    if (!definition) {
+        throw new Error("emailer definition not found");
+    }
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
@@ -424,7 +466,7 @@ async function importEmailer() {
         async deploy(next) {
             deployment = {
                 ...next,
-                functions: next.functions.map(fn => ({
+                functions: next.functions.map((fn) => ({
                     ...fn,
                     secrets: {
                         ...providerFunctionSecrets,
@@ -470,31 +512,38 @@ function newsletterSource() {
     return {
         urn: "urn:newsletter",
         meta: { name: "Newsletter" },
-        endpoints: [{
-            urn: "urn:newsletter:listSubscriptions",
-            method: "GET" as const,
-            targetUrl: "https://newsletter.test/subscriptions",
-            input: {
-                params: [
-                    { name: "subscribed", in: "query" as const, schema: { type: "string" as const } },
-                    { name: "limit", in: "query" as const, schema: { type: "number" as const } },
-                    { name: "offset", in: "query" as const, schema: { type: "number" as const } },
+        endpoints: [
+            {
+                urn: "urn:newsletter:listSubscriptions",
+                method: "GET" as const,
+                targetUrl: "https://newsletter.test/subscriptions",
+                input: {
+                    params: [
+                        { name: "subscribed", in: "query" as const, schema: { type: "string" as const } },
+                        { name: "limit", in: "query" as const, schema: { type: "number" as const } },
+                        { name: "offset", in: "query" as const, schema: { type: "number" as const } },
+                    ],
+                },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object" as const,
+                            properties: {
+                                subscriptions: {
+                                    type: "array" as const,
+                                    items: {
+                                        type: "object" as const,
+                                        properties: { email: { type: "string" as const } },
+                                    },
+                                },
+                                total: { type: "number" as const },
+                            },
+                        },
+                    },
                 ],
             },
-            output: [{
-                status: "200",
-                body: {
-                    type: "object" as const,
-                    properties: {
-                        subscriptions: {
-                            type: "array" as const,
-                            items: { type: "object" as const, properties: { email: { type: "string" as const } } },
-                        },
-                        total: { type: "number" as const },
-                    },
-                },
-            }],
-        }],
+        ],
     };
 }
 
@@ -502,18 +551,20 @@ class EmailerRestMock {
     private readonly tables: Record<string, JsonRecord[]> = {
         templates: [],
         messages: [],
-        settings: [{
-            id: "default",
-            smtp_host: null,
-            smtp_port: null,
-            smtp_secure: null,
-            smtp_user: null,
-            smtp_password: null,
-            default_from: null,
-            default_reply_to: null,
-            created_at: "2026-07-09T10:00:00.000Z",
-            updated_at: "2026-07-09T10:00:00.000Z",
-        }],
+        settings: [
+            {
+                id: "default",
+                smtp_host: null,
+                smtp_port: null,
+                smtp_secure: null,
+                smtp_user: null,
+                smtp_password: null,
+                default_from: null,
+                default_reply_to: null,
+                created_at: "2026-07-09T10:00:00.000Z",
+                updated_at: "2026-07-09T10:00:00.000Z",
+            },
+        ],
     };
 
     async fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -527,10 +578,14 @@ class EmailerRestMock {
         expect(request.headers.get("apikey")).toBe("supabase-secret-key");
         expect(request.headers.get("authorization")).toBe("Bearer supabase-secret-key");
         expect(request.headers.get("accept-profile")).toBe("emailer");
-        if (method !== "GET" && method !== "HEAD") expect(request.headers.get("content-profile")).toBe("emailer");
+        if (method !== "GET" && method !== "HEAD") {
+            expect(request.headers.get("content-profile")).toBe("emailer");
+        }
 
         const table = decodeURIComponent(url.pathname.slice("/rest/v1/".length));
-        if (!this.tables[table]) throw new Error(`unexpected table: ${table}`);
+        if (!this.tables[table]) {
+            throw new Error(`unexpected table: ${table}`);
+        }
         if (method === "GET") {
             const rows = this.select(table, url);
             return jsonResponse(rows, 200, { "content-range": `0-${Math.max(rows.length - 1, 0)}/${rows.length}` });
@@ -547,44 +602,52 @@ class EmailerRestMock {
     }
 
     rows(table: string): JsonRecord[] {
-        return this.tables[table]!.map(row => ({ ...row }));
+        return this.tables[table]!.map((row) => ({ ...row }));
     }
 
     private select(table: string, url: URL): JsonRecord[] {
         let rows = this.tables[table]!;
         for (const key of ["key", "id", "idempotency_key", "status", "template_key"]) {
             const filter = filterValue(url.searchParams.get(key));
-            if (filter?.operator === "eq") rows = rows.filter(row => same(row[key], filter.value));
+            if (filter?.operator === "eq") {
+                rows = rows.filter((row) => same(row[key], filter.value));
+            }
         }
         const offset = Number(url.searchParams.get("offset") ?? 0);
         const limit = Number(url.searchParams.get("limit") ?? rows.length);
-        return rows.slice(offset, offset + limit).map(row => ({ ...row }));
+        return rows.slice(offset, offset + limit).map((row) => ({ ...row }));
     }
 
     private insertOrUpsert(table: string, value: JsonRecord): JsonRecord {
         const rows = this.tables[table]!;
         const now = "2026-07-09T10:00:00.000Z";
         if (table === "templates") {
-            const index = rows.findIndex(row => same(row.key, value.key));
+            const index = rows.findIndex((row) => same(row.key, value.key));
             const next = {
                 ...(index >= 0 ? rows[index] : { created_at: now }),
                 ...value,
                 updated_at: now,
             };
-            if (index >= 0) rows[index] = next;
-            else rows.push(next);
+            if (index >= 0) {
+                rows[index] = next;
+            } else {
+                rows.push(next);
+            }
             return { ...next };
         }
         if (table === "settings") {
             const id = String(value.id ?? "default");
-            const index = rows.findIndex(row => same(row.id, id));
+            const index = rows.findIndex((row) => same(row.id, id));
             const next = {
                 ...(index >= 0 ? rows[index] : { id, created_at: now }),
                 ...value,
                 updated_at: now,
             };
-            if (index >= 0) rows[index] = next;
-            else rows.push(next);
+            if (index >= 0) {
+                rows[index] = next;
+            } else {
+                rows.push(next);
+            }
             return { ...next };
         }
         const next = {
@@ -600,9 +663,11 @@ class EmailerRestMock {
         const rows = this.tables[table]!;
         const key = filterValue(url.searchParams.get("key"));
         const patched: JsonRecord[] = [];
-        this.tables[table] = rows.map(row => {
+        this.tables[table] = rows.map((row) => {
             const match = key?.operator === "eq" && same(row.key, key.value);
-            if (!match) return row;
+            if (!match) {
+                return row;
+            }
             const next = { ...row, ...value, updated_at: "2026-07-09T10:00:00.000Z" };
             patched.push(next);
             return next;
@@ -619,26 +684,34 @@ function welcomeTemplate(): JsonRecord {
         subject: "Welcome {{ user.name }}",
         htmlBody: "<p>Hello {{ user.name }}</p>",
         textBody: "Hello {{ user.name }}",
-        requiredTokens: [
-            { name: "user.name", description: "Recipient display name", sample: "Ada" },
-        ],
+        requiredTokens: [{ name: "user.name", description: "Recipient display name", sample: "Ada" }],
         sampleDataJson: JSON.stringify({ user: { name: "Ada" } }),
     };
 }
 
 async function loadEdgeHandler(): Promise<EdgeHandler> {
-    if (!edgeHandler) await import(edgeFunctionUrl);
-    if (!edgeHandler) throw new Error("cms-emailer edge handler was not registered");
+    if (!edgeHandler) {
+        await import(edgeFunctionUrl);
+    }
+    if (!edgeHandler) {
+        throw new Error("cms-emailer edge handler was not registered");
+    }
     return edgeHandler;
 }
 
 async function sourceRequest(
-    harness: { sources: SourceRepository; sourceFetch: typeof fetch; resolveSecret: (ref: string) => Promise<string | undefined> },
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
     endpoint: string,
     params: Record<string, string> = {},
 ): Promise<Response> {
     const url = new URL(`${sourcePrefix}emailer/${endpoint}`, "https://cms.test");
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await handleSourceRequest(harness.sources, new Request(url), {
         prefix: sourcePrefix,
         deps: {
@@ -655,18 +728,24 @@ async function sourceJson(
     params: Record<string, string> = {},
 ): Promise<Response> {
     const url = new URL(`${sourcePrefix}emailer/${endpoint}`, "https://cms.test");
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-    return await handleSourceRequest(harness.sources, new Request(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    }), {
-        prefix: sourcePrefix,
-        deps: {
-            fetchImpl: harness.sourceFetch,
-            resolveSecret: harness.resolveSecret,
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
+    return await handleSourceRequest(
+        harness.sources,
+        new Request(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+        }),
+        {
+            prefix: sourcePrefix,
+            deps: {
+                fetchImpl: harness.sourceFetch,
+                resolveSecret: harness.resolveSecret,
+            },
         },
-    });
+    );
 }
 
 function requestFromFetchInput(input: RequestInfo | URL, init?: RequestInit): Request {
@@ -681,7 +760,9 @@ function jsonResponse(data: unknown, status = 200, headers: Record<string, strin
 }
 
 function filterValue(value: string | null): { operator: string; value: string } | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     const [operator, ...rest] = value.split(".");
     return { operator: operator ?? "", value: rest.join(".") };
 }
@@ -691,7 +772,7 @@ function same(a: unknown, b: unknown): boolean {
 }
 
 async function jsonBody(response: Response): Promise<JsonRecord> {
-    return await response.json() as JsonRecord;
+    return (await response.json()) as JsonRecord;
 }
 
 async function okJson(response: Response): Promise<JsonRecord> {

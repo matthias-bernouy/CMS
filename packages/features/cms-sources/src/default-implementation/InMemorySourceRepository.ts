@@ -8,7 +8,7 @@ import { DuplicateSourceError } from "../core/errors";
  * stored data is plain JSON, so cloning is safe.
  */
 export class InMemorySourceRepository implements SourceRepository {
-    private _sources = new Map<string, Source>();   // keyed by source.urn
+    private _sources = new Map<string, Source>(); // keyed by source.urn
 
     async createSource(source: Source): Promise<Source> {
         if (this._sources.has(source.urn)) {
@@ -19,7 +19,9 @@ export class InMemorySourceRepository implements SourceRepository {
     }
 
     async updateSource(source: Source): Promise<Source | null> {
-        if (!this._sources.has(source.urn)) return null;
+        if (!this._sources.has(source.urn)) {
+            return null;
+        }
         this._sources.set(source.urn, structuredClone(source));
         return structuredClone(source);
     }
@@ -34,13 +36,15 @@ export class InMemorySourceRepository implements SourceRepository {
     }
 
     async getAllSources(): Promise<Source[]> {
-        return Array.from(this._sources.values(), p => structuredClone(p));
+        return Array.from(this._sources.values(), (p) => structuredClone(p));
     }
 
     async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         for (const source of this._sources.values()) {
-            const endpoint = source.endpoints.find(e => e.urn === urn);
-            if (endpoint) return structuredClone(endpoint);
+            const endpoint = source.endpoints.find((e) => e.urn === urn);
+            if (endpoint) {
+                return structuredClone(endpoint);
+            }
         }
         return null;
     }

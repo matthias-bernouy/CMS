@@ -10,12 +10,12 @@ export class InMemorySourceOverlayRepository implements SourceOverlayRepository 
 
     async getOverlaysForSource(sourceId: string): Promise<SourceOverlay[]> {
         return [...this.overlays.values()]
-            .filter(overlay => overlay.sourceId === sourceId)
-            .map(overlay => structuredClone(overlay));
+            .filter((overlay) => overlay.sourceId === sourceId)
+            .map((overlay) => structuredClone(overlay));
     }
 
     async getAllOverlays(): Promise<SourceOverlay[]> {
-        return [...this.overlays.values()].map(overlay => structuredClone(overlay));
+        return [...this.overlays.values()].map((overlay) => structuredClone(overlay));
     }
 
     async upsertOverlay(overlay: SourceOverlay): Promise<SourceOverlay> {

@@ -25,11 +25,13 @@ describe("@bernouy/cms-integrations dependencies", () => {
             artifacts: [sourceArtifact("link")],
         };
 
-        await expect(importIntegration(
-            { sources, secrets, installations },
-            { kind: "products-offers-link", answers: { apiKey: "secret" }, options: {} },
-            [definition],
-        )).rejects.toThrow(/requires integration "offers" to be installed/);
+        await expect(
+            importIntegration(
+                { sources, secrets, installations },
+                { kind: "products-offers-link", answers: { apiKey: "secret" }, options: {} },
+                [definition],
+            ),
+        ).rejects.toThrow(/requires integration "offers" to be installed/);
 
         expect(await secrets.listKeys()).toEqual([]);
         expect(await sources.getSource("urn:link")).toBeNull();
@@ -55,20 +57,25 @@ describe("@bernouy/cms-integrations dependencies", () => {
             label: "Link",
             dependencies: [{ name: "products", kind: "products" }],
             inputs: [],
-            artifacts: [{
-                type: "source",
-                source: {
-                    id: "{{dependencies.products.sourceId}}-link",
-                    meta: { name: "{{dependencies.products.answers.id}}" },
-                    endpoints: [{
-                        endpointId: "status",
-                        method: "GET",
-                        targetUrl: "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
-                        params: [],
-                        output: [{ status: "200", body: { type: "object" } }],
-                    }],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "{{dependencies.products.sourceId}}-link",
+                        meta: { name: "{{dependencies.products.answers.id}}" },
+                        endpoints: [
+                            {
+                                endpointId: "status",
+                                method: "GET",
+                                targetUrl:
+                                    "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
+                                params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
+                            },
+                        ],
+                    },
                 },
-            }],
+            ],
         };
 
         const result = await importIntegration(
@@ -100,13 +107,15 @@ describe("@bernouy/cms-integrations dependencies", () => {
             definitionSnapshot: {
                 kind: "products",
                 label: "Products",
-                inputs: [{
-                    name: "legacyPassword",
-                    label: "Legacy password",
-                    type: "password",
-                    required: true,
-                    secret: true,
-                }],
+                inputs: [
+                    {
+                        name: "legacyPassword",
+                        label: "Legacy password",
+                        type: "password",
+                        required: true,
+                        secret: true,
+                    },
+                ],
             },
             artifacts: [{ type: "source", id: "urn:catalog", action: "created" }],
             runs: [],
@@ -130,10 +139,9 @@ describe("@bernouy/cms-integrations dependencies", () => {
         };
 
         for (const namespace of ["secrets", "connectorSecrets"]) {
-            expect(() => resolveTemplate(
-                `{{dependencies.products.${namespace}.cmsApiKey}}`,
-                context,
-            )).toThrow(/dependency secrets are not accessible/);
+            expect(() => resolveTemplate(`{{dependencies.products.${namespace}.cmsApiKey}}`, context)).toThrow(
+                /dependency secrets are not accessible/,
+            );
         }
     });
 
@@ -159,7 +167,7 @@ describe("@bernouy/cms-integrations dependencies", () => {
             kind: "ban-dashboard",
             label: "BAN dashboard",
             dependencies: [{ name: "ban", kind: "ban" }],
-            artifacts: BAN_DEFINITION.artifacts?.filter(artifact => artifact.type === "dashboard"),
+            artifacts: BAN_DEFINITION.artifacts?.filter((artifact) => artifact.type === "dashboard"),
         };
 
         const result = await importIntegration(
@@ -168,9 +176,7 @@ describe("@bernouy/cms-integrations dependencies", () => {
             [definition],
         );
 
-        expect(result.artifacts).toEqual([
-            { type: "dashboard", id: "ban-addresses", action: "created" },
-        ]);
+        expect(result.artifacts).toEqual([{ type: "dashboard", id: "ban-addresses", action: "created" }]);
         expect(await dashboards.getDashboard("ban-addresses")).not.toBeNull();
     });
 });

@@ -76,8 +76,12 @@ export class DashboardWCell extends HTMLElement {
 
     private render(): void {
         const meta = this.shadowRoot?.querySelector<HTMLElement>("[data-meta]");
-        if (meta) meta.textContent = this.getAttribute("meta") ?? "";
+        if (meta) {
+            meta.textContent = this.getAttribute("meta") ?? "";
+        }
     }
 }
 
-if (!customElements.get("cms-dashboard-w-cell")) customElements.define("cms-dashboard-w-cell", DashboardWCell);
+if (!customElements.get("cms-dashboard-w-cell")) {
+    customElements.define("cms-dashboard-w-cell", DashboardWCell);
+}

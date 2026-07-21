@@ -36,11 +36,13 @@ function collectBunTestBindings(sourceFile: ts.SourceFile): {
     const supported = new Set(["test", "it", "describe", "suite"]);
     for (const statement of sourceFile.statements) {
         if (
-            !ts.isImportDeclaration(statement)
-            || !ts.isStringLiteralLike(statement.moduleSpecifier)
-            || statement.moduleSpecifier.text !== "bun:test"
-            || !statement.importClause?.namedBindings
-        ) continue;
+            !ts.isImportDeclaration(statement) ||
+            !ts.isStringLiteralLike(statement.moduleSpecifier) ||
+            statement.moduleSpecifier.text !== "bun:test" ||
+            !statement.importClause?.namedBindings
+        ) {
+            continue;
+        }
         const bindings = statement.importClause.namedBindings;
         if (ts.isNamespaceImport(bindings)) {
             namespaces.add(bindings.name.text);
@@ -48,7 +50,9 @@ function collectBunTestBindings(sourceFile: ts.SourceFile): {
         }
         for (const element of bindings.elements) {
             const imported = element.propertyName?.text ?? element.name.text;
-            if (supported.has(imported)) aliases.set(element.name.text, imported);
+            if (supported.has(imported)) {
+                aliases.set(element.name.text, imported);
+            }
         }
     }
     return { aliases, namespaces };
@@ -63,35 +67,49 @@ function focusedTestCall(
         return `${expression.text}(...)`;
     }
     const chain = callChain(expression);
-    if (!chain) return undefined;
+    if (!chain) {
+        return undefined;
+    }
     let testFunction = aliases.get(chain.root) ?? chain.root;
     let members = chain.members;
     if (namespaces.has(chain.root)) {
         const [namespaceMember, ...rest] = members;
-        if (!namespaceMember) return undefined;
+        if (!namespaceMember) {
+            return undefined;
+        }
         testFunction = namespaceMember;
         members = rest;
     }
-    if (!new Set(["test", "it", "describe", "suite"]).has(testFunction)) return undefined;
+    if (!new Set(["test", "it", "describe", "suite"]).has(testFunction)) {
+        return undefined;
+    }
     const modifier = members.find((member) => member === "only" || member === "focus");
     return modifier ? `${testFunction}.${modifier}(...)` : undefined;
 }
 
 function callChain(expression: ts.Expression): { root: string; members: string[] } | undefined {
-    if (ts.isIdentifier(expression)) return { root: expression.text, members: [] };
-    if (ts.isCallExpression(expression)) return callChain(expression.expression);
+    if (ts.isIdentifier(expression)) {
+        return { root: expression.text, members: [] };
+    }
+    if (ts.isCallExpression(expression)) {
+        return callChain(expression.expression);
+    }
     if (ts.isPropertyAccessExpression(expression)) {
         const chain = callChain(expression.expression);
-        if (chain) chain.members.push(expression.name.text);
+        if (chain) {
+            chain.members.push(expression.name.text);
+        }
         return chain;
     }
     if (
-        ts.isElementAccessExpression(expression)
-        && expression.argumentExpression
-        && ts.isStringLiteralLike(expression.argumentExpression)
+        ts.isElementAccessExpression(expression) &&
+        expression.argumentExpression &&
+        ts.isStringLiteralLike(expression.argumentExpression)
     ) {
         const chain = callChain(expression.expression);
-        if (chain) chain.members.push(expression.argumentExpression.text);
+        if (chain) {
+            chain.members.push(expression.argumentExpression.text);
+        }
         return chain;
     }
     return undefined;

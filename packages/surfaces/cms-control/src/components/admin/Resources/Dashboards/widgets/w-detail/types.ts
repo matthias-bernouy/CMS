@@ -10,12 +10,13 @@ type WDetailNestedFieldBase = {
     width?: string;
 };
 
-export type WDetailTableColumn = WDetailNestedFieldBase & (
-    | { editable?: false; type?: never; options?: never }
-    | { editable: true; type: "text" | "tokens"; options?: never }
-    | { editable: true; type: "select"; options: WDetailOption[] }
-    | { editable: true; type: "combobox"; options: WDetailOption[] }
-);
+export type WDetailTableColumn = WDetailNestedFieldBase &
+    (
+        | { editable?: false; type?: never; options?: never }
+        | { editable: true; type: "text" | "tokens"; options?: never }
+        | { editable: true; type: "select"; options: WDetailOption[] }
+        | { editable: true; type: "combobox"; options: WDetailOption[] }
+    );
 
 export type WDetailTableDerive = {
     type: "cartesian";
@@ -43,21 +44,42 @@ type WDetailReorderableListFieldBase = {
     placeholder?: string;
 };
 
-export type WDetailReorderableListField = WDetailReorderableListFieldBase & (
-    | { type: "text" | "checkbox"; options?: never }
-    | { type: "select"; options: WDetailOption[] }
-    | { type: "combobox"; options: WDetailOption[] }
-);
+export type WDetailReorderableListField = WDetailReorderableListFieldBase &
+    (
+        | { type: "text" | "checkbox"; options?: never }
+        | { type: "select"; options: WDetailOption[] }
+        | { type: "combobox"; options: WDetailOption[] }
+    );
 
-export type WDetailFieldValue = string | number | boolean | string[] | DashboardMediaItem[]
-    | WDetailTableRow[] | Record<string, unknown>;
+export type WDetailFieldValue =
+    | string
+    | number
+    | boolean
+    | string[]
+    | DashboardMediaItem[]
+    | WDetailTableRow[]
+    | Record<string, unknown>;
 
 export type WDetailField = {
     id: string;
     label: string;
     value: WDetailFieldValue;
-    input: "text" | "number" | "checkbox" | "textarea" | "select" | "combobox" | "tokens" | "chips"
-        | "media-list" | "table" | "reorderable-list" | "schema" | "image" | "readonly" | "badge";
+    input:
+        | "text"
+        | "number"
+        | "checkbox"
+        | "textarea"
+        | "select"
+        | "combobox"
+        | "tokens"
+        | "chips"
+        | "media-list"
+        | "table"
+        | "reorderable-list"
+        | "schema"
+        | "image"
+        | "readonly"
+        | "badge";
     options?: WDetailOption[];
     columns?: WDetailTableColumn[];
     derive?: WDetailTableDerive;

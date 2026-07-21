@@ -51,10 +51,9 @@ export type {
 } from "@bernouy/cms-content/editor";
 
 export function registerEditor(entry: EditorCatalogRegistration): void {
-    (globalThis as { window?: Window & { p9rEditor?: { registerEditor(entry: EditorCatalogRegistration): void } } })
-        .window
-        ?.p9rEditor
-        ?.registerEditor(entry);
+    (
+        globalThis as { window?: Window & { p9rEditor?: { registerEditor(entry: EditorCatalogRegistration): void } } }
+    ).window?.p9rEditor?.registerEditor(entry);
 }
 
 export function registerEditor_opaque(entry: EditorCatalogRegistration = {}): void {

@@ -32,29 +32,49 @@ export function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-
     const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens) row.setAttribute("collection", widget.selection.opens);
+    if (widget.selection?.opens) {
+        row.setAttribute("collection", widget.selection.opens);
+    }
     for (const column of widget.columns) {
         const cell = document.createElement("cms-dashboard-w-cell");
         cell.setAttribute("column", column.id);
-        if (column.primary) cell.toggleAttribute("primary", true);
-        if (column.primary) cell.setAttribute("meta", "{{ row.id }}");
-        if (column.format === "badge") cell.setAttribute("tone", "badge");
+        if (column.primary) {
+            cell.toggleAttribute("primary", true);
+        }
+        if (column.primary) {
+            cell.setAttribute("meta", "{{ row.id }}");
+        }
+        if (column.format === "badge") {
+            cell.setAttribute("tone", "badge");
+        }
         cell.textContent = bindingPath("row", column.path);
         row.append(cell);
     }
     return row;
 }
 
-export function navigationItemsTemplate(widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>): HTMLElement {
+export function navigationItemsTemplate(
+    widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
+): HTMLElement {
     const item = document.createElement("cms-dashboard-w-navigation-item");
     item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     item.setAttribute("row-key", bindingPath("row", widget.rowKey));
     item.setAttribute("title", bindingPath("row", widget.item.title.path));
-    if (widget.item.subtitle) item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
-    if (widget.item.icon) item.setAttribute("icon", widget.item.icon);
-    if (widget.item.badge) item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
-    if (widget.selection?.opens) item.setAttribute("collection", widget.selection.opens);
-    if (widget.reorderable) item.toggleAttribute("reorderable", true);
+    if (widget.item.subtitle) {
+        item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
+    }
+    if (widget.item.icon) {
+        item.setAttribute("icon", widget.item.icon);
+    }
+    if (widget.item.badge) {
+        item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
+    }
+    if (widget.selection?.opens) {
+        item.setAttribute("collection", widget.selection.opens);
+    }
+    if (widget.reorderable) {
+        item.toggleAttribute("reorderable", true);
+    }
     return item;
 }
 
@@ -64,8 +84,13 @@ function sourceUrl(
     vars: RuntimeVars,
 ): string {
     const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) url.searchParams.set(key, value);
+    const url = new URL(
+        route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`),
+        window.location.origin,
+    );
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
+        url.searchParams.set(key, value);
+    }
     return `${url.pathname}${url.search}`;
 }
 
@@ -111,6 +136,8 @@ function sourceErrorState(): HTMLElement {
 
 function retrySource(event: Event): void {
     const target = event.target;
-    if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]")) return;
+    if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]")) {
+        return;
+    }
     target.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
 }

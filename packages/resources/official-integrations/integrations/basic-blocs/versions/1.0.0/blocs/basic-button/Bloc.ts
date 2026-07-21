@@ -38,12 +38,16 @@ export class BasicButton extends HTMLElement {
             this.removeAttribute("disabled");
             return;
         }
-        if (this.isConnected) this.render();
+        if (this.isConnected) {
+            this.render();
+        }
     }
 
     formDisabledCallback(disabled) {
         this.formDisabled = disabled;
-        if (this.isConnected) this.render();
+        if (this.isConnected) {
+            this.render();
+        }
     }
 
     get name() {
@@ -79,9 +83,7 @@ export class BasicButton extends HTMLElement {
         const action = this.getAttribute("action");
         const isLink = action === "link" || (action === null && href !== null);
         const tag = isLink ? "a" : "button";
-        const attributes = isLink
-            ? this.linkAttributes(href || "")
-            : this.buttonAttributes();
+        const attributes = isLink ? this.linkAttributes(href || "") : this.buttonAttributes();
 
         this.root.innerHTML = `
             <style>
@@ -206,7 +208,9 @@ export class BasicButton extends HTMLElement {
         for (const side of ["left", "right"]) {
             const slot = this.root.querySelector(`slot[name="icon-${side}"]`);
             const wrapper = this.root.querySelector(`[part="icon-${side}"]`);
-            if (slot && wrapper) wrapper.hidden = slot.assignedNodes({ flatten: true }).length === 0;
+            if (slot && wrapper) {
+                wrapper.hidden = slot.assignedNodes({ flatten: true }).length === 0;
+            }
         }
     };
 
@@ -218,22 +222,29 @@ export class BasicButton extends HTMLElement {
             ["text-color", "--cms-button-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) rule.setProperty(property, value);
-            else rule.removeProperty(property);
+            if (value) {
+                rule.setProperty(property, value);
+            } else {
+                rule.removeProperty(property);
+            }
         }
     }
 
-    onClick = event => {
+    onClick = (event) => {
         if (this.disabled) {
             event.preventDefault();
             return;
         }
-        if (this.getAttribute("action") === "link" || this.getAttribute("href")) return;
+        if (this.getAttribute("action") === "link" || this.getAttribute("href")) {
+            return;
+        }
         const type = this.getAttribute("type") || "button";
         const form = this.internals.form || this.closest("form");
         if (type === "submit") {
             event.preventDefault();
-            if (form) this.requestFormSubmit(form);
+            if (form) {
+                this.requestFormSubmit(form);
+            }
         } else if (type === "reset") {
             event.preventDefault();
             form?.reset();
@@ -261,11 +272,7 @@ export class BasicButton extends HTMLElement {
 }
 
 function escapeAttribute(value) {
-    return value
-        .replaceAll("&", "&amp;")
-        .replaceAll("\"", "&quot;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+    return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", BasicButton);

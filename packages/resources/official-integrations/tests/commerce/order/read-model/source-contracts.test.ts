@@ -39,22 +39,20 @@ describe("commerce order strict Source contracts", () => {
         for (const [endpointId, path, options, expected] of cases) {
             const response = await requestCommerce(path, options);
             expect({ endpointId, status: response.status }).toEqual({ endpointId, status: 200 });
-            expect(projectStrictDataShape(
-                await response.json(),
-                responseBody(endpoints, endpointId),
-                "response",
-                { enforceRequired: false },
-            )).toEqual(expected);
+            expect(
+                projectStrictDataShape(await response.json(), responseBody(endpoints, endpointId), "response", {
+                    enforceRequired: false,
+                }),
+            ).toEqual(expected);
         }
     });
 
     test("keeps the current methods and access declarations explicit", async () => {
         const endpoints = await sourceEndpoints();
-        const actual = ["myOrders", "myOrder", "mySales", "mySale", "orders", "order"]
-            .map(endpointId => {
-                const endpoint = endpoints.find(candidate => candidate.endpointId === endpointId);
-                return { endpointId, method: endpoint?.method, access: endpoint?.access ?? null };
-            });
+        const actual = ["myOrders", "myOrder", "mySales", "mySale", "orders", "order"].map((endpointId) => {
+            const endpoint = endpoints.find((candidate) => candidate.endpointId === endpointId);
+            return { endpointId, method: endpoint?.method, access: endpoint?.access ?? null };
+        });
 
         expect(actual).toEqual([
             { endpointId: "myOrders", method: "GET", access: "auth" },
@@ -67,10 +65,7 @@ describe("commerce order strict Source contracts", () => {
     });
 });
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../../integrations/commerce/versions/1.0.0/definition.json");
 
 async function sourceEndpoints(): Promise<Endpoint[]> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));
@@ -78,8 +73,11 @@ async function sourceEndpoints(): Promise<Endpoint[]> {
 }
 
 function responseBody(endpoints: Endpoint[], endpointId: string): DataShape {
-    const body = endpoints.find(endpoint => endpoint.endpointId === endpointId)
-        ?.output?.find(output => output.status === "200")?.body;
-    if (!body) throw new Error(`Missing 200 response contract for ${endpointId}`);
+    const body = endpoints
+        .find((endpoint) => endpoint.endpointId === endpointId)
+        ?.output?.find((output) => output.status === "200")?.body;
+    if (!body) {
+        throw new Error(`Missing 200 response contract for ${endpointId}`);
+    }
     return body;
 }

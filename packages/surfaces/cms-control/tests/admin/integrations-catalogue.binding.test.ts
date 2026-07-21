@@ -16,7 +16,9 @@ describe("integration catalogue binding", () => {
         expect(admin.shadowRoot).toBeNull();
 
         const source = admin.querySelector<HTMLElement>("[data-catalogue-source]")!;
-        expect(source.getAttribute("cms-source")).toBe("/cms/api/integrations/catalogue?q=#{integrationSearch}&category=#{integrationCategory} as catalogue");
+        expect(source.getAttribute("cms-source")).toBe(
+            "/cms/api/integrations/catalogue?q=#{integrationSearch}&category=#{integrationCategory} as catalogue",
+        );
         expect(source.getAttribute("cms-reload-on")).toBe("integration:updated");
 
         const template = source.querySelector("template")!;

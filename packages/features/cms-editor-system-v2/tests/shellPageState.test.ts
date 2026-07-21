@@ -12,7 +12,9 @@ import {
 import type { EditorDataSource } from "../src/runtime";
 
 function installDom(): void {
-    const { document, customElements, Element, HTMLElement, CustomEvent, Event, Node } = parseHTML("<!DOCTYPE html><html><body></body></html>");
+    const { document, customElements, Element, HTMLElement, CustomEvent, Event, Node } = parseHTML(
+        "<!DOCTYPE html><html><body></body></html>",
+    );
     Object.assign(globalThis, {
         document,
         customElements,
@@ -26,13 +28,13 @@ function installDom(): void {
 }
 
 const workspaceDomGlobals = {
-    document:              globalThis.document,
-    customElements:        globalThis.customElements,
-    Element:               globalThis.Element,
-    HTMLElement:           globalThis.HTMLElement,
-    CustomEvent:           globalThis.CustomEvent,
-    Event:                 globalThis.Event,
-    Node:                  globalThis.Node,
+    document: globalThis.document,
+    customElements: globalThis.customElements,
+    Element: globalThis.Element,
+    HTMLElement: globalThis.HTMLElement,
+    CustomEvent: globalThis.CustomEvent,
+    Event: globalThis.Event,
+    Node: globalThis.Node,
     requestAnimationFrame: globalThis.requestAnimationFrame,
 };
 
@@ -53,10 +55,9 @@ function dataSource(): EditorDataSource {
 describe("Shell page state bindings", () => {
     test("data source picker emits page state params", async () => {
         installDom();
-        const {
-            DATA_SOURCE_PICKER_SELECT_EVENT,
-            DataSourcePicker,
-        } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
+        const { DATA_SOURCE_PICKER_SELECT_EVENT, DataSourcePicker } = await import(
+            "../src/components/Layout/DataSourcePicker/DataSourcePicker"
+        );
         const picker = new DataSourcePicker();
         let detail: DataSourcePickerSelectDetail | null = null;
         picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, (event) => {
@@ -97,25 +98,27 @@ describe("Shell page state bindings", () => {
         const picker = new DataSourcePicker();
         document.body.append(picker);
 
-        picker.open([{
-            label: "Log in",
-            url: "/.cms/sources/system-auth/login",
-            method: "POST",
-            provider: "system-auth",
-            providerLabel: "Authentication",
-            body: {
-                contentType: "application/json",
-                fields: [
-                    { path: "email", type: "string", required: true },
-                    { path: "password", type: "string", required: true },
-                    { path: "returnTo", type: "string" },
-                ],
+        picker.open([
+            {
+                label: "Log in",
+                url: "/.cms/sources/system-auth/login",
+                method: "POST",
+                provider: "system-auth",
+                providerLabel: "Authentication",
+                body: {
+                    contentType: "application/json",
+                    fields: [
+                        { path: "email", type: "string", required: true },
+                        { path: "password", type: "string", required: true },
+                        { path: "returnTo", type: "string" },
+                    ],
+                },
+                fields: [{ path: "subject", type: "object" }],
             },
-            fields: [{ path: "subject", type: "object" }],
-        }]);
+        ]);
 
         const details = picker.shadowRoot!.querySelector<HTMLElement>(".details")!;
-        const headings = Array.from(details.querySelectorAll(".details-eyebrow")).map(node => node.textContent);
+        const headings = Array.from(details.querySelectorAll(".details-eyebrow")).map((node) => node.textContent);
         expect(headings).toEqual(["Request body", "Response fields"]);
         expect(details.textContent).toContain("email");
         expect(details.textContent).toContain("password");
@@ -125,31 +128,34 @@ describe("Shell page state bindings", () => {
 
     test("data source picker emits request body bindings", async () => {
         installDom();
-        const {
-            DATA_SOURCE_PICKER_SELECT_EVENT,
-            DataSourcePicker,
-        } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
+        const { DATA_SOURCE_PICKER_SELECT_EVENT, DataSourcePicker } = await import(
+            "../src/components/Layout/DataSourcePicker/DataSourcePicker"
+        );
         const picker = new DataSourcePicker();
         let detail: DataSourcePickerSelectDetail | null = null;
         picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, (event) => {
             detail = (event as CustomEvent<DataSourcePickerSelectDetail>).detail;
         });
         document.body.append(picker);
-        picker.open([{
-            label: "Log in",
-            url: "/login",
-            method: "POST",
-            body: {
-                contentType: "application/json",
-                fields: [
-                    { path: "email", type: "string", required: true },
-                    { path: "returnTo", type: "string" },
-                ],
+        picker.open([
+            {
+                label: "Log in",
+                url: "/login",
+                method: "POST",
+                body: {
+                    contentType: "application/json",
+                    fields: [
+                        { path: "email", type: "string", required: true },
+                        { path: "returnTo", type: "string" },
+                    ],
+                },
+                fields: [],
             },
-            fields: [],
-        }]);
+        ]);
 
-        const rows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>('.param-row[data-binding-kind="body"]'));
+        const rows = Array.from(
+            picker.shadowRoot!.querySelectorAll<HTMLElement>('.param-row[data-binding-kind="body"]'),
+        );
         rows[0]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 1;
         rows[0]!.querySelector<HTMLInputElement>(".param-value")!.value = "ada@example.com";
         rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 0;
@@ -173,31 +179,35 @@ describe("Shell page state bindings", () => {
         const { DataSourcePicker } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
         const picker = new DataSourcePicker();
         document.body.append(picker);
-        picker.open([{
-            label: "Create customer",
-            url: "/customers",
-            method: "POST",
-            body: {
-                contentType: "application/json",
-                fields: [
-                    { path: "email", type: "string", required: true },
-                    {
-                        path: "profile",
-                        type: "object",
-                        children: [{ path: "firstName", type: "string" }],
-                    },
-                    {
-                        path: "items",
-                        type: "array",
-                        children: [{ path: "sku", type: "string" }],
-                    },
-                ],
+        picker.open([
+            {
+                label: "Create customer",
+                url: "/customers",
+                method: "POST",
+                body: {
+                    contentType: "application/json",
+                    fields: [
+                        { path: "email", type: "string", required: true },
+                        {
+                            path: "profile",
+                            type: "object",
+                            children: [{ path: "firstName", type: "string" }],
+                        },
+                        {
+                            path: "items",
+                            type: "array",
+                            children: [{ path: "sku", type: "string" }],
+                        },
+                    ],
+                },
+                fields: [],
             },
-            fields: [],
-        }]);
+        ]);
 
-        const bodyRows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>('.param-row[data-binding-kind="body"]'));
-        expect(bodyRows.map(row => row.dataset.paramName)).toEqual(["email"]);
+        const bodyRows = Array.from(
+            picker.shadowRoot!.querySelectorAll<HTMLElement>('.param-row[data-binding-kind="body"]'),
+        );
+        expect(bodyRows.map((row) => row.dataset.paramName)).toEqual(["email"]);
         expect(picker.shadowRoot!.querySelector<HTMLElement>(".details")!.textContent).toContain("firstName");
         expect(picker.shadowRoot!.querySelector<HTMLElement>(".details")!.textContent).toContain("sku");
     });
@@ -207,22 +217,28 @@ describe("Shell page state bindings", () => {
         const { DataSourcePicker } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
         const picker = new DataSourcePicker();
         document.body.append(picker);
-        picker.open([{
-            label: "Log in",
-            url: "/login",
-            method: "POST",
-            body: {
-                contentType: "application/json",
-                fields: [{ path: "token", type: "string" }],
+        picker.open(
+            [
+                {
+                    label: "Log in",
+                    url: "/login",
+                    method: "POST",
+                    body: {
+                        contentType: "application/json",
+                        fields: [{ path: "token", type: "string" }],
+                    },
+                    fields: [],
+                },
+            ],
+            undefined,
+            {
+                initialBinding: {
+                    url: "/login",
+                    method: "POST",
+                    body: { token: { from: "state", name: "auth.token" } },
+                },
             },
-            fields: [],
-        }], undefined, {
-            initialBinding: {
-                url: "/login",
-                method: "POST",
-                body: { token: { from: "state", name: "auth.token" } },
-            },
-        });
+        );
 
         const row = picker.shadowRoot!.querySelector<HTMLElement>('.param-row[data-binding-kind="body"]')!;
         expect(row.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(2);
@@ -235,8 +251,9 @@ describe("Shell page state bindings", () => {
         input.setAttribute("name", "address");
         const editor = new Editor(input);
 
-        expect(pageStateSettings(editor)?.settings.map(setting => [setting.attribute, setting.defaultValue]))
-            .toEqual([[PAGE_STATE_ENABLE_SETTING, false]]);
+        expect(pageStateSettings(editor)?.settings.map((setting) => [setting.attribute, setting.defaultValue])).toEqual(
+            [[PAGE_STATE_ENABLE_SETTING, false]],
+        );
 
         applyPageStateSetting(editor, { attribute: PAGE_STATE_ENABLE_SETTING }, true);
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)).toBe("address");
@@ -259,12 +276,13 @@ describe("Shell page state bindings", () => {
 
         expect(input.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState)).toBe(true);
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)).toBe("");
-        expect(pageStateSettings(editor)?.settings.map(setting => [setting.attribute, setting.defaultValue]))
-            .toEqual([
+        expect(pageStateSettings(editor)?.settings.map((setting) => [setting.attribute, setting.defaultValue])).toEqual(
+            [
                 [PAGE_STATE_ENABLE_SETTING, true],
                 [PAGE_STATE_USE_NAME_SETTING, false],
                 [PAGE_STATE_NAME_SETTING, ""],
-            ]);
+            ],
+        );
 
         applyPageStateSetting(editor, { attribute: PAGE_STATE_NAME_SETTING }, "delivery.address");
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)).toBe("delivery.address");

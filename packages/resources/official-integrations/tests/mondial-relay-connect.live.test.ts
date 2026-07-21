@@ -119,7 +119,7 @@ function connectShipmentXml(options: ConnectShipmentXmlOptions): string {
 }
 
 function xmlStatusCodes(body: string): string[] {
-    return Array.from(body.matchAll(/<Status\b[^>]*\bCode="([^"]*)"/g)).map(match => match[1] ?? "");
+    return Array.from(body.matchAll(/<Status\b[^>]*\bCode="([^"]*)"/g)).map((match) => match[1] ?? "");
 }
 
 function xmlTag(body: string, tag: string): string {
@@ -152,7 +152,7 @@ function decodeXml(value: string): string {
     return value
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, "\"")
+        .replace(/&quot;/g, '"')
         .replace(/&apos;/g, "'")
         .replace(/&amp;/g, "&");
 }

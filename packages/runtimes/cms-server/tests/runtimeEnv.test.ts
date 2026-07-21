@@ -24,15 +24,17 @@ describe("runtime env validation", () => {
 
     test.failing("parses listener hosts with wildcard production defaults", () => {
         expect(readRuntimeEnv(validEnv())).toMatchObject({
-            CONTROL_HOST:  "0.0.0.0",
+            CONTROL_HOST: "0.0.0.0",
             DELIVERY_HOST: "0.0.0.0",
         });
-        expect(readRuntimeEnv({
-            ...validEnv(),
-            CONTROL_HOST:  "127.0.0.1",
-            DELIVERY_HOST: "::1",
-        })).toMatchObject({
-            CONTROL_HOST:  "127.0.0.1",
+        expect(
+            readRuntimeEnv({
+                ...validEnv(),
+                CONTROL_HOST: "127.0.0.1",
+                DELIVERY_HOST: "::1",
+            }),
+        ).toMatchObject({
+            CONTROL_HOST: "127.0.0.1",
             DELIVERY_HOST: "::1",
         });
     });
@@ -40,14 +42,17 @@ describe("runtime env validation", () => {
     test("rejects invalid and duplicate ports", () => {
         expect(() => parsePort("abc", "CONTROL_PORT", 3000)).toThrow(/integer port/);
         expect(() => parsePort("65536", "CONTROL_PORT", 3000)).toThrow(/between 1 and 65535/);
-        expect(() => readRuntimeEnv({ ...validEnv(), CONTROL_PORT: "4000", DELIVERY_PORT: "4000" }))
-            .toThrow(/must be distinct/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CONTROL_PORT: "4000", DELIVERY_PORT: "4000" })).toThrow(
+            /must be distinct/,
+        );
     });
 
     test("rejects public and override URLs outside http or https", () => {
-        expect(() => readRuntimeEnv({ ...validEnv(), CONTROL_PUBLIC_URL: "ftp://admin.example.com" }))
-            .toThrow(/CONTROL_PUBLIC_URL must use http/);
-        expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_PASSWORD_RESET_URL: "not a url" }))
-            .toThrow(/CMS_AUTH_PASSWORD_RESET_URL must be a valid URL/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CONTROL_PUBLIC_URL: "ftp://admin.example.com" })).toThrow(
+            /CONTROL_PUBLIC_URL must use http/,
+        );
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_PASSWORD_RESET_URL: "not a url" })).toThrow(
+            /CMS_AUTH_PASSWORD_RESET_URL must be a valid URL/,
+        );
     });
 });

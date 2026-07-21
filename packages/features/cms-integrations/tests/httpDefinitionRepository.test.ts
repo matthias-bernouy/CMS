@@ -10,10 +10,24 @@ describe("HttpIntegrationDefinitionRepository", () => {
                 const url = input instanceof URL ? input : new URL(String(input));
                 calls.push(`${url.pathname}${url.search}`);
                 if (url.pathname === "/base/api/integrations") {
-                    return json([{ kind: "demo", label: "Demo", icon: { path: "assets/icon.svg" }, versions: ["1.0.0"], stable: "1.0.0" }]);
+                    return json([
+                        {
+                            kind: "demo",
+                            label: "Demo",
+                            icon: { path: "assets/icon.svg" },
+                            versions: ["1.0.0"],
+                            stable: "1.0.0",
+                        },
+                    ]);
                 }
                 if (url.pathname === "/base/api/integrations/definition") {
-                    return json({ kind: "demo", label: "Demo", version: "1.0.0", icon: { path: "assets/icon.svg" }, inputs: [] });
+                    return json({
+                        kind: "demo",
+                        label: "Demo",
+                        version: "1.0.0",
+                        icon: { path: "assets/icon.svg" },
+                        inputs: [],
+                    });
                 }
                 if (url.pathname === "/base/api/integrations/index") {
                     return json({
@@ -21,11 +35,15 @@ describe("HttpIntegrationDefinitionRepository", () => {
                         label: "Demo",
                         icon: { path: "assets/icon.svg" },
                         stable: "1.0.0",
-                        versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
+                        versions: [
+                            { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+                        ],
                     });
                 }
                 if (url.pathname === "/base/api/integrations/versions") {
-                    return json([{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }]);
+                    return json([
+                        { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+                    ]);
                 }
                 if (url.pathname === "/base/api/integrations/asset") {
                     return new Response("<svg></svg>", { headers: { "content-type": "image/svg+xml; charset=utf-8" } });
@@ -34,8 +52,16 @@ describe("HttpIntegrationDefinitionRepository", () => {
             },
         });
 
-        expect(await repo.list()).toEqual([{ kind: "demo", label: "Demo", icon: { path: "assets/icon.svg" }, versions: ["1.0.0"], stable: "1.0.0" }]);
-        expect(await repo.get("demo", "1.0.0")).toEqual({ kind: "demo", label: "Demo", version: "1.0.0", icon: { path: "assets/icon.svg" }, inputs: [] });
+        expect(await repo.list()).toEqual([
+            { kind: "demo", label: "Demo", icon: { path: "assets/icon.svg" }, versions: ["1.0.0"], stable: "1.0.0" },
+        ]);
+        expect(await repo.get("demo", "1.0.0")).toEqual({
+            kind: "demo",
+            label: "Demo",
+            version: "1.0.0",
+            icon: { path: "assets/icon.svg" },
+            inputs: [],
+        });
         expect(await repo.getIndex("demo")).toEqual({
             kind: "demo",
             label: "Demo",

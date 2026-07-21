@@ -1,9 +1,4 @@
-import {
-    executeEndpoint,
-    makeEndpointUrn,
-    systemSourceUrnOf,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { executeEndpoint, makeEndpointUrn, systemSourceUrnOf, type SourceEndpoint } from "@bernouy/cms-sources";
 import type { CmsFunction, FunctionCall } from "../../interfaces/FunctionDefinition";
 import type { ExecuteFunctionOptions } from "../executeFunction";
 import {
@@ -31,13 +26,21 @@ export async function executeFunctionCall(
     };
     try {
         const endpoint = await options.sources.getEndpoint(makeEndpointUrn(call.source, call.endpoint));
-        if (!endpoint) throw new FunctionExecutionError(`Function call endpoint not found: ${call.source}.${call.endpoint}`);
-        if (systemSourceUrnOf(endpoint.urn)) throw new FunctionExecutionError(`Function call cannot target system endpoint: ${endpoint.urn}`);
-        if (endpoint.responseKind && endpoint.responseKind !== "json") throw new FunctionExecutionError(`Function call target is not JSON: ${endpoint.urn}`);
+        if (!endpoint) {
+            throw new FunctionExecutionError(`Function call endpoint not found: ${call.source}.${call.endpoint}`);
+        }
+        if (systemSourceUrnOf(endpoint.urn)) {
+            throw new FunctionExecutionError(`Function call cannot target system endpoint: ${endpoint.urn}`);
+        }
+        if (endpoint.responseKind && endpoint.responseKind !== "json") {
+            throw new FunctionExecutionError(`Function call target is not JSON: ${endpoint.urn}`);
+        }
 
         const mappings = await resolveCallMappings(definition, call, endpoint, vars, options);
         const response = await executeEndpoint(endpoint, callRequest(endpoint, mappings), options.deps);
-        if (!response.ok) throw await callFailureError(call.endpoint, response, options);
+        if (!response.ok) {
+            throw await callFailureError(call.endpoint, response, options);
+        }
         if (endpoint.effects?.invalidatesSchema) {
             options.sources.invalidateSchema?.({ sourceId: call.source });
         }
@@ -49,7 +52,9 @@ export async function executeFunctionCall(
         if (truncated) {
             throw new RecoverableFunctionCallError(`Function call "${call.endpoint}" response is too large`);
         }
-        if (!text) return null;
+        if (!text) {
+            return null;
+        }
         try {
             return JSON.parse(text) as unknown;
         } catch {
@@ -63,24 +68,35 @@ export async function executeFunctionCall(
     }
 }
 
-async function callFailureError(endpoint: string, response: Response, options: ExecuteFunctionOptions): Promise<RecoverableFunctionCallError> {
+async function callFailureError(
+    endpoint: string,
+    response: Response,
+    options: ExecuteFunctionOptions,
+): Promise<RecoverableFunctionCallError> {
     const message = `Function call "${endpoint}" failed with status ${response.status}`;
     const correlationId = response.headers.get("x-correlation-id") ?? undefined;
     const context: FunctionExecutionErrorContext = { callStatus: response.status };
     if (!options.includeCallErrorDetails) {
-        if (response.body) await response.body.cancel().catch(() => undefined);
+        if (response.body) {
+            await response.body.cancel().catch(() => undefined);
+        }
         return new RecoverableFunctionCallError(message, 502, undefined, correlationId, context);
     }
 
     const contentType = response.headers.get("content-type") ?? "";
-    const { text, truncated } = await readLimitedText(response, options.maxCallErrorBytes ?? MAX_FUNCTION_CALL_ERROR_BYTES);
+    const { text, truncated } = await readLimitedText(
+        response,
+        options.maxCallErrorBytes ?? MAX_FUNCTION_CALL_ERROR_BYTES,
+    );
     const detail: Record<string, unknown> = {
         call: endpoint,
         status: response.status,
         contentType,
         body: parseErrorBody(text, contentType),
     };
-    if (truncated) detail.truncated = true;
+    if (truncated) {
+        detail.truncated = true;
+    }
     return new RecoverableFunctionCallError(message, 502, detail, correlationId, context);
 }
 
@@ -89,7 +105,9 @@ function contextualizeFunctionError(
     context: FunctionExecutionErrorContext,
 ): FunctionExecutionError {
     const contextual = withFunctionExecutionErrorContext(error, context);
-    if (!(error instanceof RecoverableFunctionCallError)) return contextual;
+    if (!(error instanceof RecoverableFunctionCallError)) {
+        return contextual;
+    }
     return new RecoverableFunctionCallError(
         contextual.message,
         contextual.status,
@@ -100,7 +118,9 @@ function contextualizeFunctionError(
 }
 
 async function readLimitedText(response: Response, maxBytes: number): Promise<{ text: string; truncated: boolean }> {
-    if (!response.body) return { text: "", truncated: false };
+    if (!response.body) {
+        return { text: "", truncated: false };
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -110,12 +130,16 @@ async function readLimitedText(response: Response, maxBytes: number): Promise<{ 
 
     while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+            break;
+        }
 
         bytes += value.byteLength;
         if (bytes > maxBytes) {
             const remaining = maxBytes - (bytes - value.byteLength);
-            if (remaining > 0) text += decoder.decode(value.slice(0, remaining), { stream: true });
+            if (remaining > 0) {
+                text += decoder.decode(value.slice(0, remaining), { stream: true });
+            }
             truncated = true;
             await reader.cancel();
             break;
@@ -128,8 +152,12 @@ async function readLimitedText(response: Response, maxBytes: number): Promise<{ 
 }
 
 function parseErrorBody(text: string, contentType: string): unknown {
-    if (!text) return null;
-    if (!contentType.includes("application/json")) return text;
+    if (!text) {
+        return null;
+    }
+    if (!contentType.includes("application/json")) {
+        return text;
+    }
     try {
         return JSON.parse(text) as unknown;
     } catch {
@@ -137,13 +165,12 @@ function parseErrorBody(text: string, contentType: string): unknown {
     }
 }
 
-function callRequest(
-    endpoint: SourceEndpoint,
-    mappings: { params: Record<string, unknown>; body: unknown },
-): Request {
+function callRequest(endpoint: SourceEndpoint, mappings: { params: Record<string, unknown>; body: unknown }): Request {
     const url = new URL("https://cms.function/internal");
     for (const [key, value] of Object.entries(mappings.params)) {
-        if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+        if (value !== undefined && value !== null && value !== "") {
+            url.searchParams.set(key, String(value));
+        }
     }
     const body = mappings.body;
     return new Request(url, {

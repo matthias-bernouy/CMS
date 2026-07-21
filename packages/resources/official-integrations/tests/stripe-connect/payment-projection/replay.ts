@@ -6,9 +6,7 @@ import {
     type CreatePaymentProjectionHarness,
 } from "./harness";
 
-export function registerPaymentProjectionReplayContracts(
-    createHarness: CreatePaymentProjectionHarness,
-): void {
+export function registerPaymentProjectionReplayContracts(createHarness: CreatePaymentProjectionHarness): void {
     describe("stripe-connect payment projection replay contracts", () => {
         test("keeps provider freshness while deduplicating an unchanged replay", async () => {
             const fixture = await createPaymentProjectionFixture(createHarness, "projection-replay");
@@ -44,7 +42,7 @@ export function registerPaymentProjectionReplayContracts(
             );
             const bodies = await Promise.all(responses.map(successfulJson));
 
-            const stableDtos = bodies.map(body => ({
+            const stableDtos = bodies.map((body) => ({
                 paymentId: body.paymentId,
                 paymentStatus: body.paymentStatus,
                 commercePaymentStatus: body.commercePaymentStatus,
@@ -53,29 +51,27 @@ export function registerPaymentProjectionReplayContracts(
                 actualStripeProcessingFeeAmount: body.actualStripeProcessingFeeAmount,
                 paidAt: body.paidAt,
             }));
-            expect(stableDtos).toEqual(Array(concurrentRefreshCount).fill({
-                paymentId: fixture.paymentId,
-                paymentStatus: "succeeded",
-                commercePaymentStatus: "succeeded",
-                settlementStatus: "held",
-                stripeChargeId: "ch_1",
-                actualStripeProcessingFeeAmount: 65,
-                paidAt: bodies[0]?.paidAt,
-            }));
-            expect(bodies.every(body => typeof body.lastProviderSyncAt === "string"))
-                .toBe(true);
+            expect(stableDtos).toEqual(
+                Array(concurrentRefreshCount).fill({
+                    paymentId: fixture.paymentId,
+                    paymentStatus: "succeeded",
+                    commercePaymentStatus: "succeeded",
+                    settlementStatus: "held",
+                    stripeChargeId: "ch_1",
+                    actualStripeProcessingFeeAmount: 65,
+                    paidAt: bodies[0]?.paidAt,
+                }),
+            );
+            expect(bodies.every((body) => typeof body.lastProviderSyncAt === "string")).toBe(true);
             const calls = postgrestCalls(fixture);
-            expect(calls.filter(([, table]) => table === "payments"))
-                .toHaveLength(concurrentRefreshCount);
-            expect(calls.filter(([, table]) =>
-                table === "rpc/apply_payment_provider_projection"
-            )).toHaveLength(concurrentRefreshCount);
+            expect(calls.filter(([, table]) => table === "payments")).toHaveLength(concurrentRefreshCount);
+            expect(calls.filter(([, table]) => table === "rpc/apply_payment_provider_projection")).toHaveLength(
+                concurrentRefreshCount,
+            );
             expect(fixture.rest.stripeRequests).toHaveLength(concurrentRefreshCount);
-            const persisted = fixture.rest.rows("payments").find(row => row.id === fixture.paymentId);
-            expect(bodies.map(body => body.lastProviderSyncAt))
-                .toContain(persisted?.last_provider_sync_at);
-            expect(fixture.rest.rows("commerce_projection_outbox"))
-                .toHaveLength(initialProjectionCount + 1);
+            const persisted = fixture.rest.rows("payments").find((row) => row.id === fixture.paymentId);
+            expect(bodies.map((body) => body.lastProviderSyncAt)).toContain(persisted?.last_provider_sync_at);
+            expect(fixture.rest.rows("commerce_projection_outbox")).toHaveLength(initialProjectionCount + 1);
         });
     });
 }

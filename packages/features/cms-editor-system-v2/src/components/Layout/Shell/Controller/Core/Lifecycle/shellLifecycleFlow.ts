@@ -45,14 +45,14 @@ export function disconnectShellController(context: ShellLifecycleContext): void 
 
 export function lifecycleTargetsFor(context: ShellLifecycleContext): ShellLifecycleTargets {
     return lifecycleTargets({
-        structureTree:     context.refs.structureTree,
-        settings:          context.refs.settings,
-        repeatPicker:      context.refs.repeatPicker,
-        canvas:            context.refs.canvas,
-        topBar:            context.refs.topBar,
+        structureTree: context.refs.structureTree,
+        settings: context.refs.settings,
+        repeatPicker: context.refs.repeatPicker,
+        canvas: context.refs.canvas,
+        topBar: context.refs.topBar,
         pageSettingsModal: context.refs.pageSettingsModal,
-        root:              context.root,
-        settingsTabs:      context.refs.settingsTabs,
+        root: context.root,
+        settingsTabs: context.refs.settingsTabs,
     });
 }
 

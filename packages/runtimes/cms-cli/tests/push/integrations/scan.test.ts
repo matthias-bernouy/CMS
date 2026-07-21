@@ -2,17 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import {
-    canonicalIntegrationHash,
-    scanIntegrations,
-} from "cms-cli/push/integrations/scan";
+import { canonicalIntegrationHash, scanIntegrations } from "cms-cli/push/integrations/scan";
 import { classifyIntegrations } from "cms-cli/push/integrations/classify";
-import {
-    emptyState,
-    localIntegration,
-    makeSite,
-    manualSourceImport,
-} from "./fixtures";
+import { emptyState, localIntegration, makeSite, manualSourceImport } from "./fixtures";
 import type { PushState } from "cms-cli/push/shared/state";
 
 describe("scanIntegrations", () => {
@@ -36,8 +28,12 @@ describe("scanIntegrations", () => {
 
     test("rejects invalid JSON and missing integration fields", async () => {
         await expect(scanIntegrations(makeSite({ "bad.json": "{not json" }))).rejects.toThrow(/Invalid integration/);
-        await expect(scanIntegrations(makeSite({ "nokind.json": JSON.stringify({ answers: {} }) }))).rejects.toThrow(/missing "kind"/);
-        await expect(scanIntegrations(makeSite({ "noanswers.json": JSON.stringify({ kind: "manual-source" }) }))).rejects.toThrow(/missing "answers" object/);
+        await expect(scanIntegrations(makeSite({ "nokind.json": JSON.stringify({ answers: {} }) }))).rejects.toThrow(
+            /missing "kind"/,
+        );
+        await expect(
+            scanIntegrations(makeSite({ "noanswers.json": JSON.stringify({ kind: "manual-source" }) })),
+        ).rejects.toThrow(/missing "answers" object/);
     });
 });
 
@@ -59,7 +55,14 @@ describe("classifyIntegrations", () => {
             entities: { "integration:manual-source": { hash: "h1", lastSeenRemote: "h1" } },
         };
         expect(classifyIntegrations(local, new Set(["manual-source"]), state, false)[0]!.status).toBe("unchanged");
-        expect(classifyIntegrations([localIntegration("manual-source", "h2")], new Set(["manual-source"]), state, false)[0]!.status).toBe("update");
+        expect(
+            classifyIntegrations(
+                [localIntegration("manual-source", "h2")],
+                new Set(["manual-source"]),
+                state,
+                false,
+            )[0]!.status,
+        ).toBe("update");
         expect(classifyIntegrations(local, new Set(["manual-source"]), state, true)[0]!.status).toBe("update");
     });
 });

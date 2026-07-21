@@ -7,7 +7,7 @@ import type { DekRepository } from "envelope-crypto/interfaces/DekRepository";
 // (OVH OKMS, AWS KMS, …) doesn't pay a round-trip on every secret read.
 // Trade-off: a hot DEK lives in process RAM for that long. Tune via
 // `opts.ttlMs` per deployment.
-const DEFAULT_TTL_MS   = 30 * 60 * 1000;
+const DEFAULT_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_SIZE = 1000;
 
 type CacheEntry = { dek: Buffer; expiresAt: number };
@@ -25,19 +25,18 @@ type CacheEntry = { dek: Buffer; expiresAt: number };
  * must surface (not silently treat as empty).
  */
 export class EnvelopeSecretCrypto implements SecretCrypto {
-
     private readonly _kekProvider: KekProvider;
-    private readonly _dekRepo:     DekRepository;
-    private readonly _ttlMs:       number;
-    private readonly _maxSize:     number;
-    private readonly _cache:    Map<string, CacheEntry> = new Map();
+    private readonly _dekRepo: DekRepository;
+    private readonly _ttlMs: number;
+    private readonly _maxSize: number;
+    private readonly _cache: Map<string, CacheEntry> = new Map();
     private readonly _inflight: Map<string, Promise<Buffer>> = new Map();
 
     constructor(kekProvider: KekProvider, dekRepo: DekRepository, opts: { ttlMs?: number; maxSize?: number } = {}) {
         this._kekProvider = kekProvider;
-        this._dekRepo     = dekRepo;
-        this._ttlMs       = opts.ttlMs   ?? DEFAULT_TTL_MS;
-        this._maxSize     = opts.maxSize ?? DEFAULT_MAX_SIZE;
+        this._dekRepo = dekRepo;
+        this._ttlMs = opts.ttlMs ?? DEFAULT_TTL_MS;
+        this._maxSize = opts.maxSize ?? DEFAULT_MAX_SIZE;
     }
 
     async encrypt(scopeId: string, plaintext: string): Promise<EncryptedBlob> {
@@ -47,7 +46,9 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
 
     async decrypt(scopeId: string, blob: EncryptedBlob): Promise<string> {
         const dek = await this._loadDek(scopeId);
-        if (!dek) throw new Error(`EnvelopeSecretCrypto: no DEK for scope "${scopeId}" — encrypted secrets cannot be read.`);
+        if (!dek) {
+            throw new Error(`EnvelopeSecretCrypto: no DEK for scope "${scopeId}" — encrypted secrets cannot be read.`);
+        }
         return decryptAesGcm(blob, dek).toString("utf8");
     }
 
@@ -59,9 +60,13 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
      */
     private async _getOrCreateDek(scopeId: string): Promise<Buffer> {
         const cached = this._cacheHit(scopeId);
-        if (cached) return cached;
+        if (cached) {
+            return cached;
+        }
         const inflight = this._inflight.get(scopeId);
-        if (inflight) return await inflight;
+        if (inflight) {
+            return await inflight;
+        }
         const promise = this._fetchOrCreate(scopeId);
         this._inflight.set(scopeId, promise);
         try {
@@ -73,9 +78,13 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
 
     private async _loadDek(scopeId: string): Promise<Buffer | null> {
         const cached = this._cacheHit(scopeId);
-        if (cached) return cached;
+        if (cached) {
+            return cached;
+        }
         const row = await this._dekRepo.get(scopeId);
-        if (!row) return null;
+        if (!row) {
+            return null;
+        }
         const dek = await this._kekProvider.unwrap(row.wrapped);
         this._remember(scopeId, dek);
         return dek;
@@ -106,7 +115,9 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
 
     private _cacheHit(scopeId: string): Buffer | null {
         const entry = this._cache.get(scopeId);
-        if (!entry) return null;
+        if (!entry) {
+            return null;
+        }
         if (entry.expiresAt <= Date.now()) {
             this._cache.delete(scopeId);
             return null;
@@ -120,7 +131,9 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
     private _remember(scopeId: string, dek: Buffer): void {
         if (this._cache.size >= this._maxSize) {
             const oldest = this._cache.keys().next().value;
-            if (oldest !== undefined) this._cache.delete(oldest);
+            if (oldest !== undefined) {
+                this._cache.delete(oldest);
+            }
         }
         this._cache.set(scopeId, { dek, expiresAt: Date.now() + this._ttlMs });
     }

@@ -37,7 +37,9 @@ export function detailSection(slot: "main" | "aside", heading: string): HTMLElem
 
 export function fieldWrap(titleText: string, control: HTMLElement, hint?: HTMLElement): HTMLElement {
     const wrap = div("field", label(titleText), control);
-    if (hint) wrap.append(hint);
+    if (hint) {
+        wrap.append(hint);
+    }
     return wrap;
 }
 
@@ -100,6 +102,8 @@ export function pre(text: string): HTMLPreElement {
 export function div(className: string, ...children: (Node | string)[]): HTMLElement {
     const el = document.createElement("div");
     el.className = className;
-    for (const child of children) el.append(typeof child === "string" ? document.createTextNode(child) : child);
+    for (const child of children) {
+        el.append(typeof child === "string" ? document.createTextNode(child) : child);
+    }
     return el;
 }

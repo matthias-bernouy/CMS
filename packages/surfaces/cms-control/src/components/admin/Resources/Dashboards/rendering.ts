@@ -18,13 +18,24 @@ export function renderDashboardShell(
     query(root, "[data-dashboard-head]").hidden = !dashboard;
     query(root, "[data-detail-toolbar]").hidden = true;
     query(root, "[data-widgets]").hidden = !dashboard;
-    if (!group || !dashboard) return;
+    if (!group || !dashboard) {
+        return;
+    }
     query(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
     renderIcon(query(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map<string, string>();
-    if (detail) selectedRows.set(detail.collection, detail.row);
+    if (detail) {
+        selectedRows.set(detail.collection, detail.row);
+    }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
+    mountDashboardWidgets(
+        query(root, "[data-widgets]"),
+        widgets,
+        { group, dashboard, selectedRows, drafts },
+        "root",
+        tabState,
+        detail,
+    );
 }
 
 export function renderExampleShell(root: ShadowRoot, selectedRow: string | null): void {

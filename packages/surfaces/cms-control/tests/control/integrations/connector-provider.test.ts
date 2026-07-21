@@ -15,7 +15,10 @@ describe("connector provider settings API", () => {
             throw new Error("GET settings must not read the raw access token");
         };
 
-        const response = await getConnectorProvider(new Request("http://localhost/api/integrations/connector-provider"), cms);
+        const response = await getConnectorProvider(
+            new Request("http://localhost/api/integrations/connector-provider"),
+            cms,
+        );
         const text = await response.text();
 
         expect(response.status).toBe(200);
@@ -32,7 +35,10 @@ describe("connector provider settings API", () => {
     test("GET returns a disabled empty Supabase provider by default", async () => {
         const { cms } = fixture();
 
-        const response = await getConnectorProvider(new Request("http://localhost/api/integrations/connector-provider"), cms);
+        const response = await getConnectorProvider(
+            new Request("http://localhost/api/integrations/connector-provider"),
+            cms,
+        );
 
         expect(await response.json()).toEqual({
             provider: "supabase",
@@ -45,12 +51,15 @@ describe("connector provider settings API", () => {
     test("POST stores a trimmed write-only access token and enables Supabase", async () => {
         const { cms, providers, secrets } = fixture();
 
-        const response = await postConnectorProvider(jsonRequest({
-            provider: "supabase",
-            enabled: true,
-            projectRef: " abcdefghijklmnopqrst ",
-            accessToken: " sbp_new_token ",
-        }), cms);
+        const response = await postConnectorProvider(
+            jsonRequest({
+                provider: "supabase",
+                enabled: true,
+                projectRef: " abcdefghijklmnopqrst ",
+                accessToken: " sbp_new_token ",
+            }),
+            cms,
+        );
         const text = await response.text();
 
         expect(JSON.parse(text)).toEqual({
@@ -77,12 +86,15 @@ describe("connector provider settings API", () => {
             throw new Error("an empty update must not read the raw access token");
         };
 
-        const response = await postConnectorProvider(jsonRequest({
-            provider: "supabase",
-            enabled: true,
-            projectRef: "new-project-reference",
-            accessToken: "",
-        }), cms);
+        const response = await postConnectorProvider(
+            jsonRequest({
+                provider: "supabase",
+                enabled: true,
+                projectRef: "new-project-reference",
+                accessToken: "",
+            }),
+            cms,
+        );
 
         expect(response.status).toBe(200);
         expect(await readSecret(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY)).toBe("sbp_existing");
@@ -103,11 +115,14 @@ describe("connector provider settings API", () => {
         body.append("projectRef", "abcdefghijklmnopqrst");
         body.append("accessToken", "sbp_form_token");
 
-        const response = await postConnectorProvider(new Request("http://localhost/api/integrations/connector-provider", {
-            method: "POST",
-            headers: { "content-type": "application/x-www-form-urlencoded" },
-            body,
-        }), cms);
+        const response = await postConnectorProvider(
+            new Request("http://localhost/api/integrations/connector-provider", {
+                method: "POST",
+                headers: { "content-type": "application/x-www-form-urlencoded" },
+                body,
+            }),
+            cms,
+        );
 
         expect(response.status).toBe(200);
         expect((await providers.get("supabase"))?.enabled).toBe(true);
@@ -117,35 +132,50 @@ describe("connector provider settings API", () => {
     test("rejects enabling Supabase without a project reference or configured token", async () => {
         const { cms, providers } = fixture();
 
-        await expect(postConnectorProvider(jsonRequest({
-            provider: "supabase",
-            enabled: true,
-            projectRef: "",
-            accessToken: "sbp_token",
-        }), cms)).rejects.toThrow(/projectRef.*required/);
-        await expect(postConnectorProvider(jsonRequest({
-            provider: "supabase",
-            enabled: true,
-            projectRef: "abcdefghijklmnopqrst",
-            accessToken: "",
-        }), cms)).rejects.toThrow(/accessToken.*required/);
+        await expect(
+            postConnectorProvider(
+                jsonRequest({
+                    provider: "supabase",
+                    enabled: true,
+                    projectRef: "",
+                    accessToken: "sbp_token",
+                }),
+                cms,
+            ),
+        ).rejects.toThrow(/projectRef.*required/);
+        await expect(
+            postConnectorProvider(
+                jsonRequest({
+                    provider: "supabase",
+                    enabled: true,
+                    projectRef: "abcdefghijklmnopqrst",
+                    accessToken: "",
+                }),
+                cms,
+            ),
+        ).rejects.toThrow(/accessToken.*required/);
         expect(await providers.get("supabase")).toBeNull();
     });
 
     test("rejects connector provider kinds other than Supabase", async () => {
         const { cms } = fixture();
-        await expect(postConnectorProvider(jsonRequest({
-            provider: "other",
-            enabled: false,
-            projectRef: "",
-        }), cms)).rejects.toThrow(/provider.*supabase/);
+        await expect(
+            postConnectorProvider(
+                jsonRequest({
+                    provider: "other",
+                    enabled: false,
+                    projectRef: "",
+                }),
+                cms,
+            ),
+        ).rejects.toThrow(/provider.*supabase/);
     });
 });
 
 function fixture(initial?: { enabled: boolean; projectRef: string }) {
-    const providers = new InMemoryIntegrationConnectorProviderRepository(initial
-        ? { provider: "supabase", ...initial }
-        : undefined);
+    const providers = new InMemoryIntegrationConnectorProviderRepository(
+        initial ? { provider: "supabase", ...initial } : undefined,
+    );
     const secrets = new InMemorySecretStore();
     return {
         providers,

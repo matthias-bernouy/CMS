@@ -8,11 +8,7 @@ import {
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import {
-    handleSourceRequest,
-    InMemorySourceRepository,
-    type SourceRepository,
-} from "@bernouy/cms-sources";
+import { handleSourceRequest, InMemorySourceRepository, type SourceRepository } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
@@ -38,10 +34,7 @@ import type {
     TerminalOperationRecoverySeed,
 } from "./stripe-connect/provider-reconciliation/harness";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
-import type {
-    DashboardTable,
-    PostgrestRequestRecord,
-} from "./stripe-connect/dashboard-contract-harness";
+import type { DashboardTable, PostgrestRequestRecord } from "./stripe-connect/dashboard-contract-harness";
 
 type EdgeHandler = (request: Request) => Response | Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -65,7 +58,8 @@ const sourcePrefix = "/.cms/sources/";
 const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 const supabaseUrl = "https://project.supabase.co";
 const stripeUrl = "https://api.stripe.com";
-const edgeFunctionUrl = "../integrations/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts";
+const edgeFunctionUrl =
+    "../integrations/stripe-connect/versions/1.0.0/connectors/supabase/functions/cms-stripe-connect/index.ts";
 const financialTermsHash = "a".repeat(64);
 const marketplaceTermsHash = "c".repeat(64);
 const isoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -76,11 +70,19 @@ let activeEnv: Record<string, string> = {};
 let activeFetch: typeof fetch = realFetch;
 let edgeHandler: EdgeHandler | undefined;
 
-(globalThis as { Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown } }).Deno = {
+(
+    globalThis as {
+        Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown };
+    }
+).Deno = {
     env: { get: (key) => activeEnv[key] },
     serve(handler) {
         edgeHandler = handler;
-        return { shutdown() { /* test stub */ } };
+        return {
+            shutdown() {
+                /* test stub */
+            },
+        };
     },
 };
 globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
@@ -112,7 +114,9 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(schema).toContain("on stripe_connect.provider_exceptions(deduplication_key);");
         expect(schema).toContain("index_definition.indpred is not null");
         expect(schema).toContain("hashtextextended('stripe-connect-seller-risk:'");
-        expect(schema).toContain("actor_kind in ('system', 'webhook', 'reconciliation', 'support', 'finance', 'admin')");
+        expect(schema).toContain(
+            "actor_kind in ('system', 'webhook', 'reconciliation', 'support', 'finance', 'admin')",
+        );
         expect(schema).toContain("first_actor_kind in ('finance', 'admin')");
         expect(schema).toContain("second_actor_kind in ('finance', 'admin')");
         expect(schema).toContain("if p_actor_kind is distinct from 'admin'");
@@ -130,17 +134,20 @@ describe("stripe-connect 1.0.0 source", () => {
     test("does not expose arbitrary Connect account lookup to anonymous or support callers", async () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:stripe-connect");
-        expect(source?.endpoints.map(endpoint => endpoint.urn)).not.toContain("urn:stripe-connect:getConnectAccount");
-        expect(source?.endpoints.find(endpoint => endpoint.urn === "urn:stripe-connect:submitConnectVerification")?.timeoutMs)
-            .toBe(60_000);
+        expect(source?.endpoints.map((endpoint) => endpoint.urn)).not.toContain("urn:stripe-connect:getConnectAccount");
+        expect(
+            source?.endpoints.find((endpoint) => endpoint.urn === "urn:stripe-connect:submitConnectVerification")
+                ?.timeoutMs,
+        ).toBe(60_000);
 
-        const endpoint = (id: string) => source?.endpoints.find(candidate => candidate.urn === `urn:stripe-connect:${id}`);
+        const endpoint = (id: string) =>
+            source?.endpoints.find((candidate) => candidate.urn === `urn:stripe-connect:${id}`);
         const protectedPayment = endpoint("createProtectedPayment");
         const heldPaymentEligibility = endpoint("checkSellerHeldPaymentEligibility");
         const sellerRisk = endpoint("getSellerProviderRisk");
         const sellerPayout = endpoint("configureSellerPayoutSchedule");
-        const reconciliationPaymentOutput = endpoint("runProviderReconciliation")
-            ?.output?.[0]?.body?.properties?.payments?.items;
+        const reconciliationPaymentOutput =
+            endpoint("runProviderReconciliation")?.output?.[0]?.body?.properties?.payments?.items;
         const enrollment = endpoint("enrollConnectSeller");
         const protectedPaymentOutput = protectedPayment?.output?.[0]?.body;
         const protectedPaymentRead = endpoint("getProtectedPayment");
@@ -151,22 +158,31 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(reconciliationPaymentOutput?.properties?.commercePaymentStatus).toEqual({ type: "string" });
         expect(reconciliationPaymentOutput?.required).toContain("commercePaymentStatus");
         expect(protectedPaymentReadOutput?.properties?.reconciliationPending).toEqual({ type: "boolean" });
-        expect(protectedPaymentReferenceOutput?.properties?.payment?.properties?.reconciliationPending)
-            .toEqual({ type: "boolean" });
+        expect(protectedPaymentReferenceOutput?.properties?.payment?.properties?.reconciliationPending).toEqual({
+            type: "boolean",
+        });
         expect(protectedPaymentRead?.access).toEqual({ mode: "system" });
         expect(protectedPaymentReference?.access).toEqual({ mode: "system" });
         expect(enrollment?.input?.body?.required ?? []).toEqual([]);
         expect(Object.keys(enrollment?.input?.body?.properties ?? {})).toEqual([
-            "accountToken", "contactEmail", "marketplaceTermsAccepted",
-            "marketplaceTermsVersion", "marketplaceTermsHash",
+            "accountToken",
+            "contactEmail",
+            "marketplaceTermsAccepted",
+            "marketplaceTermsVersion",
+            "marketplaceTermsHash",
         ]);
-        expect(endpoint("getConnectStatus")?.input?.params?.map(param => param.name)).toEqual([
-            "marketplaceTermsVersion", "marketplaceTermsHash",
+        expect(endpoint("getConnectStatus")?.input?.params?.map((param) => param.name)).toEqual([
+            "marketplaceTermsVersion",
+            "marketplaceTermsHash",
         ]);
-        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.marketplaceTermsAcceptedAt)
-            .toEqual({ type: "string", nullable: true });
-        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.stripeAccountId)
-            .toEqual({ type: "string", nullable: true });
+        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.marketplaceTermsAcceptedAt).toEqual({
+            type: "string",
+            nullable: true,
+        });
+        expect(endpoint("getConnectStatus")?.output?.[0]?.body?.properties?.stripeAccountId).toEqual({
+            type: "string",
+            nullable: true,
+        });
         expect([
             protectedPayment?.input?.body?.properties?.sellerUserId?.semantic?.authority,
             heldPaymentEligibility?.input?.body?.properties?.sellerUserId?.semantic?.authority,
@@ -192,24 +208,21 @@ describe("stripe-connect 1.0.0 source", () => {
             required: ["eligible", "reasonCode"],
         });
 
-        const anonymousSourceLookup = await sourceRequestWithRole(
-            harness,
-            "",
-            undefined,
-            "getConnectAccount",
-            { userId: "seller-1" },
+        const anonymousSourceLookup = await sourceRequestWithRole(harness, "", undefined, "getConnectAccount", {
+            userId: "seller-1",
+        });
+        const anonymousEdgeLookup = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/accounts/account?userId=seller-1`),
         );
-        const anonymousEdgeLookup = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/accounts/account?userId=seller-1`,
-        ));
-        const supportEdgeLookup = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/accounts/account?userId=seller-1`,
-            { headers: {
-                authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
-                "x-cms-user-id": "support-1",
-                "x-cms-user-role": "support",
-            } },
-        ));
+        const supportEdgeLookup = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/accounts/account?userId=seller-1`, {
+                headers: {
+                    authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+                    "x-cms-user-id": "support-1",
+                    "x-cms-user-role": "support",
+                },
+            }),
+        );
 
         expect(anonymousSourceLookup.status).toBe(404);
         expect(anonymousEdgeLookup.status).toBe(404);
@@ -218,10 +231,17 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("projects nullable status fields for an existing seller account", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-            country: "FR",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
 
         harness.rest.setAccountState("seller-1", { marketplace_terms_accepted_at: null });
         const termsPending = await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus"));
@@ -249,13 +269,14 @@ describe("stripe-connect 1.0.0 source", () => {
         try {
             activeEnv.STRIPE_SECRET_KEY = "sk_test_mode_guard";
             activeEnv.STRIPE_PUBLISHABLE_KEY = "pk_live_mode_guard";
-            const mismatched = await harness.edgeRequest(new Request(
-                `${functionsBaseUrl}/cms-stripe-connect/connect/config`,
-                { headers: {
-                    authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
-                    "x-user-id": "buyer-mode-guard",
-                } },
-            ));
+            const mismatched = await harness.edgeRequest(
+                new Request(`${functionsBaseUrl}/cms-stripe-connect/connect/config`, {
+                    headers: {
+                        authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+                        "x-user-id": "buyer-mode-guard",
+                    },
+                }),
+            );
             expect(mismatched.status).toBe(500);
             expect(await mismatched.json()).toEqual({
                 error: "Stripe secret and publishable keys must use the same explicit test or live mode",
@@ -275,25 +296,26 @@ describe("stripe-connect 1.0.0 source", () => {
             "x-cms-user-id": "user-123",
         };
 
-        const options = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/payments/protected`,
-            { method: "OPTIONS" },
-        ));
-        const wrongMethod = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/payments/protected`,
-            { method: "GET", headers: cmsHeaders },
-        ));
-        const unknown = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/unknown`,
-            { headers: cmsHeaders },
-        ));
-        const unauthenticated = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/payments`,
-        ));
-        const forbidden = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/payments`,
-            { headers: { ...cmsHeaders, "x-cms-user-role": "member" } },
-        ));
+        const options = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/protected`, { method: "OPTIONS" }),
+        );
+        const wrongMethod = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/protected`, {
+                method: "GET",
+                headers: cmsHeaders,
+            }),
+        );
+        const unknown = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/unknown`, { headers: cmsHeaders }),
+        );
+        const unauthenticated = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/payments`),
+        );
+        const forbidden = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/payments`, {
+                headers: { ...cmsHeaders, "x-cms-user-role": "member" },
+            }),
+        );
 
         expect(options.status).toBe(200);
         expect(await options.text()).toBe("ok");
@@ -314,26 +336,38 @@ describe("stripe-connect 1.0.0 source", () => {
         const created = Math.floor(Date.now() / 1000);
         const cases = [
             {
-                route: "stripe", secret: "whsec_test_123",
+                route: "stripe",
+                secret: "whsec_test_123",
                 event: {
-                    id: "evt_live_platform_mismatch", type: "payment_intent.created",
-                    api_version: "2026-02-25.clover", created, livemode: true,
+                    id: "evt_live_platform_mismatch",
+                    type: "payment_intent.created",
+                    api_version: "2026-02-25.clover",
+                    created,
+                    livemode: true,
                     data: { object: { id: "pi_live_mismatch" } },
                 },
             },
             {
-                route: "stripe-connect", secret: "whsec_connect_test_456",
+                route: "stripe-connect",
+                secret: "whsec_connect_test_456",
                 event: {
-                    id: "evt_live_connect_mismatch", type: "payout.created",
-                    api_version: "2026-02-25.clover", created, livemode: true,
-                    account: "acct_live_mismatch", data: { object: { id: "po_live_mismatch" } },
+                    id: "evt_live_connect_mismatch",
+                    type: "payout.created",
+                    api_version: "2026-02-25.clover",
+                    created,
+                    livemode: true,
+                    account: "acct_live_mismatch",
+                    data: { object: { id: "po_live_mismatch" } },
                 },
             },
             {
-                route: "stripe-connect-v2", secret: "whsec_connect_v2_test_789",
+                route: "stripe-connect-v2",
+                secret: "whsec_connect_v2_test_789",
                 event: {
-                    id: "evt_live_connect_v2_mismatch", type: "v2.core.account.updated",
-                    created, livemode: true,
+                    id: "evt_live_connect_v2_mismatch",
+                    type: "v2.core.account.updated",
+                    created,
+                    livemode: true,
                     related_object: { type: "v2.core.account", id: "acct_live_v2_mismatch" },
                     data: { object: {} },
                 },
@@ -342,12 +376,17 @@ describe("stripe-connect 1.0.0 source", () => {
         for (const item of cases) {
             const payload = JSON.stringify(item.event);
             const signature = await stripeSignature(payload, item.secret);
-            const response = await harness.edgeRequest(new Request(
-                `${functionsBaseUrl}/cms-stripe-connect/webhooks/${item.route}`,
-                { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-            ));
+            const response = await harness.edgeRequest(
+                new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/${item.route}`, {
+                    method: "POST",
+                    headers: { "stripe-signature": signature },
+                    body: payload,
+                }),
+            );
             expect(response.status).toBe(400);
-            expect(await response.json()).toEqual({ error: "Stripe webhook livemode does not match configured API keys" });
+            expect(await response.json()).toEqual({
+                error: "Stripe webhook livemode does not match configured API keys",
+            });
         }
         expect(harness.rest.rows("stripe_events")).toHaveLength(0);
     });
@@ -357,30 +396,41 @@ describe("stripe-connect 1.0.0 source", () => {
 
         const config = await okJson(await sourceRequest(harness, "getConnectClientConfig"));
         const initial = await okJson(await sourceRequest(harness, "getConnectStatus"));
-        const sellerSession = await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-            country: "FR",
-        }, { userId: "seller-1" }));
-        const payment = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: "1200",
-            sellerTransferAmount: "1080",
-            currency: "EUR",
-            clientReferenceId: "order-1",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-            description: "Order 1",
-        }));
-        const repeated = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: "1200",
-            sellerTransferAmount: "1080",
-            currency: "EUR",
-            clientReferenceId: "order-1",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-            description: "Order 1",
-        }));
+        const sellerSession = await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const payment = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: "1200",
+                sellerTransferAmount: "1080",
+                currency: "EUR",
+                clientReferenceId: "order-1",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+                description: "Order 1",
+            }),
+        );
+        const repeated = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: "1200",
+                sellerTransferAmount: "1080",
+                currency: "EUR",
+                clientReferenceId: "order-1",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+                description: "Order 1",
+            }),
+        );
         const mismatch = await sourceJson(harness, "createProtectedPayment", {
             sellerUserId: "seller-1",
             amountTotal: 1201,
@@ -390,22 +440,35 @@ describe("stripe-connect 1.0.0 source", () => {
             financialTermsHash,
             dualApprovalThresholdAmount: 1000,
         });
-        const listedPayments = await okJson(await sourceRequest(harness, "listProviderPayments", { q: "order", limit: "20" }));
-        const fetched = await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(payment.paymentId) }));
-        const fetchedByReference = await okJson(await sourceRequest(
-            harness, "getProtectedPaymentByClientReference", { clientReferenceId: "order-1" },
-        ));
-        const missingByReference = await okJson(await sourceRequest(
-            harness, "getProtectedPaymentByClientReference", { clientReferenceId: "order-missing" },
-        ));
-        const hiddenByReference = await okJson(await sourceRequestWithUser(
-            harness, "another-buyer", "getProtectedPaymentByClientReference", { clientReferenceId: "order-1" },
-        ));
+        const listedPayments = await okJson(
+            await sourceRequest(harness, "listProviderPayments", { q: "order", limit: "20" }),
+        );
+        const fetched = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", { paymentId: String(payment.paymentId) }),
+        );
+        const fetchedByReference = await okJson(
+            await sourceRequest(harness, "getProtectedPaymentByClientReference", { clientReferenceId: "order-1" }),
+        );
+        const missingByReference = await okJson(
+            await sourceRequest(harness, "getProtectedPaymentByClientReference", {
+                clientReferenceId: "order-missing",
+            }),
+        );
+        const hiddenByReference = await okJson(
+            await sourceRequestWithUser(harness, "another-buyer", "getProtectedPaymentByClientReference", {
+                clientReferenceId: "order-1",
+            }),
+        );
         const dashboard = await harness.dashboards.getDashboard("stripe-connect-dashboard");
         const userRole = await harness.roles.get(USER_ROLE);
 
         expect(config).toEqual({ publishableKey: "pk_test_123" });
-        expect(initial).toMatchObject({ exists: false, userId: "user-123", connected: false, onboardingStatus: "not_started" });
+        expect(initial).toMatchObject({
+            exists: false,
+            userId: "user-123",
+            connected: false,
+            onboardingStatus: "not_started",
+        });
         expect(sellerSession).toMatchObject({
             exists: true,
             userId: "seller-1",
@@ -431,8 +494,12 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(repeated.paymentId).toBe(payment.paymentId);
         expect(harness.rest.paymentIntentCreateCount).toBe(1);
         expect(mismatch.status).toBe(409);
-        expect(await jsonBody(mismatch)).toEqual({ error: "protected payment replay does not match immutable financial terms" });
-        expect(listedPayments.payments).toEqual([expect.objectContaining({ clientReferenceId: "order-1", stripePaymentIntentId: "pi_1" })]);
+        expect(await jsonBody(mismatch)).toEqual({
+            error: "protected payment replay does not match immutable financial terms",
+        });
+        expect(listedPayments.payments).toEqual([
+            expect.objectContaining({ clientReferenceId: "order-1", stripePaymentIntentId: "pi_1" }),
+        ]);
         expect(fetched).toMatchObject({
             paymentId: payment.paymentId,
             clientReferenceId: "order-1",
@@ -451,23 +518,25 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(hiddenByReference).toEqual({ exists: false });
         expect(harness.rest.rows("payments")).toHaveLength(1);
         expect(dashboard).toBeNull();
-        const userPermissions = userRole?.grants.map(grant => grant.permission) ?? [];
-        expect(userPermissions).toEqual(expect.arrayContaining([
-            "urn:stripe-connect:getConnectClientConfig",
-            "urn:stripe-connect:getConnectStatus",
-            "urn:stripe-connect:getConnectWallet",
-            "urn:stripe-connect:enrollConnectSeller",
-            "urn:stripe-connect:submitConnectVerification",
-            "urn:stripe-connect:createOnboardingLink",
-            "urn:stripe-connect:createOnboardingSession",
-        ]));
+        const userPermissions = userRole?.grants.map((grant) => grant.permission) ?? [];
+        expect(userPermissions).toEqual(
+            expect.arrayContaining([
+                "urn:stripe-connect:getConnectClientConfig",
+                "urn:stripe-connect:getConnectStatus",
+                "urn:stripe-connect:getConnectWallet",
+                "urn:stripe-connect:enrollConnectSeller",
+                "urn:stripe-connect:submitConnectVerification",
+                "urn:stripe-connect:createOnboardingLink",
+                "urn:stripe-connect:createOnboardingSession",
+            ]),
+        );
         expect(userPermissions).not.toContain("urn:stripe-connect:getProtectedPayment");
         expect(userPermissions).not.toContain("urn:stripe-connect:getProtectedPaymentByClientReference");
         expect(harness.importedBlocs[0]?.viewJS).toContain("Activer mes versements");
         expect(harness.importedBlocs[0]?.viewJS).toContain("submitConnectVerification");
         expect(harness.importedBlocs[0]?.viewJS).toContain('requestAccountSource("getAccount")');
         expect(harness.importedBlocs[0]?.viewJS).toContain('requestAuthSource("me")');
-        expect(harness.importedBlocs[0]?.viewJS).toContain('currentAccount?.subject?.email');
+        expect(harness.importedBlocs[0]?.viewJS).toContain("currentAccount?.subject?.email");
         expect(harness.importedBlocs[0]?.viewJS).toContain('|| "system-auth"');
         expect(harness.importedBlocs[0]?.viewJS).toContain('requestStripeSource("getConnectWallet")');
         expect(harness.importedBlocs[0]?.viewJS).not.toContain("seller-eligibility-function-id");
@@ -499,9 +568,16 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("keeps payment creation and admin payment reads on their provider boundaries", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
 
         harness.rest.clearStripeRequests();
         const creationResponse = await sourceJson(harness, "createProtectedPayment", {
@@ -588,51 +664,54 @@ describe("stripe-connect 1.0.0 source", () => {
         ]);
 
         harness.rest.clearStripeRequests();
-        const listedResponse = await sourceRequestWithRole(
-            harness, "admin-1", "admin", "listProviderPayments", { q: "provider-boundary", limit: "20" },
-        );
+        const listedResponse = await sourceRequestWithRole(harness, "admin-1", "admin", "listProviderPayments", {
+            q: "provider-boundary",
+            limit: "20",
+        });
         expect(listedResponse.status).toBe(200);
         const listedBody = await jsonBody(listedResponse);
         expect(listedBody).toEqual({
-            payments: [{
-                paymentId: 1,
-                providerPaymentId: 1,
-                clientReferenceId: "provider-boundary-order",
-                financialTermsHash,
-                financialRevision: 1,
-                buyerUserId: "user-123",
-                sellerUserId: "seller-1",
-                stripePaymentIntentId: "pi_1",
-                stripeChargeId: null,
-                providerEventId: null,
-                transferGroup,
-                currency: "eur",
-                amountTotal: 1200,
-                sellerTransferAmount: 1080,
-                platformRetainedAmount: 120,
-                refundedAmount: 0,
-                transferredAmount: 0,
-                reversedAmount: 0,
-                stripeChargeBalanceTransactionId: null,
-                actualStripeChargeFeeAmount: 0,
-                actualStripeRefundFeeAmount: 0,
-                actualStripeProcessingFeeAmount: 0,
-                actualStripeChargeNetAmount: null,
-                actualStripeFeeCurrency: null,
-                actualStripeChargeFeeDetails: [],
-                actualPlatformMarginAfterStripeAmount: 120,
-                paymentStatus: "created",
-                settlementStatus: "held",
-                disputeStatus: "none",
-                manualReviewReason: null,
-                description: null,
-                paidAt: null,
-                cancelledAt: null,
-                lastProviderSyncAt: created.lastProviderSyncAt,
-                occurredAt: "2026-07-06T12:10:00.000Z",
-                createdAt: "2026-07-06T12:05:00.000Z",
-                updatedAt: "2026-07-06T12:10:00.000Z",
-            }],
+            payments: [
+                {
+                    paymentId: 1,
+                    providerPaymentId: 1,
+                    clientReferenceId: "provider-boundary-order",
+                    financialTermsHash,
+                    financialRevision: 1,
+                    buyerUserId: "user-123",
+                    sellerUserId: "seller-1",
+                    stripePaymentIntentId: "pi_1",
+                    stripeChargeId: null,
+                    providerEventId: null,
+                    transferGroup,
+                    currency: "eur",
+                    amountTotal: 1200,
+                    sellerTransferAmount: 1080,
+                    platformRetainedAmount: 120,
+                    refundedAmount: 0,
+                    transferredAmount: 0,
+                    reversedAmount: 0,
+                    stripeChargeBalanceTransactionId: null,
+                    actualStripeChargeFeeAmount: 0,
+                    actualStripeRefundFeeAmount: 0,
+                    actualStripeProcessingFeeAmount: 0,
+                    actualStripeChargeNetAmount: null,
+                    actualStripeFeeCurrency: null,
+                    actualStripeChargeFeeDetails: [],
+                    actualPlatformMarginAfterStripeAmount: 120,
+                    paymentStatus: "created",
+                    settlementStatus: "held",
+                    disputeStatus: "none",
+                    manualReviewReason: null,
+                    description: null,
+                    paidAt: null,
+                    cancelledAt: null,
+                    lastProviderSyncAt: created.lastProviderSyncAt,
+                    occurredAt: "2026-07-06T12:10:00.000Z",
+                    createdAt: "2026-07-06T12:05:00.000Z",
+                    updatedAt: "2026-07-06T12:10:00.000Z",
+                },
+            ],
             total: 1,
         });
         expect(harness.rest.stripeRequests).toEqual([]);
@@ -643,10 +722,11 @@ describe("stripe-connect 1.0.0 source", () => {
             "x-cms-user-id": "admin-1",
             "x-cms-user-role": "admin",
         };
-        const detailResponse = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/payments/payment?paymentId=1`,
-            { headers: adminHeaders },
-        ));
+        const detailResponse = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/payments/payment?paymentId=1`, {
+                headers: adminHeaders,
+            }),
+        );
         expect(detailResponse.status).toBe(200);
         const detailBody = await jsonBody(detailResponse);
         expect(detailBody.paidAt).toEqual(expect.stringMatching(isoTimestampPattern));
@@ -704,10 +784,11 @@ describe("stripe-connect 1.0.0 source", () => {
         ]);
 
         harness.rest.clearStripeRequests();
-        const missingResponse = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/payments/payment?paymentId=999`,
-            { headers: adminHeaders },
-        ));
+        const missingResponse = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/payments/payment?paymentId=999`, {
+                headers: adminHeaders,
+            }),
+        );
         expect(missingResponse.status).toBe(404);
         expect(await jsonBody(missingResponse)).toEqual({ error: "payment not found" });
         expect(harness.rest.stripeRequests).toEqual([]);
@@ -717,10 +798,17 @@ describe("stripe-connect 1.0.0 source", () => {
         const harness = await createHarness();
 
         const emptyWallet = await okJson(await sourceRequest(harness, "getConnectWallet"));
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-            country: "FR",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const wallet = await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectWallet"));
 
         expect(emptyWallet).toMatchObject({ connected: false, balances: [] });
@@ -752,10 +840,17 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("reads and idempotently applies Commerce seller payout controls", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-            country: "FR",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
 
         const before = await okJson(await sourceRequest(harness, "getSellerProviderRisk", { userId: "seller-1" }));
         const command = {
@@ -794,19 +889,28 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("accepts Stripe omitting a zero payout minimum but rejects an omitted positive minimum", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-            country: "FR",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
 
-        const zeroMinimum = await okJson(await sourceJson(harness, "configureSellerPayoutSchedule", {
-            userId: "seller-1",
-            payoutScheduleChangeId: "zero-minimum-canonicalized-by-stripe",
-            interval: "weekly",
-            weeklyPayoutDays: ["monday"],
-            minimumBalanceEur: 0,
-            delayDaysOverride: 14,
-        }));
+        const zeroMinimum = await okJson(
+            await sourceJson(harness, "configureSellerPayoutSchedule", {
+                userId: "seller-1",
+                payoutScheduleChangeId: "zero-minimum-canonicalized-by-stripe",
+                interval: "weekly",
+                weeklyPayoutDays: ["monday"],
+                minimumBalanceEur: 0,
+                delayDaysOverride: 14,
+            }),
+        );
         harness.rest.omitMinimumBalanceOnNextBalanceSettingsUpdate();
         const missingPositiveMinimum = await sourceJson(harness, "configureSellerPayoutSchedule", {
             userId: "seller-1",
@@ -826,18 +930,27 @@ describe("stripe-connect 1.0.0 source", () => {
             },
         });
         expect(missingPositiveMinimum.status).toBe(502);
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            business_key: "payout-schedule:seller-1:missing-positive-minimum",
-            status: "manual_review",
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                business_key: "payout-schedule:seller-1:missing-positive-minimum",
+                status: "manual_review",
+            }),
+        );
     });
 
     test("clears only its own false recovery hold after an exact provider-confirmed replay", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-            country: "FR",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                    country: "FR",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const command = {
             userId: "seller-1",
             payoutScheduleChangeId: "lost-provider-confirmation",
@@ -854,9 +967,7 @@ describe("stripe-connect 1.0.0 source", () => {
             risk_status: "manual_review",
             financial_hold_reason: "Seller recovery payout hold is not confirmed",
         });
-        harness.rest.markFinancialOperationSucceeded(
-            "payout-schedule:seller-1:lost-provider-confirmation",
-        );
+        harness.rest.markFinancialOperationSucceeded("payout-schedule:seller-1:lost-provider-confirmation");
 
         const recovered = await okJson(await sourceJson(harness, "configureSellerPayoutSchedule", command));
         expect(recovered).toMatchObject({
@@ -865,8 +976,9 @@ describe("stripe-connect 1.0.0 source", () => {
                 financialHoldReason: null,
             },
         });
-        expect(await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus")))
-            .toMatchObject({ canReceiveProtectedPayments: true });
+        expect(await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus"))).toMatchObject({
+            canReceiveProtectedPayments: true,
+        });
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             risk_status: "standard",
             financial_hold_reason: null,
@@ -886,29 +998,33 @@ describe("stripe-connect 1.0.0 source", () => {
         );
         harness.rest.setIndependentSellerRisk("seller-1", "Independent manual compliance review");
 
-        const independentlyBlocked = await okJson(await sourceJson(
-            harness,
-            "configureSellerPayoutSchedule",
-            independentCommand,
-        ));
+        const independentlyBlocked = await okJson(
+            await sourceJson(harness, "configureSellerPayoutSchedule", independentCommand),
+        );
         expect(independentlyBlocked).toMatchObject({
             account: {
                 riskStatus: "manual_review",
                 financialHoldReason: "Independent manual compliance review",
             },
         });
-        expect(await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus")))
-            .toMatchObject({
-                canReceiveProtectedPayments: false,
-                riskStatus: "manual_review",
-            });
+        expect(await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus"))).toMatchObject({
+            canReceiveProtectedPayments: false,
+            riskStatus: "manual_review",
+        });
     });
 
     test("replaces a concurrent weekly payout update with the newer seller risk hold", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const pause = harness.rest.pauseNextSellerBalanceSettingsUpdate();
         const configuring = sourceJson(harness, "configureSellerPayoutSchedule", {
             userId: "seller-1",
@@ -944,15 +1060,24 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("restores the automatic seller payout schedule only after recovery exposure clears", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.seedEmergencySellerHold("seller-1", 0);
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-restore-cleared",
-            limit: 25,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-restore-cleared",
+                limit: 25,
+            }),
+        );
 
         expect(reconciliation).toMatchObject({ repairedCount: 1, exceptionCount: 0 });
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
@@ -961,37 +1086,56 @@ describe("stripe-connect 1.0.0 source", () => {
             manual_payout_hold_deadline_at: null,
             manual_payout_hold_restore_settings: null,
         });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            business_key: expect.stringContaining("seller-risk-restore:seller-1"),
-            status: "succeeded",
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                business_key: expect.stringContaining("seller-risk-restore:seller-1"),
+                status: "succeeded",
+            }),
+        );
     });
 
     test("restores exact weekly and monthly seller payout settings after an emergency hold", async () => {
         for (const [name, restoreSettings, expected] of [
-            ["weekly", {
-                interval: "weekly",
-                weeklyPayoutDays: ["monday", "thursday"],
-                minimumBalanceEur: 125,
-                debitNegativeBalances: true,
-            }, { interval: "weekly", weeklyPayoutDays: ["monday", "thursday"] }],
-            ["monthly", {
-                interval: "monthly",
-                monthlyPayoutDays: [1, 15],
-                minimumBalanceEur: 250,
-                debitNegativeBalances: false,
-            }, { interval: "monthly", monthlyPayoutDays: [1, 15] }],
+            [
+                "weekly",
+                {
+                    interval: "weekly",
+                    weeklyPayoutDays: ["monday", "thursday"],
+                    minimumBalanceEur: 125,
+                    debitNegativeBalances: true,
+                },
+                { interval: "weekly", weeklyPayoutDays: ["monday", "thursday"] },
+            ],
+            [
+                "monthly",
+                {
+                    interval: "monthly",
+                    monthlyPayoutDays: [1, 15],
+                    minimumBalanceEur: 250,
+                    debitNegativeBalances: false,
+                },
+                { interval: "monthly", monthlyPayoutDays: [1, 15] },
+            ],
         ] as const) {
             const harness = await createHarness();
-            await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-                email: "seller@example.com",
-            }, { userId: "seller-1" }));
+            await okJson(
+                await sourceJson(
+                    harness,
+                    "createConnectOnboardingSessionForUser",
+                    {
+                        email: "seller@example.com",
+                    },
+                    { userId: "seller-1" },
+                ),
+            );
             harness.rest.seedEmergencySellerHold("seller-1", 0, restoreSettings);
 
-            await okJson(await sourceJson(harness, "runProviderReconciliation", {
-                runKey: `seller-payout-restore-${name}`,
-                limit: 25,
-            }));
+            await okJson(
+                await sourceJson(harness, "runProviderReconciliation", {
+                    runKey: `seller-payout-restore-${name}`,
+                    limit: 25,
+                }),
+            );
             const risk = await okJson(await sourceRequest(harness, "getSellerProviderRisk", { userId: "seller-1" }));
 
             expect(risk.payoutControl, name).toMatchObject(expected);
@@ -1005,16 +1149,25 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("preserves an exact pre-existing manual payout baseline through an emergency hold", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.setConnectedPayoutSettings("manual", 75);
         harness.rest.exposeSellerFinancialRisk("seller-1", 250);
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-manual-baseline-hold",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-manual-baseline-hold",
+                limit: 25,
+            }),
+        );
         expect(harness.rest.rows("accounts")[0]?.manual_payout_hold_restore_settings).toEqual({
             interval: "manual",
             minimumBalanceEur: 75,
@@ -1022,10 +1175,12 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         harness.rest.exposeSellerFinancialRisk("seller-1", 0);
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-restore-manual-baseline",
-            limit: 25,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-restore-manual-baseline",
+                limit: 25,
+            }),
+        );
 
         expect(reconciliation).toMatchObject({ exceptionCount: 0 });
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
@@ -1044,21 +1199,32 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("restores a seller payout baseline after Stripe committed a hold but the database response was lost", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const operationId = harness.rest.seedFailedSellerRiskHoldOperation("seller-1", 250);
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-hold-operation-recovery-cleared-risk",
-            limit: 25,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-hold-operation-recovery-cleared-risk",
+                limit: 25,
+            }),
+        );
 
         expect(reconciliation).toMatchObject({ exceptionCount: 0 });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            id: operationId,
-            status: "succeeded",
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                id: operationId,
+                status: "succeeded",
+            }),
+        );
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             payout_schedule: "daily",
             provider_hold_minimum_amount: 250,
@@ -1075,59 +1241,90 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("does not let a Stripe event backlog starve money-operation recovery", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const operationId = harness.rest.seedFailedSellerRiskHoldOperation("seller-1", 250);
         harness.rest.seedPendingStripeEvents(5);
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "fair-reconciliation-with-event-backlog",
-            limit: 5,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "fair-reconciliation-with-event-backlog",
+                limit: 5,
+            }),
+        );
 
-        expect(harness.rest.rows("stripe_events").filter(row => row.processing_status === "pending")).toHaveLength(4);
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            id: operationId,
-            status: "succeeded",
-        }));
+        expect(harness.rest.rows("stripe_events").filter((row) => row.processing_status === "pending")).toHaveLength(4);
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                id: operationId,
+                status: "succeeded",
+            }),
+        );
     });
 
     test("recovers a lost automatic seller payout restoration response", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.seedEmergencySellerHold("seller-1", 0);
         harness.rest.loseNextSellerPayoutSettingsResponse();
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-restore-lost-response",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-restore-lost-response",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             payout_schedule: "daily",
             manual_payout_hold_started_at: null,
         });
-        expect(harness.rest.rows("financial_operations").filter(row => (
-            String(row.business_key).includes("seller-risk-restore:seller-1")
-        ))).toHaveLength(1);
+        expect(
+            harness.rest
+                .rows("financial_operations")
+                .filter((row) => String(row.business_key).includes("seller-risk-restore:seller-1")),
+        ).toHaveLength(1);
         expect(harness.rest.rows("provider_exceptions")).toHaveLength(0);
     });
 
     test("reapplies the emergency hold when new exposure races automatic restoration", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.seedEmergencySellerHold("seller-1", 0);
         harness.rest.addRiskDuringNextSellerAutomaticRestore();
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-restore-risk-race",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-restore-risk-race",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             payout_schedule: "manual",
@@ -1139,32 +1336,50 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("repairs provider drift while an emergency seller hold is active", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.seedEmergencySellerHold("seller-1", 250);
         harness.rest.setConnectedPayoutSettings("daily", 0);
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-payout-hold-provider-drift",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-payout-hold-provider-drift",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             payout_schedule: "manual",
             financial_exposure_amount: 250,
             provider_hold_minimum_amount: 250,
         });
-        expect(harness.rest.rows("provider_exceptions")).not.toContainEqual(expect.objectContaining({
-            exception_type: "seller_manual_payout_hold_drift",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).not.toContainEqual(
+            expect.objectContaining({
+                exception_type: "seller_manual_payout_hold_drift",
+            }),
+        );
     });
 
     test("rejects a manual platform schedule even when the liability minimum is retained", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const command = {
             platformPayoutControlChangeId: "platform-risk-policy-1",
             minimumBalanceEur: 5000,
@@ -1190,27 +1405,31 @@ describe("stripe-connect 1.0.0 source", () => {
             platformPayoutControlChangeId: "platform-risk-policy-1",
             payoutControl: { interval: "daily", minimumBalanceByCurrency: { eur: 5000 } },
         });
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "protected-platform-payout-order",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "protected-platform-payout-order",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         expect(created.paymentStatus).toBe("created");
     });
 
     test("accepts Stripe omitting the platform zero payout minimum", async () => {
         const harness = await createHarness();
 
-        const configured = await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-zero-minimum-canonicalized-by-stripe",
-            minimumBalanceEur: 0,
-            liabilityRevision: 1,
-            debitNegativeBalances: false,
-        }));
+        const configured = await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-zero-minimum-canonicalized-by-stripe",
+                minimumBalanceEur: 0,
+                liabilityRevision: 1,
+                debitNegativeBalances: false,
+            }),
+        );
 
         expect(configured).toMatchObject({
             appliedMinimumBalanceEur: 0,
@@ -1220,10 +1439,12 @@ describe("stripe-connect 1.0.0 source", () => {
                 debitNegativeBalances: false,
             },
         });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            operation_type: "payout_schedule_update",
-            status: "succeeded",
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                operation_type: "payout_schedule_update",
+                status: "succeeded",
+            }),
+        );
     });
 
     test("keeps the higher platform reserve when payout protection commands race", async () => {
@@ -1287,19 +1508,23 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("retains an overcovered platform reserve until Finance authorizes the exact decrease", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-increase-r1",
-            minimumBalanceEur: 35476,
-            liabilityRevision: 1,
-            debitNegativeBalances: false,
-        }));
+        await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-increase-r1",
+                minimumBalanceEur: 35476,
+                liabilityRevision: 1,
+                debitNegativeBalances: false,
+            }),
+        );
 
-        const retained = await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-decrease-r2-retained",
-            minimumBalanceEur: 34496,
-            liabilityRevision: 2,
-            debitNegativeBalances: false,
-        }));
+        const retained = await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-decrease-r2-retained",
+                minimumBalanceEur: 34496,
+                liabilityRevision: 2,
+                debitNegativeBalances: false,
+            }),
+        );
         expect(retained).toMatchObject({
             liabilityRevision: 2,
             appliedMinimumBalanceEur: 35476,
@@ -1313,12 +1538,14 @@ describe("stripe-connect 1.0.0 source", () => {
             decrease_authorization_id: null,
             claim_owner: null,
         });
-        const retainedReplay = await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-decrease-r2-retained",
-            minimumBalanceEur: 34496,
-            liabilityRevision: 2,
-            debitNegativeBalances: false,
-        }));
+        const retainedReplay = await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-decrease-r2-retained",
+                minimumBalanceEur: 34496,
+                liabilityRevision: 2,
+                debitNegativeBalances: false,
+            }),
+        );
         expect(retainedReplay).toMatchObject({
             liabilityRevision: 2,
             appliedMinimumBalanceEur: 35476,
@@ -1326,13 +1553,15 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(harness.rest.balanceSettingsUpdateCount).toBe(1);
 
         const authorizationId = "11111111-1111-4111-8111-111111111111";
-        const decreased = await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-decrease-r2",
-            minimumBalanceEur: 34496,
-            liabilityRevision: 2,
-            decreaseAuthorizationId: authorizationId,
-            debitNegativeBalances: false,
-        }));
+        const decreased = await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-decrease-r2",
+                minimumBalanceEur: 34496,
+                liabilityRevision: 2,
+                decreaseAuthorizationId: authorizationId,
+                debitNegativeBalances: false,
+            }),
+        );
         expect(decreased).toMatchObject({
             liabilityRevision: 2,
             appliedMinimumBalanceEur: 34496,
@@ -1357,20 +1586,24 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("never lowers a higher provider-side platform reserve drift without Finance authority", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-provider-drift-r1",
-            minimumBalanceEur: 100,
-            liabilityRevision: 1,
-            debitNegativeBalances: false,
-        }));
+        await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-provider-drift-r1",
+                minimumBalanceEur: 100,
+                liabilityRevision: 1,
+                debitNegativeBalances: false,
+            }),
+        );
         harness.rest.setPlatformPayoutMinimum(450);
 
-        const retained = await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-provider-drift-r2",
-            minimumBalanceEur: 200,
-            liabilityRevision: 2,
-            debitNegativeBalances: false,
-        }));
+        const retained = await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-provider-drift-r2",
+                minimumBalanceEur: 200,
+                liabilityRevision: 2,
+                debitNegativeBalances: false,
+            }),
+        );
 
         expect(retained).toMatchObject({
             liabilityRevision: 2,
@@ -1388,12 +1621,14 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("reports the final consumed authority when a higher revision wins during a decrease", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "configurePlatformPayoutControls", {
-            platformPayoutControlChangeId: "platform-authority-race-r1",
-            minimumBalanceEur: 500,
-            liabilityRevision: 1,
-            debitNegativeBalances: false,
-        }));
+        await okJson(
+            await sourceJson(harness, "configurePlatformPayoutControls", {
+                platformPayoutControlChangeId: "platform-authority-race-r1",
+                minimumBalanceEur: 500,
+                liabilityRevision: 1,
+                debitNegativeBalances: false,
+            }),
+        );
         const authorizationId = "22222222-2222-4222-8222-222222222222";
         const pause = harness.rest.pauseNextPlatformBalanceSettingsUpdate();
         const decreasing = sourceJson(harness, "configurePlatformPayoutControls", {
@@ -1426,12 +1661,14 @@ describe("stripe-connect 1.0.0 source", () => {
             provider_minimum_amount: 700,
             decrease_authorization_id: null,
         });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            request: expect.objectContaining({
-                commerceRequestedDecreaseAuthorizationId: authorizationId,
-                commerceLiabilityRevision: 3,
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                request: expect.objectContaining({
+                    commerceRequestedDecreaseAuthorizationId: authorizationId,
+                    commerceLiabilityRevision: 3,
+                }),
             }),
-        }));
+        );
     });
 
     test("rejects ineligible sellers and hidden payments", async () => {
@@ -1446,23 +1683,36 @@ describe("stripe-connect 1.0.0 source", () => {
             financialTermsHash,
             dualApprovalThresholdAmount: 1000,
         });
-        const sellerSession = await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const payment = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "private-order",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
-        const hidden = await sourceRequestWithUser(harness, "stranger", "getProtectedPayment", { paymentId: String(payment.paymentId) });
+        const sellerSession = await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const payment = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "private-order",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
+        const hidden = await sourceRequestWithUser(harness, "stranger", "getProtectedPayment", {
+            paymentId: String(payment.paymentId),
+        });
 
         expect(sellerSession.connected).toBe(true);
         expect(ineligible.status).toBe(409);
-        expect(await jsonBody(ineligible)).toEqual({ error: "seller enrollment does not allow a held platform payment" });
+        expect(await jsonBody(ineligible)).toEqual({
+            error: "seller enrollment does not allow a held platform payment",
+        });
         expect(hidden.status).toBe(403);
         expect(await jsonBody(hidden)).toEqual({ error: "payment is not visible to this user" });
     });
@@ -1475,33 +1725,35 @@ describe("stripe-connect 1.0.0 source", () => {
             buyerUserId = "buyer-1",
             termsVersion = version,
             termsHash = marketplaceTermsHash,
-        ) => harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/payments/seller-eligibility`,
-            {
-                method: "POST",
-                headers: {
-                    authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
-                    "x-user-id": buyerUserId,
-                    "content-type": "application/json",
-                },
-                body: JSON.stringify({
-                    sellerUserId,
-                    marketplaceTermsVersion: termsVersion,
-                    marketplaceTermsHash: termsHash,
+        ) =>
+            harness.edgeRequest(
+                new Request(`${functionsBaseUrl}/cms-stripe-connect/payments/seller-eligibility`, {
+                    method: "POST",
+                    headers: {
+                        authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+                        "x-user-id": buyerUserId,
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        sellerUserId,
+                        marketplaceTermsVersion: termsVersion,
+                        marketplaceTermsHash: termsHash,
+                    }),
                 }),
-            },
-        ));
+            );
 
         const missing = await requestEligibility("missing-seller");
         expect(missing.status).toBe(200);
         expect(await jsonBody(missing)).toEqual({ eligible: false, reasonCode: "seller_account_missing" });
 
-        await okJson(await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
-            accountToken: "accttok_test_identity_123",
-            marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: version,
-            marketplaceTermsHash,
-        }));
+        await okJson(
+            await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
+                accountToken: "accttok_test_identity_123",
+                marketplaceTermsAccepted: true,
+                marketplaceTermsVersion: version,
+                marketplaceTermsHash,
+            }),
+        );
 
         const eligible = await requestEligibility("seller-1");
         const staleTerms = await requestEligibility("seller-1", "buyer-1", "courtside-seller-2026-08", "d".repeat(64));
@@ -1516,9 +1768,16 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("derives protected-payment eligibility from the exact application-controlled account state", async () => {
         const safe = await createHarness();
-        await okJson(await sourceJson(safe, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                safe,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const safeStatus = await okJson(await sourceRequestWithUser(safe, "seller-1", "getConnectStatus"));
         expect(safeStatus).toMatchObject({
             stripeAccountApiVersion: "v2",
@@ -1547,22 +1806,33 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("releases with source_transaction and reverses before a protected refund", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-release-1",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-release-1",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
-        const paid = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const paid = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
         expect(paid).toMatchObject({
             paymentStatus: "succeeded",
             stripeChargeId: "ch_1",
@@ -1575,13 +1845,15 @@ describe("stripe-connect 1.0.0 source", () => {
             actualPlatformMarginAfterStripeAmount: 55,
         });
 
-        const transfer = await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-order-1",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        }));
+        const transfer = await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-order-1",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         expect(transfer).toMatchObject({
             stripeTransferId: "tr_1",
             sourceChargeId: "ch_1",
@@ -1594,14 +1866,17 @@ describe("stripe-connect 1.0.0 source", () => {
             amount: "1080",
         });
 
-        const protectedRefund = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-order-1",
-            commerceRefundRequestId: 77,
-            amount: 1200,
-            authorizedSellerAmount: 0, sellerEntitlementReductionAmount: 1080,
-            reason: "resolved buyer claim",
-        }));
+        const protectedRefund = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-order-1",
+                commerceRefundRequestId: 77,
+                amount: 1200,
+                authorizedSellerAmount: 0,
+                sellerEntitlementReductionAmount: 1080,
+                reason: "resolved buyer claim",
+            }),
+        );
         expect(protectedRefund.reversal).toMatchObject({
             status: "succeeded",
             confirmedAmount: 1080,
@@ -1619,103 +1894,136 @@ describe("stripe-connect 1.0.0 source", () => {
             { operationType: "reversal", status: "succeeded", amount: 1080 },
             { operationType: "refund", status: "succeeded", amount: 1200, commerceRefundRequestId: 77 },
         ]);
-        const riskAfterRecovery = await okJson(await sourceRequest(harness, "getSellerProviderRisk", {
-            userId: "seller-1",
-        }));
+        const riskAfterRecovery = await okJson(
+            await sourceRequest(harness, "getSellerProviderRisk", {
+                userId: "seller-1",
+            }),
+        );
         expect(riskAfterRecovery).toMatchObject({
             account: { payoutSchedule: "manual", outstandingDebtAmount: 0, financialExposureAmount: 0 },
             payoutControl: { interval: "manual", minimumBalanceByCurrency: { eur: 1080 } },
         });
         const operations = await okJson(await sourceRequest(harness, "listFinancialOperations"));
-        expect(operations.operations).toContainEqual(expect.objectContaining({
-            operationType: "refund_create",
-            amount: 1200,
-            currency: "eur",
-            refundRequestId: "refund-order-1",
-            commerceRefundRequestId: 77,
-        }));
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "financial-operation-projection",
-        }));
-        expect(reconciliation.commerceOperations).toEqual(expect.arrayContaining([
-            expect.objectContaining({ operationType: "transfer", orderPublicId: "order-release-1", amount: 1080 }),
-            expect.objectContaining({ operationType: "reversal", orderPublicId: "order-release-1", amount: 1080 }),
-        ]));
+        expect(operations.operations).toContainEqual(
+            expect.objectContaining({
+                operationType: "refund_create",
+                amount: 1200,
+                currency: "eur",
+                refundRequestId: "refund-order-1",
+                commerceRefundRequestId: 77,
+            }),
+        );
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "financial-operation-projection",
+            }),
+        );
+        expect(reconciliation.commerceOperations).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ operationType: "transfer", orderPublicId: "order-release-1", amount: 1080 }),
+                expect.objectContaining({ operationType: "reversal", orderPublicId: "order-release-1", amount: 1080 }),
+            ]),
+        );
         expect(reconciliation.commerceOperations).not.toContainEqual(
             expect.objectContaining({ operationType: "refund" }),
         );
-        const transferProjection = (reconciliation.commerceOperations as JsonRecord[]).find(operation =>
-            operation.operationType === "transfer"
+        const transferProjection = (reconciliation.commerceOperations as JsonRecord[]).find(
+            (operation) => operation.operationType === "transfer",
         )!;
         expect(Object.hasOwn(transferProjection, "commerceRefundRequestId")).toBe(false);
         expect(Object.hasOwn(transferProjection, "refundRequestId")).toBe(false);
         for (const projection of reconciliation.commerceOperations as JsonRecord[]) {
-            const outbox = harness.rest.rows("commerce_projection_outbox").find(row =>
-                same(row.id, projection.projectionId)
-            );
+            const outbox = harness.rest
+                .rows("commerce_projection_outbox")
+                .find((row) => same(row.id, projection.projectionId));
             expect(projection.providerEventId).toBe(outbox?.projection_key);
-            await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-                projectionId: projection.projectionId,
-                claimToken: projection.projectionClaimToken,
-            }));
+            await okJson(
+                await sourceJson(harness, "acknowledgeCommerceProjection", {
+                    projectionId: projection.projectionId,
+                    claimToken: projection.projectionClaimToken,
+                }),
+            );
         }
-        const afterReversals = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "financial-operation-projection-after-reversals",
-        }));
-        expect(afterReversals.commerceOperations).toEqual(expect.arrayContaining([
-            expect.objectContaining({
-                operationType: "refund",
-                orderPublicId: "order-release-1",
-                refundRequestId: "refund-order-1",
-                commerceRefundRequestId: 77,
-                amount: 1200,
+        const afterReversals = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "financial-operation-projection-after-reversals",
             }),
-        ]));
-        const refundProjection = (afterReversals.commerceOperations as JsonRecord[]).find(operation =>
-            operation.operationType === "refund"
-        )!;
-        const refundOutbox = harness.rest.rows("commerce_projection_outbox").find(row =>
-            same(row.id, refundProjection.projectionId)
         );
+        expect(afterReversals.commerceOperations).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    operationType: "refund",
+                    orderPublicId: "order-release-1",
+                    refundRequestId: "refund-order-1",
+                    commerceRefundRequestId: 77,
+                    amount: 1200,
+                }),
+            ]),
+        );
+        const refundProjection = (afterReversals.commerceOperations as JsonRecord[]).find(
+            (operation) => operation.operationType === "refund",
+        )!;
+        const refundOutbox = harness.rest
+            .rows("commerce_projection_outbox")
+            .find((row) => same(row.id, refundProjection.projectionId));
         expect(refundProjection.providerEventId).toBe(refundOutbox?.projection_key);
         expect(harness.rest.moneyCallOrder).toEqual(["transfer", "reversal", "refund"]);
     });
 
     test("accounts for signed Stripe refund fee credits exactly once", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "refund-fee-credit", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "refund-fee-credit",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
         harness.rest.setNextRefundFee(-20);
 
-        const first = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-fee-credit-1",
-            commerceRefundRequestId: 701,
-            amount: 100,
-            authorizedSellerAmount: 980,
-            sellerEntitlementReductionAmount: 100,
-            reason: "partial buyer remedy",
-        }));
-        const replay = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-fee-credit-1",
-            commerceRefundRequestId: 701,
-            amount: 100,
-            authorizedSellerAmount: 980,
-            sellerEntitlementReductionAmount: 100,
-            reason: "partial buyer remedy",
-        }));
-        const payment = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const first = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-fee-credit-1",
+                commerceRefundRequestId: 701,
+                amount: 100,
+                authorizedSellerAmount: 980,
+                sellerEntitlementReductionAmount: 100,
+                reason: "partial buyer remedy",
+            }),
+        );
+        const replay = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-fee-credit-1",
+                commerceRefundRequestId: 701,
+                amount: 100,
+                authorizedSellerAmount: 980,
+                sellerEntitlementReductionAmount: 100,
+                reason: "partial buyer remedy",
+            }),
+        );
+        const payment = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(harness.rest.rows("refunds")[0]).toMatchObject({
             stripe_balance_transaction_id: "txn_refund_1",
@@ -1742,47 +2050,86 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("blocks the seller and enforces a provider payout hold when recovery is impossible", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "order-debt-1", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-debt-1",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId, releaseAuthorizationId: "release-debt-1", releaseKind: "initial", amount: 1080, currency: "eur",
-        }));
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-debt-1",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         harness.rest.rejectTransferReversals();
 
         const failed = await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId, refundRequestId: "refund-debt-1",
-            commerceRefundRequestId: 78, amount: 1200, authorizedSellerAmount: 0, sellerEntitlementReductionAmount: 1080,
+            paymentId: created.paymentId,
+            refundRequestId: "refund-debt-1",
+            commerceRefundRequestId: 78,
+            amount: 1200,
+            authorizedSellerAmount: 0,
+            sellerEntitlementReductionAmount: 1080,
             reason: "late buyer remedy",
         });
         expect(failed.status).toBe(409);
         expect(await jsonBody(failed)).toEqual({ error: "seller recovery failed; refund requires finance review" });
         const account = harness.rest.rows("accounts")[0];
         expect(account).toMatchObject({
-            risk_status: "blocked", payout_schedule: "manual",
-            outstanding_debt_amount: 1080, financial_exposure_amount: 0,
+            risk_status: "blocked",
+            payout_schedule: "manual",
+            outstanding_debt_amount: 1080,
+            financial_exposure_amount: 0,
         });
-        expect(Date.parse(String(account.manual_payout_hold_alert_at))
-            - Date.parse(String(account.manual_payout_hold_started_at))).toBe(75 * 24 * 60 * 60 * 1000);
-        expect(Date.parse(String(account.manual_payout_hold_deadline_at))
-            - Date.parse(String(account.manual_payout_hold_started_at))).toBe(90 * 24 * 60 * 60 * 1000);
-        expect(harness.rest.rows("seller_recovery_exposures")).toContainEqual(expect.objectContaining({
-            recovery_key: "refund-debt-1:seller-recovery", status: "debt", amount: 1080,
-        }));
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "seller_recovery_debt", severity: "critical",
-        }));
+        expect(
+            Date.parse(String(account.manual_payout_hold_alert_at)) -
+                Date.parse(String(account.manual_payout_hold_started_at)),
+        ).toBe(75 * 24 * 60 * 60 * 1000);
+        expect(
+            Date.parse(String(account.manual_payout_hold_deadline_at)) -
+                Date.parse(String(account.manual_payout_hold_started_at)),
+        ).toBe(90 * 24 * 60 * 60 * 1000);
+        expect(harness.rest.rows("seller_recovery_exposures")).toContainEqual(
+            expect.objectContaining({
+                recovery_key: "refund-debt-1:seller-recovery",
+                status: "debt",
+                amount: 1080,
+            }),
+        );
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "seller_recovery_debt",
+                severity: "critical",
+            }),
+        );
 
         const unsafePayout = await sourceJson(harness, "configureSellerPayoutSchedule", {
-            userId: "seller-1", payoutScheduleChangeId: "unsafe-after-debt",
-            interval: "weekly", weeklyPayoutDays: ["monday"], minimumBalanceEur: 1080,
+            userId: "seller-1",
+            payoutScheduleChangeId: "unsafe-after-debt",
+            interval: "weekly",
+            weeklyPayoutDays: ["monday"],
+            minimumBalanceEur: 1080,
         });
         expect(unsafePayout.status).toBe(409);
 
@@ -1792,14 +2139,18 @@ describe("stripe-connect 1.0.0 source", () => {
             "2026-01-02T00:00:00.000Z",
             "2099-01-01T00:00:00.000Z",
         );
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-manual-hold-alert",
-            limit: 25,
-        }));
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "seller_manual_payout_hold_deadline_approaching",
-            severity: "high",
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-manual-hold-alert",
+                limit: 25,
+            }),
+        );
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "seller_manual_payout_hold_deadline_approaching",
+                severity: "high",
+            }),
+        );
 
         harness.rest.setManualPayoutHoldWindow(
             "seller-1",
@@ -1807,136 +2158,200 @@ describe("stripe-connect 1.0.0 source", () => {
             "2025-03-17T00:00:00.000Z",
             "2025-04-01T00:00:00.000Z",
         );
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "seller-manual-hold-deadline",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "seller-manual-hold-deadline",
+                limit: 25,
+            }),
+        );
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             risk_status: "manual_review",
             financial_hold_reason: "Emergency seller payout hold exceeded the French 90-day deadline",
         });
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "seller_manual_payout_hold_deadline_exceeded",
-            severity: "critical",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "seller_manual_payout_hold_deadline_exceeded",
+                severity: "critical",
+            }),
+        );
     });
 
     test("leases every provider projection durably without starvation or poison blocking", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "order-projection-outbox", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-projection-outbox",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
 
-        const firstRun = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-lost-ack-1", limit: 1,
-        }));
+        const firstRun = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-lost-ack-1",
+                limit: 1,
+            }),
+        );
         const firstLease = (firstRun.payments as JsonRecord[])[0]!;
         expect(firstLease.occurredAt).toBe(firstLease.updatedAt);
         harness.rest.expireProjectionLease(Number(firstLease.projectionId));
-        const reclaimedRun = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-lost-ack-2", limit: 1,
-        }));
+        const reclaimedRun = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-lost-ack-2",
+                limit: 1,
+            }),
+        );
         const reclaimed = (reclaimedRun.payments as JsonRecord[])[0]!;
         expect(reclaimed).toMatchObject({
             projectionId: firstLease.projectionId,
             projectionAttemptCount: 2,
         });
         expect(reclaimed.projectionClaimToken).not.toBe(firstLease.projectionClaimToken);
-        await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-            projectionId: reclaimed.projectionId, claimToken: reclaimed.projectionClaimToken,
-        }));
-        const remainingInitial = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-lost-ack-drain", limit: 5,
-        }));
+        await okJson(
+            await sourceJson(harness, "acknowledgeCommerceProjection", {
+                projectionId: reclaimed.projectionId,
+                claimToken: reclaimed.projectionClaimToken,
+            }),
+        );
+        const remainingInitial = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-lost-ack-drain",
+                limit: 5,
+            }),
+        );
         for (const projection of remainingInitial.payments as JsonRecord[]) {
-            await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-                projectionId: projection.projectionId, claimToken: projection.projectionClaimToken,
-            }));
+            await okJson(
+                await sourceJson(harness, "acknowledgeCommerceProjection", {
+                    projectionId: projection.projectionId,
+                    claimToken: projection.projectionClaimToken,
+                }),
+            );
         }
 
         for (let index = 0; index < 7; index++) {
             harness.rest.seedPaymentProjection(Number(created.paymentId), `test:payment:backlog:${index}`);
         }
-        const backlogOne = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-backlog-1", limit: 5,
-        }));
+        const backlogOne = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-backlog-1",
+                limit: 5,
+            }),
+        );
         expect(backlogOne.payments).toHaveLength(5);
         for (const projection of backlogOne.payments as JsonRecord[]) {
-            await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-                projectionId: projection.projectionId, claimToken: projection.projectionClaimToken,
-            }));
+            await okJson(
+                await sourceJson(harness, "acknowledgeCommerceProjection", {
+                    projectionId: projection.projectionId,
+                    claimToken: projection.projectionClaimToken,
+                }),
+            );
         }
-        const backlogTwo = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-backlog-2", limit: 5,
-        }));
+        const backlogTwo = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-backlog-2",
+                limit: 5,
+            }),
+        );
         expect(backlogTwo.payments).toHaveLength(2);
         for (const projection of backlogTwo.payments as JsonRecord[]) {
-            await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-                projectionId: projection.projectionId, claimToken: projection.projectionClaimToken,
-            }));
+            await okJson(
+                await sourceJson(harness, "acknowledgeCommerceProjection", {
+                    projectionId: projection.projectionId,
+                    claimToken: projection.projectionClaimToken,
+                }),
+            );
         }
 
         harness.rest.seedPaymentProjection(Number(created.paymentId), "test:payment:poison");
         harness.rest.seedPaymentProjection(Number(created.paymentId), "test:payment:healthy");
-        const poisonBatch = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-poison-1", limit: 2,
-        }));
+        const poisonBatch = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-poison-1",
+                limit: 2,
+            }),
+        );
         const [poison, healthy] = poisonBatch.payments as JsonRecord[];
-        await okJson(await sourceJson(harness, "failCommerceProjection", {
-            projectionId: poison!.projectionId,
-            claimToken: poison!.projectionClaimToken,
-            error: "synthetic Commerce poison projection",
-        }));
-        await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-            projectionId: healthy!.projectionId,
-            claimToken: healthy!.projectionClaimToken,
-        }));
+        await okJson(
+            await sourceJson(harness, "failCommerceProjection", {
+                projectionId: poison!.projectionId,
+                claimToken: poison!.projectionClaimToken,
+                error: "synthetic Commerce poison projection",
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "acknowledgeCommerceProjection", {
+                projectionId: healthy!.projectionId,
+                claimToken: healthy!.projectionClaimToken,
+            }),
+        );
         harness.rest.seedPaymentProjection(Number(created.paymentId), "test:payment:after-poison");
-        const afterPoison = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-poison-2", limit: 1,
-        }));
+        const afterPoison = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-poison-2",
+                limit: 1,
+            }),
+        );
         expect(afterPoison.payments).toHaveLength(1);
         expect((afterPoison.payments as JsonRecord[])[0]?.providerEventId).toBe("test:payment:after-poison");
         const afterPoisonLease = (afterPoison.payments as JsonRecord[])[0]!;
-        await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-            projectionId: afterPoisonLease.projectionId,
-            claimToken: afterPoisonLease.projectionClaimToken,
-        }));
+        await okJson(
+            await sourceJson(harness, "acknowledgeCommerceProjection", {
+                projectionId: afterPoisonLease.projectionId,
+                claimToken: afterPoisonLease.projectionClaimToken,
+            }),
+        );
 
         for (let attempt = 2; attempt <= 5; attempt++) {
             harness.rest.makeProjectionRetryDue(Number(poison!.projectionId));
-            const retry = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-                runKey: `projection-poison-retry-${attempt}`,
-                limit: 1,
-            }));
+            const retry = await okJson(
+                await sourceJson(harness, "runProviderReconciliation", {
+                    runKey: `projection-poison-retry-${attempt}`,
+                    limit: 1,
+                }),
+            );
             const retryLease = (retry.payments as JsonRecord[])[0]!;
             expect(retryLease.projectionId).toBe(poison!.projectionId);
-            await okJson(await sourceJson(harness, "failCommerceProjection", {
-                projectionId: retryLease.projectionId,
-                claimToken: retryLease.projectionClaimToken,
-                error: "synthetic Commerce poison projection",
-            }));
+            await okJson(
+                await sourceJson(harness, "failCommerceProjection", {
+                    projectionId: retryLease.projectionId,
+                    claimToken: retryLease.projectionClaimToken,
+                    error: "synthetic Commerce poison projection",
+                }),
+            );
         }
-        expect(harness.rest.rows("commerce_projection_outbox")).toContainEqual(expect.objectContaining({
-            id: poison!.projectionId,
-            projection_status: "manual_review",
-            attempt_count: 5,
-            intervention_revision: 0,
-            last_error: "synthetic Commerce poison projection",
-        }));
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            deduplication_key: `commerce-projection:${poison!.projectionId}`,
-            exception_type: "commerce_projection_delivery_failed",
-            severity: "critical",
-            status: "open",
-        }));
+        expect(harness.rest.rows("commerce_projection_outbox")).toContainEqual(
+            expect.objectContaining({
+                id: poison!.projectionId,
+                projection_status: "manual_review",
+                attempt_count: 5,
+                intervention_revision: 0,
+                last_error: "synthetic Commerce poison projection",
+            }),
+        );
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                deduplication_key: `commerce-projection:${poison!.projectionId}`,
+                exception_type: "commerce_projection_delivery_failed",
+                severity: "critical",
+                status: "open",
+            }),
+        );
 
         const forbidden = await sourceJsonWithRole(harness, "support-1", "support", "requeueCommerceProjection", {
             projectionId: poison!.projectionId,
@@ -1944,11 +2359,13 @@ describe("stripe-connect 1.0.0 source", () => {
             reason: "Commerce consumer was repaired",
         });
         expect(forbidden.status).toBe(403);
-        const requeued = await okJson(await sourceJson(harness, "requeueCommerceProjection", {
-            projectionId: poison!.projectionId,
-            expectedInterventionRevision: 0,
-            reason: "Commerce consumer was repaired",
-        }));
+        const requeued = await okJson(
+            await sourceJson(harness, "requeueCommerceProjection", {
+                projectionId: poison!.projectionId,
+                expectedInterventionRevision: 0,
+                reason: "Commerce consumer was repaired",
+            }),
+        );
         expect(requeued).toMatchObject({
             projectionId: poison!.projectionId,
             projectionStatus: "retry",
@@ -1960,31 +2377,41 @@ describe("stripe-connect 1.0.0 source", () => {
             reason: "stale duplicate intervention",
         });
         expect(staleReplay.status).toBe(409);
-        expect(harness.rest.rows("commerce_projection_interventions")).toContainEqual(expect.objectContaining({
-            projection_id: poison!.projectionId,
-            intervention_revision: 1,
-            actor_id: "user-123",
-            reason: "Commerce consumer was repaired",
-        }));
+        expect(harness.rest.rows("commerce_projection_interventions")).toContainEqual(
+            expect.objectContaining({
+                projection_id: poison!.projectionId,
+                intervention_revision: 1,
+                actor_id: "user-123",
+                reason: "Commerce consumer was repaired",
+            }),
+        );
 
-        const interventionRun = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "projection-poison-finance-requeue",
-            limit: 1,
-        }));
+        const interventionRun = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "projection-poison-finance-requeue",
+                limit: 1,
+            }),
+        );
         const interventionLease = (interventionRun.payments as JsonRecord[])[0]!;
         expect(interventionLease.projectionId).toBe(poison!.projectionId);
-        await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-            projectionId: interventionLease.projectionId,
-            claimToken: interventionLease.projectionClaimToken,
-        }));
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            deduplication_key: `commerce-projection:${poison!.projectionId}`,
-            status: "resolved",
-            resolved_by: "commerce-projection-ack",
-        }));
-        expect(harness.rest.rows("commerce_projection_outbox").filter(row => (
-            row.projection_key === "test:payment:poison"
-        ))).toHaveLength(1);
+        await okJson(
+            await sourceJson(harness, "acknowledgeCommerceProjection", {
+                projectionId: interventionLease.projectionId,
+                claimToken: interventionLease.projectionClaimToken,
+            }),
+        );
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                deduplication_key: `commerce-projection:${poison!.projectionId}`,
+                status: "resolved",
+                resolved_by: "commerce-projection-ack",
+            }),
+        );
+        expect(
+            harness.rest
+                .rows("commerce_projection_outbox")
+                .filter((row) => row.projection_key === "test:payment:poison"),
+        ).toHaveLength(1);
     });
 
     test("reverses initial and reserve Transfers before one full protected refund", async () => {
@@ -1993,14 +2420,17 @@ describe("stripe-connect 1.0.0 source", () => {
             { id: "release-reserve-split", kind: "reserve", amount: 180 },
         ]);
 
-        const result = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-two-transfer-full",
-            commerceRefundRequestId: 801,
-            amount: 1200,
-            authorizedSellerAmount: 0, sellerEntitlementReductionAmount: 1080,
-            reason: "full buyer remedy",
-        }));
+        const result = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-two-transfer-full",
+                commerceRefundRequestId: 801,
+                amount: 1200,
+                authorizedSellerAmount: 0,
+                sellerEntitlementReductionAmount: 1080,
+                reason: "full buyer remedy",
+            }),
+        );
 
         expect(result.reversal).toMatchObject({
             status: "succeeded",
@@ -2017,9 +2447,7 @@ describe("stripe-connect 1.0.0 source", () => {
             { operationType: "reversal", amount: 900, status: "succeeded" },
             { operationType: "refund", amount: 1200, status: "succeeded" },
         ]);
-        expect(harness.rest.moneyCallOrder).toEqual([
-            "transfer", "transfer", "reversal", "reversal", "refund",
-        ]);
+        expect(harness.rest.moneyCallOrder).toEqual(["transfer", "transfer", "reversal", "reversal", "refund"]);
     });
 
     test("allocates a partial seller recovery deterministically across two Transfers", async () => {
@@ -2028,14 +2456,17 @@ describe("stripe-connect 1.0.0 source", () => {
             { id: "release-reserve-partial", kind: "reserve", amount: 180 },
         ]);
 
-        const result = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-two-transfer-partial",
-            commerceRefundRequestId: 802,
-            amount: 250,
-            authorizedSellerAmount: 830, sellerEntitlementReductionAmount: 250,
-            reason: "partial buyer remedy",
-        }));
+        const result = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-two-transfer-partial",
+                commerceRefundRequestId: 802,
+                amount: 250,
+                authorizedSellerAmount: 830,
+                sellerEntitlementReductionAmount: 250,
+                reason: "partial buyer remedy",
+            }),
+        );
 
         expect(result.reversal).toMatchObject({
             requestedAmount: 250,
@@ -2064,7 +2495,8 @@ describe("stripe-connect 1.0.0 source", () => {
             refundRequestId: "refund-two-transfer-lost",
             commerceRefundRequestId: 803,
             amount: 1200,
-            authorizedSellerAmount: 0, sellerEntitlementReductionAmount: 1080,
+            authorizedSellerAmount: 0,
+            sellerEntitlementReductionAmount: 1080,
             reason: "buyer remedy with lost provider response",
         };
 
@@ -2078,13 +2510,13 @@ describe("stripe-connect 1.0.0 source", () => {
 
         const retried = await okJson(await sourceJson(harness, "requestProtectedRefund", body));
         expect(retried.reversal).toMatchObject({ status: "succeeded", confirmedAmount: 1080 });
-        expect(harness.rest.moneyCallOrder).toEqual([
-            "transfer", "transfer", "reversal", "reversal", "refund",
-        ]);
+        expect(harness.rest.moneyCallOrder).toEqual(["transfer", "transfer", "reversal", "reversal", "refund"]);
         expect(harness.rest.rows("transfer_reversals")).toHaveLength(2);
-        expect(harness.rest.rows("financial_operations").filter(row =>
-            row.operation_type === "transfer_reversal_create"
-        )).toEqual([
+        expect(
+            harness.rest
+                .rows("financial_operations")
+                .filter((row) => row.operation_type === "transfer_reversal_create"),
+        ).toEqual([
             expect.objectContaining({ status: "succeeded", stripe_object_id: "trr_1" }),
             expect.objectContaining({ status: "succeeded", stripe_object_id: "trr_2" }),
         ]);
@@ -2132,10 +2564,12 @@ describe("stripe-connect 1.0.0 source", () => {
             status: "needs_response",
         });
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "two-transfer-chargeback",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "two-transfer-chargeback",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("transfer_recovery_requests")[0]).toMatchObject({
             exposure_type: "chargeback",
@@ -2143,33 +2577,58 @@ describe("stripe-connect 1.0.0 source", () => {
             confirmed_amount: 1080,
             status: "succeeded",
         });
-        expect(harness.rest.rows("transfer_reversals").map(row => row.amount)).toEqual([180, 900]);
+        expect(harness.rest.rows("transfer_reversals").map((row) => row.amount)).toEqual([180, 900]);
         expect(harness.rest.moneyCallOrder).toEqual(["transfer", "transfer", "reversal", "reversal"]);
         expect(harness.rest.rows("refunds")).toHaveLength(0);
     });
 
     test("still attempts seller recovery when the provider payout hold is unavailable", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "order-hold-outage", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-hold-outage",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId, releaseAuthorizationId: "release-hold-outage", releaseKind: "initial", amount: 1080, currency: "eur",
-        }));
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-hold-outage",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         harness.rest.rejectBalanceSettingsUpdates();
 
-        const refunded = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId, refundRequestId: "refund-hold-outage",
-            commerceRefundRequestId: 79, amount: 1200, authorizedSellerAmount: 0, sellerEntitlementReductionAmount: 1080,
-            reason: "buyer remedy during provider payout outage",
-        }));
+        const refunded = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-hold-outage",
+                commerceRefundRequestId: 79,
+                amount: 1200,
+                authorizedSellerAmount: 0,
+                sellerEntitlementReductionAmount: 1080,
+                reason: "buyer remedy during provider payout outage",
+            }),
+        );
 
         expect(refunded.reversal).toMatchObject({
             status: "succeeded",
@@ -2178,43 +2637,60 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         expect(refunded.refund).toMatchObject({ status: "succeeded", stripeRefundId: "re_1" });
         expect(harness.rest.moneyCallOrder).toEqual(["transfer", "reversal", "refund"]);
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "seller_payout_hold_failed", severity: "critical",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "seller_payout_hold_failed",
+                severity: "critical",
+            }),
+        );
     });
 
     test("releases only the remaining authorized seller amount after a partial refund", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-partial-refund-before-release",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-partial-refund-before-release",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
 
-        const partialRefund = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-partial-before-release",
-            commerceRefundRequestId: 79,
-            amount: 400,
-            authorizedSellerAmount: 780, sellerEntitlementReductionAmount: 300,
-            reason: "partial buyer remedy",
-        }));
-        const release = await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-after-partial-refund",
-            releaseKind: "initial",
-            amount: 780,
-            currency: "eur",
-        }));
+        const partialRefund = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-partial-before-release",
+                commerceRefundRequestId: 79,
+                amount: 400,
+                authorizedSellerAmount: 780,
+                sellerEntitlementReductionAmount: 300,
+                reason: "partial buyer remedy",
+            }),
+        );
+        const release = await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-after-partial-refund",
+                releaseKind: "initial",
+                amount: 780,
+                currency: "eur",
+            }),
+        );
         const payment = harness.rest.rows("payments")[0];
 
         expect(partialRefund).toMatchObject({
@@ -2237,15 +2713,17 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(harness.rest.lastTransferParameters).toMatchObject({ amount: "780" });
         expect(harness.rest.moneyCallOrder).toEqual(["refund", "transfer"]);
 
-        const secondRefund = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-partial-after-release",
-            commerceRefundRequestId: 80,
-            amount: 200,
-            authorizedSellerAmount: 580,
-            sellerEntitlementReductionAmount: 200,
-            reason: "second partial buyer remedy",
-        }));
+        const secondRefund = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-partial-after-release",
+                commerceRefundRequestId: 80,
+                amount: 200,
+                authorizedSellerAmount: 580,
+                sellerEntitlementReductionAmount: 200,
+                reason: "second partial buyer remedy",
+            }),
+        );
         expect(secondRefund).toMatchObject({
             reversal: {
                 requestedAmount: 200,
@@ -2265,60 +2743,85 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("projects a pending refund before its exact succeeded provider transition", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "order-pending-refund-success", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-pending-refund-success",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
         harness.rest.setNextRefundStatus("pending");
 
-        const requested = await okJson(await sourceJson(harness, "requestProtectedRefund", {
-            paymentId: created.paymentId,
-            refundRequestId: "refund-pending-success",
-            commerceRefundRequestId: 901,
-            amount: 300,
-            authorizedSellerAmount: 780,
-            sellerEntitlementReductionAmount: 300,
-            reason: "pending provider refund",
-        }));
+        const requested = await okJson(
+            await sourceJson(harness, "requestProtectedRefund", {
+                paymentId: created.paymentId,
+                refundRequestId: "refund-pending-success",
+                commerceRefundRequestId: 901,
+                amount: 300,
+                authorizedSellerAmount: 780,
+                sellerEntitlementReductionAmount: 300,
+                reason: "pending provider refund",
+            }),
+        );
         expect(requested.refund).toMatchObject({ status: "pending", stripeRefundId: "re_1" });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            operation_type: "refund_create",
-            status: "processing",
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                operation_type: "refund_create",
+                status: "processing",
+            }),
+        );
 
-        const pendingRun = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "pending-refund-projection",
-            limit: 25,
-        }));
-        const pendingProjection = (pendingRun.commerceOperations as JsonRecord[]).find(operation =>
-            operation.refundRequestId === "refund-pending-success"
+        const pendingRun = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "pending-refund-projection",
+                limit: 25,
+            }),
+        );
+        const pendingProjection = (pendingRun.commerceOperations as JsonRecord[]).find(
+            (operation) => operation.refundRequestId === "refund-pending-success",
         )!;
         expect(pendingProjection).toMatchObject({ operationType: "refund", status: "pending" });
-        await okJson(await sourceJson(harness, "acknowledgeCommerceProjection", {
-            projectionId: pendingProjection.projectionId,
-            claimToken: pendingProjection.projectionClaimToken,
-        }));
+        await okJson(
+            await sourceJson(harness, "acknowledgeCommerceProjection", {
+                projectionId: pendingProjection.projectionId,
+                claimToken: pendingProjection.projectionClaimToken,
+            }),
+        );
 
         harness.rest.updateProviderRefund("re_1", { status: "succeeded" });
-        const succeededRun = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "pending-refund-provider-reconciled",
-            limit: 25,
-        }));
-        const succeededProjection = (succeededRun.commerceOperations as JsonRecord[]).find(operation =>
-            operation.refundRequestId === "refund-pending-success"
+        const succeededRun = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "pending-refund-provider-reconciled",
+                limit: 25,
+            }),
+        );
+        const succeededProjection = (succeededRun.commerceOperations as JsonRecord[]).find(
+            (operation) => operation.refundRequestId === "refund-pending-success",
         )!;
         expect(succeededProjection).toMatchObject({ operationType: "refund", status: "succeeded" });
         expect(harness.rest.rows("refunds")[0]).toMatchObject({ status: "succeeded" });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            operation_type: "refund_create",
-            status: "succeeded",
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                operation_type: "refund_create",
+                status: "succeeded",
+            }),
+        );
 
         harness.rest.updateProviderRefund("re_1", { status: "pending" });
         const stalePayload = JSON.stringify({
@@ -2330,29 +2833,50 @@ describe("stripe-connect 1.0.0 source", () => {
             data: { object: { id: "re_1" } },
         });
         const staleSignature = await stripeSignature(stalePayload, "whsec_test_123");
-        await harness.edgeRequest(new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
-            method: "POST", headers: { "stripe-signature": staleSignature }, body: stalePayload,
-        }));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "pending-refund-stale-event",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": staleSignature },
+                body: stalePayload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "pending-refund-stale-event",
+                limit: 25,
+            }),
+        );
         expect(harness.rest.rows("refunds")[0]).toMatchObject({ status: "succeeded" });
-        expect(harness.rest.rows("commerce_projection_outbox").filter(row =>
-            String(row.projection_key).startsWith("refund:")
-        )).toHaveLength(2);
+        expect(
+            harness.rest
+                .rows("commerce_projection_outbox")
+                .filter((row) => String(row.projection_key).startsWith("refund:")),
+        ).toHaveLength(2);
     });
 
     test("keeps one nonterminal refund per payment and releases the reservation after failure", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "order-pending-refund-failure", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-pending-refund-failure",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
         harness.rest.setNextRefundStatus("pending");
@@ -2374,49 +2898,66 @@ describe("stripe-connect 1.0.0 source", () => {
             authorizedSellerAmount: 480,
         });
         expect(second.status).toBe(409);
-        expect(harness.rest.moneyCallOrder.filter(call => call === "refund")).toHaveLength(1);
+        expect(harness.rest.moneyCallOrder.filter((call) => call === "refund")).toHaveLength(1);
 
         harness.rest.updateProviderRefund("re_1", { status: "failed", failure_reason: "provider_declined" });
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "pending-refund-provider-failed",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "pending-refund-provider-failed",
+                limit: 25,
+            }),
+        );
         expect(harness.rest.rows("refunds")[0]).toMatchObject({ status: "failed" });
-        expect(harness.rest.rows("financial_operations")).toContainEqual(expect.objectContaining({
-            operation_type: "refund_create",
-            status: "failed",
-        }));
-        expect(harness.rest.rows("commerce_projection_outbox")).toContainEqual(expect.objectContaining({
-            projection_key: expect.stringContaining(":failed"),
-            projection_payload: expect.objectContaining({ status: "failed" }),
-        }));
+        expect(harness.rest.rows("financial_operations")).toContainEqual(
+            expect.objectContaining({
+                operation_type: "refund_create",
+                status: "failed",
+            }),
+        );
+        expect(harness.rest.rows("commerce_projection_outbox")).toContainEqual(
+            expect.objectContaining({
+                projection_key: expect.stringContaining(":failed"),
+                projection_payload: expect.objectContaining({ status: "failed" }),
+            }),
+        );
     });
 
     test("releases after Stripe closes a dispute without loss", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-won-dispute-release",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-won-dispute-release",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
         harness.rest.addProviderDispute("ch_1", { id: "dp_won_before_release", status: "won" });
 
-        const release = await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-after-won-dispute",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        }));
+        const release = await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-after-won-dispute",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         const payment = harness.rest.rows("payments")[0];
 
         expect(release).toMatchObject({ amount: 1080, status: "succeeded" });
@@ -2426,22 +2967,33 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("blocks a refund when a seller Transfer becomes in flight after provider reconciliation", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-transfer-races-refund",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-transfer-races-refund",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
-        await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
         harness.rest.injectInFlightTransferBeforeNextRefundReservation(Number(created.paymentId), 500);
 
         const response = await sourceJson(harness, "requestProtectedRefund", {
@@ -2465,27 +3017,38 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("keeps a won dispute blocked while withdrawn funds are not reinstated", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-won-but-funds-withdrawn",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-won-but-funds-withdrawn",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-before-funds-withdrawn",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        }));
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-before-funds-withdrawn",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         harness.rest.rejectTransferReversals();
         harness.rest.addProviderDispute("ch_1", { id: "dp_won_funds_withdrawn", status: "won" });
         const payload = JSON.stringify({
@@ -2497,16 +3060,21 @@ describe("stripe-connect 1.0.0 source", () => {
             data: { object: { id: "dp_won_funds_withdrawn" } },
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
-        const ingestion = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
+        const ingestion = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
         expect(ingestion.status).toBe(202);
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "won-dispute-without-funds-reinstated",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "won-dispute-without-funds-reinstated",
+                limit: 25,
+            }),
+        );
         const payment = harness.rest.rows("payments")[0];
         const dispute = harness.rest.rows("stripe_disputes")[0];
         const exposure = harness.rest.rows("seller_recovery_exposures")[0];
@@ -2522,18 +3090,27 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("orders dispute funds events monotonically and ignores stale or losing tie events", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-dispute-funds-ordering",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-dispute-funds-ordering",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
         harness.rest.addProviderDispute("ch_1", { id: "dp_funds_ordering", status: "won" });
@@ -2548,15 +3125,29 @@ describe("stripe-connect 1.0.0 source", () => {
                 data: { object: { id: "dp_funds_ordering" } },
             });
             const signature = await stripeSignature(payload, "whsec_test_123");
-            await harness.edgeRequest(new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
-                method: "POST", headers: { "stripe-signature": signature }, body: payload,
-            }));
+            await harness.edgeRequest(
+                new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                    method: "POST",
+                    headers: { "stripe-signature": signature },
+                    body: payload,
+                }),
+            );
             await okJson(await sourceJson(harness, "runProviderReconciliation", { runKey, limit: 25 }));
         };
 
         const base = Math.floor(Date.now() / 1000) - 100;
-        await sendFundsEvent("evt_funds_withdrawn_new", "charge.dispute.funds_withdrawn", base + 20, "funds-withdrawn-new");
-        await sendFundsEvent("evt_funds_reinstated_stale", "charge.dispute.funds_reinstated", base + 10, "funds-reinstated-stale");
+        await sendFundsEvent(
+            "evt_funds_withdrawn_new",
+            "charge.dispute.funds_withdrawn",
+            base + 20,
+            "funds-withdrawn-new",
+        );
+        await sendFundsEvent(
+            "evt_funds_reinstated_stale",
+            "charge.dispute.funds_reinstated",
+            base + 10,
+            "funds-reinstated-stale",
+        );
         expect(harness.rest.rows("stripe_disputes")[0]).toMatchObject({
             funds_withdrawn: true,
             last_funds_event_id: "evt_funds_withdrawn_new",
@@ -2570,16 +3161,41 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         expect(blocked.status).toBe(409);
 
-        await sendFundsEvent("evt_funds_a_withdrawn", "charge.dispute.funds_withdrawn", base + 30, "funds-tie-withdrawn-a");
-        await sendFundsEvent("evt_funds_z_reinstated", "charge.dispute.funds_reinstated", base + 30, "funds-tie-reinstated-z");
-        await sendFundsEvent("evt_funds_b_withdrawn", "charge.dispute.funds_withdrawn", base + 30, "funds-tie-withdrawn-b");
+        await sendFundsEvent(
+            "evt_funds_a_withdrawn",
+            "charge.dispute.funds_withdrawn",
+            base + 30,
+            "funds-tie-withdrawn-a",
+        );
+        await sendFundsEvent(
+            "evt_funds_z_reinstated",
+            "charge.dispute.funds_reinstated",
+            base + 30,
+            "funds-tie-reinstated-z",
+        );
+        await sendFundsEvent(
+            "evt_funds_b_withdrawn",
+            "charge.dispute.funds_withdrawn",
+            base + 30,
+            "funds-tie-withdrawn-b",
+        );
         expect(harness.rest.rows("stripe_disputes")[0]).toMatchObject({
             funds_withdrawn: true,
             last_funds_event_id: "same-second-conflict",
         });
 
-        await sendFundsEvent("evt_funds_first_reinstated", "charge.dispute.funds_reinstated", base + 40, "funds-tie-reinstated-first");
-        await sendFundsEvent("evt_funds_second_withdrawn", "charge.dispute.funds_withdrawn", base + 40, "funds-tie-withdrawn-second");
+        await sendFundsEvent(
+            "evt_funds_first_reinstated",
+            "charge.dispute.funds_reinstated",
+            base + 40,
+            "funds-tie-reinstated-first",
+        );
+        await sendFundsEvent(
+            "evt_funds_second_withdrawn",
+            "charge.dispute.funds_withdrawn",
+            base + 40,
+            "funds-tie-withdrawn-second",
+        );
         expect(harness.rest.rows("stripe_disputes")[0]).toMatchObject({
             funds_withdrawn: true,
             last_funds_event_id: "same-second-conflict",
@@ -2596,33 +3212,46 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("keeps an open dispute blocked after a successful seller Transfer Reversal", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-open-dispute-after-release",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-open-dispute-after-release",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-before-open-dispute",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        }));
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-before-open-dispute",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         harness.rest.addProviderDispute("ch_1", { id: "dp_open_after_release", status: "needs_response" });
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "open-dispute-reversal-remains-blocked",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "open-dispute-reversal-remains-blocked",
+                limit: 25,
+            }),
+        );
         const payment = harness.rest.rows("payments")[0];
 
         expect(payment).toMatchObject({
@@ -2637,33 +3266,46 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("records a lost dispute as seller debt instead of transient exposure", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-lost-dispute-debt",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-lost-dispute-debt",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-before-lost-dispute",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        }));
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-before-lost-dispute",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         harness.rest.addProviderDispute("ch_1", { id: "dp_lost_after_release", status: "lost" });
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "lost-dispute-records-debt",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "lost-dispute-records-debt",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("payments")[0]).toMatchObject({
             dispute_status: "lost",
@@ -2680,40 +3322,55 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("releases one exact platform-balance recovery after a reversed dispute is won", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-dispute-recovery-release",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-dispute-recovery-release",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: "release-before-recovery-dispute",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        }));
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: "release-before-recovery-dispute",
+                releaseKind: "initial",
+                amount: 1080,
+                currency: "eur",
+            }),
+        );
         harness.rest.addProviderDispute("ch_1", {
             id: "dp_recovery_release",
             status: "needs_response",
         });
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "recovery-dispute-open",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "recovery-dispute-open",
+                limit: 25,
+            }),
+        );
         harness.rest.updateProviderDispute("dp_recovery_release", { status: "won" });
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "recovery-dispute-won",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "recovery-dispute-won",
+                limit: 25,
+            }),
+        );
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             outstanding_debt_amount: 0,
             financial_exposure_amount: 0,
@@ -2759,18 +3416,27 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("blocks the same release call when reconciliation finds arithmetic divergence", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-arithmetic-divergence",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-arithmetic-divergence",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         await okJson(await sourceRequest(harness, "getProtectedPayment", { paymentId: String(created.paymentId) }));
         harness.rest.seedSucceededTransfer(created.paymentId, 1200);
@@ -2797,22 +3463,33 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("blocks release when provider reconciliation discovers a missing dispute webhook", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-missing-dispute-webhook",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-missing-dispute-webhook",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
-        await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
         harness.rest.addProviderDispute("ch_1");
 
         const release = await sourceJson(harness, "requestSettlementRelease", {
@@ -2822,9 +3499,11 @@ describe("stripe-connect 1.0.0 source", () => {
             amount: 1080,
             currency: "eur",
         });
-        const payment = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const payment = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(release.status).toBe(409);
         expect(await jsonBody(release)).toEqual({
@@ -2832,42 +3511,56 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         expect(payment).toMatchObject({ disputeStatus: "open", settlementStatus: "blocked" });
         expect(harness.rest.moneyCallOrder).toEqual([]);
-        const projectionRun = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "missing-dispute-webhook-projection", limit: 25,
-        }));
-        expect(projectionRun.disputes).toContainEqual(expect.objectContaining({
-            status: "needs_response",
-            clientReferenceId: "order-missing-dispute-webhook",
-            providerEventId: expect.stringContaining("dispute:"),
-            projectionClaimToken: expect.stringContaining("claim-"),
-        }));
-        const disputeProjection = (projectionRun.disputes as JsonRecord[]).find(dispute =>
-            dispute.id === "dp_1"
-        )!;
-        const disputeOutbox = harness.rest.rows("commerce_projection_outbox").find(row =>
-            same(row.id, disputeProjection.projectionId)
+        const projectionRun = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "missing-dispute-webhook-projection",
+                limit: 25,
+            }),
         );
+        expect(projectionRun.disputes).toContainEqual(
+            expect.objectContaining({
+                status: "needs_response",
+                clientReferenceId: "order-missing-dispute-webhook",
+                providerEventId: expect.stringContaining("dispute:"),
+                projectionClaimToken: expect.stringContaining("claim-"),
+            }),
+        );
+        const disputeProjection = (projectionRun.disputes as JsonRecord[]).find((dispute) => dispute.id === "dp_1")!;
+        const disputeOutbox = harness.rest
+            .rows("commerce_projection_outbox")
+            .find((row) => same(row.id, disputeProjection.projectionId));
         expect(disputeProjection.providerEventId).toBe(disputeOutbox?.projection_key);
     });
 
     test("quarantines an out-of-band refund before any seller Transfer", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "order-out-of-band-refund",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "order-out-of-band-refund",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
-        await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
         harness.rest.addProviderRefund("ch_1");
 
         const release = await sourceJson(harness, "requestSettlementRelease", {
@@ -2877,9 +3570,11 @@ describe("stripe-connect 1.0.0 source", () => {
             amount: 1080,
             currency: "eur",
         });
-        const payment = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const payment = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(release.status).toBe(409);
         expect(await jsonBody(release)).toEqual({ error: "payment settlement is blocked or requires finance review" });
@@ -2889,13 +3584,17 @@ describe("stripe-connect 1.0.0 source", () => {
 
         harness.rest.clearProviderRefunds();
         harness.rest.addProviderDispute("ch_1", { id: "dp_won_after_manual_review", status: "won" });
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "won-dispute-must-not-clear-independent-manual-review",
-            limit: 25,
-        }));
-        const afterWonDispute = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "won-dispute-must-not-clear-independent-manual-review",
+                limit: 25,
+            }),
+        );
+        const afterWonDispute = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
         expect(afterWonDispute).toMatchObject({
             disputeStatus: "won",
             settlementStatus: "manual_review",
@@ -2915,32 +3614,40 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
         const url = `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`;
-        const invalid = await harness.edgeRequest(new Request(url, {
-            method: "POST",
-            headers: { "stripe-signature": "t=1,v1=bad" },
-            body: payload,
-        }));
+        const invalid = await harness.edgeRequest(
+            new Request(url, {
+                method: "POST",
+                headers: { "stripe-signature": "t=1,v1=bad" },
+                body: payload,
+            }),
+        );
         expect(invalid.status).toBe(400);
 
-        const first = await harness.edgeRequest(new Request(url, {
-            method: "POST",
-            headers: { "stripe-signature": signature },
-            body: payload,
-        }));
-        const repeated = await harness.edgeRequest(new Request(url, {
-            method: "POST",
-            headers: { "stripe-signature": signature },
-            body: payload,
-        }));
+        const first = await harness.edgeRequest(
+            new Request(url, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        const repeated = await harness.edgeRequest(
+            new Request(url, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
         expect(first.status).toBe(202);
         expect(repeated.status).toBe(200);
         expect(await repeated.json()).toEqual({ received: true, duplicate: true });
         expect(harness.rest.rows("stripe_events")).toHaveLength(1);
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "stripe-reconciliation-1",
-            limit: 25,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "stripe-reconciliation-1",
+                limit: 25,
+            }),
+        );
         expect(reconciliation).toMatchObject({
             runKey: "stripe-reconciliation-1",
             status: "succeeded",
@@ -2972,39 +3679,62 @@ describe("stripe-connect 1.0.0 source", () => {
         const connectUrl = `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect`;
         const platformUrl = `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`;
 
-        const wrongSecret = await harness.edgeRequest(new Request(connectUrl, {
-            method: "POST", headers: { "stripe-signature": platformSignature }, body: payload,
-        }));
-        const wrongScope = await harness.edgeRequest(new Request(platformUrl, {
-            method: "POST", headers: { "stripe-signature": platformSignature }, body: payload,
-        }));
-        const accepted = await harness.edgeRequest(new Request(connectUrl, {
-            method: "POST", headers: { "stripe-signature": connectSignature }, body: payload,
-        }));
+        const wrongSecret = await harness.edgeRequest(
+            new Request(connectUrl, {
+                method: "POST",
+                headers: { "stripe-signature": platformSignature },
+                body: payload,
+            }),
+        );
+        const wrongScope = await harness.edgeRequest(
+            new Request(platformUrl, {
+                method: "POST",
+                headers: { "stripe-signature": platformSignature },
+                body: payload,
+            }),
+        );
+        const accepted = await harness.edgeRequest(
+            new Request(connectUrl, {
+                method: "POST",
+                headers: { "stripe-signature": connectSignature },
+                body: payload,
+            }),
+        );
 
         expect(wrongSecret.status).toBe(400);
         expect(wrongScope.status).toBe(400);
         expect(accepted.status).toBe(202);
-        expect(harness.rest.rows("stripe_events")).toContainEqual(expect.objectContaining({
-            stripe_account_id: "acct_connected_1",
-            event_id: "evt_connect_account_1",
-            event_type: "account.updated",
-        }));
+        expect(harness.rest.rows("stripe_events")).toContainEqual(
+            expect.objectContaining({
+                stripe_account_id: "acct_connected_1",
+                event_id: "evt_connect_account_1",
+                event_type: "account.updated",
+            }),
+        );
     });
 
     test("retrieves current Accounts v2 state from a signed thin event", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.setStripeAccountState("seller-1", {
             requirements: {
-                entries: [{
-                    awaiting_action_from: "user",
-                    description: "identity.individual.documents.primary_verification",
-                    errors: [],
-                    minimum_deadline: { status: "currently_due" },
-                }],
+                entries: [
+                    {
+                        awaiting_action_from: "user",
+                        description: "identity.individual.documents.primary_verification",
+                        errors: [],
+                        minimum_deadline: { status: "currently_due" },
+                    },
+                ],
                 summary: { minimum_deadline: { status: "currently_due" } },
             },
         });
@@ -3023,14 +3753,19 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         const signature = await stripeSignature(payload, "whsec_connect_v2_test_789");
 
-        const ingested = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect-v2`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "accounts-v2-thin-event",
-            limit: 25,
-        }));
+        const ingested = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect-v2`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "accounts-v2-thin-event",
+                limit: 25,
+            }),
+        );
 
         expect(ingested.status).toBe(202);
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
@@ -3057,20 +3792,27 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
 
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-automatic-payout-event",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-automatic-payout-event",
+                limit: 25,
+            }),
+        );
 
-        expect(harness.rest.rows("payout_events")).toContainEqual(expect.objectContaining({
-            stripe_account_id: "platform",
-            stripe_payout_id: "po_platform_automatic_1",
-            status: "pending",
-        }));
+        expect(harness.rest.rows("payout_events")).toContainEqual(
+            expect.objectContaining({
+                stripe_account_id: "platform",
+                stripe_payout_id: "po_platform_automatic_1",
+                status: "pending",
+            }),
+        );
         expect(harness.rest.rows("provider_exceptions")).toHaveLength(0);
     });
 
@@ -3084,27 +3826,41 @@ describe("stripe-connect 1.0.0 source", () => {
             method: "standard",
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-automatic-payout-drift",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-automatic-payout-drift",
+                limit: 25,
+            }),
+        );
 
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "unexpected_provider_payout",
-            severity: "critical",
-            message: "Stripe reported an automatic platform payout while payout protection had drifted",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "unexpected_provider_payout",
+                severity: "critical",
+                message: "Stripe reported an automatic platform payout while payout protection had drifted",
+            }),
+        );
     });
 
     test("quarantines a connected automatic payout during an emergency seller hold", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         harness.rest.seedEmergencySellerHold("seller-1", 250);
         const payload = payoutEventPayload({
             eventId: "evt_connected_automatic_hold_1",
@@ -3114,24 +3870,31 @@ describe("stripe-connect 1.0.0 source", () => {
             method: "standard",
         });
         const signature = await stripeSignature(payload, "whsec_connect_test_456");
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "connected-automatic-payout-emergency-hold",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "connected-automatic-payout-emergency-hold",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             risk_status: "manual_review",
             financial_hold_reason: "Automatic payout conflicts with an emergency seller hold",
         });
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "unexpected_provider_payout",
-            severity: "critical",
-            message: "Stripe reported an automatic payout during an emergency seller hold",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "unexpected_provider_payout",
+                severity: "critical",
+                message: "Stripe reported an automatic payout during an emergency seller hold",
+            }),
+        );
     });
 
     test("quarantines manual and instant platform payouts", async () => {
@@ -3150,20 +3913,27 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         for (const payload of [manualPayload, instantPayload]) {
             const signature = await stripeSignature(payload, "whsec_test_123");
-            await harness.edgeRequest(new Request(
-                `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-                { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-            ));
+            await harness.edgeRequest(
+                new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                    method: "POST",
+                    headers: { "stripe-signature": signature },
+                    body: payload,
+                }),
+            );
         }
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-unsafe-payout-events",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-unsafe-payout-events",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("payout_events")).toHaveLength(2);
-        expect(harness.rest.rows("provider_exceptions").filter(row => (
-            row.exception_type === "unexpected_provider_payout"
-        ))).toHaveLength(2);
+        expect(
+            harness.rest
+                .rows("provider_exceptions")
+                .filter((row) => row.exception_type === "unexpected_provider_payout"),
+        ).toHaveLength(2);
     });
 
     test("retrieves current provider truth when a payout event omits automatic", async () => {
@@ -3183,14 +3953,19 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
 
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-retrieved-payout-event",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-retrieved-payout-event",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("payout_events")[0]).toMatchObject({
             stripe_payout_id: "po_platform_retrieved_1",
@@ -3209,20 +3984,27 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
 
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-ambiguous-payout-event",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-ambiguous-payout-event",
+                limit: 25,
+            }),
+        );
 
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "unexpected_provider_payout",
-            severity: "critical",
-            message: "Stripe payout control mode could not be verified",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "unexpected_provider_payout",
+                severity: "critical",
+                message: "Stripe payout control mode could not be verified",
+            }),
+        );
 
         const recoveredPayload = payoutEventPayload({
             eventId: "evt_platform_ambiguous_recovered_1",
@@ -3233,14 +4015,19 @@ describe("stripe-connect 1.0.0 source", () => {
             method: "standard",
         });
         const recoveredSignature = await stripeSignature(recoveredPayload, "whsec_test_123");
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": recoveredSignature }, body: recoveredPayload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-ambiguous-payout-recovered",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": recoveredSignature },
+                body: recoveredPayload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-ambiguous-payout-recovered",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("provider_exceptions")[0]).toMatchObject({
             exception_type: "unexpected_provider_payout",
@@ -3261,29 +4048,45 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
 
-        await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "platform-failed-payout-event",
-            limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "platform-failed-payout-event",
+                limit: 25,
+            }),
+        );
 
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            exception_type: "provider_payout_failed",
-            severity: "critical",
-        }));
-        expect(harness.rest.rows("provider_exceptions")).not.toContainEqual(expect.objectContaining({
-            exception_type: "unexpected_provider_payout",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                exception_type: "provider_payout_failed",
+                severity: "critical",
+            }),
+        );
+        expect(harness.rest.rows("provider_exceptions")).not.toContainEqual(
+            expect.objectContaining({
+                exception_type: "unexpected_provider_payout",
+            }),
+        );
     });
 
     test("records every connected payout state and quarantines manual and instant payouts", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
         const manualPayload = payoutEventPayload({
             eventId: "evt_manual_payout_1",
             payoutId: "po_manual_1",
@@ -3300,37 +4103,48 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         for (const payload of [manualPayload, instantPayload]) {
             const signature = await stripeSignature(payload, "whsec_connect_test_456");
-            await harness.edgeRequest(new Request(
-                `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect`,
-                { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-            ));
+            await harness.edgeRequest(
+                new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe-connect`, {
+                    method: "POST",
+                    headers: { "stripe-signature": signature },
+                    body: payload,
+                }),
+            );
         }
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "connected-unsafe-payout-events",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "connected-unsafe-payout-events",
+                limit: 25,
+            }),
+        );
 
-        expect(harness.rest.rows("payout_events")).toContainEqual(expect.objectContaining({
-            stripe_payout_id: "po_manual_1",
-            status: "pending",
-        }));
+        expect(harness.rest.rows("payout_events")).toContainEqual(
+            expect.objectContaining({
+                stripe_payout_id: "po_manual_1",
+                status: "pending",
+            }),
+        );
         expect(harness.rest.rows("accounts")[0]).toMatchObject({
             risk_status: "manual_review",
             financial_hold_reason: "Unexpected manual or instant Stripe payout",
         });
-        expect(harness.rest.rows("provider_exceptions").filter(row => (
-            row.exception_type === "unexpected_provider_payout"
-        ))).toHaveLength(2);
+        expect(
+            harness.rest
+                .rows("provider_exceptions")
+                .filter((row) => row.exception_type === "unexpected_provider_payout"),
+        ).toHaveLength(2);
     });
 
     test("reclaims a Stripe webhook abandoned by a crashed worker", async () => {
         const harness = await createHarness();
         harness.rest.seedAbandonedStripeEvent();
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "reclaim-abandoned-webhook",
-            limit: 5,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "reclaim-abandoned-webhook",
+                limit: 5,
+            }),
+        );
 
         expect(reconciliation).toMatchObject({ scannedCount: 1, exceptionCount: 0 });
         expect(harness.rest.rows("stripe_events")[0]).toMatchObject({
@@ -3339,10 +4153,9 @@ describe("stripe-connect 1.0.0 source", () => {
             attempt_count: 2,
         });
 
-        const schema = await Bun.file(new URL(
-            "../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql",
-            import.meta.url,
-        )).text();
+        const schema = await Bun.file(
+            new URL("../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+        ).text();
         expect(schema).toContain("event.processing_status = 'processing'");
         expect(schema).toContain("event.processing_started_at <= now() - interval '5 minutes'");
         expect(schema).toContain("processing_started_at = now()");
@@ -3350,25 +4163,36 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("reconciles a succeeded PaymentIntent when its webhook was lost", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "lost-payment-webhook-order",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "lost-payment-webhook-order",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
         harness.rest.clearStripeRequests();
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "lost-payment-webhook-reconciliation",
-            limit: 25,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "lost-payment-webhook-reconciliation",
+                limit: 25,
+            }),
+        );
         const payments = reconciliation.payments as JsonRecord[];
         const operations = reconciliation.operations as JsonRecord[];
         expect(reconciliation.finishedAt).toEqual(expect.stringMatching(isoTimestampPattern));
@@ -3444,63 +4268,67 @@ describe("stripe-connect 1.0.0 source", () => {
             payments: [
                 {
                     ...expectedPayment,
-                    providerEventId: "payment:1:payment-intent-create:created:none:8ff5f26ecf043c8d4f737fc241bfd33465c18f801f18a0b233274e521c3f3129",
+                    providerEventId:
+                        "payment:1:payment-intent-create:created:none:8ff5f26ecf043c8d4f737fc241bfd33465c18f801f18a0b233274e521c3f3129",
                     projectionId: 3,
                     projectionClaimToken: "claim-3-1",
                 },
                 {
                     ...expectedPayment,
-                    providerEventId: "payment:1:provider-sync:succeeded:ch_1:9d3a23058256c7334017e4d1d1c5679af6efbc0d7ffb6c1c536eb254a04d433b",
+                    providerEventId:
+                        "payment:1:provider-sync:succeeded:ch_1:9d3a23058256c7334017e4d1d1c5679af6efbc0d7ffb6c1c536eb254a04d433b",
                     projectionId: 5,
                     projectionClaimToken: "claim-5-1",
                 },
             ],
-            operations: [{
-                providerOperationId: 2,
-                paymentId: 1,
-                providerPaymentId: 1,
-                clientReferenceId: "lost-payment-webhook-order",
-                businessKey: `payment:1:${financialTermsHash}`,
-                operationType: "payment_intent_create",
-                status: "succeeded",
-                amount: 1200,
-                currency: "eur",
-                releaseAuthorizationId: null,
-                refundRequestId: null,
-                commerceRefundRequestId: null,
-                stripeObjectId: "pi_1",
-                request: {
-                    amount: 1200,
-                    currency: "eur",
+            operations: [
+                {
+                    providerOperationId: 2,
+                    paymentId: 1,
+                    providerPaymentId: 1,
                     clientReferenceId: "lost-payment-webhook-order",
-                    financialTermsHash,
-                    transferGroup,
-                },
-                response: {
-                    id: "pi_1",
-                    status: "requires_payment_method",
+                    businessKey: `payment:1:${financialTermsHash}`,
+                    operationType: "payment_intent_create",
+                    status: "succeeded",
                     amount: 1200,
-                    amount_received: 0,
                     currency: "eur",
-                    transfer_group: transferGroup,
-                    metadata: {
-                        cms_payment_id: "1",
-                        client_reference_id: "lost-payment-webhook-order",
-                        financial_terms_hash: financialTermsHash,
-                        seller_cms_user_id: "seller-1",
+                    releaseAuthorizationId: null,
+                    refundRequestId: null,
+                    commerceRefundRequestId: null,
+                    stripeObjectId: "pi_1",
+                    request: {
+                        amount: 1200,
+                        currency: "eur",
+                        clientReferenceId: "lost-payment-webhook-order",
+                        financialTermsHash,
+                        transferGroup,
                     },
-                    latest_charge: null,
+                    response: {
+                        id: "pi_1",
+                        status: "requires_payment_method",
+                        amount: 1200,
+                        amount_received: 0,
+                        currency: "eur",
+                        transfer_group: transferGroup,
+                        metadata: {
+                            cms_payment_id: "1",
+                            client_reference_id: "lost-payment-webhook-order",
+                            financial_terms_hash: financialTermsHash,
+                            seller_cms_user_id: "seller-1",
+                        },
+                        latest_charge: null,
+                    },
+                    lastError: null,
+                    attemptCount: 1,
+                    nextAttemptAt: null,
+                    claimedAt: operations[0]?.claimedAt,
+                    completedAt: operations[0]?.completedAt,
+                    providerEventId: "operation:2:succeeded",
+                    occurredAt: "2026-07-06T12:10:00.000Z",
+                    createdAt: "2026-07-06T12:04:00.000Z",
+                    updatedAt: "2026-07-06T12:10:00.000Z",
                 },
-                lastError: null,
-                attemptCount: 1,
-                nextAttemptAt: null,
-                claimedAt: operations[0]?.claimedAt,
-                completedAt: operations[0]?.completedAt,
-                providerEventId: "operation:2:succeeded",
-                occurredAt: "2026-07-06T12:10:00.000Z",
-                createdAt: "2026-07-06T12:04:00.000Z",
-                updatedAt: "2026-07-06T12:10:00.000Z",
-            }],
+            ],
             commerceOperations: [],
             disputes: [],
         });
@@ -3528,21 +4356,30 @@ describe("stripe-connect 1.0.0 source", () => {
             {
                 method: "GET",
                 pathname: "/v1/disputes",
-                searchParams: [["charge", "ch_1"], ["limit", "100"]],
+                searchParams: [
+                    ["charge", "ch_1"],
+                    ["limit", "100"],
+                ],
                 idempotencyKey: null,
                 stripeAccount: null,
             },
             {
                 method: "GET",
                 pathname: "/v1/refunds",
-                searchParams: [["charge", "ch_1"], ["limit", "100"]],
+                searchParams: [
+                    ["charge", "ch_1"],
+                    ["limit", "100"],
+                ],
                 idempotencyKey: null,
                 stripeAccount: null,
             },
             {
                 method: "GET",
                 pathname: "/v1/transfers",
-                searchParams: [["transfer_group", transferGroup], ["limit", "100"]],
+                searchParams: [
+                    ["transfer_group", transferGroup],
+                    ["limit", "100"],
+                ],
                 idempotencyKey: null,
                 stripeAccount: null,
             },
@@ -3551,25 +4388,36 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("retrieves and validates Charge and BalanceTransaction references before accepting provider success", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "provider-reference-hydration",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "provider-reference-hydration",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
         harness.rest.setPaymentIntentProviderReferences(paymentIntentId);
 
-        const synced = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const synced = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(synced).toMatchObject({
             paymentStatus: "succeeded",
@@ -3586,26 +4434,37 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("never trusts a separately retrieved BalanceTransaction without validating immutable payment truth", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "invalid-retrieved-balance-transaction",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "invalid-retrieved-balance-transaction",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
         harness.rest.setPaymentIntentProviderReferences(paymentIntentId);
         harness.rest.patchProviderBalanceTransaction(paymentIntentId, { amount: 1199, net: 1134 });
 
-        const synced = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const synced = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(synced).toMatchObject({
             paymentStatus: "failed",
@@ -3613,38 +4472,53 @@ describe("stripe-connect 1.0.0 source", () => {
             settlementStatus: "manual_review",
         });
         expect(harness.rest.balanceTransactionRetrieveCount).toBe(1);
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            payment_id: created.paymentId,
-            exception_type: "provider_payment_truth_mismatch",
-            status: "open",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                payment_id: created.paymentId,
+                exception_type: "provider_payment_truth_mismatch",
+                status: "open",
+            }),
+        );
     });
 
     test("atomically clears only the transient expansion review after full provider revalidation", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "transient-provider-review-recovery",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "transient-provider-review-recovery",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
         harness.rest.setPaymentIntentProviderReferences(paymentIntentId);
         harness.rest.seedTransientProviderTruthReview(Number(created.paymentId), paymentIntentId);
 
-        const first = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
-        const replay = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const first = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
+        const replay = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(first).toMatchObject({
             paymentStatus: "succeeded",
@@ -3653,43 +4527,60 @@ describe("stripe-connect 1.0.0 source", () => {
             manualReviewReason: null,
         });
         expect(replay).toMatchObject({ commercePaymentStatus: "succeeded", settlementStatus: "held" });
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            deduplication_key: `provider-payment-truth:${created.paymentId}:${paymentIntentId}`,
-            status: "resolved",
-            resolved_by: "provider-truth-revalidation",
-        }));
-        expect(harness.rest.rows("payment_events").filter(row => (
-            row.event_type === "provider_payment_truth_revalidated"
-        ))).toEqual([expect.objectContaining({
-            payment_id: created.paymentId,
-            actor_kind: "reconciliation",
-            previous_settlement_status: "manual_review",
-            next_settlement_status: "held",
-        })]);
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                deduplication_key: `provider-payment-truth:${created.paymentId}:${paymentIntentId}`,
+                status: "resolved",
+                resolved_by: "provider-truth-revalidation",
+            }),
+        );
+        expect(
+            harness.rest
+                .rows("payment_events")
+                .filter((row) => row.event_type === "provider_payment_truth_revalidated"),
+        ).toEqual([
+            expect.objectContaining({
+                payment_id: created.paymentId,
+                actor_kind: "reconciliation",
+                previous_settlement_status: "manual_review",
+                next_settlement_status: "held",
+            }),
+        ]);
     });
 
     test("keeps transient provider review fail-closed when another unresolved exception exists", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "transient-review-with-independent-risk",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "transient-review-with-independent-risk",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
         harness.rest.seedTransientProviderTruthReview(Number(created.paymentId), paymentIntentId);
         harness.rest.seedOtherOpenProviderException(Number(created.paymentId));
 
-        const synced = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const synced = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(synced).toMatchObject({
             paymentStatus: "succeeded",
@@ -3698,33 +4589,44 @@ describe("stripe-connect 1.0.0 source", () => {
             reconciliationPending: true,
             manualReviewReason: "Stripe payment provider truth mismatch: charge_balance_transaction_expansion",
         });
-        expect(harness.rest.rows("payment_events").some(row => (
-            row.event_type === "provider_payment_truth_revalidated"
-        ))).toBeFalse();
+        expect(
+            harness.rest.rows("payment_events").some((row) => row.event_type === "provider_payment_truth_revalidated"),
+        ).toBeFalse();
     });
 
     test("rebuilds a missing transient provider exception before recovering", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "transient-review-without-recovery-exception",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "transient-review-without-recovery-exception",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
         harness.rest.seedTransientProviderTruthReview(Number(created.paymentId), paymentIntentId);
         harness.rest.removeTransientProviderTruthException(Number(created.paymentId), paymentIntentId);
 
-        const synced = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-            paymentId: String(created.paymentId),
-        }));
+        const synced = await okJson(
+            await sourceRequest(harness, "getProtectedPayment", {
+                paymentId: String(created.paymentId),
+            }),
+        );
 
         expect(synced).toMatchObject({
             paymentStatus: "succeeded",
@@ -3732,79 +4634,116 @@ describe("stripe-connect 1.0.0 source", () => {
             settlementStatus: "held",
             manualReviewReason: null,
         });
-        expect(harness.rest.rows("provider_exceptions")).toContainEqual(expect.objectContaining({
-            deduplication_key: `provider-payment-truth:${created.paymentId}:${paymentIntentId}`,
-            status: "resolved",
-            resolved_by: "provider-truth-revalidation",
-        }));
-        expect(harness.rest.rows("payment_events")).toContainEqual(expect.objectContaining({
-            payment_id: created.paymentId,
-            event_type: "provider_payment_truth_revalidated",
-        }));
+        expect(harness.rest.rows("provider_exceptions")).toContainEqual(
+            expect.objectContaining({
+                deduplication_key: `provider-payment-truth:${created.paymentId}:${paymentIntentId}`,
+                status: "resolved",
+                resolved_by: "provider-truth-revalidation",
+            }),
+        );
+        expect(harness.rest.rows("payment_events")).toContainEqual(
+            expect.objectContaining({
+                payment_id: created.paymentId,
+                event_type: "provider_payment_truth_revalidated",
+            }),
+        );
     });
 
     test("fails closed when Stripe succeeded payment truth diverges from immutable Commerce terms", async () => {
         const cases: Array<[string, (rest: StripeConnectMock, paymentIntentId: string) => void]> = [
             ["lower PaymentIntent amount", (rest, id) => rest.patchPaymentIntent(id, { amount: 1199 })],
             ["wrong PaymentIntent currency", (rest, id) => rest.patchPaymentIntent(id, { currency: "usd" })],
-            ["wrong PaymentIntent transfer group", (rest, id) => rest.patchPaymentIntent(id, { transfer_group: "order:other" })],
-            ["wrong immutable terms hash", (rest, id) => rest.patchPaymentIntentMetadata(id, { financial_terms_hash: "b".repeat(64) })],
+            [
+                "wrong PaymentIntent transfer group",
+                (rest, id) => rest.patchPaymentIntent(id, { transfer_group: "order:other" }),
+            ],
+            [
+                "wrong immutable terms hash",
+                (rest, id) => rest.patchPaymentIntentMetadata(id, { financial_terms_hash: "b".repeat(64) }),
+            ],
             ["under-captured Charge", (rest, id) => rest.patchLatestCharge(id, { amount_captured: 1199 })],
             ["unpaid Charge", (rest, id) => rest.patchLatestCharge(id, { paid: false })],
-            ["wrong Charge transfer group", (rest, id) => rest.patchLatestCharge(id, { transfer_group: "order:other" })],
+            [
+                "wrong Charge transfer group",
+                (rest, id) => rest.patchLatestCharge(id, { transfer_group: "order:other" }),
+            ],
         ];
 
         for (const [name, mutate] of cases) {
             const harness = await createHarness();
-            await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-                email: `seller-${name.replaceAll(" ", "-")}@example.com`,
-            }, { userId: "seller-1" }));
-            const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-                sellerUserId: "seller-1",
-                amountTotal: 1200,
-                sellerTransferAmount: 1080,
-                currency: "eur",
-                clientReferenceId: `provider-truth-${name}`,
-                financialTermsHash,
-                dualApprovalThresholdAmount: 1000,
-            }));
+            await okJson(
+                await sourceJson(
+                    harness,
+                    "createConnectOnboardingSessionForUser",
+                    {
+                        email: `seller-${name.replaceAll(" ", "-")}@example.com`,
+                    },
+                    { userId: "seller-1" },
+                ),
+            );
+            const created = await okJson(
+                await sourceJson(harness, "createProtectedPayment", {
+                    sellerUserId: "seller-1",
+                    amountTotal: 1200,
+                    sellerTransferAmount: 1080,
+                    currency: "eur",
+                    clientReferenceId: `provider-truth-${name}`,
+                    financialTermsHash,
+                    dualApprovalThresholdAmount: 1000,
+                }),
+            );
             const paymentIntentId = String(created.stripePaymentIntentId);
             harness.rest.setPaymentIntentSucceeded(paymentIntentId);
             mutate(harness.rest, paymentIntentId);
 
-            const synced = await okJson(await sourceRequest(harness, "getProtectedPayment", {
-                paymentId: String(created.paymentId),
-            }));
+            const synced = await okJson(
+                await sourceRequest(harness, "getProtectedPayment", {
+                    paymentId: String(created.paymentId),
+                }),
+            );
 
             expect(synced, name).toMatchObject({ paymentStatus: "failed", settlementStatus: "manual_review" });
-            expect(harness.rest.rows("provider_exceptions"), name).toContainEqual(expect.objectContaining({
-                payment_id: created.paymentId,
-                exception_type: "provider_payment_truth_mismatch",
-                severity: "critical",
-                status: "open",
-            }));
-            expect(harness.rest.rows("payment_events"), name).toContainEqual(expect.objectContaining({
-                payment_id: created.paymentId,
-                event_type: "provider_payment_truth_mismatch",
-                actor_kind: "reconciliation",
-            }));
+            expect(harness.rest.rows("provider_exceptions"), name).toContainEqual(
+                expect.objectContaining({
+                    payment_id: created.paymentId,
+                    exception_type: "provider_payment_truth_mismatch",
+                    severity: "critical",
+                    status: "open",
+                }),
+            );
+            expect(harness.rest.rows("payment_events"), name).toContainEqual(
+                expect.objectContaining({
+                    payment_id: created.paymentId,
+                    event_type: "provider_payment_truth_mismatch",
+                    actor_kind: "reconciliation",
+                }),
+            );
         }
     });
 
     test("never lets charge.succeeded override a provider-truth quarantine", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "charge-webhook-provider-truth",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "charge-webhook-provider-truth",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
         harness.rest.patchLatestCharge(paymentIntentId, { amount_captured: 1199 });
@@ -3817,48 +4756,70 @@ describe("stripe-connect 1.0.0 source", () => {
             data: { object: { id: "ch_1", payment_intent: paymentIntentId } },
         });
         const signature = await stripeSignature(payload, "whsec_test_123");
-        const accepted = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`,
-            { method: "POST", headers: { "stripe-signature": signature }, body: payload },
-        ));
+        const accepted = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": signature },
+                body: payload,
+            }),
+        );
         expect(accepted.status).toBe(202);
 
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "charge-provider-truth-mismatch",
-            limit: 25,
-        }));
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "charge-provider-truth-mismatch",
+                limit: 25,
+            }),
+        );
 
         expect(harness.rest.rows("payments")[0]).toMatchObject({
             payment_status: "failed",
             settlement_status: "manual_review",
             stripe_charge_id: "ch_1",
         });
-        expect(harness.rest.rows("payment_events")).toContainEqual(expect.objectContaining({
-            event_type: "provider_payment_truth_mismatch",
-            actor_kind: "webhook",
-            actor_id: "evt_charge_truth_mismatch",
-        }));
+        expect(harness.rest.rows("payment_events")).toContainEqual(
+            expect.objectContaining({
+                event_type: "provider_payment_truth_mismatch",
+                actor_kind: "webhook",
+                actor_id: "evt_charge_truth_mismatch",
+            }),
+        );
     });
 
     test("tombstones an absent provider payment and permanently rejects a later create race", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
 
-        const first = await okJson(await sourceJson(harness, "cancelProtectedPayment", {
-            clientReferenceId: "cancel-before-provider-create",
-            cancellationRequestId: "commerce-cancellation-absent-1",
-            reason: "buyer cancelled before the provider payment existed",
-        }));
-        const replay = await okJson(await sourceJson(harness, "cancelProtectedPayment", {
-            clientReferenceId: "cancel-before-provider-create",
-            cancellationRequestId: "commerce-cancellation-absent-1",
-            reason: "buyer cancelled before the provider payment existed",
-        }));
+        const first = await okJson(
+            await sourceJson(harness, "cancelProtectedPayment", {
+                clientReferenceId: "cancel-before-provider-create",
+                cancellationRequestId: "commerce-cancellation-absent-1",
+                reason: "buyer cancelled before the provider payment existed",
+            }),
+        );
+        const replay = await okJson(
+            await sourceJson(harness, "cancelProtectedPayment", {
+                clientReferenceId: "cancel-before-provider-create",
+                cancellationRequestId: "commerce-cancellation-absent-1",
+                reason: "buyer cancelled before the provider payment existed",
+            }),
+        );
         const lateCreate = await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "cancel-before-provider-create", financialTermsHash,
+            sellerUserId: "seller-1",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            currency: "eur",
+            clientReferenceId: "cancel-before-provider-create",
+            financialTermsHash,
             dualApprovalThresholdAmount: 1000,
         });
 
@@ -3883,25 +4844,42 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("cancels a reconfirmable PaymentIntent idempotently before Commerce can restore inventory", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "cancel-during-confirmation", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "cancel-during-confirmation",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
 
-        const first = await okJson(await sourceJson(harness, "cancelProtectedPayment", {
-            clientReferenceId: "cancel-during-confirmation",
-            cancellationRequestId: "commerce-cancellation-1",
-            reason: "buyer cancelled during confirmation",
-        }));
-        const replay = await okJson(await sourceJson(harness, "cancelProtectedPayment", {
-            clientReferenceId: "cancel-during-confirmation",
-            cancellationRequestId: "commerce-cancellation-1",
-            reason: "buyer cancelled during confirmation",
-        }));
+        const first = await okJson(
+            await sourceJson(harness, "cancelProtectedPayment", {
+                clientReferenceId: "cancel-during-confirmation",
+                cancellationRequestId: "commerce-cancellation-1",
+                reason: "buyer cancelled during confirmation",
+            }),
+        );
+        const replay = await okJson(
+            await sourceJson(harness, "cancelProtectedPayment", {
+                clientReferenceId: "cancel-during-confirmation",
+                cancellationRequestId: "commerce-cancellation-1",
+                reason: "buyer cancelled during confirmation",
+            }),
+        );
 
         expect(first).toMatchObject({
             cancellationRequestId: "commerce-cancellation-1",
@@ -3909,20 +4887,34 @@ describe("stripe-connect 1.0.0 source", () => {
             payment: { paymentId: created.paymentId, paymentStatus: "cancelled" },
         });
         expect(replay).toMatchObject({ providerOperationId: first.providerOperationId, providerStatus: "canceled" });
-        expect(harness.rest.rows("financial_operations").filter(row => row.operation_type === "payment_intent_cancel"))
-            .toEqual([expect.objectContaining({ status: "succeeded", stripe_object_id: created.stripePaymentIntentId })]);
+        expect(
+            harness.rest.rows("financial_operations").filter((row) => row.operation_type === "payment_intent_cancel"),
+        ).toEqual([expect.objectContaining({ status: "succeeded", stripe_object_id: created.stripePaymentIntentId })]);
     });
 
     test("recovers a lost PaymentIntent cancellation response without creating a second cancellation", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "lost-cancel-response", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "lost-cancel-response",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         harness.rest.losePaymentCancellationResponseOnce();
         const lost = await sourceJson(harness, "cancelProtectedPayment", {
             clientReferenceId: "lost-cancel-response",
@@ -3931,55 +4923,89 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         expect(lost.status).toBeGreaterThanOrEqual(500);
 
-        const reconciliation = await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "recover-lost-payment-cancellation", limit: 25,
-        }));
+        const reconciliation = await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "recover-lost-payment-cancellation",
+                limit: 25,
+            }),
+        );
 
-        expect(reconciliation.payments).toContainEqual(expect.objectContaining({
-            paymentId: created.paymentId, paymentStatus: "cancelled",
-        }));
-        expect(harness.rest.rows("financial_operations").filter(row => row.operation_type === "payment_intent_cancel"))
-            .toEqual([expect.objectContaining({ status: "succeeded", stripe_object_id: created.stripePaymentIntentId })]);
+        expect(reconciliation.payments).toContainEqual(
+            expect.objectContaining({
+                paymentId: created.paymentId,
+                paymentStatus: "cancelled",
+            }),
+        );
+        expect(
+            harness.rest.rows("financial_operations").filter((row) => row.operation_type === "payment_intent_cancel"),
+        ).toEqual([expect.objectContaining({ status: "succeeded", stripe_object_id: created.stripePaymentIntentId })]);
     });
 
     test("keeps payment_failed reconfirmable and reports a cancellation race as late success", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1", amountTotal: 1200, sellerTransferAmount: 1080,
-            currency: "eur", clientReferenceId: "failed-then-reconfirm", financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        const created = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "failed-then-reconfirm",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         const paymentIntentId = String(created.stripePaymentIntentId);
         const failedPayload = JSON.stringify({
-            id: "evt_reconfirmable_payment_failed", type: "payment_intent.payment_failed",
-            api_version: "2026-02-25.clover", created: Math.floor(Date.now() / 1000), livemode: false,
+            id: "evt_reconfirmable_payment_failed",
+            type: "payment_intent.payment_failed",
+            api_version: "2026-02-25.clover",
+            created: Math.floor(Date.now() / 1000),
+            livemode: false,
             data: { object: { id: paymentIntentId } },
         });
         const failedSignature = await stripeSignature(failedPayload, "whsec_test_123");
-        await harness.edgeRequest(new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
-            method: "POST", headers: { "stripe-signature": failedSignature }, body: failedPayload,
-        }));
-        await okJson(await sourceJson(harness, "runProviderReconciliation", {
-            runKey: "reconfirmable-payment-failed", limit: 25,
-        }));
+        await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/webhooks/stripe`, {
+                method: "POST",
+                headers: { "stripe-signature": failedSignature },
+                body: failedPayload,
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "runProviderReconciliation", {
+                runKey: "reconfirmable-payment-failed",
+                limit: 25,
+            }),
+        );
         expect(harness.rest.rows("payments")[0]).toMatchObject({ payment_status: "created" });
 
         harness.rest.setPaymentIntentSucceeded(paymentIntentId);
-        const late = await okJson(await sourceJson(harness, "cancelProtectedPayment", {
-            clientReferenceId: "failed-then-reconfirm",
-            cancellationRequestId: "commerce-cancellation-late-success",
-            reason: "buyer cancelled while reconfirming",
-        }));
+        const late = await okJson(
+            await sourceJson(harness, "cancelProtectedPayment", {
+                clientReferenceId: "failed-then-reconfirm",
+                cancellationRequestId: "commerce-cancellation-late-success",
+                reason: "buyer cancelled while reconfirming",
+            }),
+        );
         expect(late).toMatchObject({
             providerStatus: "succeeded",
             payment: { paymentStatus: "succeeded", stripeChargeId: "ch_1" },
         });
-        expect(harness.rest.rows("payment_events")).toContainEqual(expect.objectContaining({
-            event_type: "payment_intent_cancellation_found_late_success",
-        }));
+        expect(harness.rest.rows("payment_events")).toContainEqual(
+            expect.objectContaining({
+                event_type: "payment_intent_cancellation_found_late_success",
+            }),
+        );
     });
 
     test("keeps Stripe dispute submission and acceptance locally irreversible", async () => {
@@ -3988,10 +5014,14 @@ describe("stripe-connect 1.0.0 source", () => {
         harness.rest.seedDispute("dp_submitted", "needs_response", "submitted", true);
         harness.rest.seedDispute("dp_terminal", "won", "closed", false);
 
-        const missingRole = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-stripe-connect/admin/exceptions`,
-            { headers: { authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`, "x-cms-user-id": "operator" } },
-        ));
+        const missingRole = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-stripe-connect/admin/exceptions`, {
+                headers: {
+                    authorization: `Bearer ${activeEnv.CMS_STRIPE_CONNECT_API_KEY}`,
+                    "x-cms-user-id": "operator",
+                },
+            }),
+        );
         const adminList = await sourceRequestWithRole(harness, "admin-1", "admin", "listProviderExceptions");
         const supportList = await sourceRequestWithRole(harness, "operator", "support", "listProviderExceptions");
         const financeList = await sourceRequestWithRole(harness, "operator", "finance", "listProviderExceptions");
@@ -4000,17 +5030,29 @@ describe("stripe-connect 1.0.0 source", () => {
             evidenceOperationId: "admin-stage-1",
             evidenceText: "Tracked shipment evidence",
         });
-        const stagedBySupport = await sourceJsonWithRole(harness, "support-1", "support", "stageStripeDisputeEvidence", {
-            disputeId: "dp_stage",
-            evidenceOperationId: "support-stage-1",
-            evidenceText: "Tracked shipment evidence",
-        });
-        const supportSubmission = await sourceJsonWithRole(harness, "support-1", "support", "submitStripeDisputeEvidence", {
-            disputeId: "dp_submitted",
-            submissionOperationId: "support-submit",
-            evidenceOperationId: "evidence-dp_submitted",
-            confirmation: "SUBMIT STRIPE EVIDENCE",
-        });
+        const stagedBySupport = await sourceJsonWithRole(
+            harness,
+            "support-1",
+            "support",
+            "stageStripeDisputeEvidence",
+            {
+                disputeId: "dp_stage",
+                evidenceOperationId: "support-stage-1",
+                evidenceText: "Tracked shipment evidence",
+            },
+        );
+        const supportSubmission = await sourceJsonWithRole(
+            harness,
+            "support-1",
+            "support",
+            "submitStripeDisputeEvidence",
+            {
+                disputeId: "dp_submitted",
+                submissionOperationId: "support-submit",
+                evidenceOperationId: "evidence-dp_submitted",
+                confirmation: "SUBMIT STRIPE EVIDENCE",
+            },
+        );
         const resubmission = await sourceJsonWithRole(harness, "admin-1", "admin", "submitStripeDisputeEvidence", {
             disputeId: "dp_submitted",
             submissionOperationId: "submit-again",
@@ -4036,16 +5078,20 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(stagedBySupport.status).toBe(403);
         expect(supportSubmission.status).toBe(403);
         expect(resubmission.status).toBe(409);
-        expect(await jsonBody(resubmission)).toEqual({ error: "Stripe dispute evidence was already submitted irreversibly" });
+        expect(await jsonBody(resubmission)).toEqual({
+            error: "Stripe dispute evidence was already submitted irreversibly",
+        });
         expect(adminAcceptance.status).toBe(409);
         expect(await jsonBody(adminAcceptance)).toEqual({ error: "Stripe dispute is already terminal" });
         expect(financeAcceptance.status).toBe(403);
         expect(harness.rest.rows("financial_operations")).toHaveLength(0);
-        expect(harness.rest.rows("payment_events")).toContainEqual(expect.objectContaining({
-            event_type: "stripe_dispute_evidence_staged",
-            actor_kind: "admin",
-            actor_id: "admin-1",
-        }));
+        expect(harness.rest.rows("payment_events")).toContainEqual(
+            expect.objectContaining({
+                event_type: "stripe_dispute_evidence_staged",
+                actor_kind: "admin",
+                actor_id: "admin-1",
+            }),
+        );
     });
 
     test("requires two distinct admins above the immutable Commerce threshold", async () => {
@@ -4059,9 +5105,27 @@ describe("stripe-connect 1.0.0 source", () => {
             evidenceOperationId: "evidence-dp_dual_submit",
             confirmation: "SUBMIT STRIPE EVIDENCE",
         };
-        const firstSubmit = await sourceJsonWithRole(harness, "admin-1", "admin", "submitStripeDisputeEvidence", submitBody);
-        const repeatedFirstSubmit = await sourceJsonWithRole(harness, "admin-1", "admin", "submitStripeDisputeEvidence", submitBody);
-        const secondSubmit = await sourceJsonWithRole(harness, "admin-2", "admin", "submitStripeDisputeEvidence", submitBody);
+        const firstSubmit = await sourceJsonWithRole(
+            harness,
+            "admin-1",
+            "admin",
+            "submitStripeDisputeEvidence",
+            submitBody,
+        );
+        const repeatedFirstSubmit = await sourceJsonWithRole(
+            harness,
+            "admin-1",
+            "admin",
+            "submitStripeDisputeEvidence",
+            submitBody,
+        );
+        const secondSubmit = await sourceJsonWithRole(
+            harness,
+            "admin-2",
+            "admin",
+            "submitStripeDisputeEvidence",
+            submitBody,
+        );
 
         const acceptBody = {
             disputeId: "dp_dual_accept",
@@ -4073,7 +5137,10 @@ describe("stripe-connect 1.0.0 source", () => {
 
         expect(firstSubmit.status).toBe(202);
         expect(repeatedFirstSubmit.status).toBe(202);
-        expect(await jsonBody(firstSubmit)).toMatchObject({ approvalStatus: "pending_second_approval", firstApprovedBy: "admin-1" });
+        expect(await jsonBody(firstSubmit)).toMatchObject({
+            approvalStatus: "pending_second_approval",
+            firstApprovedBy: "admin-1",
+        });
         expect(secondSubmit.status).toBe(200);
         expect(await jsonBody(secondSubmit)).toMatchObject({ evidenceStatus: "submitted", approvalStatus: "approved" });
         expect(firstAccept.status).toBe(202);
@@ -4081,34 +5148,59 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(await jsonBody(secondAccept)).toMatchObject({ evidenceStatus: "accepted", approvalStatus: "approved" });
         expect(harness.rest.rows("irreversible_dispute_action_approvals")).toEqual([
             expect.objectContaining({
-                first_actor_kind: "admin", first_actor_id: "admin-1",
-                second_actor_kind: "admin", second_actor_id: "admin-2", status: "approved",
+                first_actor_kind: "admin",
+                first_actor_id: "admin-1",
+                second_actor_kind: "admin",
+                second_actor_id: "admin-2",
+                status: "approved",
             }),
             expect.objectContaining({
-                first_actor_kind: "admin", first_actor_id: "admin-3",
-                second_actor_kind: "admin", second_actor_id: "admin-4", status: "approved",
+                first_actor_kind: "admin",
+                first_actor_id: "admin-3",
+                second_actor_kind: "admin",
+                second_actor_id: "admin-4",
+                status: "approved",
             }),
         ]);
-        expect(harness.rest.rows("payment_events")).toEqual(expect.arrayContaining([
-            expect.objectContaining({ event_type: "stripe_dispute_evidence_submitted", actor_kind: "admin", actor_id: "admin-2" }),
-            expect.objectContaining({ event_type: "stripe_dispute_accepted", actor_kind: "admin", actor_id: "admin-4" }),
-        ]));
+        expect(harness.rest.rows("payment_events")).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    event_type: "stripe_dispute_evidence_submitted",
+                    actor_kind: "admin",
+                    actor_id: "admin-2",
+                }),
+                expect.objectContaining({
+                    event_type: "stripe_dispute_accepted",
+                    actor_kind: "admin",
+                    actor_id: "admin-4",
+                }),
+            ]),
+        );
     });
 
     test("recursively redacts provider secrets from listed financial operations", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-            email: "seller@example.com",
-        }, { userId: "seller-1" }));
-        await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "redacted-operation-order",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        await okJson(
+            await sourceJson(
+                harness,
+                "createConnectOnboardingSessionForUser",
+                {
+                    email: "seller@example.com",
+                },
+                { userId: "seller-1" },
+            ),
+        );
+        await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "redacted-operation-order",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
 
         const listed = await sourceRequestWithRole(harness, "admin-1", "admin", "listFinancialOperations");
         const serialized = JSON.stringify(await okJson(listed));
@@ -4120,17 +5212,21 @@ describe("stripe-connect 1.0.0 source", () => {
     test("keeps verification requirements visible when payouts were already enabled", async () => {
         const harness = await createHarness();
 
-        await okJson(await sourceJson(harness, "createOnboardingSession", {
-            email: "seller@example.com",
-        }));
+        await okJson(
+            await sourceJson(harness, "createOnboardingSession", {
+                email: "seller@example.com",
+            }),
+        );
         harness.rest.setStripeAccountState("user-123", {
             requirements: {
-                entries: [{
-                    awaiting_action_from: "user",
-                    description: "identity.individual.documents.primary_verification",
-                    errors: [],
-                    minimum_deadline: { status: "currently_due" },
-                }],
+                entries: [
+                    {
+                        awaiting_action_from: "user",
+                        description: "identity.individual.documents.primary_verification",
+                        errors: [],
+                        minimum_deadline: { status: "currently_due" },
+                    },
+                ],
                 summary: { minimum_deadline: { status: "currently_due" } },
             },
         });
@@ -4147,11 +5243,13 @@ describe("stripe-connect 1.0.0 source", () => {
     test("creates a hosted verification fallback for the authenticated seller", async () => {
         const harness = await createHarness();
 
-        const link = await okJson(await sourceJson(harness, "createOnboardingLink", {
-            email: "seller@example.com",
-            returnUrl: "https://market.example/account/payouts",
-            refreshUrl: "https://market.example/account/payouts",
-        }));
+        const link = await okJson(
+            await sourceJson(harness, "createOnboardingLink", {
+                email: "seller@example.com",
+                returnUrl: "https://market.example/account/payouts",
+                refreshUrl: "https://market.example/account/payouts",
+            }),
+        );
 
         expect(link).toMatchObject({
             userId: "user-123",
@@ -4171,10 +5269,12 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(harness.rest.accountCreationRequests[0]).toMatchObject({
             body: {
                 dashboard: "none",
-                defaults: { responsibilities: {
-                    fees_collector: "application",
-                    losses_collector: "application",
-                } },
+                defaults: {
+                    responsibilities: {
+                        fees_collector: "application",
+                        losses_collector: "application",
+                    },
+                },
             },
             idempotencyKey: expect.stringMatching(/^cms_connect_account_v2_controlled_recipient_v2_/),
         });
@@ -4184,9 +5284,11 @@ describe("stripe-connect 1.0.0 source", () => {
         const harness = await createHarness();
 
         harness.rest.seedLegacyRecipientAccount("user-123");
-        const repaired = await okJson(await sourceJson(harness, "createOnboardingSession", {
-            email: "seller@example.com",
-        }));
+        const repaired = await okJson(
+            await sourceJson(harness, "createOnboardingSession", {
+                email: "seller@example.com",
+            }),
+        );
 
         expect(repaired.stripeAccountId).toBe("acct_seller_example_com");
         expect(repaired.stripeAccountApiVersion).toBe("v2");
@@ -4201,7 +5303,9 @@ describe("stripe-connect 1.0.0 source", () => {
         const missingEmail = await sourceJson(fresh, "createOnboardingSession", {});
 
         expect(missingEmail.status).toBe(400);
-        expect(await jsonBody(missingEmail)).toEqual({ error: "email is required to create a Stripe recipient account" });
+        expect(await jsonBody(missingEmail)).toEqual({
+            error: "email is required to create a Stripe recipient account",
+        });
 
         const legacy = await createHarness();
         legacy.rest.seedActiveLegacyAccount("user-123");
@@ -4241,12 +5345,14 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(await jsonBody(missingConsent)).toEqual({ error: "current marketplace terms acceptance is required" });
         expect(harness.rest.rows("accounts")).toHaveLength(0);
 
-        const enrolled = await okJson(await sourceJson(harness, "enrollConnectSeller", {
-            accountToken: "accttok_test_identity_123",
-            marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: version,
-            marketplaceTermsHash,
-        }));
+        const enrolled = await okJson(
+            await sourceJson(harness, "enrollConnectSeller", {
+                accountToken: "accttok_test_identity_123",
+                marketplaceTermsAccepted: true,
+                marketplaceTermsVersion: version,
+                marketplaceTermsHash,
+            }),
+        );
         expect(enrolled).toMatchObject({
             stripeAccountId: "acct_custom_identity_123",
             stripeAccountApiVersion: "v2",
@@ -4265,17 +5371,21 @@ describe("stripe-connect 1.0.0 source", () => {
             payoutBankReady: false,
         });
         expect(enrolled).not.toHaveProperty("commerceVerified");
-        expect(harness.rest.rows("marketplace_terms_acceptances")).toEqual([{
-            cms_user_id: "user-123",
-            terms_version: version,
-            terms_hash: marketplaceTermsHash,
-            accepted_at: "2026-07-06T12:03:00.000Z",
-        }]);
+        expect(harness.rest.rows("marketplace_terms_acceptances")).toEqual([
+            {
+                cms_user_id: "user-123",
+                terms_version: version,
+                terms_hash: marketplaceTermsHash,
+                accepted_at: "2026-07-06T12:03:00.000Z",
+            },
+        ]);
 
-        const replayed = await okJson(await sourceJson(harness, "enrollConnectSeller", {
-            marketplaceTermsVersion: version,
-            marketplaceTermsHash,
-        }));
+        const replayed = await okJson(
+            await sourceJson(harness, "enrollConnectSeller", {
+                marketplaceTermsVersion: version,
+                marketplaceTermsHash,
+            }),
+        );
         expect(replayed).toMatchObject({
             stripeAccountId: "acct_custom_identity_123",
             marketplaceTermsCurrentVersionAccepted: true,
@@ -4283,14 +5393,18 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         expect(harness.rest.rows("marketplace_terms_acceptances")).toHaveLength(1);
 
-        const currentStatus = await okJson(await sourceRequest(harness, "getConnectStatus", {
-            marketplaceTermsVersion: version,
-            marketplaceTermsHash,
-        }));
-        const futureStatus = await okJson(await sourceRequest(harness, "getConnectStatus", {
-            marketplaceTermsVersion: "courtside-seller-2026-08",
-            marketplaceTermsHash: "d".repeat(64),
-        }));
+        const currentStatus = await okJson(
+            await sourceRequest(harness, "getConnectStatus", {
+                marketplaceTermsVersion: version,
+                marketplaceTermsHash,
+            }),
+        );
+        const futureStatus = await okJson(
+            await sourceRequest(harness, "getConnectStatus", {
+                marketplaceTermsVersion: "courtside-seller-2026-08",
+                marketplaceTermsHash: "d".repeat(64),
+            }),
+        );
         expect(currentStatus.marketplaceTermsCurrentVersionAccepted).toBeTrue();
         expect(futureStatus.marketplaceTermsCurrentVersionAccepted).toBeFalse();
 
@@ -4300,11 +5414,13 @@ describe("stripe-connect 1.0.0 source", () => {
         });
         expect(unacceptedUpdate.status).toBe(409);
 
-        const acceptedUpdate = await okJson(await sourceJson(harness, "enrollConnectSeller", {
-            marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: "courtside-seller-2026-08",
-            marketplaceTermsHash: "d".repeat(64),
-        }));
+        const acceptedUpdate = await okJson(
+            await sourceJson(harness, "enrollConnectSeller", {
+                marketplaceTermsAccepted: true,
+                marketplaceTermsVersion: "courtside-seller-2026-08",
+                marketplaceTermsHash: "d".repeat(64),
+            }),
+        );
         expect(acceptedUpdate).toMatchObject({
             stripeAccountId: "acct_custom_identity_123",
             marketplaceTermsCurrentVersionAccepted: true,
@@ -4322,9 +5438,11 @@ describe("stripe-connect 1.0.0 source", () => {
             error: "marketplace terms version is already bound to another document hash",
         });
 
-        const bankReady = await okJson(await sourceJson(harness, "submitConnectVerification", {
-            bankAccountToken: "btok_test_iban_123",
-        }));
+        const bankReady = await okJson(
+            await sourceJson(harness, "submitConnectVerification", {
+                bankAccountToken: "btok_test_iban_123",
+            }),
+        );
         expect(bankReady).toMatchObject({
             stripeAccountId: "acct_custom_identity_123",
             bankAccountStatus: "attached",
@@ -4337,12 +5455,14 @@ describe("stripe-connect 1.0.0 source", () => {
 
     test("accepts a held charge before Stripe transfers or bank payouts are ready but keeps release strict", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
-            accountToken: "accttok_test_identity_123",
-            marketplaceTermsAccepted: true,
-            marketplaceTermsVersion: "courtside-seller-2026-07",
-            marketplaceTermsHash,
-        }));
+        await okJson(
+            await sourceJsonWithUser(harness, "seller-1", "enrollConnectSeller", {
+                accountToken: "accttok_test_identity_123",
+                marketplaceTermsAccepted: true,
+                marketplaceTermsVersion: "courtside-seller-2026-07",
+                marketplaceTermsHash,
+            }),
+        );
         harness.rest.setStripeAccountState("seller-1", {
             configuration: {
                 recipient: {
@@ -4356,20 +5476,24 @@ describe("stripe-connect 1.0.0 source", () => {
                 },
             },
             requirements: {
-                entries: [{
-                    awaiting_action_from: "user",
-                    description: "identity.individual.documents.primary_verification",
-                    errors: [],
-                    minimum_deadline: { status: "currently_due" },
-                }],
+                entries: [
+                    {
+                        awaiting_action_from: "user",
+                        description: "identity.individual.documents.primary_verification",
+                        errors: [],
+                        minimum_deadline: { status: "currently_due" },
+                    },
+                ],
                 summary: { minimum_deadline: { status: "currently_due" } },
             },
         });
 
-        const status = await okJson(await sourceRequestWithUser(harness, "seller-1", "getConnectStatus", {
-            marketplaceTermsVersion: "courtside-seller-2026-07",
-            marketplaceTermsHash,
-        }));
+        const status = await okJson(
+            await sourceRequestWithUser(harness, "seller-1", "getConnectStatus", {
+                marketplaceTermsVersion: "courtside-seller-2026-07",
+                marketplaceTermsHash,
+            }),
+        );
         expect(status).toMatchObject({
             stripeTransfersStatus: "pending",
             bankAccountStatus: "not_attached",
@@ -4377,15 +5501,17 @@ describe("stripe-connect 1.0.0 source", () => {
             canReceiveProtectedPayments: false,
         });
 
-        const payment = await okJson(await sourceJson(harness, "createProtectedPayment", {
-            sellerUserId: "seller-1",
-            amountTotal: 1200,
-            sellerTransferAmount: 1080,
-            currency: "eur",
-            clientReferenceId: "minimal-enrollment-held-charge",
-            financialTermsHash,
-            dualApprovalThresholdAmount: 1000,
-        }));
+        const payment = await okJson(
+            await sourceJson(harness, "createProtectedPayment", {
+                sellerUserId: "seller-1",
+                amountTotal: 1200,
+                sellerTransferAmount: 1080,
+                currency: "eur",
+                clientReferenceId: "minimal-enrollment-held-charge",
+                financialTermsHash,
+                dualApprovalThresholdAmount: 1000,
+            }),
+        );
         expect(payment).toMatchObject({ settlementStatus: "held", sellerUserId: "seller-1" });
 
         harness.rest.setPaymentIntentSucceeded(String(payment.stripePaymentIntentId));
@@ -4413,11 +5539,13 @@ describe("stripe-connect 1.0.0 source", () => {
         expect(rejectedPii.status).toBe(400);
         expect(await rejectedPii.text()).toBe("body.givenName is not allowed");
 
-        const verified = await okJson(await sourceJson(harness, "submitConnectVerification", {
-            accountToken: "accttok_test_identity_123",
-            bankAccountToken: "btok_test_iban_123",
-            contactEmail: "seller@example.com",
-        }));
+        const verified = await okJson(
+            await sourceJson(harness, "submitConnectVerification", {
+                accountToken: "accttok_test_identity_123",
+                bankAccountToken: "btok_test_iban_123",
+                contactEmail: "seller@example.com",
+            }),
+        );
 
         expect(verified).toMatchObject({
             stripeAccountId: "acct_custom_identity_123",
@@ -4438,11 +5566,13 @@ describe("stripe-connect 1.0.0 source", () => {
         const harness = await createHarness();
         harness.rest.seedHostedV2AccountWithRequirements("user-123");
 
-        const verified = await okJson(await sourceJson(harness, "submitConnectVerification", {
-            accountToken: "accttok_test_identity_123",
-            bankAccountToken: "btok_test_iban_123",
-            contactEmail: "seller@example.com",
-        }));
+        const verified = await okJson(
+            await sourceJson(harness, "submitConnectVerification", {
+                accountToken: "accttok_test_identity_123",
+                bankAccountToken: "btok_test_iban_123",
+                contactEmail: "seller@example.com",
+            }),
+        );
 
         expect(verified.stripeAccountId).toBe("acct_custom_identity_123");
         expect(harness.rest.rows("accounts")[0]?.stripe_account_id).toBe("acct_custom_identity_123");
@@ -4451,7 +5581,9 @@ describe("stripe-connect 1.0.0 source", () => {
 
 async function createHarness() {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("stripe-connect");
-    if (!definition) throw new Error("stripe-connect definition not found");
+    if (!definition) {
+        throw new Error("stripe-connect definition not found");
+    }
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
@@ -4538,12 +5670,14 @@ async function createHarness() {
                 }
                 return await handler(request);
             } catch (error) {
-                return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
+                return new Response(error instanceof Error ? (error.stack ?? error.message) : String(error), {
+                    status: 599,
+                });
             }
         },
         async resolveSecret(ref: string): Promise<string | undefined> {
             const key = secretRefToKey(ref) ?? ref;
-            return await secrets.get(key) ?? undefined;
+            return (await secrets.get(key)) ?? undefined;
         },
     };
 }
@@ -4552,17 +5686,19 @@ class StripeConnectMock {
     private readonly tables: Record<string, JsonRecord[]> = {
         accounts: [],
         marketplace_terms_acceptances: [],
-        platform_payout_controls: [{
-            control_key: "default",
-            liability_revision: 0,
-            required_minimum_amount: 0,
-            provider_minimum_amount: 0,
-            decrease_authorization_id: null,
-            claim_owner: null,
-            claimed_at: null,
-            last_error: null,
-            last_provider_sync_at: null,
-        }],
+        platform_payout_controls: [
+            {
+                control_key: "default",
+                liability_revision: 0,
+                required_minimum_amount: 0,
+                provider_minimum_amount: 0,
+                decrease_authorization_id: null,
+                claim_owner: null,
+                claimed_at: null,
+                last_error: null,
+                last_provider_sync_at: null,
+            },
+        ],
         payments: [],
         payment_lifecycle_guards: [],
         payment_events: [],
@@ -4654,7 +5790,9 @@ class StripeConnectMock {
 
     setPaymentIntentSucceeded(paymentIntentId: string): void {
         const intent = this.paymentIntents.get(paymentIntentId);
-        if (!intent) throw new Error(`unknown PaymentIntent ${paymentIntentId}`);
+        if (!intent) {
+            throw new Error(`unknown PaymentIntent ${paymentIntentId}`);
+        }
         const chargeId = `ch_${paymentIntentId.slice(3)}`;
         const balanceTransaction: JsonRecord = {
             id: `txn_charge_${paymentIntentId.slice(3)}`,
@@ -4687,16 +5825,22 @@ class StripeConnectMock {
 
     setPaymentIntentProviderReferences(paymentIntentId: string): void {
         const intent = this.paymentIntents.get(paymentIntentId);
-        if (!intent || !isRecord(intent.latest_charge)) throw new Error(`unknown PaymentIntent charge ${paymentIntentId}`);
+        if (!intent || !isRecord(intent.latest_charge)) {
+            throw new Error(`unknown PaymentIntent charge ${paymentIntentId}`);
+        }
         const charge = intent.latest_charge;
-        if (!isRecord(charge.balance_transaction)) throw new Error(`unknown Charge balance transaction ${paymentIntentId}`);
+        if (!isRecord(charge.balance_transaction)) {
+            throw new Error(`unknown Charge balance transaction ${paymentIntentId}`);
+        }
         charge.balance_transaction = String(charge.balance_transaction.id);
         intent.latest_charge = String(charge.id);
     }
 
     patchProviderBalanceTransaction(paymentIntentId: string, patch: JsonRecord): void {
         const transaction = this.providerBalanceTransactions.get(`txn_charge_${paymentIntentId.slice(3)}`);
-        if (!transaction) throw new Error(`unknown BalanceTransaction ${paymentIntentId}`);
+        if (!transaction) {
+            throw new Error(`unknown BalanceTransaction ${paymentIntentId}`);
+        }
         Object.assign(transaction, patch);
     }
 
@@ -4744,20 +5888,22 @@ class StripeConnectMock {
         status: "open" | "investigating" | "resolved",
         patch: JsonRecord = {},
     ): number {
-        return Number(this.insertGeneric("provider_exceptions", {
-            deduplication_key: deduplicationKey,
-            payment_id: null,
-            operation_id: null,
-            exception_type: "provider_reconciliation_contract",
-            severity: "critical",
-            status,
-            message: "Provider reconciliation contract fixture",
-            details: {},
-            detected_at: "2026-07-06T12:05:00.000Z",
-            resolved_at: status === "resolved" ? "2026-07-06T12:06:00.000Z" : null,
-            resolved_by: status === "resolved" ? "admin-contract" : null,
-            ...patch,
-        }).id);
+        return Number(
+            this.insertGeneric("provider_exceptions", {
+                deduplication_key: deduplicationKey,
+                payment_id: null,
+                operation_id: null,
+                exception_type: "provider_reconciliation_contract",
+                severity: "critical",
+                status,
+                message: "Provider reconciliation contract fixture",
+                details: {},
+                detected_at: "2026-07-06T12:05:00.000Z",
+                resolved_at: status === "resolved" ? "2026-07-06T12:06:00.000Z" : null,
+                resolved_by: status === "resolved" ? "admin-contract" : null,
+                ...patch,
+            }).id,
+        );
     }
 
     seedPaymentReconciliationLedger(paymentId: number): void {
@@ -4765,29 +5911,37 @@ class StripeConnectMock {
             { amount: 120, seller_entitlement_reduction_amount: 70, status: "succeeded" },
             { amount: 80, seller_entitlement_reduction_amount: 50, status: "succeeded" },
             { amount: 400, seller_entitlement_reduction_amount: 400, status: "pending" },
-        ]) this.insertGeneric("refunds", {
-            payment_id: paymentId,
-            stripe_refund_id: null,
-            ...row,
-        });
+        ]) {
+            this.insertGeneric("refunds", {
+                payment_id: paymentId,
+                stripe_refund_id: null,
+                ...row,
+            });
+        }
         for (const row of [
             { amount: 400, status: "succeeded" },
             { amount: 300, status: "partially_reversed" },
             { amount: 200, status: "reversed" },
             { amount: 600, status: "reserved" },
-        ]) this.insertGeneric("transfers", { payment_id: paymentId, ...row });
+        ]) {
+            this.insertGeneric("transfers", { payment_id: paymentId, ...row });
+        }
         for (const row of [
             { amount: 125, status: "succeeded" },
             { amount: 75, status: "succeeded" },
             { amount: 500, status: "failed" },
-        ]) this.insertGeneric("transfer_reversals", { payment_id: paymentId, ...row });
+        ]) {
+            this.insertGeneric("transfer_reversals", { payment_id: paymentId, ...row });
+        }
     }
 
     setPaymentReconciliationSellerRecoveryAmount(paymentId: number, amount: number): void {
-        const refunds = this.tables.refunds.filter(row => (
-            same(row.payment_id, paymentId) && row.status === "succeeded"
-        ));
-        if (refunds.length === 0) throw new Error(`payment ${paymentId} has no succeeded refund`);
+        const refunds = this.tables.refunds.filter(
+            (row) => same(row.payment_id, paymentId) && row.status === "succeeded",
+        );
+        if (refunds.length === 0) {
+            throw new Error(`payment ${paymentId} has no succeeded refund`);
+        }
         refunds.forEach((refund, index) => {
             refund.seller_entitlement_reduction_amount = index === 0 ? amount : 0;
         });
@@ -4795,10 +5949,10 @@ class StripeConnectMock {
 
     removeTransientProviderTruthException(paymentId: number, paymentIntentId: string): void {
         const exceptionKey = `provider-payment-truth:${paymentId}:${paymentIntentId}`;
-        const index = this.tables.provider_exceptions.findIndex(row => (
-            row.deduplication_key === exceptionKey
-        ));
-        if (index < 0) throw new Error(`unknown provider exception ${exceptionKey}`);
+        const index = this.tables.provider_exceptions.findIndex((row) => row.deduplication_key === exceptionKey);
+        if (index < 0) {
+            throw new Error(`unknown provider exception ${exceptionKey}`);
+        }
         this.tables.provider_exceptions.splice(index, 1);
     }
 
@@ -4815,8 +5969,10 @@ class StripeConnectMock {
     }
 
     updateProviderRefund(refundId: string, patch: JsonRecord): void {
-        const refund = this.providerRefunds.find(candidate => candidate.id === refundId);
-        if (!refund) throw new Error(`unknown provider refund ${refundId}`);
+        const refund = this.providerRefunds.find((candidate) => candidate.id === refundId);
+        if (!refund) {
+            throw new Error(`unknown provider refund ${refundId}`);
+        }
         Object.assign(refund, patch);
         if (patch.status === "succeeded" && !refund.balance_transaction) {
             const amount = Number(refund.amount);
@@ -4832,8 +5988,10 @@ class StripeConnectMock {
     }
 
     setManualPayoutHoldWindow(userId: string, startedAt: string, alertAt: string, deadlineAt: string): void {
-        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-        if (!account) throw new Error(`unknown account ${userId}`);
+        const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account) {
+            throw new Error(`unknown account ${userId}`);
+        }
         this.update(account, {
             manual_payout_hold_started_at: startedAt,
             manual_payout_hold_alert_at: alertAt,
@@ -4846,8 +6004,10 @@ class StripeConnectMock {
     }
 
     setIndependentSellerRisk(userId: string, reason: string): void {
-        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-        if (!account) throw new Error(`unknown account ${userId}`);
+        const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account) {
+            throw new Error(`unknown account ${userId}`);
+        }
         this.update(account, {
             risk_status: "manual_review",
             financial_hold_reason: reason,
@@ -4856,8 +6016,10 @@ class StripeConnectMock {
     }
 
     markFinancialOperationSucceeded(businessKey: string): void {
-        const operation = this.tables.financial_operations.find(row => row.business_key === businessKey);
-        if (!operation) throw new Error(`unknown financial operation ${businessKey}`);
+        const operation = this.tables.financial_operations.find((row) => row.business_key === businessKey);
+        if (!operation) {
+            throw new Error(`unknown financial operation ${businessKey}`);
+        }
         this.update(operation, {
             status: "succeeded",
             last_error: null,
@@ -4888,14 +6050,15 @@ class StripeConnectMock {
             debitNegativeBalances: false,
         },
     ): void {
-        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-        if (!account) throw new Error(`unknown account ${userId}`);
+        const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account) {
+            throw new Error(`unknown account ${userId}`);
+        }
         this.update(account, {
             payout_schedule: "manual",
             risk_status: financialExposureAmount > 0 ? "restricted" : "standard",
-            financial_hold_reason: financialExposureAmount > 0
-                ? "Seller recovery exposure blocks payments and payouts"
-                : null,
+            financial_hold_reason:
+                financialExposureAmount > 0 ? "Seller recovery exposure blocks payments and payouts" : null,
             financial_exposure_amount: financialExposureAmount,
             risk_revision: Number(account.risk_revision ?? 0) + 1,
             provider_hold_minimum_amount: financialExposureAmount,
@@ -4909,19 +6072,25 @@ class StripeConnectMock {
 
     patchPaymentIntent(paymentIntentId: string, patch: JsonRecord): void {
         const intent = this.paymentIntents.get(paymentIntentId);
-        if (!intent) throw new Error(`unknown PaymentIntent ${paymentIntentId}`);
+        if (!intent) {
+            throw new Error(`unknown PaymentIntent ${paymentIntentId}`);
+        }
         Object.assign(intent, patch);
     }
 
     patchPaymentIntentMetadata(paymentIntentId: string, patch: JsonRecord): void {
         const intent = this.paymentIntents.get(paymentIntentId);
-        if (!intent) throw new Error(`unknown PaymentIntent ${paymentIntentId}`);
+        if (!intent) {
+            throw new Error(`unknown PaymentIntent ${paymentIntentId}`);
+        }
         intent.metadata = { ...asRecord(intent.metadata), ...patch };
     }
 
     patchLatestCharge(paymentIntentId: string, patch: JsonRecord): void {
         const intent = this.paymentIntents.get(paymentIntentId);
-        if (!intent || !isRecord(intent.latest_charge)) throw new Error(`unknown PaymentIntent charge ${paymentIntentId}`);
+        if (!intent || !isRecord(intent.latest_charge)) {
+            throw new Error(`unknown PaymentIntent charge ${paymentIntentId}`);
+        }
         Object.assign(intent.latest_charge, patch);
     }
 
@@ -4934,8 +6103,10 @@ class StripeConnectMock {
     }
 
     setAccountState(userId: string, patch: JsonRecord): void {
-        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-        if (!account) throw new Error(`unknown account ${userId}`);
+        const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account) {
+            throw new Error(`unknown account ${userId}`);
+        }
         this.update(account, patch);
     }
 
@@ -4954,8 +6125,10 @@ class StripeConnectMock {
     }
 
     updateProviderDispute(disputeId: string, patch: JsonRecord): void {
-        const dispute = this.providerDisputes.find(candidate => candidate.id === disputeId);
-        if (!dispute) throw new Error(`unknown provider dispute ${disputeId}`);
+        const dispute = this.providerDisputes.find((candidate) => candidate.id === disputeId);
+        if (!dispute) {
+            throw new Error(`unknown provider dispute ${disputeId}`);
+        }
         Object.assign(dispute, patch);
     }
 
@@ -4971,8 +6144,10 @@ class StripeConnectMock {
     }
 
     patchProviderTransfer(stripeTransferId: string, patch: JsonRecord): void {
-        const transfer = this.providerTransfers.find(candidate => candidate.id === stripeTransferId);
-        if (!transfer) throw new Error(`unknown provider transfer ${stripeTransferId}`);
+        const transfer = this.providerTransfers.find((candidate) => candidate.id === stripeTransferId);
+        if (!transfer) {
+            throw new Error(`unknown provider transfer ${stripeTransferId}`);
+        }
         Object.assign(transfer, patch);
     }
 
@@ -4994,8 +6169,10 @@ class StripeConnectMock {
     }
 
     seedLocalTransferReversal(stripeTransferId: string, amount: number, status: string): void {
-        const transfer = this.tables.transfers.find(row => row.stripe_transfer_id === stripeTransferId);
-        if (!transfer) throw new Error(`unknown local transfer ${stripeTransferId}`);
+        const transfer = this.tables.transfers.find((row) => row.stripe_transfer_id === stripeTransferId);
+        if (!transfer) {
+            throw new Error(`unknown local transfer ${stripeTransferId}`);
+        }
         const operation = this.insertGeneric("financial_operations", {
             payment_id: transfer.payment_id,
             business_key: `seed-transfer-reversal:${stripeTransferId}:${status}:${amount}`,
@@ -5040,8 +6217,10 @@ class StripeConnectMock {
     }
 
     patchPaymentLedger(paymentId: number, patch: JsonRecord): void {
-        const payment = this.tables.payments.find(row => same(row.id, paymentId));
-        if (!payment) throw new Error(`unknown payment ${paymentId}`);
+        const payment = this.tables.payments.find((row) => same(row.id, paymentId));
+        if (!payment) {
+            throw new Error(`unknown payment ${paymentId}`);
+        }
         this.update(payment, patch);
     }
 
@@ -5087,32 +6266,41 @@ class StripeConnectMock {
             transferred_amount: kind === "refund" ? 0 : 1080,
             settlement_status: kind === "refund" ? "refund_pending" : "released",
         });
-        const request = kind === "transfer" ? {
-            releaseAuthorizationId: "release-terminal-operation-recovery",
-            releaseKind: "initial",
-            amount: 1080,
-            currency: "eur",
-        } : kind === "reversal" ? {
-            recoveryRequestId: "recovery-terminal-operation-recovery",
-            reversalRequestId: "reversal-terminal-operation-recovery",
-            transferId: "tr_terminal_operation_recovery",
-            amount: 1080,
-            currency: "eur",
-            allocationIndex: 1,
-        } : {
-            refundRequestId: "refund-terminal-operation-recovery",
-            commerceRefundRequestId: 701,
-            amount: 1200,
-            requiredReversalAmount: 0,
-            sellerEntitlementReductionAmount: 0,
-            authorizedSellerAmount: 1080,
-            currency: "eur",
-        };
+        const request =
+            kind === "transfer"
+                ? {
+                      releaseAuthorizationId: "release-terminal-operation-recovery",
+                      releaseKind: "initial",
+                      amount: 1080,
+                      currency: "eur",
+                  }
+                : kind === "reversal"
+                  ? {
+                        recoveryRequestId: "recovery-terminal-operation-recovery",
+                        reversalRequestId: "reversal-terminal-operation-recovery",
+                        transferId: "tr_terminal_operation_recovery",
+                        amount: 1080,
+                        currency: "eur",
+                        allocationIndex: 1,
+                    }
+                  : {
+                        refundRequestId: "refund-terminal-operation-recovery",
+                        commerceRefundRequestId: 701,
+                        amount: 1200,
+                        requiredReversalAmount: 0,
+                        sellerEntitlementReductionAmount: 0,
+                        authorizedSellerAmount: 1080,
+                        currency: "eur",
+                    };
         const operation = this.insertGeneric("financial_operations", {
             payment_id: paymentId,
             business_key: `${kind}:terminal-operation-recovery`,
-            operation_type: kind === "transfer" ? "transfer_create"
-                : kind === "reversal" ? "transfer_reversal_create" : "refund_create",
+            operation_type:
+                kind === "transfer"
+                    ? "transfer_create"
+                    : kind === "reversal"
+                      ? "transfer_reversal_create"
+                      : "refund_create",
             status: "failed",
             stripe_object_id: null,
             request,
@@ -5289,9 +6477,8 @@ class StripeConnectMock {
             second_approved_at: null,
             created_at: createdAt,
         });
-        const projection = (kind: string, key: string, values: JsonRecord) => this.insertGeneric(
-            "commerce_projection_outbox",
-            {
+        const projection = (kind: string, key: string, values: JsonRecord) =>
+            this.insertGeneric("commerce_projection_outbox", {
                 operation_id: null,
                 payment_id: paymentId,
                 projection_key: key,
@@ -5309,26 +6496,32 @@ class StripeConnectMock {
                 projected_at: null,
                 intervention_revision: 0,
                 ...values,
-            },
-        );
+            });
         const paymentKey = "terminal:payment";
         const operationKey = "terminal:transfer";
         const disputeKey = "terminal:dispute";
         const paymentProjection = projection("payment", paymentKey, {
-            provider_object_id: String(paymentId), causal_sequence: 10,
+            provider_object_id: String(paymentId),
+            causal_sequence: 10,
             created_at: "2026-07-21T09:10:00.000Z",
         });
         const operationProjection = projection("transfer", operationKey, {
-            operation_id: operation.id, provider_object_id: "tr_terminal_reconciliation",
-            causal_sequence: 20, created_at: "2026-07-21T09:11:00.000Z",
+            operation_id: operation.id,
+            provider_object_id: "tr_terminal_reconciliation",
+            causal_sequence: 20,
+            created_at: "2026-07-21T09:11:00.000Z",
         });
         const disputeProjection = projection("dispute", disputeKey, {
-            provider_object_id: String(dispute.id), causal_sequence: 30,
+            provider_object_id: String(dispute.id),
+            causal_sequence: 30,
             created_at: "2026-07-21T09:12:00.000Z",
         });
         return {
-            runId: Number(run.id), runKey, paymentId,
-            operationId: Number(operation.id), disputeRowId: Number(dispute.id),
+            runId: Number(run.id),
+            runKey,
+            paymentId,
+            operationId: Number(operation.id),
+            disputeRowId: Number(dispute.id),
             paymentProjectionId: Number(paymentProjection.id),
             operationProjectionId: Number(operationProjection.id),
             disputeProjectionId: Number(disputeProjection.id),
@@ -5339,8 +6532,10 @@ class StripeConnectMock {
     }
 
     removeTerminalReconciliationDispute(disputeRowId: number): void {
-        const index = this.tables.stripe_disputes.findIndex(row => same(row.id, disputeRowId));
-        if (index < 0) throw new Error(`unknown terminal reconciliation dispute ${disputeRowId}`);
+        const index = this.tables.stripe_disputes.findIndex((row) => same(row.id, disputeRowId));
+        if (index < 0) {
+            throw new Error(`unknown terminal reconciliation dispute ${disputeRowId}`);
+        }
         this.tables.stripe_disputes.splice(index, 1);
     }
 
@@ -5350,26 +6545,42 @@ class StripeConnectMock {
 
     seedPaymentProjection(paymentId: number, key: string): void {
         this.insertGeneric("commerce_projection_outbox", {
-            operation_id: null, payment_id: paymentId, projection_key: key,
-            projection_kind: "payment", provider_object_id: String(paymentId),
+            operation_id: null,
+            payment_id: paymentId,
+            projection_key: key,
+            projection_kind: "payment",
+            provider_object_id: String(paymentId),
             projection_payload: {},
-            recovery_key: null, causal_sequence: 0, projection_status: "pending",
-            attempt_count: 0, next_attempt_at: null, claim_owner: null,
-            claim_token: null, claimed_at: null, last_error: null, projected_at: null,
-            intervention_revision: 0, last_intervention_at: null,
-            last_intervention_by: null, last_intervention_reason: null,
+            recovery_key: null,
+            causal_sequence: 0,
+            projection_status: "pending",
+            attempt_count: 0,
+            next_attempt_at: null,
+            claim_owner: null,
+            claim_token: null,
+            claimed_at: null,
+            last_error: null,
+            projected_at: null,
+            intervention_revision: 0,
+            last_intervention_at: null,
+            last_intervention_by: null,
+            last_intervention_reason: null,
         });
     }
 
     expireProjectionLease(projectionId: number): void {
-        const projection = this.tables.commerce_projection_outbox.find(row => same(row.id, projectionId));
-        if (!projection) throw new Error(`unknown projection ${projectionId}`);
+        const projection = this.tables.commerce_projection_outbox.find((row) => same(row.id, projectionId));
+        if (!projection) {
+            throw new Error(`unknown projection ${projectionId}`);
+        }
         projection.claimed_at = "2026-07-06T00:00:00.000Z";
     }
 
     makeProjectionRetryDue(projectionId: number): void {
-        const projection = this.tables.commerce_projection_outbox.find(row => same(row.id, projectionId));
-        if (!projection) throw new Error(`unknown projection ${projectionId}`);
+        const projection = this.tables.commerce_projection_outbox.find((row) => same(row.id, projectionId));
+        if (!projection) {
+            throw new Error(`unknown projection ${projectionId}`);
+        }
         this.update(projection, { next_attempt_at: "2020-01-01T00:00:00.000Z" });
     }
 
@@ -5380,8 +6591,12 @@ class StripeConnectMock {
     pauseNextSellerBalanceSettingsUpdate(): { entered: Promise<void>; resume: () => void } {
         let markEntered!: () => void;
         let resume!: () => void;
-        const entered = new Promise<void>(resolve => { markEntered = resolve; });
-        const wait = new Promise<void>(resolve => { resume = resolve; });
+        const entered = new Promise<void>((resolve) => {
+            markEntered = resolve;
+        });
+        const wait = new Promise<void>((resolve) => {
+            resume = resolve;
+        });
         this.nextSellerBalanceSettingsPause = { entered: markEntered, wait };
         return { entered, resume };
     }
@@ -5389,8 +6604,12 @@ class StripeConnectMock {
     pauseNextPlatformBalanceSettingsUpdate(): { entered: Promise<void>; resume: () => void } {
         let markEntered!: () => void;
         let resume!: () => void;
-        const entered = new Promise<void>(resolve => { markEntered = resolve; });
-        const wait = new Promise<void>(resolve => { resume = resolve; });
+        const entered = new Promise<void>((resolve) => {
+            markEntered = resolve;
+        });
+        const wait = new Promise<void>((resolve) => {
+            resume = resolve;
+        });
         this.nextPlatformBalanceSettingsPause = { entered: markEntered, wait };
         return { entered, resume };
     }
@@ -5400,8 +6619,10 @@ class StripeConnectMock {
     }
 
     exposeSellerFinancialRisk(userId: string, amount: number): void {
-        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-        if (!account) throw new Error(`unknown account ${userId}`);
+        const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account) {
+            throw new Error(`unknown account ${userId}`);
+        }
         this.update(account, {
             financial_exposure_amount: amount,
             risk_revision: Number(account.risk_revision ?? 0) + 1,
@@ -5412,8 +6633,10 @@ class StripeConnectMock {
     }
 
     seedSucceededTransfer(paymentId: number, amount: number): void {
-        const payment = this.tables.payments.find(row => same(row.id, paymentId));
-        if (!payment) throw new Error(`unknown payment ${paymentId}`);
+        const payment = this.tables.payments.find((row) => same(row.id, paymentId));
+        if (!payment) {
+            throw new Error(`unknown payment ${paymentId}`);
+        }
         const now = "2026-07-06T12:06:00.000Z";
         this.tables.transfers.push({
             id: this.nextRowId++,
@@ -5435,7 +6658,7 @@ class StripeConnectMock {
 
     seedDispute(disputeId: string, status: string, evidenceStatus: string, submitted: boolean): void {
         const now = "2026-07-06T12:00:00.000Z";
-        if (!this.tables.payments.some(row => row.id === 999)) {
+        if (!this.tables.payments.some((row) => row.id === 999)) {
             this.tables.payments.push({
                 id: 999,
                 client_reference_id: "order-dispute-seed",
@@ -5559,8 +6782,10 @@ class StripeConnectMock {
     }
 
     seedFailedSellerRiskHoldOperation(userId: string, appliedMinimum: number): number {
-        const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-        if (!account?.stripe_account_id) throw new Error(`unknown connected account ${userId}`);
+        const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+        if (!account?.stripe_account_id) {
+            throw new Error(`unknown connected account ${userId}`);
+        }
         this.setConnectedPayoutSettings("manual", appliedMinimum);
         const operation = this.insertGeneric("financial_operations", {
             payment_id: null,
@@ -5638,12 +6863,14 @@ class StripeConnectMock {
                 },
             },
             requirements: {
-                entries: [{
-                    awaiting_action_from: "user",
-                    description: "identity.individual.attestations.terms_of_service",
-                    errors: [],
-                    minimum_deadline: { status: "currently_due" },
-                }],
+                entries: [
+                    {
+                        awaiting_action_from: "user",
+                        description: "identity.individual.attestations.terms_of_service",
+                        errors: [],
+                        minimum_deadline: { status: "currently_due" },
+                    },
+                ],
                 summary: { minimum_deadline: { status: "currently_due" } },
             },
         });
@@ -5654,7 +6881,9 @@ class StripeConnectMock {
         const url = new URL(request.url);
         const method = request.method.toUpperCase();
 
-        if (url.origin === stripeUrl) return await this.stripeFetch(request, url, method);
+        if (url.origin === stripeUrl) {
+            return await this.stripeFetch(request, url, method);
+        }
         if (url.origin !== supabaseUrl || !url.pathname.startsWith("/rest/v1/")) {
             throw new Error(`unexpected fetch: ${method} ${request.url}`);
         }
@@ -5662,35 +6891,44 @@ class StripeConnectMock {
         expect(request.headers.get("apikey")).toBe("supabase-secret-key");
         expect(request.headers.get("authorization")).toBe("Bearer supabase-secret-key");
         expect(request.headers.get("accept-profile")).toBe("stripe_connect");
-        if (method !== "GET" && method !== "HEAD") expect(request.headers.get("content-profile")).toBe("stripe_connect");
+        if (method !== "GET" && method !== "HEAD") {
+            expect(request.headers.get("content-profile")).toBe("stripe_connect");
+        }
         const table = decodeURIComponent(url.pathname.slice("/rest/v1/".length));
         this.postgrestRequests.push({
             method,
             table,
             searchParams: Array.from(url.searchParams.entries()),
-            body: method === "POST" || method === "PATCH"
-                ? await request.clone().json().catch(() => null) as JsonRecord | null
-                : null,
+            body:
+                method === "POST" || method === "PATCH"
+                    ? ((await request
+                          .clone()
+                          .json()
+                          .catch(() => null)) as JsonRecord | null)
+                    : null,
         });
-        if (table === "provider_exceptions" && method === "PATCH"
-            && this.failProviderExceptionResolution) {
+        if (table === "provider_exceptions" && method === "PATCH" && this.failProviderExceptionResolution) {
             this.failProviderExceptionResolution = false;
             return jsonResponse({ message: "simulated provider exception resolution failure" }, 500);
         }
-        const isPaymentReconciliationLedgerRead = (
-            table === "rpc/read_payment_reconciliation_ledger" && method === "POST"
-        ) || (table === "transfers" && method === "GET");
+        const isPaymentReconciliationLedgerRead =
+            (table === "rpc/read_payment_reconciliation_ledger" && method === "POST") ||
+            (table === "transfers" && method === "GET");
         if (isPaymentReconciliationLedgerRead && this.failPaymentReconciliationLedgerRead) {
             this.failPaymentReconciliationLedgerRead = false;
             return jsonResponse({ message: "simulated payment ledger read failure" }, 500);
         }
-        if (table === "rpc/read_payment_reconciliation_local_context" && method === "POST"
-            && this.failPaymentReconciliationLocalContextRead) {
+        if (
+            table === "rpc/read_payment_reconciliation_local_context" &&
+            method === "POST" &&
+            this.failPaymentReconciliationLocalContextRead
+        ) {
             this.failPaymentReconciliationLocalContextRead = false;
             return jsonResponse({ message: "simulated payment reconciliation local context read failure" }, 500);
         }
-        const isProviderTransferContextRead = table === "rpc/read_provider_transfer_reconciliation_context"
-            || (table === "transfers" && method === "GET" && url.searchParams.has("stripe_transfer_id"));
+        const isProviderTransferContextRead =
+            table === "rpc/read_provider_transfer_reconciliation_context" ||
+            (table === "transfers" && method === "GET" && url.searchParams.has("stripe_transfer_id"));
         if (isProviderTransferContextRead && this.providerTransferContextReadsBeforeFailure !== null) {
             if (this.providerTransferContextReadsBeforeFailure === 0) {
                 this.providerTransferContextReadsBeforeFailure = null;
@@ -5701,56 +6939,69 @@ class StripeConnectMock {
         if (table === "rpc/list_dashboard_refunds" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const rows = this.dashboardPage("refunds", body, ["refund_request_id", "stripe_refund_id"]);
-            return jsonResponse(rows.map(refund => ({
-                refund,
-                client_reference_id: this.requiredDashboardPayment(refund.payment_id).client_reference_id,
-            })));
+            return jsonResponse(
+                rows.map((refund) => ({
+                    refund,
+                    client_reference_id: this.requiredDashboardPayment(refund.payment_id).client_reference_id,
+                })),
+            );
         }
         if (table === "rpc/read_dashboard_disputes" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const rows = this.dashboardPage(
-                "stripe_disputes", body, ["stripe_dispute_id", "stripe_charge_id", "reason"],
+                "stripe_disputes",
+                body,
+                ["stripe_dispute_id", "stripe_charge_id", "reason"],
                 "stripe_dispute_id",
             );
-            return jsonResponse(rows.map(dispute => {
-                const evidence = this.tables.stripe_dispute_evidence
-                    .filter(row => same(row.dispute_id, dispute.id));
-                const pendingApproval = this.tables.irreversible_dispute_action_approvals
-                    .find(row => same(row.dispute_id, dispute.id) && row.status === "pending_second_approval");
-                return {
-                    dispute,
-                    client_reference_id: this.requiredDashboardPayment(dispute.payment_id).client_reference_id,
-                    staged_evidence: evidence[0] ?? null,
-                    evidence_submission_count: evidence.filter(row => row.submitted_at).length,
-                    pending_approval: pendingApproval ?? null,
-                };
-            }));
+            return jsonResponse(
+                rows.map((dispute) => {
+                    const evidence = this.tables.stripe_dispute_evidence.filter((row) =>
+                        same(row.dispute_id, dispute.id),
+                    );
+                    const pendingApproval = this.tables.irreversible_dispute_action_approvals.find(
+                        (row) => same(row.dispute_id, dispute.id) && row.status === "pending_second_approval",
+                    );
+                    return {
+                        dispute,
+                        client_reference_id: this.requiredDashboardPayment(dispute.payment_id).client_reference_id,
+                        staged_evidence: evidence[0] ?? null,
+                        evidence_submission_count: evidence.filter((row) => row.submitted_at).length,
+                        pending_approval: pendingApproval ?? null,
+                    };
+                }),
+            );
         }
         if (table === "rpc/list_dashboard_financial_operations" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const rows = this.dashboardPage(
-                "financial_operations", body, ["business_key", "stripe_object_id", "last_error"],
+            const rows = this.dashboardPage("financial_operations", body, [
+                "business_key",
+                "stripe_object_id",
+                "last_error",
+            ]);
+            return jsonResponse(
+                rows.map((operation) => {
+                    const payment = operation.payment_id ? this.requiredDashboardPayment(operation.payment_id) : null;
+                    return {
+                        operation,
+                        client_reference_id: payment?.client_reference_id ?? null,
+                        payment_currency: payment?.currency ?? null,
+                    };
+                }),
             );
-            return jsonResponse(rows.map(operation => {
-                const payment = operation.payment_id
-                    ? this.requiredDashboardPayment(operation.payment_id)
-                    : null;
-                return {
-                    operation,
-                    client_reference_id: payment?.client_reference_id ?? null,
-                    payment_currency: payment?.currency ?? null,
-                };
-            }));
         }
         if (table === "rpc/reserve_protected_payment" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const payment = asRecord(body.p_payment);
             const reference = String(payment.client_reference_id);
-            let guard = this.tables.payment_lifecycle_guards.find(row => row.client_reference_id === reference);
+            let guard = this.tables.payment_lifecycle_guards.find((row) => row.client_reference_id === reference);
             if (guard?.cancellation_request_id) {
-                return jsonResponse({ message: "conflict: protected payment creation was cancelled before provider creation" }, 400);
+                return jsonResponse(
+                    { message: "conflict: protected payment creation was cancelled before provider creation" },
+                    400,
+                );
             }
-            const existing = this.tables.payments.find(row => row.client_reference_id === reference);
+            const existing = this.tables.payments.find((row) => row.client_reference_id === reference);
             const reserved = existing ?? this.insertPayment(payment);
             if (!guard) {
                 guard = this.insertGeneric("payment_lifecycle_guards", {
@@ -5762,49 +7013,61 @@ class StripeConnectMock {
                     payment_linked_at: reserved.created_at,
                 });
             } else {
-                this.update(guard, { payment_id: reserved.id, payment_linked_at: guard.payment_linked_at ?? reserved.created_at });
+                this.update(guard, {
+                    payment_id: reserved.id,
+                    payment_linked_at: guard.payment_linked_at ?? reserved.created_at,
+                });
             }
             return jsonResponse(reserved);
         }
         if (table === "rpc/apply_payment_provider_projection" && method === "POST") {
-            return this.applyPaymentProviderProjection(
-                JSON.parse(await request.text()) as JsonRecord,
-            );
+            return this.applyPaymentProviderProjection(JSON.parse(await request.text()) as JsonRecord);
         }
         if (table === "rpc/recover_transient_provider_truth_review" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const paymentId = Number(body.p_payment_id);
-            const payment = this.tables.payments.find(row => same(row.id, paymentId));
-            if (!payment) return jsonResponse({ message: "not_found: payment" }, 400);
+            const payment = this.tables.payments.find((row) => same(row.id, paymentId));
+            if (!payment) {
+                return jsonResponse({ message: "not_found: payment" }, 400);
+            }
             const reason = "Stripe payment provider truth mismatch: charge_balance_transaction_expansion";
             const exceptionKey = `provider-payment-truth:${paymentId}:${body.p_payment_intent_id}`;
-            const hasRecoveryException = this.tables.provider_exceptions.some(row => (
-                same(row.payment_id, paymentId)
-                && ["open", "investigating"].includes(String(row.status))
-                && row.deduplication_key === exceptionKey
-            ));
-            const hasOtherException = this.tables.provider_exceptions.some(row => (
-                same(row.payment_id, paymentId)
-                && ["open", "investigating"].includes(String(row.status))
-                && row.deduplication_key !== exceptionKey
-            ));
-            const recovered = payment.payment_status === "succeeded"
-                && payment.settlement_status === "manual_review"
-                && payment.manual_review_reason === reason
-                && payment.stripe_payment_intent_id === body.p_payment_intent_id
-                && payment.stripe_charge_id === body.p_charge_id
-                && payment.stripe_charge_balance_transaction_id === body.p_balance_transaction_id
-                && Number(payment.transferred_amount) === 0
-                && Number(payment.reversed_amount) === 0
-                && Number(payment.refunded_amount) === 0
-                && payment.dispute_status === "none"
-                && hasRecoveryException
-                && !hasOtherException;
-            if (!recovered) return jsonResponse({ recovered: false, payment });
+            const hasRecoveryException = this.tables.provider_exceptions.some(
+                (row) =>
+                    same(row.payment_id, paymentId) &&
+                    ["open", "investigating"].includes(String(row.status)) &&
+                    row.deduplication_key === exceptionKey,
+            );
+            const hasOtherException = this.tables.provider_exceptions.some(
+                (row) =>
+                    same(row.payment_id, paymentId) &&
+                    ["open", "investigating"].includes(String(row.status)) &&
+                    row.deduplication_key !== exceptionKey,
+            );
+            const recovered =
+                payment.payment_status === "succeeded" &&
+                payment.settlement_status === "manual_review" &&
+                payment.manual_review_reason === reason &&
+                payment.stripe_payment_intent_id === body.p_payment_intent_id &&
+                payment.stripe_charge_id === body.p_charge_id &&
+                payment.stripe_charge_balance_transaction_id === body.p_balance_transaction_id &&
+                Number(payment.transferred_amount) === 0 &&
+                Number(payment.reversed_amount) === 0 &&
+                Number(payment.refunded_amount) === 0 &&
+                payment.dispute_status === "none" &&
+                hasRecoveryException &&
+                !hasOtherException;
+            if (!recovered) {
+                return jsonResponse({ recovered: false, payment });
+            }
             this.update(payment, { settlement_status: "held", manual_review_reason: null });
             for (const exception of this.tables.provider_exceptions) {
-                if (exception.deduplication_key !== exceptionKey
-                    || !["open", "investigating"].includes(String(exception.status))) continue;
+                if (
+                    exception.deduplication_key !== exceptionKey ||
+                    !["open", "investigating"].includes(String(exception.status))
+                ) {
+                    continue;
+                }
                 this.update(exception, {
                     status: "resolved",
                     resolved_at: "2026-07-06T12:10:00.000Z",
@@ -5834,13 +7097,18 @@ class StripeConnectMock {
             const userId = String(body.p_cms_user_id);
             const version = String(body.p_terms_version);
             const hash = String(body.p_terms_hash);
-            const account = this.tables.accounts.find(row => row.cms_user_id === userId);
-            if (!account) return jsonResponse({ message: "not_found: Stripe Connect account" }, 400);
-            let acceptance = this.tables.marketplace_terms_acceptances.find(row =>
-                row.cms_user_id === userId && row.terms_version === version
+            const account = this.tables.accounts.find((row) => row.cms_user_id === userId);
+            if (!account) {
+                return jsonResponse({ message: "not_found: Stripe Connect account" }, 400);
+            }
+            let acceptance = this.tables.marketplace_terms_acceptances.find(
+                (row) => row.cms_user_id === userId && row.terms_version === version,
             );
             if (acceptance && acceptance.terms_hash !== hash) {
-                return jsonResponse({ message: "conflict: marketplace terms version is already bound to another document hash" }, 400);
+                return jsonResponse(
+                    { message: "conflict: marketplace terms version is already bound to another document hash" },
+                    400,
+                );
             }
             if (!acceptance) {
                 acceptance = {
@@ -5866,12 +7134,16 @@ class StripeConnectMock {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const reference = String(body.p_client_reference_id);
             const cancellationRequestId = String(body.p_cancellation_request_id);
-            const reason = typeof body.p_reason === "string" && body.p_reason.trim()
-                ? body.p_reason.trim() : "Commerce requested provider payment cancellation";
-            const payment = this.tables.payments.find(row => row.client_reference_id === reference);
-            let guard = this.tables.payment_lifecycle_guards.find(row => row.client_reference_id === reference);
-            if (guard?.cancellation_request_id
-                && (guard.cancellation_request_id !== cancellationRequestId || guard.cancellation_reason !== reason)) {
+            const reason =
+                typeof body.p_reason === "string" && body.p_reason.trim()
+                    ? body.p_reason.trim()
+                    : "Commerce requested provider payment cancellation";
+            const payment = this.tables.payments.find((row) => row.client_reference_id === reference);
+            let guard = this.tables.payment_lifecycle_guards.find((row) => row.client_reference_id === reference);
+            if (
+                guard?.cancellation_request_id &&
+                (guard.cancellation_request_id !== cancellationRequestId || guard.cancellation_reason !== reason)
+            ) {
                 return jsonResponse({ message: "conflict: payment cancellation intent replay mismatch" }, 400);
             }
             if (!guard) {
@@ -5901,12 +7173,17 @@ class StripeConnectMock {
         if (table === "rpc/reserve_financial_operation" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const businessKey = String(body.p_business_key);
-            const existing = this.tables.financial_operations.find(row => row.business_key === businessKey);
-            if (existing) return jsonResponse(existing);
+            const existing = this.tables.financial_operations.find((row) => row.business_key === businessKey);
+            if (existing) {
+                return jsonResponse(existing);
+            }
             const operationRequest = asRecord(body.p_request);
-            if (body.p_operation_type === "refund_create" && this.inFlightTransferBeforeRefund
-                && same(this.inFlightTransferBeforeRefund.paymentId, body.p_payment_id)) {
-                const payment = this.tables.payments.find(row => same(row.id, body.p_payment_id));
+            if (
+                body.p_operation_type === "refund_create" &&
+                this.inFlightTransferBeforeRefund &&
+                same(this.inFlightTransferBeforeRefund.paymentId, body.p_payment_id)
+            ) {
+                const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
                 const inFlight = this.inFlightTransferBeforeRefund;
                 this.inFlightTransferBeforeRefund = null;
                 this.insertGeneric("transfers", {
@@ -5925,31 +7202,51 @@ class StripeConnectMock {
                 });
             }
             if (body.p_operation_type === "refund_create") {
-                const unresolved = this.tables.financial_operations.some(row =>
-                    same(row.payment_id, body.p_payment_id)
-                    && row.operation_type === "refund_create"
-                    && ["reserved", "processing", "manual_review"].includes(String(row.status))
+                const unresolved = this.tables.financial_operations.some(
+                    (row) =>
+                        same(row.payment_id, body.p_payment_id) &&
+                        row.operation_type === "refund_create" &&
+                        ["reserved", "processing", "manual_review"].includes(String(row.status)),
                 );
                 if (unresolved) {
-                    return jsonResponse({ message: "conflict: another refund is awaiting terminal provider confirmation" }, 400);
+                    return jsonResponse(
+                        { message: "conflict: another refund is awaiting terminal provider confirmation" },
+                        400,
+                    );
                 }
-                const payment = this.tables.payments.find(row => same(row.id, body.p_payment_id));
+                const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
                 const priorReduction = this.tables.financial_operations
-                    .filter(row => same(row.payment_id, body.p_payment_id)
-                        && row.operation_type === "refund_create" && row.status !== "failed")
+                    .filter(
+                        (row) =>
+                            same(row.payment_id, body.p_payment_id) &&
+                            row.operation_type === "refund_create" &&
+                            row.status !== "failed",
+                    )
                     .reduce((sum, row) => sum + Number(asRecord(row.request).sellerEntitlementReductionAmount ?? 0), 0);
-                const expectedAuthorized = Number(payment?.seller_transfer_amount ?? 0) - priorReduction
-                    - Number(operationRequest.sellerEntitlementReductionAmount ?? 0);
+                const expectedAuthorized =
+                    Number(payment?.seller_transfer_amount ?? 0) -
+                    priorReduction -
+                    Number(operationRequest.sellerEntitlementReductionAmount ?? 0);
                 const transferred = this.tables.transfers
-                    .filter(row => same(row.payment_id, body.p_payment_id)
-                        && ["reserved", "processing", "succeeded", "partially_reversed", "reversed"].includes(String(row.status)))
+                    .filter(
+                        (row) =>
+                            same(row.payment_id, body.p_payment_id) &&
+                            ["reserved", "processing", "succeeded", "partially_reversed", "reversed"].includes(
+                                String(row.status),
+                            ),
+                    )
                     .reduce((sum, row) => sum + Number(row.amount), 0);
                 const reversed = this.tables.transfer_reversals
-                    .filter(row => same(row.payment_id, body.p_payment_id) && row.status === "succeeded")
+                    .filter((row) => same(row.payment_id, body.p_payment_id) && row.status === "succeeded")
                     .reduce((sum, row) => sum + Number(row.amount), 0);
-                if (expectedAuthorized !== Number(operationRequest.authorizedSellerAmount)
-                    || transferred - reversed > expectedAuthorized) {
-                    return jsonResponse({ message: "conflict: required Transfer Reversal is not confirmed or a Transfer is in flight" }, 400);
+                if (
+                    expectedAuthorized !== Number(operationRequest.authorizedSellerAmount) ||
+                    transferred - reversed > expectedAuthorized
+                ) {
+                    return jsonResponse(
+                        { message: "conflict: required Transfer Reversal is not confirmed or a Transfer is in flight" },
+                        400,
+                    );
                 }
             }
             const now = "2026-07-06T12:04:00.000Z";
@@ -5975,11 +7272,13 @@ class StripeConnectMock {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const recoveryRequestId = String(body.p_recovery_request_id);
             let recovery = this.tables.transfer_recovery_requests.find(
-                row => row.recovery_request_id === recoveryRequestId,
+                (row) => row.recovery_request_id === recoveryRequestId,
             );
             if (!recovery) {
-                const payment = this.tables.payments.find(row => same(row.id, body.p_payment_id));
-                if (!payment) return jsonResponse({ message: "not_found: payment" }, 400);
+                const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
+                if (!payment) {
+                    return jsonResponse({ message: "not_found: payment" }, 400);
+                }
                 const now = "2026-07-06T12:04:00.000Z";
                 recovery = this.insertGeneric("transfer_recovery_requests", {
                     payment_id: body.p_payment_id,
@@ -5998,18 +7297,29 @@ class StripeConnectMock {
                 let remaining = Number(body.p_amount);
                 let allocationIndex = 0;
                 const transfers = this.tables.transfers
-                    .filter(row => same(row.payment_id, body.p_payment_id)
-                        && ["succeeded", "partially_reversed"].includes(String(row.status))
-                        && typeof row.stripe_transfer_id === "string")
-                    .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at))
-                        || Number(right.id) - Number(left.id));
+                    .filter(
+                        (row) =>
+                            same(row.payment_id, body.p_payment_id) &&
+                            ["succeeded", "partially_reversed"].includes(String(row.status)) &&
+                            typeof row.stripe_transfer_id === "string",
+                    )
+                    .sort(
+                        (left, right) =>
+                            String(right.created_at).localeCompare(String(left.created_at)) ||
+                            Number(right.id) - Number(left.id),
+                    );
                 for (const transfer of transfers) {
                     const reserved = this.tables.transfer_reversals
-                        .filter(row => same(row.transfer_id, transfer.id)
-                            && ["reserved", "processing", "succeeded", "manual_review"].includes(String(row.status)))
+                        .filter(
+                            (row) =>
+                                same(row.transfer_id, transfer.id) &&
+                                ["reserved", "processing", "succeeded", "manual_review"].includes(String(row.status)),
+                        )
                         .reduce((sum, row) => sum + Number(row.amount), 0);
                     const allocationAmount = Math.min(remaining, Math.max(0, Number(transfer.amount) - reserved));
-                    if (allocationAmount <= 0) continue;
+                    if (allocationAmount <= 0) {
+                        continue;
+                    }
                     allocationIndex++;
                     const childKey = `${recoveryRequestId}:part:${allocationIndex}:transfer:${transfer.id}`;
                     const operation = this.insertGeneric("financial_operations", {
@@ -6051,103 +7361,139 @@ class StripeConnectMock {
                         provider_snapshot: null,
                     });
                     remaining -= allocationAmount;
-                    if (remaining === 0 || allocationIndex === 23) break;
+                    if (remaining === 0 || allocationIndex === 23) {
+                        break;
+                    }
                 }
-                const recoveryRef = this.tables.transfer_recovery_requests.find(row => same(row.id, recovery!.id));
-                if (!recoveryRef) throw new Error("Transfer recovery reservation disappeared");
+                const recoveryRef = this.tables.transfer_recovery_requests.find((row) => same(row.id, recovery!.id));
+                if (!recoveryRef) {
+                    throw new Error("Transfer recovery reservation disappeared");
+                }
                 recovery = this.update(recoveryRef, {
                     allocated_amount: Number(body.p_amount) - remaining,
                     allocation_shortfall_amount: remaining,
                     status: Number(body.p_amount) === remaining ? "manual_review" : "reserved",
                     last_error: remaining > 0 ? "confirmed Transfers cannot cover the requested recovery" : null,
                 });
-            } else if (!same(recovery.payment_id, body.p_payment_id)
-                || !same(recovery.requested_amount, body.p_amount)
-                || recovery.exposure_type !== body.p_exposure_type
-                || recovery.reason !== body.p_reason) {
+            } else if (
+                !same(recovery.payment_id, body.p_payment_id) ||
+                !same(recovery.requested_amount, body.p_amount) ||
+                recovery.exposure_type !== body.p_exposure_type ||
+                recovery.reason !== body.p_reason
+            ) {
                 return jsonResponse({ message: "conflict: transfer recovery replay mismatch" }, 400);
             }
             const allocations = this.tables.transfer_reversals
-                .filter(row => same(row.recovery_id, recovery!.id))
+                .filter((row) => same(row.recovery_id, recovery!.id))
                 .sort((left, right) => Number(left.allocation_index) - Number(right.allocation_index))
-                .map(reversal => ({
+                .map((reversal) => ({
                     reversal,
-                    operation: this.tables.financial_operations.find(row => same(row.id, reversal.operation_id)),
-                    transfer: this.tables.transfers.find(row => same(row.id, reversal.transfer_id)),
+                    operation: this.tables.financial_operations.find((row) => same(row.id, reversal.operation_id)),
+                    transfer: this.tables.transfers.find((row) => same(row.id, reversal.transfer_id)),
                 }));
             return jsonResponse({ recovery, allocations });
         }
         if (table === "rpc/upsert_seller_recovery_exposure_and_refresh" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const account = this.tables.accounts.find(row => row.cms_user_id === body.p_seller_cms_user_id);
-            if (!account) return jsonResponse({ message: "Stripe Connect account not found" }, 400);
-            let exposure = this.tables.seller_recovery_exposures.find(row => row.recovery_key === body.p_recovery_key);
+            const account = this.tables.accounts.find((row) => row.cms_user_id === body.p_seller_cms_user_id);
+            if (!account) {
+                return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            }
+            let exposure = this.tables.seller_recovery_exposures.find(
+                (row) => row.recovery_key === body.p_recovery_key,
+            );
             const previousStatus = String(exposure?.status ?? "");
             const requestedStatus = String(body.p_status);
             const status = ["recovered", "waived"].includes(previousStatus)
                 ? previousStatus
-                : previousStatus === "debt" && requestedStatus === "at_risk" ? "debt" : requestedStatus;
+                : previousStatus === "debt" && requestedStatus === "at_risk"
+                  ? "debt"
+                  : requestedStatus;
             const amount = Math.max(Number(exposure?.amount ?? 0), Number(body.p_amount));
             const values = {
                 seller_cms_user_id: body.p_seller_cms_user_id,
                 payment_id: body.p_payment_id,
                 recovery_key: body.p_recovery_key,
-                exposure_type: requestedStatus === "debt" ? body.p_exposure_type : exposure?.exposure_type ?? body.p_exposure_type,
+                exposure_type:
+                    requestedStatus === "debt"
+                        ? body.p_exposure_type
+                        : (exposure?.exposure_type ?? body.p_exposure_type),
                 status,
                 amount,
                 recovered_amount: ["recovered", "waived"].includes(status)
                     ? amount
-                    : Math.min(amount, Math.max(
-                        Number(exposure?.recovered_amount ?? 0),
-                        Number(body.p_recovered_amount ?? 0),
-                    )),
+                    : Math.min(
+                          amount,
+                          Math.max(Number(exposure?.recovered_amount ?? 0), Number(body.p_recovered_amount ?? 0)),
+                      ),
                 currency: body.p_currency,
                 reason: body.p_reason,
-                details: { ...((exposure?.details as JsonRecord | undefined) ?? {}), ...((body.p_details as JsonRecord | undefined) ?? {}) },
+                details: {
+                    ...((exposure?.details as JsonRecord | undefined) ?? {}),
+                    ...((body.p_details as JsonRecord | undefined) ?? {}),
+                },
             };
-            exposure = exposure ? this.update(exposure, values) : this.insertGeneric("seller_recovery_exposures", values);
-            const active = this.tables.seller_recovery_exposures.filter(row => row.seller_cms_user_id === body.p_seller_cms_user_id);
-            const debt = active.filter(row => row.status === "debt")
+            exposure = exposure
+                ? this.update(exposure, values)
+                : this.insertGeneric("seller_recovery_exposures", values);
+            const active = this.tables.seller_recovery_exposures.filter(
+                (row) => row.seller_cms_user_id === body.p_seller_cms_user_id,
+            );
+            const debt = active
+                .filter((row) => row.status === "debt")
                 .reduce((sum, row) => sum + Number(row.amount) - Number(row.recovered_amount), 0);
-            const atRisk = active.filter(row => row.status === "at_risk")
+            const atRisk = active
+                .filter((row) => row.status === "at_risk")
                 .reduce((sum, row) => sum + Number(row.amount) - Number(row.recovered_amount), 0);
             this.update(account, {
                 outstanding_debt_amount: debt,
                 financial_exposure_amount: atRisk,
                 risk_revision: Number(account.risk_revision ?? 0) + 1,
                 risk_status: debt > 0 ? "blocked" : atRisk > 0 ? "restricted" : "standard",
-                financial_hold_reason: debt > 0 ? "Seller recovery debt blocks payments and payouts"
-                    : atRisk > 0 ? "Seller recovery exposure blocks payments and payouts" : null,
-                payout_blocked_at: debt > 0 || atRisk > 0 ? account.payout_blocked_at ?? new Date().toISOString() : null,
+                financial_hold_reason:
+                    debt > 0
+                        ? "Seller recovery debt blocks payments and payouts"
+                        : atRisk > 0
+                          ? "Seller recovery exposure blocks payments and payouts"
+                          : null,
+                payout_blocked_at:
+                    debt > 0 || atRisk > 0 ? (account.payout_blocked_at ?? new Date().toISOString()) : null,
             });
             return jsonResponse({ account, exposure });
         }
         if (table === "rpc/claim_seller_payout_hold" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const account = this.tables.accounts.find(row => row.cms_user_id === body.p_seller_cms_user_id);
-            if (!account) return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            const account = this.tables.accounts.find((row) => row.cms_user_id === body.p_seller_cms_user_id);
+            if (!account) {
+                return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            }
             const required = Number(account.outstanding_debt_amount) + Number(account.financial_exposure_amount);
             const claimed = (body.p_require_risk === false || required > 0) && !account.payout_hold_claimed_by;
-            if (claimed) this.update(account, {
-                payout_hold_claimed_by: body.p_owner,
-                payout_hold_claimed_at: new Date().toISOString(),
-            });
+            if (claimed) {
+                this.update(account, {
+                    payout_hold_claimed_by: body.p_owner,
+                    payout_hold_claimed_at: new Date().toISOString(),
+                });
+            }
             return jsonResponse({ claimed, account });
         }
         if (table === "rpc/finalize_seller_payout_configuration" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const account = this.tables.accounts.find(row => row.cms_user_id === body.p_seller_cms_user_id);
-            if (!account) return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            const account = this.tables.accounts.find((row) => row.cms_user_id === body.p_seller_cms_user_id);
+            if (!account) {
+                return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            }
             if (account.payout_hold_claimed_by !== body.p_owner) {
                 return jsonResponse({ accepted: false, superseded: true, account });
             }
             const required = Number(account.outstanding_debt_amount) + Number(account.financial_exposure_amount);
             const superseded = Number(account.risk_revision) !== Number(body.p_expected_risk_revision) || required > 0;
             if (!superseded) {
-                const clearsAmbiguousRecoveryHold = body.p_clear_ambiguous_recovery_hold === true
-                    && account.risk_status === "manual_review"
-                    && account.financial_hold_reason === "Seller recovery payout hold is not confirmed"
-                    && required === 0;
+                const clearsAmbiguousRecoveryHold =
+                    body.p_clear_ambiguous_recovery_hold === true &&
+                    account.risk_status === "manual_review" &&
+                    account.financial_hold_reason === "Seller recovery payout hold is not confirmed" &&
+                    required === 0;
                 this.update(account, {
                     payout_schedule: body.p_interval,
                     risk_status: clearsAmbiguousRecoveryHold ? "standard" : account.risk_status,
@@ -6166,8 +7512,10 @@ class StripeConnectMock {
         }
         if (table === "rpc/cancel_seller_payout_configuration" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const account = this.tables.accounts.find(row => row.cms_user_id === body.p_seller_cms_user_id);
-            if (!account) return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            const account = this.tables.accounts.find((row) => row.cms_user_id === body.p_seller_cms_user_id);
+            if (!account) {
+                return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            }
             if (account.payout_hold_claimed_by !== body.p_owner) {
                 return jsonResponse({ accepted: false, superseded: true, account });
             }
@@ -6181,8 +7529,10 @@ class StripeConnectMock {
         }
         if (table === "rpc/complete_seller_payout_hold" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const account = this.tables.accounts.find(row => row.cms_user_id === body.p_seller_cms_user_id);
-            if (!account) return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            const account = this.tables.accounts.find((row) => row.cms_user_id === body.p_seller_cms_user_id);
+            if (!account) {
+                return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            }
             if (account.payout_hold_claimed_by !== body.p_owner) {
                 return jsonResponse({ accepted: false, needsReapply: false, account });
             }
@@ -6191,32 +7541,42 @@ class StripeConnectMock {
             const needsReapply = body.p_succeeded === true && required > applied;
             const holdStartedAt = String(account.manual_payout_hold_started_at ?? new Date().toISOString());
             const holdStartedTime = Date.parse(holdStartedAt);
-            this.update(account, body.p_succeeded === true ? {
-                provider_hold_minimum_amount: Math.max(Number(account.provider_hold_minimum_amount ?? 0), applied),
-                payout_schedule: "manual",
-                manual_payout_hold_started_at: holdStartedAt,
-                manual_payout_hold_alert_at: account.manual_payout_hold_alert_at
-                    ?? new Date(holdStartedTime + 75 * 24 * 60 * 60 * 1000).toISOString(),
-                manual_payout_hold_deadline_at: account.manual_payout_hold_deadline_at
-                    ?? new Date(holdStartedTime + 90 * 24 * 60 * 60 * 1000).toISOString(),
-                manual_payout_hold_restore_settings: account.manual_payout_hold_restore_settings
-                    ?? body.p_restore_settings,
-                last_provider_sync_at: new Date().toISOString(),
-                payout_hold_claimed_by: needsReapply ? body.p_owner : null,
-                payout_hold_claimed_at: needsReapply ? new Date().toISOString() : null,
-            } : {
-                risk_status: "manual_review",
-                financial_hold_reason: "Seller recovery payout hold is not confirmed",
-                payout_blocked_at: account.payout_blocked_at ?? new Date().toISOString(),
-                payout_hold_claimed_by: null,
-                payout_hold_claimed_at: null,
-            });
+            this.update(
+                account,
+                body.p_succeeded === true
+                    ? {
+                          provider_hold_minimum_amount: Math.max(
+                              Number(account.provider_hold_minimum_amount ?? 0),
+                              applied,
+                          ),
+                          payout_schedule: "manual",
+                          manual_payout_hold_started_at: holdStartedAt,
+                          manual_payout_hold_alert_at:
+                              account.manual_payout_hold_alert_at ??
+                              new Date(holdStartedTime + 75 * 24 * 60 * 60 * 1000).toISOString(),
+                          manual_payout_hold_deadline_at:
+                              account.manual_payout_hold_deadline_at ??
+                              new Date(holdStartedTime + 90 * 24 * 60 * 60 * 1000).toISOString(),
+                          manual_payout_hold_restore_settings:
+                              account.manual_payout_hold_restore_settings ?? body.p_restore_settings,
+                          last_provider_sync_at: new Date().toISOString(),
+                          payout_hold_claimed_by: needsReapply ? body.p_owner : null,
+                          payout_hold_claimed_at: needsReapply ? new Date().toISOString() : null,
+                      }
+                    : {
+                          risk_status: "manual_review",
+                          financial_hold_reason: "Seller recovery payout hold is not confirmed",
+                          payout_blocked_at: account.payout_blocked_at ?? new Date().toISOString(),
+                          payout_hold_claimed_by: null,
+                          payout_hold_claimed_at: null,
+                      },
+            );
             return jsonResponse({ accepted: true, needsReapply, account });
         }
         if (table === "rpc/reserve_account_financial_operation" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const businessKey = String(body.p_business_key);
-            const existing = this.tables.financial_operations.find(row => row.business_key === businessKey);
+            const existing = this.tables.financial_operations.find((row) => row.business_key === businessKey);
             if (existing) {
                 if (JSON.stringify(existing.request) !== JSON.stringify(body.p_request)) {
                     return jsonResponse({ message: "conflict: account financial operation replay mismatch" }, 400);
@@ -6225,11 +7585,21 @@ class StripeConnectMock {
             }
             const now = "2026-07-06T12:04:00.000Z";
             const operation = {
-                id: this.nextRowId++, payment_id: null, business_key: businessKey,
-                operation_type: body.p_operation_type, status: "reserved",
-                stripe_object_id: null, request: body.p_request, response: null,
-                last_error: null, attempt_count: 0, next_attempt_at: null,
-                claimed_at: null, completed_at: null, created_at: now, updated_at: now,
+                id: this.nextRowId++,
+                payment_id: null,
+                business_key: businessKey,
+                operation_type: body.p_operation_type,
+                status: "reserved",
+                stripe_object_id: null,
+                request: body.p_request,
+                response: null,
+                last_error: null,
+                attempt_count: 0,
+                next_attempt_at: null,
+                claimed_at: null,
+                completed_at: null,
+                created_at: now,
+                updated_at: now,
             };
             this.tables.financial_operations.push(operation);
             return jsonResponse(operation);
@@ -6237,15 +7607,27 @@ class StripeConnectMock {
         if (table === "rpc/reserve_platform_financial_operation" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const businessKey = String(body.p_business_key);
-            const existing = this.tables.financial_operations.find(row => row.business_key === businessKey);
-            if (existing) return jsonResponse(existing);
+            const existing = this.tables.financial_operations.find((row) => row.business_key === businessKey);
+            if (existing) {
+                return jsonResponse(existing);
+            }
             const now = "2026-07-06T12:04:00.000Z";
             const operation = {
-                id: this.nextRowId++, payment_id: null, business_key: businessKey,
-                operation_type: body.p_operation_type, status: "reserved",
-                stripe_object_id: null, request: body.p_request, response: null,
-                last_error: null, attempt_count: 0, next_attempt_at: null,
-                claimed_at: null, completed_at: null, created_at: now, updated_at: now,
+                id: this.nextRowId++,
+                payment_id: null,
+                business_key: businessKey,
+                operation_type: body.p_operation_type,
+                status: "reserved",
+                stripe_object_id: null,
+                request: body.p_request,
+                response: null,
+                last_error: null,
+                attempt_count: 0,
+                next_attempt_at: null,
+                claimed_at: null,
+                completed_at: null,
+                created_at: now,
+                updated_at: now,
             };
             this.tables.financial_operations.push(operation);
             return jsonResponse(operation);
@@ -6258,16 +7640,18 @@ class StripeConnectMock {
             if (revision < Number(control.liability_revision)) {
                 return jsonResponse({ message: "conflict: stale Commerce platform payout liability revision" }, 400);
             }
-            if (revision === Number(control.liability_revision)
-                && required !== Number(control.required_minimum_amount)) {
+            if (
+                revision === Number(control.liability_revision) &&
+                required !== Number(control.required_minimum_amount)
+            ) {
                 return jsonResponse({ message: "conflict: Commerce revision changed amount" }, 400);
             }
             if (revision > Number(control.liability_revision)) {
                 this.update(control, {
                     required_minimum_amount: required,
                     liability_revision: revision,
-                    decrease_authorization_id: required < Number(control.provider_minimum_amount)
-                        ? body.p_decrease_authorization_id : null,
+                    decrease_authorization_id:
+                        required < Number(control.provider_minimum_amount) ? body.p_decrease_authorization_id : null,
                 });
             } else if (required < Number(control.provider_minimum_amount)) {
                 if (!control.decrease_authorization_id && body.p_decrease_authorization_id) {
@@ -6279,10 +7663,12 @@ class StripeConnectMock {
                 }
             }
             const claimed = !control.claim_owner || control.claim_owner === body.p_owner;
-            if (claimed) this.update(control, {
-                claim_owner: body.p_owner,
-                claimed_at: new Date().toISOString(),
-            });
+            if (claimed) {
+                this.update(control, {
+                    claim_owner: body.p_owner,
+                    claimed_at: new Date().toISOString(),
+                });
+            }
             return jsonResponse({ claimed, control });
         }
         if (table === "rpc/complete_platform_payout_protection" && method === "POST") {
@@ -6292,22 +7678,28 @@ class StripeConnectMock {
                 return jsonResponse({ accepted: false, needsReapply: false, control });
             }
             const applied = Number(body.p_applied_minimum_amount);
-            const needsReapply = body.p_succeeded === true
-                && (applied < Number(control.required_minimum_amount)
-                    || (control.decrease_authorization_id !== null
-                        && applied !== Number(control.required_minimum_amount)));
-            this.update(control, body.p_succeeded === true ? {
-                provider_minimum_amount: applied,
-                decrease_authorization_id: needsReapply ? control.decrease_authorization_id : null,
-                claim_owner: needsReapply ? body.p_owner : null,
-                claimed_at: needsReapply ? new Date().toISOString() : null,
-                last_error: null,
-                last_provider_sync_at: new Date().toISOString(),
-            } : {
-                claim_owner: null,
-                claimed_at: null,
-                last_error: body.p_error,
-            });
+            const needsReapply =
+                body.p_succeeded === true &&
+                (applied < Number(control.required_minimum_amount) ||
+                    (control.decrease_authorization_id !== null &&
+                        applied !== Number(control.required_minimum_amount)));
+            this.update(
+                control,
+                body.p_succeeded === true
+                    ? {
+                          provider_minimum_amount: applied,
+                          decrease_authorization_id: needsReapply ? control.decrease_authorization_id : null,
+                          claim_owner: needsReapply ? body.p_owner : null,
+                          claimed_at: needsReapply ? new Date().toISOString() : null,
+                          last_error: null,
+                          last_provider_sync_at: new Date().toISOString(),
+                      }
+                    : {
+                          claim_owner: null,
+                          claimed_at: null,
+                          last_error: body.p_error,
+                      },
+            );
             return jsonResponse({
                 accepted: true,
                 needsReapply,
@@ -6317,14 +7709,20 @@ class StripeConnectMock {
         }
         if (table === "rpc/mark_payment_manual_review" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const payment = this.tables.payments.find(row => same(row.id, body.p_payment_id));
-            if (payment) Object.assign(payment, { settlement_status: "manual_review", manual_review_reason: body.p_reason });
+            const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
+            if (payment) {
+                Object.assign(payment, { settlement_status: "manual_review", manual_review_reason: body.p_reason });
+            }
             return jsonResponse(payment ?? {});
         }
         if (table === "rpc/apply_dispute_funds_truth" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const dispute = this.tables.stripe_disputes.find(row => row.stripe_dispute_id === body.p_stripe_dispute_id);
-            if (!dispute) return jsonResponse({ message: "not_found: Stripe dispute" }, 400);
+            const dispute = this.tables.stripe_disputes.find(
+                (row) => row.stripe_dispute_id === body.p_stripe_dispute_id,
+            );
+            if (!dispute) {
+                return jsonResponse({ message: "not_found: Stripe dispute" }, 400);
+            }
             const previousAt = Date.parse(String(dispute.last_funds_event_at ?? ""));
             const nextAt = Date.parse(String(body.p_event_at));
             if (!Number.isFinite(previousAt) || nextAt > previousAt) {
@@ -6347,7 +7745,9 @@ class StripeConnectMock {
                 return jsonResponse({ message: "forbidden: admin approval actor is required" }, 400);
             }
             const actionKey = String(body.p_action_key);
-            let approval = this.tables.irreversible_dispute_action_approvals.find(row => row.action_key === actionKey);
+            let approval = this.tables.irreversible_dispute_action_approvals.find(
+                (row) => row.action_key === actionKey,
+            );
             if (!approval) {
                 approval = this.insertGeneric("irreversible_dispute_action_approvals", {
                     action_key: actionKey,
@@ -6382,34 +7782,48 @@ class StripeConnectMock {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const limit = Number(body.p_limit ?? 50);
             const claimed = this.tables.stripe_events
-                .filter(row => ["pending", "failed"].includes(String(row.processing_status ?? "pending"))
-                    || (row.processing_status === "processing"
-                        && Date.parse(String(row.processing_started_at ?? "")) <= Date.now() - 5 * 60_000))
+                .filter(
+                    (row) =>
+                        ["pending", "failed"].includes(String(row.processing_status ?? "pending")) ||
+                        (row.processing_status === "processing" &&
+                            Date.parse(String(row.processing_started_at ?? "")) <= Date.now() - 5 * 60_000),
+                )
                 .slice(0, limit)
-                .map(row => this.update(row, {
-                    processing_status: "processing",
-                    processing_started_at: new Date().toISOString(),
-                    attempt_count: Number(row.attempt_count ?? 0) + 1,
-                    last_error: null,
-                }));
+                .map((row) =>
+                    this.update(row, {
+                        processing_status: "processing",
+                        processing_started_at: new Date().toISOString(),
+                        attempt_count: Number(row.attempt_count ?? 0) + 1,
+                        last_error: null,
+                    }),
+                );
             return jsonResponse(claimed);
         }
         if (table === "rpc/claim_financial_operations" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const limit = Number(body.p_limit ?? 50);
             const claimed = this.tables.financial_operations
-                .filter(row => [
-                    "payment_intent_create", "payment_intent_cancel", "transfer_create",
-                    "transfer_reversal_create", "refund_create", "payout_schedule_update",
-                ].includes(String(row.operation_type))
-                    && ["reserved", "processing", "failed"].includes(String(row.status)))
+                .filter(
+                    (row) =>
+                        [
+                            "payment_intent_create",
+                            "payment_intent_cancel",
+                            "transfer_create",
+                            "transfer_reversal_create",
+                            "refund_create",
+                            "payout_schedule_update",
+                        ].includes(String(row.operation_type)) &&
+                        ["reserved", "processing", "failed"].includes(String(row.status)),
+                )
                 .slice(0, limit)
-                .map(row => this.update(row, {
-                    status: "processing",
-                    claimed_at: new Date().toISOString(),
-                    attempt_count: Number(row.attempt_count ?? 0) + 1,
-                    last_error: null,
-                }));
+                .map((row) =>
+                    this.update(row, {
+                        status: "processing",
+                        claimed_at: new Date().toISOString(),
+                        attempt_count: Number(row.attempt_count ?? 0) + 1,
+                        last_error: null,
+                    }),
+                );
             return jsonResponse(claimed);
         }
         if (table === "rpc/enqueue_commerce_provider_projection" && method === "POST") {
@@ -6419,30 +7833,32 @@ class StripeConnectMock {
             }
             const body = JSON.parse(await request.text()) as JsonRecord;
             let projection = this.tables.commerce_projection_outbox.find(
-                row => row.projection_key === body.p_projection_key,
+                (row) => row.projection_key === body.p_projection_key,
             );
-            if (!projection) projection = this.insertGeneric("commerce_projection_outbox", {
-                operation_id: null,
-                payment_id: body.p_payment_id,
-                projection_key: body.p_projection_key,
-                projection_kind: body.p_projection_kind,
-                provider_object_id: body.p_provider_object_id,
-                projection_payload: {},
-                recovery_key: null,
-                causal_sequence: 0,
-                projection_status: "pending",
-                attempt_count: 0,
-                next_attempt_at: null,
-                claim_owner: null,
-                claim_token: null,
-                claimed_at: null,
-                last_error: null,
-                projected_at: null,
-                intervention_revision: 0,
-                last_intervention_at: null,
-                last_intervention_by: null,
-                last_intervention_reason: null,
-            });
+            if (!projection) {
+                projection = this.insertGeneric("commerce_projection_outbox", {
+                    operation_id: null,
+                    payment_id: body.p_payment_id,
+                    projection_key: body.p_projection_key,
+                    projection_kind: body.p_projection_kind,
+                    provider_object_id: body.p_provider_object_id,
+                    projection_payload: {},
+                    recovery_key: null,
+                    causal_sequence: 0,
+                    projection_status: "pending",
+                    attempt_count: 0,
+                    next_attempt_at: null,
+                    claim_owner: null,
+                    claim_token: null,
+                    claimed_at: null,
+                    last_error: null,
+                    projected_at: null,
+                    intervention_revision: 0,
+                    last_intervention_at: null,
+                    last_intervention_by: null,
+                    last_intervention_reason: null,
+                });
+            }
             if (this.losePaymentProjectionEnqueueResponse) {
                 this.losePaymentProjectionEnqueueResponse = false;
                 throw new Error("simulated lost payment projection response");
@@ -6451,43 +7867,48 @@ class StripeConnectMock {
         }
         if (table === "rpc/enqueue_commerce_refund_projection" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const refund = this.tables.refunds.find(row => same(row.id, body.p_refund_id));
-            if (!refund) return jsonResponse({ message: "not_found: refund" }, 400);
+            const refund = this.tables.refunds.find((row) => same(row.id, body.p_refund_id));
+            if (!refund) {
+                return jsonResponse({ message: "not_found: refund" }, 400);
+            }
             const projectionKey = `refund:${refund.id}:${refund.status}`;
-            let projection = this.tables.commerce_projection_outbox.find(row => row.projection_key === projectionKey);
-            if (!projection) projection = this.insertGeneric("commerce_projection_outbox", {
-                operation_id: refund.operation_id,
-                payment_id: refund.payment_id,
-                projection_key: projectionKey,
-                projection_kind: "refund",
-                provider_object_id: refund.stripe_refund_id ?? String(refund.id),
-                projection_payload: {
-                    refundId: refund.id,
-                    refundRequestId: refund.refund_request_id,
-                    commerceRefundRequestId: refund.commerce_refund_request_id,
-                    stripeRefundId: refund.stripe_refund_id,
-                    status: refund.status,
-                    failureReason: refund.failure_reason,
-                    providerSnapshot: refund.provider_snapshot ?? {},
-                    occurredAt: refund.updated_at,
-                },
-                recovery_key: Number(refund.required_reversal_amount) > 0
-                    ? `${refund.refund_request_id}:seller-recovery`
-                    : null,
-                causal_sequence: refund.status === "pending" ? 10 : 20,
-                projection_status: "pending",
-                attempt_count: 0,
-                next_attempt_at: null,
-                claim_owner: null,
-                claim_token: null,
-                claimed_at: null,
-                last_error: null,
-                projected_at: null,
-                intervention_revision: 0,
-                last_intervention_at: null,
-                last_intervention_by: null,
-                last_intervention_reason: null,
-            });
+            let projection = this.tables.commerce_projection_outbox.find((row) => row.projection_key === projectionKey);
+            if (!projection) {
+                projection = this.insertGeneric("commerce_projection_outbox", {
+                    operation_id: refund.operation_id,
+                    payment_id: refund.payment_id,
+                    projection_key: projectionKey,
+                    projection_kind: "refund",
+                    provider_object_id: refund.stripe_refund_id ?? String(refund.id),
+                    projection_payload: {
+                        refundId: refund.id,
+                        refundRequestId: refund.refund_request_id,
+                        commerceRefundRequestId: refund.commerce_refund_request_id,
+                        stripeRefundId: refund.stripe_refund_id,
+                        status: refund.status,
+                        failureReason: refund.failure_reason,
+                        providerSnapshot: refund.provider_snapshot ?? {},
+                        occurredAt: refund.updated_at,
+                    },
+                    recovery_key:
+                        Number(refund.required_reversal_amount) > 0
+                            ? `${refund.refund_request_id}:seller-recovery`
+                            : null,
+                    causal_sequence: refund.status === "pending" ? 10 : 20,
+                    projection_status: "pending",
+                    attempt_count: 0,
+                    next_attempt_at: null,
+                    claim_owner: null,
+                    claim_token: null,
+                    claimed_at: null,
+                    last_error: null,
+                    projected_at: null,
+                    intervention_revision: 0,
+                    last_intervention_at: null,
+                    last_intervention_by: null,
+                    last_intervention_reason: null,
+                });
+            }
             return jsonResponse(projection);
         }
         if (table === "rpc/read_reconciliation_operations" && method === "POST") {
@@ -6496,14 +7917,16 @@ class StripeConnectMock {
             const operations = [...this.tables.financial_operations]
                 .sort((left, right) => String(right.updated_at).localeCompare(String(left.updated_at)))
                 .slice(0, limit);
-            return jsonResponse(operations.map(operation => {
-                const payment = this.tables.payments.find(row => same(row.id, operation.payment_id));
-                return {
-                    operation,
-                    client_reference_id: payment?.client_reference_id ?? null,
-                    payment_currency: payment?.currency ?? null,
-                };
-            }));
+            return jsonResponse(
+                operations.map((operation) => {
+                    const payment = this.tables.payments.find((row) => same(row.id, operation.payment_id));
+                    return {
+                        operation,
+                        client_reference_id: payment?.client_reference_id ?? null,
+                        payment_currency: payment?.currency ?? null,
+                    };
+                }),
+            );
         }
         if (table === "rpc/claim_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
@@ -6512,152 +7935,190 @@ class StripeConnectMock {
         if (table === "rpc/claim_reconciliation_projection_batch" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const claimed = this.claimCommerceProjectionOutbox(body);
-            return jsonResponse(claimed.map(projection => {
-                const payment = this.tables.payments.find(row => same(row.id, projection.payment_id)) ?? null;
-                const operation = this.tables.financial_operations.find(
-                    row => same(row.id, projection.operation_id),
-                ) ?? null;
-                const operationPayment = operation
-                    ? this.tables.payments.find(row => same(row.id, operation.payment_id)) ?? null
-                    : null;
-                const providerObjectId = String(projection.provider_object_id ?? "");
-                const dispute = projection.projection_kind === "dispute" && /^[1-9][0-9]*$/.test(providerObjectId)
-                    ? this.tables.stripe_disputes.find(row => same(row.id, providerObjectId)) ?? null
-                    : null;
-                const disputePayment = dispute
-                    ? this.tables.payments.find(row => same(row.id, dispute.payment_id)) ?? null
-                    : null;
-                const evidence = dispute ? this.tables.stripe_dispute_evidence
-                    .filter(row => same(row.dispute_id, dispute.id))
-                    .sort((left, right) => String(right.staged_at).localeCompare(String(left.staged_at))) : [];
-                const pendingApproval = dispute ? this.tables.irreversible_dispute_action_approvals
-                    .filter(row => same(row.dispute_id, dispute.id)
-                        && row.status === "pending_second_approval")
-                    .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0]
-                    ?? null : null;
-                const staged = evidence[0];
-                return {
-                    projection,
-                    payment,
-                    financial_operation: operation,
-                    operation_payment: operationPayment,
-                    dispute,
-                    dispute_client_reference_id: disputePayment?.client_reference_id ?? null,
-                    staged_evidence: staged ? {
-                        evidence_operation_id: staged.evidence_operation_id,
-                        staged_at: staged.staged_at,
-                        submitted_at: staged.submitted_at,
-                    } : null,
-                    evidence_submission_count: evidence.filter(row => row.submitted_at).length,
-                    pending_approval: pendingApproval ? {
-                        action_type: pendingApproval.action_type,
-                        status: pendingApproval.status,
-                        first_actor_id: pendingApproval.first_actor_id,
-                        first_approved_at: pendingApproval.first_approved_at,
-                        second_actor_id: pendingApproval.second_actor_id,
-                        second_approved_at: pendingApproval.second_approved_at,
-                    } : null,
-                };
-            }));
+            return jsonResponse(
+                claimed.map((projection) => {
+                    const payment = this.tables.payments.find((row) => same(row.id, projection.payment_id)) ?? null;
+                    const operation =
+                        this.tables.financial_operations.find((row) => same(row.id, projection.operation_id)) ?? null;
+                    const operationPayment = operation
+                        ? (this.tables.payments.find((row) => same(row.id, operation.payment_id)) ?? null)
+                        : null;
+                    const providerObjectId = String(projection.provider_object_id ?? "");
+                    const dispute =
+                        projection.projection_kind === "dispute" && /^[1-9][0-9]*$/.test(providerObjectId)
+                            ? (this.tables.stripe_disputes.find((row) => same(row.id, providerObjectId)) ?? null)
+                            : null;
+                    const disputePayment = dispute
+                        ? (this.tables.payments.find((row) => same(row.id, dispute.payment_id)) ?? null)
+                        : null;
+                    const evidence = dispute
+                        ? this.tables.stripe_dispute_evidence
+                              .filter((row) => same(row.dispute_id, dispute.id))
+                              .sort((left, right) => String(right.staged_at).localeCompare(String(left.staged_at)))
+                        : [];
+                    const pendingApproval = dispute
+                        ? (this.tables.irreversible_dispute_action_approvals
+                              .filter(
+                                  (row) => same(row.dispute_id, dispute.id) && row.status === "pending_second_approval",
+                              )
+                              .sort((left, right) =>
+                                  String(right.created_at).localeCompare(String(left.created_at)),
+                              )[0] ?? null)
+                        : null;
+                    const staged = evidence[0];
+                    return {
+                        projection,
+                        payment,
+                        financial_operation: operation,
+                        operation_payment: operationPayment,
+                        dispute,
+                        dispute_client_reference_id: disputePayment?.client_reference_id ?? null,
+                        staged_evidence: staged
+                            ? {
+                                  evidence_operation_id: staged.evidence_operation_id,
+                                  staged_at: staged.staged_at,
+                                  submitted_at: staged.submitted_at,
+                              }
+                            : null,
+                        evidence_submission_count: evidence.filter((row) => row.submitted_at).length,
+                        pending_approval: pendingApproval
+                            ? {
+                                  action_type: pendingApproval.action_type,
+                                  status: pendingApproval.status,
+                                  first_actor_id: pendingApproval.first_actor_id,
+                                  first_approved_at: pendingApproval.first_approved_at,
+                                  second_actor_id: pendingApproval.second_actor_id,
+                                  second_approved_at: pendingApproval.second_approved_at,
+                              }
+                            : null,
+                    };
+                }),
+            );
         }
         if (table === "rpc/read_payment_reconciliation_ledger" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const paymentId = Number(body.p_payment_id);
-            const succeededRefunds = this.tables.refunds.filter(row => (
-                same(row.payment_id, paymentId) && row.status === "succeeded"
-            ));
-            return jsonResponse([{
-                refunded_amount: succeededRefunds.reduce(
-                    (sum, row) => sum + Number(row.amount ?? 0), 0,
-                ),
-                transferred_amount: this.tables.transfers
-                    .filter(row => same(row.payment_id, paymentId)
-                        && ["succeeded", "partially_reversed", "reversed"].includes(String(row.status)))
-                    .reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
-                reversed_amount: this.tables.transfer_reversals
-                    .filter(row => same(row.payment_id, paymentId) && row.status === "succeeded")
-                    .reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
-                seller_recovery_amount: succeededRefunds.reduce(
-                    (sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0,
-                ),
-            }]);
+            const succeededRefunds = this.tables.refunds.filter(
+                (row) => same(row.payment_id, paymentId) && row.status === "succeeded",
+            );
+            return jsonResponse([
+                {
+                    refunded_amount: succeededRefunds.reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+                    transferred_amount: this.tables.transfers
+                        .filter(
+                            (row) =>
+                                same(row.payment_id, paymentId) &&
+                                ["succeeded", "partially_reversed", "reversed"].includes(String(row.status)),
+                        )
+                        .reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+                    reversed_amount: this.tables.transfer_reversals
+                        .filter((row) => same(row.payment_id, paymentId) && row.status === "succeeded")
+                        .reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+                    seller_recovery_amount: succeededRefunds.reduce(
+                        (sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0),
+                        0,
+                    ),
+                },
+            ]);
         }
         if (table === "rpc/read_payment_reconciliation_local_context" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const paymentId = Number(body.p_payment_id);
-            const payment = this.tables.payments.find(row => same(row.id, paymentId));
+            const payment = this.tables.payments.find((row) => same(row.id, paymentId));
             const refunds = this.tables.refunds
-                .filter(row => same(row.payment_id, paymentId))
+                .filter((row) => same(row.payment_id, paymentId))
                 .sort((left, right) => Number(left.id) - Number(right.id))
-                .map(row => ({ ...row }));
-            return jsonResponse([{
-                payment: payment ? { ...payment } : null,
-                refunds,
-            }]);
+                .map((row) => ({ ...row }));
+            return jsonResponse([
+                {
+                    payment: payment ? { ...payment } : null,
+                    refunds,
+                },
+            ]);
         }
         if (table === "rpc/read_provider_transfer_reconciliation_context" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const transfer = this.tables.transfers.find(row => (
-                row.stripe_transfer_id === body.p_stripe_transfer_id
-            ));
-            const localReversedAmount = transfer ? this.tables.transfer_reversals
-                .filter(row => same(row.transfer_id, transfer.id) && row.status === "succeeded")
-                .reduce((sum, row) => sum + Number(row.amount ?? 0), 0) : 0;
-            return jsonResponse([{
-                transfer: transfer ? { ...transfer } : null,
-                local_reversed_amount: localReversedAmount,
-            }]);
+            const transfer = this.tables.transfers.find((row) => row.stripe_transfer_id === body.p_stripe_transfer_id);
+            const localReversedAmount = transfer
+                ? this.tables.transfer_reversals
+                      .filter((row) => same(row.transfer_id, transfer.id) && row.status === "succeeded")
+                      .reduce((sum, row) => sum + Number(row.amount ?? 0), 0)
+                : 0;
+            return jsonResponse([
+                {
+                    transfer: transfer ? { ...transfer } : null,
+                    local_reversed_amount: localReversedAmount,
+                },
+            ]);
         }
         if (table === "rpc/read_financial_operation_recovery_context" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const copy = (row: JsonRecord | undefined): JsonRecord | null => row ? { ...row } : null;
-            return jsonResponse([{
-                payment: copy(this.tables.payments.find(row => same(row.id, body.p_payment_id))),
-                transfer: copy(this.tables.transfers.find(row => same(row.operation_id, body.p_operation_id))),
-                transfer_reversal: copy(this.tables.transfer_reversals.find(
-                    row => same(row.operation_id, body.p_operation_id),
-                )),
-                transfer_recovery: copy(this.tables.transfer_recovery_requests.find(
-                    row => row.recovery_request_id === body.p_recovery_request_id,
-                )),
-                refund: copy(this.tables.refunds.find(row => same(row.operation_id, body.p_operation_id))),
-            }]);
+            const copy = (row: JsonRecord | undefined): JsonRecord | null => (row ? { ...row } : null);
+            return jsonResponse([
+                {
+                    payment: copy(this.tables.payments.find((row) => same(row.id, body.p_payment_id))),
+                    transfer: copy(this.tables.transfers.find((row) => same(row.operation_id, body.p_operation_id))),
+                    transfer_reversal: copy(
+                        this.tables.transfer_reversals.find((row) => same(row.operation_id, body.p_operation_id)),
+                    ),
+                    transfer_recovery: copy(
+                        this.tables.transfer_recovery_requests.find(
+                            (row) => row.recovery_request_id === body.p_recovery_request_id,
+                        ),
+                    ),
+                    refund: copy(this.tables.refunds.find((row) => same(row.operation_id, body.p_operation_id))),
+                },
+            ]);
         }
         if (table === "rpc/ack_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const row = this.tables.commerce_projection_outbox.find(candidate =>
-                same(candidate.id, body.p_projection_id)
-                && candidate.claim_token === body.p_claim_token
-                && candidate.projection_status === "leased"
+            const row = this.tables.commerce_projection_outbox.find(
+                (candidate) =>
+                    same(candidate.id, body.p_projection_id) &&
+                    candidate.claim_token === body.p_claim_token &&
+                    candidate.projection_status === "leased",
             );
-            if (!row) return jsonResponse({ message: "conflict: projection lease is no longer valid" }, 400);
+            if (!row) {
+                return jsonResponse({ message: "conflict: projection lease is no longer valid" }, 400);
+            }
             const acknowledged = this.update(row, {
-                projection_status: "succeeded", projected_at: new Date().toISOString(),
-                claim_owner: null, claim_token: null, claimed_at: null,
-                next_attempt_at: null, last_error: null,
+                projection_status: "succeeded",
+                projected_at: new Date().toISOString(),
+                claim_owner: null,
+                claim_token: null,
+                claimed_at: null,
+                next_attempt_at: null,
+                last_error: null,
             });
-            const exception = this.tables.provider_exceptions.find(candidate =>
-                candidate.deduplication_key === `commerce-projection:${row.id}`
+            const exception = this.tables.provider_exceptions.find(
+                (candidate) => candidate.deduplication_key === `commerce-projection:${row.id}`,
             );
-            if (exception) this.update(exception, {
-                status: "resolved",
-                resolved_at: new Date().toISOString(),
-                resolved_by: "commerce-projection-ack",
-            });
+            if (exception) {
+                this.update(exception, {
+                    status: "resolved",
+                    resolved_at: new Date().toISOString(),
+                    resolved_by: "commerce-projection-ack",
+                });
+            }
             return jsonResponse(acknowledged);
         }
         if (table === "rpc/fail_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const row = this.tables.commerce_projection_outbox.find(candidate =>
-                same(candidate.id, body.p_projection_id)
-                && candidate.claim_token === body.p_claim_token
-                && candidate.projection_status === "leased"
+            const row = this.tables.commerce_projection_outbox.find(
+                (candidate) =>
+                    same(candidate.id, body.p_projection_id) &&
+                    candidate.claim_token === body.p_claim_token &&
+                    candidate.projection_status === "leased",
             );
-            if (!row) return jsonResponse({ message: "conflict: projection lease is no longer valid" }, 400);
+            if (!row) {
+                return jsonResponse({ message: "conflict: projection lease is no longer valid" }, 400);
+            }
             const failed = this.update(row, {
                 projection_status: Number(row.attempt_count) >= 5 ? "manual_review" : "retry",
                 next_attempt_at: Number(row.attempt_count) >= 5 ? null : new Date(Date.now() + 60_000).toISOString(),
-                claim_owner: null, claim_token: null, claimed_at: null,
+                claim_owner: null,
+                claim_token: null,
+                claimed_at: null,
                 last_error: body.p_error,
             });
             if (failed.projection_status === "manual_review") {
@@ -6678,23 +8139,33 @@ class StripeConnectMock {
                         lastError: row.last_error,
                     },
                 };
-                const existing = this.tables.provider_exceptions.find(candidate =>
-                    candidate.deduplication_key === values.deduplication_key
+                const existing = this.tables.provider_exceptions.find(
+                    (candidate) => candidate.deduplication_key === values.deduplication_key,
                 );
-                if (existing) this.update(existing, values);
-                else this.insertGeneric("provider_exceptions", values);
+                if (existing) {
+                    this.update(existing, values);
+                } else {
+                    this.insertGeneric("provider_exceptions", values);
+                }
             }
             return jsonResponse(failed);
         }
         if (table === "rpc/requeue_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
-            const row = this.tables.commerce_projection_outbox.find(candidate => same(candidate.id, body.p_projection_id));
-            if (!row) return jsonResponse({ message: "not_found: Commerce projection" }, 400);
+            const row = this.tables.commerce_projection_outbox.find((candidate) =>
+                same(candidate.id, body.p_projection_id),
+            );
+            if (!row) {
+                return jsonResponse({ message: "not_found: Commerce projection" }, 400);
+            }
             if (Number(row.intervention_revision ?? 0) !== Number(body.p_expected_intervention_revision)) {
                 return jsonResponse({ message: "conflict: stale Commerce projection intervention revision" }, 400);
             }
             if (row.projection_status !== "manual_review") {
-                return jsonResponse({ message: "conflict: Commerce projection is not awaiting Finance intervention" }, 400);
+                return jsonResponse(
+                    { message: "conflict: Commerce projection is not awaiting Finance intervention" },
+                    400,
+                );
             }
             const revision = Number(row.intervention_revision ?? 0) + 1;
             const requeued = this.update(row, {
@@ -6720,29 +8191,41 @@ class StripeConnectMock {
             });
             return jsonResponse(requeued);
         }
-        if (!this.tables[table]) throw new Error(`unexpected table: ${table}`);
-        if (method === "GET") return jsonResponse(this.select(table, url));
+        if (!this.tables[table]) {
+            throw new Error(`unexpected table: ${table}`);
+        }
+        if (method === "GET") {
+            return jsonResponse(this.select(table, url));
+        }
         if (method === "POST") {
             const row = JSON.parse(await request.text()) as JsonRecord;
             let inserted: JsonRecord;
-            if (table === "accounts") inserted = this.upsertAccount(row);
-            else if (table === "payments") inserted = this.insertPayment(row);
-            else {
+            if (table === "accounts") {
+                inserted = this.upsertAccount(row);
+            } else if (table === "payments") {
+                inserted = this.insertPayment(row);
+            } else {
                 const conflict = url.searchParams.get("on_conflict");
                 const conflictFields = conflict?.split(",") ?? [];
                 const existing = conflictFields.length
-                    ? this.tables[table].find(candidate => conflictFields.every(field => same(candidate[field], row[field])))
+                    ? this.tables[table].find((candidate) =>
+                          conflictFields.every((field) => same(candidate[field], row[field])),
+                      )
                     : null;
-                if (existing && request.headers.get("prefer")?.includes("ignore-duplicates")) return jsonResponse([], 200);
+                if (existing && request.headers.get("prefer")?.includes("ignore-duplicates")) {
+                    return jsonResponse([], 200);
+                }
                 inserted = existing ? this.update(existing, row) : this.insertGeneric(table, row);
             }
             return jsonResponse([inserted], 201);
         }
         if (method === "PATCH") {
             const patch = JSON.parse(await request.text()) as JsonRecord;
-            const rows = this.selectRefs(table, url).map(row => this.update(row, patch));
+            const rows = this.selectRefs(table, url).map((row) => this.update(row, patch));
             if (table === "financial_operations") {
-                for (const row of rows) this.enqueueCommerceProjection(row);
+                for (const row of rows) {
+                    this.enqueueCommerceProjection(row);
+                }
             }
             return jsonResponse(rows);
         }
@@ -6750,7 +8233,7 @@ class StripeConnectMock {
     }
 
     rows(table: string): JsonRecord[] {
-        return this.tables[table]!.map(row => ({ ...row }));
+        return this.tables[table]!.map((row) => ({ ...row }));
     }
 
     seedDashboardPayment(clientReferenceId: string, patch: JsonRecord = {}): number {
@@ -6781,8 +8264,10 @@ class StripeConnectMock {
     }
 
     patchDashboardRow(table: DashboardTable, id: number, patch: JsonRecord): void {
-        const row = this.tables[table]?.find(candidate => same(candidate.id, id));
-        if (!row) throw new Error(`unknown ${table} dashboard row ${id}`);
+        const row = this.tables[table]?.find((candidate) => same(candidate.id, id));
+        if (!row) {
+            throw new Error(`unknown ${table} dashboard row ${id}`);
+        }
         this.update(row, patch);
     }
 
@@ -6861,7 +8346,9 @@ class StripeConnectMock {
                     },
                 },
             });
-            expect(request.headers.get("idempotency-key")).toStartWith("cms_connect_account_v2_controlled_recipient_v2_");
+            expect(request.headers.get("idempotency-key")).toStartWith(
+                "cms_connect_account_v2_controlled_recipient_v2_",
+            );
             expect(JSON.stringify(body)).not.toContain("requirements_collector");
             this.accountCreationRequests.push({
                 body,
@@ -6906,7 +8393,7 @@ class StripeConnectMock {
                 ["include[3]", "requirements"],
             ]);
             const accountId = decodeURIComponent(url.pathname.slice("/v2/core/accounts/".length));
-            const row = this.tables.accounts.find(account => account.stripe_account_id === accountId);
+            const row = this.tables.accounts.find((account) => account.stripe_account_id === accountId);
             const userId = String(row?.cms_user_id ?? "unknown");
             return jsonResponse({
                 ...stripeAccountV2(accountId, `${userId}@example.com`, this.customAccountIds.has(accountId)),
@@ -6935,7 +8422,7 @@ class StripeConnectMock {
         }
         if (url.pathname.startsWith("/v1/accounts/") && method === "GET") {
             const accountId = decodeURIComponent(url.pathname.slice("/v1/accounts/".length));
-            const row = this.tables.accounts.find(account => account.stripe_account_id === accountId);
+            const row = this.tables.accounts.find((account) => account.stripe_account_id === accountId);
             const userId = String(row?.cms_user_id ?? "unknown");
             return jsonResponse({
                 ...stripeAccountV1(userId, accountId),
@@ -6946,9 +8433,7 @@ class StripeConnectMock {
             expect(request.headers.get("stripe-account")).toBe("acct_seller_example_com");
             return jsonResponse({
                 object: "balance",
-                available: [
-                    { amount: this.availableEur, currency: "eur" },
-                ],
+                available: [{ amount: this.availableEur, currency: "eur" }],
                 pending: [
                     { amount: 1800, currency: "eur" },
                     { amount: 125, currency: "usd" },
@@ -6959,7 +8444,9 @@ class StripeConnectMock {
             });
         }
         if (url.pathname === "/v1/balance_settings" && method === "GET") {
-            return jsonResponse(request.headers.get("stripe-account") ? this.balanceSettings : this.platformBalanceSettings);
+            return jsonResponse(
+                request.headers.get("stripe-account") ? this.balanceSettings : this.platformBalanceSettings,
+            );
         }
         if (url.pathname === "/v1/balance_settings" && method === "POST") {
             const connectedAccount = request.headers.get("stripe-account");
@@ -7000,17 +8487,21 @@ class StripeConnectMock {
             }
             settlement.delay_days_override = Number(params.get("payments[settlement_timing][delay_days_override]"));
             payments.debit_negative_balances = params.get("payments[debit_negative_balances]") === "true";
-            if (connectedAccount
-                && params.get("payments[payouts][schedule][interval]") === "daily"
-                && this.addSellerRiskDuringNextAutomaticRestore) {
+            if (
+                connectedAccount &&
+                params.get("payments[payouts][schedule][interval]") === "daily" &&
+                this.addSellerRiskDuringNextAutomaticRestore
+            ) {
                 this.addSellerRiskDuringNextAutomaticRestore = false;
-                const account = this.tables.accounts.find(row => row.stripe_account_id === connectedAccount);
-                if (account) this.update(account, {
-                    financial_exposure_amount: 250,
-                    risk_revision: Number(account.risk_revision ?? 0) + 1,
-                    risk_status: "restricted",
-                    financial_hold_reason: "Seller recovery exposure blocks payments and payouts",
-                });
+                const account = this.tables.accounts.find((row) => row.stripe_account_id === connectedAccount);
+                if (account) {
+                    this.update(account, {
+                        financial_exposure_amount: 250,
+                        risk_revision: Number(account.risk_revision ?? 0) + 1,
+                        risk_status: "restricted",
+                        financial_hold_reason: "Seller recovery exposure blocks payments and payouts",
+                    });
+                }
             }
             if (connectedAccount && this.loseNextSellerBalanceSettingsResponse) {
                 this.loseNextSellerBalanceSettingsResponse = false;
@@ -7025,9 +8516,7 @@ class StripeConnectMock {
         if (/^\/v1\/payouts\/po_[^/]+$/.test(url.pathname) && method === "GET") {
             const payoutId = decodeURIComponent(url.pathname.slice("/v1/payouts/".length));
             const payout = this.providerPayouts.get(payoutId);
-            return payout
-                ? jsonResponse(payout)
-                : jsonResponse({ error: { message: "payout not found" } }, 404);
+            return payout ? jsonResponse(payout) : jsonResponse({ error: { message: "payout not found" } }, 404);
         }
         if (url.pathname === "/v1/payouts" && method === "POST") {
             expect(request.headers.get("stripe-account")).toBe("acct_seller_example_com");
@@ -7052,7 +8541,7 @@ class StripeConnectMock {
             expect(params.get("default_for_currency")).toBe("true");
             expect(request.headers.get("idempotency-key")).toStartWith("cms_connect_bank_");
             const accountId = decodeURIComponent(url.pathname.split("/")[3] ?? "");
-            const row = this.tables.accounts.find(account => account.stripe_account_id === accountId);
+            const row = this.tables.accounts.find((account) => account.stripe_account_id === accountId);
             const userId = String(row?.cms_user_id ?? "unknown");
             this.stripeAccountState.set(userId, {
                 configuration: {
@@ -7067,7 +8556,13 @@ class StripeConnectMock {
                     },
                 },
             });
-            return jsonResponse({ id: "ba_test_123", object: "bank_account", country: "FR", currency: "eur", last4: "0123" });
+            return jsonResponse({
+                id: "ba_test_123",
+                object: "bank_account",
+                country: "FR",
+                currency: "eur",
+                last4: "0123",
+            });
         }
         if (url.pathname === "/v1/account_sessions" && method === "POST") {
             const params = new URLSearchParams(await request.text());
@@ -7076,7 +8571,7 @@ class StripeConnectMock {
                 ["components[account_onboarding][enabled]", "true"],
             ]);
             const accountId = params.get("account") || "acct_unknown";
-            const row = this.tables.accounts.find(account => account.stripe_account_id === accountId);
+            const row = this.tables.accounts.find((account) => account.stripe_account_id === accountId);
             return jsonResponse({
                 account: accountId,
                 client_secret: `as_${row?.cms_user_id ?? "unknown"}_secret`,
@@ -7132,7 +8627,9 @@ class StripeConnectMock {
             expect(params.getAll("expand[]")).toEqual(["latest_charge.balance_transaction"]);
             expect(request.headers.get("idempotency-key")).toStartWith("cms:payment-cancel:");
             const intent = this.paymentIntents.get(id);
-            if (!intent) return jsonResponse({ error: { message: "PaymentIntent not found" } }, 404);
+            if (!intent) {
+                return jsonResponse({ error: { message: "PaymentIntent not found" } }, 404);
+            }
             Object.assign(intent, { status: "canceled", canceled_at: Math.floor(Date.now() / 1000) });
             if (this.loseNextPaymentCancellationResponse) {
                 this.loseNextPaymentCancellationResponse = false;
@@ -7146,7 +8643,11 @@ class StripeConnectMock {
                 this.failPaymentIntentRetrieve = false;
                 return jsonResponse({ error: { message: "simulated Stripe provider outage" } }, 503);
             }
-            const intent = this.paymentIntents.get(id) ?? { id, status: "requires_payment_method", latest_charge: null };
+            const intent = this.paymentIntents.get(id) ?? {
+                id,
+                status: "requires_payment_method",
+                latest_charge: null,
+            };
             const replacement = this.paymentIntentReplacementOnNextRetrieve;
             if (replacement) {
                 this.paymentIntentReplacementOnNextRetrieve = null;
@@ -7161,9 +8662,7 @@ class StripeConnectMock {
             this.chargeRetrieveCount += 1;
             expect(url.searchParams.getAll("expand[]")).toEqual(["balance_transaction"]);
             const charge = this.providerCharges.get(id);
-            return charge
-                ? jsonResponse(charge)
-                : jsonResponse({ error: { message: "Charge not found" } }, 404);
+            return charge ? jsonResponse(charge) : jsonResponse({ error: { message: "Charge not found" } }, 404);
         }
         if (/^\/v1\/balance_transactions\/txn_[^/]+$/.test(url.pathname) && method === "GET") {
             const id = decodeURIComponent(url.pathname.slice("/v1/balance_transactions/".length));
@@ -7176,13 +8675,13 @@ class StripeConnectMock {
         if (url.pathname === "/v1/disputes" && method === "GET") {
             const charge = url.searchParams.get("charge");
             return jsonResponse({
-                data: this.providerDisputes.filter(dispute => !charge || dispute.charge === charge),
+                data: this.providerDisputes.filter((dispute) => !charge || dispute.charge === charge),
                 has_more: false,
             });
         }
         if (/^\/v1\/disputes\/dp_[^/]+$/.test(url.pathname) && method === "GET") {
             const disputeId = decodeURIComponent(url.pathname.slice("/v1/disputes/".length));
-            const dispute = this.providerDisputes.find(candidate => candidate.id === disputeId);
+            const dispute = this.providerDisputes.find((candidate) => candidate.id === disputeId);
             return dispute ? jsonResponse(dispute) : jsonResponse({ error: { message: "dispute not found" } }, 404);
         }
         if (/^\/v1\/disputes\/dp_[^/]+$/.test(url.pathname) && method === "POST") {
@@ -7200,7 +8699,9 @@ class StripeConnectMock {
             }
             const transferGroup = url.searchParams.get("transfer_group");
             return jsonResponse({
-                data: this.providerTransfers.filter(transfer => !transferGroup || transfer.transfer_group === transferGroup),
+                data: this.providerTransfers.filter(
+                    (transfer) => !transferGroup || transfer.transfer_group === transferGroup,
+                ),
                 has_more: false,
             });
         }
@@ -7228,32 +8729,32 @@ class StripeConnectMock {
             return jsonResponse(transfer);
         }
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals$/.test(url.pathname) && method === "GET") {
-            const transferId = decodeURIComponent(
-                url.pathname.slice("/v1/transfers/".length, -"/reversals".length),
-            );
+            const transferId = decodeURIComponent(url.pathname.slice("/v1/transfers/".length, -"/reversals".length));
             return jsonResponse({ data: this.providerTransferReversals.get(transferId) ?? [], has_more: false });
         }
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals\/trr_[^/]+$/.test(url.pathname) && method === "GET") {
             const path = url.pathname.slice("/v1/transfers/".length).split("/reversals/");
             const transferId = decodeURIComponent(path[0] ?? "");
             const reversalId = decodeURIComponent(path[1] ?? "");
-            const reversal = (this.providerTransferReversals.get(transferId) ?? [])
-                .find(candidate => candidate.id === reversalId);
+            const reversal = (this.providerTransferReversals.get(transferId) ?? []).find(
+                (candidate) => candidate.id === reversalId,
+            );
             return reversal ? jsonResponse(reversal) : jsonResponse({ error: { message: "reversal not found" } }, 404);
         }
         if (/^\/v1\/transfers\/tr_[^/]+\/reversals$/.test(url.pathname) && method === "POST") {
             const params = new URLSearchParams(await request.text());
             this.moneyCallOrder.push("reversal");
             if (this.failTransferReversals) {
-                return new Response(JSON.stringify({ error: { message: "connected account balance is unavailable" } }), {
-                    status: 402,
-                    headers: { "content-type": "application/json" },
-                });
+                return new Response(
+                    JSON.stringify({ error: { message: "connected account balance is unavailable" } }),
+                    {
+                        status: 402,
+                        headers: { "content-type": "application/json" },
+                    },
+                );
             }
-            const transferId = decodeURIComponent(
-                url.pathname.slice("/v1/transfers/".length, -"/reversals".length),
-            );
-            const transfer = this.providerTransfers.find(candidate => candidate.id === transferId);
+            const transferId = decodeURIComponent(url.pathname.slice("/v1/transfers/".length, -"/reversals".length));
+            const transfer = this.providerTransfers.find((candidate) => candidate.id === transferId);
             const reversalAmount = Number(params.get("amount"));
             if (transfer) {
                 transfer.amount_reversed = Number(transfer.amount_reversed ?? 0) + reversalAmount;
@@ -7276,13 +8777,13 @@ class StripeConnectMock {
         }
         if (/^\/v1\/refunds\/re_[^/]+$/.test(url.pathname) && method === "GET") {
             const refundId = decodeURIComponent(url.pathname.slice("/v1/refunds/".length));
-            const refund = this.providerRefunds.find(candidate => candidate.id === refundId);
+            const refund = this.providerRefunds.find((candidate) => candidate.id === refundId);
             return refund ? jsonResponse(refund) : jsonResponse({ error: { message: "refund not found" } }, 404);
         }
         if (url.pathname === "/v1/refunds" && method === "GET") {
             const charge = url.searchParams.get("charge");
             return jsonResponse({
-                data: this.providerRefunds.filter(refund => !charge || refund.charge === charge),
+                data: this.providerRefunds.filter((refund) => !charge || refund.charge === charge),
                 has_more: false,
             });
         }
@@ -7297,14 +8798,19 @@ class StripeConnectMock {
                 amount: Number(params.get("amount")),
                 currency: "eur",
                 status: this.nextRefundStatus,
-                ...(this.nextRefundStatus === "succeeded" ? { balance_transaction: {
-                    id: `txn_refund_${refundId.slice(3)}`,
-                    amount: -Number(params.get("amount")),
-                    fee: refundFee,
-                    net: -Number(params.get("amount")) - refundFee,
-                    currency: "eur",
-                    fee_details: refundFee === 0 ? [] : [{ type: "stripe_fee", amount: refundFee, currency: "eur" }],
-                } } : {}),
+                ...(this.nextRefundStatus === "succeeded"
+                    ? {
+                          balance_transaction: {
+                              id: `txn_refund_${refundId.slice(3)}`,
+                              amount: -Number(params.get("amount")),
+                              fee: refundFee,
+                              net: -Number(params.get("amount")) - refundFee,
+                              currency: "eur",
+                              fee_details:
+                                  refundFee === 0 ? [] : [{ type: "stripe_fee", amount: refundFee, currency: "eur" }],
+                          },
+                      }
+                    : {}),
                 ...(this.nextRefundStatus === "failed" ? { failure_reason: "provider_declined" } : {}),
             };
             this.nextRefundStatus = "succeeded";
@@ -7323,66 +8829,93 @@ class StripeConnectMock {
     ): JsonRecord[] {
         let rows = this.tables[table]!;
         if (idField && typeof body.p_dispute_id === "string") {
-            rows = rows.filter(row => same(row[idField], body.p_dispute_id));
+            rows = rows.filter((row) => same(row[idField], body.p_dispute_id));
         } else {
             if (typeof body.p_status === "string") {
-                rows = rows.filter(row => row.status === body.p_status);
+                rows = rows.filter((row) => row.status === body.p_status);
             }
             if (typeof body.p_search === "string") {
-                const pattern = new RegExp(body.p_search.split("*")
-                    .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-                    .join(".*"), "i");
-                rows = rows.filter(row => searchFields.some(field => pattern.test(String(row[field] ?? ""))));
+                const pattern = new RegExp(
+                    body.p_search
+                        .split("*")
+                        .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+                        .join(".*"),
+                    "i",
+                );
+                rows = rows.filter((row) => searchFields.some((field) => pattern.test(String(row[field] ?? ""))));
             }
         }
         const limit = Number(body.p_limit);
-        return rows.slice(0, Number.isSafeInteger(limit) && limit >= 0 ? limit : rows.length)
-            .map(row => ({ ...row }));
+        return rows
+            .slice(0, Number.isSafeInteger(limit) && limit >= 0 ? limit : rows.length)
+            .map((row) => ({ ...row }));
     }
 
     private requiredDashboardPayment(paymentId: unknown): JsonRecord {
-        const payment = this.tables.payments.find(row => same(row.id, paymentId));
-        if (!payment) throw new Error(`unknown dashboard payment ${String(paymentId)}`);
+        const payment = this.tables.payments.find((row) => same(row.id, paymentId));
+        if (!payment) {
+            throw new Error(`unknown dashboard payment ${String(paymentId)}`);
+        }
         return payment;
     }
 
     private select(table: string, url: URL): JsonRecord[] {
-        return this.selectRefs(table, url).map(row => ({ ...row }));
+        return this.selectRefs(table, url).map((row) => ({ ...row }));
     }
 
     private selectRefs(table: string, url: URL): JsonRecord[] {
         let rows = this.tables[table]!;
         for (const [key, value] of url.searchParams.entries()) {
             const filter = filterValue(value);
-            if (!filter) continue;
-            if (["select", "order", "limit", "on_conflict"].includes(key)) continue;
+            if (!filter) {
+                continue;
+            }
+            if (["select", "order", "limit", "on_conflict"].includes(key)) {
+                continue;
+            }
             if (filter.operator === "not" && filter.value === "is.null") {
-                rows = rows.filter(row => row[key] !== null && row[key] !== undefined);
+                rows = rows.filter((row) => row[key] !== null && row[key] !== undefined);
                 continue;
             }
             if (filter.operator === "neq") {
-                rows = rows.filter(row => !same(row[key], filter.value));
+                rows = rows.filter((row) => !same(row[key], filter.value));
                 continue;
             }
             if (filter.operator === "in") {
                 const values = filter.value.replace(/^\(|\)$/g, "").split(",");
-                rows = rows.filter(row => values.some(value => same(row[key], value)));
+                rows = rows.filter((row) => values.some((value) => same(row[key], value)));
                 continue;
             }
-            if (filter.operator !== "eq") continue;
-            rows = rows.filter(row => same(row[key], filter.value));
+            if (filter.operator !== "eq") {
+                continue;
+            }
+            rows = rows.filter((row) => same(row[key], filter.value));
         }
         const or = url.searchParams.get("or");
         if (or) {
             if (or.includes("outstanding_debt_amount.gt.0") || or.includes("financial_exposure_amount.gt.0")) {
-                rows = rows.filter(row => Number(row.outstanding_debt_amount ?? 0) > 0
-                    || Number(row.financial_exposure_amount ?? 0) > 0);
+                rows = rows.filter(
+                    (row) =>
+                        Number(row.outstanding_debt_amount ?? 0) > 0 || Number(row.financial_exposure_amount ?? 0) > 0,
+                );
             } else {
                 const search = or.match(/ilike\.\*([^*]+)\*/)?.[1]?.toLowerCase() ?? "";
-                const fields = table === "accounts"
-                    ? ["cms_user_id", "stripe_account_id"]
-                    : ["client_reference_id", "buyer_cms_user_id", "seller_cms_user_id", "stripe_payment_intent_id"];
-                rows = rows.filter(row => fields.some(key => String(row[key] ?? "").toLowerCase().includes(search)));
+                const fields =
+                    table === "accounts"
+                        ? ["cms_user_id", "stripe_account_id"]
+                        : [
+                              "client_reference_id",
+                              "buyer_cms_user_id",
+                              "seller_cms_user_id",
+                              "stripe_payment_intent_id",
+                          ];
+                rows = rows.filter((row) =>
+                    fields.some((key) =>
+                        String(row[key] ?? "")
+                            .toLowerCase()
+                            .includes(search),
+                    ),
+                );
             }
         }
         const limit = Number(url.searchParams.get("limit") ?? rows.length);
@@ -7392,48 +8925,72 @@ class StripeConnectMock {
     private claimCommerceProjectionOutbox(body: JsonRecord): JsonRecord[] {
         const limit = Number(body.p_limit ?? 50);
         return this.tables.commerce_projection_outbox
-            .filter(row => (["pending", "retry"].includes(String(row.projection_status))
-                    && (!row.next_attempt_at || Date.parse(String(row.next_attempt_at)) <= Date.now()))
-                || (row.projection_status === "leased"
-                    && Date.parse(String(row.claimed_at ?? "")) <= Date.now() - 5 * 60_000))
-            .filter(row => !(row.projection_kind === "refund" && row.recovery_key
-                && this.tables.commerce_projection_outbox.some(predecessor =>
-                    predecessor.recovery_key === row.recovery_key
-                    && predecessor.projection_kind === "reversal"
-                    && Number(predecessor.causal_sequence) < Number(row.causal_sequence)
-                    && predecessor.projection_status !== "succeeded"
-                )))
-            .filter(row => !(row.projection_kind === "refund"
-                && this.tables.commerce_projection_outbox.some(predecessor =>
-                    same(predecessor.operation_id, row.operation_id)
-                    && predecessor.projection_kind === "refund"
-                    && Number(predecessor.causal_sequence) < Number(row.causal_sequence)
-                    && predecessor.projection_status !== "succeeded"
-                )))
-            .sort((left, right) => String(left.created_at).localeCompare(String(right.created_at))
-                || Number(left.causal_sequence) - Number(right.causal_sequence)
-                || Number(left.id) - Number(right.id))
+            .filter(
+                (row) =>
+                    (["pending", "retry"].includes(String(row.projection_status)) &&
+                        (!row.next_attempt_at || Date.parse(String(row.next_attempt_at)) <= Date.now())) ||
+                    (row.projection_status === "leased" &&
+                        Date.parse(String(row.claimed_at ?? "")) <= Date.now() - 5 * 60_000),
+            )
+            .filter(
+                (row) =>
+                    !(
+                        row.projection_kind === "refund" &&
+                        row.recovery_key &&
+                        this.tables.commerce_projection_outbox.some(
+                            (predecessor) =>
+                                predecessor.recovery_key === row.recovery_key &&
+                                predecessor.projection_kind === "reversal" &&
+                                Number(predecessor.causal_sequence) < Number(row.causal_sequence) &&
+                                predecessor.projection_status !== "succeeded",
+                        )
+                    ),
+            )
+            .filter(
+                (row) =>
+                    !(
+                        row.projection_kind === "refund" &&
+                        this.tables.commerce_projection_outbox.some(
+                            (predecessor) =>
+                                same(predecessor.operation_id, row.operation_id) &&
+                                predecessor.projection_kind === "refund" &&
+                                Number(predecessor.causal_sequence) < Number(row.causal_sequence) &&
+                                predecessor.projection_status !== "succeeded",
+                        )
+                    ),
+            )
+            .sort(
+                (left, right) =>
+                    String(left.created_at).localeCompare(String(right.created_at)) ||
+                    Number(left.causal_sequence) - Number(right.causal_sequence) ||
+                    Number(left.id) - Number(right.id),
+            )
             .slice(0, limit)
-            .map(row => this.update(row, {
-                projection_status: "leased",
-                claim_owner: body.p_owner,
-                claim_token: `claim-${row.id}-${Number(row.attempt_count ?? 0) + 1}`,
-                claimed_at: new Date().toISOString(),
-                attempt_count: Number(row.attempt_count ?? 0) + 1,
-                last_error: null,
-            }));
+            .map((row) =>
+                this.update(row, {
+                    projection_status: "leased",
+                    claim_owner: body.p_owner,
+                    claim_token: `claim-${row.id}-${Number(row.attempt_count ?? 0) + 1}`,
+                    claimed_at: new Date().toISOString(),
+                    attempt_count: Number(row.attempt_count ?? 0) + 1,
+                    last_error: null,
+                }),
+            );
     }
 
     private upsertAccount(value: JsonRecord): JsonRecord {
         const now = "2026-07-06T12:00:00.000Z";
-        const index = this.tables.accounts.findIndex(row => same(row.cms_user_id, value.cms_user_id));
+        const index = this.tables.accounts.findIndex((row) => same(row.cms_user_id, value.cms_user_id));
         const next = {
             ...(index >= 0 ? this.tables.accounts[index] : defaultAccountRow(String(value.cms_user_id), now)),
             ...value,
             updated_at: now,
         };
-        if (index >= 0) this.tables.accounts[index] = next;
-        else this.tables.accounts.push(next);
+        if (index >= 0) {
+            this.tables.accounts[index] = next;
+        } else {
+            this.tables.accounts.push(next);
+        }
         return { ...next };
     }
 
@@ -7468,12 +9025,15 @@ class StripeConnectMock {
     }
 
     private applyPaymentProviderProjection(body: JsonRecord): Response {
-        const payment = this.tables.payments.find(row => same(row.id, body.p_payment_id));
-        if (!payment) return jsonResponse({ message: "not_found: payment" }, 400);
+        const payment = this.tables.payments.find((row) => same(row.id, body.p_payment_id));
+        if (!payment) {
+            return jsonResponse({ message: "not_found: payment" }, 400);
+        }
         const projection = asRecord(body.p_projection);
         const expectedPayment = asRecord(body.p_expected_payment);
-        const equivalentApply = !isDeepStrictEqual(payment, expectedPayment)
-            && this.isEquivalentPaymentApply(payment, expectedPayment, projection);
+        const equivalentApply =
+            !isDeepStrictEqual(payment, expectedPayment) &&
+            this.isEquivalentPaymentApply(payment, expectedPayment, projection);
         if (!isDeepStrictEqual(payment, expectedPayment) && !equivalentApply) {
             return jsonResponse({ applied: false, payment: { ...payment } });
         }
@@ -7483,7 +9043,9 @@ class StripeConnectMock {
                 last_provider_sync_at: this.latestProviderSyncAt(payment, projection),
             });
             const failed = this.paymentProjectionEnqueueFailure(snapshot);
-            if (failed) return failed;
+            if (failed) {
+                return failed;
+            }
             this.enqueuePaymentProviderProjection(payment, String(projection.projectionKey));
         } else if (projection.kind === "apply") {
             this.update(payment, {
@@ -7505,7 +9067,9 @@ class StripeConnectMock {
                 ? String(projection.recoveredProjectionKey)
                 : String(projection.projectionKey);
             const failed = this.paymentProjectionEnqueueFailure(snapshot);
-            if (failed) return failed;
+            if (failed) {
+                return failed;
+            }
             this.enqueuePaymentProviderProjection(payment, projectionKey);
         } else if (projection.kind === "quarantine") {
             this.update(payment, {
@@ -7518,7 +9082,9 @@ class StripeConnectMock {
                 last_provider_sync_at: this.latestProviderSyncAt(payment, projection),
             });
             const failed = this.paymentProjectionEnqueueFailure(snapshot);
-            if (failed) return failed;
+            if (failed) {
+                return failed;
+            }
             this.enqueuePaymentProviderProjection(payment, String(projection.projectionKey));
             this.upsertProjectedProviderException(
                 String(projection.exceptionKey),
@@ -7548,19 +9114,15 @@ class StripeConnectMock {
     }
 
     private latestProviderSyncAt(payment: JsonRecord, projection: JsonRecord): unknown {
-        return Date.parse(String(payment.last_provider_sync_at))
-            > Date.parse(String(projection.lastProviderSyncAt))
+        return Date.parse(String(payment.last_provider_sync_at)) > Date.parse(String(projection.lastProviderSyncAt))
             ? payment.last_provider_sync_at
             : projection.lastProviderSyncAt;
     }
 
-    private isEquivalentPaymentApply(
-        payment: JsonRecord,
-        expected: JsonRecord,
-        projection: JsonRecord,
-    ): boolean {
-        if (projection.kind !== "apply" || projection.recovery !== null
-            || projection.recoveredProjectionKey !== null) return false;
+    private isEquivalentPaymentApply(payment: JsonRecord, expected: JsonRecord, projection: JsonRecord): boolean {
+        if (projection.kind !== "apply" || projection.recovery !== null || projection.recoveredProjectionKey !== null) {
+            return false;
+        }
         const target = {
             ...expected,
             payment_status: projection.paymentStatus,
@@ -7580,13 +9142,16 @@ class StripeConnectMock {
         if (expected.paid_at === null && payment.paid_at !== null && projection.paidAt !== null) {
             target.paid_at = payment.paid_at;
         }
-        if (expected.cancelled_at === null && payment.cancelled_at !== null
-            && projection.cancelledAt !== null) target.cancelled_at = payment.cancelled_at;
+        if (expected.cancelled_at === null && payment.cancelled_at !== null && projection.cancelledAt !== null) {
+            target.cancelled_at = payment.cancelled_at;
+        }
         return isDeepStrictEqual(payment, target);
     }
 
     private recoverProjectedPaymentReview(payment: JsonRecord, rawRecovery: unknown): boolean {
-        if (!isRecord(rawRecovery)) return false;
+        if (!isRecord(rawRecovery)) {
+            return false;
+        }
         const recovery = rawRecovery;
         const reason = "Stripe payment provider truth mismatch: charge_balance_transaction_expansion";
         const exceptionKey = String(recovery.exceptionKey);
@@ -7595,33 +9160,38 @@ class StripeConnectMock {
             chargeId: recovery.chargeId,
             mismatches: ["charge_balance_transaction_expansion"],
         });
-        const hasOtherException = this.tables.provider_exceptions.some(row => (
-            same(row.payment_id, payment.id)
-            && ["open", "investigating"].includes(String(row.status))
-            && row.deduplication_key !== exceptionKey
-        ));
-        const recovered = payment.payment_status === "succeeded"
-            && payment.settlement_status === "manual_review"
-            && payment.manual_review_reason === reason
-            && payment.stripe_payment_intent_id === recovery.paymentIntentId
-            && payment.stripe_charge_id === recovery.chargeId
-            && payment.stripe_charge_balance_transaction_id === recovery.balanceTransactionId
-            && Number(payment.transferred_amount) === 0
-            && Number(payment.reversed_amount) === 0
-            && Number(payment.refunded_amount) === 0
-            && payment.dispute_status === "none"
-            && !hasOtherException;
-        if (!recovered) return false;
+        const hasOtherException = this.tables.provider_exceptions.some(
+            (row) =>
+                same(row.payment_id, payment.id) &&
+                ["open", "investigating"].includes(String(row.status)) &&
+                row.deduplication_key !== exceptionKey,
+        );
+        const recovered =
+            payment.payment_status === "succeeded" &&
+            payment.settlement_status === "manual_review" &&
+            payment.manual_review_reason === reason &&
+            payment.stripe_payment_intent_id === recovery.paymentIntentId &&
+            payment.stripe_charge_id === recovery.chargeId &&
+            payment.stripe_charge_balance_transaction_id === recovery.balanceTransactionId &&
+            Number(payment.transferred_amount) === 0 &&
+            Number(payment.reversed_amount) === 0 &&
+            Number(payment.refunded_amount) === 0 &&
+            payment.dispute_status === "none" &&
+            !hasOtherException;
+        if (!recovered) {
+            return false;
+        }
         this.update(payment, { settlement_status: "held", manual_review_reason: null });
-        const exception = this.tables.provider_exceptions.find(row => (
-            row.deduplication_key === exceptionKey
-            && ["open", "investigating"].includes(String(row.status))
-        ));
-        if (exception) this.update(exception, {
-            status: "resolved",
-            resolved_at: "2026-07-06T12:10:00.000Z",
-            resolved_by: "provider-truth-revalidation",
-        });
+        const exception = this.tables.provider_exceptions.find(
+            (row) => row.deduplication_key === exceptionKey && ["open", "investigating"].includes(String(row.status)),
+        );
+        if (exception) {
+            this.update(exception, {
+                status: "resolved",
+                resolved_at: "2026-07-06T12:10:00.000Z",
+                resolved_by: "provider-truth-revalidation",
+            });
+        }
         this.insertGeneric("payment_events", {
             payment_id: payment.id,
             event_type: "provider_payment_truth_revalidated",
@@ -7659,13 +9229,18 @@ class StripeConnectMock {
             resolved_at: null,
             resolved_by: null,
         };
-        const existing = this.tables.provider_exceptions.find(row => row.deduplication_key === key);
-        if (existing) this.update(existing, values);
-        else this.insertGeneric("provider_exceptions", values);
+        const existing = this.tables.provider_exceptions.find((row) => row.deduplication_key === key);
+        if (existing) {
+            this.update(existing, values);
+        } else {
+            this.insertGeneric("provider_exceptions", values);
+        }
     }
 
     private enqueuePaymentProviderProjection(payment: JsonRecord, projectionKey: string): void {
-        if (this.tables.commerce_projection_outbox.some(row => row.projection_key === projectionKey)) return;
+        if (this.tables.commerce_projection_outbox.some((row) => row.projection_key === projectionKey)) {
+            return;
+        }
         this.insertGeneric("commerce_projection_outbox", {
             operation_id: null,
             payment_id: payment.id,
@@ -7709,7 +9284,9 @@ class StripeConnectMock {
     private paymentProjectionEnqueueFailure(
         snapshot: ReturnType<StripeConnectMock["paymentProjectionSnapshot"]>,
     ): Response | null {
-        if (!this.failPaymentProjectionEnqueue) return null;
+        if (!this.failPaymentProjectionEnqueue) {
+            return null;
+        }
         this.failPaymentProjectionEnqueue = false;
         this.tables.payments = snapshot.payments;
         this.tables.commerce_projection_outbox = snapshot.outbox;
@@ -7721,13 +9298,16 @@ class StripeConnectMock {
 
     private insertGeneric(table: string, value: JsonRecord): JsonRecord {
         const now = "2026-07-06T12:05:00.000Z";
-        const defaults = table === "refunds" ? {
-            stripe_balance_transaction_id: null,
-            actual_stripe_fee_amount: 0,
-            actual_stripe_net_amount: null,
-            actual_stripe_fee_currency: null,
-            actual_stripe_fee_details: [],
-        } : {};
+        const defaults =
+            table === "refunds"
+                ? {
+                      stripe_balance_transaction_id: null,
+                      actual_stripe_fee_amount: 0,
+                      actual_stripe_net_amount: null,
+                      actual_stripe_fee_currency: null,
+                      actual_stripe_fee_details: [],
+                  }
+                : {};
         const row = { id: this.nextRowId++, created_at: now, updated_at: now, ...defaults, ...value };
         this.tables[table].push(row);
         return { ...row };
@@ -7739,12 +9319,16 @@ class StripeConnectMock {
     }
 
     private enqueueCommerceProjection(operation: JsonRecord): void {
-        if (operation.status !== "succeeded" || !operation.payment_id
-            || !["transfer_create", "transfer_reversal_create"].includes(String(operation.operation_type))
-            || this.tables.commerce_projection_outbox.some(row => same(row.operation_id, operation.id))) return;
+        if (
+            operation.status !== "succeeded" ||
+            !operation.payment_id ||
+            !["transfer_create", "transfer_reversal_create"].includes(String(operation.operation_type)) ||
+            this.tables.commerce_projection_outbox.some((row) => same(row.operation_id, operation.id))
+        ) {
+            return;
+        }
         const request = asRecord(operation.request);
-        const kind = operation.operation_type === "transfer_create" ? "transfer"
-            : "reversal";
+        const kind = operation.operation_type === "transfer_create" ? "transfer" : "reversal";
         const recoveryKey = kind === "reversal" ? request.recoveryRequestId : null;
         this.insertGeneric("commerce_projection_outbox", {
             operation_id: operation.id,
@@ -7881,16 +9465,29 @@ function defaultAccountRow(userId: string, now: string): JsonRecord {
 }
 
 async function loadEdgeHandler(): Promise<EdgeHandler> {
-    if (!edgeHandler) await import(edgeFunctionUrl);
-    if (!edgeHandler) throw new Error("cms-stripe-connect edge handler was not registered");
+    if (!edgeHandler) {
+        await import(edgeFunctionUrl);
+    }
+    if (!edgeHandler) {
+        throw new Error("cms-stripe-connect edge handler was not registered");
+    }
     return edgeHandler;
 }
 
-async function sourceRequest(harness: Harness, endpoint: string, params: Record<string, string> = {}): Promise<Response> {
+async function sourceRequest(
+    harness: Harness,
+    endpoint: string,
+    params: Record<string, string> = {},
+): Promise<Response> {
     return await sourceRequestWithUser(harness, "user-123", endpoint, params);
 }
 
-async function sourceRequestWithUser(harness: Harness, userId: string, endpoint: string, params: Record<string, string> = {}): Promise<Response> {
+async function sourceRequestWithUser(
+    harness: Harness,
+    userId: string,
+    endpoint: string,
+    params: Record<string, string> = {},
+): Promise<Response> {
     return await sourceRequestWithRole(harness, userId, "admin", endpoint, params);
 }
 
@@ -7902,15 +9499,28 @@ async function sourceRequestWithRole(
     params: Record<string, string> = {},
 ): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}stripe-connect/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await proxySource(harness, userId, role, new Request(url));
 }
 
-async function sourceJson(harness: Harness, endpoint: string, body: unknown, params: Record<string, string> = {}): Promise<Response> {
+async function sourceJson(
+    harness: Harness,
+    endpoint: string,
+    body: unknown,
+    params: Record<string, string> = {},
+): Promise<Response> {
     return await sourceJsonWithUser(harness, "user-123", endpoint, body, params);
 }
 
-async function sourceJsonWithUser(harness: Harness, userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}): Promise<Response> {
+async function sourceJsonWithUser(
+    harness: Harness,
+    userId: string,
+    endpoint: string,
+    body: unknown,
+    params: Record<string, string> = {},
+): Promise<Response> {
     return await sourceJsonWithRole(harness, userId, "admin", endpoint, body, params);
 }
 
@@ -7923,15 +9533,27 @@ async function sourceJsonWithRole(
     params: Record<string, string> = {},
 ): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}stripe-connect/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-    return await proxySource(harness, userId, role, new Request(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    }));
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
+    return await proxySource(
+        harness,
+        userId,
+        role,
+        new Request(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+        }),
+    );
 }
 
-async function proxySource(harness: Harness, userId: string, role: string | undefined, request: Request): Promise<Response> {
+async function proxySource(
+    harness: Harness,
+    userId: string,
+    role: string | undefined,
+    request: Request,
+): Promise<Response> {
     return await handleSourceRequest(harness.sources, request, {
         prefix: sourcePrefix,
         deps: {
@@ -7950,30 +9572,43 @@ async function createPaidPaymentWithReleases(
     releases: Array<{ id: string; kind: "initial" | "reserve"; amount: number }>,
 ): Promise<{ harness: Harness; created: JsonRecord }> {
     const harness = await createHarness();
-    await okJson(await sourceJson(harness, "createConnectOnboardingSessionForUser", {
-        email: "seller@example.com",
-    }, { userId: "seller-1" }));
-    const created = await okJson(await sourceJson(harness, "createProtectedPayment", {
-        sellerUserId: "seller-1",
-        amountTotal: 1200,
-        sellerTransferAmount: 1080,
-        currency: "eur",
-        clientReferenceId,
-        financialTermsHash,
-        dualApprovalThresholdAmount: 1000,
-    }));
-    harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
-    await okJson(await sourceRequest(harness, "getProtectedPayment", {
-        paymentId: String(created.paymentId),
-    }));
-    for (const release of releases) {
-        await okJson(await sourceJson(harness, "requestSettlementRelease", {
-            paymentId: created.paymentId,
-            releaseAuthorizationId: release.id,
-            releaseKind: release.kind,
-            amount: release.amount,
+    await okJson(
+        await sourceJson(
+            harness,
+            "createConnectOnboardingSessionForUser",
+            {
+                email: "seller@example.com",
+            },
+            { userId: "seller-1" },
+        ),
+    );
+    const created = await okJson(
+        await sourceJson(harness, "createProtectedPayment", {
+            sellerUserId: "seller-1",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
             currency: "eur",
-        }));
+            clientReferenceId,
+            financialTermsHash,
+            dualApprovalThresholdAmount: 1000,
+        }),
+    );
+    harness.rest.setPaymentIntentSucceeded(String(created.stripePaymentIntentId));
+    await okJson(
+        await sourceRequest(harness, "getProtectedPayment", {
+            paymentId: String(created.paymentId),
+        }),
+    );
+    for (const release of releases) {
+        await okJson(
+            await sourceJson(harness, "requestSettlementRelease", {
+                paymentId: created.paymentId,
+                releaseAuthorizationId: release.id,
+                releaseKind: release.kind,
+                amount: release.amount,
+                currency: "eur",
+            }),
+        );
     }
     return { harness, created };
 }
@@ -7990,7 +9625,9 @@ function jsonResponse(data: unknown, status = 200): Response {
 }
 
 function filterValue(value: string | null): { operator: string; value: string } | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     const [operator, ...rest] = value.split(".");
     return { operator: operator ?? "", value: rest.join(".") };
 }
@@ -8003,11 +9640,17 @@ function widgetById(widgets: JsonRecord[] | undefined, id: string): JsonRecord |
     const stack = [...(widgets ?? [])];
     while (stack.length) {
         const next = stack.shift()!;
-        if (next.id === id) return next;
-        if (Array.isArray(next.children)) stack.push(...next.children as JsonRecord[]);
+        if (next.id === id) {
+            return next;
+        }
+        if (Array.isArray(next.children)) {
+            stack.push(...(next.children as JsonRecord[]));
+        }
         if (Array.isArray(next.tabs)) {
             for (const tab of next.tabs as Array<{ children?: JsonRecord[] }>) {
-                if (Array.isArray(tab.children)) stack.push(...tab.children);
+                if (Array.isArray(tab.children)) {
+                    stack.push(...tab.children);
+                }
             }
         }
     }
@@ -8015,14 +9658,14 @@ function widgetById(widgets: JsonRecord[] | undefined, id: string): JsonRecord |
 }
 
 function filterValues(widget: JsonRecord | undefined, filterId: string): string[] {
-    const filters = Array.isArray(widget?.filters) ? widget.filters as JsonRecord[] : [];
-    const filter = filters.find(candidate => candidate.id === filterId);
-    const options = Array.isArray(filter?.options) ? filter.options as JsonRecord[] : [];
-    return options.map(option => String(option.value));
+    const filters = Array.isArray(widget?.filters) ? (widget.filters as JsonRecord[]) : [];
+    const filter = filters.find((candidate) => candidate.id === filterId);
+    const options = Array.isArray(filter?.options) ? (filter.options as JsonRecord[]) : [];
+    return options.map((option) => String(option.value));
 }
 
 async function jsonBody(response: Response): Promise<JsonRecord> {
-    return await response.json() as JsonRecord;
+    return (await response.json()) as JsonRecord;
 }
 
 function payoutEventPayload(options: {
@@ -8041,26 +9684,30 @@ function payoutEventPayload(options: {
         api_version: "2026-02-25.clover",
         created: Math.floor(Date.now() / 1000),
         livemode: false,
-        data: { object: {
-            id: options.payoutId,
-            amount: 1000,
-            currency: "eur",
-            status: options.status ?? "pending",
-            ...(options.automatic === undefined ? {} : { automatic: options.automatic }),
-            method: options.method,
-        } },
+        data: {
+            object: {
+                id: options.payoutId,
+                amount: 1000,
+                currency: "eur",
+                status: options.status ?? "pending",
+                ...(options.automatic === undefined ? {} : { automatic: options.automatic }),
+                method: options.method,
+            },
+        },
     });
 }
 
 async function stripeSignature(payload: string, secret: string): Promise<string> {
     const timestamp = Math.floor(Date.now() / 1000);
     const key = await crypto.subtle.importKey(
-        "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
     );
-    const signature = await crypto.subtle.sign(
-        "HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`),
-    );
-    const hex = [...new Uint8Array(signature)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+    const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`));
+    const hex = [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
     return `t=${timestamp},v1=${hex}`;
 }
 
@@ -8090,12 +9737,8 @@ const createPaymentProjectionHarness = async () => {
         rest: harness.rest,
         request: async (userId: string, endpoint: string, params: Record<string, string> = {}) =>
             await sourceRequestWithUser(harness, userId, endpoint, params),
-        submit: async (
-            userId: string,
-            endpoint: string,
-            body: unknown,
-            params: Record<string, string> = {},
-        ) => await sourceJsonWithUser(harness, userId, endpoint, body, params),
+        submit: async (userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}) =>
+            await sourceJsonWithUser(harness, userId, endpoint, body, params),
     };
 };
 
@@ -8103,17 +9746,10 @@ const createProviderReconciliationHarness = async () => {
     const harness = await createHarness();
     return {
         rest: harness.rest,
-        run: async (runKey: string, limit = 50) => await sourceJson(
-            harness,
-            "runProviderReconciliation",
-            { runKey, limit },
-        ),
-        submit: async (
-            userId: string,
-            endpoint: string,
-            body: unknown,
-            params: Record<string, string> = {},
-        ) => await sourceJsonWithUser(harness, userId, endpoint, body, params),
+        run: async (runKey: string, limit = 50) =>
+            await sourceJson(harness, "runProviderReconciliation", { runKey, limit }),
+        submit: async (userId: string, endpoint: string, body: unknown, params: Record<string, string> = {}) =>
+            await sourceJsonWithUser(harness, userId, endpoint, body, params),
     };
 };
 

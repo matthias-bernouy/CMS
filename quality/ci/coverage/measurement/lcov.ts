@@ -13,13 +13,18 @@ function emptyRecord(): LcovRecord {
     return { functionsFound: 0, functionsHit: 0, linesFound: 0, linesHit: 0 };
 }
 
-export function parseLcov(lcov: string, packagePath: string): Pick<PackageCoverage, "functions" | "lines"> & {
+export function parseLcov(
+    lcov: string,
+    packagePath: string,
+): Pick<PackageCoverage, "functions" | "lines"> & {
     coveredFiles: Set<string>;
 } {
     const records: LcovRecord[] = [];
     let current = emptyRecord();
     const finishRecord = () => {
-        if (current.sourceFile && isPackageSourceFile(current.sourceFile, packagePath)) records.push(current);
+        if (current.sourceFile && isPackageSourceFile(current.sourceFile, packagePath)) {
+            records.push(current);
+        }
         current = emptyRecord();
     };
 
@@ -28,12 +33,24 @@ export function parseLcov(lcov: string, packagePath: string): Pick<PackageCovera
         const key = separator === -1 ? line : line.slice(0, separator);
         const value = separator === -1 ? "" : line.slice(separator + 1);
         switch (key) {
-            case "SF": current.sourceFile = normalizePath(value); break;
-            case "FNF": current.functionsFound = Number.parseInt(value, 10); break;
-            case "FNH": current.functionsHit = Number.parseInt(value, 10); break;
-            case "LF": current.linesFound = Number.parseInt(value, 10); break;
-            case "LH": current.linesHit = Number.parseInt(value, 10); break;
-            case "end_of_record": finishRecord(); break;
+            case "SF":
+                current.sourceFile = normalizePath(value);
+                break;
+            case "FNF":
+                current.functionsFound = Number.parseInt(value, 10);
+                break;
+            case "FNH":
+                current.functionsHit = Number.parseInt(value, 10);
+                break;
+            case "LF":
+                current.linesFound = Number.parseInt(value, 10);
+                break;
+            case "LH":
+                current.linesHit = Number.parseInt(value, 10);
+                break;
+            case "end_of_record":
+                finishRecord();
+                break;
         }
     }
 

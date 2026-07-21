@@ -1,15 +1,9 @@
-import {
-    jsonResponse,
-    setRestResponder,
-    type JsonRecord,
-} from "../../harness";
+import { jsonResponse, setRestResponder, type JsonRecord } from "../../harness";
 
 export const userId = "buyer-user-42";
 export const orderId = 42;
-export const setupRoute =
-    `/system/order/delivery-setup-context?orderId=${orderId}`;
-export const selectionRoute =
-    `/system/order/delivery-selection-context?orderId=${orderId}`;
+export const setupRoute = `/system/order/delivery-setup-context?orderId=${orderId}`;
+export const selectionRoute = `/system/order/delivery-selection-context?orderId=${orderId}`;
 
 export const setupContext = {
     order: {

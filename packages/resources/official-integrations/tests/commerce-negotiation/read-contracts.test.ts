@@ -74,18 +74,27 @@ const proposalEvent = {
 
 beforeAll(async () => {
     (globalThis as { Deno?: unknown }).Deno = {
-        env: { get: (name: string) => ({
-            CMS_NEGOTIATION_API_KEY: apiKey,
-            SUPABASE_URL: "https://project.supabase.co",
-            SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
-        })[name] },
+        env: {
+            get: (name: string) =>
+                ({
+                    CMS_NEGOTIATION_API_KEY: apiKey,
+                    SUPABASE_URL: "https://project.supabase.co",
+                    SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
+                })[name],
+        },
         serve(value: EdgeHandler) {
             handler = value;
-            return { shutdown() { /* test stub */ } };
+            return {
+                shutdown() {
+                    /* test stub */
+                },
+            };
         },
     };
     globalThis.fetch = captureDatabaseRequest;
-    await import("../../integrations/commerce-negotiation/versions/1.0.0/connectors/supabase/functions/cms-commerce-negotiation/index.ts?read-contracts");
+    await import(
+        "../../integrations/commerce-negotiation/versions/1.0.0/connectors/supabase/functions/cms-commerce-negotiation/index.ts?read-contracts"
+    );
 });
 
 afterAll(() => {
@@ -97,10 +106,9 @@ describe("commerce negotiation read contracts", () => {
     test("preserves participant list, detail, pagination, expiry, and denial contracts", async () => {
         requests.length = 0;
         const headers = { authorization: `Bearer ${apiKey}`, "x-cms-user-id": "buyer-user" };
-        const list = await handler(new Request(
-            `${functionUrl}/proposals?role=buyer&status=pending&offerId=42&limit=1&offset=2`,
-            { headers },
-        ));
+        const list = await handler(
+            new Request(`${functionUrl}/proposals?role=buyer&status=pending&offerId=42&limit=1&offset=2`, { headers }),
+        );
 
         expect(list.status).toBe(200);
         expect(await list.json()).toEqual({ items: [expectedProposal], total: 1 });
@@ -115,23 +123,22 @@ describe("commerce negotiation read contracts", () => {
         });
 
         requests.length = 0;
-        const detail = await handler(new Request(
-            `${functionUrl}/proposal?publicId=proposal-public-7`,
-            { headers },
-        ));
+        const detail = await handler(new Request(`${functionUrl}/proposal?publicId=proposal-public-7`, { headers }));
         expect(detail.status).toBe(200);
         expect(await detail.json()).toEqual({
             ...expectedProposal,
-            events: [{
-                id: 11,
-                eventType: "created",
-                actorKind: "buyer",
-                actorId: "buyer-user",
-                previousStatus: null,
-                nextStatus: "pending",
-                data: { amount: 9_500 },
-                createdAt: "2026-07-17T12:00:00Z",
-            }],
+            events: [
+                {
+                    id: 11,
+                    eventType: "created",
+                    actorKind: "buyer",
+                    actorId: "buyer-user",
+                    previousStatus: null,
+                    nextStatus: "pending",
+                    data: { amount: 9_500 },
+                    createdAt: "2026-07-17T12:00:00Z",
+                },
+            ],
         });
         expect(databasePaths()).toEqual(["/rest/v1/rpc/get_participant_proposal_detail"]);
         expect(await requests[0]!.json()).toEqual({
@@ -141,18 +148,23 @@ describe("commerce negotiation read contracts", () => {
         });
 
         requests.length = 0;
-        const denied = await handler(new Request(
-            `${functionUrl}/proposal?publicId=proposal-public-7`,
-            { headers: { ...headers, "x-cms-user-id": "other-user" } },
-        ));
+        const denied = await handler(
+            new Request(`${functionUrl}/proposal?publicId=proposal-public-7`, {
+                headers: { ...headers, "x-cms-user-id": "other-user" },
+            }),
+        );
         expect(denied.status).toBe(404);
         expect(await denied.json()).toEqual({ error: "proposal not found" });
         expect(databasePaths()).toEqual(["/rest/v1/rpc/get_participant_proposal_detail"]);
 
         requests.length = 0;
-        await expect(handler(new Request(`${functionUrl}/proposals`, {
-            headers: { authorization: `Bearer ${apiKey}` },
-        }))).rejects.toMatchObject({ status: 401, message: "CMS user identity required" });
+        await expect(
+            handler(
+                new Request(`${functionUrl}/proposals`, {
+                    headers: { authorization: `Bearer ${apiKey}` },
+                }),
+            ),
+        ).rejects.toMatchObject({ status: 401, message: "CMS user identity required" });
         expect(requests).toEqual([]);
     });
 });
@@ -161,18 +173,16 @@ const captureDatabaseRequest = (async (input: RequestInfo | URL, init?: RequestI
     const request = input instanceof Request ? input : new Request(input, init);
     requests.push(request.clone());
     const path = new URL(request.url).pathname;
-    const body = request.method === "POST" ? await request.json() as Record<string, unknown> : {};
+    const body = request.method === "POST" ? ((await request.json()) as Record<string, unknown>) : {};
     if (path.endsWith("/rpc/list_participant_proposals")) {
         return Response.json({ items: [proposal], total: 1 });
     }
     if (path.endsWith("/rpc/get_participant_proposal_detail")) {
-        return Response.json(body.p_user_id === "buyer-user"
-            ? { proposal, events: [proposalEvent] }
-            : null);
+        return Response.json(body.p_user_id === "buyer-user" ? { proposal, events: [proposalEvent] } : null);
     }
     return Response.json({ message: "not found" }, { status: 404 });
 }) as typeof fetch;
 
 function databasePaths(): string[] {
-    return requests.map(request => new URL(request.url).pathname);
+    return requests.map((request) => new URL(request.url).pathname);
 }

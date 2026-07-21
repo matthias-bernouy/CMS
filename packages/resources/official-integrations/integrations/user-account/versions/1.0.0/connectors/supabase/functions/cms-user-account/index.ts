@@ -102,52 +102,86 @@ const extraFieldSelect = [
 
 Deno.serve(async (request) => {
     try {
-        if (request.method === "OPTIONS") return optionsResponse();
+        if (request.method === "OPTIONS") {
+            return optionsResponse();
+        }
 
         const route = routePath(request);
-        if (route === "/health") return await withMethod(request, "GET", () => health(request));
+        if (route === "/health") {
+            return await withMethod(request, "GET", () => health(request));
+        }
         if (route === "/account" || route === "/personal-information") {
-            if (request.method === "GET") return await getAccount(request);
-            if (request.method === "POST") return await updateAccount(request);
+            if (request.method === "GET") {
+                return await getAccount(request);
+            }
+            if (request.method === "POST") {
+                return await updateAccount(request);
+            }
             return methodNotAllowed("GET, POST, OPTIONS");
         }
         if (route === "/account/metadata" || route === "/personal-information/metadata") {
-            if (request.method === "POST") return await updateAccountMetadata(request);
+            if (request.method === "POST") {
+                return await updateAccountMetadata(request);
+            }
             return methodNotAllowed("POST, OPTIONS");
         }
         if (route === "/account/avatar" || route === "/personal-information/avatar") {
-            if (request.method === "GET") return await getAccountAvatar(request);
-            if (request.method === "POST") return await uploadAccountAvatar(request);
+            if (request.method === "GET") {
+                return await getAccountAvatar(request);
+            }
+            if (request.method === "POST") {
+                return await uploadAccountAvatar(request);
+            }
             return methodNotAllowed("GET, POST, OPTIONS");
         }
         if (route === "/accounts" || route === "/personal-information/records") {
             return await withMethod(request, "GET", () => listAccounts(request));
         }
         if (route === "/extra-fields" || route === "/personal-information/extra-fields") {
-            if (request.method === "GET") return await listExtraFields(request);
-            if (request.method === "POST") return await createExtraField(request);
+            if (request.method === "GET") {
+                return await listExtraFields(request);
+            }
+            if (request.method === "POST") {
+                return await createExtraField(request);
+            }
             return methodNotAllowed("GET, POST, OPTIONS");
         }
         if (route === "/extra-fields/reorder" || route === "/personal-information/extra-fields/reorder") {
             return await withMethod(request, "POST", () => reorderExtraFields(request));
         }
         if (route === "/extra-fields/field" || route === "/personal-information/extra-fields/field") {
-            if (request.method === "GET") return await getExtraField(request);
-            if (request.method === "DELETE") return await deleteExtraField(request);
+            if (request.method === "GET") {
+                return await getExtraField(request);
+            }
+            if (request.method === "DELETE") {
+                return await deleteExtraField(request);
+            }
             return methodNotAllowed("GET, DELETE, OPTIONS");
         }
         if (route === "/accounts/account" || route === "/personal-information/record") {
-            if (request.method === "GET") return await getAccountByUserId(request);
-            if (request.method === "POST") return await createAccountByUserId(request);
-            if (request.method === "DELETE") return await deleteAccountByUserId(request);
+            if (request.method === "GET") {
+                return await getAccountByUserId(request);
+            }
+            if (request.method === "POST") {
+                return await createAccountByUserId(request);
+            }
+            if (request.method === "DELETE") {
+                return await deleteAccountByUserId(request);
+            }
             return methodNotAllowed("GET, POST, DELETE, OPTIONS");
         }
         if (route === "/accounts/account/avatar" || route === "/personal-information/record/avatar") {
-            if (request.method === "GET") return await getAccountAvatarByUserId(request);
-            if (request.method === "POST") return await uploadAccountAvatarByUserId(request);
+            if (request.method === "GET") {
+                return await getAccountAvatarByUserId(request);
+            }
+            if (request.method === "POST") {
+                return await uploadAccountAvatarByUserId(request);
+            }
             return methodNotAllowed("GET, POST, OPTIONS");
         }
-        if (route === "/delete-account") return await withMethod(request, "POST", () => deleteAccount(request));
+        if (route === "/delete-account") {
+            return await withMethod(request, "POST", () => deleteAccount(request));
+        }
 
         return json({ error: "not found" }, 404);
     } catch (error) {
@@ -184,8 +218,11 @@ async function updateAccountMetadata(request: Request): Promise<Response> {
     };
 
     for (const [key, value] of Object.entries(metadataPatch)) {
-        if (value === undefined) delete metadata[key];
-        else metadata[key] = value;
+        if (value === undefined) {
+            delete metadata[key];
+        } else {
+            metadata[key] = value;
+        }
     }
 
     if (JSON.stringify(metadata).length > 16384) {
@@ -216,15 +253,14 @@ async function deleteAccount(request: Request): Promise<Response> {
 }
 
 async function deleteAccountRow(userId: string): Promise<boolean> {
-    const response = await rest(
-        `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=cms_user_id`,
-        {
-            method: "DELETE",
-            headers: { prefer: "return=representation" },
-        },
-    );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as Array<{ cms_user_id: string }>;
+    const response = await rest(`accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=cms_user_id`, {
+        method: "DELETE",
+        headers: { prefer: "return=representation" },
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as Array<{ cms_user_id: string }>;
     return rows.length > 0;
 }
 
@@ -252,10 +288,12 @@ async function listAccounts(request: Request): Promise<Response> {
     }
 
     const response = await rest(`accounts?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as UserAccountRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as UserAccountRow[];
     return json({
-        accounts: rows.map(row => publicAccount(row, row.cms_user_id)),
+        accounts: rows.map((row) => publicAccount(row, row.cms_user_id)),
         total: rows.length,
     });
 }
@@ -264,8 +302,10 @@ async function listExtraFields(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
 
     const response = await rest(`extra_fields?select=${extraFieldSelect}&order=position.asc,id.asc`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ExtraFieldRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ExtraFieldRow[];
     return json({ fields: rows.map(extraField) });
 }
 
@@ -274,16 +314,30 @@ async function getExtraField(request: Request): Promise<Response> {
 
     const id = requiredQueryText(request, "id", 64);
     if (id === "__new__") {
-        return json({ field: { id: "", label: "", type: "string", required: false, multiple: false, hasAllowedValues: false, showInDashboardTable: false, options: [] } });
+        return json({
+            field: {
+                id: "",
+                label: "",
+                type: "string",
+                required: false,
+                multiple: false,
+                hasAllowedValues: false,
+                showInDashboardTable: false,
+                options: [],
+            },
+        });
     }
 
-    const response = await rest(
-        `extra_fields?id=eq.${encodeURIComponent(id)}&select=${extraFieldSelect}&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ExtraFieldRow[];
-    if (!rows[0]) throw new HttpError(404, "field not found");
+    const response = await rest(`extra_fields?id=eq.${encodeURIComponent(id)}&select=${extraFieldSelect}&limit=1`, {
+        method: "GET",
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ExtraFieldRow[];
+    if (!rows[0]) {
+        throw new HttpError(404, "field not found");
+    }
     return json({ field: extraFieldDetail(rows[0]) });
 }
 
@@ -293,7 +347,9 @@ async function createExtraField(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     const label = requiredText(body, "label", 120);
     const id = optionalText(body, "id", 64) ?? fieldIdFromLabel(label);
-    if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new HttpError(400, "id is invalid");
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) {
+        throw new HttpError(400, "id is invalid");
+    }
     const fieldType = requiredFieldType(body, "type");
     const hasAllowedValues = optionalBoolean(body, "hasAllowedValues") ?? body.options !== undefined;
     const values = {
@@ -313,7 +369,9 @@ async function createExtraField(request: Request): Promise<Response> {
         },
         body: JSON.stringify(values),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return json({ field: extraField(firstRow<ExtraFieldRow>(await response.json())) });
 }
 
@@ -321,19 +379,25 @@ async function reorderExtraFields(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
     const ids = requiredIdList(await readJsonObject(request), "ids");
     const existingResponse = await rest(`extra_fields?select=id&order=position.asc,id.asc`, { method: "GET" });
-    if (!existingResponse.ok) throw await restError(existingResponse);
-    const existingIds = (await existingResponse.json() as Array<{ id: string }>).map(field => field.id);
-    if (ids.length !== existingIds.length || ids.some(id => !existingIds.includes(id))) {
+    if (!existingResponse.ok) {
+        throw await restError(existingResponse);
+    }
+    const existingIds = ((await existingResponse.json()) as Array<{ id: string }>).map((field) => field.id);
+    if (ids.length !== existingIds.length || ids.some((id) => !existingIds.includes(id))) {
         throw new HttpError(400, "ids must contain every configured field exactly once");
     }
-    await Promise.all(ids.map(async (id, position) => {
-        const response = await rest(`extra_fields?id=eq.${encodeURIComponent(id)}`, {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ position }),
-        });
-        if (!response.ok) throw await restError(response);
-    }));
+    await Promise.all(
+        ids.map(async (id, position) => {
+            const response = await rest(`extra_fields?id=eq.${encodeURIComponent(id)}`, {
+                method: "PATCH",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ position }),
+            });
+            if (!response.ok) {
+                throw await restError(response);
+            }
+        }),
+    );
     return json({ ids });
 }
 
@@ -345,8 +409,10 @@ async function deleteExtraField(request: Request): Promise<Response> {
         method: "DELETE",
         headers: { prefer: "return=representation" },
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as Array<{ id: string }>;
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as Array<{ id: string }>;
     return json({ deleted: rows.length > 0, id });
 }
 
@@ -397,20 +463,21 @@ async function getAccountAvatarByUserId(request: Request): Promise<Response> {
 async function upsertAccountRow(userId: string, values: JsonRecord): Promise<UserAccountRow> {
     const current = await getAccountRow(userId);
     if (current) {
-        if (Object.keys(values).length === 0) return current;
+        if (Object.keys(values).length === 0) {
+            return current;
+        }
 
-        const response = await rest(
-            `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}`,
-            {
-                method: "PATCH",
-                headers: {
-                    "content-type": "application/json",
-                    prefer: "return=representation",
-                },
-                body: JSON.stringify(values),
+        const response = await rest(`accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}`, {
+            method: "PATCH",
+            headers: {
+                "content-type": "application/json",
+                prefer: "return=representation",
             },
-        );
-        if (!response.ok) throw await restError(response);
+            body: JSON.stringify(values),
+        });
+        if (!response.ok) {
+            throw await restError(response);
+        }
         return firstRow<UserAccountRow>(await response.json());
     }
 
@@ -422,7 +489,9 @@ async function upsertAccountRow(userId: string, values: JsonRecord): Promise<Use
         },
         body: JSON.stringify({ cms_user_id: userId, ...values }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return firstRow<UserAccountRow>(await response.json());
 }
 
@@ -431,8 +500,10 @@ async function getAccountRow(userId: string): Promise<UserAccountRow | null> {
         `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}&limit=1`,
         { method: "GET" },
     );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as UserAccountRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as UserAccountRow[];
     return rows[0] ?? null;
 }
 
@@ -530,14 +601,18 @@ function extraFieldDetail(row: ExtraFieldRow): JsonRecord {
 
 async function validatedMetadataPatch(body: JsonRecord): Promise<Record<string, unknown | undefined>> {
     const response = await rest(`extra_fields?select=${extraFieldSelect}&order=position.asc,id.asc`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const fields = await response.json() as ExtraFieldRow[];
-    const configured = new Map(fields.map(field => [field.id, field]));
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const fields = (await response.json()) as ExtraFieldRow[];
+    const configured = new Map(fields.map((field) => [field.id, field]));
     const patch: Record<string, unknown | undefined> = {};
 
     for (const [key, value] of Object.entries(body)) {
         const field = configured.get(key);
-        if (!field) throw new HttpError(400, `${key} is not a configured metadata field`);
+        if (!field) {
+            throw new HttpError(400, `${key} is not a configured metadata field`);
+        }
         patch[key] = metadataFieldValue(field, value);
     }
 
@@ -546,19 +621,25 @@ async function validatedMetadataPatch(body: JsonRecord): Promise<Record<string, 
 
 function metadataFieldValue(field: ExtraFieldRow, value: unknown): unknown | undefined {
     if (value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
-        if (field.required) throw new HttpError(400, `${field.id} is required`);
+        if (field.required) {
+            throw new HttpError(400, `${field.id} is required`);
+        }
         return undefined;
     }
 
     if (field.multiple) {
         const entries = Array.isArray(value) ? value : [value];
         const normalized = entries.map((entry, index) => metadataScalarValue(field, entry, `${field.id}.${index}`));
-        if (!normalized.length && field.required) throw new HttpError(400, `${field.id} is required`);
+        if (!normalized.length && field.required) {
+            throw new HttpError(400, `${field.id} is required`);
+        }
         return normalized;
     }
 
     if (Array.isArray(value)) {
-        if (value.length !== 1) throw new HttpError(400, `${field.id} must contain one value`);
+        if (value.length !== 1) {
+            throw new HttpError(400, `${field.id} must contain one value`);
+        }
         value = value[0];
     }
     return metadataScalarValue(field, value, field.id);
@@ -567,20 +648,32 @@ function metadataFieldValue(field: ExtraFieldRow, value: unknown): unknown | und
 function metadataScalarValue(field: ExtraFieldRow, value: unknown, path: string): string | number | boolean {
     let normalized: string | number | boolean;
     if (field.field_type === "string") {
-        if (typeof value !== "string") throw new HttpError(400, `${path} must be a string`);
+        if (typeof value !== "string") {
+            throw new HttpError(400, `${path} must be a string`);
+        }
         normalized = value.trim();
-        if (!normalized) throw new HttpError(400, `${path} must not be empty`);
-        if (normalized.length > 1000) throw new HttpError(400, `${path} is too long`);
+        if (!normalized) {
+            throw new HttpError(400, `${path} must not be empty`);
+        }
+        if (normalized.length > 1000) {
+            throw new HttpError(400, `${path} is too long`);
+        }
     } else if (field.field_type === "number") {
         normalized = typeof value === "number" ? value : Number(typeof value === "string" ? value.trim() : NaN);
-        if (!Number.isFinite(normalized)) throw new HttpError(400, `${path} must be a number`);
+        if (!Number.isFinite(normalized)) {
+            throw new HttpError(400, `${path} must be a number`);
+        }
     } else {
-        if (value === true || value === "true" || value === "1" || value === "on") normalized = true;
-        else if (value === false || value === "false" || value === "0" || value === "off") normalized = false;
-        else throw new HttpError(400, `${path} must be a boolean`);
+        if (value === true || value === "true" || value === "1" || value === "on") {
+            normalized = true;
+        } else if (value === false || value === "false" || value === "0" || value === "off") {
+            normalized = false;
+        } else {
+            throw new HttpError(400, `${path} must be a boolean`);
+        }
     }
 
-    const allowed = new Set((field.options ?? []).map(option => option.value));
+    const allowed = new Set((field.options ?? []).map((option) => option.value));
     if (allowed.size && !allowed.has(String(normalized))) {
         throw new HttpError(400, `${path} is not an allowed value`);
     }
@@ -591,12 +684,16 @@ function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
     const marker = "/cms-user-account";
     const index = pathname.indexOf(marker);
-    if (index === -1) return pathname || "/";
+    if (index === -1) {
+        return pathname || "/";
+    }
     return pathname.slice(index + marker.length) || "/";
 }
 
 async function withMethod(request: Request, method: string, handler: () => Promise<Response>): Promise<Response> {
-    if (request.method !== method) return methodNotAllowed(`${method}, OPTIONS`);
+    if (request.method !== method) {
+        return methodNotAllowed(`${method}, OPTIONS`);
+    }
     return handler();
 }
 
@@ -607,10 +704,7 @@ function methodNotAllowed(allow: string): Response {
     });
 }
 
-function requireCmsRequest(
-    request: Request,
-    options: { requireUser?: boolean } = {},
-): { userId: string } {
+function requireCmsRequest(request: Request, options: { requireUser?: boolean } = {}): { userId: string } {
     const expectedKeys = acceptedCmsApiKeys();
     const authorization = request.headers.get("authorization") ?? "";
     const token = authorization.startsWith("Bearer ") ? authorization.slice("Bearer ".length).trim() : "";
@@ -620,8 +714,12 @@ function requireCmsRequest(
 
     const requireUser = options.requireUser ?? true;
     const userId = request.headers.get("x-user-id")?.trim() || "";
-    if (requireUser && !userId) throw new HttpError(401, "missing x-user-id");
-    if (userId.length > 200) throw new HttpError(400, "x-user-id is too long");
+    if (requireUser && !userId) {
+        throw new HttpError(401, "missing x-user-id");
+    }
+    if (userId.length > 200) {
+        throw new HttpError(400, "x-user-id is too long");
+    }
 
     return { userId };
 }
@@ -629,7 +727,9 @@ function requireCmsRequest(
 function acceptedCmsApiKeys(): string[] {
     const keys = unique([Deno.env.get("CMS_USER_ACCOUNT_API_KEY") ?? ""]);
 
-    if (!keys.length) throw new HttpError(500, "missing CMS_USER_ACCOUNT_API_KEY");
+    if (!keys.length) {
+        throw new HttpError(500, "missing CMS_USER_ACCOUNT_API_KEY");
+    }
     return keys;
 }
 
@@ -640,7 +740,9 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
     headers.set("apikey", key);
     headers.set("authorization", `Bearer ${key}`);
     headers.set("accept-profile", accountSchema);
-    if (init.method && init.method !== "GET") headers.set("content-profile", accountSchema);
+    if (init.method && init.method !== "GET") {
+        headers.set("content-profile", accountSchema);
+    }
 
     return fetch(`${base}/rest/v1/${path}`, { ...init, headers });
 }
@@ -648,7 +750,9 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
 async function uploadAvatarFile(userId: string, file: File): Promise<string> {
     const contentType = file.type.toLowerCase();
     const extension = avatarContentTypes.get(contentType);
-    if (!extension) throw new HttpError(400, "unsupported avatar content type");
+    if (!extension) {
+        throw new HttpError(400, "unsupported avatar content type");
+    }
 
     const fileId = `${await avatarPrefix(userId)}/${crypto.randomUUID()}${extension}`;
     const response = await storage(fileId, {
@@ -659,20 +763,30 @@ async function uploadAvatarFile(userId: string, file: File): Promise<string> {
         },
         body: file,
     });
-    if (!response.ok) throw await storageError(response);
+    if (!response.ok) {
+        throw await storageError(response);
+    }
     return fileId;
 }
 
 async function serveAvatarFile(userId: string, fileId: string): Promise<Response> {
     const prefix = `${await avatarPrefix(userId)}/`;
-    if (!fileId.startsWith(prefix)) throw new HttpError(404, "avatar not found");
+    if (!fileId.startsWith(prefix)) {
+        throw new HttpError(404, "avatar not found");
+    }
 
     const row = await getAccountRow(userId);
-    if (row?.avatar_file_id !== fileId) throw new HttpError(404, "avatar not found");
+    if (row?.avatar_file_id !== fileId) {
+        throw new HttpError(404, "avatar not found");
+    }
 
     const response = await storage(fileId, { method: "GET" });
-    if (response.status === 404) throw new HttpError(404, "avatar not found");
-    if (!response.ok) throw await storageError(response);
+    if (response.status === 404) {
+        throw new HttpError(404, "avatar not found");
+    }
+    if (!response.ok) {
+        throw await storageError(response);
+    }
 
     const headers = new Headers(corsHeaders);
     copyResponseHeader(response, headers, "content-type", "application/octet-stream");
@@ -697,9 +811,10 @@ async function storage(path: string, init: RequestInit): Promise<Response> {
 
 async function restError(response: Response): Promise<HttpError> {
     const data = await response.json().catch(() => null);
-    const message = isRecord(data) && typeof data.message === "string"
-        ? data.message
-        : `Supabase request failed (${response.status})`;
+    const message =
+        isRecord(data) && typeof data.message === "string"
+            ? data.message
+            : `Supabase request failed (${response.status})`;
     return new HttpError(502, message);
 }
 
@@ -708,8 +823,12 @@ async function storageError(response: Response): Promise<HttpError> {
     let message = text.trim();
     try {
         const data = JSON.parse(text);
-        if (isRecord(data) && typeof data.message === "string") message = data.message;
-        if (isRecord(data) && typeof data.error === "string") message = data.error;
+        if (isRecord(data) && typeof data.message === "string") {
+            message = data.message;
+        }
+        if (isRecord(data) && typeof data.error === "string") {
+            message = data.error;
+        }
     } catch {
         // Keep the raw text fallback.
     }
@@ -722,18 +841,20 @@ async function avatarPrefix(userId: string): Promise<string> {
 }
 
 function hexDigest(buffer: ArrayBuffer): string {
-    return [...new Uint8Array(buffer)]
-        .map(byte => byte.toString(16).padStart(2, "0"))
-        .join("");
+    return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function copyResponseHeader(source: Response, target: Headers, name: string, fallback?: string): void {
     const value = source.headers.get(name) ?? fallback;
-    if (value) target.set(name, value);
+    if (value) {
+        target.set(name, value);
+    }
 }
 
 function firstRow<T>(value: unknown): T {
-    if (!Array.isArray(value) || !value[0]) throw new HttpError(502, "Supabase returned no rows");
+    if (!Array.isArray(value) || !value[0]) {
+        throw new HttpError(502, "Supabase returned no rows");
+    }
     return value[0] as T;
 }
 
@@ -752,7 +873,9 @@ function json(data: unknown, status = 200): Response {
 }
 
 function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+        return json({ error: error.message }, error.status);
+    }
     console.error(error);
     return json({ error: "internal error" }, 500);
 }
@@ -764,7 +887,9 @@ async function readJsonObject(request: Request): Promise<JsonRecord> {
     } catch {
         throw new HttpError(400, "invalid JSON body");
     }
-    if (!isRecord(value)) throw new HttpError(400, "body must be an object");
+    if (!isRecord(value)) {
+        throw new HttpError(400, "body must be an object");
+    }
     return value;
 }
 
@@ -782,9 +907,15 @@ async function readUploadFile(request: Request): Promise<File> {
     }
 
     const value = formData.get("file");
-    if (!(value instanceof File)) throw new HttpError(400, "file is required");
-    if (value.size <= 0) throw new HttpError(400, "file is empty");
-    if (value.size > maxAvatarBytes) throw new HttpError(413, "file is too large");
+    if (!(value instanceof File)) {
+        throw new HttpError(400, "file is required");
+    }
+    if (value.size <= 0) {
+        throw new HttpError(400, "file is empty");
+    }
+    if (value.size > maxAvatarBytes) {
+        throw new HttpError(413, "file is too large");
+    }
     if (!avatarContentTypes.has(value.type.toLowerCase())) {
         throw new HttpError(400, "file must be a JPEG, PNG, WebP, or GIF image");
     }
@@ -792,83 +923,135 @@ async function readUploadFile(request: Request): Promise<File> {
 }
 
 function optionalText(body: JsonRecord, name: string, maxLength: number): string | null | undefined {
-    if (!Object.hasOwn(body, name)) return undefined;
+    if (!Object.hasOwn(body, name)) {
+        return undefined;
+    }
     const value = body[name];
-    if (value === null) return null;
-    if (typeof value !== "string") throw new HttpError(400, `${name} must be a string`);
+    if (value === null) {
+        return null;
+    }
+    if (typeof value !== "string") {
+        throw new HttpError(400, `${name} must be a string`);
+    }
     const normalized = value.trim();
-    if (!normalized) return null;
-    if (normalized.length > maxLength) throw new HttpError(400, `${name} is too long`);
+    if (!normalized) {
+        return null;
+    }
+    if (normalized.length > maxLength) {
+        throw new HttpError(400, `${name} is too long`);
+    }
     return normalized;
 }
 
 function optionalBirthDate(body: JsonRecord, name: string): string | null | undefined {
     const value = optionalText(body, name, 10);
-    if (value === undefined || value === null) return value;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new HttpError(400, `${name} must use YYYY-MM-DD`);
+    if (value === undefined || value === null) {
+        return value;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        throw new HttpError(400, `${name} must use YYYY-MM-DD`);
+    }
     const date = new Date(`${value}T00:00:00.000Z`);
     if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
         throw new HttpError(400, `${name} is invalid`);
     }
     const today = new Date().toISOString().slice(0, 10);
-    if (value < "1900-01-01" || value > today) throw new HttpError(400, `${name} is outside the accepted range`);
+    if (value < "1900-01-01" || value > today) {
+        throw new HttpError(400, `${name} is outside the accepted range`);
+    }
     return value;
 }
 
 function optionalCountryCode(body: JsonRecord, name: string): string | null | undefined {
     const value = optionalText(body, name, 2);
-    if (value === undefined || value === null) return value;
+    if (value === undefined || value === null) {
+        return value;
+    }
     const normalized = value.toUpperCase();
-    if (!/^[A-Z]{2}$/.test(normalized)) throw new HttpError(400, `${name} must be an ISO 3166-1 alpha-2 code`);
+    if (!/^[A-Z]{2}$/.test(normalized)) {
+        throw new HttpError(400, `${name} must be an ISO 3166-1 alpha-2 code`);
+    }
     return normalized;
 }
 
 function requiredText(body: JsonRecord, name: string, maxLength: number): string {
     const value = optionalText(body, name, maxLength);
-    if (!value) throw new HttpError(400, `${name} is required`);
+    if (!value) {
+        throw new HttpError(400, `${name} is required`);
+    }
     return value;
 }
 
 function optionalBoolean(body: JsonRecord, name: string): boolean | undefined {
-    if (!Object.hasOwn(body, name)) return undefined;
+    if (!Object.hasOwn(body, name)) {
+        return undefined;
+    }
     const value = body[name];
-    if (value === "true") return true;
-    if (value === "false") return false;
-    if (typeof value !== "boolean") throw new HttpError(400, `${name} must be a boolean`);
+    if (value === "true") {
+        return true;
+    }
+    if (value === "false") {
+        return false;
+    }
+    if (typeof value !== "boolean") {
+        throw new HttpError(400, `${name} must be a boolean`);
+    }
     return value;
 }
 
 function requiredFieldType(body: JsonRecord, name: string): "string" | "number" | "boolean" {
     const value = body[name];
-    if (value === "string" || value === "number" || value === "boolean") return value;
+    if (value === "string" || value === "number" || value === "boolean") {
+        return value;
+    }
     throw new HttpError(400, `${name} must be string, number, or boolean`);
 }
 
 function requiredIdList(body: JsonRecord, name: string): string[] {
     const value = body[name];
-    if (!Array.isArray(value)) throw new HttpError(400, `${name} must be an array`);
+    if (!Array.isArray(value)) {
+        throw new HttpError(400, `${name} must be an array`);
+    }
     const ids = value.map((entry, index) => {
-        if (typeof entry !== "string" || !entry.trim()) throw new HttpError(400, `${name}.${index} must be a non-empty string`);
+        if (typeof entry !== "string" || !entry.trim()) {
+            throw new HttpError(400, `${name}.${index} must be a non-empty string`);
+        }
         return entry.trim();
     });
-    if (new Set(ids).size !== ids.length) throw new HttpError(400, `${name} must not contain duplicates`);
+    if (new Set(ids).size !== ids.length) {
+        throw new HttpError(400, `${name} must not contain duplicates`);
+    }
     return ids;
 }
 
 function extraFieldOptions(value: unknown): ExtraFieldOption[] {
-    if (value === undefined || value === null) return [];
-    if (!Array.isArray(value)) throw new HttpError(400, "options must be an array");
-    if (value.length > 100) throw new HttpError(400, "options cannot contain more than 100 items");
+    if (value === undefined || value === null) {
+        return [];
+    }
+    if (!Array.isArray(value)) {
+        throw new HttpError(400, "options must be an array");
+    }
+    if (value.length > 100) {
+        throw new HttpError(400, "options cannot contain more than 100 items");
+    }
     const ids = new Set<string>();
     const values = new Set<string>();
     return value.map((entry, position) => {
-        if (!isRecord(entry)) throw new HttpError(400, `options.${position} must be an object`);
+        if (!isRecord(entry)) {
+            throw new HttpError(400, `options.${position} must be an object`);
+        }
         const optionValue = requiredOptionText(entry, "value", position);
         const label = requiredOptionText(entry, "label", position);
         const id = optionalText(entry, "id", 120) ?? optionIdFromValue(optionValue);
-        if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) throw new HttpError(400, `options.${position}.id is invalid`);
-        if (ids.has(id)) throw new HttpError(400, `options.${position}.id must be unique`);
-        if (values.has(optionValue)) throw new HttpError(400, `options.${position}.value must be unique`);
+        if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)) {
+            throw new HttpError(400, `options.${position}.id is invalid`);
+        }
+        if (ids.has(id)) {
+            throw new HttpError(400, `options.${position}.id must be unique`);
+        }
+        if (values.has(optionValue)) {
+            throw new HttpError(400, `options.${position}.value must be unique`);
+        }
         ids.add(id);
         values.add(optionValue);
         return { id, value: optionValue, label, position };
@@ -877,26 +1060,35 @@ function extraFieldOptions(value: unknown): ExtraFieldOption[] {
 
 function requiredOptionText(value: JsonRecord, name: string, position: number): string {
     const text = optionalText(value, name, 120);
-    if (!text) throw new HttpError(400, `options.${position}.${name} is required`);
+    if (!text) {
+        throw new HttpError(400, `options.${position}.${name} is required`);
+    }
     return text;
 }
 
 function optionIdFromValue(value: string): string {
-    const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const normalized = value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
     return `option-${normalized || "value"}`;
 }
 
 function fieldIdFromLabel(label: string): string {
-    return label
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_+|_+$/g, "") || crypto.randomUUID().replace(/-/g, "_");
+    return (
+        label
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/^_+|_+$/g, "") || crypto.randomUUID().replace(/-/g, "_")
+    );
 }
 
 function optionalUrl(body: JsonRecord, name: string): string | null | undefined {
     const value = optionalText(body, name, 2048);
-    if (value === undefined || value === null) return value;
+    if (value === undefined || value === null) {
+        return value;
+    }
 
     let parsed: URL;
     try {
@@ -911,32 +1103,52 @@ function optionalUrl(body: JsonRecord, name: string): string | null | undefined 
 }
 
 function optionalMetadata(body: JsonRecord, name: string): JsonRecord | undefined {
-    if (!Object.hasOwn(body, name)) return undefined;
+    if (!Object.hasOwn(body, name)) {
+        return undefined;
+    }
     const value = body[name];
-    if (value === null) return {};
-    if (!isRecord(value)) throw new HttpError(400, `${name} must be an object`);
-    if (JSON.stringify(value).length > 16384) throw new HttpError(400, `${name} is too large`);
+    if (value === null) {
+        return {};
+    }
+    if (!isRecord(value)) {
+        throw new HttpError(400, `${name} must be an object`);
+    }
+    if (JSON.stringify(value).length > 16384) {
+        throw new HttpError(400, `${name} is too large`);
+    }
     return value;
 }
 
 function requiredQueryText(request: Request, name: string, maxLength: number): string {
     const value = new URL(request.url).searchParams.get(name)?.trim() ?? "";
-    if (!value) throw new HttpError(400, `${name} is required`);
-    if (value.length > maxLength) throw new HttpError(400, `${name} is too long`);
+    if (!value) {
+        throw new HttpError(400, `${name} is required`);
+    }
+    if (value.length > maxLength) {
+        throw new HttpError(400, `${name} is too long`);
+    }
     return value;
 }
 
 function queryLimit(value: string | null): number {
-    if (!value) return 100;
+    if (!value) {
+        return 100;
+    }
     const limit = Number(value);
-    if (!Number.isInteger(limit) || limit < 1) throw new HttpError(400, "limit must be a positive integer");
+    if (!Number.isInteger(limit) || limit < 1) {
+        throw new HttpError(400, "limit must be a positive integer");
+    }
     return Math.min(limit, 200);
 }
 
 function searchPattern(value: string | null): string | null {
     const normalized = value?.trim() ?? "";
-    if (!normalized) return null;
-    if (normalized.length > 160) throw new HttpError(400, "q is too long");
+    if (!normalized) {
+        return null;
+    }
+    if (normalized.length > 160) {
+        throw new HttpError(400, "q is too long");
+    }
 
     const safe = normalized
         .replace(/[^A-Za-z0-9@._+\-\s]/g, " ")
@@ -947,7 +1159,9 @@ function searchPattern(value: string | null): string | null {
 
 function serviceRoleKey(): string {
     const [key] = supabaseSecretKeys();
-    if (key) return key;
+    if (key) {
+        return key;
+    }
     throw new HttpError(500, "missing Supabase secret key");
 }
 
@@ -959,7 +1173,9 @@ function supabaseSecretKeys(): string[] {
             const parsed = JSON.parse(secretKeys);
             if (isRecord(parsed)) {
                 for (const value of Object.values(parsed)) {
-                    if (typeof value === "string" && value) keys.push(value);
+                    if (typeof value === "string" && value) {
+                        keys.push(value);
+                    }
                 }
             }
         } catch {
@@ -968,22 +1184,30 @@ function supabaseSecretKeys(): string[] {
     }
 
     const modernSecretKey = Deno.env.get("SUPABASE_SECRET_KEY");
-    if (modernSecretKey) keys.push(modernSecretKey);
+    if (modernSecretKey) {
+        keys.push(modernSecretKey);
+    }
 
     const legacyServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (legacyServiceRoleKey) keys.push(legacyServiceRoleKey);
+    if (legacyServiceRoleKey) {
+        keys.push(legacyServiceRoleKey);
+    }
 
     return unique(keys);
 }
 
 function requiredEnv(name: string): string {
     const value = Deno.env.get(name);
-    if (!value) throw new HttpError(500, `missing ${name}`);
+    if (!value) {
+        throw new HttpError(500, `missing ${name}`);
+    }
     return value;
 }
 
 function safeEqual(left: string, right: string): boolean {
-    if (left.length !== right.length) return false;
+    if (left.length !== right.length) {
+        return false;
+    }
     let result = 0;
     for (let i = 0; i < left.length; i++) {
         result |= left.charCodeAt(i) ^ right.charCodeAt(i);

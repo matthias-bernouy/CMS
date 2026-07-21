@@ -18,11 +18,12 @@ function makeBlocsRoot(layout: Record<string, Record<string, string>>): string {
     return blocs;
 }
 
-const baseManifest = (tag: string) => JSON.stringify({
-    "default-tag": tag,
-    bloc: "./Bloc.ts",
-    meta: { title: "T", description: "" },
-});
+const baseManifest = (tag: string) =>
+    JSON.stringify({
+        "default-tag": tag,
+        bloc: "./Bloc.ts",
+        meta: { title: "T", description: "" },
+    });
 
 describe("scanDevBlocs", () => {
     test("derives group from the parent folder name", async () => {
@@ -31,7 +32,7 @@ describe("scanDevBlocs", () => {
             "_uncategorized/footer": { "manifest.json": baseManifest("footer"), "Bloc.ts": "" },
         });
         const blocs = await scanDevBlocs(root, { quiet: true });
-        const byTag = Object.fromEntries(blocs.map(b => [b.tag, b]));
+        const byTag = Object.fromEntries(blocs.map((b) => [b.tag, b]));
         expect(byTag["cta-v1"]?.group).toBe("marketing");
         expect(byTag["footer"]?.group).toBe(""); // _uncategorized → empty
     });
@@ -46,7 +47,9 @@ describe("scanDevBlocs", () => {
 
     test("rejects manifest.json containing default-group", async () => {
         const manifest = JSON.stringify({
-            "default-tag": "invalid", "default-group": "Old", bloc: "./Bloc.ts",
+            "default-tag": "invalid",
+            "default-group": "Old",
+            bloc: "./Bloc.ts",
         });
         const root = makeBlocsRoot({
             "marketing/invalid": { "manifest.json": manifest, "Bloc.ts": "" },
@@ -62,7 +65,7 @@ describe("scanDevBlocs", () => {
             "ui/accordion/item": { "manifest.json": baseManifest("base-accordion-item"), "Bloc.ts": "" },
         });
         const blocs = await scanDevBlocs(root, { quiet: true });
-        const tags = blocs.map(b => b.tag).sort();
+        const tags = blocs.map((b) => b.tag).sort();
         expect(tags).toEqual(["base-accordion", "base-accordion-item"]);
     });
 

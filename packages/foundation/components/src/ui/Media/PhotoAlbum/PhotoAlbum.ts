@@ -82,8 +82,12 @@ export class PhotoAlbum extends Component {
         image.src = source.currentSrc || source.src;
         image.alt = source.alt;
         image.loading = source.loading || "lazy";
-        if (source.width > 0) image.width = source.width;
-        if (source.height > 0) image.height = source.height;
+        if (source.width > 0) {
+            image.width = source.width;
+        }
+        if (source.height > 0) {
+            image.height = source.height;
+        }
 
         const caption = document.createElement("figcaption");
         caption.setAttribute("part", "legend");
@@ -109,26 +113,34 @@ export class PhotoAlbum extends Component {
         const targetButton = event.composedPath().find((target): target is HTMLButtonElement => {
             return target instanceof HTMLButtonElement && target.dataset.previewIndex !== undefined;
         });
-        if (!targetButton) return;
+        if (!targetButton) {
+            return;
+        }
 
         this._openPreview(Number(targetButton.dataset.previewIndex));
     };
 
     private readonly _onPreviewClick = (event: MouseEvent): void => {
-        if (event.target === this._preview) this._closePreview();
+        if (event.target === this._preview) {
+            this._closePreview();
+        }
     };
 
     private readonly _onStripClick = (event: MouseEvent): void => {
         const button = event.composedPath().find((target): target is HTMLButtonElement => {
             return target instanceof HTMLButtonElement && target.dataset.previewIndex !== undefined;
         });
-        if (!button) return;
+        if (!button) {
+            return;
+        }
 
         this._setActiveIndex(Number(button.dataset.previewIndex));
     };
 
     private readonly _onKeyDown = (event: KeyboardEvent): void => {
-        if (this._preview.hidden) return;
+        if (this._preview.hidden) {
+            return;
+        }
 
         if (event.key === "Escape") {
             event.preventDefault();
@@ -143,7 +155,9 @@ export class PhotoAlbum extends Component {
     };
 
     private _openPreview(index: number): void {
-        if (!Number.isInteger(index) || index < 0 || index >= this._images.length) return;
+        if (!Number.isInteger(index) || index < 0 || index >= this._images.length) {
+            return;
+        }
 
         this._preview.hidden = false;
         document.addEventListener("keydown", this._onKeyDown);
@@ -158,19 +172,25 @@ export class PhotoAlbum extends Component {
 
     private readonly _showPrevious = (): void => {
         const count = this._images.length;
-        if (count === 0) return;
+        if (count === 0) {
+            return;
+        }
         this._setActiveIndex((this._activeIndex - 1 + count) % count);
     };
 
     private readonly _showNext = (): void => {
         const count = this._images.length;
-        if (count === 0) return;
+        if (count === 0) {
+            return;
+        }
         this._setActiveIndex((this._activeIndex + 1) % count);
     };
 
     private _setActiveIndex(index: number): void {
         const images = this._images;
-        if (!Number.isInteger(index) || index < 0 || index >= images.length) return;
+        if (!Number.isInteger(index) || index < 0 || index >= images.length) {
+            return;
+        }
 
         this._activeIndex = index;
         const source = images[index]!;
@@ -184,7 +204,9 @@ export class PhotoAlbum extends Component {
     }
 
     private _syncPreview(): void {
-        if (this._preview.hidden) return;
+        if (this._preview.hidden) {
+            return;
+        }
         if (this._images.length === 0) {
             this._closePreview();
             return;

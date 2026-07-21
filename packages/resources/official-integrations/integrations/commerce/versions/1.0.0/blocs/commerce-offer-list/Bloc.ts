@@ -1,6 +1,12 @@
 import {
-    activeFilterParams, activeMetadataFilters, filterSignature, fixedFilters,
-    positiveInteger, readFilterParams, readMetadataFilters, setAttributeIfChanged,
+    activeFilterParams,
+    activeMetadataFilters,
+    filterSignature,
+    fixedFilters,
+    positiveInteger,
+    readFilterParams,
+    readMetadataFilters,
+    setAttributeIfChanged,
     validIdentifier,
 } from "./helpers";
 import { syncOfferListPresentation } from "./presentation";
@@ -66,11 +72,15 @@ export class CommerceOfferList extends HTMLElement {
         this.observer = null;
     }
     attributeChangedCallback() {
-        if (this.isConnected) this.syncSource();
+        if (this.isConnected) {
+            this.syncSource();
+        }
     }
 
     readPage() {
-        if (!this.syncsUrl || typeof location === "undefined") return 1;
+        if (!this.syncsUrl || typeof location === "undefined") {
+            return 1;
+        }
         return positiveInteger(new URLSearchParams(location.search).get(this.pageParam), 1);
     }
     syncSource() {
@@ -87,7 +97,9 @@ export class CommerceOfferList extends HTMLElement {
         }
         for (const [attribute, endpointParam] of fixedFilters) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) params.set(endpointParam, value);
+            if (value) {
+                params.set(endpointParam, value);
+            }
         }
         const filters = activeMetadataFilters(this.metadataFilters, urlParams);
         if (params.get("category") && Object.keys(filters).length > 0) {
@@ -95,7 +107,9 @@ export class CommerceOfferList extends HTMLElement {
         }
         const alias = validIdentifier(this.getAttribute("data-alias")) || "data";
         const source = `${prefix}/${sourceId}/offers?${params.toString()} as ${alias}`;
-        if (this.getAttribute("cms-source") !== source) this.setAttribute("cms-source", source);
+        if (this.getAttribute("cms-source") !== source) {
+            this.setAttribute("cms-source", source);
+        }
         this.syncPagination();
         syncOfferListPresentation(this);
     }
@@ -107,18 +121,25 @@ export class CommerceOfferList extends HTMLElement {
         }
     }
     writePage() {
-        if (!this.syncsUrl || typeof location === "undefined" || typeof history === "undefined") return;
+        if (!this.syncsUrl || typeof location === "undefined" || typeof history === "undefined") {
+            return;
+        }
         const url = new URL(location.href);
-        if (this.page <= 1) url.searchParams.delete(this.pageParam);
-        else url.searchParams.set(this.pageParam, String(this.page));
+        if (this.page <= 1) {
+            url.searchParams.delete(this.pageParam);
+        } else {
+            url.searchParams.set(this.pageParam, String(this.page));
+        }
         history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
     }
     currentFilterSignature() {
         return filterSignature(this.filterParams, this.metadataFilters);
     }
 
-    onPageChange = event => {
-        if (event.target?.closest?.("commerce-offer-list") !== this) return;
+    onPageChange = (event) => {
+        if (event.target?.closest?.("commerce-offer-list") !== this) {
+            return;
+        }
         this.page = positiveInteger(event.detail?.page, 1);
         this.writePage();
         this.syncSource();
@@ -129,26 +150,36 @@ export class CommerceOfferList extends HTMLElement {
 
     onParamsChange = () => {
         const signature = this.currentFilterSignature();
-        if (signature === this.filterSignature) return;
+        if (signature === this.filterSignature) {
+            return;
+        }
         this.filterSignature = signature;
         if (this.page !== 1) {
             this.page = 1;
             this.writePage();
             this.syncSource();
-        } else this.syncSource();
+        } else {
+            this.syncSource();
+        }
     };
 
     onPopState = () => {
         const page = this.readPage();
         const signature = this.currentFilterSignature();
-        if (page === this.page && signature === this.filterSignature) return;
+        if (page === this.page && signature === this.filterSignature) {
+            return;
+        }
         this.page = page;
         this.filterSignature = signature;
         this.syncSource();
     };
 
-    get pageParam() { return this.getAttribute("page-param")?.trim() || "page"; }
-    get syncsUrl() { return this.getAttribute("sync-url") !== "false"; }
+    get pageParam() {
+        return this.getAttribute("page-param")?.trim() || "page";
+    }
+    get syncsUrl() {
+        return this.getAttribute("sync-url") !== "false";
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceOfferList);

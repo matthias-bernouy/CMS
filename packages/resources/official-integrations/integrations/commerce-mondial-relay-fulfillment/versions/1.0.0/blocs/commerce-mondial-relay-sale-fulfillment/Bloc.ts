@@ -6,9 +6,21 @@ import { renderFulfillment, syncFulfillmentPresentation } from "./presentation";
 
 export class CommerceMondialRelaySaleFulfillment extends Component {
     static observedAttributes = [
-        "accent-color", "background-color", "border-color", "text-color",
-        "button-text-color", "order-id", "order-param",
-        "title", "copy", "create-label", "retry-label", "tracking-label", "label-label", "redownload-label", "handoff-label",
+        "accent-color",
+        "background-color",
+        "border-color",
+        "text-color",
+        "button-text-color",
+        "order-id",
+        "order-param",
+        "title",
+        "copy",
+        "create-label",
+        "retry-label",
+        "tracking-label",
+        "label-label",
+        "redownload-label",
+        "handoff-label",
     ];
 
     constructor() {
@@ -21,7 +33,7 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
         this.labelButton.addEventListener("click", this.onLabel);
         this.handoffButton.addEventListener("click", this.onHandoff);
         this.syncPresentation();
-        this.load().catch(error => this.fail(error));
+        this.load().catch((error) => this.fail(error));
     }
 
     disconnectedCallback() {
@@ -31,28 +43,32 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     attributeChangedCallback(name, previous, current) {
-        if (!this.isConnected) return;
+        if (!this.isConnected) {
+            return;
+        }
         this.syncPresentation();
         if ((name === "order-id" || name === "order-param") && previous !== current) {
-            this.load().catch(error => this.fail(error));
+            this.load().catch((error) => this.fail(error));
         }
     }
 
     onCreate = () => {
-        this.createShipment().catch(error => this.setStatus(errorMessage(error), true));
+        this.createShipment().catch((error) => this.setStatus(errorMessage(error), true));
     };
 
     onLabel = () => {
-        this.requestLabel().catch(error => this.setStatus(errorMessage(error), true));
+        this.requestLabel().catch((error) => this.setStatus(errorMessage(error), true));
     };
 
     onHandoff = () => {
-        this.declareHandoff().catch(error => this.setStatus(errorMessage(error), true));
+        this.declareHandoff().catch((error) => this.setStatus(errorMessage(error), true));
     };
 
     async load() {
         this.show("loading");
-        if (!this.orderId) throw new Error("L’identifiant de la vente est manquant.");
+        if (!this.orderId) {
+            throw new Error("L’identifiant de la vente est manquant.");
+        }
         const result = await this.request(
             `/.cms/sources/system-functions/getShipmentForMySale?orderId=${encodeURIComponent(this.orderId)}`,
         );
@@ -61,7 +77,9 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     async createShipment() {
-        if (!this.orderId) throw new Error("L’identifiant de la vente est manquant.");
+        if (!this.orderId) {
+            throw new Error("L’identifiant de la vente est manquant.");
+        }
         this.createButton.setAttribute("loading", "");
         this.createButton.setAttribute("disabled", "");
         this.setStatus("Création du bordereau…", false);
@@ -78,7 +96,9 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     async requestLabel() {
-        if (!this.orderId) throw new Error("L’identifiant de la vente est manquant.");
+        if (!this.orderId) {
+            throw new Error("L’identifiant de la vente est manquant.");
+        }
         this.labelButton.setAttribute("loading", "");
         this.labelButton.setAttribute("disabled", "");
         try {
@@ -87,7 +107,9 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
                 body: JSON.stringify({ orderId: this.orderId }),
             });
             const labelUrl = safeCmsLabelUrl(result.labelUrl);
-            if (!labelUrl) throw new Error("Le lien sécurisé du bordereau est invalide.");
+            if (!labelUrl) {
+                throw new Error("Le lien sécurisé du bordereau est invalide.");
+            }
             const link = document.createElement("a");
             link.href = labelUrl;
             link.target = "_blank";
@@ -103,7 +125,9 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     async declareHandoff() {
-        if (!this.orderId) throw new Error("L’identifiant de la vente est manquant.");
+        if (!this.orderId) {
+            throw new Error("L’identifiant de la vente est manquant.");
+        }
         this.handoffButton.setAttribute("loading", "");
         this.handoffButton.setAttribute("disabled", "");
         try {
@@ -112,11 +136,13 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
                 body: JSON.stringify({ orderId: this.orderId }),
             });
             await this.showMutation(result);
-            this.dispatchEvent(new CustomEvent("commerce-fulfillment:updated", {
-                bubbles: true,
-                composed: true,
-                detail: { status: "seller_handoff_declared" },
-            }));
+            this.dispatchEvent(
+                new CustomEvent("commerce-fulfillment:updated", {
+                    bubbles: true,
+                    composed: true,
+                    detail: { status: "seller_handoff_declared" },
+                }),
+            );
         } finally {
             this.handoffButton.removeAttribute("loading");
             this.handoffButton.removeAttribute("disabled");
@@ -139,9 +165,13 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
             return;
         }
         const returnedShipment = isRecord(result.shipment) ? result.shipment : null;
-        if (!returnedShipment) throw new Error("Réponse invalide du service de livraison.");
-        const previousShipment = Array.isArray(this.projection.shipments)
-            && isRecord(this.projection.shipments[0]) ? this.projection.shipments[0] : {};
+        if (!returnedShipment) {
+            throw new Error("Réponse invalide du service de livraison.");
+        }
+        const previousShipment =
+            Array.isArray(this.projection.shipments) && isRecord(this.projection.shipments[0])
+                ? this.projection.shipments[0]
+                : {};
         const shipment = { ...previousShipment, ...returnedShipment };
         const projection = {
             ...this.projection,
@@ -166,8 +196,12 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
             },
         });
         const body = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(body?.error || body?.message || `${response.status} ${response.statusText}`);
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Réponse invalide du service de livraison.");
+        if (!response.ok) {
+            throw new Error(body?.error || body?.message || `${response.status} ${response.statusText}`);
+        }
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            throw new Error("Réponse invalide du service de livraison.");
+        }
         return body;
     }
 
@@ -192,27 +226,61 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     get orderId() {
-        return this.getAttribute("order-id")?.trim()
-            || new URL(location.href).searchParams.get(this.getAttribute("order-param") || "orderId")
-            || "";
+        return (
+            this.getAttribute("order-id")?.trim() ||
+            new URL(location.href).searchParams.get(this.getAttribute("order-param") || "orderId") ||
+            ""
+        );
     }
 
-    get root() { return this.shadowRoot; }
-    get loading() { return this.root.querySelector("[data-loading]"); }
-    get content() { return this.root.querySelector("[data-content]"); }
-    get error() { return this.root.querySelector("[data-error]"); }
-    get errorMessage() { return this.root.querySelector("[data-error-message]"); }
-    get titleElement() { return this.root.querySelector("[data-title]"); }
-    get copyElement() { return this.root.querySelector("[data-copy]"); }
-    get orderNumber() { return this.root.querySelector("[data-order-number]"); }
-    get status() { return this.root.querySelector("[data-status]"); }
-    get expedition() { return this.root.querySelector("[data-expedition]"); }
-    get latest() { return this.root.querySelector("[data-latest]"); }
-    get createButton() { return this.root.querySelector("[data-create]"); }
-    get labelButton() { return this.root.querySelector("[data-label]"); }
-    get handoffButton() { return this.root.querySelector("[data-handoff]"); }
-    get trackingLink() { return this.root.querySelector("[data-tracking-link]"); }
-    get message() { return this.root.querySelector("[data-message]"); }
+    get root() {
+        return this.shadowRoot;
+    }
+    get loading() {
+        return this.root.querySelector("[data-loading]");
+    }
+    get content() {
+        return this.root.querySelector("[data-content]");
+    }
+    get error() {
+        return this.root.querySelector("[data-error]");
+    }
+    get errorMessage() {
+        return this.root.querySelector("[data-error-message]");
+    }
+    get titleElement() {
+        return this.root.querySelector("[data-title]");
+    }
+    get copyElement() {
+        return this.root.querySelector("[data-copy]");
+    }
+    get orderNumber() {
+        return this.root.querySelector("[data-order-number]");
+    }
+    get status() {
+        return this.root.querySelector("[data-status]");
+    }
+    get expedition() {
+        return this.root.querySelector("[data-expedition]");
+    }
+    get latest() {
+        return this.root.querySelector("[data-latest]");
+    }
+    get createButton() {
+        return this.root.querySelector("[data-create]");
+    }
+    get labelButton() {
+        return this.root.querySelector("[data-label]");
+    }
+    get handoffButton() {
+        return this.root.querySelector("[data-handoff]");
+    }
+    get trackingLink() {
+        return this.root.querySelector("[data-tracking-link]");
+    }
+    get message() {
+        return this.root.querySelector("[data-message]");
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceMondialRelaySaleFulfillment);

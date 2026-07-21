@@ -1,10 +1,7 @@
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import type {
-    LocalIntegration,
-    LocalIntegrationImport,
-} from "cms-cli/push/integrations/scan";
+import type { LocalIntegration, LocalIntegrationImport } from "cms-cli/push/integrations/scan";
 import type { PushState } from "cms-cli/push/shared/state";
 
 export function makeSite(files: Record<string, string>): string {
@@ -39,19 +36,23 @@ const MANUAL_SOURCE_DEFINITION = {
         { name: "id", label: "Source id", type: "text", required: true },
         { name: "targetUrl", label: "Target URL", type: "url", required: true },
     ],
-    artifacts: [{
-        type: "source",
-        source: {
-            id: "{{answers.id}}",
-            meta: { name: "Manual source" },
-            endpoints: [{
-                endpointId: "list",
-                method: "GET",
-                targetUrl: "{{answers.targetUrl}}",
-                params: [],
-            }],
+    artifacts: [
+        {
+            type: "source",
+            source: {
+                id: "{{answers.id}}",
+                meta: { name: "Manual source" },
+                endpoints: [
+                    {
+                        endpointId: "list",
+                        method: "GET",
+                        targetUrl: "{{answers.targetUrl}}",
+                        params: [],
+                    },
+                ],
+            },
         },
-    }],
+    ],
 } satisfies NonNullable<LocalIntegrationImport["definition"]>;
 
 export function manualSourceImport(id = "shop", targetUrl = SOURCE_URL): LocalIntegrationImport {

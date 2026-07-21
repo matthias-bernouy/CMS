@@ -1,16 +1,5 @@
-import {
-    makeEndpointUrn,
-    makeSourceUrn,
-    type DataShape,
-    type Source,
-} from "@bernouy/cms-sources";
-import {
-    computedUserHeader,
-    number,
-    object,
-    text,
-    userId,
-} from "./shapes";
+import { makeEndpointUrn, makeSourceUrn, type DataShape, type Source } from "@bernouy/cms-sources";
+import { computedUserHeader, number, object, text, userId } from "./shapes";
 
 export function deliverySource(): Source {
     const selectionInput = object({
@@ -38,76 +27,77 @@ export function deliverySource(): Source {
     });
     return {
         urn: makeSourceUrn("delivery"),
-        endpoints: [{
-            urn: makeEndpointUrn("delivery", "saveRelaySelection"),
-            method: "POST",
-            targetUrl: "https://delivery.test/relay-selection",
-            headers: computedUserHeader(),
-            input: { body: {
-                ...selectionInput,
-                required: [
-                    "requestKey",
-                    "externalOrderId",
-                    "orderVersion",
-                    "selectedForCmsUserId",
-                    "relayLocation",
-                    "country",
-                    "postalCode",
-                    "currency",
-                    "merchandiseSubtotalMinorAmount",
-                    "recipientSnapshot",
-                    "sellerFulfillmentSnapshot",
-                ],
-            } },
-            output: quoteOutputs(false, true, true),
-        }, {
-            urn: makeEndpointUrn("delivery", "resolveDeliveryQuote"),
-            method: "POST",
-            targetUrl: "https://delivery.test/resolve",
-            input: { body: {
-                ...quoteInput,
-                required: [
-                    "quoteId",
-                    "externalOrderId",
-                    "selectedForCmsUserId",
-                    "purpose",
-                ],
-            } },
-            output: quoteOutputs(true, false, true),
-        }, {
-            urn: makeEndpointUrn("delivery", "deliveryQuote"),
-            method: "GET",
-            targetUrl: "https://delivery.test/public",
-            input: { params: [
-                {
-                    name: "quoteId",
-                    in: "query",
-                    required: true,
-                    schema: text(),
+        endpoints: [
+            {
+                urn: makeEndpointUrn("delivery", "saveRelaySelection"),
+                method: "POST",
+                targetUrl: "https://delivery.test/relay-selection",
+                headers: computedUserHeader(),
+                input: {
+                    body: {
+                        ...selectionInput,
+                        required: [
+                            "requestKey",
+                            "externalOrderId",
+                            "orderVersion",
+                            "selectedForCmsUserId",
+                            "relayLocation",
+                            "country",
+                            "postalCode",
+                            "currency",
+                            "merchandiseSubtotalMinorAmount",
+                            "recipientSnapshot",
+                            "sellerFulfillmentSnapshot",
+                        ],
+                    },
                 },
-                {
-                    name: "externalOrderId",
-                    in: "query",
-                    required: true,
-                    schema: text(),
+                output: quoteOutputs(false, true, true),
+            },
+            {
+                urn: makeEndpointUrn("delivery", "resolveDeliveryQuote"),
+                method: "POST",
+                targetUrl: "https://delivery.test/resolve",
+                input: {
+                    body: {
+                        ...quoteInput,
+                        required: ["quoteId", "externalOrderId", "selectedForCmsUserId", "purpose"],
+                    },
                 },
-                {
-                    name: "selectedForCmsUserId",
-                    in: "query",
-                    required: true,
-                    schema: userId(),
+                output: quoteOutputs(true, false, true),
+            },
+            {
+                urn: makeEndpointUrn("delivery", "deliveryQuote"),
+                method: "GET",
+                targetUrl: "https://delivery.test/public",
+                input: {
+                    params: [
+                        {
+                            name: "quoteId",
+                            in: "query",
+                            required: true,
+                            schema: text(),
+                        },
+                        {
+                            name: "externalOrderId",
+                            in: "query",
+                            required: true,
+                            schema: text(),
+                        },
+                        {
+                            name: "selectedForCmsUserId",
+                            in: "query",
+                            required: true,
+                            schema: userId(),
+                        },
+                    ],
                 },
-            ] },
-            output: quoteOutputs(false),
-        }],
+                output: quoteOutputs(false),
+            },
+        ],
     };
 }
 
-function quoteOutputs(
-    includeSnapshots: boolean,
-    includeCoordinates = false,
-    includeInternalRequirements = false,
-) {
+function quoteOutputs(includeSnapshots: boolean, includeCoordinates = false, includeInternalRequirements = false) {
     const properties: Record<string, DataShape> = {
         quoteId: text(),
         externalOrderId: text(),
@@ -142,9 +132,7 @@ function quoteOutputs(
     const required = [
         "quoteId",
         "externalOrderId",
-        ...(includeInternalRequirements
-            ? ["orderVersion", "revision", "selectedForCmsUserId"]
-            : []),
+        ...(includeInternalRequirements ? ["orderVersion", "revision", "selectedForCmsUserId"] : []),
         "relayLocation",
         "country",
         "number",
@@ -154,12 +142,8 @@ function quoteOutputs(
         "weightGrams",
         "shippingAmount",
         "currency",
-        ...(includeInternalRequirements
-            ? ["merchandiseSubtotalMinorAmount"]
-            : []),
-        ...(includeSnapshots
-            ? ["recipientSnapshot", "sellerFulfillmentSnapshot"]
-            : []),
+        ...(includeInternalRequirements ? ["merchandiseSubtotalMinorAmount"] : []),
+        ...(includeSnapshots ? ["recipientSnapshot", "sellerFulfillmentSnapshot"] : []),
         "quotedAt",
         "expiresAt",
     ];

@@ -1,15 +1,24 @@
 import { randomUUID } from "node:crypto";
 import { trimIntegrationRuns } from "./runRetention";
 import type { IntegrationImportResult } from "../../interfaces/IntegrationImport";
-import type {
-    IntegrationInstallation,
-    IntegrationRun,
-} from "../../interfaces/IntegrationInstallation";
+import type { IntegrationInstallation, IntegrationRun } from "../../interfaces/IntegrationInstallation";
 
 export function appendRun(
     installation: IntegrationInstallation,
     run: IntegrationRun,
-    patch: Partial<Pick<IntegrationInstallation, "status" | "artifacts" | "answersSnapshot" | "secretRefs" | "secretInputs" | "label" | "definitionVersion" | "definitionSnapshot">>,
+    patch: Partial<
+        Pick<
+            IntegrationInstallation,
+            | "status"
+            | "artifacts"
+            | "answersSnapshot"
+            | "secretRefs"
+            | "secretInputs"
+            | "label"
+            | "definitionVersion"
+            | "definitionSnapshot"
+        >
+    >,
 ): IntegrationInstallation {
     return {
         ...installation,
@@ -34,9 +43,13 @@ export function successRun(runNumber: number, startedAt: Date, result: Integrati
 }
 
 export function failedRun(runNumber: number, startedAt: Date, error: unknown): IntegrationRun {
-    const status = typeof error === "object" && error !== null && "status" in error && typeof (error as { status?: unknown }).status === "number"
-        ? (error as { status: number }).status
-        : undefined;
+    const status =
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof (error as { status?: unknown }).status === "number"
+            ? (error as { status: number }).status
+            : undefined;
     return {
         id: randomUUID(),
         runNumber,

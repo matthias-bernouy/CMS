@@ -7,7 +7,7 @@ import { withValidationResponse } from "cms-control/core/secrets/withValidationR
 export default async function postSecret(req: Request, cms: ControlCms) {
     return withValidationResponse(async () => {
         const body = await readJsonBody(req);
-        const dto  = parseSecretDto(body);
+        const dto = parseSecretDto(body);
         await setSecret(cms, dto);
         return new Response();
     });

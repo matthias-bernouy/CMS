@@ -1,8 +1,5 @@
 import type { EditorDataSource } from "../../../../runtime";
-import type {
-    DataSourcePickerSourceBinding,
-    DataSourcePickerSourceParamValue,
-} from "./dataSourceBinding";
+import type { DataSourcePickerSourceBinding, DataSourcePickerSourceParamValue } from "./dataSourceBinding";
 
 export function readSourceBinding(root: ParentNode, source: EditorDataSource): DataSourcePickerSourceBinding {
     const alias = root.querySelector<HTMLInputElement>(".source-alias")?.value.trim();
@@ -29,10 +26,15 @@ function readRows(root: ParentNode, kind: "param" | "body"): Record<string, Data
         const modeElement = row.querySelector(".param-mode") as HTMLSelectElement | null;
         const mode = modeElement ? selectedMode(modeElement) : "queryParam";
         const rawValue = (row.querySelector(".param-value") as HTMLInputElement | null)?.value.trim();
-        if (!name || !rawValue) continue;
+        if (!name || !rawValue) {
+            continue;
+        }
 
-        if (mode === "raw") params[name] = { from: "raw", value: rawValue };
-        else params[name] = { from: mode, name: rawValue };
+        if (mode === "raw") {
+            params[name] = { from: "raw", value: rawValue };
+        } else {
+            params[name] = { from: mode, name: rawValue };
+        }
     }
 
     return params;

@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import {
-    assertGatewayGrantsWithinAccess,
-    roleCanBeGrantedEndpoint,
-} from "cms-control/core/roles/gatewayAccess";
+import { assertGatewayGrantsWithinAccess, roleCanBeGrantedEndpoint } from "cms-control/core/roles/gatewayAccess";
 
 describe("gatewayAccess", () => {
     const adminEndpoint = {
@@ -21,9 +18,9 @@ describe("gatewayAccess", () => {
             endpoints: [adminEndpoint],
         });
 
-        await expect(assertGatewayGrantsWithinAccess(sources, USER_ROLE, [
-            { permission: adminEndpoint.urn },
-        ])).rejects.toThrow("cannot be granted");
+        await expect(
+            assertGatewayGrantsWithinAccess(sources, USER_ROLE, [{ permission: adminEndpoint.urn }]),
+        ).rejects.toThrow("cannot be granted");
     });
 
     test("uses the side-effect-free endpoint lookup when available", async () => {
@@ -48,9 +45,9 @@ describe("gatewayAccess", () => {
             endpoints: [adminEndpoint],
         });
 
-        await expect(assertGatewayGrantsWithinAccess(sources, USER_ROLE, [
-            { permission: adminEndpoint.urn },
-        ])).rejects.toThrow("cannot be granted");
+        await expect(
+            assertGatewayGrantsWithinAccess(sources, USER_ROLE, [{ permission: adminEndpoint.urn }]),
+        ).rejects.toThrow("cannot be granted");
 
         expect(sources.authorizationLookupCount).toBe(1);
         expect(sources.fullLookupCount).toBe(0);

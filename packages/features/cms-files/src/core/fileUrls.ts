@@ -54,24 +54,32 @@ export function cmsFilesByIdRef(id: string): string {
 
 export function cmsImageVariantUrlFromByIdUrl(byIdUrl: string, width: number): string | null {
     const base = cmsImageVariantBaseUrlFromByIdUrl(byIdUrl);
-    if (!base) return null;
+    if (!base) {
+        return null;
+    }
     return `${base}/${width}.webp`;
 }
 
 export function cmsImageVariantBaseUrlFromByIdUrl(byIdUrl: string): string | null {
     const parsed = parseCmsFilesByIdUrl(byIdUrl);
-    if (!parsed) return null;
+    if (!parsed) {
+        return null;
+    }
     return `${parsed.prefix}${CMS_IMAGE_VARIANT_ROUTE}/${encodeURIComponent(parsed.id)}`;
 }
 
 export function parseCmsFilesByIdUrl(urlOrPath: string): CmsFilesByIdUrl | null {
     const idx = urlOrPath.indexOf(CMS_FILES_BY_ID_MARKER);
-    if (idx < 0) return null;
+    if (idx < 0) {
+        return null;
+    }
 
     const idStart = idx + CMS_FILES_BY_ID_MARKER.length;
     const idEnd = findIdEnd(urlOrPath, idStart);
     const encodedId = urlOrPath.slice(idStart, idEnd);
-    if (!encodedId) return null;
+    if (!encodedId) {
+        return null;
+    }
 
     try {
         return { id: decodeURIComponent(encodedId), prefix: urlOrPath.slice(0, idx) };

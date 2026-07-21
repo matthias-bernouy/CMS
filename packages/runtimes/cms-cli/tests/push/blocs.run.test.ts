@@ -23,7 +23,7 @@ describe("runBlocs", () => {
         );
 
         expect(code).toBe(0);
-        const post = calls.find(c => c.init?.method === "POST");
+        const post = calls.find((c) => c.init?.method === "POST");
         expect(post).toBeDefined();
         const body = post!.init!.body as FormData;
         expect(body.get("tag")).toBe("demo-card");
@@ -40,7 +40,7 @@ describe("runBlocs", () => {
         );
 
         expect(code).toBe(0);
-        const post = calls.find(c => c.init?.method === "POST");
+        const post = calls.find((c) => c.init?.method === "POST");
         expect(post).toBeDefined();
         expect((post!.init!.body as FormData).get("force")).toBe("true");
     });
@@ -55,7 +55,7 @@ describe("runBlocs", () => {
         );
 
         expect(code).toBe(0);
-        expect(calls.some(c => c.init?.method === "POST")).toBe(false);
+        expect(calls.some((c) => c.init?.method === "POST")).toBe(false);
     });
 });
 
@@ -63,34 +63,45 @@ describe("CLI_push bloc stage wiring", () => {
     test("uses the normal blocs stage instead of the legacy import implementation", () => {
         const source = readFileSync(new URL("../../src/CLI_push.ts", import.meta.url), "utf-8");
 
-        expect(source).toContain(`import { runBlocs } from "./push/blocs/run";`);
-        expect(source).toContain(`case "blocs":     return runBlocs(adminBase, token, flags);`);
-        expect(source).not.toContain("CLI_importBloc");
+        expect(source).toMatch(/import\s*\{\s*runBlocs\s*\}\s*from\s*["']\.\/push\/blocs\/run["']\s*;/);
+        expect(source).toMatch(
+            /case\s+["']blocs["']\s*:\s*return\s+runBlocs\s*\(\s*adminBase\s*,\s*token\s*,\s*flags\s*\)\s*;/,
+        );
+        expect(source).not.toMatch(/\bCLI_importBloc\b/);
     });
 });
 
 function makeProject(opts: { siteDir?: string; forcePushDefault?: boolean }) {
     const cwd = mkdtempSync(join(tmpdir(), "p9r-blocs-run-"));
     const siteDir = opts.siteDir ?? "site";
-    writeFileSync(join(cwd, "p9r.config.json"), JSON.stringify({
-        siteDir,
-        forcePushDefault: opts.forcePushDefault === true,
-    }));
+    writeFileSync(
+        join(cwd, "p9r.config.json"),
+        JSON.stringify({
+            siteDir,
+            forcePushDefault: opts.forcePushDefault === true,
+        }),
+    );
 
     const blocDir = join(cwd, siteDir, "blocs", "Content", "demo-card");
     mkdirSync(blocDir, { recursive: true });
-    writeFileSync(join(blocDir, "manifest.json"), JSON.stringify({
-        "default-tag": "demo-card",
-        meta: {
-            title: "Demo card",
-            description: "A demo bloc",
-        },
-    }));
-    writeFileSync(join(blocDir, "Bloc.ts"), `
+    writeFileSync(
+        join(blocDir, "manifest.json"),
+        JSON.stringify({
+            "default-tag": "demo-card",
+            meta: {
+                title: "Demo card",
+                description: "A demo bloc",
+            },
+        }),
+    );
+    writeFileSync(
+        join(blocDir, "Bloc.ts"),
+        `
 export class DemoCard extends HTMLElement {
     connectedCallback() { this.textContent = "Demo"; }
 }
-`);
+`,
+    );
 
     return { cwd };
 }
@@ -100,8 +111,12 @@ function mockBlocFetch(remoteTags: string[]) {
     spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
         calls.push({ input, init });
         const url = String(input);
-        if (url.endsWith("/api/bloc/list")) return Response.json(remoteTags.map(id => ({ id })));
-        if (init?.method === "POST") return new Response("ok");
+        if (url.endsWith("/api/bloc/list")) {
+            return Response.json(remoteTags.map((id) => ({ id })));
+        }
+        if (init?.method === "POST") {
+            return new Response("ok");
+        }
         return new Response("not found", { status: 404 });
     });
     return calls;

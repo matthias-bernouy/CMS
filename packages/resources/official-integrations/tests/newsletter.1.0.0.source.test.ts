@@ -8,11 +8,7 @@ import {
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import {
-    handleSourceRequest,
-    InMemorySourceRepository,
-    type SourceRepository,
-} from "@bernouy/cms-sources";
+import { handleSourceRequest, InMemorySourceRepository, type SourceRepository } from "@bernouy/cms-sources";
 import { InMemorySecretStore, secretRefToKey } from "@bernouy/cms-secrets";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 
@@ -22,7 +18,8 @@ type JsonRecord = Record<string, unknown>;
 const sourcePrefix = "/.cms/sources/";
 const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 const supabaseUrl = "https://project.supabase.co";
-const edgeFunctionUrl = "../integrations/newsletter/versions/1.0.0/connectors/supabase/functions/cms-newsletter/index.ts";
+const edgeFunctionUrl =
+    "../integrations/newsletter/versions/1.0.0/connectors/supabase/functions/cms-newsletter/index.ts";
 
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
@@ -30,11 +27,19 @@ let activeEnv: Record<string, string> = {};
 let activeFetch: typeof fetch = realFetch;
 let edgeHandler: EdgeHandler | undefined;
 
-(globalThis as { Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown } }).Deno = {
+(
+    globalThis as {
+        Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown };
+    }
+).Deno = {
     env: { get: (key) => activeEnv[key] },
     serve(handler) {
         edgeHandler = handler;
-        return { shutdown() { /* test stub */ } };
+        return {
+            shutdown() {
+                /* test stub */
+            },
+        };
     },
 };
 globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
@@ -48,31 +53,43 @@ describe("newsletter 1.0.0 source", () => {
     test("writes, lists, exports, and deletes subscriptions through the installed CMS source", async () => {
         const harness = await createHarness();
 
-        const subscribed = await okJson(await sourceJson(harness, "setSubscription", {
-            email: "USER@Example.COM ",
-            subscribed: "true",
-        }));
-        const listed = await okJson(await sourceRequest(harness, "listSubscriptions", {
-            q: "user",
-            subscribed: "true",
-            limit: "10",
-        }));
-        const fetched = await okJson(await sourceRequest(harness, "getSubscription", {
-            email: "user@example.com",
-        }));
-        const exported = await textBody(await sourceRequest(harness, "exportSubscriptions", {
-            subscribed: "true",
-        }));
-        const deleted = await okJson(await sourceDelete(harness, "deleteSubscription", {
-            email: "user@example.com",
-        }));
+        const subscribed = await okJson(
+            await sourceJson(harness, "setSubscription", {
+                email: "USER@Example.COM ",
+                subscribed: "true",
+            }),
+        );
+        const listed = await okJson(
+            await sourceRequest(harness, "listSubscriptions", {
+                q: "user",
+                subscribed: "true",
+                limit: "10",
+            }),
+        );
+        const fetched = await okJson(
+            await sourceRequest(harness, "getSubscription", {
+                email: "user@example.com",
+            }),
+        );
+        const exported = await textBody(
+            await sourceRequest(harness, "exportSubscriptions", {
+                subscribed: "true",
+            }),
+        );
+        const deleted = await okJson(
+            await sourceDelete(harness, "deleteSubscription", {
+                email: "user@example.com",
+            }),
+        );
 
         expect(subscribed).toMatchObject({
             exists: true,
             email: "user@example.com",
             subscribed: true,
         });
-        expect(listed.subscriptions).toEqual([expect.objectContaining({ email: "user@example.com", subscribed: true })]);
+        expect(listed.subscriptions).toEqual([
+            expect.objectContaining({ email: "user@example.com", subscribed: true }),
+        ]);
         expect(listed.total).toBe(1);
         expect(fetched).toMatchObject({ exists: true, email: "user@example.com", subscribed: true });
         expect(exported).toContain("email,subscribed,createdAt,updatedAt");
@@ -123,19 +140,23 @@ async function createHarness() {
                 }
                 return await handler(request);
             } catch (error) {
-                return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
+                return new Response(error instanceof Error ? (error.stack ?? error.message) : String(error), {
+                    status: 599,
+                });
             }
         },
         async resolveSecret(ref: string): Promise<string | undefined> {
             const key = secretRefToKey(ref) ?? ref;
-            return await base.secrets.get(key) ?? undefined;
+            return (await base.secrets.get(key)) ?? undefined;
         },
     };
 }
 
 async function importNewsletter() {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("newsletter");
-    if (!definition) throw new Error("newsletter definition not found");
+    if (!definition) {
+        throw new Error("newsletter definition not found");
+    }
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
@@ -195,11 +216,19 @@ class NewsletterRestMock {
         expect(request.headers.get("apikey")).toBe("supabase-secret-key");
         expect(request.headers.get("authorization")).toBe("Bearer supabase-secret-key");
         expect(request.headers.get("accept-profile")).toBe("newsletter");
-        if (method !== "GET" && method !== "HEAD") expect(request.headers.get("content-profile")).toBe("newsletter");
+        if (method !== "GET" && method !== "HEAD") {
+            expect(request.headers.get("content-profile")).toBe("newsletter");
+        }
 
         const table = decodeURIComponent(url.pathname.slice("/rest/v1/".length));
-        if (!this.tables[table]) throw new Error(`unexpected table: ${table}`);
-        if (method === "GET") return jsonResponse(this.select(table, url), 200, { "content-range": `0-${Math.max(this.select(table, url).length - 1, 0)}/${this.select(table, url).length}` });
+        if (!this.tables[table]) {
+            throw new Error(`unexpected table: ${table}`);
+        }
+        if (method === "GET") {
+            return jsonResponse(this.select(table, url), 200, {
+                "content-range": `0-${Math.max(this.select(table, url).length - 1, 0)}/${this.select(table, url).length}`,
+            });
+        }
         if (method === "POST") {
             const row = JSON.parse(await request.text()) as JsonRecord;
             const inserted = this.upsert(table, row);
@@ -213,30 +242,43 @@ class NewsletterRestMock {
     }
 
     rows(table: string): JsonRecord[] {
-        return this.tables[table]!.map(row => ({ ...row }));
+        return this.tables[table]!.map((row) => ({ ...row }));
     }
 
     private select(table: string, url: URL): JsonRecord[] {
         let rows = this.tables[table]!;
         const email = filterValue(url.searchParams.get("email"));
         const subscribed = filterValue(url.searchParams.get("subscribed"));
-        if (email?.operator === "eq") rows = rows.filter(row => same(row.email, email.value));
-        if (email?.operator === "ilike") rows = rows.filter(row => String(row.email ?? "").toLowerCase().includes(email.value.replaceAll("*", "").toLowerCase()));
-        if (subscribed?.operator === "eq") rows = rows.filter(row => String(row.subscribed) === subscribed.value);
-        return rows.map(row => ({ ...row }));
+        if (email?.operator === "eq") {
+            rows = rows.filter((row) => same(row.email, email.value));
+        }
+        if (email?.operator === "ilike") {
+            rows = rows.filter((row) =>
+                String(row.email ?? "")
+                    .toLowerCase()
+                    .includes(email.value.replaceAll("*", "").toLowerCase()),
+            );
+        }
+        if (subscribed?.operator === "eq") {
+            rows = rows.filter((row) => String(row.subscribed) === subscribed.value);
+        }
+        return rows.map((row) => ({ ...row }));
     }
 
     private upsert(table: string, value: JsonRecord): JsonRecord {
         const rows = this.tables[table]!;
         const now = "2026-07-06T10:00:00.000Z";
-        const index = rows.findIndex(row => same(row.email, value.email));
+        const index = rows.findIndex((row) => same(row.email, value.email));
         const next = {
             ...(index >= 0 ? rows[index] : { created_at: now }),
             ...value,
             updated_at: now,
         };
-        if (index >= 0) rows[index] = next;
-        else rows.push(next);
+        if (index >= 0) {
+            rows[index] = next;
+        } else {
+            rows.push(next);
+        }
         return { ...next };
     }
 
@@ -244,9 +286,11 @@ class NewsletterRestMock {
         const rows = this.tables[table]!;
         const email = filterValue(url.searchParams.get("email"));
         const deleted: JsonRecord[] = [];
-        this.tables[table] = rows.filter(row => {
+        this.tables[table] = rows.filter((row) => {
             const match = email?.operator === "eq" && same(row.email, email.value);
-            if (match) deleted.push({ email: row.email });
+            if (match) {
+                deleted.push({ email: row.email });
+            }
             return !match;
         });
         return deleted;
@@ -254,14 +298,28 @@ class NewsletterRestMock {
 }
 
 async function loadEdgeHandler(): Promise<EdgeHandler> {
-    if (!edgeHandler) await import(edgeFunctionUrl);
-    if (!edgeHandler) throw new Error("cms-newsletter edge handler was not registered");
+    if (!edgeHandler) {
+        await import(edgeFunctionUrl);
+    }
+    if (!edgeHandler) {
+        throw new Error("cms-newsletter edge handler was not registered");
+    }
     return edgeHandler;
 }
 
-async function sourceRequest(harness: { sources: SourceRepository; sourceFetch: typeof fetch; resolveSecret: (ref: string) => Promise<string | undefined> }, endpoint: string, params: Record<string, string> = {}): Promise<Response> {
+async function sourceRequest(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    endpoint: string,
+    params: Record<string, string> = {},
+): Promise<Response> {
     const url = new URL(`${sourcePrefix}newsletter/${endpoint}`, "https://cms.test");
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await handleSourceRequest(harness.sources, new Request(url), {
         prefix: sourcePrefix,
         deps: {
@@ -272,26 +330,43 @@ async function sourceRequest(harness: { sources: SourceRepository; sourceFetch: 
     });
 }
 
-async function sourceJson(harness: Awaited<ReturnType<typeof createHarness>>, endpoint: string, body: unknown, params: Record<string, string> = {}): Promise<Response> {
+async function sourceJson(
+    harness: Awaited<ReturnType<typeof createHarness>>,
+    endpoint: string,
+    body: unknown,
+    params: Record<string, string> = {},
+): Promise<Response> {
     const url = new URL(`${sourcePrefix}newsletter/${endpoint}`, "https://cms.test");
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-    return await handleSourceRequest(harness.sources, new Request(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    }), {
-        prefix: sourcePrefix,
-        deps: {
-            fetchImpl: harness.sourceFetch,
-            resolveSecret: harness.resolveSecret,
-            resolveContext: async () => ({ userID: "user-123" }),
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
+    return await handleSourceRequest(
+        harness.sources,
+        new Request(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+        }),
+        {
+            prefix: sourcePrefix,
+            deps: {
+                fetchImpl: harness.sourceFetch,
+                resolveSecret: harness.resolveSecret,
+                resolveContext: async () => ({ userID: "user-123" }),
+            },
         },
-    });
+    );
 }
 
-async function sourceDelete(harness: Awaited<ReturnType<typeof createHarness>>, endpoint: string, params: Record<string, string>): Promise<Response> {
+async function sourceDelete(
+    harness: Awaited<ReturnType<typeof createHarness>>,
+    endpoint: string,
+    params: Record<string, string>,
+): Promise<Response> {
     const url = new URL(`${sourcePrefix}newsletter/${endpoint}`, "https://cms.test");
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await handleSourceRequest(harness.sources, new Request(url, { method: "DELETE" }), {
         prefix: sourcePrefix,
         deps: {
@@ -314,7 +389,9 @@ function jsonResponse(data: unknown, status = 200, headers: Record<string, strin
 }
 
 function filterValue(value: string | null): { operator: string; value: string } | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     const [operator, ...rest] = value.split(".");
     return { operator: operator ?? "", value: rest.join(".") };
 }
@@ -324,7 +401,7 @@ function same(a: unknown, b: unknown): boolean {
 }
 
 async function jsonBody(response: Response): Promise<JsonRecord> {
-    return await response.json() as JsonRecord;
+    return (await response.json()) as JsonRecord;
 }
 
 async function okJson(response: Response): Promise<JsonRecord> {

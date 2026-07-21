@@ -22,12 +22,14 @@ describe("flattenDataShape", () => {
             },
         };
 
-        expect(flattenDataShape(shape).map(field => ({
-            path: field.path,
-            input: field.input,
-            required: field.required,
-            array: field.array,
-        }))).toEqual([
+        expect(
+            flattenDataShape(shape).map((field) => ({
+                path: field.path,
+                input: field.input,
+                required: field.required,
+                array: field.array,
+            })),
+        ).toEqual([
             { path: "id", input: "text", required: true, array: false },
             { path: "customer.name", input: "text", required: false, array: false },
             { path: "customer.email", input: "text", required: true, array: false },
@@ -49,11 +51,13 @@ describe("flattenDataShape", () => {
             },
         };
 
-        expect(flattenDataShape(shape).map(field => ({
-            path: field.path,
-            required: field.required,
-            array: field.array,
-        }))).toEqual([
+        expect(
+            flattenDataShape(shape).map((field) => ({
+                path: field.path,
+                required: field.required,
+                array: field.array,
+            })),
+        ).toEqual([
             { path: "id", required: true, array: true },
             { path: "total", required: false, array: true },
         ]);

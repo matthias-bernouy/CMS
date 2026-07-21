@@ -15,11 +15,11 @@ export const PARAM_SYNC_ATTR = "cms-param-sync";
 export const PAGE_STATE_ATTR = "cms-page-state";
 
 export const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
-export type SourceState = typeof SOURCE_STATES[number];
+export type SourceState = (typeof SOURCE_STATES)[number];
 export const SOURCE_TRIGGERS = ["auto", "submit", "change"] as const;
-export type SourceTrigger = typeof SOURCE_TRIGGERS[number];
+export type SourceTrigger = (typeof SOURCE_TRIGGERS)[number];
 export const SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
-export type SourceMethod = typeof SOURCE_METHODS[number];
+export type SourceMethod = (typeof SOURCE_METHODS)[number];
 
 /**
  * Marks a subtree the runtime must NOT discover sources within. Unlike a

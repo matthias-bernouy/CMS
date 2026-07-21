@@ -25,4 +25,6 @@ export type {
 
 import { runCoverageRatchet } from "./runner";
 
-if (import.meta.main) await runCoverageRatchet();
+if (import.meta.main) {
+    await runCoverageRatchet();
+}

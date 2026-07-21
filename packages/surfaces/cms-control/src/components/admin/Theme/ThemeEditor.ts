@@ -45,16 +45,23 @@ export class CmsThemeEditor extends Component {
     private async load(): Promise<void> {
         this.setMessage("Loading theme…");
         try {
-            const response = await fetch(`${getMetaBasePath()}/api/system/settings`, { headers: { Accept: "application/json" } });
-            if (!response.ok) throw new Error(`Request failed (${response.status})`);
-            const data = await response.json() as SettingsResponse;
+            const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+                headers: { Accept: "application/json" },
+            });
+            if (!response.ok) {
+                throw new Error(`Request failed (${response.status})`);
+            }
+            const data = (await response.json()) as SettingsResponse;
             this.canPersist = Boolean(data.theme);
             this.settings = structuredClone(data.theme ?? themeSettingsFromCss(data.site?.theme ?? ""));
             this.siteName = data.site?.name ?? "";
             this.selectedThemeId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
             this.selection = this.selectionFromUrl();
             this.render();
-            this.setMessage(this.canPersist ? "" : "Restart the Control server to enable theme persistence.", !this.canPersist);
+            this.setMessage(
+                this.canPersist ? "" : "Restart the Control server to enable theme persistence.",
+                !this.canPersist,
+            );
             dispatchThemeSettingsChanged();
         } catch (error) {
             this.setMessage(error instanceof Error ? error.message : "Unable to load theme", true);
@@ -66,10 +73,13 @@ export class CmsThemeEditor extends Component {
         const source = this.currentSource();
         const category = this.currentCategory();
         const theme = this.currentTheme();
-        if (!settings || !source || !category || !theme) return;
+        if (!settings || !source || !category || !theme) {
+            return;
+        }
 
         this.query<HTMLElement>("[data-category-title]").textContent = category.label;
-        this.query<HTMLElement>("[data-category-description]").textContent = `${source.label} · ${category.description}`;
+        this.query<HTMLElement>("[data-category-description]").textContent =
+            `${source.label} · ${category.description}`;
         this.query<HTMLInputElement>("[data-theme-name-input]").value = theme.name;
         this.query<HTMLInputElement>("[data-category-label-input]").value = category.label;
         this.query<HTMLTextAreaElement>("[data-category-description-input]").value = category.description;
@@ -78,12 +88,14 @@ export class CmsThemeEditor extends Component {
             : "Editing the appearance of this site.";
 
         const select = this.query<HTMLElement>("[data-theme-switch]") as HTMLElement & { value: string };
-        select.replaceChildren(...settings.themes.map((item) => {
-            const option = document.createElement("option");
-            option.value = item.id;
-            option.textContent = item.name;
-            return option;
-        }));
+        select.replaceChildren(
+            ...settings.themes.map((item) => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = item.name;
+                return option;
+            }),
+        );
         select.value = theme.id;
 
         const active = theme.id === settings.activeThemeId;
@@ -95,7 +107,9 @@ export class CmsThemeEditor extends Component {
 
         const modeSwitch = this.query<HTMLElement>("[data-mode-switch]");
         modeSwitch.hidden = !source.supportsModes;
-        if (!source.supportsModes) this.mode = "light";
+        if (!source.supportsModes) {
+            this.mode = "light";
+        }
         for (const button of Array.from(modeSwitch.querySelectorAll<HTMLButtonElement>("[data-mode]"))) {
             button.setAttribute("aria-pressed", String(button.dataset.mode === this.mode));
         }
@@ -171,15 +185,18 @@ export class CmsThemeEditor extends Component {
         const url = new URL(window.location.href);
         const sourceId = url.searchParams.get("type") ?? "";
         const categoryId = url.searchParams.get("category") ?? "";
-        const source = sources.find((item) => item.id === sourceId)
-            ?? sources.find((item) => item.categories.some((category) => category.id === categoryId))
-            ?? sources[0];
+        const source =
+            sources.find((item) => item.id === sourceId) ??
+            sources.find((item) => item.categories.some((category) => category.id === categoryId)) ??
+            sources[0];
         const category = source?.categories.find((item) => item.id === categoryId) ?? source?.categories[0];
         return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
     }
 
     private addTheme(): void {
-        if (!this.settings) return;
+        if (!this.settings) {
+            return;
+        }
         const number = this.settings.themes.length + 1;
         const id = uniqueId(`theme-${number}`, new Set(this.settings.themes.map((item) => item.id)));
         this.settings.themes.push({ id, name: `New theme ${number}`, values: { light: {}, dark: {} } });
@@ -189,10 +206,17 @@ export class CmsThemeEditor extends Component {
 
     private addCategory(): void {
         const source = this.currentSource();
-        if (!source) return;
+        if (!source) {
+            return;
+        }
         const number = source.categories.length + 1;
         const id = uniqueId(`${source.id}-category-${number}`, new Set(source.categories.map((item) => item.id)));
-        const category: ThemeCategory = { id, label: `New category ${number}`, description: `Custom ${source.label} tokens.`, tokens: [] };
+        const category: ThemeCategory = {
+            id,
+            label: `New category ${number}`,
+            description: `Custom ${source.label} tokens.`,
+            tokens: [],
+        };
         source.categories.push(category);
         this.selection = { sourceId: source.id, categoryId: category.id };
         this.render();
@@ -203,17 +227,33 @@ export class CmsThemeEditor extends Component {
         const settings = this.settings;
         const source = this.currentSource();
         const category = this.currentCategory();
-        if (!settings || !source || !category) return;
-        const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
+        if (!settings || !source || !category) {
+            return;
+        }
+        const allIds = new Set(
+            settings.sources.flatMap((item) =>
+                item.categories.flatMap((entry) => entry.tokens.map((token) => token.id)),
+            ),
+        );
         const number = allIds.size + 1;
         const id = uniqueId(`custom-${number}`, allIds);
-        category.tokens.push({ id, variable: id, label: `New token ${number}`, description: "Custom design token", type: source.supportsModes ? "color" : "value" });
+        category.tokens.push({
+            id,
+            variable: id,
+            label: `New token ${number}`,
+            description: "Custom design token",
+            type: source.supportsModes ? "color" : "value",
+        });
         this.render();
     }
 
     private async save(activate: boolean): Promise<void> {
-        if (!this.settings || !this.canPersist) return;
-        if (activate) this.settings.activeThemeId = this.selectedThemeId;
+        if (!this.settings || !this.canPersist) {
+            return;
+        }
+        if (activate) {
+            this.settings.activeThemeId = this.selectedThemeId;
+        }
         this.setMessage("Saving…");
         try {
             const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
@@ -221,7 +261,9 @@ export class CmsThemeEditor extends Component {
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 body: JSON.stringify({ theme: this.settings }),
             });
-            if (!response.ok) throw new Error((await response.text()) || `Request failed (${response.status})`);
+            if (!response.ok) {
+                throw new Error((await response.text()) || `Request failed (${response.status})`);
+            }
             this.setMessage(activate ? "Theme activated." : "Theme saved.");
             this.render();
             dispatchThemeSettingsChanged();
@@ -232,7 +274,9 @@ export class CmsThemeEditor extends Component {
 
     private setMessage(message: string, error = false): void {
         const element = this.shadowRoot?.querySelector<HTMLElement>("[data-message]");
-        if (!element) return;
+        if (!element) {
+            return;
+        }
         element.textContent = message;
         element.toggleAttribute("data-error", error);
     }
@@ -246,11 +290,21 @@ export class CmsThemeEditor extends Component {
 
     private onClick = (event: Event): void => {
         const target = event.target as HTMLElement | null;
-        if (target?.closest("[data-add-theme]")) this.addTheme();
-        if (target?.closest("[data-add-theme-category]")) this.addCategory();
-        if (target?.closest("[data-add-element]")) this.addToken();
-        if (target?.closest("[data-save-theme]")) void this.save(false);
-        if (target?.closest("[data-activate-theme]")) void this.save(true);
+        if (target?.closest("[data-add-theme]")) {
+            this.addTheme();
+        }
+        if (target?.closest("[data-add-theme-category]")) {
+            this.addCategory();
+        }
+        if (target?.closest("[data-add-element]")) {
+            this.addToken();
+        }
+        if (target?.closest("[data-save-theme]")) {
+            void this.save(false);
+        }
+        if (target?.closest("[data-activate-theme]")) {
+            void this.save(true);
+        }
         const mode = target?.closest<HTMLButtonElement>("[data-mode]")?.dataset.mode;
         if (mode === "light" || mode === "dark") {
             this.mode = mode;
@@ -261,7 +315,9 @@ export class CmsThemeEditor extends Component {
     private onInput = (event: Event): void => {
         const input = event.target as HTMLInputElement | null;
         const theme = this.currentTheme();
-        if (!input || !theme) return;
+        if (!input || !theme) {
+            return;
+        }
         if (input.matches("[data-theme-name-input]")) {
             theme.name = input.value;
             return;
@@ -278,37 +334,52 @@ export class CmsThemeEditor extends Component {
         if (input.matches("[data-category-description-input]") && category && source) {
             category.description = input.value;
             this.query<HTMLElement>("[data-category-section]").setAttribute("description", category.description);
-            this.query<HTMLElement>("[data-category-description]").textContent = `${source.label} · ${category.description}`;
+            this.query<HTMLElement>("[data-category-description]").textContent =
+                `${source.label} · ${category.description}`;
             dispatchThemeCategoryUpdated({ sourceId: source.id, category });
             return;
         }
         if (input.matches("[data-token-label]")) {
             const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
             const token = category?.tokens.find((item) => item.id === tokenId);
-            if (token) token.label = input.value;
+            if (token) {
+                token.label = input.value;
+            }
             return;
         }
-        if (!input.matches("[data-value-control]")) return;
+        if (!input.matches("[data-value-control]")) {
+            return;
+        }
         const tokenId = input.closest<HTMLElement>("[data-token-id]")?.dataset.tokenId;
-        if (!tokenId) return;
+        if (!tokenId) {
+            return;
+        }
         theme.values[this.mode] ??= {};
         theme.values[this.mode][tokenId] = input.value;
         if (input.type === "color") {
-            const text = input.closest<HTMLElement>("[data-token-id]")?.querySelector<HTMLInputElement>('input[type="text"]');
-            if (text) text.value = input.value;
+            const text = input
+                .closest<HTMLElement>("[data-token-id]")
+                ?.querySelector<HTMLInputElement>('input[type="text"]');
+            if (text) {
+                text.value = input.value;
+            }
         }
     };
 
     private onChange = (event: Event): void => {
         const target = event.target as HTMLElement & { value?: string };
-        if (!target.matches?.("[data-theme-switch]") || !target.value) return;
+        if (!target.matches?.("[data-theme-switch]") || !target.value) {
+            return;
+        }
         this.selectedThemeId = target.value;
         this.render();
     };
 
     private onCategorySelected = (event: CustomEvent<ThemeSelection>): void => {
         const source = this.settings?.sources.find((item) => item.id === event.detail?.sourceId);
-        if (!source?.categories.some((category) => category.id === event.detail.categoryId)) return;
+        if (!source?.categories.some((category) => category.id === event.detail.categoryId)) {
+            return;
+        }
         this.selection = event.detail;
         this.render();
     };
@@ -318,7 +389,9 @@ export class CmsThemeEditor extends Component {
     }
 }
 
-if (!customElements.get("cms-theme-editor")) customElements.define("cms-theme-editor", CmsThemeEditor);
+if (!customElements.get("cms-theme-editor")) {
+    customElements.define("cms-theme-editor", CmsThemeEditor);
+}
 
 function validHex(value: string): boolean {
     return /^#[0-9a-f]{6}$/i.test(value);
@@ -327,7 +400,9 @@ function validHex(value: string): boolean {
 function uniqueId(base: string, existing: Set<string>): string {
     let value = base;
     let suffix = 2;
-    while (existing.has(value)) value = `${base}-${suffix++}`;
+    while (existing.has(value)) {
+        value = `${base}-${suffix++}`;
+    }
     return value;
 }
 
@@ -337,7 +412,9 @@ function themeSettingsFromCss(css: string): ThemeSettings {
     const seen = new Set<string>();
     for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:\s*([^;{}]+)\s*;/gi)) {
         const variable = match[1]!.toLowerCase();
-        if (seen.has(variable)) continue;
+        if (seen.has(variable)) {
+            continue;
+        }
         seen.add(variable);
         const value = match[2]!.trim();
         tokens.push({
@@ -351,22 +428,28 @@ function themeSettingsFromCss(css: string): ThemeSettings {
     }
     return {
         activeThemeId: "imported",
-        sources: [{
-            id: "other",
-            label: "Other",
-            supportsModes: false,
-            categories: [{
-                id: "general",
-                label: "General",
-                description: "Variables inferred from the current free-form stylesheet.",
-                tokens,
-            }],
-        }],
-        themes: [{
-            id: "imported",
-            name: "Imported theme",
-            values: { light: values, dark: {} },
-        }],
+        sources: [
+            {
+                id: "other",
+                label: "Other",
+                supportsModes: false,
+                categories: [
+                    {
+                        id: "general",
+                        label: "General",
+                        description: "Variables inferred from the current free-form stylesheet.",
+                        tokens,
+                    },
+                ],
+            },
+        ],
+        themes: [
+            {
+                id: "imported",
+                name: "Imported theme",
+                values: { light: values, dark: {} },
+            },
+        ],
     };
 }
 

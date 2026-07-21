@@ -7,7 +7,9 @@ const ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" 
 
 export function buildPreview(item: MediaItem): HTMLElement | null {
     const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
-    if (!isImage) return null;
+    if (!isImage) {
+        return null;
+    }
     const img = document.createElement("img");
     img.slot = "preview";
     img.src = variantUrl(item, 800, 600); // display URL = absoluteURL + ?v=contentHash
@@ -18,7 +20,7 @@ export function buildPreview(item: MediaItem): HTMLElement | null {
 export function buildFields(item: MediaItem): HTMLElement {
     const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
     const size = item.size ? formatSize(item.size) : "";
-    const dims = (item.width && item.height) ? `${item.width}×${item.height}` : "";
+    const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
     const mediaUrl = item.absoluteURL ?? "";
 
     const el = document.createElement("div");
@@ -28,11 +30,15 @@ export function buildFields(item: MediaItem): HTMLElement {
             <label>Name</label>
             <input type="text" id="detail-label" value="${escapeAttr(item.label)}">
         </div>
-        ${isImage ? `
+        ${
+            isImage
+                ? `
         <div class="detail-field">
             <label>Alt text</label>
-            <textarea id="detail-alt" rows="2">${escapeHtml(item.alt || '')}</textarea>
-        </div>` : ""}
+            <textarea id="detail-alt" rows="2">${escapeHtml(item.alt || "")}</textarea>
+        </div>`
+                : ""
+        }
         <div class="detail-meta-row">
             <div class="detail-field">
                 <label>Type</label>
@@ -43,11 +49,15 @@ export function buildFields(item: MediaItem): HTMLElement {
                 <span class="detail-value">${size || "—"}</span>
             </div>
         </div>
-        ${dims ? `
+        ${
+            dims
+                ? `
         <div class="detail-field">
             <label>Dimensions</label>
             <span class="detail-value">${escapeHtml(dims)}</span>
-        </div>` : ""}
+        </div>`
+                : ""
+        }
         <div class="detail-field">
             <label>URL</label>
             <div class="url-row">
@@ -61,7 +71,9 @@ export function buildFields(item: MediaItem): HTMLElement {
     copyBtn.addEventListener("click", () => {
         navigator.clipboard.writeText(mediaUrl);
         copyBtn.innerHTML = ICON_CHECK;
-        setTimeout(() => { copyBtn.innerHTML = ICON_COPY; }, 1500);
+        setTimeout(() => {
+            copyBtn.innerHTML = ICON_COPY;
+        }, 1500);
     });
 
     return el;

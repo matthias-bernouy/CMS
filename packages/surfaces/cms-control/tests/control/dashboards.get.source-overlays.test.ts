@@ -21,18 +21,20 @@ describe("GET /api/dashboards source overlays", () => {
                     urn: "urn:user-account:listAccounts",
                     method: "GET",
                     targetUrl: "https://api.example.com/accounts",
-                    output: [{
-                        status: "200",
-                        body: {
-                            type: "object",
-                            properties: {
-                                accounts: {
-                                    type: "array",
-                                    items: { type: "object", properties: { userId: { type: "string" } } },
+                    output: [
+                        {
+                            status: "200",
+                            body: {
+                                type: "object",
+                                properties: {
+                                    accounts: {
+                                        type: "array",
+                                        items: { type: "object", properties: { userId: { type: "string" } } },
+                                    },
                                 },
                             },
                         },
-                    }],
+                    ],
                 },
                 {
                     urn: "urn:user-account:getAccountByUserId",
@@ -72,32 +74,40 @@ describe("GET /api/dashboards source overlays", () => {
                     widget: "w-detail",
                     id: "accountDetail",
                     source: { endpoint: "getAccountByUserId", params: { userId: "$selection.id" } },
-                    actions: [{
-                        id: "save",
-                        label: "Save",
-                        endpoint: {
-                            endpoint: "createUserPersonalInformation",
-                            body: { displayName: "$field.displayName" },
+                    actions: [
+                        {
+                            id: "save",
+                            label: "Save",
+                            endpoint: {
+                                endpoint: "createUserPersonalInformation",
+                                body: { displayName: "$field.displayName" },
+                            },
                         },
-                    }],
-                    main: [{
-                        id: "personal",
-                        title: "Personal information",
-                        fields: [{ id: "displayName", label: "Name", path: "displayName", type: "text" }],
-                    }],
+                    ],
+                    main: [
+                        {
+                            id: "personal",
+                            title: "Personal information",
+                            fields: [{ id: "displayName", label: "Name", path: "displayName", type: "text" }],
+                        },
+                    ],
                 },
             ],
         });
 
-        const body = await (await listDashboards(list(), {
-            sources: new SourceOverlaySourceRepository(sources, sourceOverlays),
-            dashboards,
-            sourceOverlays,
-        } as any)).json();
+        const body = await (
+            await listDashboards(list(), {
+                sources: new SourceOverlaySourceRepository(sources, sourceOverlays),
+                dashboards,
+                sourceOverlays,
+            } as any)
+        ).json();
 
         expect(body[0].sourceOverlays).toHaveLength(1);
         expect(body[0].settings).toBeUndefined();
-        expect(body[0].endpoints.find((endpoint: any) => endpoint.endpointId === "getAccountByUserId").output[0].body).toMatchObject({
+        expect(
+            body[0].endpoints.find((endpoint: any) => endpoint.endpointId === "getAccountByUserId").output[0].body,
+        ).toMatchObject({
             properties: { metadata: { properties: { company: { type: "string" } } } },
         });
         expect(body[0].dashboards[0].views[0].columns).toContainEqual({

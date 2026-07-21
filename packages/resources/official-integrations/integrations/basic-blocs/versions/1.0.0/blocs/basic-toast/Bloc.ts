@@ -38,7 +38,9 @@ export class BasicToast extends Component {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     sync() {
@@ -51,8 +53,11 @@ export class BasicToast extends Component {
             ["text-color", "--basic-toast-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
         this.scheduleDismiss();
     }
@@ -66,19 +71,25 @@ export class BasicToast extends Component {
     };
 
     clearTimer = () => {
-        if (this.timer !== null) clearTimeout(this.timer);
+        if (this.timer !== null) {
+            clearTimeout(this.timer);
+        }
         this.timer = null;
     };
 
     dismiss = () => {
-        if (this.hasAttribute("leaving")) return;
+        if (this.hasAttribute("leaving")) {
+            return;
+        }
         this.clearTimer();
         this.setAttribute("leaving", "");
         setTimeout(() => {
-            this.dispatchEvent(new CustomEvent("basic-toast:dismissed", {
-                bubbles: true,
-                composed: true,
-            }));
+            this.dispatchEvent(
+                new CustomEvent("basic-toast:dismissed", {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
             this.remove();
         }, 180);
     };

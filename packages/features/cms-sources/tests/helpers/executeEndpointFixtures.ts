@@ -10,4 +10,6 @@ export const ep = (over: Partial<SourceEndpoint> = {}): SourceEndpoint => ({
 });
 
 export const okFetch = () =>
-    mock(async (_input: Parameters<typeof fetch>[0], _init?: Parameters<typeof fetch>[1]) => Response.json({ ok: true }));
+    mock(async (_input: Parameters<typeof fetch>[0], _init?: Parameters<typeof fetch>[1]) =>
+        Response.json({ ok: true }),
+    );

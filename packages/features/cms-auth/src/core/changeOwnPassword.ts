@@ -15,13 +15,19 @@ export async function changeOwnPassword(
     if (user.provider !== "local") {
         throw new AuthValidationError("provider", "password change is only available for local accounts");
     }
-    if (!user.email) throw new AuthValidationError("email", "no email on file");
+    if (!user.email) {
+        throw new AuthValidationError("email", "no email on file");
+    }
 
     validatePassword(newPassword);
 
     const identity = await stores.credentials.verify(user.email, currentPassword);
-    if (!identity) throw new AuthValidationError("currentPassword", "incorrect");
+    if (!identity) {
+        throw new AuthValidationError("currentPassword", "incorrect");
+    }
 
     const changed = await stores.credentials.setPassword(identity.sub, newPassword);
-    if (!changed) throw new AuthValidationError("credential", "not found after password verification");
+    if (!changed) {
+        throw new AuthValidationError("credential", "not found after password verification");
+    }
 }

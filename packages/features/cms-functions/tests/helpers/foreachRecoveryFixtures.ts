@@ -1,8 +1,4 @@
-import type {
-    CmsFunction,
-    FunctionCall,
-    FunctionForEach,
-} from "@bernouy/cms-functions";
+import type { CmsFunction, FunctionCall, FunctionForEach } from "@bernouy/cms-functions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { productsSource } from "./functionFixtures";
 
@@ -20,33 +16,37 @@ export function recoveringProductsFunction(
     return {
         id: "recoverProducts",
         method: "GET",
-        steps: [{
-            id: "loop",
-            forEach: {
-                items,
-                max: Math.max(items.length, 1),
-                continueOnError: true,
-                steps: [{ id: "product", call: productCall("$item.id") }],
-                yield: {
-                    itemId: "$item.id",
-                    failed: false,
-                    productId: "$steps.product.id",
-                },
-                onError: [{ id: "recovered", call: productCall("$item.recoveryId") }],
-                errorYield: {
-                    itemId: "$item.id",
-                    failed: true,
-                    recoveryId: "$steps.recovered.id",
+        steps: [
+            {
+                id: "loop",
+                forEach: {
+                    items,
+                    max: Math.max(items.length, 1),
+                    continueOnError: true,
+                    steps: [{ id: "product", call: productCall("$item.id") }],
+                    yield: {
+                        itemId: "$item.id",
+                        failed: false,
+                        productId: "$steps.product.id",
+                    },
+                    onError: [{ id: "recovered", call: productCall("$item.recoveryId") }],
+                    errorYield: {
+                        itemId: "$item.id",
+                        failed: true,
+                        recoveryId: "$steps.recovered.id",
+                    },
                 },
             },
-        }],
+        ],
         return: { body: "$steps.loop" },
     };
 }
 
 export function recoveryLoop(fn: CmsFunction): FunctionForEach {
     const step = fn.steps[0];
-    if (step && "forEach" in step) return step.forEach;
+    if (step && "forEach" in step) {
+        return step.forEach;
+    }
     throw new Error("Expected the recovery fixture to start with a forEach step");
 }
 
@@ -58,12 +58,16 @@ export function productCall(productId: string): FunctionCall {
     };
 }
 
-export async function productSources(options: { passthroughProductResponses?: boolean } = {}): Promise<InMemorySourceRepository> {
+export async function productSources(
+    options: { passthroughProductResponses?: boolean } = {},
+): Promise<InMemorySourceRepository> {
     const sources = new InMemorySourceRepository();
     const source = productsSource();
     if (options.passthroughProductResponses) {
-        const productEndpoint = source.endpoints.find(endpoint => endpoint.urn === "urn:products:getProduct");
-        if (!productEndpoint) throw new Error("Expected the products fixture to expose getProduct");
+        const productEndpoint = source.endpoints.find((endpoint) => endpoint.urn === "urn:products:getProduct");
+        if (!productEndpoint) {
+            throw new Error("Expected the products fixture to expose getProduct");
+        }
         productEndpoint.output = undefined;
     }
     await sources.createSource(source);

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    checkWorkspaceArchitecture,
-    type WorkspaceCheckOptions,
-} from "../core/checkWorkspace";
+import { checkWorkspaceArchitecture, type WorkspaceCheckOptions } from "../core/checkWorkspace";
 import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixture";
 
 const { createWorkspace } = createWorkspaceFixture();
@@ -16,17 +13,21 @@ describe("workspace source policies", () => {
             "packages/features/domain/src/index.ts": [
                 "export const first = process.env.MODE;",
                 "export const second = process.env.MODE;",
-                "export const bracket = process [ \"env\" ] . TOKEN;",
-                "export const bunBracket = Bun[\"env\"].SECRET;",
+                'export const bracket = process [ "env" ] . TOKEN;',
+                'export const bunBracket = Bun["env"].SECRET;',
                 "export const globalProcess = globalThis.process.env.DEBUG;",
-                "const { env: processEnv } = process;", "const { env: bunEnv } = Bun;", "",
+                "const { env: processEnv } = process;",
+                "const { env: bunEnv } = Bun;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({
             rootDir: root,
             environmentReadBaseline: {
                 "packages/features/domain/src/index.ts": {
-                    "process.env.MODE": 1, "process[\"env\"].TOKEN": 1, "process.env": 1,
+                    "process.env.MODE": 1,
+                    'process["env"].TOKEN': 1,
+                    "process.env": 1,
                 },
             },
         });
@@ -48,11 +49,17 @@ describe("workspace source policies", () => {
             }),
             "packages/features/domain/src/index.ts": "export const domain = true;\n",
             "quality/focused.test.ts": [
-                "import { test as bunTest } from 'bun:test';", "import * as bt from 'bun:test';",
-                "test.only('one', () => {});", "describe.skip('two', () => {});",
-                "it.focus('three', () => {});", "test.only.each([1])('four', () => {});",
-                "test['only']('five', () => {});", "bunTest.only('six', () => {});",
-                "bt.test.only('seven', () => {});", "input.focus();", "",
+                "import { test as bunTest } from 'bun:test';",
+                "import * as bt from 'bun:test';",
+                "test.only('one', () => {});",
+                "describe.skip('two', () => {});",
+                "it.focus('three', () => {});",
+                "test.only.each([1])('four', () => {});",
+                "test['only']('five', () => {});",
+                "bunTest.only('six', () => {});",
+                "bt.test.only('seven', () => {});",
+                "input.focus();",
+                "",
             ].join("\n"),
             "packages/features/domain/__tests__/focused.ts": "test.only('nested', () => {});\n",
         });

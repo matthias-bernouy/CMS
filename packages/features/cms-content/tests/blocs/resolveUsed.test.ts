@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import type { ContentReader } from "@bernouy/cms-content";
 
-const blocs = ["root-card", "child-card", "side-card", "leaf-badge"].map(id => ({ id }));
+const blocs = ["root-card", "child-card", "side-card", "leaf-badge"].map((id) => ({ id }));
 
 function resolver(views: Record<string, string | null>) {
     const repository = {
@@ -19,11 +19,7 @@ describe("createBlocUsageResolver", () => {
             "leaf-badge": "LEAF();",
         });
 
-        expect(await resolve("<root-card></root-card>")).toEqual([
-            "child-card",
-            "leaf-badge",
-            "root-card",
-        ]);
+        expect(await resolve("<root-card></root-card>")).toEqual(["child-card", "leaf-badge", "root-card"]);
     });
 
     test("deduplicates shared dependencies and stops cycles", async () => {

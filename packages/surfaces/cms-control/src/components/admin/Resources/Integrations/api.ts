@@ -1,7 +1,4 @@
-import type {
-    IntegrationImportPayload,
-    BrowserTab,
-} from "./model";
+import type { IntegrationImportPayload, BrowserTab } from "./model";
 
 export type IntegrationImportResponse = {
     installation?: {
@@ -32,17 +29,25 @@ export type IntegrationRoute =
 export function currentIntegrationRoute(): IntegrationRoute {
     const params = new URL(window.location.href).searchParams;
     const installation = params.get("integration")?.trim();
-    if (installation) return { view: "installation", id: installation };
+    if (installation) {
+        return { view: "installation", id: installation };
+    }
     const setup = params.get("setup")?.trim();
-    if (setup) return { view: "setup", kind: setup };
+    if (setup) {
+        return { view: "setup", kind: setup };
+    }
     return { view: "list", tab: params.get("tab") === "catalogue" ? "catalogue" : "installed" };
 }
 
 export function integrationRouteUrl(next: IntegrationRoute): string {
     const params = new URLSearchParams();
-    if (next.view === "installation") params.set("integration", next.id);
-    else if (next.view === "setup") params.set("setup", next.kind);
-    else if (next.tab === "catalogue") params.set("tab", "catalogue");
+    if (next.view === "installation") {
+        params.set("integration", next.id);
+    } else if (next.view === "setup") {
+        params.set("setup", next.kind);
+    } else if (next.tab === "catalogue") {
+        params.set("tab", "catalogue");
+    }
     const suffix = params.toString() ? `?${params.toString()}` : "";
     return route(`/admin/integrations${suffix}`);
 }
@@ -73,6 +78,8 @@ async function postJson<T = unknown>(url: string, body: unknown): Promise<T> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
     return response.json() as Promise<T>;
 }

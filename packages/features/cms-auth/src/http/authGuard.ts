@@ -8,10 +8,10 @@ import type { Middleware } from "@bernouy/http-runner";
  * `admin`, the hub on `superadmin`, etc.
  */
 export interface AuthGuardContext<Role extends string> {
-    basePath:     string;
-    auth:         Authentication<Role>;
+    basePath: string;
+    auth: Authentication<Role>;
     requiredRole: Role;
-    onForbidden?:       (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
+    onForbidden?: (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
 }
 
 export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>): Middleware => {
@@ -22,7 +22,9 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
         // unguarded login page can load the component bundle + theme tokens.
         // Anchored to `<basePath>/assets/` (a loose `includes` would exempt any
         // guarded path that merely contains "/assets/").
-        if (url.pathname.startsWith(`${ctx.basePath}/assets/`)) return next();
+        if (url.pathname.startsWith(`${ctx.basePath}/assets/`)) {
+            return next();
+        }
 
         // CSRF: mutating methods must come from the same origin. The host the
         // browser sees lives in the `Host` header (preserved by reverse proxies
@@ -33,7 +35,7 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
             const origin = req.headers.get("origin") || req.headers.get("referer");
             if (origin) {
                 try {
-                    const oHost   = new URL(origin).host;
+                    const oHost = new URL(origin).host;
                     const reqHost = req.headers.get("host") ?? url.host;
                     if (oHost !== reqHost) {
                         return new Response("CSRF: cross-origin request blocked", { status: 403 });
@@ -59,15 +61,17 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
             const loginUrl = ctx.auth.buildLoginUrl(url.pathname);
             return new Response(null, {
                 status: 302,
-                headers: { "Location": loginUrl }
+                headers: { "Location": loginUrl },
             });
         }
         if (subject.role !== ctx.requiredRole) {
-            if (url.pathname.startsWith(`${ctx.basePath}/api/`)) return new Response("Forbidden", { status: 403 });
+            if (url.pathname.startsWith(`${ctx.basePath}/api/`)) {
+                return new Response("Forbidden", { status: 403 });
+            }
             if (ctx.onForbidden) {
                 return ctx.onForbidden(req, {
-                    basePath:     ctx.basePath,
-                    logoutUrl:    ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`),
+                    basePath: ctx.basePath,
+                    logoutUrl: ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`),
                 });
             }
             return new Response("Forbidden", { status: 403 });

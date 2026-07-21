@@ -28,12 +28,16 @@ describe("commerce administrator claim detail boundaries", () => {
         ];
         const responses = await Promise.all(cases);
 
-        expect(await Promise.all(responses.map(async response => ({
-            status: response.status,
-            body: response.headers.get("content-type")?.includes("json")
-                ? await response.json()
-                : await response.text(),
-        })))).toEqual([
+        expect(
+            await Promise.all(
+                responses.map(async (response) => ({
+                    status: response.status,
+                    body: response.headers.get("content-type")?.includes("json")
+                        ? await response.json()
+                        : await response.text(),
+                })),
+            ),
+        ).toEqual([
             { status: 401, body: { error: "invalid CMS API key" } },
             { status: 403, body: { error: "CMS admin role is required" } },
             { status: 400, body: { error: "id is required" } },
@@ -59,13 +63,11 @@ describe("commerce administrator claim detail boundaries", () => {
         const url = new URL(firstCall.url);
 
         expect(response.status).toBe(200);
-        expect(url.pathname.endsWith("/rpc/get_marketplace_claim_read_model")
-            ? firstCall.body.p_claim_id
-            : url.searchParams.get("id")).toBe(
-                url.pathname.endsWith("/rpc/get_marketplace_claim_read_model")
-                    ? 3_000_000_000
-                    : "eq.3000000000",
-            );
+        expect(
+            url.pathname.endsWith("/rpc/get_marketplace_claim_read_model")
+                ? firstCall.body.p_claim_id
+                : url.searchParams.get("id"),
+        ).toBe(url.pathname.endsWith("/rpc/get_marketplace_claim_read_model") ? 3_000_000_000 : "eq.3000000000");
     });
 
     test("returns the exact hidden missing-claim response", async () => {
@@ -78,7 +80,7 @@ describe("commerce administrator claim detail boundaries", () => {
     });
 
     test("preserves the initial PostgREST failure mapping", async () => {
-        setRestResponder(request => responseForFailure(request, "claim lookup unavailable", true));
+        setRestResponder((request) => responseForFailure(request, "claim lookup unavailable", true));
 
         const response = await requestCommerce("/admin/claim?id=7");
 
@@ -87,7 +89,7 @@ describe("commerce administrator claim detail boundaries", () => {
     });
 
     test("preserves relation hydration failure mapping after finding the claim", async () => {
-        setRestResponder(request => responseForFailure(request, "claim events unavailable", false));
+        setRestResponder((request) => responseForFailure(request, "claim events unavailable", false));
 
         const response = await requestCommerce("/admin/claim?id=7");
 
@@ -141,7 +143,11 @@ function responseForFailure(request: Request, message: string, failInitial: bool
     if (path.endsWith("/rest/v1/marketplace_claim_events")) {
         return failInitial ? jsonResponse(claimEvents) : jsonResponse({ message }, 503);
     }
-    if (path.endsWith("/rest/v1/marketplace_claim_evidence")) return jsonResponse(claimEvidenceRows);
-    if (path.endsWith("/rest/v1/marketplace_claim_return_events")) return jsonResponse(claimReturnEvents);
+    if (path.endsWith("/rest/v1/marketplace_claim_evidence")) {
+        return jsonResponse(claimEvidenceRows);
+    }
+    if (path.endsWith("/rest/v1/marketplace_claim_return_events")) {
+        return jsonResponse(claimReturnEvents);
+    }
     throw new Error(`unexpected claim detail request ${request.url}`);
 }

@@ -1,7 +1,4 @@
-import type {
-    SourceRepository,
-    SourceSchemaInvalidationScope,
-} from "../interfaces/SourceRepository";
+import type { SourceRepository, SourceSchemaInvalidationScope } from "../interfaces/SourceRepository";
 import type { Source, SourceEndpoint } from "../interfaces/Source";
 import { validateSource } from "./validateSource";
 import { SourceValidationError } from "./errors";
@@ -22,7 +19,7 @@ export class ValidatingSourceRepository implements SourceRepository {
             this.getEndpointForAuthorization = (urn: string) => inner.getEndpointForAuthorization!(urn);
         }
         if (inner.invalidateSchema) {
-            this.invalidateSchema = scope => inner.invalidateSchema!(scope);
+            this.invalidateSchema = (scope) => inner.invalidateSchema!(scope);
         }
     }
 
@@ -38,11 +35,21 @@ export class ValidatingSourceRepository implements SourceRepository {
 
     private validate(source: Source): void {
         const errors = validateSource(source);
-        if (errors.length) throw new SourceValidationError("source", errors.join("; "));
+        if (errors.length) {
+            throw new SourceValidationError("source", errors.join("; "));
+        }
     }
 
-    deleteSource(urn: string)  { return this.inner.deleteSource(urn); }
-    getSource(urn: string)     { return this.inner.getSource(urn); }
-    getAllSources()            { return this.inner.getAllSources(); }
-    getEndpoint(urn: string)     { return this.inner.getEndpoint(urn); }
+    deleteSource(urn: string) {
+        return this.inner.deleteSource(urn);
+    }
+    getSource(urn: string) {
+        return this.inner.getSource(urn);
+    }
+    getAllSources() {
+        return this.inner.getAllSources();
+    }
+    getEndpoint(urn: string) {
+        return this.inner.getEndpoint(urn);
+    }
 }

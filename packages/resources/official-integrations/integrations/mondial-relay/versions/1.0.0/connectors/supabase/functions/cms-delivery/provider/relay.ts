@@ -24,14 +24,19 @@ type WidgetSearchResponse = {
     PRList?: WidgetRelayPoint[];
 };
 
-const widgetSearchEndpoint = "https://widget.mondialrelay.com/parcelshop-picker/v4_0/services/parcelshop-picker.svc/SearchPR";
+const widgetSearchEndpoint =
+    "https://widget.mondialrelay.com/parcelshop-picker/v4_0/services/parcelshop-picker.svc/SearchPR";
 
 export async function relayPointsFromUrl(url: URL): Promise<JsonRecord[]> {
     const brand = envDefault("MONDIAL_RELAY_WIDGET_BRAND", envDefault("MONDIAL_RELAY_CONNECT_CUSTOMER_ID", ""));
-    if (!brand) throw new HttpError(500, "Mondial Relay widget brand is not configured");
+    if (!brand) {
+        throw new HttpError(500, "Mondial Relay widget brand is not configured");
+    }
 
     const params = lookupParams(url, brand);
-    if (!params.get("PostCode") && !params.get("City") && !(params.get("Latitude") && params.get("Longitude"))) return [];
+    if (!params.get("PostCode") && !params.get("City") && !(params.get("Latitude") && params.get("Longitude"))) {
+        return [];
+    }
 
     const response = await fetch(`${widgetSearchEndpoint}?${params.toString()}`, {
         method: "GET",
@@ -41,19 +46,27 @@ export async function relayPointsFromUrl(url: URL): Promise<JsonRecord[]> {
     });
     const text = await response.text();
     if (!response.ok) {
-        throw new ProviderStatusError(502, `Mondial Relay relay lookup returned HTTP ${response.status}`, providerContext(params));
+        throw new ProviderStatusError(
+            502,
+            `Mondial Relay relay lookup returned HTTP ${response.status}`,
+            providerContext(params),
+        );
     }
 
     const body = parseJsonp(text);
     if (body.Error) {
-        throw new ProviderStatusError(502, `Mondial Relay relay lookup returned an error: ${body.Error}`, providerContext(params));
+        throw new ProviderStatusError(
+            502,
+            `Mondial Relay relay lookup returned an error: ${body.Error}`,
+            providerContext(params),
+        );
     }
 
     return (body.PRList ?? [])
-        .filter(point => point.Available !== false)
+        .filter((point) => point.Available !== false)
         .filter(isSupported24RRelayPoint)
         .map(normalizeRelayPoint)
-        .filter(point => point.location);
+        .filter((point) => point.location);
 }
 
 function lookupParams(url: URL, brand: string): URLSearchParams {
@@ -64,7 +77,9 @@ function lookupParams(url: URL, brand: string): URLSearchParams {
     params.set("PostCode", query(url, "postalCode", query(url, "cp", "")));
     params.set("City", query(url, "city", ""));
     const modeDelivery = query(url, "modeDelivery", envDefault("MONDIAL_RELAY_DEFAULT_MODE_LIV", "24R")).toUpperCase();
-    if (modeDelivery !== "24R") throw new HttpError(400, "Mondial Relay relay lookup supports 24R only");
+    if (modeDelivery !== "24R") {
+        throw new HttpError(400, "Mondial Relay relay lookup supports 24R only");
+    }
     params.set("ColLivMod", modeDelivery);
     params.set("Weight", query(url, "weightGrams", query(url, "weight", "500")));
     params.set("NbResults", String(boundedInteger(query(url, "limit", "8"), 1, 8)));
@@ -119,7 +134,9 @@ function normalizedNature(value: string | undefined): string {
 
 function parseJsonp(source: string): WidgetSearchResponse {
     const match = source.match(/^[^(]+\(\s*(.*)\s*\)\s*;?\s*$/s);
-    if (!match?.[1]) throw new HttpError(502, "Mondial Relay relay lookup returned an invalid response");
+    if (!match?.[1]) {
+        throw new HttpError(502, "Mondial Relay relay lookup returned an invalid response");
+    }
     try {
         return JSON.parse(match[1]) as WidgetSearchResponse;
     } catch {
@@ -149,9 +166,15 @@ function query(url: URL, name: string, fallback: string): string {
 
 function boundedInteger(value: string, min: number, max: number): number {
     const number = Number(value);
-    if (!Number.isInteger(number)) return min;
-    if (number < min) return min;
-    if (number > max) return max;
+    if (!Number.isInteger(number)) {
+        return min;
+    }
+    if (number < min) {
+        return min;
+    }
+    if (number > max) {
+        return max;
+    }
     return number;
 }
 
@@ -161,5 +184,8 @@ function coordinate(value: string | undefined): number | undefined {
 }
 
 function stripHtml(value: string): string {
-    return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    return value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 }

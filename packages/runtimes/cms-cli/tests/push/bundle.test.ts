@@ -18,23 +18,23 @@ function tmpBloc(files: Record<string, string | Buffer>): string {
 describe("bundleBlocSource", () => {
     test("encodes every file as base64 keyed by its relative path", async () => {
         const dir = tmpBloc({
-            "manifest.json":      `{"default-tag":"x"}`,
-            "Bloc.ts":            `export class X {}`,
-            "assets/icon.svg":    `<svg/>`,
+            "manifest.json": `{"default-tag":"x"}`,
+            "Bloc.ts": `export class X {}`,
+            "assets/icon.svg": `<svg/>`,
         });
         const out = await bundleBlocSource(dir);
         expect(Object.keys(out).sort()).toEqual(["Bloc.ts", "assets/icon.svg", "manifest.json"]);
-        expect(Buffer.from(out["Bloc.ts"]!,         "base64").toString()).toBe("export class X {}");
+        expect(Buffer.from(out["Bloc.ts"]!, "base64").toString()).toBe("export class X {}");
         expect(Buffer.from(out["assets/icon.svg"]!, "base64").toString()).toBe("<svg/>");
     });
 
     test("skips node_modules / dist / dotfiles", async () => {
         const dir = tmpBloc({
-            "Bloc.ts":                  "kept",
+            "Bloc.ts": "kept",
             "node_modules/foo/index.js": "skip",
-            "dist/output.js":            "skip",
-            ".env":                      "skip",
-            ".git/HEAD":                 "skip",
+            "dist/output.js": "skip",
+            ".env": "skip",
+            ".git/HEAD": "skip",
         });
         const out = await bundleBlocSource(dir);
         expect(Object.keys(out)).toEqual(["Bloc.ts"]);

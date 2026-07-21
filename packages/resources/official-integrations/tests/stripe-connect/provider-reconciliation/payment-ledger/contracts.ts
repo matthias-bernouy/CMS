@@ -6,16 +6,14 @@ import {
     type CreateProviderReconciliationHarness,
 } from "../harness";
 
-export function registerPaymentReconciliationLedgerContracts(
-    createHarness: CreateProviderReconciliationHarness,
-): void {
+export function registerPaymentReconciliationLedgerContracts(createHarness: CreateProviderReconciliationHarness): void {
     describe("stripe-connect payment reconciliation ledger contracts", () => {
         test("preserves the exact payment projection with one aggregate read", async () => {
             const fixture = await createPaymentLedgerFixture(createHarness, "payment-ledger-contract");
 
-            const result = await successfulJson(await fixture.submit(
-                "system-ledger", "reconcileProviderPayment", { paymentId: fixture.paymentId },
-            ));
+            const result = await successfulJson(
+                await fixture.submit("system-ledger", "reconcileProviderPayment", { paymentId: fixture.paymentId }),
+            );
 
             expect(result).toEqual({
                 paymentId: fixture.paymentId,
@@ -59,43 +57,41 @@ export function registerPaymentReconciliationLedgerContracts(
                 createdAt: "2026-07-06T12:05:00.000Z",
                 updatedAt: "2026-07-06T12:10:00.000Z",
             });
-            expect(fixture.rest.stripeRequests.map(request => [request.method, request.pathname]))
-                .toEqual([
-                    ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
-                    ["GET", "/v1/disputes"],
-                    ["GET", "/v1/refunds"],
-                    ["GET", "/v1/transfers"],
-                ]);
-            expect(fixture.rest.postgrestRequests.map(request => [request.method, request.table]))
-                .toEqual([
-                    ["GET", "payments"],
-                    ["POST", "rpc/apply_payment_provider_projection"],
-                    ["POST", "rpc/read_payment_reconciliation_local_context"],
-                    ["POST", "rpc/read_payment_reconciliation_ledger"],
-                    ["PATCH", "payments"],
-                ]);
+            expect(fixture.rest.stripeRequests.map((request) => [request.method, request.pathname])).toEqual([
+                ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
+                ["GET", "/v1/disputes"],
+                ["GET", "/v1/refunds"],
+                ["GET", "/v1/transfers"],
+            ]);
+            expect(fixture.rest.postgrestRequests.map((request) => [request.method, request.table])).toEqual([
+                ["GET", "payments"],
+                ["POST", "rpc/apply_payment_provider_projection"],
+                ["POST", "rpc/read_payment_reconciliation_local_context"],
+                ["POST", "rpc/read_payment_reconciliation_ledger"],
+                ["PATCH", "payments"],
+            ]);
         });
 
         test("never reads the ledger when provider refresh fails", async () => {
             const fixture = await createPaymentLedgerFixture(createHarness, "payment-ledger-provider-failure");
             fixture.rest.failNextPaymentIntentRetrieve();
 
-            const failed = await fixture.submit(
-                "system-ledger", "reconcileProviderPayment", { paymentId: fixture.paymentId },
-            );
+            const failed = await fixture.submit("system-ledger", "reconcileProviderPayment", {
+                paymentId: fixture.paymentId,
+            });
 
             expect(failed.status).toBe(502);
             expect(await failed.json()).toEqual({ error: "simulated Stripe provider outage" });
-            expect(fixture.rest.postgrestRequests.map(request => request.table)).toEqual(["payments"]);
+            expect(fixture.rest.postgrestRequests.map((request) => request.table)).toEqual(["payments"]);
         });
 
         test("does not apply final totals when the aggregate read fails", async () => {
             const fixture = await createPaymentLedgerFixture(createHarness, "payment-ledger-db-failure");
             fixture.rest.failNextPaymentReconciliationLedgerRead();
 
-            const failed = await fixture.submit(
-                "system-ledger", "reconcileProviderPayment", { paymentId: fixture.paymentId },
-            );
+            const failed = await fixture.submit("system-ledger", "reconcileProviderPayment", {
+                paymentId: fixture.paymentId,
+            });
 
             expect(failed.status).toBe(502);
             expect(await failed.json()).toEqual({ error: "simulated payment ledger read failure" });
@@ -105,8 +101,9 @@ export function registerPaymentReconciliationLedgerContracts(
                 transferred_amount: 0,
                 reversed_amount: 0,
             });
-            expect(["transfers", "rpc/read_payment_reconciliation_ledger"])
-                .toContain(fixture.rest.postgrestRequests.at(-1)?.table);
+            expect(["transfers", "rpc/read_payment_reconciliation_ledger"]).toContain(
+                fixture.rest.postgrestRequests.at(-1)?.table,
+            );
         });
     });
 }

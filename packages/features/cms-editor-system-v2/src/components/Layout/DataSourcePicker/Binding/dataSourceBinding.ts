@@ -19,12 +19,16 @@ export function sourceForBinding(
     sources: EditorDataSource[],
     binding: DataSourcePickerSourceBinding | null,
 ): EditorDataSource | null {
-    if (!binding) return null;
-    return sources.find(source => sourceMatchesBinding(source, binding)) ?? null;
+    if (!binding) {
+        return null;
+    }
+    return sources.find((source) => sourceMatchesBinding(source, binding)) ?? null;
 }
 
 export function sourceMatchesBinding(source: EditorDataSource, binding: DataSourcePickerSourceBinding): boolean {
-    if (binding.method && (source.method ?? "GET") !== binding.method) return false;
+    if (binding.method && (source.method ?? "GET") !== binding.method) {
+        return false;
+    }
     return bindingQuery(source.url, binding.url) !== null;
 }
 
@@ -32,11 +36,17 @@ export function paramsForBinding(
     source: EditorDataSource,
     binding: DataSourcePickerSourceBinding | null,
 ): Record<string, DataSourcePickerSourceParamValue> {
-    if (!binding) return {};
-    if (binding.params) return binding.params;
+    if (!binding) {
+        return {};
+    }
+    if (binding.params) {
+        return binding.params;
+    }
 
     const query = bindingQuery(source.url, binding.url);
-    if (!query) return {};
+    if (!query) {
+        return {};
+    }
 
     const params: Record<string, DataSourcePickerSourceParamValue> = {};
     for (const [name, value] of new URLSearchParams(query).entries()) {
@@ -47,9 +57,13 @@ export function paramsForBinding(
 
 function paramValue(value: string): DataSourcePickerSourceParamValue {
     const queryParam = tokenValue(value, "#");
-    if (queryParam) return { from: "queryParam", name: queryParam };
+    if (queryParam) {
+        return { from: "queryParam", name: queryParam };
+    }
     const state = tokenValue(value, "@");
-    if (state) return { from: "state", name: state };
+    if (state) {
+        return { from: "state", name: state };
+    }
     return { from: "raw", value };
 }
 
@@ -59,8 +73,12 @@ function tokenValue(value: string, prefix: "#" | "@"): string | null {
 }
 
 function bindingQuery(sourceUrl: string, bindingUrl: string): string | null {
-    if (bindingUrl === sourceUrl) return "";
-    if (bindingUrl.startsWith(`${sourceUrl}?`)) return bindingUrl.slice(sourceUrl.length + 1);
+    if (bindingUrl === sourceUrl) {
+        return "";
+    }
+    if (bindingUrl.startsWith(`${sourceUrl}?`)) {
+        return bindingUrl.slice(sourceUrl.length + 1);
+    }
     if (sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`)) {
         return bindingUrl.slice(sourceUrl.length + 1);
     }

@@ -145,19 +145,41 @@ const settingsSelect = [
 
 Deno.serve(async (request) => {
     try {
-        if (request.method === "OPTIONS") return optionsResponse();
+        if (request.method === "OPTIONS") {
+            return optionsResponse();
+        }
 
         const route = routePath(request);
-        if (route === "/health") return await withMethod(request, "GET", () => health(request));
-        if (route === "/settings") return await settingsRoute(request);
-        if (route === "/templates") return await withMethod(request, "GET", () => listTemplates(request));
-        if (route === "/template/archive") return await withMethod(request, "POST", () => archiveTemplate(request));
-        if (route === "/template/render") return await withMethod(request, "POST", () => renderTemplateRoute(request));
-        if (route === "/template/send-test") return await withMethod(request, "POST", () => sendTestEmail(request));
-        if (route === "/template/send") return await withMethod(request, "POST", () => sendTemplateEmail(request));
-        if (route === "/template") return await templateRoute(request);
-        if (route === "/messages") return await withMethod(request, "GET", () => listMessages(request));
-        if (route === "/message") return await withMethod(request, "GET", () => getMessage(request));
+        if (route === "/health") {
+            return await withMethod(request, "GET", () => health(request));
+        }
+        if (route === "/settings") {
+            return await settingsRoute(request);
+        }
+        if (route === "/templates") {
+            return await withMethod(request, "GET", () => listTemplates(request));
+        }
+        if (route === "/template/archive") {
+            return await withMethod(request, "POST", () => archiveTemplate(request));
+        }
+        if (route === "/template/render") {
+            return await withMethod(request, "POST", () => renderTemplateRoute(request));
+        }
+        if (route === "/template/send-test") {
+            return await withMethod(request, "POST", () => sendTestEmail(request));
+        }
+        if (route === "/template/send") {
+            return await withMethod(request, "POST", () => sendTemplateEmail(request));
+        }
+        if (route === "/template") {
+            return await templateRoute(request);
+        }
+        if (route === "/messages") {
+            return await withMethod(request, "GET", () => listMessages(request));
+        }
+        if (route === "/message") {
+            return await withMethod(request, "GET", () => getMessage(request));
+        }
 
         return json({ error: "not found" }, 404);
     } catch (error) {
@@ -166,14 +188,22 @@ Deno.serve(async (request) => {
 });
 
 async function settingsRoute(request: Request): Promise<Response> {
-    if (request.method === "GET") return settings(request);
-    if (request.method === "POST") return updateSettings(request);
+    if (request.method === "GET") {
+        return settings(request);
+    }
+    if (request.method === "POST") {
+        return updateSettings(request);
+    }
     return methodNotAllowed("GET, POST, OPTIONS");
 }
 
 async function templateRoute(request: Request): Promise<Response> {
-    if (request.method === "GET") return getTemplate(request);
-    if (request.method === "POST") return upsertTemplate(request);
+    if (request.method === "GET") {
+        return getTemplate(request);
+    }
+    if (request.method === "POST") {
+        return upsertTemplate(request);
+    }
     return methodNotAllowed("GET, POST, OPTIONS");
 }
 
@@ -203,16 +233,22 @@ async function listTemplates(request: Request): Promise<Response> {
     query.set("limit", String(boundedLimit(url.searchParams.get("limit"))));
     query.set("offset", String(boundedOffset(url.searchParams.get("offset"))));
     const status = optionalText(url.searchParams.get("status"), 40);
-    if (status) query.set("status", `eq.${status}`);
+    if (status) {
+        query.set("status", `eq.${status}`);
+    }
     const q = optionalSearch(url.searchParams.get("q"));
-    if (q) query.set("or", `(key.ilike.*${q}*,name.ilike.*${q}*,subject.ilike.*${q}*)`);
+    if (q) {
+        query.set("or", `(key.ilike.*${q}*,name.ilike.*${q}*,subject.ilike.*${q}*)`);
+    }
 
     const response = await rest(`templates?${query.toString()}`, {
         method: "GET",
         headers: { prefer: "count=exact" },
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as TemplateRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as TemplateRow[];
     return json({
         items: rows.map(publicTemplateSummary),
         total: countFromContentRange(response.headers.get("content-range")) ?? rows.length,
@@ -224,9 +260,13 @@ async function listTemplates(request: Request): Promise<Response> {
 async function getTemplate(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const key = new URL(request.url).searchParams.get("key")?.trim() ?? "";
-    if (!key || key === "__new__") return json(defaultTemplate());
+    if (!key || key === "__new__") {
+        return json(defaultTemplate());
+    }
     const row = await templateByKey(key);
-    if (!row) throw new HttpError(404, "template not found");
+    if (!row) {
+        throw new HttpError(404, "template not found");
+    }
     return json(publicTemplate(row));
 }
 
@@ -257,36 +297,46 @@ async function sendTestEmail(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const body = await readJsonObject(request);
     const template = await requiredTemplate(requiredTextValue(body.key, "key", 140));
-    if (template.status === "archived") throw new HttpError(400, "archived templates cannot be sent");
+    if (template.status === "archived") {
+        throw new HttpError(400, "archived templates cannot be sent");
+    }
     const toEmail = emailField(body.toEmail, "toEmail");
-    return json(await sendRenderedTemplate(template, {
-        toEmails: [toEmail],
-        ccEmails: [],
-        bccEmails: [],
-        data: dataPayload(body, template.sample_data),
-        idempotencyKey: optionalTextValue(body.idempotencyKey, "idempotencyKey", 200),
-    }));
+    return json(
+        await sendRenderedTemplate(template, {
+            toEmails: [toEmail],
+            ccEmails: [],
+            bccEmails: [],
+            data: dataPayload(body, template.sample_data),
+            idempotencyKey: optionalTextValue(body.idempotencyKey, "idempotencyKey", 200),
+        }),
+    );
 }
 
 async function sendTemplateEmail(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const body = await readJsonObject(request);
     const template = await requiredTemplate(requiredTextValue(body.key, "key", 140));
-    if (template.status !== "active") throw new HttpError(400, "template must be active");
+    if (template.status !== "active") {
+        throw new HttpError(400, "template must be active");
+    }
     const idempotencyKey = optionalTextValue(body.idempotencyKey, "idempotencyKey", 200);
     if (idempotencyKey) {
         const existing = await messageByIdempotencyKey(idempotencyKey);
-        if (existing) return json(publicMessage(existing));
+        if (existing) {
+            return json(publicMessage(existing));
+        }
     }
-    return json(await sendRenderedTemplate(template, {
-        toEmails: emailList(body.toEmails ?? body.toEmail, "toEmails"),
-        ccEmails: optionalEmailList(body.ccEmails, "ccEmails"),
-        bccEmails: optionalEmailList(body.bccEmails, "bccEmails"),
-        data: dataPayload(body, {}),
-        idempotencyKey,
-        fromEmail: optionalEmailValue(body.fromEmail, "fromEmail"),
-        replyTo: optionalEmailValue(body.replyTo, "replyTo"),
-    }));
+    return json(
+        await sendRenderedTemplate(template, {
+            toEmails: emailList(body.toEmails ?? body.toEmail, "toEmails"),
+            ccEmails: optionalEmailList(body.ccEmails, "ccEmails"),
+            bccEmails: optionalEmailList(body.bccEmails, "bccEmails"),
+            data: dataPayload(body, {}),
+            idempotencyKey,
+            fromEmail: optionalEmailValue(body.fromEmail, "fromEmail"),
+            replyTo: optionalEmailValue(body.replyTo, "replyTo"),
+        }),
+    );
 }
 
 async function sendRenderedTemplate(
@@ -369,17 +419,25 @@ async function listMessages(request: Request): Promise<Response> {
     query.set("offset", String(boundedOffset(url.searchParams.get("offset"))));
     const status = optionalText(url.searchParams.get("status"), 40);
     const templateKey = optionalText(url.searchParams.get("templateKey"), 140);
-    if (status) query.set("status", `eq.${status}`);
-    if (templateKey) query.set("template_key", `eq.${templateKey}`);
+    if (status) {
+        query.set("status", `eq.${status}`);
+    }
+    if (templateKey) {
+        query.set("template_key", `eq.${templateKey}`);
+    }
     const q = optionalSearch(url.searchParams.get("q"));
-    if (q) query.set("or", `(subject.ilike.*${q}*,from_email.ilike.*${q}*)`);
+    if (q) {
+        query.set("or", `(subject.ilike.*${q}*,from_email.ilike.*${q}*)`);
+    }
 
     const response = await rest(`messages?${query.toString()}`, {
         method: "GET",
         headers: { prefer: "count=exact" },
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as MessageRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as MessageRow[];
     return json({
         items: rows.map(publicMessageSummary),
         total: countFromContentRange(response.headers.get("content-range")) ?? rows.length,
@@ -392,13 +450,20 @@ async function getMessage(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const id = requiredQuery(request, "id");
     const row = await messageById(id);
-    if (!row) throw new HttpError(404, "message not found");
+    if (!row) {
+        throw new HttpError(404, "message not found");
+    }
     return json(publicMessage(row));
 }
 
-function renderTemplate(template: TemplateRow, data: JsonRecord): { subject: string; htmlBody: string; textBody: string } {
+function renderTemplate(
+    template: TemplateRow,
+    data: JsonRecord,
+): { subject: string; htmlBody: string; textBody: string } {
     for (const token of normalizeTokenDefinitions(template.required_tokens)) {
-        if (!lookup(data, token.name).found) throw new HttpError(400, `missing required token: ${token.name}`);
+        if (!lookup(data, token.name).found) {
+            throw new HttpError(400, `missing required token: ${token.name}`);
+        }
     }
     return {
         subject: renderString(template.subject, data, "subject"),
@@ -410,9 +475,13 @@ function renderTemplate(template: TemplateRow, data: JsonRecord): { subject: str
 function renderString(source: string, data: JsonRecord, field: string, escapeHtmlValues = false): string {
     const rendered = source.replace(/{{\s*([^{}]+?)\s*}}/g, (_match, rawName: string) => {
         const name = rawName.trim();
-        if (!isTokenName(name)) throw new HttpError(400, `${field} contains an invalid token`);
+        if (!isTokenName(name)) {
+            throw new HttpError(400, `${field} contains an invalid token`);
+        }
         const found = lookup(data, name);
-        if (!found.found || found.value === null || found.value === undefined) return "";
+        if (!found.found || found.value === null || found.value === undefined) {
+            return "";
+        }
         const value = String(found.value);
         return escapeHtmlValues ? escapeHtml(value) : value;
     });
@@ -437,14 +506,18 @@ async function templateByKey(key: string): Promise<TemplateRow | null> {
     query.set("key", `eq.${key}`);
     query.set("limit", "1");
     const response = await rest(`templates?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as TemplateRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as TemplateRow[];
     return rows[0] ?? null;
 }
 
 async function requiredTemplate(key: string): Promise<TemplateRow> {
     const template = await templateByKey(key);
-    if (!template) throw new HttpError(404, "template not found");
+    if (!template) {
+        throw new HttpError(404, "template not found");
+    }
     return template;
 }
 
@@ -456,8 +529,10 @@ async function upsertTemplateRow(payload: JsonRecord): Promise<TemplateRow> {
         headers: { prefer: "resolution=merge-duplicates,return=representation" },
         body: JSON.stringify(payload),
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as TemplateRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as TemplateRow[];
     return rows[0]!;
 }
 
@@ -469,9 +544,13 @@ async function patchTemplateRow(key: string, patch: JsonRecord): Promise<Templat
         headers: { prefer: "return=representation" },
         body: JSON.stringify(patch),
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as TemplateRow[];
-    if (!rows[0]) throw new HttpError(404, "template not found");
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as TemplateRow[];
+    if (!rows[0]) {
+        throw new HttpError(404, "template not found");
+    }
     return rows[0];
 }
 
@@ -481,8 +560,10 @@ async function insertMessageRow(payload: JsonRecord): Promise<MessageRow> {
         headers: { prefer: "return=representation" },
         body: JSON.stringify(payload),
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as MessageRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as MessageRow[];
     return rows[0]!;
 }
 
@@ -492,8 +573,10 @@ async function messageById(id: string): Promise<MessageRow | null> {
     query.set("id", `eq.${id}`);
     query.set("limit", "1");
     const response = await rest(`messages?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as MessageRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as MessageRow[];
     return rows[0] ?? null;
 }
 
@@ -503,8 +586,10 @@ async function messageByIdempotencyKey(key: string): Promise<MessageRow | null> 
     query.set("idempotency_key", `eq.${key}`);
     query.set("limit", "1");
     const response = await rest(`messages?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as MessageRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as MessageRow[];
     return rows[0] ?? null;
 }
 
@@ -514,8 +599,10 @@ async function settingsRow(): Promise<SettingsRow | null> {
     query.set("id", "eq.default");
     query.set("limit", "1");
     const response = await rest(`settings?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as SettingsRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as SettingsRow[];
     return rows[0] ?? null;
 }
 
@@ -525,8 +612,10 @@ async function upsertSettingsRow(patch: JsonRecord): Promise<SettingsRow> {
         headers: { prefer: "resolution=merge-duplicates,return=representation" },
         body: JSON.stringify({ id: "default", ...patch }),
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as SettingsRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as SettingsRow[];
     return rows[0]!;
 }
 
@@ -540,13 +629,17 @@ function settingsPatch(body: JsonRecord): JsonRecord {
         default_reply_to: optionalEmailValue(body.defaultReplyTo, "defaultReplyTo") ?? null,
     };
     const smtpPassword = optionalTextValue(body.smtpPassword, "smtpPassword", 1000);
-    if (smtpPassword) patch.smtp_password = smtpPassword;
+    if (smtpPassword) {
+        patch.smtp_password = smtpPassword;
+    }
     return patch;
 }
 
 function templatePayload(body: JsonRecord): JsonRecord {
     const key = templateKey(body.key);
-    if (key === "__new__") throw new HttpError(400, "key must be changed before saving");
+    if (key === "__new__") {
+        throw new HttpError(400, "key must be changed before saving");
+    }
     const subject = requiredTextValue(body.subject, "subject", 1000);
     const htmlBody = requiredTextValue(body.htmlBody, "htmlBody", 200_000);
     assertTemplateTokens(subject, "subject");
@@ -692,19 +785,25 @@ async function rest(path: string, init: RequestInit = {}): Promise<Response> {
 }
 
 async function restError(response: Response): Promise<HttpError> {
-    const data = await response.json().catch(() => null) as JsonRecord | null;
-    const message = data && typeof data.message === "string"
-        ? data.message
-        : await response.text().catch(() => "");
+    const data = (await response.json().catch(() => null)) as JsonRecord | null;
+    const message = data && typeof data.message === "string" ? data.message : await response.text().catch(() => "");
     return new HttpError(response.status, message || `Supabase request failed with ${response.status}`);
 }
 
 async function emailTransport(settings: EmailSettings): Promise<EmailTransport> {
-    const injected = (globalThis as unknown as { __CMS_EMAILER_TRANSPORT__?: EmailTransport }).__CMS_EMAILER_TRANSPORT__;
-    if (injected) return injected;
-    const mod = await import("nodemailer") as unknown as { default?: { createTransport: (options: JsonRecord) => EmailTransport }; createTransport?: (options: JsonRecord) => EmailTransport };
+    const injected = (globalThis as unknown as { __CMS_EMAILER_TRANSPORT__?: EmailTransport })
+        .__CMS_EMAILER_TRANSPORT__;
+    if (injected) {
+        return injected;
+    }
+    const mod = (await import("nodemailer")) as unknown as {
+        default?: { createTransport: (options: JsonRecord) => EmailTransport };
+        createTransport?: (options: JsonRecord) => EmailTransport;
+    };
     const createTransport = mod.createTransport ?? mod.default?.createTransport;
-    if (!createTransport) throw new HttpError(500, "SMTP transport is not available");
+    if (!createTransport) {
+        throw new HttpError(500, "SMTP transport is not available");
+    }
     return createTransport({
         host: requiredSetting(settings.smtpHost, "SMTP host"),
         port: settings.smtpPort ?? missingSetting("SMTP port"),
@@ -721,10 +820,13 @@ function supabaseServiceKey(): string {
     if (keys) {
         try {
             const parsed = JSON.parse(keys) as JsonRecord;
-            const first = typeof parsed.default === "string"
-                ? parsed.default
-                : Object.values(parsed).find((value): value is string => typeof value === "string");
-            if (first) return first;
+            const first =
+                typeof parsed.default === "string"
+                    ? parsed.default
+                    : Object.values(parsed).find((value): value is string => typeof value === "string");
+            if (first) {
+                return first;
+            }
         } catch {
             // Fall through to the legacy single-key variable.
         }
@@ -744,12 +846,16 @@ function requireCmsRequest(request: Request): void {
     const configured = requiredEnv("CMS_EMAILER_API_KEY");
     const authorization = request.headers.get("authorization") ?? "";
     const token = authorization.startsWith("Bearer ") ? authorization.slice("Bearer ".length).trim() : "";
-    if (!token || token !== configured) throw new HttpError(401, "invalid CMS API key");
+    if (!token || token !== configured) {
+        throw new HttpError(401, "invalid CMS API key");
+    }
 }
 
 function requiredEnv(name: string): string {
     const value = Deno.env.get(name)?.trim();
-    if (!value) throw new HttpError(500, `${name} is not configured`);
+    if (!value) {
+        throw new HttpError(500, `${name} is not configured`);
+    }
     return value;
 }
 
@@ -774,7 +880,9 @@ function settingBoolean(value: unknown, envName: string): boolean {
 }
 
 function requiredSetting(value: string, label: string): string {
-    if (!value) throw new HttpError(500, `${label} is not configured`);
+    if (!value) {
+        throw new HttpError(500, `${label} is not configured`);
+    }
     return value;
 }
 
@@ -783,14 +891,20 @@ function missingSetting(label: string): never {
 }
 
 function dataPayload(body: JsonRecord, fallback: JsonRecord): JsonRecord {
-    if (isRecord(body.data)) return body.data;
+    if (isRecord(body.data)) {
+        return body.data;
+    }
     return sampleDataPayload(body, fallback);
 }
 
 function sampleDataPayload(body: JsonRecord, fallback: JsonRecord = {}): JsonRecord {
-    if (isRecord(body.sampleData)) return body.sampleData;
+    if (isRecord(body.sampleData)) {
+        return body.sampleData;
+    }
     const raw = optionalTextValue(body.sampleDataJson, "sampleDataJson", 200_000);
-    if (raw === undefined || raw.trim() === "") return fallback;
+    if (raw === undefined || raw.trim() === "") {
+        return fallback;
+    }
     try {
         const parsed = JSON.parse(raw);
         return objectValue(parsed, "sampleDataJson", fallback);
@@ -802,7 +916,9 @@ function sampleDataPayload(body: JsonRecord, fallback: JsonRecord = {}): JsonRec
 function sampleDataFromTokens(tokens: TokenDefinition[]): JsonRecord {
     const data: JsonRecord = {};
     for (const token of tokens) {
-        if (!token.sample) continue;
+        if (!token.sample) {
+            continue;
+        }
         assignPath(data, token.name, token.sample);
     }
     return data;
@@ -813,27 +929,39 @@ function assignPath(target: JsonRecord, path: string, value: string): void {
     let current = target;
     for (const segment of segments.slice(0, -1)) {
         const existing = current[segment];
-        if (!isRecord(existing)) current[segment] = {};
+        if (!isRecord(existing)) {
+            current[segment] = {};
+        }
         current = current[segment] as JsonRecord;
     }
     const last = segments.at(-1);
-    if (last) current[last] = value;
+    if (last) {
+        current[last] = value;
+    }
 }
 
 function normalizeTokenDefinitions(value: unknown): TokenDefinition[] {
-    if (value === undefined || value === null || value === "") return [];
-    if (!Array.isArray(value)) throw new HttpError(400, "requiredTokens must be an array");
+    if (value === undefined || value === null || value === "") {
+        return [];
+    }
+    if (!Array.isArray(value)) {
+        throw new HttpError(400, "requiredTokens must be an array");
+    }
     const out: TokenDefinition[] = [];
     for (const [index, item] of value.entries()) {
         const token = isRecord(item)
             ? {
-                name: optionalTextValue(item.name, `requiredTokens.${index}.name`, 120) ?? "",
-                description: optionalTextValue(item.description, `requiredTokens.${index}.description`, 300),
-                sample: optionalTextValue(item.sample, `requiredTokens.${index}.sample`, 500),
-            }
+                  name: optionalTextValue(item.name, `requiredTokens.${index}.name`, 120) ?? "",
+                  description: optionalTextValue(item.description, `requiredTokens.${index}.description`, 300),
+                  sample: optionalTextValue(item.sample, `requiredTokens.${index}.sample`, 500),
+              }
             : { name: optionalTextValue(item, `requiredTokens.${index}`, 120) ?? "" };
-        if (!token.name) continue;
-        if (!isTokenName(token.name)) throw new HttpError(400, `requiredTokens.${index}.name is invalid`);
+        if (!token.name) {
+            continue;
+        }
+        if (!isTokenName(token.name)) {
+            throw new HttpError(400, `requiredTokens.${index}.name is invalid`);
+        }
         out.push(stripUndefined(token));
     }
     return out;
@@ -841,7 +969,9 @@ function normalizeTokenDefinitions(value: unknown): TokenDefinition[] {
 
 function templateKey(value: unknown): string {
     const key = requiredTextValue(value, "key", 140).toLowerCase();
-    if (key === "__new__") return key;
+    if (key === "__new__") {
+        return key;
+    }
     if (!/^[a-z0-9][a-z0-9_.-]{1,120}$/.test(key)) {
         throw new HttpError(400, "key must use lowercase letters, numbers, dots, dashes, or underscores");
     }
@@ -850,30 +980,42 @@ function templateKey(value: unknown): string {
 
 function emailList(value: unknown, field: string): string[] {
     const list = optionalEmailList(value, field);
-    if (!list.length) throw new HttpError(400, `${field} must contain at least one email`);
+    if (!list.length) {
+        throw new HttpError(400, `${field} must contain at least one email`);
+    }
     return list;
 }
 
 function optionalEmailList(value: unknown, field: string): string[] {
-    if (value === undefined || value === null || value === "") return [];
+    if (value === undefined || value === null || value === "") {
+        return [];
+    }
     const values = Array.isArray(value) ? value : String(value).split(",");
     return values.map((item, index) => emailField(item, `${field}.${index}`));
 }
 
 function optionalEmailValue(value: unknown, field: string): string | undefined {
-    if (value === undefined || value === null || String(value).trim() === "") return undefined;
+    if (value === undefined || value === null || String(value).trim() === "") {
+        return undefined;
+    }
     return emailField(value, field);
 }
 
 function emailField(value: unknown, field: string): string {
     const email = requiredTextValue(value, field, 320).toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, `${field} is invalid`);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new HttpError(400, `${field} is invalid`);
+    }
     return email;
 }
 
 function objectValue(value: unknown, field: string, fallback: JsonRecord): JsonRecord {
-    if (value === undefined || value === null || value === "") return fallback;
-    if (!isRecord(value)) throw new HttpError(400, `${field} must be an object`);
+    if (value === undefined || value === null || value === "") {
+        return fallback;
+    }
+    if (!isRecord(value)) {
+        throw new HttpError(400, `${field} must be an object`);
+    }
     return value;
 }
 
@@ -885,56 +1027,86 @@ function enumField<T extends string>(value: unknown, field: string, allowed: rea
 }
 
 function optionalIntegerValue(value: unknown, field: string, min: number, max: number): number | null {
-    if (value === undefined || value === null || String(value).trim() === "") return null;
+    if (value === undefined || value === null || String(value).trim() === "") {
+        return null;
+    }
     const parsed = integerOrNull(value);
-    if (parsed === null || parsed < min || parsed > max) throw new HttpError(400, `${field} must be an integer between ${min} and ${max}`);
+    if (parsed === null || parsed < min || parsed > max) {
+        throw new HttpError(400, `${field} must be an integer between ${min} and ${max}`);
+    }
     return parsed;
 }
 
 function optionalBooleanValue(value: unknown, field: string): boolean | null {
-    if (value === undefined || value === null || String(value).trim() === "") return null;
+    if (value === undefined || value === null || String(value).trim() === "") {
+        return null;
+    }
     const parsed = booleanOrNull(value);
-    if (parsed === null) throw new HttpError(400, `${field} must be true or false`);
+    if (parsed === null) {
+        throw new HttpError(400, `${field} must be true or false`);
+    }
     return parsed;
 }
 
 function requiredTextValue(value: unknown, field: string, max: number): string {
     const result = optionalTextValue(value, field, max);
-    if (!result) throw new HttpError(400, `${field} is required`);
+    if (!result) {
+        throw new HttpError(400, `${field} is required`);
+    }
     return result;
 }
 
 function optionalTextValue(value: unknown, field: string, max: number): string | undefined {
-    if (value === undefined || value === null) return undefined;
+    if (value === undefined || value === null) {
+        return undefined;
+    }
     const result = String(value).trim();
-    if (!result) return undefined;
-    if (result.length > max) throw new HttpError(400, `${field} is too long`);
+    if (!result) {
+        return undefined;
+    }
+    if (result.length > max) {
+        throw new HttpError(400, `${field} is too long`);
+    }
     return result;
 }
 
 function textOrEmpty(value: unknown): string {
-    if (value === undefined || value === null) return "";
+    if (value === undefined || value === null) {
+        return "";
+    }
     return String(value).trim();
 }
 
 function integerOrNull(value: unknown): number | null {
-    if (value === undefined || value === null || String(value).trim() === "") return null;
+    if (value === undefined || value === null || String(value).trim() === "") {
+        return null;
+    }
     const parsed = Number(value);
     return Number.isInteger(parsed) ? parsed : null;
 }
 
 function booleanOrNull(value: unknown): boolean | null {
-    if (typeof value === "boolean") return value;
+    if (typeof value === "boolean") {
+        return value;
+    }
     const text = textOrEmpty(value).toLowerCase();
-    if (text === "true" || text === "1") return true;
-    if (text === "false" || text === "0") return false;
+    if (text === "true" || text === "1") {
+        return true;
+    }
+    if (text === "false" || text === "0") {
+        return false;
+    }
     return null;
 }
 
 function optionalText(value: string | null, max: number): string | undefined {
-    if (!value) return undefined;
+    if (!value) {
+        return undefined;
+    }
     const trimmed = value.trim();
-    if (!trimmed) return undefined;
+    if (!trimmed) {
+        return undefined;
+    }
     return trimmed.slice(0, max);
 }
 
@@ -949,18 +1121,24 @@ function requiredQuery(request: Request, name: string): string {
 
 function boundedLimit(value: string | null, max = 100): number {
     const parsed = Number(value ?? 50);
-    if (!Number.isFinite(parsed) || parsed < 1) return 50;
+    if (!Number.isFinite(parsed) || parsed < 1) {
+        return 50;
+    }
     return Math.min(Math.trunc(parsed), max);
 }
 
 function boundedOffset(value: string | null): number {
     const parsed = Number(value ?? 0);
-    if (!Number.isFinite(parsed) || parsed < 0) return 0;
+    if (!Number.isFinite(parsed) || parsed < 0) {
+        return 0;
+    }
     return Math.trunc(parsed);
 }
 
 function countFromContentRange(value: string | null): number | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     const match = value.match(/\/(\d+)$/);
     return match ? Number(match[1]) : null;
 }
@@ -968,7 +1146,9 @@ function countFromContentRange(value: string | null): number | null {
 function lookup(source: JsonRecord, path: string): { found: boolean; value: unknown } {
     let current: unknown = source;
     for (const segment of path.split(".")) {
-        if (!isRecord(current) || !Object.hasOwn(current, segment)) return { found: false, value: undefined };
+        if (!isRecord(current) || !Object.hasOwn(current, segment)) {
+            return { found: false, value: undefined };
+        }
         current = current[segment];
     }
     return { found: true, value: current };
@@ -979,7 +1159,7 @@ function isTokenName(value: string): boolean {
 }
 
 function stringArray(value: unknown): string[] {
-    return Array.isArray(value) ? value.map(item => String(item)).filter(Boolean) : [];
+    return Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : [];
 }
 
 async function readJsonObject(request: Request): Promise<JsonRecord> {
@@ -989,12 +1169,20 @@ async function readJsonObject(request: Request): Promise<JsonRecord> {
     } catch {
         throw new HttpError(400, "invalid JSON body");
     }
-    if (!isRecord(value)) throw new HttpError(400, "body must be an object");
+    if (!isRecord(value)) {
+        throw new HttpError(400, "body must be an object");
+    }
     return value;
 }
 
-async function withMethod(request: Request, method: string, handler: () => Promise<Response> | Response): Promise<Response> {
-    if (request.method !== method) return methodNotAllowed(`${method}, OPTIONS`);
+async function withMethod(
+    request: Request,
+    method: string,
+    handler: () => Promise<Response> | Response,
+): Promise<Response> {
+    if (request.method !== method) {
+        return methodNotAllowed(`${method}, OPTIONS`);
+    }
     return await handler();
 }
 
@@ -1009,7 +1197,9 @@ function routePath(request: Request): string {
     const path = new URL(request.url).pathname;
     const marker = "/cms-emailer";
     const index = path.indexOf(marker);
-    if (index < 0) return path;
+    if (index < 0) {
+        return path;
+    }
     return path.slice(index + marker.length) || "/";
 }
 
@@ -1025,7 +1215,9 @@ function json(body: unknown, status = 200): Response {
 }
 
 function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+        return json({ error: error.message }, error.status);
+    }
     return json({ error: "internal error" }, 500);
 }
 

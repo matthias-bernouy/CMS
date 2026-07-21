@@ -9,7 +9,11 @@ import { generateImageVariant, variantKey, ensureVariants, readManifest, manifes
 // Note: requires libvips on the loader path (LD_LIBRARY_PATH in dev / system
 // libvips in Docker) — sharp dlopens it at runtime.
 const sourcePng = async (w: number, h: number): Promise<Uint8Array> =>
-    new Uint8Array(await sharp({ create: { width: w, height: h, channels: 3, background: { r: 10, g: 120, b: 200 } } }).png().toBuffer());
+    new Uint8Array(
+        await sharp({ create: { width: w, height: h, channels: 3, background: { r: 10, g: 120, b: 200 } } })
+            .png()
+            .toBuffer(),
+    );
 
 const spec = { width: 200, format: "webp" as const };
 
@@ -49,7 +53,7 @@ describe("image variants (sharp)", () => {
         const src = await sourcePng(400, 300);
         await ensureVariants(store, "h1", src, [200]);
         await store.delete(variantKey("h1", { width: 200, format: "webp" })); // remove a variant
-        await ensureVariants(store, "h1", src, [200]);                          // manifest still there → early return
+        await ensureVariants(store, "h1", src, [200]); // manifest still there → early return
         expect(await store.exists(variantKey("h1", { width: 200, format: "webp" }))).toBe(false); // NOT regenerated
         expect(await store.exists(manifestKey("h1"))).toBe(true);
     });
@@ -65,7 +69,9 @@ describe("image variants (sharp)", () => {
             await store.put(variantKey("h", { width: 200, format: "webp" }), new Uint8Array([1, 2, 3]));
             expect(await store.exists(manifestKey("h"))).toBe(true);
             expect(await store.exists(variantKey("h", { width: 200, format: "webp" }))).toBe(true);
-        } finally { await rm(dir, { recursive: true, force: true }); }
+        } finally {
+            await rm(dir, { recursive: true, force: true });
+        }
     });
 
     test("a different contentHash is a different variant key (immutable keying)", async () => {

@@ -1,9 +1,8 @@
 export abstract class CustomHTMLElement extends HTMLElement {
-    
     constructor(html?: string, css?: string, shadow?: boolean) {
         super();
-        if ( shadow ) {
-            const ele = this.attachShadow({mode: "open"});
+        if (shadow) {
+            const ele = this.attachShadow({ mode: "open" });
             ele.innerHTML = `<style>${css ?? ""}</style>${html ?? ""}`;
         }
     }
@@ -16,5 +15,5 @@ export abstract class CustomHTMLElement extends HTMLElement {
 
     abstract disconnectedCallback(): void;
 
-    abstract attributeChangedCallback(name: any, oldValue: any, newValue: any): void
+    abstract attributeChangedCallback(name: any, oldValue: any, newValue: any): void;
 }

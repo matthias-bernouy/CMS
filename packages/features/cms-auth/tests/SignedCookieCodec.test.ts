@@ -42,7 +42,9 @@ describe("SignedCookieCodec", () => {
 
 function base64urlEncode(bytes: Uint8Array): string {
     let bin = "";
-    for (const b of bytes) bin += String.fromCharCode(b);
+    for (const b of bytes) {
+        bin += String.fromCharCode(b);
+    }
     return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
@@ -50,6 +52,8 @@ function base64urlDecode(value: string): Uint8Array {
     const std = value.replace(/-/g, "+").replace(/_/g, "/");
     const bin = atob(std + "=".repeat((4 - (std.length % 4)) % 4));
     const out = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    for (let i = 0; i < bin.length; i++) {
+        out[i] = bin.charCodeAt(i);
+    }
     return out;
 }

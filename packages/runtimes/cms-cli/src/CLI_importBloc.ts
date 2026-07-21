@@ -4,11 +4,20 @@ import { runBlocs, type RunBlocsFlags } from "./push/blocs/run";
 function parseFlags(args: string[]): RunBlocsFlags {
     const flags: RunBlocsFlags = { dryRun: false, force: false, yes: false, only: null };
     for (const arg of args) {
-        if      (arg === "--dry-run")                 flags.dryRun = true;
-        else if (arg === "--force" || arg === "-f")   flags.force = true;
-        else if (arg === "--yes" || arg === "-y")     flags.yes = true;
-        else if (arg.startsWith("--only=")) {
-            flags.only = new Set(arg.slice("--only=".length).split(",").map(s => s.trim()).filter(Boolean));
+        if (arg === "--dry-run") {
+            flags.dryRun = true;
+        } else if (arg === "--force" || arg === "-f") {
+            flags.force = true;
+        } else if (arg === "--yes" || arg === "-y") {
+            flags.yes = true;
+        } else if (arg.startsWith("--only=")) {
+            flags.only = new Set(
+                arg
+                    .slice("--only=".length)
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+            );
         }
     }
     return flags;
@@ -29,7 +38,9 @@ async function resolveAdminBase(): Promise<{ adminBase: URL; token: string }> {
 
     const token = await getAccessToken(rawUrl.replace(/\/+$/, ""));
     if (!token) {
-        console.error(`✖ No token for ${rawUrl}. Set P9R_TOKEN to a CMS Personal Access Token (admin → Profile), or add it to ~/.config/p9r/credentials.json.`);
+        console.error(
+            `✖ No token for ${rawUrl}. Set P9R_TOKEN to a CMS Personal Access Token (admin → Profile), or add it to ~/.config/p9r/credentials.json.`,
+        );
         process.exit(1);
     }
     try {

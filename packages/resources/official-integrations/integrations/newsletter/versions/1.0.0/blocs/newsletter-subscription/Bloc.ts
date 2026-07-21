@@ -6,9 +6,9 @@ class NewsletterSubscription extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        this.form.addEventListener("submit", event => {
+        this.form.addEventListener("submit", (event) => {
             event.preventDefault();
-            this.submit().catch(error => this.setStatus(errorMessage(error), "error"));
+            this.submit().catch((error) => this.setStatus(errorMessage(error), "error"));
         });
     }
 
@@ -83,7 +83,9 @@ class NewsletterSubscription extends HTMLElement {
 
     async submit() {
         const email = this.emailInput.value.trim();
-        if (!email) return;
+        if (!email) {
+            return;
+        }
 
         this.button.disabled = true;
         this.setStatus(this.getAttribute("loading-label") || "Enregistrement…", "idle");
@@ -92,11 +94,13 @@ class NewsletterSubscription extends HTMLElement {
                 method: "POST",
                 body: JSON.stringify({ email, subscribed: !this.hasAttribute("unsubscribe") }),
             });
-            this.dispatchEvent(new CustomEvent("newsletter-subscription:saved", {
-                bubbles: true,
-                composed: true,
-                detail: result,
-            }));
+            this.dispatchEvent(
+                new CustomEvent("newsletter-subscription:saved", {
+                    bubbles: true,
+                    composed: true,
+                    detail: result,
+                }),
+            );
             this.setStatus(this.successLabel(result), "success");
         } finally {
             this.button.disabled = false;
@@ -104,7 +108,9 @@ class NewsletterSubscription extends HTMLElement {
     }
 
     successLabel(result) {
-        if (result.subscribed === false) return this.getAttribute("unsubscribed-label") || "Vous êtes désinscrit(e).";
+        if (result.subscribed === false) {
+            return this.getAttribute("unsubscribed-label") || "Vous êtes désinscrit(e).";
+        }
         return this.getAttribute("subscribed-label") || "Votre inscription est confirmée.";
     }
 
@@ -119,8 +125,12 @@ class NewsletterSubscription extends HTMLElement {
             },
         });
         const body = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(errorMessageFromBody(body, response));
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Réponse invalide du service.");
+        if (!response.ok) {
+            throw new Error(errorMessageFromBody(body, response));
+        }
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            throw new Error("Réponse invalide du service.");
+        }
         return body;
     }
 
@@ -153,7 +163,9 @@ class NewsletterSubscription extends HTMLElement {
 }
 
 function headersObject(headers) {
-    if (!headers) return {};
+    if (!headers) {
+        return {};
+    }
     return Object.fromEntries(new Headers(headers).entries());
 }
 
@@ -163,18 +175,24 @@ function errorMessage(error) {
 }
 
 function errorMessageFromBody(body, response) {
-    if (body && typeof body === "object" && "error" in body) return String(body.error);
+    if (body && typeof body === "object" && "error" in body) {
+        return String(body.error);
+    }
     return `${response.status} ${response.statusText}`;
 }
 
 function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "\"": "&quot;",
-        "'": "&#39;",
-    })[char] || char);
+    return String(value).replace(
+        /[&<>"']/g,
+        (char) =>
+            ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+            })[char] || char,
+    );
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", NewsletterSubscription);

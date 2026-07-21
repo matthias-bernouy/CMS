@@ -65,32 +65,38 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
         dashboardsBySource.set(dashboard.source, list);
     }
 
-    const groups: DashboardSourceGroup[] = sources.filter(source => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN).map(source => {
-        const dto = sourceToDto(source);
-        const id = parseUrn(source.urn)?.source ?? dto.id;
-        const overlays = sourceOverlays.filter(overlay => overlay.sourceId === id);
-        const sourceDashboards = (dashboardsBySource.get(id) ?? [])
-            .map(dashboard => applyDashboardSourceOverlays(dashboard, overlays));
-        const sourceDashboardIds = new Set(sourceDashboards.map(dashboard => dashboard.id));
-        const sourceDashboardRelationProjections = dashboardRelationProjections
-            .filter(projection => sourceDashboardIds.has(projection.dashboardId));
-        return {
-            source: {
-                urn: source.urn,
-                id,
-                name: source.meta?.name ?? id,
-                ...(source.meta?.icon ? { icon: source.meta.icon } : {}),
-                ...(source.meta?.svg ? { svg: source.meta.svg } : {}),
-                endpointCount: source.endpoints.length,
-                dashboardCount: sourceDashboards.length,
-                readonly: isSystemSourceUrn(source.urn),
-            },
-            endpoints: dto.endpoints,
-            dashboards: sourceDashboards,
-            ...(overlays.length ? { sourceOverlays: overlays } : {}),
-            ...(sourceDashboardRelationProjections.length ? { dashboardRelationProjections: sourceDashboardRelationProjections } : {}),
-        };
-    });
+    const groups: DashboardSourceGroup[] = sources
+        .filter((source) => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN)
+        .map((source) => {
+            const dto = sourceToDto(source);
+            const id = parseUrn(source.urn)?.source ?? dto.id;
+            const overlays = sourceOverlays.filter((overlay) => overlay.sourceId === id);
+            const sourceDashboards = (dashboardsBySource.get(id) ?? []).map((dashboard) =>
+                applyDashboardSourceOverlays(dashboard, overlays),
+            );
+            const sourceDashboardIds = new Set(sourceDashboards.map((dashboard) => dashboard.id));
+            const sourceDashboardRelationProjections = dashboardRelationProjections.filter((projection) =>
+                sourceDashboardIds.has(projection.dashboardId),
+            );
+            return {
+                source: {
+                    urn: source.urn,
+                    id,
+                    name: source.meta?.name ?? id,
+                    ...(source.meta?.icon ? { icon: source.meta.icon } : {}),
+                    ...(source.meta?.svg ? { svg: source.meta.svg } : {}),
+                    endpointCount: source.endpoints.length,
+                    dashboardCount: sourceDashboards.length,
+                    readonly: isSystemSourceUrn(source.urn),
+                },
+                endpoints: dto.endpoints,
+                dashboards: sourceDashboards,
+                ...(overlays.length ? { sourceOverlays: overlays } : {}),
+                ...(sourceDashboardRelationProjections.length
+                    ? { dashboardRelationProjections: sourceDashboardRelationProjections }
+                    : {}),
+            };
+        });
 
     return new Response(JSON.stringify(groups), {
         headers: { "Content-Type": "application/json" },
@@ -103,11 +109,11 @@ async function materializeOverlays(
     deps: ExecutorDeps | undefined,
     cache: SourceOverlaySchemaCache | undefined,
 ): Promise<SourceOverlay[]> {
-    const sourcesById = new Map(sources.map(source => [parseUrn(source.urn)?.source ?? "", source]));
+    const sourcesById = new Map(sources.map((source) => [parseUrn(source.urn)?.source ?? "", source]));
     const resolved: SourceOverlay[] = [];
     for (const source of sourcesById.values()) {
-        const matching = overlays.filter(overlay => overlay.sourceId === parseUrn(source.urn)?.source);
-        resolved.push(...await materializeSourceOverlays(source, matching, deps, cache));
+        const matching = overlays.filter((overlay) => overlay.sourceId === parseUrn(source.urn)?.source);
+        resolved.push(...(await materializeSourceOverlays(source, matching, deps, cache)));
     }
     return resolved;
 }

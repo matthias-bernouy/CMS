@@ -1,12 +1,12 @@
-import template from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import template from "./template.html" with { type: "text" };
+import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
 export class DetailMedia extends Component {
     constructor() {
         super({
             css: css as unknown as string,
-            template: template as unknown as string
+            template: template as unknown as string,
         });
     }
 
@@ -17,11 +17,15 @@ export class DetailMedia extends Component {
         closeBtn.addEventListener("click", () => this.close());
 
         backdrop.addEventListener("click", (e) => {
-            if (e.target === backdrop) this.close();
+            if (e.target === backdrop) {
+                this.close();
+            }
         });
 
         document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape" && this.hasAttribute("open")) this.close();
+            if (e.key === "Escape" && this.hasAttribute("open")) {
+                this.close();
+            }
         });
     }
 
@@ -38,6 +42,6 @@ export class DetailMedia extends Component {
     }
 }
 
-if ( !customElements.get("p9r-detail-media") ) {
+if (!customElements.get("p9r-detail-media")) {
     customElements.define("p9r-detail-media", DetailMedia);
 }

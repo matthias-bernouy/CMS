@@ -32,8 +32,11 @@ describe("BindingRuntime — cms-bind-stop boundary", () => {
     test("the runtime never registers OR fetches sources inside a [cms-bind-stop] region", async () => {
         let walledFetches = 0;
         routes({
-            "/outer":  () => res(200, JSON.stringify([{ v: "o" }])),
-            "/walled": () => { walledFetches++; return res(200, JSON.stringify([{ v: "w" }])); },
+            "/outer": () => res(200, JSON.stringify([{ v: "o" }])),
+            "/walled": () => {
+                walledFetches++;
+                return res(200, JSON.stringify([{ v: "w" }]));
+            },
         });
         const root = el(`
             <div>
@@ -48,8 +51,8 @@ describe("BindingRuntime — cms-bind-stop boundary", () => {
         rt.start();
         await waitFor(() => rt.size >= 1);
         await settle();
-        expect(rt.size).toBe(1);        // only /outer — the walled source is never registered
-        expect(walledFetches).toBe(0);  // and never executed → stays an inert template
+        expect(rt.size).toBe(1); // only /outer — the walled source is never registered
+        expect(walledFetches).toBe(0); // and never executed → stays an inert template
         rt.stop();
     });
 
@@ -87,21 +90,26 @@ describe("BindingRuntime — cms-bind-stop boundary", () => {
             </div>
         `);
         document.body.appendChild(root);
-        const outer = new BindingRuntime(root);                          // chrome-like outer runtime
+        const outer = new BindingRuntime(root); // chrome-like outer runtime
         outer.start();
         const inner = new BindingRuntime(root.querySelector("cms-binding-core")!); // the core's OWN runtime
         inner.start();
         await waitFor(() => inner.size === 1);
         await settle();
-        expect(outer.size).toBe(0);  // outer ignores everything behind bind-stop
-        expect(inner.size).toBe(1);  // but the core's OWN runtime is unaffected by bind-stop above it
+        expect(outer.size).toBe(0); // outer ignores everything behind bind-stop
+        expect(inner.size).toBe(1); // but the core's OWN runtime is unaffected by bind-stop above it
         outer.stop();
         inner.stop();
     });
 
     test("a source injected into a [cms-bind-stop] region after start is ignored by the observer", async () => {
         let walledFetches = 0;
-        routes({ "/walled": () => { walledFetches++; return res(200, "[]"); } });
+        routes({
+            "/walled": () => {
+                walledFetches++;
+                return res(200, "[]");
+            },
+        });
         const root = el(`<div><div cms-bind-stop></div></div>`);
         document.body.appendChild(root);
         const rt = new BindingRuntime(root);

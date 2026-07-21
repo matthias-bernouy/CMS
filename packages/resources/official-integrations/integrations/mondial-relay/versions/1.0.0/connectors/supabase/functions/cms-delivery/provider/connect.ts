@@ -21,15 +21,23 @@ export async function createConnectShipment(payload: ShipmentPayload): Promise<C
         throw new ProviderStatusError(502, "Mondial Relay Connect request failed", providerContext(payload, [], false));
     });
     if (response.redirected || (response.status >= 300 && response.status < 400)) {
-        throw new ProviderStatusError(502, "Mondial Relay Connect redirects are not allowed", providerContext(payload, [], false));
+        throw new ProviderStatusError(
+            502,
+            "Mondial Relay Connect redirects are not allowed",
+            providerContext(payload, [], false),
+        );
     }
     const text = await response.text();
     if (!response.ok) {
-        throw new ProviderStatusError(502, `Mondial Relay Connect returned HTTP ${response.status}`, providerContext(payload, [], false));
+        throw new ProviderStatusError(
+            502,
+            `Mondial Relay Connect returned HTTP ${response.status}`,
+            providerContext(payload, [], false),
+        );
     }
 
     const statuses = connectStatuses(text);
-    const blocking = statuses.find(status => /error|critical/i.test(status.level));
+    const blocking = statuses.find((status) => /error|critical/i.test(status.level));
     if (blocking) {
         throw new ProviderStatusError(
             502,
@@ -41,7 +49,11 @@ export async function createConnectShipment(payload: ShipmentPayload): Promise<C
     const expeditionNumber = xmlAttr(text, "Shipment", "ShipmentNumber");
     const rawLabelUrl = xmlTag(text, "Output");
     if (!expeditionNumber) {
-        throw new ProviderStatusError(502, "Mondial Relay Connect did not return a shipment number", providerContext(payload, statuses, false));
+        throw new ProviderStatusError(
+            502,
+            "Mondial Relay Connect did not return a shipment number",
+            providerContext(payload, statuses, false),
+        );
     }
     const labelUrl = rawLabelUrl ? validatedMondialRelayLabelUrl(rawLabelUrl).toString() : "";
 
@@ -134,19 +146,25 @@ function connectShipmentXml(payload: ShipmentPayload): string {
 }
 
 function connectStatuses(source: string): ConnectStatus[] {
-    const xmlStatuses = xmlAttributes(source, "Status").map(attrs => ({
-        code: attrs.Code ?? "",
-        level: attrs.Level ?? "",
-        message: attrs.Message ?? "",
-    })).filter(status => status.code || status.message);
-    if (xmlStatuses.length) return xmlStatuses;
+    const xmlStatuses = xmlAttributes(source, "Status")
+        .map((attrs) => ({
+            code: attrs.Code ?? "",
+            level: attrs.Level ?? "",
+            message: attrs.Message ?? "",
+        }))
+        .filter((status) => status.code || status.message);
+    if (xmlStatuses.length) {
+        return xmlStatuses;
+    }
     let value: { statusListField?: Array<{ codeField?: string; levelField?: string; messageField?: string }> };
     try {
-        value = JSON.parse(source) as { statusListField?: Array<{ codeField?: string; levelField?: string; messageField?: string }> };
+        value = JSON.parse(source) as {
+            statusListField?: Array<{ codeField?: string; levelField?: string; messageField?: string }>;
+        };
     } catch {
         return [];
     }
-    return (value.statusListField ?? []).map(status => ({
+    return (value.statusListField ?? []).map((status) => ({
         code: status.codeField ?? "",
         level: status.levelField ?? "",
         message: status.messageField ?? "",
@@ -157,7 +175,9 @@ function relayPointInfo(source: string): JsonRecord {
     const values: JsonRecord = {};
     for (const attrs of xmlAttributes(source, "LabelValues")) {
         const key = attrs.Key;
-        if (!key) continue;
+        if (!key) {
+            continue;
+        }
         values[key] = decodeXml(attrs.Value ?? "");
     }
     return values;

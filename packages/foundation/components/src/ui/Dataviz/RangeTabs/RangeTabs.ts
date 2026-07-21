@@ -15,14 +15,22 @@ export class RangeTabs extends Component {
     override connectedCallback(): void {
         const param = this.getAttribute("param") ?? "range";
         const current = new URLSearchParams(window.location.search).get(param) ?? this.getAttribute("default") ?? "";
-        const tabs = (this.getAttribute("tabs") ?? "").split(",").map((t) => t.split(":")).filter((p) => p[0]);
+        const tabs = (this.getAttribute("tabs") ?? "")
+            .split(",")
+            .map((t) => t.split(":"))
+            .filter((p) => p[0]);
         const box = this.shadowRoot!.querySelector(".tabs") as HTMLElement;
         box.innerHTML = tabs
-            .map(([v, label]) => `<button type="button" data-v="${esc(v!)}"${v === current ? ' class="active"' : ""}>${esc(label ?? v!)}</button>`)
+            .map(
+                ([v, label]) =>
+                    `<button type="button" data-v="${esc(v!)}"${v === current ? ' class="active"' : ""}>${esc(label ?? v!)}</button>`,
+            )
             .join("");
         box.addEventListener("click", (e) => {
             const v = (e.target as HTMLElement).closest("button")?.dataset.v;
-            if (!v) return;
+            if (!v) {
+                return;
+            }
             const url = new URL(window.location.href);
             url.searchParams.set(param, v);
             window.location.assign(url.toString());

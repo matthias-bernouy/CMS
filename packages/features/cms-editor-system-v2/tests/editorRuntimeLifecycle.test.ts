@@ -9,10 +9,7 @@ function editorDocument(markup: string) {
     return { contentRoot, HTMLElement };
 }
 
-function catalog(
-    HTMLElementConstructor: typeof HTMLElement,
-    events: string[],
-): EditorCatalog {
+function catalog(HTMLElementConstructor: typeof HTMLElement, events: string[]): EditorCatalog {
     class LifecycleEditor extends Editor {
         override mountEditor(): void {
             events.push(`mount:${this.target.id}`);
@@ -23,12 +20,14 @@ function catalog(
         }
     }
 
-    return [{
-        tag: "x-lifecycle",
-        label: "Lifecycle",
-        bloc: class extends HTMLElementConstructor { } as unknown as CustomElementConstructor,
-        editor: LifecycleEditor,
-    }];
+    return [
+        {
+            tag: "x-lifecycle",
+            label: "Lifecycle",
+            bloc: class extends HTMLElementConstructor {} as unknown as CustomElementConstructor,
+            editor: LifecycleEditor,
+        },
+    ];
 }
 
 describe("EditorRuntime lifecycle", () => {
@@ -49,13 +48,7 @@ describe("EditorRuntime lifecycle", () => {
         runtime.select(oldChild);
         runtime.load({ root: second.contentRoot, contentRoot: second.contentRoot });
 
-        expect(events).toEqual([
-            "mount:parent",
-            "mount:child",
-            "unmount:child",
-            "unmount:parent",
-            "mount:replacement",
-        ]);
+        expect(events).toEqual(["mount:parent", "mount:child", "unmount:child", "unmount:parent", "mount:replacement"]);
         expect(runtime.getEditor(oldParent)).toBeUndefined();
         expect(runtime.getEditor(oldChild)).toBeUndefined();
         expect(runtime.getEditor(replacement)).toBeDefined();
@@ -63,9 +56,7 @@ describe("EditorRuntime lifecycle", () => {
     });
 
     test("disposes a loaded document idempotently", () => {
-        const { contentRoot, HTMLElement } = editorDocument(
-            `<x-lifecycle id="editor"></x-lifecycle>`,
-        );
+        const { contentRoot, HTMLElement } = editorDocument(`<x-lifecycle id="editor"></x-lifecycle>`);
         const events: string[] = [];
         const runtime = new EditorRuntime(catalog(HTMLElement, events));
         const target = contentRoot.querySelector<HTMLElement>("#editor")!;

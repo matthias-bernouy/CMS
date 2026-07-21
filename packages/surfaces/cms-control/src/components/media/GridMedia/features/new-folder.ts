@@ -18,7 +18,9 @@ export function setupNewFolder(host: HTMLElement, s: ShadowRoot, callbacks: NewF
 
     const create = () => {
         const name = input.value.trim();
-        if (!name) return;
+        if (!name) {
+            return;
+        }
         hide();
         callbacks.onCreate(name);
     };
@@ -26,10 +28,18 @@ export function setupNewFolder(host: HTMLElement, s: ShadowRoot, callbacks: NewF
     host.addEventListener("new-folder", show);
     confirmBtn.addEventListener("click", create);
     cancelBtn.addEventListener("click", hide);
-    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) hide(); });
+    backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) {
+            hide();
+        }
+    });
     input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") create();
-        if (e.key === "Escape") hide();
+        if (e.key === "Enter") {
+            create();
+        }
+        if (e.key === "Escape") {
+            hide();
+        }
     });
 
     document.addEventListener("keydown", (e) => {

@@ -12,8 +12,9 @@ describe("parseShapeField", () => {
     });
 
     test("valid JSON string → DataShape", () => {
-        expect(parseShapeField(JSON.stringify({ type: "object", properties: { a: { type: "string" } } }), "body"))
-            .toEqual({ type: "object", properties: { a: { type: "string" } } });
+        expect(
+            parseShapeField(JSON.stringify({ type: "object", properties: { a: { type: "string" } } }), "body"),
+        ).toEqual({ type: "object", properties: { a: { type: "string" } } });
     });
 
     test("malformed JSON → InvalidParam", () => {
@@ -58,11 +59,15 @@ describe("endpoint DataShape editor", () => {
             properties: { authorization: { type: "string" } },
             required: ["authorization"],
         };
-        const row = makeResponseRow({
-            status: "201",
-            body: { type: "object", properties: { id: { type: "number" } } },
-            triggerBody,
-        }, () => undefined, () => undefined);
+        const row = makeResponseRow(
+            {
+                status: "201",
+                body: { type: "object", properties: { id: { type: "number" } } },
+                triggerBody,
+            },
+            () => undefined,
+            () => undefined,
+        );
 
         expect(row.read()).toEqual({
             status: "201",

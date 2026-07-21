@@ -1,6 +1,6 @@
-import MissingParam from 'cms-control/errors/Http/MissingParam';
-import { coerceVisible } from './visible';
-import { coerceTags } from '../contentDefaults';
+import MissingParam from "cms-control/errors/Http/MissingParam";
+import { coerceVisible } from "./visible";
+import { coerceTags } from "../contentDefaults";
 
 export type PageUpdateDto = {
     id: string;
@@ -19,16 +19,22 @@ export type PageUpdateDto = {
  */
 export function parsePageUpdateDto(body: Record<string, unknown>): PageUpdateDto {
     const { id, title, path } = body;
-    if (!id)    throw new MissingParam('id');
-    if (!title) throw new MissingParam('title');
-    if (!path)  throw new MissingParam('path');
+    if (!id) {
+        throw new MissingParam("id");
+    }
+    if (!title) {
+        throw new MissingParam("title");
+    }
+    if (!path) {
+        throw new MissingParam("path");
+    }
     return {
-        id:          String(id),
-        title:       String(title),
-        path:        String(path),
-        content:     body.content     == null ? '' : String(body.content),
-        description: body.description == null ? '' : String(body.description),
-        visible:     coerceVisible(body.visible),
-        tags:        coerceTags(body.tags),
+        id: String(id),
+        title: String(title),
+        path: String(path),
+        content: body.content == null ? "" : String(body.content),
+        description: body.description == null ? "" : String(body.description),
+        visible: coerceVisible(body.visible),
+        tags: coerceTags(body.tags),
     };
 }

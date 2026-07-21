@@ -34,28 +34,32 @@ export function validIdentifier(value) {
 }
 
 export function setAttributeIfChanged(element, name, value) {
-    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+    if (element.getAttribute(name) !== value) {
+        element.setAttribute(name, value);
+    }
 }
 
 export function readFilterParams(host) {
     const entries = [];
     for (const control of host.querySelectorAll("[cms-param-sync], [data-commerce-param][data-url-param]")) {
         const urlParam = (
-            control.getAttribute("data-url-param")
-            || control.getAttribute("cms-param-sync")
-            || control.getAttribute("name")
-            || ""
+            control.getAttribute("data-url-param") ||
+            control.getAttribute("cms-param-sync") ||
+            control.getAttribute("name") ||
+            ""
         ).trim();
         const endpointParam = (control.getAttribute("data-commerce-param") || urlParam).trim();
-        if (urlParam && supportedParams.has(endpointParam)) entries.push([endpointParam, urlParam]);
+        if (urlParam && supportedParams.has(endpointParam)) {
+            entries.push([endpointParam, urlParam]);
+        }
     }
-    return entries.filter(([endpointParam], index) => (
-        entries.findIndex(([candidate]) => candidate === endpointParam) === index
-    ));
+    return entries.filter(
+        ([endpointParam], index) => entries.findIndex(([candidate]) => candidate === endpointParam) === index,
+    );
 }
 
 export function readMetadataFilters(host) {
-    return [...host.querySelectorAll("commerce-offer-filter")].flatMap(filter => {
+    return [...host.querySelectorAll("commerce-offer-filter")].flatMap((filter) => {
         const field = filter.getAttribute("field")?.trim();
         const operator = filter.getAttribute("operator")?.trim() || "eq";
         const valueType = filter.getAttribute("value-type")?.trim() || "string";
@@ -76,9 +80,13 @@ export function activeMetadataFilters(metadataFilters, params) {
     const filters = {};
     for (const { field, operator, urlParam, valueType } of metadataFilters) {
         const rawValue = params.get(urlParam)?.trim();
-        if (!rawValue) continue;
+        if (!rawValue) {
+            continue;
+        }
         const value = valueType === "number" ? Number(rawValue) : rawValue;
-        if (valueType === "number" && !Number.isFinite(value)) continue;
+        if (valueType === "number" && !Number.isFinite(value)) {
+            continue;
+        }
         filters[field] ||= {};
         filters[field][operator] = value;
     }
@@ -86,8 +94,11 @@ export function activeMetadataFilters(metadataFilters, params) {
 }
 
 export function filterSignature(filters, metadataFilters) {
-    if (typeof location === "undefined") return "";
+    if (typeof location === "undefined") {
+        return "";
+    }
     const params = new URLSearchParams(location.search);
-    return [...filters.map(([, urlParam]) => urlParam), ...metadataFilters.map(filter => filter.urlParam)]
-        .map(urlParam => `${urlParam}=${params.get(urlParam) ?? ""}`).join("&");
+    return [...filters.map(([, urlParam]) => urlParam), ...metadataFilters.map((filter) => filter.urlParam)]
+        .map((urlParam) => `${urlParam}=${params.get(urlParam) ?? ""}`)
+        .join("&");
 }

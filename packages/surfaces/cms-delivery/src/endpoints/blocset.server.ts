@@ -16,15 +16,21 @@ import { generateBlocSetEntry } from "@bernouy/cms-content";
  * This is the live grouped path: `resolveAssets` emits `/blocset?tags=…&v=`
  * for each signature-grouped bundle (the `/bloc?tag=` route is dev/editor only).
  */
-export default async function BlocSetServer(req: Request, delivery: DeliveryCms){
-
-    const url       = new URL(req.url);
+export default async function BlocSetServer(req: Request, delivery: DeliveryCms) {
+    const url = new URL(req.url);
     const tagsParam = url.searchParams.get("tags");
 
-    if (!tagsParam) return Response.error();
+    if (!tagsParam) {
+        return Response.error();
+    }
 
-    const tags = tagsParam.split(",").map(t => t.trim()).filter(Boolean);
-    if (tags.length === 0) return Response.error();
+    const tags = tagsParam
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+    if (tags.length === 0) {
+        return Response.error();
+    }
 
     return cachedResponseAsync(
         req,
@@ -33,5 +39,4 @@ export default async function BlocSetServer(req: Request, delivery: DeliveryCms)
         () => generateBlocSetEntry(tags, delivery.repository),
         publicAssetCacheControl(req),
     ).catch(() => Response.error());
-
 }

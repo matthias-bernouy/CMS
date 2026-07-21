@@ -23,7 +23,9 @@ describe("LocalFsEnvSecretStore", () => {
         const store = LocalFsEnvSecretStore.forSite(siteDir);
 
         await store.set("SUPABASE_KEY", "new key");
-        expect(await readFile(envPath, "utf-8")).toBe('P9R_URL=http://localhost:5000\n# local notes\nSUPABASE_KEY="new key"\n');
+        expect(await readFile(envPath, "utf-8")).toBe(
+            'P9R_URL=http://localhost:5000\n# local notes\nSUPABASE_KEY="new key"\n',
+        );
 
         await store.delete("SUPABASE_KEY");
         expect(await readFile(envPath, "utf-8")).toBe("P9R_URL=http://localhost:5000\n# local notes\n");
@@ -31,13 +33,17 @@ describe("LocalFsEnvSecretStore", () => {
 
     test("reads quoted values and ignores keys that cannot be referenced as secrets", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-secrets-"));
-        await writeFile(join(siteDir, ".env"), [
-            'SUPABASE_KEY="service role #1"',
-            "OTHER_KEY='single quoted'",
-            "lowercase=value",
-            "BAD-DASH=value",
-            "",
-        ].join("\n"), "utf-8");
+        await writeFile(
+            join(siteDir, ".env"),
+            [
+                'SUPABASE_KEY="service role #1"',
+                "OTHER_KEY='single quoted'",
+                "lowercase=value",
+                "BAD-DASH=value",
+                "",
+            ].join("\n"),
+            "utf-8",
+        );
         const store = LocalFsEnvSecretStore.forSite(siteDir);
 
         expect(await store.get("SUPABASE_KEY")).toBe("service role #1");

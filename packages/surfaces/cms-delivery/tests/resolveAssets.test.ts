@@ -7,7 +7,18 @@ import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 const system: TSystem = {
     initializationStep: 1,
-    site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, forbidden: null, serverError: null, login: null },
+    site: {
+        name: "Site",
+        favicon: "",
+        visible: true,
+        host: "",
+        language: "",
+        theme: "",
+        notFound: null,
+        forbidden: null,
+        serverError: null,
+        login: null,
+    },
     editor: { layoutCategory: "" },
     security: { connectExtras: [], mediaExtras: [] },
 };
@@ -41,7 +52,7 @@ function repositoryWith(options: {
 
     return {
         getAllPages: async () => [page],
-        getBlocsList: async () => options.blocTags.map(id => ({ id, name: id, group: "", description: "" })),
+        getBlocsList: async () => options.blocTags.map((id) => ({ id, name: id, group: "", description: "" })),
         getBlocViewJS: async (tag: string) => options.viewJS?.[tag] ?? null,
         getSystem: async () => system,
         getPage: async () => null,
@@ -62,10 +73,12 @@ describe("resolveRuntimeAssets", () => {
 
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
         const assets = await resolveRuntimeAssets(
-            deliveryWith(repositoryWith({
-                pageContent: "<p>Hello</p><form><label>Email</label><input></form>",
-                blocTags: ["p", "form", "label", "input"],
-            })),
+            deliveryWith(
+                repositoryWith({
+                    pageContent: "<p>Hello</p><form><label>Email</label><input></form>",
+                    blocTags: ["p", "form", "label", "input"],
+                }),
+            ),
             ["p", "form", "label", "input"],
         );
 
@@ -75,11 +88,13 @@ describe("resolveRuntimeAssets", () => {
 
     test("keeps a blocset script when at least one referenced bloc has viewJS", async () => {
         const assets = await resolveRuntimeAssets(
-            deliveryWith(repositoryWith({
-                pageContent: "<p>Hello</p><site-card></site-card>",
-                blocTags: ["p", "site-card"],
-                viewJS: { "site-card": "customElements.define('site-card', class extends HTMLElement {});" },
-            })),
+            deliveryWith(
+                repositoryWith({
+                    pageContent: "<p>Hello</p><site-card></site-card>",
+                    blocTags: ["p", "site-card"],
+                    viewJS: { "site-card": "customElements.define('site-card', class extends HTMLElement {});" },
+                }),
+            ),
             ["p", "site-card"],
         );
 

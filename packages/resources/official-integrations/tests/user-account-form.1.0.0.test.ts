@@ -9,9 +9,15 @@ import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 describe("user-account form 1.0.0", () => {
     test("compiles as a Light DOM composition and exposes its Basic Blocs dependencies", async () => {
         const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("user-account");
-        if (!definition) throw new Error("user-account definition not found");
-        const artifact = definition.artifacts?.find(item => item.type === "bloc" && item.bloc.tag === "user-account-form");
-        const avatarArtifact = definition.artifacts?.find(item => item.type === "bloc" && item.bloc.tag === "user-account-avatar");
+        if (!definition) {
+            throw new Error("user-account definition not found");
+        }
+        const artifact = definition.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "user-account-form",
+        );
+        const avatarArtifact = definition.artifacts?.find(
+            (item) => item.type === "bloc" && item.bloc.tag === "user-account-avatar",
+        );
         if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS || !artifact.bloc.editorJS) {
             throw new Error("user-account-form sources not found");
         }
@@ -48,7 +54,14 @@ describe("user-account form 1.0.0", () => {
                 { id: "basic-toast" },
                 { id: "basic-skeleton" },
             ],
-            { getBlocViewJS: async tag => tag === "user-account-form" ? compiled.viewJS : tag === "user-account-avatar" ? compiledAvatar.viewJS : null },
+            {
+                getBlocViewJS: async (tag) =>
+                    tag === "user-account-form"
+                        ? compiled.viewJS
+                        : tag === "user-account-avatar"
+                          ? compiledAvatar.viewJS
+                          : null,
+            },
         );
         const viewSource = declaredBlocViewSources(artifact.bloc);
         const editorSource = artifact.bloc.editorJS;
@@ -62,12 +75,14 @@ describe("user-account form 1.0.0", () => {
         expect(compiled.viewJS).toContain('cms-condition="$source.loading"');
         expect(compiled.viewJS).not.toContain("Mes informations");
         expect(compiled.viewJS).not.toContain("data-account-title");
-        expect(compiled.viewJS).toContain('<form data-account-form cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-condition="$source.loaded">\n                <basic-stack gap="lg">');
+        expect(compiled.viewJS).toContain(
+            '<form data-account-form cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" cms-condition="$source.loaded">\n                <basic-stack gap="lg">',
+        );
         expect(compiled.viewJS).not.toContain("<p9r-grid");
         expect(compiled.viewJS).not.toContain("<p9r-stack");
         expect(compiled.viewJS).toContain('<basic-toast data-toast-kind="success" role="status"');
         expect(compiled.viewJS).toContain('<basic-toast data-toast-kind="error" role="alert"');
-        expect(compiled.viewJS).not.toContain('<basic-toast type=');
+        expect(compiled.viewJS).not.toContain("<basic-toast type=");
         expect(compiled.viewJS).not.toContain('<p cms-condition="save.ok"');
         expect(compiled.viewJS).not.toContain("<cms-binding-core");
         expect(compiled.viewJS).not.toContain("<style>");
@@ -75,7 +90,9 @@ describe("user-account form 1.0.0", () => {
         expect(compiledAvatar.viewJS).toContain("Choisir une photo de profil");
         expect(compiledAvatar.viewJS).toContain("URL.createObjectURL");
         expect(compiled.viewJS).toContain('cms-source-trigger="submit"');
-        expect(compiled.viewJS).toContain('name="birthDate" label="Date de naissance" type="date" autocomplete="bday" min="1900-01-01"');
+        expect(compiled.viewJS).toContain(
+            'name="birthDate" label="Date de naissance" type="date" autocomplete="bday" min="1900-01-01"',
+        );
         expect(compiled.viewJS).not.toContain('date-format="day-month-year"');
         expect(compiled.viewJS).not.toContain('placeholder="jj/mm/aaaa"');
         expect(compiled.viewJS).not.toContain("invalid-date-message");
@@ -84,7 +101,9 @@ describe("user-account form 1.0.0", () => {
         expect(compiled.viewJS).toContain("system-auth/me");
         expect(viewSource).toContain("element.hidden = !visible");
         expect(viewSource).toContain('control?.toggleAttribute("disabled", !visible)');
-        expect(viewSource).toContain('this.setAttributeIfChanged(this.querySelector(\'[data-account-field="birth-date"]\'), "max", currentLocalDate())');
+        expect(viewSource).toContain(
+            'this.setAttributeIfChanged(this.querySelector(\'[data-account-field="birth-date"]\'), "max", currentLocalDate())',
+        );
         expect(viewSource).toContain("date.getFullYear()");
         expect(viewSource).toContain("date.getMonth() + 1");
         expect(viewSource).toContain("date.getDate()");
@@ -97,8 +116,16 @@ describe("user-account form 1.0.0", () => {
         expect(editorSource).toContain("error-toast-background-color");
         expect(editorSource).toContain("toast-position");
         expect(viewSource).toContain('this.setOptionalAttribute(input, "background-color"');
-        expect(await resolveUsage("<user-account-form></user-account-form>"))
-            .toEqual(["basic-button", "basic-grid", "basic-input", "basic-skeleton", "basic-stack", "basic-toast", "user-account-avatar", "user-account-form"]);
+        expect(await resolveUsage("<user-account-form></user-account-form>")).toEqual([
+            "basic-button",
+            "basic-grid",
+            "basic-input",
+            "basic-skeleton",
+            "basic-stack",
+            "basic-toast",
+            "user-account-avatar",
+            "user-account-form",
+        ]);
 
         const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
         (window as typeof window & { p9r?: unknown }).p9r = { Composition };

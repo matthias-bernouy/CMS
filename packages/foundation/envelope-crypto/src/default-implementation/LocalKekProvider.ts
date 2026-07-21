@@ -10,7 +10,6 @@ const DEK_BYTES = 32;
  * so the storage layer carries a single string field.
  */
 export class LocalKekProvider implements KekProvider {
-
     private readonly _kek: Buffer;
 
     constructor(kek: Buffer) {
@@ -21,7 +20,7 @@ export class LocalKekProvider implements KekProvider {
     }
 
     async generateDek(): Promise<{ wrapped: string; plaintext: Buffer }> {
-        const dek     = randomBytes(DEK_BYTES);
+        const dek = randomBytes(DEK_BYTES);
         const wrapped = encryptAesGcm(dek, this._kek);
         return { wrapped: serializeBlob(wrapped), plaintext: dek };
     }
@@ -44,7 +43,7 @@ export function parseBlob(s: string): EncryptedBlob {
         throw new Error("LocalKekProvider: malformed wrapped DEK (expected '<iv-b64>.<ct-b64>').");
     }
     return {
-        iv:         Buffer.from(s.slice(0, idx),     "base64"),
-        ciphertext: Buffer.from(s.slice(idx + 1),    "base64"),
+        iv: Buffer.from(s.slice(0, idx), "base64"),
+        ciphertext: Buffer.from(s.slice(idx + 1), "base64"),
     };
 }

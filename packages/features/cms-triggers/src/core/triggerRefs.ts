@@ -38,12 +38,14 @@ export function triggerVars(input: {
             params: requestParams(input.request),
             ...(input.requestBody !== undefined ? { body: input.requestBody } : {}),
         },
-        ...(input.responseStatus !== undefined ? {
-            response: {
-                status: input.responseStatus,
-                ...(input.responseBody !== undefined ? { body: input.responseBody } : {}),
-            },
-        } : {}),
+        ...(input.responseStatus !== undefined
+            ? {
+                  response: {
+                      status: input.responseStatus,
+                      ...(input.responseBody !== undefined ? { body: input.responseBody } : {}),
+                  },
+              }
+            : {}),
         endpoint: {
             urn: input.endpoint.urn,
             source: match.source,
@@ -54,23 +56,57 @@ export function triggerVars(input: {
 }
 
 export function resolveTriggerReference(ref: string, vars: TriggerRuntimeVars): unknown {
-    if (ref === "$request") return vars.request;
-    if (ref === "$request.method") return vars.request.method;
-    if (ref === "$request.params") return vars.request.params;
-    if (ref.startsWith("$request.params.")) return valueAt(vars.request.params, ref.slice("$request.params.".length));
-    if (ref === "$request.body") return vars.request.body;
-    if (ref.startsWith("$request.body.")) return valueAt(vars.request.body, ref.slice("$request.body.".length));
-    if (ref === "$response") return vars.response;
-    if (ref === "$response.status") return vars.response?.status;
-    if (ref === "$response.body") return vars.response?.body;
-    if (ref.startsWith("$response.body.")) return valueAt(vars.response?.body, ref.slice("$response.body.".length));
-    if (ref === "$endpoint") return vars.endpoint;
-    if (ref === "$endpoint.urn") return vars.endpoint.urn;
-    if (ref === "$endpoint.source") return vars.endpoint.source;
-    if (ref === "$endpoint.endpoint") return vars.endpoint.endpoint;
-    if (ref === "$ctx") return vars.ctx;
-    if (ref === "$ctx.user") return vars.ctx?.user;
-    if (ref.startsWith("$ctx.user.")) return valueAt(vars.ctx?.user, ref.slice("$ctx.user.".length));
+    if (ref === "$request") {
+        return vars.request;
+    }
+    if (ref === "$request.method") {
+        return vars.request.method;
+    }
+    if (ref === "$request.params") {
+        return vars.request.params;
+    }
+    if (ref.startsWith("$request.params.")) {
+        return valueAt(vars.request.params, ref.slice("$request.params.".length));
+    }
+    if (ref === "$request.body") {
+        return vars.request.body;
+    }
+    if (ref.startsWith("$request.body.")) {
+        return valueAt(vars.request.body, ref.slice("$request.body.".length));
+    }
+    if (ref === "$response") {
+        return vars.response;
+    }
+    if (ref === "$response.status") {
+        return vars.response?.status;
+    }
+    if (ref === "$response.body") {
+        return vars.response?.body;
+    }
+    if (ref.startsWith("$response.body.")) {
+        return valueAt(vars.response?.body, ref.slice("$response.body.".length));
+    }
+    if (ref === "$endpoint") {
+        return vars.endpoint;
+    }
+    if (ref === "$endpoint.urn") {
+        return vars.endpoint.urn;
+    }
+    if (ref === "$endpoint.source") {
+        return vars.endpoint.source;
+    }
+    if (ref === "$endpoint.endpoint") {
+        return vars.endpoint.endpoint;
+    }
+    if (ref === "$ctx") {
+        return vars.ctx;
+    }
+    if (ref === "$ctx.user") {
+        return vars.ctx?.user;
+    }
+    if (ref.startsWith("$ctx.user.")) {
+        return valueAt(vars.ctx?.user, ref.slice("$ctx.user.".length));
+    }
     return undefined;
 }
 

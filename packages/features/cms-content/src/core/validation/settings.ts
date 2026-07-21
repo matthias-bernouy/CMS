@@ -17,10 +17,15 @@ function validateOrigins(field: string, origins: string[]): string[] {
     const out = new Set<string>();
     for (const raw of origins) {
         const trimmed = raw.trim();
-        if (!trimmed) continue;
+        if (!trimmed) {
+            continue;
+        }
         let origin: string;
-        try { origin = new URL(trimmed).origin; }
-        catch { throw new ContentValidationError(field, `invalid URL: "${trimmed}"`); }
+        try {
+            origin = new URL(trimmed).origin;
+        } catch {
+            throw new ContentValidationError(field, `invalid URL: "${trimmed}"`);
+        }
         if (!origin || origin === "null") {
             throw new ContentValidationError(field, `URL has no origin: "${trimmed}"`);
         }
@@ -39,8 +44,12 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
 
     if (patch.security) {
         const security = { ...patch.security };
-        if (security.connectExtras !== undefined) security.connectExtras = validateOrigins("connectExtras", security.connectExtras);
-        if (security.mediaExtras   !== undefined) security.mediaExtras   = validateOrigins("mediaExtras", security.mediaExtras);
+        if (security.connectExtras !== undefined) {
+            security.connectExtras = validateOrigins("connectExtras", security.connectExtras);
+        }
+        if (security.mediaExtras !== undefined) {
+            security.mediaExtras = validateOrigins("mediaExtras", security.mediaExtras);
+        }
         normalized.security = security;
     }
 
@@ -48,7 +57,9 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
         normalized.email = validateEmailSettings(patch.email);
     }
 
-    if (patch.theme) normalized.theme = validateThemeSettings(patch.theme);
+    if (patch.theme) {
+        normalized.theme = validateThemeSettings(patch.theme);
+    }
 
     return normalized;
 }
@@ -60,18 +71,18 @@ function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email
         ...base,
         ...email,
         fromEmail: (email.fromEmail ?? base.fromEmail).trim(),
-        fromName:  (email.fromName ?? base.fromName).trim(),
-        replyTo:   (email.replyTo ?? base.replyTo).trim(),
-        smtp:      {
+        fromName: (email.fromName ?? base.fromName).trim(),
+        replyTo: (email.replyTo ?? base.replyTo).trim(),
+        smtp: {
             ...base.smtp,
             ...(email.smtp ?? {}),
-            host:              (email.smtp?.host ?? base.smtp.host).trim(),
-            username:          (email.smtp?.username ?? base.smtp.username).trim(),
+            host: (email.smtp?.host ?? base.smtp.host).trim(),
+            username: (email.smtp?.username ?? base.smtp.username).trim(),
             passwordSecretRef: (email.smtp?.passwordSecretRef ?? base.smtp.passwordSecretRef).trim(),
         },
         templates: {
             emailVerification: normalizeEmailTemplate(templates.emailVerification, base.templates.emailVerification),
-            passwordReset:     normalizeEmailTemplate(templates.passwordReset, base.templates.passwordReset),
+            passwordReset: normalizeEmailTemplate(templates.passwordReset, base.templates.passwordReset),
         },
     };
 
@@ -83,10 +94,14 @@ function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email
         throw new ContentValidationError("email.smtp.port", "must be an integer between 1 and 65535.");
     }
 
-    if (!normalized.enabled) return normalized;
+    if (!normalized.enabled) {
+        return normalized;
+    }
 
     requireEmailAddress("email.fromEmail", normalized.fromEmail);
-    if (normalized.replyTo) requireEmailAddress("email.replyTo", normalized.replyTo);
+    if (normalized.replyTo) {
+        requireEmailAddress("email.replyTo", normalized.replyTo);
+    }
     if (normalized.smtp.host.length === 0) {
         throw new ContentValidationError("email.smtp.host", "SMTP host is required when email is enabled.");
     }
@@ -94,7 +109,10 @@ function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email
         throw new ContentValidationError("email.smtp.username", "SMTP username is required when email is enabled.");
     }
     if (!SECRET_REF_PATTERN.test(normalized.smtp.passwordSecretRef)) {
-        throw new ContentValidationError("email.smtp.passwordSecretRef", "must be a secret reference such as ${SMTP_PASSWORD}.");
+        throw new ContentValidationError(
+            "email.smtp.passwordSecretRef",
+            "must be a secret reference such as ${SMTP_PASSWORD}.",
+        );
     }
 
     return normalized;
@@ -106,7 +124,7 @@ function normalizeEmailTemplate(
 ): TSystem["email"]["templates"]["emailVerification"] {
     return {
         subject: typeof template?.subject === "string" ? template.subject : base.subject,
-        html:    typeof template?.html    === "string" ? template.html    : base.html,
+        html: typeof template?.html === "string" ? template.html : base.html,
     };
 }
 

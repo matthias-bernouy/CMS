@@ -34,7 +34,7 @@ describe("Commerce public offer list filters", () => {
             ["data-commerce-param", "category"],
             ["data-url-param", "category"],
         ]);
-        const control = { getAttribute: name => attributes.get(name) ?? null };
+        const control = { getAttribute: (name) => attributes.get(name) ?? null };
         const host = { querySelectorAll: () => [control] };
 
         expect(readFilterParams(host)).toEqual([["category", "category"]]);

@@ -23,7 +23,9 @@ export function normalizeBlockPickerOption(option: BlockPickerOption): BlockPick
 }
 
 export function blockPickerOptionItem(option: BlockPickerOption): BlockPickerItem {
-    if (option.item) return option.item;
+    if (option.item) {
+        return option.item;
+    }
     if (option.entry) {
         return {
             kind: "block",
@@ -34,8 +36,12 @@ export function blockPickerOptionItem(option: BlockPickerOption): BlockPickerIte
 }
 
 export function blockPickerSourceLabel(kind: BlockPickerItem["kind"]): string {
-    if (kind === "template") return "Template";
-    if (kind === "media") return "Media";
+    if (kind === "template") {
+        return "Template";
+    }
+    if (kind === "media") {
+        return "Media";
+    }
     return "Block";
 }
 
@@ -44,7 +50,9 @@ export function blockPickerItemLabel(item: BlockPickerItem): string {
 }
 
 export function blockPickerItemDescription(item: BlockPickerItem): string {
-    if (item.kind === "block") return item.entry.description ?? item.entry.tag;
+    if (item.kind === "block") {
+        return item.entry.description ?? item.entry.tag;
+    }
     return item.description ?? blockPickerItemHandle(item);
 }
 
@@ -61,8 +69,12 @@ export function blockPickerItemIcon(item: BlockPickerItem): string | undefined {
 }
 
 export function blockPickerItemHandle(item: BlockPickerItem): string {
-    if (item.kind === "block") return item.entry.tag;
-    if (item.kind === "media") return item.accept?.join(", ") ?? "media";
+    if (item.kind === "block") {
+        return item.entry.tag;
+    }
+    if (item.kind === "media") {
+        return item.accept?.join(", ") ?? "media";
+    }
     return item.id;
 }
 
@@ -78,7 +90,9 @@ export function blockPickerCategoryLabel(option: BlockPickerOption): string {
 }
 
 export function blockPickerOptionMatches(option: BlockPickerOption, query: string): boolean {
-    if (!query) return true;
+    if (!query) {
+        return true;
+    }
     const item = blockPickerOptionItem(option);
     return [
         blockPickerItemLabel(item),
@@ -87,5 +101,5 @@ export function blockPickerOptionMatches(option: BlockPickerOption, query: strin
         blockPickerItemSubCategory(item),
         blockPickerItemHandle(item),
         option.slotLabel,
-    ].some(value => value?.toLowerCase().includes(query));
+    ].some((value) => value?.toLowerCase().includes(query));
 }

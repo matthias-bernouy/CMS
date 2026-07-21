@@ -10,7 +10,7 @@
  */
 export type DataShape = {
     type: "string" | "number" | "boolean" | "object" | "array";
-    nullable?: boolean;                       // `true` when JSON null is an explicitly valid value
+    nullable?: boolean; // `true` when JSON null is an explicitly valid value
     /** Human-readable field name, following JSON Schema's `title` vocabulary. */
     title?: string;
     /** Domain meaning independent from the JSON representation. The importer
@@ -20,7 +20,7 @@ export type DataShape = {
         kind: "user-id";
         authority?: string;
     };
-    properties?: Record<string, DataShape>;   // when type === "object"
-    required?: string[];                        // when type === "object": names of required properties
-    items?: DataShape;                          // when type === "array"
+    properties?: Record<string, DataShape>; // when type === "object"
+    required?: string[]; // when type === "object": names of required properties
+    items?: DataShape; // when type === "array"
 };

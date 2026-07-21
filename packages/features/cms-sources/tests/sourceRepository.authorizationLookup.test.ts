@@ -30,11 +30,13 @@ describe("SourceRepository authorization lookup propagation", () => {
         const inner = new AuthorizationAwareSourceRepository();
         await inner.createSource({
             urn: "urn:shop",
-            endpoints: [{
-                urn: "urn:shop:getCart",
-                method: "GET",
-                targetUrl: "https://api.example.com/cart",
-            }],
+            endpoints: [
+                {
+                    urn: "urn:shop:getCart",
+                    method: "GET",
+                    targetUrl: "https://api.example.com/cart",
+                },
+            ],
         });
         const repository = decorate(inner);
 

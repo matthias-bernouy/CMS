@@ -24,7 +24,9 @@ describe("BindingRuntime — source render reconciliation", () => {
         document.body.appendChild(root);
         const runtime = new BindingRuntime(root);
         let paramChanges = 0;
-        const onParamChange = () => { paramChanges++; };
+        const onParamChange = () => {
+            paramChanges++;
+        };
         document.addEventListener(PARAMS_CHANGE_EVENT, onParamChange);
 
         try {

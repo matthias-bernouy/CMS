@@ -13,21 +13,24 @@ installCommerceTestEnvironment();
 
 describe("commerce system seller identity", () => {
     test("returns only the trusted actor identity after one narrow lookup", async () => {
-        setRestResponder(() => jsonResponse([{
-            id: 184,
-            cms_user_id: "seller-subject",
-            display_name: "Private seller name",
-            verification_status: "verified",
-            verified_by: "private-operator",
-            metadata: {
-                email: "private@example.test",
-                address: "7 Private Street",
-            },
-        }]));
+        setRestResponder(() =>
+            jsonResponse([
+                {
+                    id: 184,
+                    cms_user_id: "seller-subject",
+                    display_name: "Private seller name",
+                    verification_status: "verified",
+                    verified_by: "private-operator",
+                    metadata: {
+                        email: "private@example.test",
+                        address: "7 Private Street",
+                    },
+                },
+            ]),
+        );
 
         const response = await requestCommerce(
-            "/system/seller/identity?cmsUserId=spoofed"
-                + "&cms_user_id=eq.spoofed&id=999&select=*",
+            "/system/seller/identity?cmsUserId=spoofed" + "&cms_user_id=eq.spoofed&id=999&select=*",
             { userId: "seller-subject" },
         );
 

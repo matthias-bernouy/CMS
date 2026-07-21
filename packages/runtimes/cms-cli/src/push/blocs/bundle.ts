@@ -21,8 +21,12 @@ export async function bundleBlocSource(folder: string): Promise<Record<string, s
 async function walk(dir: string, root: string, out: Record<string, string>): Promise<void> {
     const entries = await readdir(dir);
     for (const entry of entries) {
-        if (entry.startsWith(".")) continue;
-        if (EXCLUDED_DIRS.has(entry)) continue;
+        if (entry.startsWith(".")) {
+            continue;
+        }
+        if (EXCLUDED_DIRS.has(entry)) {
+            continue;
+        }
         const full = join(dir, entry);
         const s = await stat(full);
         if (s.isDirectory()) {

@@ -8,10 +8,12 @@ import {
 
 describe("coverage policy", () => {
     test("requires every workspace package to own a test directory", () => {
-        expect(() => assertEveryPackageHasTests([
-            { name: "@bernouy/covered", path: "packages/features/covered", hasTests: true },
-            { name: "@bernouy/untested", path: "packages/features/untested", hasTests: false },
-        ])).toThrow("missing: @bernouy/untested");
+        expect(() =>
+            assertEveryPackageHasTests([
+                { name: "@bernouy/covered", path: "packages/features/covered", hasTests: true },
+                { name: "@bernouy/untested", path: "packages/features/untested", hasTests: false },
+            ]),
+        ).toThrow("missing: @bernouy/untested");
     });
 
     test("forbids baseline generation inside CI", () => {

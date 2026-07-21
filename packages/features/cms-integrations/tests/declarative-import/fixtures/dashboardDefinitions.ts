@@ -36,17 +36,95 @@ export const DELIVERY_DEFINITION = {
             dashboard: {
                 id: "delivery",
                 source: "delivery",
-                views: [{
-                    widget: "w-detail",
-                    id: "shipmentDetail",
-                    source: { endpoint: "relayPoints", params: { country: "FR" }, itemPath: "item" },
-                    actions: [{
+                views: [
+                    {
+                        widget: "w-detail",
+                        id: "shipmentDetail",
+                        source: { endpoint: "relayPoints", params: { country: "FR" }, itemPath: "item" },
+                        actions: [
+                            {
+                                id: "create",
+                                label: "Create shipment",
+                                placement: "primary",
+                                endpoint: { endpoint: "createShipment" },
+                            },
+                        ],
+                        main: [
+                            {
+                                id: "shipment",
+                                title: "Shipment",
+                                fields: [
+                                    {
+                                        id: "recipientCountry",
+                                        label: "Recipient country",
+                                        path: "recipientCountry",
+                                        type: "select",
+                                        options: ["FR"],
+                                        required: true,
+                                    },
+                                    {
+                                        id: "deliveryRelayNumber",
+                                        label: "Pickup point",
+                                        path: "deliveryRelayNumber",
+                                        type: "combobox",
+                                        required: true,
+                                        lookup: {
+                                            endpoint: "relayPoints",
+                                            params: {
+                                                country: "FR",
+                                                postalCode: "$field.recipientPostalCode",
+                                                city: "$field.recipientCity",
+                                                limit: "10",
+                                            },
+                                            itemsPath: "items",
+                                            valuePath: "number",
+                                            labelPath: "name",
+                                            selected: "$resource.relayPoint",
+                                            subtitlePath: "city",
+                                            descriptionPaths: ["addressLine1", "postalCode", "city"],
+                                        },
+                                    },
+                                    {
+                                        id: "options",
+                                        label: "Options",
+                                        path: "options",
+                                        type: "tokens",
+                                        allowCustom: true,
+                                        visibleWhen: {
+                                            value: "$field.recipientCountry",
+                                            equals: "FR",
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
+};
+
+export const EXPECTED_DELIVERY_DASHBOARD = {
+    type: "dashboard",
+    dashboard: {
+        id: "delivery",
+        source: "delivery",
+        views: [
+            {
+                widget: "w-detail",
+                id: "shipmentDetail",
+                source: { endpoint: "relayPoints", params: { country: "FR" }, itemPath: "item" },
+                actions: [
+                    {
                         id: "create",
                         label: "Create shipment",
                         placement: "primary",
                         endpoint: { endpoint: "createShipment" },
-                    }],
-                    main: [{
+                    },
+                ],
+                main: [
+                    {
                         id: "shipment",
                         title: "Shipment",
                         fields: [
@@ -55,7 +133,7 @@ export const DELIVERY_DEFINITION = {
                                 label: "Recipient country",
                                 path: "recipientCountry",
                                 type: "select",
-                                options: ["FR"],
+                                options: [{ value: "FR", label: "FR" }],
                                 required: true,
                             },
                             {
@@ -92,75 +170,9 @@ export const DELIVERY_DEFINITION = {
                                 },
                             },
                         ],
-                    }],
-                }],
-            },
-        },
-    ],
-};
-
-export const EXPECTED_DELIVERY_DASHBOARD = {
-    type: "dashboard",
-    dashboard: {
-        id: "delivery",
-        source: "delivery",
-        views: [{
-            widget: "w-detail",
-            id: "shipmentDetail",
-            source: { endpoint: "relayPoints", params: { country: "FR" }, itemPath: "item" },
-            actions: [{
-                id: "create",
-                label: "Create shipment",
-                placement: "primary",
-                endpoint: { endpoint: "createShipment" },
-            }],
-            main: [{
-                id: "shipment",
-                title: "Shipment",
-                fields: [
-                    {
-                        id: "recipientCountry",
-                        label: "Recipient country",
-                        path: "recipientCountry",
-                        type: "select",
-                        options: [{ value: "FR", label: "FR" }],
-                        required: true,
-                    },
-                    {
-                        id: "deliveryRelayNumber",
-                        label: "Pickup point",
-                        path: "deliveryRelayNumber",
-                        type: "combobox",
-                        required: true,
-                        lookup: {
-                            endpoint: "relayPoints",
-                            params: {
-                                country: "FR",
-                                postalCode: "$field.recipientPostalCode",
-                                city: "$field.recipientCity",
-                                limit: "10",
-                            },
-                            itemsPath: "items",
-                            valuePath: "number",
-                            labelPath: "name",
-                            selected: "$resource.relayPoint",
-                            subtitlePath: "city",
-                            descriptionPaths: ["addressLine1", "postalCode", "city"],
-                        },
-                    },
-                    {
-                        id: "options",
-                        label: "Options",
-                        path: "options",
-                        type: "tokens",
-                        allowCustom: true,
-                        visibleWhen: {
-                            value: "$field.recipientCountry",
-                            equals: "FR",
-                        },
                     },
                 ],
-            }],
-        }],
+            },
+        ],
     },
 };

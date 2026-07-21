@@ -1,7 +1,7 @@
 import type { ComboItem, ComboOption } from "./types";
 
 export function comboOptionsFrom(host: HTMLElement): ComboOption[] {
-    return Array.from(host.querySelectorAll("option")).map(option => ({
+    return Array.from(host.querySelectorAll("option")).map((option) => ({
         value: option.value,
         label: option.textContent ?? option.value,
         disabled: option.disabled,
@@ -10,8 +10,8 @@ export function comboOptionsFrom(host: HTMLElement): ComboOption[] {
 
 export function comboItemsFor(options: ComboOption[], query: string): ComboItem[] {
     const needle = query.toLowerCase();
-    const matches = needle ? options.filter(item => item.label.toLowerCase().includes(needle)) : options;
-    return matches.slice(0, 8).map(item => ({ ...item, kind: "option" }));
+    const matches = needle ? options.filter((item) => item.label.toLowerCase().includes(needle)) : options;
+    return matches.slice(0, 8).map((item) => ({ ...item, kind: "option" }));
 }
 
 export function renderComboItem(
@@ -28,9 +28,11 @@ export function renderComboItem(
     row.dataset.selected = String(item.kind === "option" && item.value === selectedValue);
     row.setAttribute("role", "option");
     row.setAttribute("aria-selected", row.dataset.active);
-    row.addEventListener("mousedown", event => {
+    row.addEventListener("mousedown", (event) => {
         event.preventDefault();
-        if (!item.disabled) onSelect(item);
+        if (!item.disabled) {
+            onSelect(item);
+        }
     });
     row.append(indicator(), optionLabel(item.label));
     return row;
@@ -47,7 +49,7 @@ export function createPromptItem(label: string, onSelect: () => void): HTMLEleme
     const row = document.createElement("div");
     row.className = "option create";
     row.setAttribute("role", "option");
-    row.addEventListener("mousedown", event => {
+    row.addEventListener("mousedown", (event) => {
         event.preventDefault();
         onSelect();
     });

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    importIntegration,
-    type IntegrationDefinition,
-} from "@bernouy/cms-integrations";
+import { importIntegration, type IntegrationDefinition } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
@@ -28,7 +25,11 @@ describe("@bernouy/cms-integrations runtime artifact imports", () => {
         );
 
         expect(result.artifacts).toContainEqual({ type: "trigger", id: "sync-offers", action: "created" });
-        expect(result.artifacts).toContainEqual({ type: "sourceOverlay", id: "product-offers-fields", action: "created" });
+        expect(result.artifacts).toContainEqual({
+            type: "sourceOverlay",
+            id: "product-offers-fields",
+            action: "created",
+        });
         expect(result.artifacts).toContainEqual({ type: "relation", id: "product-offers", action: "created" });
         expect(result.artifacts).toContainEqual({
             type: "dashboardRelation",
@@ -52,14 +53,16 @@ function runtimeArtifactsDefinition(): IntegrationDefinition {
         inputs: [],
         artifacts: [
             sourceArtifact("products", "Products", [{ endpointId: "product", params: [] }]),
-            sourceArtifact("offers", "Offers", [{
-                endpointId: "offers",
-                params: [
-                    { name: "productId", type: "string" },
-                    { name: "limit", type: "number" },
-                    { name: "offset", type: "number" },
-                ],
-            }]),
+            sourceArtifact("offers", "Offers", [
+                {
+                    endpointId: "offers",
+                    params: [
+                        { name: "productId", type: "string" },
+                        { name: "limit", type: "number" },
+                        { name: "offset", type: "number" },
+                    ],
+                },
+            ]),
             { type: "function", function: { id: "syncOffers", method: "POST", steps: [], return: { status: 204 } } },
             {
                 type: "trigger",
@@ -95,11 +98,11 @@ function sourceArtifact(id: string, name: string, endpoints: Endpoint[]): Artifa
         source: {
             id,
             meta: { name },
-            endpoints: endpoints.map(endpoint => ({
+            endpoints: endpoints.map((endpoint) => ({
                 endpointId: endpoint.endpointId,
                 method: "GET",
                 targetUrl: `https://api.example.com/${id}/${endpoint.endpointId}`,
-                params: endpoint.params.map(param => ({ ...param, in: "query" })),
+                params: endpoint.params.map((param) => ({ ...param, in: "query" })),
                 output: [{ status: "200", body: { type: "object" } }],
             })),
         },
@@ -119,12 +122,20 @@ function productDashboard(): Extract<Artifact, { type: "dashboard" }>["dashboard
     return {
         id: "products",
         source: "products",
-        views: [{
-            widget: "w-detail",
-            id: "productDetail",
-            source: { endpoint: "product", itemPath: "item" },
-            main: [{ id: "details", title: "Details", fields: [{ id: "title", label: "Title", type: "text", path: "title" }] }],
-        }],
+        views: [
+            {
+                widget: "w-detail",
+                id: "productDetail",
+                source: { endpoint: "product", itemPath: "item" },
+                main: [
+                    {
+                        id: "details",
+                        title: "Details",
+                        fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
+                    },
+                ],
+            },
+        ],
     };
 }
 
@@ -134,7 +145,11 @@ function productOffersRelation(): Extract<Artifact, { type: "relation" }>["relat
         from: { sourceId: "products", idPath: "id" },
         to: { sourceId: "offers", idPath: "id" },
         cardinality: "many",
-        binding: { kind: "reference", endpoint: { sourceId: "offers", endpointId: "offers" }, params: { productId: "$from.id" } },
+        binding: {
+            kind: "reference",
+            endpoint: { sourceId: "offers", endpointId: "offers" },
+            params: { productId: "$from.id" },
+        },
         page: { itemsPath: "items", limitParam: "limit", offsetParam: "offset" },
     };
 }

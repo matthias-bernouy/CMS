@@ -1,8 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class BasicImageEditor extends Editor {
     protected override settings(): SettingSection[] {

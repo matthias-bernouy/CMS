@@ -7,11 +7,7 @@ export const CONTROL_COMPONENT_ENTRY = "packages/surfaces/cms-control/src/compon
 export const CONTROL_COMPONENT_ASSET = "packages/surfaces/cms-control/src/static/assets/control-components.js";
 
 export async function generateControlComponentAsset(rootDir: string): Promise<string> {
-    const process = Bun.spawn([
-        Bun.argv[0]!,
-        resolve(import.meta.dir, "generateControlAsset.ts"),
-        resolve(rootDir),
-    ], {
+    const process = Bun.spawn([Bun.argv[0]!, resolve(import.meta.dir, "generateControlAsset.ts"), resolve(rootDir)], {
         stdout: "pipe",
         stderr: "pipe",
     });
@@ -20,7 +16,9 @@ export async function generateControlComponentAsset(rootDir: string): Promise<st
         new Response(process.stdout).text(),
         new Response(process.stderr).text(),
     ]);
-    if (exitCode !== 0) throw new Error(`Isolated Control asset build failed:\n${stderr.trim()}`);
+    if (exitCode !== 0) {
+        throw new Error(`Isolated Control asset build failed:\n${stderr.trim()}`);
+    }
     return stdout;
 }
 
@@ -44,11 +42,15 @@ export function normalizeControlAsset(contents: string): string {
         const packagesMarker = path.lastIndexOf("/packages/");
         const repositoryPath = packagesMarker >= 0 ? path.slice(packagesMarker + 1) : path;
         const controlPrefix = "packages/surfaces/cms-control/";
-        if (repositoryPath.startsWith(controlPrefix)) return `${prefix}${repositoryPath.slice(controlPrefix.length)}`;
+        if (repositoryPath.startsWith(controlPrefix)) {
+            return `${prefix}${repositoryPath.slice(controlPrefix.length)}`;
+        }
         const workspaceMatch = repositoryPath.match(
             /^packages\/(foundation|features|resources|surfaces|runtimes)\/(.+)$/,
         );
-        if (workspaceMatch) return `${prefix}../../${workspaceMatch[1]}/${workspaceMatch[2]}`;
+        if (workspaceMatch) {
+            return `${prefix}../../${workspaceMatch[1]}/${workspaceMatch[2]}`;
+        }
         return `${prefix}${path}`;
     });
 }

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    applyPushIntegrations,
-    fetchRemoteIntegrationDefinitions,
-} from "cms-cli/push/integrations/apply";
+import { applyPushIntegrations, fetchRemoteIntegrationDefinitions } from "cms-cli/push/integrations/apply";
 import type { ClassifiedIntegration } from "cms-cli/push/integrations/classify";
 import { orderIntegrationWritesByDependencies } from "cms-cli/push/integrations/order";
 import type { LocalIntegrationImport } from "cms-cli/push/integrations/scan";
@@ -34,20 +31,18 @@ describe("orderIntegrationWritesByDependencies", () => {
             integration("commerce"),
         ]);
 
-        expect(ids(ordered)).toEqual([
-            "z-root",
-            "a-root",
-            "stripe-connect",
-            "commerce",
-            "payments",
-        ]);
+        expect(ids(ordered)).toEqual(["z-root", "a-root", "stripe-connect", "commerce", "payments"]);
 
-        expect(ids(orderIntegrationWritesByDependencies([
-            integration("child", [{ name: "base", kind: "root" }]),
-            integration("unrelated"),
-            integration("root"),
-            integration("later"),
-        ]))).toEqual(["unrelated", "root", "child", "later"]);
+        expect(
+            ids(
+                orderIntegrationWritesByDependencies([
+                    integration("child", [{ name: "base", kind: "root" }]),
+                    integration("unrelated"),
+                    integration("root"),
+                    integration("later"),
+                ]),
+            ),
+        ).toEqual(["unrelated", "root", "child", "later"]);
     });
 
     test("prefers local optional dependencies but excludes unchanged entries", () => {
@@ -70,17 +65,18 @@ describe("orderIntegrationWritesByDependencies", () => {
     });
 
     test("rejects a required dependency cycle with its path", () => {
-        expect(() => orderIntegrationWritesByDependencies([
-            integration("a", [{ name: "b", kind: "b" }]),
-            integration("b", [{ name: "a", kind: "a" }]),
-        ])).toThrow("Integration dependency cycle detected: a -> b -> a");
+        expect(() =>
+            orderIntegrationWritesByDependencies([
+                integration("a", [{ name: "b", kind: "b" }]),
+                integration("b", [{ name: "a", kind: "a" }]),
+            ]),
+        ).toThrow("Integration dependency cycle detected: a -> b -> a");
     });
 
     test("rejects duplicate writable integration kinds", () => {
-        expect(() => orderIntegrationWritesByDependencies([
-            integration("duplicate"),
-            integration("duplicate", [], "update"),
-        ])).toThrow('Duplicate writable integration kind "duplicate"');
+        expect(() =>
+            orderIntegrationWritesByDependencies([integration("duplicate"), integration("duplicate", [], "update")]),
+        ).toThrow('Duplicate writable integration kind "duplicate"');
     });
 
     test("does not create a cycle through an unchanged integration", () => {
@@ -98,10 +94,10 @@ describe("orderIntegrationWritesByDependencies", () => {
             ["root", definition("root")],
         ]);
 
-        const ordered = orderIntegrationWritesByDependencies([
-            kindOnlyIntegration("consumer"),
-            kindOnlyIntegration("root"),
-        ], definitions);
+        const ordered = orderIntegrationWritesByDependencies(
+            [kindOnlyIntegration("consumer"), kindOnlyIntegration("root")],
+            definitions,
+        );
 
         expect(ids(ordered)).toEqual(["root", "consumer"]);
     });
@@ -112,10 +108,10 @@ describe("orderIntegrationWritesByDependencies", () => {
             ["root", definition("root")],
         ]);
 
-        const ordered = orderIntegrationWritesByDependencies([
-            integration("consumer"),
-            integration("root"),
-        ], definitions);
+        const ordered = orderIntegrationWritesByDependencies(
+            [integration("consumer"), integration("root")],
+            definitions,
+        );
 
         expect(ids(ordered)).toEqual(["consumer", "root"]);
     });
@@ -126,24 +122,27 @@ describe("applyPushIntegrations dependency failures", () => {
         const calls: string[] = [];
         let result: Awaited<ReturnType<typeof applyPushIntegrations>> | undefined;
 
-        await withFetch((_url, init) => {
-            const request = JSON.parse(String(init?.body)) as LocalIntegrationImport;
-            calls.push(request.kind);
-            return request.kind === "root"
-                ? new Response("invalid root", { status: 400 })
-                : new Response(null, { status: 200 });
-        }, async () => {
-            result = await applyPushIntegrations(new URL("https://cms.example/"), "token", [
-                integration("leaf", [{ name: "parent", kind: "dependant" }]),
-                integration("dependant", [{ name: "root", kind: "root" }]),
-                integration("root"),
-                integration("independent"),
-            ]);
-        });
+        await withFetch(
+            (_url, init) => {
+                const request = JSON.parse(String(init?.body)) as LocalIntegrationImport;
+                calls.push(request.kind);
+                return request.kind === "root"
+                    ? new Response("invalid root", { status: 400 })
+                    : new Response(null, { status: 200 });
+            },
+            async () => {
+                result = await applyPushIntegrations(new URL("https://cms.example/"), "token", [
+                    integration("leaf", [{ name: "parent", kind: "dependant" }]),
+                    integration("dependant", [{ name: "root", kind: "root" }]),
+                    integration("root"),
+                    integration("independent"),
+                ]);
+            },
+        );
 
         expect(calls).toEqual(["root", "independent"]);
-        expect(result?.pushed.map(item => item.id)).toEqual(["independent"]);
-        expect(result?.failed.map(item => item.id)).toEqual(["root", "dependant", "leaf"]);
+        expect(result?.pushed.map((item) => item.id)).toEqual(["independent"]);
+        expect(result?.failed.map((item) => item.id)).toEqual(["root", "dependant", "leaf"]);
         expect(result?.failed[0]?.error).toContain("HTTP 400");
         expect(result?.failed[1]?.error).toBe('Skipped because dependency "root" failed to push');
         expect(result?.failed[2]?.error).toBe('Skipped because dependency "dependant" failed to push');
@@ -153,22 +152,25 @@ describe("applyPushIntegrations dependency failures", () => {
         const calls: string[] = [];
         let result: Awaited<ReturnType<typeof applyPushIntegrations>> | undefined;
 
-        await withFetch((_url, init) => {
-            const request = JSON.parse(String(init?.body)) as LocalIntegrationImport;
-            calls.push(request.kind);
-            return request.kind === "optional-root"
-                ? new Response("invalid optional root", { status: 400 })
-                : new Response(null, { status: 200 });
-        }, async () => {
-            result = await applyPushIntegrations(new URL("https://cms.example/"), "token", [
-                integration("optional-root"),
-                integration("consumer", [{ name: "extra", kind: "optional-root", optional: true }]),
-            ]);
-        });
+        await withFetch(
+            (_url, init) => {
+                const request = JSON.parse(String(init?.body)) as LocalIntegrationImport;
+                calls.push(request.kind);
+                return request.kind === "optional-root"
+                    ? new Response("invalid optional root", { status: 400 })
+                    : new Response(null, { status: 200 });
+            },
+            async () => {
+                result = await applyPushIntegrations(new URL("https://cms.example/"), "token", [
+                    integration("optional-root"),
+                    integration("consumer", [{ name: "extra", kind: "optional-root", optional: true }]),
+                ]);
+            },
+        );
 
         expect(calls).toEqual(["optional-root", "consumer"]);
-        expect(result?.pushed.map(item => item.id)).toEqual(["consumer"]);
-        expect(result?.failed.map(item => item.id)).toEqual(["optional-root"]);
+        expect(result?.pushed.map((item) => item.id)).toEqual(["consumer"]);
+        expect(result?.failed.map((item) => item.id)).toEqual(["optional-root"]);
     });
 
     test("propagates failures through catalogue definitions for kind-only imports", async () => {
@@ -179,19 +181,24 @@ describe("applyPushIntegrations dependency failures", () => {
         ]);
         let result: Awaited<ReturnType<typeof applyPushIntegrations>> | undefined;
 
-        await withFetch((_url, init) => {
-            const request = JSON.parse(String(init?.body)) as LocalIntegrationImport;
-            calls.push(request.kind);
-            return new Response("invalid root", { status: 400 });
-        }, async () => {
-            result = await applyPushIntegrations(new URL("https://cms.example/"), "token", [
-                kindOnlyIntegration("consumer"),
-                kindOnlyIntegration("root"),
-            ], definitions);
-        });
+        await withFetch(
+            (_url, init) => {
+                const request = JSON.parse(String(init?.body)) as LocalIntegrationImport;
+                calls.push(request.kind);
+                return new Response("invalid root", { status: 400 });
+            },
+            async () => {
+                result = await applyPushIntegrations(
+                    new URL("https://cms.example/"),
+                    "token",
+                    [kindOnlyIntegration("consumer"), kindOnlyIntegration("root")],
+                    definitions,
+                );
+            },
+        );
 
         expect(calls).toEqual(["root"]);
-        expect(result?.failed.map(item => item.id)).toEqual(["root", "consumer"]);
+        expect(result?.failed.map((item) => item.id)).toEqual(["root", "consumer"]);
         expect(result?.failed[1]?.error).toBe('Skipped because dependency "root" failed to push');
     });
 });
@@ -200,16 +207,18 @@ describe("fetchRemoteIntegrationDefinitions", () => {
     test("loads the remote catalogue used by kind-only imports", async () => {
         const definitions = [definition("root")];
 
-        await withFetch((url, init) => {
-            expect(url).toBe("https://cms.example/api/integrations/list");
-            expect(init?.headers).toEqual({ "Authorization": "Bearer token" });
-            return Response.json(definitions);
-        }, async () => {
-            expect(await fetchRemoteIntegrationDefinitions(
-                new URL("https://cms.example/"),
-                "token",
-            )).toEqual(definitions);
-        });
+        await withFetch(
+            (url, init) => {
+                expect(url).toBe("https://cms.example/api/integrations/list");
+                expect(init?.headers).toEqual({ "Authorization": "Bearer token" });
+                return Response.json(definitions);
+            },
+            async () => {
+                expect(await fetchRemoteIntegrationDefinitions(new URL("https://cms.example/"), "token")).toEqual(
+                    definitions,
+                );
+            },
+        );
     });
 });
 
@@ -239,10 +248,7 @@ function integration(
     };
 }
 
-function kindOnlyIntegration(
-    kind: string,
-    status: ClassifiedIntegration["status"] = "new",
-): ClassifiedIntegration {
+function kindOnlyIntegration(kind: string, status: ClassifiedIntegration["status"] = "new"): ClassifiedIntegration {
     const entry = integration(kind, [], status);
     entry.integration.request = { kind, answers: {} };
     return entry;
@@ -258,5 +264,5 @@ function definition(kind: string, dependencies: Dependency[] = []): IntegrationD
 }
 
 function ids(entries: ClassifiedIntegration[]): string[] {
-    return entries.map(entry => entry.integration.id);
+    return entries.map((entry) => entry.integration.id);
 }

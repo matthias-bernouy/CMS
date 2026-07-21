@@ -29,7 +29,9 @@ describe("dashboard manual detail lifecycle", () => {
             calls += 1;
             if (calls === 1) {
                 firstSignal = init?.signal ?? undefined;
-                return new Promise<Response>(resolve => { firstResolve = resolve; });
+                return new Promise<Response>((resolve) => {
+                    firstResolve = resolve;
+                });
             }
             return Promise.resolve(Response.json({ items: [{ id: "b", title: "Bound option B" }] }));
         }) as unknown as typeof fetch;
@@ -41,16 +43,22 @@ describe("dashboard manual detail lifecycle", () => {
         expect(firstSignal?.aborted).toBeTrue();
         expect(detail.shadowRoot?.textContent).toContain("Manual replacement");
         changeDetailInput(detail, "productId", "manual-edited");
-        await new Promise(resolve => setTimeout(resolve, 270));
+        await new Promise((resolve) => setTimeout(resolve, 270));
         expect(calls).toBe(1);
 
         firstResolve?.(Response.json({ items: [{ id: "a", title: "Stale bound option" }] }));
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 20));
         expect(detail.shadowRoot?.textContent).not.toContain("Stale bound option");
 
-        detail.setAttribute("data-source-json", JSON.stringify({
-            id: "b", title: "Bound product B", name: "Fresh", productId: "b",
-        }));
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({
+                id: "b",
+                title: "Bound product B",
+                name: "Fresh",
+                productId: "b",
+            }),
+        );
         await waitForDetail(() => detail.shadowRoot?.textContent?.includes("Bound product B") === true);
         await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("option[value='b']")));
         expect(calls).toBe(2);
@@ -64,11 +72,21 @@ describe("dashboard manual detail lifecycle", () => {
         globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) => {
             calls += 1;
             const signal = init?.signal;
-            if (signal) signals.push(signal);
-            if (calls === 1) return Promise.resolve(Response.json({
-                items: [{ id: "a", title: "Private option" }],
-            }));
-            if (calls > 2) return new Promise<Response>(resolve => { reconnectResolve = resolve; });
+            if (signal) {
+                signals.push(signal);
+            }
+            if (calls === 1) {
+                return Promise.resolve(
+                    Response.json({
+                        items: [{ id: "a", title: "Private option" }],
+                    }),
+                );
+            }
+            if (calls > 2) {
+                return new Promise<Response>((resolve) => {
+                    reconnectResolve = resolve;
+                });
+            }
             return new Promise<Response>((_resolve, reject) => {
                 signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
             });
@@ -98,22 +116,37 @@ describe("dashboard manual detail lifecycle", () => {
 
 function boundDetail(resource: Record<string, unknown>): DashboardWDetail {
     const detail = document.createElement("cms-dashboard-w-detail") as DashboardWDetail;
-    detail.setAttribute("data-config-json", JSON.stringify({
-        widget: "w-detail",
-        id: "detail",
-        source: { endpoint: "resource" },
-        title: { path: "title" },
-        main: [{ id: "main", title: "Main", fields: [
-            { id: "name", label: "Name", path: "name", type: "text" },
-            { id: "productId", label: "Product", path: "productId", type: "combobox", lookup: {
-                endpoint: "products",
-                params: { ownerId: "$resource.id", name: "$field.name" },
-                itemsPath: "items",
-                valuePath: "id",
-                labelPath: "title",
-            } },
-        ] }],
-    }));
+    detail.setAttribute(
+        "data-config-json",
+        JSON.stringify({
+            widget: "w-detail",
+            id: "detail",
+            source: { endpoint: "resource" },
+            title: { path: "title" },
+            main: [
+                {
+                    id: "main",
+                    title: "Main",
+                    fields: [
+                        { id: "name", label: "Name", path: "name", type: "text" },
+                        {
+                            id: "productId",
+                            label: "Product",
+                            path: "productId",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "products",
+                                params: { ownerId: "$resource.id", name: "$field.name" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
+                            },
+                        },
+                    ],
+                },
+            ],
+        }),
+    );
     detail.setAttribute("data-source-id", "catalog");
     detail.setAttribute("data-row-key", String(resource.id ?? ""));
     detail.setAttribute("data-source-json", JSON.stringify(resource));
@@ -125,9 +158,7 @@ function manualData(title: string): WDetailData {
         eyebrow: "Manual",
         title,
         actions: [],
-        main: [{ title: "Main", fields: [
-            { id: "productId", label: "Product", input: "text", value: "manual" },
-        ] }],
+        main: [{ title: "Main", fields: [{ id: "productId", label: "Product", input: "text", value: "manual" }] }],
         aside: [],
     };
 }

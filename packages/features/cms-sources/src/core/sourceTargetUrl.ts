@@ -22,16 +22,26 @@ export function validateSourceTargetUrl(value: string, opts: SourceTargetUrlVali
     }
 
     const hostname = normalizeHostname(url.hostname);
-    if (!hostname) return { ok: false, reason: "targetUrl host is required" };
+    if (!hostname) {
+        return { ok: false, reason: "targetUrl host is required" };
+    }
     const allowlist = new Set((opts.allowBlockedTargetHosts ?? []).map(normalizeHostname));
-    if (allowlist.has(hostname)) return { ok: true };
-    if (hostname === "localhost" || hostname.endsWith(".localhost")) return { ok: false, reason: "targetUrl host is blocked" };
+    if (allowlist.has(hostname)) {
+        return { ok: true };
+    }
+    if (hostname === "localhost" || hostname.endsWith(".localhost")) {
+        return { ok: false, reason: "targetUrl host is blocked" };
+    }
 
     const ipv4 = parseIpv4(hostname);
-    if (ipv4 && isBlockedIpv4(ipv4)) return { ok: false, reason: "targetUrl IP range is blocked" };
+    if (ipv4 && isBlockedIpv4(ipv4)) {
+        return { ok: false, reason: "targetUrl IP range is blocked" };
+    }
 
     const ipv6 = parseIpv6(hostname);
-    if (ipv6 && isBlockedIpv6(ipv6)) return { ok: false, reason: "targetUrl IP range is blocked" };
+    if (ipv6 && isBlockedIpv6(ipv6)) {
+        return { ok: false, reason: "targetUrl IP range is blocked" };
+    }
 
     return { ok: true };
 }
@@ -50,12 +60,18 @@ function normalizeHostname(value: string): string {
 
 function parseIpv4(value: string): number[] | null {
     const parts = value.split(".");
-    if (parts.length !== 4) return null;
+    if (parts.length !== 4) {
+        return null;
+    }
     const out: number[] = [];
     for (const part of parts) {
-        if (!/^[0-9]+$/.test(part)) return null;
+        if (!/^[0-9]+$/.test(part)) {
+            return null;
+        }
         const n = Number(part);
-        if (!Number.isInteger(n) || n < 0 || n > 255) return null;
+        if (!Number.isInteger(n) || n < 0 || n > 255) {
+            return null;
+        }
         out.push(n);
     }
     return out;
@@ -65,7 +81,9 @@ function isBlockedIpv4(ip: readonly number[]): boolean {
     const a = ip[0]!;
     const b = ip[1]!;
     return (
-        a === 0 || a === 10 || a === 127 ||
+        a === 0 ||
+        a === 10 ||
+        a === 127 ||
         (a === 100 && b >= 64 && b <= 127) ||
         (a === 169 && b === 254) ||
         (a === 172 && b >= 16 && b <= 31) ||
@@ -77,26 +95,36 @@ function isBlockedIpv4(ip: readonly number[]): boolean {
 
 function parseIpv6(value: string): number[] | null {
     const zoneLess = value.split("%")[0]!;
-    if (!zoneLess.includes(":")) return null;
+    if (!zoneLess.includes(":")) {
+        return null;
+    }
 
     let input = zoneLess;
     const ipv4Match = /(^|:)(\d+\.\d+\.\d+\.\d+)$/.exec(input);
     if (ipv4Match) {
         const ipv4 = parseIpv4(ipv4Match[2]!);
-        if (!ipv4) return null;
+        if (!ipv4) {
+            return null;
+        }
         const high = ((ipv4[0]! << 8) | ipv4[1]!).toString(16);
         const low = ((ipv4[2]! << 8) | ipv4[3]!).toString(16);
         input = `${input.slice(0, input.length - ipv4Match[2]!.length)}${high}:${low}`;
     }
 
     const halves = input.split("::");
-    if (halves.length > 2) return null;
+    if (halves.length > 2) {
+        return null;
+    }
     const left = splitIpv6Half(halves[0]!);
     const right = halves.length === 2 ? splitIpv6Half(halves[1]!) : [];
-    if (!left || !right) return null;
+    if (!left || !right) {
+        return null;
+    }
 
     const missing = 8 - left.length - right.length;
-    if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+    if (halves.length === 1 ? missing !== 0 : missing < 1) {
+        return null;
+    }
 
     const bytes: number[] = [];
     for (const group of [...left, ...Array(missing).fill(0), ...right]) {
@@ -106,10 +134,14 @@ function parseIpv6(value: string): number[] | null {
 }
 
 function splitIpv6Half(value: string): number[] | null {
-    if (!value) return [];
+    if (!value) {
+        return [];
+    }
     const out: number[] = [];
     for (const part of value.split(":")) {
-        if (!/^[0-9a-fA-F]{1,4}$/.test(part)) return null;
+        if (!/^[0-9a-fA-F]{1,4}$/.test(part)) {
+            return null;
+        }
         out.push(parseInt(part, 16));
     }
     return out;
@@ -124,5 +156,7 @@ function isBlockedIpv6(bytes: readonly number[]): boolean {
     const mappedIpv4 = bytes.slice(0, 10).every((b) => b === 0) && bytes[10] === 0xff && bytes[11] === 0xff;
     const compatibleIpv4 = bytes.slice(0, 12).every((b) => b === 0);
     const embeddedIpv4 = mappedIpv4 || compatibleIpv4 ? bytes.slice(12, 16) : null;
-    return allZero || loopback || uniqueLocal || linkLocal || multicast || (!!embeddedIpv4 && isBlockedIpv4(embeddedIpv4));
+    return (
+        allZero || loopback || uniqueLocal || linkLocal || multicast || (!!embeddedIpv4 && isBlockedIpv4(embeddedIpv4))
+    );
 }

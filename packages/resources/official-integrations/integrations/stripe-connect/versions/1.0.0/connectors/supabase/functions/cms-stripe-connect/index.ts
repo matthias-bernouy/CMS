@@ -379,7 +379,13 @@ type ProviderTruthActorKind = "system" | "webhook" | "reconciliation";
 
 type StripeTransfer = JsonRecord & { id: string; amount?: number; currency?: string; reversed?: boolean };
 type StripeRefund = JsonRecord & { id: string; amount?: number; currency?: string; status?: string };
-type StripeDispute = JsonRecord & { id: string; charge?: string | JsonRecord; amount?: number; currency?: string; status?: string };
+type StripeDispute = JsonRecord & {
+    id: string;
+    charge?: string | JsonRecord;
+    amount?: number;
+    currency?: string;
+    status?: string;
+};
 
 type StripeAccountSession = JsonRecord & {
     account: string;
@@ -481,44 +487,123 @@ const paymentSelect = [
     "updated_at",
 ].join(",");
 const operationSelect = [
-    "id", "payment_id", "business_key", "operation_type", "status",
-    "stripe_object_id", "request", "response", "last_error", "attempt_count",
-    "next_attempt_at", "claimed_at", "completed_at", "created_at", "updated_at",
+    "id",
+    "payment_id",
+    "business_key",
+    "operation_type",
+    "status",
+    "stripe_object_id",
+    "request",
+    "response",
+    "last_error",
+    "attempt_count",
+    "next_attempt_at",
+    "claimed_at",
+    "completed_at",
+    "created_at",
+    "updated_at",
 ].join(",");
 const transferSelect = [
-    "id", "payment_id", "operation_id", "release_authorization_id",
-    "release_kind", "stripe_transfer_id", "source_charge_id", "destination_account_id",
-    "transfer_group", "amount", "currency", "status", "provider_snapshot",
-    "created_at", "updated_at",
+    "id",
+    "payment_id",
+    "operation_id",
+    "release_authorization_id",
+    "release_kind",
+    "stripe_transfer_id",
+    "source_charge_id",
+    "destination_account_id",
+    "transfer_group",
+    "amount",
+    "currency",
+    "status",
+    "provider_snapshot",
+    "created_at",
+    "updated_at",
 ].join(",");
 const transferRecoverySelect = [
-    "id", "payment_id", "recovery_request_id", "exposure_type", "requested_amount",
-    "allocated_amount", "confirmed_amount", "allocation_shortfall_amount", "currency",
-    "reason", "allocation_strategy", "status", "last_error", "created_at", "updated_at",
+    "id",
+    "payment_id",
+    "recovery_request_id",
+    "exposure_type",
+    "requested_amount",
+    "allocated_amount",
+    "confirmed_amount",
+    "allocation_shortfall_amount",
+    "currency",
+    "reason",
+    "allocation_strategy",
+    "status",
+    "last_error",
+    "created_at",
+    "updated_at",
 ].join(",");
 const transferReversalSelect = [
-    "id", "payment_id", "recovery_id", "allocation_index", "transfer_id", "operation_id",
-    "reversal_request_id", "stripe_transfer_reversal_id", "amount", "currency", "reason",
-    "status", "provider_snapshot", "created_at", "updated_at",
+    "id",
+    "payment_id",
+    "recovery_id",
+    "allocation_index",
+    "transfer_id",
+    "operation_id",
+    "reversal_request_id",
+    "stripe_transfer_reversal_id",
+    "amount",
+    "currency",
+    "reason",
+    "status",
+    "provider_snapshot",
+    "created_at",
+    "updated_at",
 ].join(",");
 const refundSelect = [
-    "id", "payment_id", "operation_id", "refund_request_id", "commerce_refund_request_id", "stripe_refund_id",
-    "stripe_charge_id", "stripe_balance_transaction_id", "amount", "required_reversal_amount", "currency", "reason",
-    "seller_entitlement_reduction_amount", "authorized_seller_amount_after_refund",
-    "status", "failure_reason", "actual_stripe_fee_amount", "actual_stripe_net_amount",
-    "actual_stripe_fee_currency", "actual_stripe_fee_details", "provider_snapshot", "created_at", "updated_at",
+    "id",
+    "payment_id",
+    "operation_id",
+    "refund_request_id",
+    "commerce_refund_request_id",
+    "stripe_refund_id",
+    "stripe_charge_id",
+    "stripe_balance_transaction_id",
+    "amount",
+    "required_reversal_amount",
+    "currency",
+    "reason",
+    "seller_entitlement_reduction_amount",
+    "authorized_seller_amount_after_refund",
+    "status",
+    "failure_reason",
+    "actual_stripe_fee_amount",
+    "actual_stripe_net_amount",
+    "actual_stripe_fee_currency",
+    "actual_stripe_fee_details",
+    "provider_snapshot",
+    "created_at",
+    "updated_at",
 ].join(",");
 const disputeSelect = [
-    "id", "payment_id", "stripe_dispute_id", "stripe_charge_id", "amount", "currency",
-    "reason", "status", "evidence_status", "evidence_due_by", "is_charge_refundable",
-    "funds_withdrawn", "last_funds_event_at", "last_funds_event_id",
-    "balance_transaction_ids", "provider_snapshot", "created_at", "updated_at",
+    "id",
+    "payment_id",
+    "stripe_dispute_id",
+    "stripe_charge_id",
+    "amount",
+    "currency",
+    "reason",
+    "status",
+    "evidence_status",
+    "evidence_due_by",
+    "is_charge_refundable",
+    "funds_withdrawn",
+    "last_funds_event_at",
+    "last_funds_event_id",
+    "balance_transaction_ids",
+    "provider_snapshot",
+    "created_at",
+    "updated_at",
 ].join(",");
 
 serveStripeConnect({
-    ingestPlatformWebhook: request => ingestStripeWebhook(request, "platform"),
-    ingestConnectWebhook: request => ingestStripeWebhook(request, "connect"),
-    ingestConnectV2Webhook: request => ingestStripeWebhook(request, "connect_v2"),
+    ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
+    ingestConnectWebhook: (request) => ingestStripeWebhook(request, "connect"),
+    ingestConnectV2Webhook: (request) => ingestStripeWebhook(request, "connect_v2"),
     health,
     connectConfig,
     connectStatus,
@@ -565,9 +650,9 @@ async function connectStatus(request: Request): Promise<Response> {
     const expectedTerms = marketplaceTermsExpectationFromRequest(request);
     const account = await syncAccountForUser(userId);
     const currentTermsAccepted = Boolean(
-        account
-        && expectedTerms
-        && await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash),
+        account &&
+            expectedTerms &&
+            (await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash)),
     );
     return json(publicAccountStatus(account, userId, { currentTermsAccepted }));
 }
@@ -604,21 +689,28 @@ async function connectVerification(request: Request): Promise<Response> {
 
 async function enrollSellerForUser(userId: string, body: JsonRecord): Promise<JsonRecord> {
     assertAllowedKeys(body, [
-        "accountToken", "contactEmail", "marketplaceTermsAccepted",
-        "marketplaceTermsVersion", "marketplaceTermsHash",
+        "accountToken",
+        "contactEmail",
+        "marketplaceTermsAccepted",
+        "marketplaceTermsVersion",
+        "marketplaceTermsHash",
     ]);
     const expectedTerms = marketplaceTermsExpectationFromBody(body);
     let current = await syncAccountForUser(userId);
-    let recordedTerms = current && expectedTerms
-        ? await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash)
-        : null;
+    let recordedTerms =
+        current && expectedTerms
+            ? await getMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash)
+            : null;
 
     const explicitlyAccepted = body.marketplaceTermsAccepted === true;
     if (body.marketplaceTermsAccepted !== undefined && !explicitlyAccepted) {
         throw new HttpError(400, "marketplaceTermsAccepted must be true when provided");
     }
     if (explicitlyAccepted && !expectedTerms) {
-        throw new HttpError(400, "marketplaceTermsVersion and marketplaceTermsHash are required with marketplaceTermsAccepted");
+        throw new HttpError(
+            400,
+            "marketplaceTermsVersion and marketplaceTermsHash are required with marketplaceTermsAccepted",
+        );
     }
     if (!recordedTerms && !explicitlyAccepted && !(current?.marketplace_terms_accepted_at && !expectedTerms)) {
         throw new HttpError(409, "current marketplace terms acceptance is required");
@@ -640,7 +732,9 @@ async function enrollSellerForUser(userId: string, body: JsonRecord): Promise<Js
     if (expectedTerms && explicitlyAccepted && !recordedTerms) {
         recordedTerms = await recordMarketplaceTermsAcceptance(userId, expectedTerms.version, expectedTerms.hash);
         current = await getAccountRow(userId);
-        if (!current) throw new HttpError(502, "could not reload the enrolled seller account");
+        if (!current) {
+            throw new HttpError(502, "could not reload the enrolled seller account");
+        }
     }
 
     return publicAccount(current, { currentTermsAccepted: Boolean(expectedTerms && recordedTerms) });
@@ -672,7 +766,10 @@ async function adminCreateOnboardingSession(request: Request): Promise<Response>
     return json(await createOnboardingSessionForUser(userId, body));
 }
 
-async function ensureConnectedAccountForUser(userId: string, body: JsonRecord): Promise<{
+async function ensureConnectedAccountForUser(
+    userId: string,
+    body: JsonRecord,
+): Promise<{
     account: ConnectAccountRow;
     stripeAccountId: string;
     stripeAccountApiVersion: StripeAccountApiVersion;
@@ -689,7 +786,9 @@ async function ensureConnectedAccountForUser(userId: string, body: JsonRecord): 
     let stripeAccountId = account?.stripe_account_id ?? null;
     let stripeAccountApiVersion: StripeAccountApiVersion = account?.stripe_account_api_version ?? "v1";
     if (!stripeAccountId) {
-        if (!email) throw new HttpError(400, "email is required to create a Stripe recipient account");
+        if (!email) {
+            throw new HttpError(400, "email is required to create a Stripe recipient account");
+        }
         const stripeAccount = await createConnectedAccount({
             userId,
             country,
@@ -707,7 +806,9 @@ async function ensureConnectedAccountForUser(userId: string, body: JsonRecord): 
     } else {
         let stripeAccount = await retrieveAccount(stripeAccountId, stripeAccountApiVersion);
         if (stripeAccountApiVersion !== "v2" || !isApplicationCollectedAccount(stripeAccount)) {
-            if (!email) throw new HttpError(409, "email is required to replace a recipient account with unsafe payout access");
+            if (!email) {
+                throw new HttpError(409, "email is required to replace a recipient account with unsafe payout access");
+            }
             stripeAccount = await createConnectedAccount({
                 userId,
                 country,
@@ -727,8 +828,12 @@ async function ensureConnectedAccountForUser(userId: string, body: JsonRecord): 
         }
     }
 
-    if (!stripeAccountId) throw new HttpError(502, "could not create connected account");
-    if (!account) throw new HttpError(502, "could not store connected account");
+    if (!stripeAccountId) {
+        throw new HttpError(502, "could not create connected account");
+    }
+    if (!account) {
+        throw new HttpError(502, "could not store connected account");
+    }
     return { account, stripeAccountId, stripeAccountApiVersion };
 }
 
@@ -744,17 +849,22 @@ async function submitCustomVerificationForUser(userId: string, body: JsonRecord)
         stripeAccount = await retrieveAccount(row.stripe_account_id, row.stripe_account_api_version);
     }
 
-    const replaceAccount = !row?.stripe_account_id
-        || row.stripe_account_api_version !== "v2"
-        || !isApplicationCollectedAccount(stripeAccount);
+    const replaceAccount =
+        !row?.stripe_account_id ||
+        row.stripe_account_api_version !== "v2" ||
+        !isApplicationCollectedAccount(stripeAccount);
 
     if (replaceAccount) {
-        if (!accountToken) throw new HttpError(400, "accountToken is required for initial Stripe identity enrollment");
-        const currentPatch = stripeAccount && row
-            ? accountPatchFromStripe(stripeAccount, row.stripe_account_api_version)
-            : null;
+        if (!accountToken) {
+            throw new HttpError(400, "accountToken is required for initial Stripe identity enrollment");
+        }
+        const currentPatch =
+            stripeAccount && row ? accountPatchFromStripe(stripeAccount, row.stripe_account_api_version) : null;
         if (currentPatch?.payouts_enabled === true && currentPatch.details_submitted === true) {
-            throw new HttpError(409, "A fully active legacy Stripe account cannot be replaced through seller verification");
+            throw new HttpError(
+                409,
+                "A fully active legacy Stripe account cannot be replaced through seller verification",
+            );
         }
         stripeAccount = await createCustomConnectedAccount(userId, accountToken);
         row = await upsertAccountRow({
@@ -766,8 +876,12 @@ async function submitCustomVerificationForUser(userId: string, body: JsonRecord)
         stripeAccount = await updateCustomConnectedAccount(row!.stripe_account_id!, accountToken);
     }
 
-    if (!stripeAccount?.id) throw new HttpError(502, "Stripe did not return a connected account");
-    if (bankAccountToken) await attachBankAccount(stripeAccount.id, bankAccountToken);
+    if (!stripeAccount?.id) {
+        throw new HttpError(502, "Stripe did not return a connected account");
+    }
+    if (bankAccountToken) {
+        await attachBankAccount(stripeAccount.id, bankAccountToken);
+    }
     stripeAccount = await retrieveAccount(stripeAccount.id, "v2");
     row = await upsertAccountRow({
         cms_user_id: userId,
@@ -783,10 +897,11 @@ async function createOnboardingForUser(userId: string, body: JsonRecord): Promis
     const refreshUrl = validHttpsUrl(requiredString(body, "refreshUrl", 2048), "refreshUrl");
     const { account, stripeAccountId, stripeAccountApiVersion } = await ensureConnectedAccountForUser(userId, body);
     const link = await createAccountLink(stripeAccountId, stripeAccountApiVersion, returnUrl, refreshUrl);
-    const updated = await updateAccountRow(userId, {
-        onboarding_status: "link_created",
-        last_onboarding_started_at: new Date().toISOString(),
-    }) ?? account;
+    const updated =
+        (await updateAccountRow(userId, {
+            onboarding_status: "link_created",
+            last_onboarding_started_at: new Date().toISOString(),
+        })) ?? account;
 
     return {
         ...publicAccountStatus(updated, userId),
@@ -798,10 +913,11 @@ async function createOnboardingForUser(userId: string, body: JsonRecord): Promis
 async function createOnboardingSessionForUser(userId: string, body: JsonRecord): Promise<JsonRecord> {
     const { account, stripeAccountId } = await ensureConnectedAccountForUser(userId, body);
     const session = await createAccountSession(stripeAccountId);
-    const updated = await updateAccountRow(userId, {
-        onboarding_status: "onboarding_started",
-        last_onboarding_started_at: new Date().toISOString(),
-    }) ?? account;
+    const updated =
+        (await updateAccountRow(userId, {
+            onboarding_status: "onboarding_started",
+            last_onboarding_started_at: new Date().toISOString(),
+        })) ?? account;
 
     return {
         ...publicAccountStatus(updated, userId),
@@ -832,11 +948,9 @@ async function checkSellerHeldPaymentEligibility(request: Request): Promise<Resp
     if (seller.cms_user_id === buyerUserId) {
         return json({ eligible: false, reasonCode: "buyer_is_seller" });
     }
-    const currentTermsAccepted = Boolean(await getMarketplaceTermsAcceptance(
-        seller.cms_user_id,
-        expectedTerms.version,
-        expectedTerms.hash,
-    ));
+    const currentTermsAccepted = Boolean(
+        await getMarketplaceTermsAcceptance(seller.cms_user_id, expectedTerms.version, expectedTerms.hash),
+    );
     if (!currentTermsAccepted) {
         return json({ eligible: false, reasonCode: "seller_terms_not_current" });
     }
@@ -848,9 +962,15 @@ async function checkSellerHeldPaymentEligibility(request: Request): Promise<Resp
 
 async function createProtectedPaymentForBuyer(buyerUserId: string, body: JsonRecord): Promise<JsonRecord> {
     assertAllowedKeys(body, [
-        "sellerUserId", "amountTotal", "sellerTransferAmount", "currency",
-        "clientReferenceId", "financialTermsHash", "financialRevision",
-        "dualApprovalThresholdAmount", "description",
+        "sellerUserId",
+        "amountTotal",
+        "sellerTransferAmount",
+        "currency",
+        "clientReferenceId",
+        "financialTermsHash",
+        "financialRevision",
+        "dualApprovalThresholdAmount",
+        "description",
     ]);
     const sellerIdentity = requiredString(body, "sellerUserId", 200);
     const amountTotal = requiredInteger(body, "amountTotal");
@@ -862,19 +982,27 @@ async function createProtectedPaymentForBuyer(buyerUserId: string, body: JsonRec
     const dualApprovalThresholdAmount = requiredInteger(body, "dualApprovalThresholdAmount");
     const description = optionalText(body, "description", 500);
 
-    if (amountTotal <= 0) throw new HttpError(400, "amountTotal must be positive");
+    if (amountTotal <= 0) {
+        throw new HttpError(400, "amountTotal must be positive");
+    }
     if (sellerTransferAmount < 0 || sellerTransferAmount > amountTotal) {
         throw new HttpError(400, "sellerTransferAmount must be between zero and amountTotal");
     }
-    if (currency !== "eur") throw new HttpError(400, "protected C2C payments support EUR only");
-    if (dualApprovalThresholdAmount < 0) throw new HttpError(400, "dualApprovalThresholdAmount must be non-negative");
+    if (currency !== "eur") {
+        throw new HttpError(400, "protected C2C payments support EUR only");
+    }
+    if (dualApprovalThresholdAmount < 0) {
+        throw new HttpError(400, "dualApprovalThresholdAmount must be non-negative");
+    }
 
     const seller = await syncAccountForIdentity(sellerIdentity);
     if (!seller?.stripe_account_id || !sellerCanAcceptHeldPayments(seller)) {
         throw new HttpError(409, "seller enrollment does not allow a held platform payment");
     }
     const sellerUserId = seller.cms_user_id;
-    if (sellerUserId === buyerUserId) throw new HttpError(400, "buyer and seller must be different users");
+    if (sellerUserId === buyerUserId) {
+        throw new HttpError(400, "buyer and seller must be different users");
+    }
 
     const expectedTerms = {
         buyerUserId,
@@ -890,7 +1018,9 @@ async function createProtectedPaymentForBuyer(buyerUserId: string, body: JsonRec
     const existing = await getPaymentByClientReference(clientReferenceId);
     if (existing) {
         assertPaymentReplay(existing, expectedTerms);
-        if (existing.payment_status !== "succeeded") await assertPlatformPayoutProtection();
+        if (existing.payment_status !== "succeeded") {
+            await assertPlatformPayoutProtection();
+        }
         const synced = await syncPayment(existing);
         return publicPaymentWithClientSecret(synced, await paymentClientSecret(synced));
     }
@@ -901,26 +1031,28 @@ async function createProtectedPaymentForBuyer(buyerUserId: string, body: JsonRec
     let payment: ConnectPaymentRow;
     try {
         payment = await reserveProtectedPayment({
-        client_reference_id: clientReferenceId,
-        financial_terms_hash: financialTermsHash,
-        financial_revision: financialRevision,
-        dual_approval_threshold_amount: dualApprovalThresholdAmount,
-        buyer_cms_user_id: buyerUserId,
-        seller_cms_user_id: sellerUserId,
-        seller_stripe_account_id: seller.stripe_account_id,
-        transfer_group: transferGroup,
-        currency,
-        amount_total: amountTotal,
-        seller_transfer_amount: sellerTransferAmount,
-        platform_retained_amount: amountTotal - sellerTransferAmount,
-        payment_status: "created",
-        settlement_status: "held",
-        description,
+            client_reference_id: clientReferenceId,
+            financial_terms_hash: financialTermsHash,
+            financial_revision: financialRevision,
+            dual_approval_threshold_amount: dualApprovalThresholdAmount,
+            buyer_cms_user_id: buyerUserId,
+            seller_cms_user_id: sellerUserId,
+            seller_stripe_account_id: seller.stripe_account_id,
+            transfer_group: transferGroup,
+            currency,
+            amount_total: amountTotal,
+            seller_transfer_amount: sellerTransferAmount,
+            platform_retained_amount: amountTotal - sellerTransferAmount,
+            payment_status: "created",
+            settlement_status: "held",
+            description,
         });
         assertPaymentReplay(payment, expectedTerms);
     } catch (error) {
         const raced = await getPaymentByClientReference(clientReferenceId);
-        if (!raced) throw error;
+        if (!raced) {
+            throw error;
+        }
         assertPaymentReplay(raced, expectedTerms);
         payment = raced;
     }
@@ -946,7 +1078,8 @@ async function createProtectedPaymentForBuyer(buyerUserId: string, body: JsonRec
         if (operation.status === "succeeded" && operation.stripe_object_id) {
             const intent = await retrievePaymentIntent(operation.stripe_object_id);
             payment = await applyPaymentIntent(payment, intent, {
-                actorKind: "system", actorId: "payment-operation-replay",
+                actorKind: "system",
+                actorId: "payment-operation-replay",
             });
             return publicPaymentWithClientSecret(payment, intent.client_secret ?? "");
         }
@@ -983,7 +1116,9 @@ async function getProtectedPayment(request: Request): Promise<Response> {
     const { userId } = requireCmsRequest(request);
     const paymentId = requiredQueryInteger(request, "paymentId");
     const payment = await getPaymentRow(paymentId);
-    if (!payment) throw new HttpError(404, "payment not found");
+    if (!payment) {
+        throw new HttpError(404, "payment not found");
+    }
     if (payment.buyer_cms_user_id !== userId && payment.seller_cms_user_id !== userId) {
         throw new HttpError(403, "payment is not visible to this user");
     }
@@ -1004,7 +1139,9 @@ async function getSellerProviderRisk(request: Request): Promise<Response> {
     requireDashboardAdmin(request);
     const userId = requiredQueryText(request, "userId", 200);
     const account = await syncAccountForUser(userId);
-    if (!account?.stripe_account_id) throw new HttpError(404, "connected account not found");
+    if (!account?.stripe_account_id) {
+        throw new HttpError(404, "connected account not found");
+    }
     const [balance, balanceSettings] = await Promise.all([
         retrieveConnectedBalance(account.stripe_account_id),
         retrieveConnectedBalanceSettings(account.stripe_account_id),
@@ -1016,8 +1153,13 @@ async function configurePlatformPayoutProtection(request: Request): Promise<Resp
     requireCmsRequest(request, { requireUser: false });
     const body = await readJsonObject(request);
     assertAllowedKeys(body, [
-        "platformPayoutControlChangeId", "minimumBalanceEur", "delayDaysOverride",
-        "debitNegativeBalances", "reason", "liabilityRevision", "decreaseAuthorizationId",
+        "platformPayoutControlChangeId",
+        "minimumBalanceEur",
+        "delayDaysOverride",
+        "debitNegativeBalances",
+        "reason",
+        "liabilityRevision",
+        "decreaseAuthorizationId",
     ]);
     const changeId = requiredString(body, "platformPayoutControlChangeId", 200);
     const minimumBalanceEur = optionalNonNegativeInteger(body, "minimumBalanceEur");
@@ -1026,7 +1168,10 @@ async function configurePlatformPayoutProtection(request: Request): Promise<Resp
         throw new HttpError(400, "liabilityRevision must be a non-negative safe integer");
     }
     const decreaseAuthorizationId = optionalText(body, "decreaseAuthorizationId", 64);
-    if (decreaseAuthorizationId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decreaseAuthorizationId)) {
+    if (
+        decreaseAuthorizationId &&
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decreaseAuthorizationId)
+    ) {
         throw new HttpError(400, "decreaseAuthorizationId must be a UUID");
     }
     const delayDaysOverride = optionalNonNegativeInteger(body, "delayDaysOverride");
@@ -1043,7 +1188,10 @@ async function configurePlatformPayoutProtection(request: Request): Promise<Resp
         p_decrease_authorization_id: decreaseAuthorizationId,
     });
     if (claim.claimed !== true) {
-        throw new HttpError(409, "platform payout protection is already being synchronized; the higher requirement was recorded");
+        throw new HttpError(
+            409,
+            "platform payout protection is already being synchronized; the higher requirement was recorded",
+        );
     }
     let operation: FinancialOperationRow | null = null;
     let appliedMinimum = 0;
@@ -1053,17 +1201,14 @@ async function configurePlatformPayoutProtection(request: Request): Promise<Resp
             const control = platformPayoutControl(claim);
             appliedDecreaseAuthorizationId = control.decrease_authorization_id;
             const current = await retrievePlatformBalanceSettings();
-            const currentMinimum = numberAt(
-                objectAt(objectAt(objectAt(current, "payments"), "payouts"), "minimum_balance_by_currency"),
-                "eur",
-            ) ?? 0;
+            const currentMinimum =
+                numberAt(
+                    objectAt(objectAt(objectAt(current, "payments"), "payouts"), "minimum_balance_by_currency"),
+                    "eur",
+                ) ?? 0;
             appliedMinimum = control.decrease_authorization_id
                 ? control.required_minimum_amount
-                : Math.max(
-                    control.required_minimum_amount,
-                    control.provider_minimum_amount,
-                    currentMinimum,
-                );
+                : Math.max(control.required_minimum_amount, control.provider_minimum_amount, currentMinimum);
             const operationRequest = stripUndefined({
                 scope: "platform",
                 interval: protectedPlatformPayoutInterval,
@@ -1105,7 +1250,9 @@ async function configurePlatformPayoutProtection(request: Request): Promise<Resp
             }
             if (operation.status !== "succeeded" || provider !== current) {
                 await updateFinancialOperation(operation.id, {
-                    status: "succeeded", response: provider, last_error: null,
+                    status: "succeeded",
+                    response: provider,
+                    last_error: null,
                     completed_at: new Date().toISOString(),
                 });
             }
@@ -1137,7 +1284,9 @@ async function configurePlatformPayoutProtection(request: Request): Promise<Resp
     } catch (error) {
         const message = errorMessage(error);
         if (operation) {
-            await updateFinancialOperation(operation.id, { status: "manual_review", last_error: message }).catch(() => null);
+            await updateFinancialOperation(operation.id, { status: "manual_review", last_error: message }).catch(
+                () => null,
+            );
         }
         const control = platformPayoutControl(claim);
         await platformPayoutControlRpc("complete_platform_payout_protection", {
@@ -1166,9 +1315,15 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
     requireCmsRequest(request, { requireUser: false });
     const body = await readJsonObject(request);
     assertAllowedKeys(body, [
-        "userId", "payoutScheduleChangeId", "interval", "weeklyPayoutDays",
-        "monthlyPayoutDays", "minimumBalanceEur", "delayDaysOverride",
-        "debitNegativeBalances", "reason",
+        "userId",
+        "payoutScheduleChangeId",
+        "interval",
+        "weeklyPayoutDays",
+        "monthlyPayoutDays",
+        "minimumBalanceEur",
+        "delayDaysOverride",
+        "debitNegativeBalances",
+        "reason",
     ]);
     const userId = requiredString(body, "userId", 200);
     const payoutScheduleChangeId = requiredString(body, "payoutScheduleChangeId", 200);
@@ -1196,7 +1351,9 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
     }
 
     const existingAccount = await getAccountRow(userId);
-    if (!existingAccount?.stripe_account_id) throw new HttpError(404, "connected account not found");
+    if (!existingAccount?.stripe_account_id) {
+        throw new HttpError(404, "connected account not found");
+    }
     const owner = crypto.randomUUID();
     const claim = await sellerPayoutHoldRpc("claim_seller_payout_hold", {
         p_seller_cms_user_id: userId,
@@ -1208,11 +1365,16 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
     }
     const account = sellerRiskAccount(claim);
     const requiredRiskBalance = account.outstanding_debt_amount + account.financial_exposure_amount;
-    if (requiredRiskBalance > 0
-        && (interval !== "manual"
-            || (minimumBalanceEur ?? 0) < Math.max(requiredRiskBalance, account.provider_hold_minimum_amount))) {
+    if (
+        requiredRiskBalance > 0 &&
+        (interval !== "manual" ||
+            (minimumBalanceEur ?? 0) < Math.max(requiredRiskBalance, account.provider_hold_minimum_amount))
+    ) {
         await applyClaimedSellerRecoveryPayoutHold(userId, owner, claim);
-        throw new HttpError(409, "seller financial exposure requires a manual payout hold covering the full risk balance");
+        throw new HttpError(
+            409,
+            "seller financial exposure requires a manual payout hold covering the full risk balance",
+        );
     }
     const operationRequest = stripUndefined({
         cmsUserId: userId,
@@ -1271,16 +1433,18 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
             p_clear_ambiguous_recovery_hold: recoversAmbiguousProviderConfirmation,
         });
         if (finalized.accepted !== true || finalized.superseded === true) {
-            const protectedByHold = finalized.accepted === true
-                && await applyClaimedSellerRecoveryPayoutHold(userId, owner, finalized);
+            const protectedByHold =
+                finalized.accepted === true && (await applyClaimedSellerRecoveryPayoutHold(userId, owner, finalized));
             if (!protectedByHold) {
                 throw new HttpError(409, "seller risk changed and the replacement payout hold requires finance review");
             }
-            const finalAccount = await getAccountRow(userId) ?? sellerRiskAccount(finalized);
+            const finalAccount = (await getAccountRow(userId)) ?? sellerRiskAccount(finalized);
             const finalProvider = await retrieveConnectedBalanceSettings(account.stripe_account_id);
             if (interval === "manual") {
                 await updateFinancialOperation(operation.id, {
-                    status: "succeeded", response: finalProvider, last_error: null,
+                    status: "succeeded",
+                    response: finalProvider,
+                    last_error: null,
                     completed_at: new Date().toISOString(),
                 });
                 return json({
@@ -1356,8 +1520,12 @@ async function listProviderPayments(request: Request): Promise<Response> {
         limit: String(limit),
     });
 
-    if (status) query.set("payment_status", `eq.${status}`);
-    if (settlementStatus) query.set("settlement_status", `eq.${settlementStatus}`);
+    if (status) {
+        query.set("payment_status", `eq.${status}`);
+    }
+    if (settlementStatus) {
+        query.set("settlement_status", `eq.${settlementStatus}`);
+    }
     if (search) {
         const clauses = [
             `client_reference_id.ilike.${search}`,
@@ -1369,8 +1537,10 @@ async function listProviderPayments(request: Request): Promise<Response> {
     }
 
     const response = await rest(`payments?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectPaymentRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectPaymentRow[];
     return json({
         payments: rows.map(publicPayment),
         total: rows.length,
@@ -1381,7 +1551,9 @@ async function getProviderPayment(request: Request): Promise<Response> {
     requireDashboardAdmin(request);
     const paymentId = requiredQueryInteger(request, "paymentId");
     const row = await getPaymentRow(paymentId);
-    if (!row) throw new HttpError(404, "payment not found");
+    if (!row) {
+        throw new HttpError(404, "payment not found");
+    }
     return json(publicPayment(await syncPayment(row)));
 }
 
@@ -1416,7 +1588,9 @@ async function requestPaymentIntentCancellation(request: Request): Promise<Respo
     try {
         const result = await executePaymentIntentCancellation(payment, operation, "system", cancellationRequestId);
         const projectedPayment = result.payment;
-        if (!isRecord(projectedPayment)) throw new HttpError(502, "provider cancellation omitted payment truth");
+        if (!isRecord(projectedPayment)) {
+            throw new HttpError(502, "provider cancellation omitted payment truth");
+        }
         return json({
             ...result,
             providerPaymentAbsent: false,
@@ -1469,9 +1643,15 @@ async function executePaymentIntentCancellation(
         next_attempt_at: null,
         completed_at: new Date().toISOString(),
     });
-    await insertPaymentEvent(payment.id, intent.status === "canceled"
-        ? "payment_intent_cancellation_confirmed" : "payment_intent_cancellation_found_late_success",
-    actorKind, actorId, { operationId: operation.id, paymentIntentId: intent.id });
+    await insertPaymentEvent(
+        payment.id,
+        intent.status === "canceled"
+            ? "payment_intent_cancellation_confirmed"
+            : "payment_intent_cancellation_found_late_success",
+        actorKind,
+        actorId,
+        { operationId: operation.id, paymentIntentId: intent.id },
+    );
     return {
         cancellationRequestId: requiredOperationString(operation, "cancellationRequestId"),
         providerOperationId: operation.id,
@@ -1487,12 +1667,21 @@ async function paymentIntentForCancellation(
     if (cancellationOperation.stripe_object_id) {
         return await retrievePaymentIntent(cancellationOperation.stripe_object_id);
     }
-    if (payment.stripe_payment_intent_id) return await retrievePaymentIntent(payment.stripe_payment_intent_id);
+    if (payment.stripe_payment_intent_id) {
+        return await retrievePaymentIntent(payment.stripe_payment_intent_id);
+    }
     const createOperation = await getRowByField<FinancialOperationRow>(
-        "financial_operations", "business_key", `payment:${payment.id}:${payment.financial_terms_hash}`, operationSelect,
+        "financial_operations",
+        "business_key",
+        `payment:${payment.id}:${payment.financial_terms_hash}`,
+        operationSelect,
     );
-    if (!createOperation) throw new Error("PaymentIntent creation has not been durably reserved yet");
-    if (createOperation.stripe_object_id) return await retrievePaymentIntent(createOperation.stripe_object_id);
+    if (!createOperation) {
+        throw new Error("PaymentIntent creation has not been durably reserved yet");
+    }
+    if (createOperation.stripe_object_id) {
+        return await retrievePaymentIntent(createOperation.stripe_object_id);
+    }
     const age = Date.now() - Date.parse(createOperation.created_at);
     if (!Number.isFinite(age) || age >= 23 * 60 * 60 * 1000) {
         throw new Error("PaymentIntent cancellation recovery exceeded the Stripe idempotency safety window");
@@ -1543,11 +1732,15 @@ async function executeSettlementRelease(
     if (!seller || !sellerCanReceivePayments(seller)) {
         throw new HttpError(409, "seller financial risk blocks settlement release");
     }
-    if (currency !== payment.currency || currency !== "eur") throw new HttpError(409, "release currency mismatch");
+    if (currency !== payment.currency || currency !== "eur") {
+        throw new HttpError(409, "release currency mismatch");
+    }
     const existingTransfer = await getTransferByAuthorization(releaseAuthorizationId);
     if (existingTransfer) {
         assertTransferReplay(existingTransfer, payment, releaseKind, amount, currency);
-        if (existingTransfer.status === "succeeded") return publicTransfer(existingTransfer);
+        if (existingTransfer.status === "succeeded") {
+            return publicTransfer(existingTransfer);
+        }
     }
     if (!releasableDisputeStatus(payment.dispute_status)) {
         throw new HttpError(409, "payment is blocked by an open, lost, or unresolved Stripe dispute");
@@ -1618,11 +1811,17 @@ async function executeSettlementRelease(
                 await stableStripeIdempotencyKey("transfer", businessKey),
             );
         }
-        transfer = await updateRow<TransferRow>("transfers", transfer.id, {
-            stripe_transfer_id: stripeTransfer.id,
-            status: "succeeded",
-            provider_snapshot: stripeTransfer,
-        }, transferSelect) ?? transfer;
+        transfer =
+            (await updateRow<TransferRow>(
+                "transfers",
+                transfer.id,
+                {
+                    stripe_transfer_id: stripeTransfer.id,
+                    status: "succeeded",
+                    provider_snapshot: stripeTransfer,
+                },
+                transferSelect,
+            )) ?? transfer;
         await updateFinancialOperation(operation.id, {
             status: "succeeded",
             stripe_object_id: stripeTransfer.id,
@@ -1634,7 +1833,8 @@ async function executeSettlementRelease(
         const remainingAuthorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
         await updatePayment(payment.id, {
             transferred_amount: transferredAmount,
-            settlement_status: transferredAmount - reversedAmount >= remainingAuthorizedSellerAmount ? "released" : "held",
+            settlement_status:
+                transferredAmount - reversedAmount >= remainingAuthorizedSellerAmount ? "released" : "held",
         });
         return publicTransfer(transfer);
     } catch (error) {
@@ -1664,9 +1864,15 @@ async function executeTransferReversal(
     reason: string | null,
 ): Promise<JsonRecord> {
     const existingRecovery = await getRowByField<TransferRecoveryRow>(
-        "transfer_recovery_requests", "recovery_request_id", recoveryRequestId, transferRecoverySelect,
+        "transfer_recovery_requests",
+        "recovery_request_id",
+        recoveryRequestId,
+        transferRecoverySelect,
     );
-    if (existingRecovery && (existingRecovery.payment_id !== payment.id || existingRecovery.requested_amount !== amount)) {
+    if (
+        existingRecovery &&
+        (existingRecovery.payment_id !== payment.id || existingRecovery.requested_amount !== amount)
+    ) {
         throw new HttpError(409, "Transfer recovery request replay mismatch");
     }
     const amountStillRequired = existingRecovery ? amount - existingRecovery.confirmed_amount : amount;
@@ -1675,7 +1881,11 @@ async function executeTransferReversal(
     }
     const exposureType = recoveryRequestId.startsWith("stripe-dispute:") ? "chargeback" : "refund_recovery";
     await recordSellerRecoveryExposure(
-        payment, recoveryRequestId, exposureType, "at_risk", amount,
+        payment,
+        recoveryRequestId,
+        exposureType,
+        "at_risk",
+        amount,
         "Seller funds are awaiting confirmed Transfer Reversal recovery",
         { recoveryRequestId },
     );
@@ -1695,25 +1905,33 @@ async function executeTransferReversal(
                 let stripeReversal: JsonRecord | null = null;
                 if (operation.status === "succeeded" && operation.stripe_object_id) {
                     stripeReversal = await retrieveStripeTransferReversal(
-                        transfer.stripe_transfer_id, operation.stripe_object_id,
+                        transfer.stripe_transfer_id,
+                        operation.stripe_object_id,
                     );
                 } else if (operation.attempt_count > 0) {
                     stripeReversal = await findStripeTransferReversal(
-                        transfer.stripe_transfer_id, businessKey, reversal.amount,
+                        transfer.stripe_transfer_id,
+                        businessKey,
+                        reversal.amount,
                     );
                     if (!stripeReversal && operation.status === "manual_review") {
                         throw new HttpError(409, "Transfer Reversal outcome is unresolved and requires finance review");
                     }
                 }
                 if (!stripeReversal) {
-                    operation = await updateFinancialOperation(operation.id, {
-                        status: "processing",
-                        claimed_at: new Date().toISOString(),
-                        attempt_count: operation.attempt_count + 1,
-                    }) ?? operation;
-                    reversal = await updateRow<TransferReversalRow>(
-                        "transfer_reversals", reversal.id, { status: "processing" }, transferReversalSelect,
-                    ) ?? reversal;
+                    operation =
+                        (await updateFinancialOperation(operation.id, {
+                            status: "processing",
+                            claimed_at: new Date().toISOString(),
+                            attempt_count: operation.attempt_count + 1,
+                        })) ?? operation;
+                    reversal =
+                        (await updateRow<TransferReversalRow>(
+                            "transfer_reversals",
+                            reversal.id,
+                            { status: "processing" },
+                            transferReversalSelect,
+                        )) ?? reversal;
                     stripeReversal = await createStripeTransferReversal(
                         transfer.stripe_transfer_id,
                         reversal.amount,
@@ -1721,11 +1939,17 @@ async function executeTransferReversal(
                         await stableStripeIdempotencyKey("transfer-reversal", businessKey),
                     );
                 }
-                reversal = await updateRow<TransferReversalRow>("transfer_reversals", reversal.id, {
-                    stripe_transfer_reversal_id: stripeReversal.id,
-                    status: "succeeded",
-                    provider_snapshot: stripeReversal,
-                }, transferReversalSelect) ?? reversal;
+                reversal =
+                    (await updateRow<TransferReversalRow>(
+                        "transfer_reversals",
+                        reversal.id,
+                        {
+                            stripe_transfer_reversal_id: stripeReversal.id,
+                            status: "succeeded",
+                            provider_snapshot: stripeReversal,
+                        },
+                        transferReversalSelect,
+                    )) ?? reversal;
                 await updateFinancialOperation(operation.id, {
                     status: "succeeded",
                     stripe_object_id: stripeReversal.id,
@@ -1734,49 +1958,84 @@ async function executeTransferReversal(
                     completed_at: new Date().toISOString(),
                 });
                 const reversedOnTransfer = await sumSucceededTransferReversalAmounts(transfer.id);
-                transfer = await updateRow<TransferRow>("transfers", transfer.id, {
-                    status: reversedOnTransfer >= transfer.amount ? "reversed" : "partially_reversed",
-                }, transferSelect) ?? transfer;
+                transfer =
+                    (await updateRow<TransferRow>(
+                        "transfers",
+                        transfer.id,
+                        {
+                            status: reversedOnTransfer >= transfer.amount ? "reversed" : "partially_reversed",
+                        },
+                        transferSelect,
+                    )) ?? transfer;
             }
             reversals.push(publicReversal(reversal));
             activeAllocation = null;
             const confirmedAmount = await sumConfirmedRecoveryAmount(recovery.id);
-            recovery = await updateRow<TransferRecoveryRow>("transfer_recovery_requests", recovery.id, {
-                confirmed_amount: confirmedAmount,
-                status: confirmedAmount === recovery.requested_amount
-                    ? "succeeded"
-                    : confirmedAmount > 0 ? "partially_succeeded" : "processing",
-                last_error: null,
-            }, transferRecoverySelect) ?? recovery;
+            recovery =
+                (await updateRow<TransferRecoveryRow>(
+                    "transfer_recovery_requests",
+                    recovery.id,
+                    {
+                        confirmed_amount: confirmedAmount,
+                        status:
+                            confirmedAmount === recovery.requested_amount
+                                ? "succeeded"
+                                : confirmedAmount > 0
+                                  ? "partially_succeeded"
+                                  : "processing",
+                        last_error: null,
+                    },
+                    transferRecoverySelect,
+                )) ?? recovery;
         }
 
         const confirmedAmount = await sumConfirmedRecoveryAmount(recovery.id);
         if (confirmedAmount !== recovery.requested_amount || recovery.allocation_shortfall_amount > 0) {
-            const message = recovery.allocation_shortfall_amount > 0
-                ? "confirmed Transfers cannot cover the requested recovery"
-                : "Transfer Reversal recovery is not fully confirmed";
-            recovery = await updateRow<TransferRecoveryRow>("transfer_recovery_requests", recovery.id, {
-                confirmed_amount: confirmedAmount,
-                status: "manual_review",
-                last_error: message,
-            }, transferRecoverySelect) ?? recovery;
+            const message =
+                recovery.allocation_shortfall_amount > 0
+                    ? "confirmed Transfers cannot cover the requested recovery"
+                    : "Transfer Reversal recovery is not fully confirmed";
+            recovery =
+                (await updateRow<TransferRecoveryRow>(
+                    "transfer_recovery_requests",
+                    recovery.id,
+                    {
+                        confirmed_amount: confirmedAmount,
+                        status: "manual_review",
+                        last_error: message,
+                    },
+                    transferRecoverySelect,
+                )) ?? recovery;
             await recordSellerRecoveryExposure(
-                payment, recoveryRequestId, "reversal_failure", "debt", amount,
-                message, { recoveryRequestId, confirmedAmount, shortfallAmount: recovery.allocation_shortfall_amount },
+                payment,
+                recoveryRequestId,
+                "reversal_failure",
+                "debt",
+                amount,
+                message,
+                { recoveryRequestId, confirmedAmount, shortfallAmount: recovery.allocation_shortfall_amount },
                 confirmedAmount,
             );
             await markPaymentManualReview(payment.id, message, {
-                recoveryRequestId, requestedAmount: amount, confirmedAmount,
+                recoveryRequestId,
+                requestedAmount: amount,
+                confirmedAmount,
                 allocationShortfallAmount: recovery.allocation_shortfall_amount,
             });
             throw new HttpError(409, message);
         }
 
-        recovery = await updateRow<TransferRecoveryRow>("transfer_recovery_requests", recovery.id, {
-            confirmed_amount: confirmedAmount,
-            status: "succeeded",
-            last_error: null,
-        }, transferRecoverySelect) ?? recovery;
+        recovery =
+            (await updateRow<TransferRecoveryRow>(
+                "transfer_recovery_requests",
+                recovery.id,
+                {
+                    confirmed_amount: confirmedAmount,
+                    status: "succeeded",
+                    last_error: null,
+                },
+                transferRecoverySelect,
+            )) ?? recovery;
         const reversedAmount = await sumSucceededAmounts("transfer_reversals", payment.id);
         const currentPayment = await requiredPayment(payment.id);
         const preservesBlockingSettlement = ["blocked", "manual_review", "refund_pending"].includes(
@@ -1786,14 +2045,20 @@ async function executeTransferReversal(
             reversed_amount: reversedAmount,
             settlement_status: preservesBlockingSettlement
                 ? currentPayment.settlement_status
-                : reversedAmount >= currentPayment.transferred_amount ? "reversed" : "released",
+                : reversedAmount >= currentPayment.transferred_amount
+                  ? "reversed"
+                  : "released",
         });
         await recordSellerRecoveryExposure(
-            payment, recoveryRequestId, exposureType, "recovered", amount,
+            payment,
+            recoveryRequestId,
+            exposureType,
+            "recovered",
+            amount,
             "Stripe confirmed seller Transfer Reversal recovery",
             {
                 recoveryRequestId,
-                stripeTransferReversalIds: reversals.map(reversal => reversal.stripeTransferReversalId),
+                stripeTransferReversalIds: reversals.map((reversal) => reversal.stripeTransferReversalId),
             },
         );
         return publicTransferRecovery(recovery, reversals);
@@ -1804,7 +2069,10 @@ async function executeTransferReversal(
                 provider_snapshot: { error: errorMessage(error) },
             }).catch(() => null);
             await moveOperationToManualReview(
-                payment.id, activeAllocation.operation, error, "transfer_reversal_ambiguous",
+                payment.id,
+                activeAllocation.operation,
+                error,
+                "transfer_reversal_ambiguous",
             );
         }
         const confirmedAmount = await sumConfirmedRecoveryAmount(recovery.id).catch(() => recovery.confirmed_amount);
@@ -1814,7 +2082,11 @@ async function executeTransferReversal(
             last_error: errorMessage(error),
         }).catch(() => null);
         await recordSellerRecoveryExposure(
-            payment, recoveryRequestId, "reversal_failure", "debt", amount,
+            payment,
+            recoveryRequestId,
+            "reversal_failure",
+            "debt",
+            amount,
             "Stripe could not confirm recovery of transferred seller funds",
             { recoveryRequestId, confirmedAmount, error: errorMessage(error) },
             confirmedAmount,
@@ -1827,8 +2099,13 @@ async function requestProtectedRefund(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
     const body = await readJsonObject(request);
     assertAllowedKeys(body, [
-        "paymentId", "refundRequestId", "commerceRefundRequestId", "amount",
-        "authorizedSellerAmount", "sellerEntitlementReductionAmount", "reason",
+        "paymentId",
+        "refundRequestId",
+        "commerceRefundRequestId",
+        "amount",
+        "authorizedSellerAmount",
+        "sellerEntitlementReductionAmount",
+        "reason",
     ]);
     let payment = await requiredPayment(requiredInteger(body, "paymentId"));
     payment = await reconcilePayment(payment);
@@ -1844,24 +2121,31 @@ async function requestProtectedRefund(request: Request): Promise<Response> {
     if (authorizedSellerAmount < 0 || authorizedSellerAmount > payment.seller_transfer_amount) {
         throw new HttpError(400, "authorizedSellerAmount is invalid");
     }
-    const existingRefund = await getRowByField<RefundRow>("refunds", "refund_request_id", refundRequestId, refundSelect);
+    const existingRefund = await getRowByField<RefundRow>(
+        "refunds",
+        "refund_request_id",
+        refundRequestId,
+        refundSelect,
+    );
     if (existingRefund) {
-        if (existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount
-            || existingRefund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount) {
+        if (
+            existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
+            existingRefund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount
+        ) {
             throw new HttpError(409, "refund seller entitlement replay mismatch");
         }
     } else {
         const refunds = await listRows<RefundRow>(
             `refunds?payment_id=eq.${payment.id}&select=${encodeURIComponent(refundSelect)}`,
         );
-        if (refunds.some(refund => ["reserved", "processing", "pending", "manual_review"].includes(refund.status))) {
+        if (refunds.some((refund) => ["reserved", "processing", "pending", "manual_review"].includes(refund.status))) {
             throw new HttpError(409, "another refund is awaiting terminal provider confirmation");
         }
         const committedReductionAmount = refunds
-            .filter(refund => refund.status === "succeeded")
+            .filter((refund) => refund.status === "succeeded")
             .reduce((sum, refund) => sum + refund.seller_entitlement_reduction_amount, 0);
-        const expectedAuthorizedSellerAmount = payment.seller_transfer_amount
-            - committedReductionAmount - sellerEntitlementReductionAmount;
+        const expectedAuthorizedSellerAmount =
+            payment.seller_transfer_amount - committedReductionAmount - sellerEntitlementReductionAmount;
         if (expectedAuthorizedSellerAmount !== authorizedSellerAmount) {
             throw new HttpError(409, "refund seller entitlement target is stale or invalid");
         }
@@ -1870,7 +2154,10 @@ async function requestProtectedRefund(request: Request): Promise<Response> {
     const requiredRecoveryNow = Math.max(0, netTransferredAmount - authorizedSellerAmount);
     const recoveryRequestId = `${refundRequestId}:seller-recovery`;
     const existingRecovery = await getRowByField<TransferRecoveryRow>(
-        "transfer_recovery_requests", "recovery_request_id", recoveryRequestId, transferRecoverySelect,
+        "transfer_recovery_requests",
+        "recovery_request_id",
+        recoveryRequestId,
+        transferRecoverySelect,
     );
     let reversal: JsonRecord | null = existingRecovery ? await loadPublicTransferRecovery(existingRecovery) : null;
     const requestedRecoveryAmount = existingRecovery?.requested_amount ?? requiredRecoveryNow;
@@ -1879,12 +2166,18 @@ async function requestProtectedRefund(request: Request): Promise<Response> {
             reversal = await executeTransferReversal(payment, recoveryRequestId, requestedRecoveryAmount, reason);
         } catch (error) {
             await recordSellerRecoveryExposure(
-                payment, recoveryRequestId, "refund_recovery", "debt", requestedRecoveryAmount,
+                payment,
+                recoveryRequestId,
+                "refund_recovery",
+                "debt",
+                requestedRecoveryAmount,
                 "Protected Refund seller recovery is not available",
                 { refundRequestId, error: errorMessage(error) },
             ).catch(() => null);
             await markPaymentManualReview(payment.id, "Protected Refund seller recovery failed", {
-                refundRequestId, recoveryRequestId, error: errorMessage(error),
+                refundRequestId,
+                recoveryRequestId,
+                error: errorMessage(error),
             }).catch(() => null);
             throw new HttpError(409, "seller recovery failed; refund requires finance review");
         }
@@ -1904,11 +2197,14 @@ async function requestProtectedRefund(request: Request): Promise<Response> {
         reason,
     );
     const currentPayment = await requiredPayment(payment.id);
-    const reversalOperations = isRecord(reversal) && Array.isArray(reversal.reversals)
-        ? reversal.reversals.filter(isRecord).map(child =>
-            normalizeProtectedRefundOperation("reversal", child, currentPayment.last_stripe_event_id)
-        )
-        : [];
+    const reversalOperations =
+        isRecord(reversal) && Array.isArray(reversal.reversals)
+            ? reversal.reversals
+                  .filter(isRecord)
+                  .map((child) =>
+                      normalizeProtectedRefundOperation("reversal", child, currentPayment.last_stripe_event_id),
+                  )
+            : [];
     const operations = [
         ...reversalOperations,
         normalizeProtectedRefundOperation("refund", refund, currentPayment.last_stripe_event_id),
@@ -1929,16 +2225,26 @@ async function executeRefund(
     if (payment.payment_status !== "succeeded" || !payment.stripe_charge_id) {
         throw new HttpError(409, "payment is not refundable");
     }
-    const existingRefund = await getRowByField<RefundRow>("refunds", "refund_request_id", refundRequestId, refundSelect);
+    const existingRefund = await getRowByField<RefundRow>(
+        "refunds",
+        "refund_request_id",
+        refundRequestId,
+        refundSelect,
+    );
     if (existingRefund) {
         if (
-            existingRefund.payment_id !== payment.id || existingRefund.amount !== amount
-            || existingRefund.required_reversal_amount !== requiredReversalAmount
-            || existingRefund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount
-            || existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount
-            || (existingRefund.commerce_refund_request_id ?? null) !== commerceRefundRequestId
-        ) throw new HttpError(409, "refund request replay mismatch");
-        if (["succeeded", "pending"].includes(existingRefund.status)) return publicRefund(existingRefund);
+            existingRefund.payment_id !== payment.id ||
+            existingRefund.amount !== amount ||
+            existingRefund.required_reversal_amount !== requiredReversalAmount ||
+            existingRefund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount ||
+            existingRefund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
+            (existingRefund.commerce_refund_request_id ?? null) !== commerceRefundRequestId
+        ) {
+            throw new HttpError(409, "refund request replay mismatch");
+        }
+        if (["succeeded", "pending"].includes(existingRefund.status)) {
+            return publicRefund(existingRefund);
+        }
     }
     if (amount <= 0 || payment.refunded_amount + amount > payment.amount_total) {
         throw new HttpError(409, "refund exceeds the remaining captured amount");
@@ -1982,11 +2288,12 @@ async function executeRefund(
             status: "reserved",
         });
     } else if (
-        refund.payment_id !== payment.id || refund.amount !== amount
-        || refund.required_reversal_amount !== requiredReversalAmount
-        || refund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount
-        || refund.authorized_seller_amount_after_refund !== authorizedSellerAmount
-        || (refund.commerce_refund_request_id ?? null) !== commerceRefundRequestId
+        refund.payment_id !== payment.id ||
+        refund.amount !== amount ||
+        refund.required_reversal_amount !== requiredReversalAmount ||
+        refund.seller_entitlement_reduction_amount !== sellerEntitlementReductionAmount ||
+        refund.authorized_seller_amount_after_refund !== authorizedSellerAmount ||
+        (refund.commerce_refund_request_id ?? null) !== commerceRefundRequestId
     ) {
         throw new HttpError(409, "refund request replay mismatch");
     }
@@ -2015,11 +2322,17 @@ async function executeRefund(
                 await stableStripeIdempotencyKey("refund", businessKey),
             );
         }
-        refund = await updateRow<RefundRow>("refunds", refund.id, {
-            stripe_refund_id: stripeRefund.id,
-        }, refundSelect) ?? refund;
+        refund =
+            (await updateRow<RefundRow>(
+                "refunds",
+                refund.id,
+                {
+                    stripe_refund_id: stripeRefund.id,
+                },
+                refundSelect,
+            )) ?? refund;
         await applyStripeRefund(refund, stripeRefund);
-        refund = await getRowByField<RefundRow>("refunds", "id", String(refund.id), refundSelect) ?? refund;
+        refund = (await getRowByField<RefundRow>("refunds", "id", String(refund.id), refundSelect)) ?? refund;
         return publicRefund(refund);
     } catch (error) {
         await moveOperationToManualReview(payment.id, operation, error, "refund_create_ambiguous");
@@ -2030,7 +2343,7 @@ async function executeRefund(
 async function listProviderRefunds(request: Request): Promise<Response> {
     const actor = requireDashboardAdmin(request);
     const rows = await readRefundDashboardPage(request, actor);
-    const refunds = rows.map(row => ({
+    const refunds = rows.map((row) => ({
         ...publicRefund(row.refund as unknown as RefundRow),
         clientReferenceId: row.client_reference_id,
     }));
@@ -2041,7 +2354,9 @@ async function getProviderRefund(request: Request): Promise<Response> {
     requireDashboardAdmin(request);
     const refundId = requiredQueryInteger(request, "refundId");
     const row = await getRowByField<RefundRow>("refunds", "id", String(refundId), refundSelect);
-    if (!row) throw new HttpError(404, "refund not found");
+    if (!row) {
+        throw new HttpError(404, "refund not found");
+    }
     return json(publicRefund(row));
 }
 
@@ -2056,7 +2371,9 @@ async function getStripeDispute(request: Request): Promise<Response> {
     const actor = requireDashboardAdmin(request);
     const disputeId = requiredQueryText(request, "disputeId", 200);
     const row = await readDisputeDashboardDetail(disputeId, actor);
-    if (!row) throw new HttpError(404, "Stripe dispute not found");
+    if (!row) {
+        throw new HttpError(404, "Stripe dispute not found");
+    }
     return json(publicDisputeFromDashboardRead(row));
 }
 
@@ -2072,7 +2389,9 @@ async function uploadStripeDisputeFile(request: Request): Promise<Response> {
         throw new HttpError(400, "unsupported dispute evidence file type");
     }
     const bytes = decodeBase64(requiredString(body, "base64", 8_000_000));
-    if (!bytes.length || bytes.length > 5 * 1024 * 1024) throw new HttpError(413, "dispute evidence file is too large");
+    if (!bytes.length || bytes.length > 5 * 1024 * 1024) {
+        throw new HttpError(413, "dispute evidence file is too large");
+    }
     const form = new FormData();
     form.set("purpose", "dispute_evidence");
     const fileBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
@@ -2090,17 +2409,32 @@ async function stageStripeDisputeEvidence(request: Request): Promise<Response> {
     const { userId, actorKind } = requireDashboardAdmin(request);
     const body = await readJsonObject(request);
     assertAllowedKeys(body, [
-        "disputeId", "evidenceOperationId", "evidence", "evidenceText",
-        "customerCommunicationFileId", "shippingDocumentationFileId",
-        "shippingTrackingNumber", "shippingDate", "receiptFileId",
-        "productDescription", "customerName", "customerEmailAddress",
+        "disputeId",
+        "evidenceOperationId",
+        "evidence",
+        "evidenceText",
+        "customerCommunicationFileId",
+        "shippingDocumentationFileId",
+        "shippingTrackingNumber",
+        "shippingDate",
+        "receiptFileId",
+        "productDescription",
+        "customerName",
+        "customerEmailAddress",
     ]);
     const disputeId = requiredString(body, "disputeId", 200);
     const evidenceOperationId = requiredString(body, "evidenceOperationId", 200);
     const dispute = await requiredDispute(disputeId);
-    if (terminalDisputeStatus(dispute.status)) throw new HttpError(409, "Stripe dispute is already terminal");
+    if (terminalDisputeStatus(dispute.status)) {
+        throw new HttpError(409, "Stripe dispute is already terminal");
+    }
     const evidence = sanitizeDisputeEvidence(flattenDisputeEvidence(body));
-    let row = await getRowByField<JsonRecord>("stripe_dispute_evidence", "evidence_operation_id", evidenceOperationId, "*");
+    let row = await getRowByField<JsonRecord>(
+        "stripe_dispute_evidence",
+        "evidence_operation_id",
+        evidenceOperationId,
+        "*",
+    );
     if (row) {
         if (Number(row.dispute_id) !== dispute.id || !jsonEqual(row.evidence, evidence)) {
             throw new HttpError(409, "dispute evidence replay mismatch");
@@ -2114,7 +2448,8 @@ async function stageStripeDisputeEvidence(request: Request): Promise<Response> {
         });
         await updateRow("stripe_disputes", dispute.id, { evidence_status: "staged" });
         await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_staged", actorKind, userId, {
-            disputeId, evidenceOperationId,
+            disputeId,
+            evidenceOperationId,
         });
     }
     return json({ evidenceOperationId, disputeId, status: "staged", stagedAt: row.staged_at });
@@ -2129,21 +2464,37 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
         throw new HttpError(400, "explicit evidence submission confirmation is required");
     }
     const evidenceOperationId = requiredString(body, "evidenceOperationId", 200);
-    const staged = await getRowByField<JsonRecord>("stripe_dispute_evidence", "evidence_operation_id", evidenceOperationId, "*");
-    if (!staged || Number(staged.dispute_id) !== dispute.id) throw new HttpError(404, "staged dispute evidence not found");
+    const staged = await getRowByField<JsonRecord>(
+        "stripe_dispute_evidence",
+        "evidence_operation_id",
+        evidenceOperationId,
+        "*",
+    );
+    if (!staged || Number(staged.dispute_id) !== dispute.id) {
+        throw new HttpError(404, "staged dispute evidence not found");
+    }
     const submissionOperationId = requiredString(body, "submissionOperationId", 200);
     const businessKey = `dispute-evidence:${dispute.stripe_dispute_id}:${submissionOperationId}`;
     const operationRequest = { disputeId: dispute.stripe_dispute_id, evidenceOperationId };
     const existingOperation = await getRowByField<FinancialOperationRow>(
-        "financial_operations", "business_key", businessKey, operationSelect,
+        "financial_operations",
+        "business_key",
+        businessKey,
+        operationSelect,
     );
     if (existingOperation?.status === "succeeded" && jsonEqual(existingOperation.request, operationRequest)) {
-        return json({ disputeId: dispute.stripe_dispute_id, evidenceStatus: "submitted", operationId: existingOperation.id });
+        return json({
+            disputeId: dispute.stripe_dispute_id,
+            evidenceStatus: "submitted",
+            operationId: existingOperation.id,
+        });
     }
     if (existingOperation && !jsonEqual(existingOperation.request, operationRequest)) {
         throw new HttpError(409, "dispute evidence submission replay mismatch");
     }
-    if (terminalDisputeStatus(dispute.status)) throw new HttpError(409, "Stripe dispute is already terminal");
+    if (terminalDisputeStatus(dispute.status)) {
+        throw new HttpError(409, "Stripe dispute is already terminal");
+    }
     if (dispute.evidence_due_by && Date.parse(dispute.evidence_due_by) <= Date.now()) {
         throw new HttpError(409, "Stripe evidence deadline has passed");
     }
@@ -2159,18 +2510,27 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
         payload: operationRequest,
     });
     if (!approval.approved) {
-        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_evidence_first_approval_recorded", actorKind, userId, {
-            disputeId: dispute.stripe_dispute_id,
-            submissionOperationId,
-            approvalStatus: approval.approvalStatus,
-        });
-        return json({
-            disputeId: dispute.stripe_dispute_id,
-            evidenceStatus: "staged",
-            approvalStatus: approval.approvalStatus,
-            dualApprovalRequired: approval.dualApprovalRequired,
-            firstApprovedBy: approval.firstApprovedBy,
-        }, 202);
+        await insertPaymentEvent(
+            dispute.payment_id,
+            "stripe_dispute_evidence_first_approval_recorded",
+            actorKind,
+            userId,
+            {
+                disputeId: dispute.stripe_dispute_id,
+                submissionOperationId,
+                approvalStatus: approval.approvalStatus,
+            },
+        );
+        return json(
+            {
+                disputeId: dispute.stripe_dispute_id,
+                evidenceStatus: "staged",
+                approvalStatus: approval.approvalStatus,
+                dualApprovalRequired: approval.dualApprovalRequired,
+                firstApprovedBy: approval.firstApprovedBy,
+            },
+            202,
+        );
     }
     const operation = await reserveFinancialOperation(dispute.payment_id, {
         businessKey,
@@ -2179,15 +2539,20 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
     });
     if (operation.status !== "succeeded") {
         try {
-            await updateFinancialOperation(operation.id, { status: "processing", attempt_count: operation.attempt_count + 1 });
+            await updateFinancialOperation(operation.id, {
+                status: "processing",
+                attempt_count: operation.attempt_count + 1,
+            });
             const provider = await updateStripeDisputeEvidence(
                 dispute.stripe_dispute_id,
                 staged.evidence as JsonRecord,
                 await stableStripeIdempotencyKey("dispute-evidence", operation.business_key),
             );
             await updateFinancialOperation(operation.id, {
-                status: "succeeded", stripe_object_id: dispute.stripe_dispute_id,
-                response: provider, completed_at: new Date().toISOString(),
+                status: "succeeded",
+                stripe_object_id: dispute.stripe_dispute_id,
+                response: provider,
+                completed_at: new Date().toISOString(),
             });
             await updateRow("stripe_dispute_evidence", Number(staged.id), {
                 submitted_operation_id: operation.id,
@@ -2205,7 +2570,12 @@ async function submitStripeDisputeEvidence(request: Request): Promise<Response> 
                 secondApprovedBy: approval.secondApprovedBy ?? null,
             });
         } catch (error) {
-            await moveOperationToManualReview(dispute.payment_id, operation, error, "dispute_evidence_submission_ambiguous");
+            await moveOperationToManualReview(
+                dispute.payment_id,
+                operation,
+                error,
+                "dispute_evidence_submission_ambiguous",
+            );
             throw error;
         }
     }
@@ -2230,15 +2600,24 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
     const businessKey = `dispute-accept:${dispute.stripe_dispute_id}:${acceptanceOperationId}`;
     const operationRequest = { disputeId: dispute.stripe_dispute_id };
     const existingOperation = await getRowByField<FinancialOperationRow>(
-        "financial_operations", "business_key", businessKey, operationSelect,
+        "financial_operations",
+        "business_key",
+        businessKey,
+        operationSelect,
     );
     if (existingOperation?.status === "succeeded" && jsonEqual(existingOperation.request, operationRequest)) {
-        return json({ disputeId: dispute.stripe_dispute_id, evidenceStatus: "accepted", operationId: existingOperation.id });
+        return json({
+            disputeId: dispute.stripe_dispute_id,
+            evidenceStatus: "accepted",
+            operationId: existingOperation.id,
+        });
     }
     if (existingOperation && !jsonEqual(existingOperation.request, operationRequest)) {
         throw new HttpError(409, "dispute acceptance replay mismatch");
     }
-    if (terminalDisputeStatus(dispute.status)) throw new HttpError(409, "Stripe dispute is already terminal");
+    if (terminalDisputeStatus(dispute.status)) {
+        throw new HttpError(409, "Stripe dispute is already terminal");
+    }
     if (["accepted", "closed"].includes(dispute.evidence_status)) {
         throw new HttpError(409, "Stripe dispute was already accepted irreversibly");
     }
@@ -2254,18 +2633,27 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
         payload: operationRequest,
     });
     if (!approval.approved) {
-        await insertPaymentEvent(dispute.payment_id, "stripe_dispute_acceptance_first_approval_recorded", actorKind, userId, {
-            disputeId: dispute.stripe_dispute_id,
-            acceptanceOperationId,
-            approvalStatus: approval.approvalStatus,
-        });
-        return json({
-            disputeId: dispute.stripe_dispute_id,
-            evidenceStatus: dispute.evidence_status,
-            approvalStatus: approval.approvalStatus,
-            dualApprovalRequired: approval.dualApprovalRequired,
-            firstApprovedBy: approval.firstApprovedBy,
-        }, 202);
+        await insertPaymentEvent(
+            dispute.payment_id,
+            "stripe_dispute_acceptance_first_approval_recorded",
+            actorKind,
+            userId,
+            {
+                disputeId: dispute.stripe_dispute_id,
+                acceptanceOperationId,
+                approvalStatus: approval.approvalStatus,
+            },
+        );
+        return json(
+            {
+                disputeId: dispute.stripe_dispute_id,
+                evidenceStatus: dispute.evidence_status,
+                approvalStatus: approval.approvalStatus,
+                dualApprovalRequired: approval.dualApprovalRequired,
+                firstApprovedBy: approval.firstApprovedBy,
+            },
+            202,
+        );
     }
     const operation = await reserveFinancialOperation(dispute.payment_id, {
         businessKey,
@@ -2274,14 +2662,23 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
     });
     if (operation.status !== "succeeded") {
         try {
-            await updateFinancialOperation(operation.id, { status: "processing", attempt_count: operation.attempt_count + 1 });
-            const provider = await stripeV1<StripeDispute>(`/disputes/${encodeURIComponent(dispute.stripe_dispute_id)}/close`, {
-                method: "POST",
-                body: new URLSearchParams(),
-            }, { idempotencyKey: await stableStripeIdempotencyKey("dispute-accept", operation.business_key) });
             await updateFinancialOperation(operation.id, {
-                status: "succeeded", stripe_object_id: dispute.stripe_dispute_id,
-                response: provider, completed_at: new Date().toISOString(),
+                status: "processing",
+                attempt_count: operation.attempt_count + 1,
+            });
+            const provider = await stripeV1<StripeDispute>(
+                `/disputes/${encodeURIComponent(dispute.stripe_dispute_id)}/close`,
+                {
+                    method: "POST",
+                    body: new URLSearchParams(),
+                },
+                { idempotencyKey: await stableStripeIdempotencyKey("dispute-accept", operation.business_key) },
+            );
+            await updateFinancialOperation(operation.id, {
+                status: "succeeded",
+                stripe_object_id: dispute.stripe_dispute_id,
+                response: provider,
+                completed_at: new Date().toISOString(),
             });
             await updateRow("stripe_disputes", dispute.id, {
                 evidence_status: "accepted",
@@ -2310,14 +2707,18 @@ async function acceptStripeDispute(request: Request): Promise<Response> {
 
 async function listProviderExceptions(request: Request): Promise<Response> {
     requireDashboardAdmin(request);
-    return json(await listTable(request, "provider_exceptions", "*", "exception_type,message", "exceptions", "detected_at"));
+    return json(
+        await listTable(request, "provider_exceptions", "*", "exception_type,message", "exceptions", "detected_at"),
+    );
 }
 
 async function getProviderException(request: Request): Promise<Response> {
     requireDashboardAdmin(request);
     const exceptionId = requiredQueryInteger(request, "id");
     const exception = await getRowByField<JsonRecord>("provider_exceptions", "id", String(exceptionId), "*");
-    if (!exception) throw new HttpError(404, "provider exception not found");
+    if (!exception) {
+        throw new HttpError(404, "provider exception not found");
+    }
     return json(exception);
 }
 
@@ -2342,13 +2743,17 @@ async function requeueCommerceProjection(request: Request): Promise<Response> {
 async function listFinancialOperations(request: Request): Promise<Response> {
     const actor = requireDashboardAdmin(request);
     const rows = await readFinancialOperationDashboardPage(request, actor);
-    const operations = rows.map(row => publicFinancialOperation(
-        row.operation as unknown as FinancialOperationRow,
-        row.client_reference_id === null ? null : {
-            client_reference_id: row.client_reference_id,
-            currency: row.payment_currency ?? "",
-        },
-    ));
+    const operations = rows.map((row) =>
+        publicFinancialOperation(
+            row.operation as unknown as FinancialOperationRow,
+            row.client_reference_id === null
+                ? null
+                : {
+                      client_reference_id: row.client_reference_id,
+                      currency: row.payment_currency ?? "",
+                  },
+        ),
+    );
     return json({ operations, total: operations.length });
 }
 
@@ -2370,7 +2775,9 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
     if (run && ["succeeded", "manual_review"].includes(String(run.status))) {
         return json(await publicReconciliationRun(run, limit, `commerce:${runKey}`));
     }
-    if (!run) run = await insertRow<JsonRecord>("reconciliation_runs", "*", { run_key: runKey, status: "running" });
+    if (!run) {
+        run = await insertRow<JsonRecord>("reconciliation_runs", "*", { run_key: runKey, status: "running" });
+    }
 
     let scanned = 0;
     let repaired = 0;
@@ -2382,19 +2789,19 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
     try {
         const [platformSettings, platformControl] = await Promise.all([
             retrievePlatformBalanceSettings(),
-            getRowByField<PlatformPayoutControlRow>(
-                "platform_payout_controls", "control_key", "default", "*",
-            ),
+            getRowByField<PlatformPayoutControlRow>("platform_payout_controls", "control_key", "default", "*"),
         ]);
-        if (!platformControl) throw new Error("platform payout control state is unavailable");
-        platformPayoutInterval = stringAt(
-            objectAt(objectAt(objectAt(platformSettings, "payments"), "payouts"), "schedule"),
-            "interval",
-        ) || "unknown";
-        platformPayoutMinimum = numberAt(
-            objectAt(objectAt(objectAt(platformSettings, "payments"), "payouts"), "minimum_balance_by_currency"),
-            "eur",
-        ) ?? 0;
+        if (!platformControl) {
+            throw new Error("platform payout control state is unavailable");
+        }
+        platformPayoutInterval =
+            stringAt(objectAt(objectAt(objectAt(platformSettings, "payments"), "payouts"), "schedule"), "interval") ||
+            "unknown";
+        platformPayoutMinimum =
+            numberAt(
+                objectAt(objectAt(objectAt(platformSettings, "payments"), "payouts"), "minimum_balance_by_currency"),
+                "eur",
+            ) ?? 0;
         platformRequiredMinimum = Math.max(
             platformControl.required_minimum_amount,
             platformControl.provider_minimum_amount,
@@ -2406,7 +2813,8 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
                 exception_type: "platform_payout_schedule_drift",
                 severity: "critical",
                 status: "open",
-                message: "Stripe platform payout schedule is not the protected automatic schedule; new protected payments are blocked",
+                message:
+                    "Stripe platform payout schedule is not the protected automatic schedule; new protected payments are blocked",
                 details: { platformPayoutInterval, providerSnapshot: platformSettings },
             });
         } else {
@@ -2442,15 +2850,16 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
     // webhook backlog must never starve money-operation recovery, provider
     // payment reconciliation, or payout-hold enforcement.
     const eventBudget = Math.max(1, remainingWorkBudget - 4);
-    const events = remainingWorkBudget > 0
-        ? await callRpcRows<JsonRecord>("claim_stripe_events", { p_limit: eventBudget })
-        : [];
+    const events =
+        remainingWorkBudget > 0 ? await callRpcRows<JsonRecord>("claim_stripe_events", { p_limit: eventBudget }) : [];
     remainingWorkBudget -= events.length;
     for (const event of events) {
         scanned++;
         try {
             const changed = await processStripeEvent(event);
-            if (changed) repaired++;
+            if (changed) {
+                repaired++;
+            }
             await updateRow("stripe_events", Number(event.id), {
                 processing_status: changed ? "processed" : "ignored",
                 processing_started_at: null,
@@ -2468,14 +2877,17 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
     }
 
     const operationBudget = Math.max(1, remainingWorkBudget - 3);
-    const claimedOperations = remainingWorkBudget > 0
-        ? await callRpcRows<FinancialOperationRow>("claim_financial_operations", { p_limit: operationBudget })
-        : [];
+    const claimedOperations =
+        remainingWorkBudget > 0
+            ? await callRpcRows<FinancialOperationRow>("claim_financial_operations", { p_limit: operationBudget })
+            : [];
     remainingWorkBudget -= claimedOperations.length;
     for (const operation of claimedOperations) {
         scanned++;
         try {
-            if (await processClaimedFinancialOperation(operation)) repaired++;
+            if (await processClaimedFinancialOperation(operation)) {
+                repaired++;
+            }
         } catch (error) {
             exceptions++;
             if (operation.payment_id) {
@@ -2501,11 +2913,14 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
         }
     }
     const stalePaymentBudget = Math.max(1, remainingWorkBudget - 2);
-    const stalePayments = remainingWorkBudget > 0 ? await listRows<ConnectPaymentRow>(
-        "payments?payment_status=in.(created,requires_action,processing,succeeded)"
-        + `&select=${encodeURIComponent(paymentSelect)}`
-        + `&order=last_provider_sync_at.asc.nullsfirst,updated_at.asc&limit=${stalePaymentBudget}`,
-    ) : [];
+    const stalePayments =
+        remainingWorkBudget > 0
+            ? await listRows<ConnectPaymentRow>(
+                  "payments?payment_status=in.(created,requires_action,processing,succeeded)" +
+                      `&select=${encodeURIComponent(paymentSelect)}` +
+                      `&order=last_provider_sync_at.asc.nullsfirst,updated_at.asc&limit=${stalePaymentBudget}`,
+              )
+            : [];
     remainingWorkBudget -= stalePayments.length;
     for (const payment of stalePayments) {
         scanned++;
@@ -2513,7 +2928,9 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
             const before = `${payment.payment_status}:${payment.stripe_charge_id ?? ""}:${payment.refunded_amount}`;
             const reconciled = await reconcilePayment(payment);
             const after = `${reconciled.payment_status}:${reconciled.stripe_charge_id ?? ""}:${reconciled.refunded_amount}`;
-            if (before !== after) repaired++;
+            if (before !== after) {
+                repaired++;
+            }
         } catch (error) {
             exceptions++;
             await markPaymentManualReview(payment.id, "stale provider payment reconciliation failed", {
@@ -2522,11 +2939,14 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
         }
     }
     const sellerRiskBudget = Math.max(1, remainingWorkBudget - 1);
-    const sellerRiskAccounts = remainingWorkBudget > 0 ? await listRows<ConnectAccountRow>(
-        "accounts?or=(outstanding_debt_amount.gt.0,financial_exposure_amount.gt.0)"
-        + `&select=${encodeURIComponent(accountSelect)}`
-        + `&order=payout_hold_claimed_at.asc.nullsfirst,updated_at.asc&limit=${sellerRiskBudget}`,
-    ) : [];
+    const sellerRiskAccounts =
+        remainingWorkBudget > 0
+            ? await listRows<ConnectAccountRow>(
+                  "accounts?or=(outstanding_debt_amount.gt.0,financial_exposure_amount.gt.0)" +
+                      `&select=${encodeURIComponent(accountSelect)}` +
+                      `&order=payout_hold_claimed_at.asc.nullsfirst,updated_at.asc&limit=${sellerRiskBudget}`,
+              )
+            : [];
     remainingWorkBudget -= sellerRiskAccounts.length;
     for (const account of sellerRiskAccounts) {
         scanned++;
@@ -2542,16 +2962,19 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
             }).catch(() => null);
         }
     }
-    const manualPayoutHoldAccounts = remainingWorkBudget > 0 ? await listRows<ConnectAccountRow>(
-        "accounts?manual_payout_hold_deadline_at=not.is.null"
-        + `&select=${encodeURIComponent(accountSelect)}`
-        + `&order=manual_payout_hold_deadline_at.asc&limit=${remainingWorkBudget}`,
-    ) : [];
+    const manualPayoutHoldAccounts =
+        remainingWorkBudget > 0
+            ? await listRows<ConnectAccountRow>(
+                  "accounts?manual_payout_hold_deadline_at=not.is.null" +
+                      `&select=${encodeURIComponent(accountSelect)}` +
+                      `&order=manual_payout_hold_deadline_at.asc&limit=${remainingWorkBudget}`,
+              )
+            : [];
     remainingWorkBudget -= manualPayoutHoldAccounts.length;
     for (const account of manualPayoutHoldAccounts) {
         scanned++;
         const restorationRequired = account.outstanding_debt_amount + account.financial_exposure_amount === 0;
-        if (restorationRequired && await restoreSellerAutomaticPayoutSchedule(account.cms_user_id)) {
+        if (restorationRequired && (await restoreSellerAutomaticPayoutSchedule(account.cms_user_id))) {
             repaired++;
             await resolveProviderException(`seller-manual-payout-hold-drift:${account.cms_user_id}`);
             await resolveProviderException(`seller-manual-payout-hold-alert:${account.cms_user_id}`);
@@ -2645,28 +3068,36 @@ async function runProviderReconciliation(request: Request): Promise<Response> {
                 await resolveProviderException(`seller-manual-payout-hold-alert:${account.cms_user_id}`);
             }
         }
-        if (accountHasException) exceptions++;
+        if (accountHasException) {
+            exceptions++;
+        }
     }
-    run = await updateRow<JsonRecord>("reconciliation_runs", Number(run.id), {
-        status: exceptions ? "manual_review" : "succeeded",
-        scanned_count: scanned,
-        repaired_count: repaired,
-        exception_count: exceptions,
-        details: {
-            stripeApiVersion: stripeV1ApiVersion,
-            processedStripeEvents: events.length,
-            recoveredFinancialOperations: claimedOperations.length,
-            reconciledStalePayments: stalePayments.length,
-            reconciledSellerRiskAccounts: sellerRiskAccounts.length,
-            reconciledManualPayoutHolds: manualPayoutHoldAccounts.length,
-            platformPayoutInterval,
-            platformPayoutMinimum,
-            platformRequiredMinimum,
-            workBudgetLimit: limit,
-            workBudgetConsumed: limit - remainingWorkBudget,
-        },
-        finished_at: new Date().toISOString(),
-    }, "*") ?? run;
+    run =
+        (await updateRow<JsonRecord>(
+            "reconciliation_runs",
+            Number(run.id),
+            {
+                status: exceptions ? "manual_review" : "succeeded",
+                scanned_count: scanned,
+                repaired_count: repaired,
+                exception_count: exceptions,
+                details: {
+                    stripeApiVersion: stripeV1ApiVersion,
+                    processedStripeEvents: events.length,
+                    recoveredFinancialOperations: claimedOperations.length,
+                    reconciledStalePayments: stalePayments.length,
+                    reconciledSellerRiskAccounts: sellerRiskAccounts.length,
+                    reconciledManualPayoutHolds: manualPayoutHoldAccounts.length,
+                    platformPayoutInterval,
+                    platformPayoutMinimum,
+                    platformRequiredMinimum,
+                    workBudgetLimit: limit,
+                    workBudgetConsumed: limit - remainingWorkBudget,
+                },
+                finished_at: new Date().toISOString(),
+            },
+            "*",
+        )) ?? run;
     return json(await publicReconciliationRun(run, limit, `commerce:${runKey}`));
 }
 
@@ -2735,12 +3166,15 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
                     protectedByHold = await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, claim);
                 } else {
                     let readyToRestore = false;
-                    if (!account.manual_payout_hold_started_at
-                        || !account.manual_payout_hold_restore_settings) {
-                        const currentMinimum = numberAt(
-                            objectAt(objectAt(objectAt(current, "payments"), "payouts"), "minimum_balance_by_currency"),
-                            "eur",
-                        ) ?? 0;
+                    if (!account.manual_payout_hold_started_at || !account.manual_payout_hold_restore_settings) {
+                        const currentMinimum =
+                            numberAt(
+                                objectAt(
+                                    objectAt(objectAt(current, "payments"), "payouts"),
+                                    "minimum_balance_by_currency",
+                                ),
+                                "eur",
+                            ) ?? 0;
                         const completed = await sellerPayoutHoldRpc("complete_seller_payout_hold", {
                             p_seller_cms_user_id: cmsUserId,
                             p_owner: owner,
@@ -2754,11 +3188,10 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
                             throw new Error("seller payout hold recovery lease was superseded");
                         }
                         if (completed.needsReapply === true) {
-                            protectedByHold = await applyClaimedSellerRecoveryPayoutHold(
-                                cmsUserId,
-                                owner,
-                                { claimed: true, account: objectAt(completed, "account") },
-                            );
+                            protectedByHold = await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, {
+                                claimed: true,
+                                account: objectAt(completed, "account"),
+                            });
                         } else {
                             readyToRestore = true;
                         }
@@ -2772,11 +3205,10 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
                             throw new Error("seller payout hold recovery lease was superseded");
                         }
                         if (cancelled.superseded === true) {
-                            protectedByHold = await applyClaimedSellerRecoveryPayoutHold(
-                                cmsUserId,
-                                owner,
-                                { claimed: true, account: objectAt(cancelled, "account") },
-                            );
+                            protectedByHold = await applyClaimedSellerRecoveryPayoutHold(cmsUserId, owner, {
+                                claimed: true,
+                                account: objectAt(cancelled, "account"),
+                            });
                         } else {
                             readyToRestore = true;
                         }
@@ -2785,7 +3217,9 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
                         protectedByHold = await restoreSellerAutomaticPayoutSchedule(cmsUserId);
                     }
                 }
-                if (!protectedByHold) throw new Error("seller payout hold recovery requires finance review");
+                if (!protectedByHold) {
+                    throw new Error("seller payout hold recovery requires finance review");
+                }
             } else {
                 if (!balanceSettingsMatchRequest(current, operation.request)) {
                     const cancelled = await sellerPayoutHoldRpc("cancel_seller_payout_configuration", {
@@ -2837,22 +3271,27 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
         });
         return true;
     }
-    if (!operation.payment_id) return false;
-    const usesRecoveryContext = operation.operation_type === "transfer_create"
-        || operation.operation_type === "transfer_reversal_create"
-        || operation.operation_type === "refund_create";
+    if (!operation.payment_id) {
+        return false;
+    }
+    const usesRecoveryContext =
+        operation.operation_type === "transfer_create" ||
+        operation.operation_type === "transfer_reversal_create" ||
+        operation.operation_type === "refund_create";
     const rawRecoveryRequestId = operation.request.recoveryRequestId;
     const recoveryContext = usesRecoveryContext
         ? await readFinancialOperationRecoveryContext(
-            operation.payment_id,
-            operation.id,
-            typeof rawRecoveryRequestId === "string" ? rawRecoveryRequestId : null,
-        )
+              operation.payment_id,
+              operation.id,
+              typeof rawRecoveryRequestId === "string" ? rawRecoveryRequestId : null,
+          )
         : null;
     const payment = recoveryContext
-        ? recoveryContext.payment as unknown as ConnectPaymentRow | null
+        ? (recoveryContext.payment as unknown as ConnectPaymentRow | null)
         : await requiredPayment(operation.payment_id);
-    if (!payment) throw new HttpError(404, "payment not found");
+    if (!payment) {
+        throw new HttpError(404, "payment not found");
+    }
     if (operation.operation_type === "payment_intent_create") {
         let intent: StripePaymentIntent;
         if (operation.stripe_object_id) {
@@ -2867,7 +3306,8 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
             intent = await createStripePaymentIntent(payment);
         }
         const applied = await applyPaymentIntent(payment, intent, {
-            actorKind: "reconciliation", actorId: "financial-operation-recovery",
+            actorKind: "reconciliation",
+            actorId: "financial-operation-recovery",
         });
         await updateFinancialOperation(operation.id, {
             status: applied.settlement_status === "manual_review" ? "manual_review" : "succeeded",
@@ -2922,7 +3362,9 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
         }
         const recoveryRequestId = requiredOperationString(operation, "recoveryRequestId");
         const recovery = recoveryContext?.transfer_recovery as unknown as TransferRecoveryRow | null;
-        if (!recovery) throw new Error(`operation ${operation.id} has no Transfer recovery parent`);
+        if (!recovery) {
+            throw new Error(`operation ${operation.id} has no Transfer recovery parent`);
+        }
         await executeTransferReversal(payment, recoveryRequestId, recovery.requested_amount, recovery.reason);
         return true;
     }
@@ -2956,15 +3398,19 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
 
 async function publicReconciliationRun(run: JsonRecord, limit: number, projectionOwner: string): Promise<JsonRecord> {
     const operationReads = await readReconciliationOperations(limit);
-    const operations = operationReads.map(read => publicFinancialOperation(
-        read.operation as unknown as FinancialOperationRow,
-        read.client_reference_id === null ? null : {
-            client_reference_id: read.client_reference_id,
-            currency: read.payment_currency ?? "",
-        },
-    ));
+    const operations = operationReads.map((read) =>
+        publicFinancialOperation(
+            read.operation as unknown as FinancialOperationRow,
+            read.client_reference_id === null
+                ? null
+                : {
+                      client_reference_id: read.client_reference_id,
+                      currency: read.payment_currency ?? "",
+                  },
+        ),
+    );
     const claimedReads = await claimReconciliationProjectionBatch(projectionOwner, limit);
-    const claimedPublic = claimedReads.map(read => {
+    const claimedPublic = claimedReads.map((read) => {
         const projection = read.projection as unknown as CommerceProjectionOutboxRow;
         const lease = {
             projectionId: projection.id,
@@ -2974,7 +3420,9 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
             causalSequence: projection.causal_sequence,
         };
         if (projection.projection_kind === "payment") {
-            if (!read.payment) throw new HttpError(404, "payment not found");
+            if (!read.payment) {
+                throw new HttpError(404, "payment not found");
+            }
             const payment = read.payment as unknown as ConnectPaymentRow;
             return {
                 kind: "payment",
@@ -2986,8 +3434,12 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
             };
         }
         if (projection.projection_kind === "dispute") {
-            if (!read.dispute) throw new Error(`projection ${projection.id} has no Stripe dispute`);
-            if (read.dispute_client_reference_id === null) throw new HttpError(404, "payment not found");
+            if (!read.dispute) {
+                throw new Error(`projection ${projection.id} has no Stripe dispute`);
+            }
+            if (read.dispute_client_reference_id === null) {
+                throw new HttpError(404, "payment not found");
+            }
             const dispute = read.dispute as unknown as StripeDisputeRow;
             return {
                 kind: "dispute",
@@ -3003,12 +3455,18 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
                 },
             };
         }
-        if (!projection.operation_id) throw new Error(`projection ${projection.id} has no financial operation id`);
-        if (!read.financial_operation) throw new Error(`projection ${projection.id} has no financial operation`);
+        if (!projection.operation_id) {
+            throw new Error(`projection ${projection.id} has no financial operation id`);
+        }
+        if (!read.financial_operation) {
+            throw new Error(`projection ${projection.id} has no financial operation`);
+        }
         const operation = read.financial_operation as unknown as FinancialOperationRow;
         const payment = read.operation_payment as unknown as ConnectPaymentRow | null;
         const publicOperation = publicCommerceOperation(publicFinancialOperation(operation, payment));
-        if (!publicOperation) return null;
+        if (!publicOperation) {
+            return null;
+        }
         if (projection.projection_kind === "refund") {
             const payload = projection.projection_payload ?? {};
             return {
@@ -3036,13 +3494,13 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
     });
     const paymentProjections = claimedPublic
         .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "payment")
-        .map(entry => entry.value);
+        .map((entry) => entry.value);
     const commerceOperations = claimedPublic
         .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "operation")
-        .map(entry => entry.value);
+        .map((entry) => entry.value);
     const disputeProjections = claimedPublic
         .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "dispute")
-        .map(entry => entry.value);
+        .map((entry) => entry.value);
     return {
         runId: run.id,
         runKey: run.run_key,
@@ -3062,11 +3520,17 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
 
 function publicCommerceOperation(operation: JsonRecord): JsonRecord | null {
     const rawType = stringAt(operation, "operationType");
-    const operationType = rawType === "transfer_create" ? "transfer"
-        : rawType === "transfer_reversal_create" ? "reversal"
-        : rawType === "refund_create" ? "refund"
-        : null;
-    if (!operationType) return null;
+    const operationType =
+        rawType === "transfer_create"
+            ? "transfer"
+            : rawType === "transfer_reversal_create"
+              ? "reversal"
+              : rawType === "refund_create"
+                ? "refund"
+                : null;
+    if (!operationType) {
+        return null;
+    }
     return stripUndefined({
         orderPublicId: operation.clientReferenceId ?? null,
         paymentId: operation.paymentId ?? null,
@@ -3087,11 +3551,18 @@ function publicCommerceOperation(operation: JsonRecord): JsonRecord | null {
     });
 }
 
-async function ingestStripeWebhook(request: Request, endpointKind: "platform" | "connect" | "connect_v2"): Promise<Response> {
+async function ingestStripeWebhook(
+    request: Request,
+    endpointKind: "platform" | "connect" | "connect_v2",
+): Promise<Response> {
     const contentLength = Number(request.headers.get("content-length") ?? 0);
-    if (contentLength > stripeWebhookMaximumBytes) throw new HttpError(413, "Stripe webhook payload is too large");
+    if (contentLength > stripeWebhookMaximumBytes) {
+        throw new HttpError(413, "Stripe webhook payload is too large");
+    }
     const bytes = new Uint8Array(await request.arrayBuffer());
-    if (bytes.length > stripeWebhookMaximumBytes) throw new HttpError(413, "Stripe webhook payload is too large");
+    if (bytes.length > stripeWebhookMaximumBytes) {
+        throw new HttpError(413, "Stripe webhook payload is too large");
+    }
     const rawBody = new TextDecoder().decode(bytes);
     await verifyStripeWebhookSignature(
         rawBody,
@@ -3099,13 +3570,15 @@ async function ingestStripeWebhook(request: Request, endpointKind: "platform" | 
         endpointKind === "platform"
             ? "STRIPE_WEBHOOK_SECRET"
             : endpointKind === "connect_v2"
-                ? "STRIPE_CONNECT_V2_WEBHOOK_SECRET"
-                : "STRIPE_CONNECT_WEBHOOK_SECRET",
+              ? "STRIPE_CONNECT_V2_WEBHOOK_SECRET"
+              : "STRIPE_CONNECT_WEBHOOK_SECRET",
     );
     let event: JsonRecord;
     try {
         const parsed = JSON.parse(rawBody);
-        if (!isRecord(parsed)) throw new Error("not an object");
+        if (!isRecord(parsed)) {
+            throw new Error("not an object");
+        }
         event = parsed;
     } catch {
         throw new HttpError(400, "invalid Stripe event JSON");
@@ -3119,19 +3592,20 @@ async function ingestStripeWebhook(request: Request, endpointKind: "platform" | 
     const providerCreatedAt = stripeEventCreatedAt(event);
     const dataObject = objectAt(objectAt(event, "data"), "object");
     const relatedObject = objectAt(event, "related_object");
-    const connectedAccountId = endpointKind === "connect_v2"
-        ? stringAt(relatedObject, "id")
-        : stringAt(event, "account");
+    const connectedAccountId =
+        endpointKind === "connect_v2" ? stringAt(relatedObject, "id") : stringAt(event, "account");
     if (endpointKind === "platform" && connectedAccountId) {
         throw new HttpError(400, "connected-account event sent to platform Stripe webhook");
     }
     if (endpointKind === "connect" && !connectedAccountId) {
         throw new HttpError(400, "platform event sent to Stripe Connect webhook");
     }
-    if (endpointKind === "connect_v2"
-        && (!eventType.startsWith("v2.core.account")
-            || stringAt(relatedObject, "type") !== "v2.core.account"
-            || !connectedAccountId)) {
+    if (
+        endpointKind === "connect_v2" &&
+        (!eventType.startsWith("v2.core.account") ||
+            stringAt(relatedObject, "type") !== "v2.core.account" ||
+            !connectedAccountId)
+    ) {
         throw new HttpError(400, "non-account event sent to Stripe Connect v2 webhook");
     }
     const stripeAccountId = connectedAccountId || "platform";
@@ -3153,7 +3627,9 @@ async function ingestStripeWebhook(request: Request, endpointKind: "platform" | 
 
 async function syncAccountForUser(userId: string): Promise<ConnectAccountRow | null> {
     const account = await getAccountRow(userId);
-    if (!account?.stripe_account_id) return account;
+    if (!account?.stripe_account_id) {
+        return account;
+    }
     const stripeAccount = await retrieveAccount(account.stripe_account_id, account.stripe_account_api_version);
     return await updateAccountRow(userId, accountPatchFromStripe(stripeAccount, account.stripe_account_api_version));
 }
@@ -3168,8 +3644,10 @@ async function getAccountRowByStripeAccountId(stripeAccountId: string): Promise<
         `accounts?stripe_account_id=eq.${encodeURIComponent(stripeAccountId)}&select=${accountSelect}&limit=1`,
         { method: "GET" },
     );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectAccountRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectAccountRow[];
     return rows[0] ?? null;
 }
 
@@ -3178,8 +3656,10 @@ async function getAccountRow(userId: string): Promise<ConnectAccountRow | null> 
         `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}&limit=1`,
         { method: "GET" },
     );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectAccountRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectAccountRow[];
     return rows[0] ?? null;
 }
 
@@ -3196,8 +3676,10 @@ async function getMarketplaceTermsAcceptance(
         limit: "1",
     });
     const response = await rest(`marketplace_terms_acceptances?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as MarketplaceTermsAcceptanceRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as MarketplaceTermsAcceptanceRow[];
     return rows[0] ?? null;
 }
 
@@ -3215,9 +3697,13 @@ async function recordMarketplaceTermsAcceptance(
             p_terms_hash: hash,
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
-    if (!isRecord(value)) throw new HttpError(502, "Supabase returned an invalid marketplace terms acceptance");
+    if (!isRecord(value)) {
+        throw new HttpError(502, "Supabase returned an invalid marketplace terms acceptance");
+    }
     return value as MarketplaceTermsAcceptanceRow;
 }
 
@@ -3234,24 +3720,25 @@ async function upsertAccountRow(values: JsonRecord): Promise<ConnectAccountRow> 
         },
         body: JSON.stringify(stripUndefined(values)),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return firstRow<ConnectAccountRow>(await response.json());
 }
 
 async function updateAccountRow(userId: string, values: JsonRecord): Promise<ConnectAccountRow | null> {
-    const response = await rest(
-        `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}`,
-        {
-            method: "PATCH",
-            headers: {
-                "content-type": "application/json",
-                prefer: "return=representation",
-            },
-            body: JSON.stringify(stripUndefined(values)),
+    const response = await rest(`accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=${accountSelect}`, {
+        method: "PATCH",
+        headers: {
+            "content-type": "application/json",
+            prefer: "return=representation",
         },
-    );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectAccountRow[];
+        body: JSON.stringify(stripUndefined(values)),
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectAccountRow[];
     return rows[0] ?? null;
 }
 
@@ -3264,7 +3751,9 @@ async function insertPayment(values: JsonRecord): Promise<ConnectPaymentRow> {
         },
         body: JSON.stringify(stripUndefined(values)),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return firstRow<ConnectPaymentRow>(await response.json());
 }
 
@@ -3274,9 +3763,13 @@ async function reserveProtectedPayment(values: JsonRecord): Promise<ConnectPayme
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ p_payment: stripUndefined(values) }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
-    if (isRecord(value)) return value as ConnectPaymentRow;
+    if (isRecord(value)) {
+        return value as ConnectPaymentRow;
+    }
     return firstRow<ConnectPaymentRow>(value);
 }
 
@@ -3294,35 +3787,35 @@ async function reservePaymentCancellationIntent(
             p_reason: reason ?? null,
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
     return isRecord(value) ? value : firstRow<JsonRecord>(value);
 }
 
 async function updatePayment(paymentId: number, values: JsonRecord): Promise<ConnectPaymentRow | null> {
-    const response = await rest(
-        `payments?id=eq.${paymentId}&select=${paymentSelect}`,
-        {
-            method: "PATCH",
-            headers: {
-                "content-type": "application/json",
-                prefer: "return=representation",
-            },
-            body: JSON.stringify(stripUndefined(values)),
+    const response = await rest(`payments?id=eq.${paymentId}&select=${paymentSelect}`, {
+        method: "PATCH",
+        headers: {
+            "content-type": "application/json",
+            prefer: "return=representation",
         },
-    );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectPaymentRow[];
+        body: JSON.stringify(stripUndefined(values)),
+    });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectPaymentRow[];
     return rows[0] ?? null;
 }
 
 async function getPaymentRow(paymentId: number): Promise<ConnectPaymentRow | null> {
-    const response = await rest(
-        `payments?id=eq.${paymentId}&select=${paymentSelect}&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectPaymentRow[];
+    const response = await rest(`payments?id=eq.${paymentId}&select=${paymentSelect}&limit=1`, { method: "GET" });
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectPaymentRow[];
     return rows[0] ?? null;
 }
 
@@ -3331,16 +3824,21 @@ async function getPaymentByClientReference(clientReferenceId: string): Promise<C
         `payments?client_reference_id=eq.${encodeURIComponent(clientReferenceId)}&select=${paymentSelect}&limit=1`,
         { method: "GET" },
     );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as ConnectPaymentRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as ConnectPaymentRow[];
     return rows[0] ?? null;
 }
 
 async function syncPayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow> {
-    if (!payment.stripe_payment_intent_id) return payment;
+    if (!payment.stripe_payment_intent_id) {
+        return payment;
+    }
     const intent = await retrievePaymentIntent(payment.stripe_payment_intent_id);
     return await applyPaymentIntent(payment, intent, {
-        actorKind: "reconciliation", actorId: "provider-sync",
+        actorKind: "reconciliation",
+        actorId: "provider-sync",
     });
 }
 
@@ -3360,8 +3858,10 @@ const transientBalanceTransactionExpansionReviewReason =
     "Stripe payment provider truth mismatch: charge_balance_transaction_expansion";
 
 function isTransientBalanceTransactionExpansionReview(payment: ConnectPaymentRow): boolean {
-    return payment.settlement_status === "manual_review"
-        && payment.manual_review_reason === transientBalanceTransactionExpansionReviewReason;
+    return (
+        payment.settlement_status === "manual_review" &&
+        payment.manual_review_reason === transientBalanceTransactionExpansionReviewReason
+    );
 }
 
 async function projectPaymentIntent(
@@ -3386,9 +3886,11 @@ async function projectPaymentIntent(
         if (!forcedMismatches && paymentStatus === "succeeded") {
             intent = await hydrateSucceededPaymentIntentProviderTruth(intent);
         }
-        const mismatches = forcedMismatches ?? (paymentStatus === "succeeded"
-            ? providerPaymentTruthMismatches(payment, intent, expectedPaymentIntentId)
-            : []);
+        const mismatches =
+            forcedMismatches ??
+            (paymentStatus === "succeeded"
+                ? providerPaymentTruthMismatches(payment, intent, expectedPaymentIntentId)
+                : []);
         const projection = mismatches.length
             ? await buildQuarantinePaymentProjection(payment, intent, mismatches, options)
             : await buildAppliedPaymentProjection(payment, intent, paymentStatus, expectedPaymentIntentId, options);
@@ -3401,7 +3903,9 @@ async function projectPaymentIntent(
             throw new HttpError(502, "payment provider projection returned an invalid response");
         }
         payment = result.payment as ConnectPaymentRow;
-        if (result.applied) return payment;
+        if (result.applied) {
+            return payment;
+        }
     }
 }
 
@@ -3414,40 +3918,50 @@ async function buildAppliedPaymentProjection(
 ): Promise<JsonRecord> {
     const charge = paymentStatus === "succeeded" && isRecord(intent.latest_charge) ? intent.latest_charge : null;
     const balanceTransaction = charge && isRecord(charge.balance_transaction) ? charge.balance_transaction : null;
-    const chargeFee = balanceTransaction ? numberAt(balanceTransaction, "fee") ?? 0 : 0;
+    const chargeFee = balanceTransaction ? (numberAt(balanceTransaction, "fee") ?? 0) : 0;
     const projected: ConnectPaymentRow = {
         ...payment,
         payment_status: paymentStatus,
         stripe_payment_intent_id: expectedPaymentIntentId ?? intent.id,
-        stripe_charge_id: paymentStatus === "succeeded" ? chargeId(intent) ?? payment.stripe_charge_id : payment.stripe_charge_id,
+        stripe_charge_id:
+            paymentStatus === "succeeded" ? (chargeId(intent) ?? payment.stripe_charge_id) : payment.stripe_charge_id,
         stripe_charge_balance_transaction_id: balanceTransaction
-            ? stringAt(balanceTransaction, "id") : payment.stripe_charge_balance_transaction_id,
-        actual_stripe_charge_fee_amount: paymentStatus === "succeeded"
-            ? chargeFee : payment.actual_stripe_charge_fee_amount,
-        actual_stripe_processing_fee_amount: paymentStatus === "succeeded"
-            ? chargeFee + payment.actual_stripe_refund_fee_amount
-            : payment.actual_stripe_processing_fee_amount,
+            ? stringAt(balanceTransaction, "id")
+            : payment.stripe_charge_balance_transaction_id,
+        actual_stripe_charge_fee_amount:
+            paymentStatus === "succeeded" ? chargeFee : payment.actual_stripe_charge_fee_amount,
+        actual_stripe_processing_fee_amount:
+            paymentStatus === "succeeded"
+                ? chargeFee + payment.actual_stripe_refund_fee_amount
+                : payment.actual_stripe_processing_fee_amount,
         actual_stripe_charge_net_amount: balanceTransaction
-            ? numberAt(balanceTransaction, "net") : payment.actual_stripe_charge_net_amount,
+            ? numberAt(balanceTransaction, "net")
+            : payment.actual_stripe_charge_net_amount,
         actual_stripe_fee_currency: balanceTransaction
-            ? stringAt(balanceTransaction, "currency").toLowerCase() : payment.actual_stripe_fee_currency,
+            ? stringAt(balanceTransaction, "currency").toLowerCase()
+            : payment.actual_stripe_fee_currency,
         actual_stripe_charge_fee_details: balanceTransaction
-            ? recordArrayAt(balanceTransaction, "fee_details") : payment.actual_stripe_charge_fee_details,
-        paid_at: paymentStatus === "succeeded" ? payment.paid_at ?? new Date().toISOString() : payment.paid_at,
-        cancelled_at: paymentStatus === "cancelled" ? payment.cancelled_at ?? new Date().toISOString() : payment.cancelled_at,
+            ? recordArrayAt(balanceTransaction, "fee_details")
+            : payment.actual_stripe_charge_fee_details,
+        paid_at: paymentStatus === "succeeded" ? (payment.paid_at ?? new Date().toISOString()) : payment.paid_at,
+        cancelled_at:
+            paymentStatus === "cancelled" ? (payment.cancelled_at ?? new Date().toISOString()) : payment.cancelled_at,
         last_provider_sync_at: new Date().toISOString(),
     };
-    const recovery = isTransientBalanceTransactionExpansionReview(payment) && paymentStatus === "succeeded"
-        && charge && balanceTransaction
-        ? {
-            exceptionKey: `provider-payment-truth:${payment.id}:${intent.id}`,
-            paymentIntentId: intent.id,
-            chargeId: stringAt(charge, "id"),
-            balanceTransactionId: stringAt(balanceTransaction, "id"),
-            actorKind: options.actorKind,
-            actorId: options.actorId,
-        }
-        : null;
+    const recovery =
+        isTransientBalanceTransactionExpansionReview(payment) &&
+        paymentStatus === "succeeded" &&
+        charge &&
+        balanceTransaction
+            ? {
+                  exceptionKey: `provider-payment-truth:${payment.id}:${intent.id}`,
+                  paymentIntentId: intent.id,
+                  chargeId: stringAt(charge, "id"),
+                  balanceTransactionId: stringAt(balanceTransaction, "id"),
+                  actorKind: options.actorKind,
+                  actorId: options.actorId,
+              }
+            : null;
     return {
         kind: "apply",
         paymentStatus: projected.payment_status,
@@ -3464,7 +3978,11 @@ async function buildAppliedPaymentProjection(
         lastProviderSyncAt: projected.last_provider_sync_at,
         projectionKey: await paymentProjectionKey(projected, options.actorId, paymentStatus),
         recoveredProjectionKey: recovery
-            ? await paymentProjectionKey({ ...projected, settlement_status: "held", manual_review_reason: null }, options.actorId, paymentStatus)
+            ? await paymentProjectionKey(
+                  { ...projected, settlement_status: "held", manual_review_reason: null },
+                  options.actorId,
+                  paymentStatus,
+              )
             : null,
         recovery,
     };
@@ -3475,17 +3993,19 @@ async function paymentProjectionKey(
     actorId: string,
     paymentStatus: string,
 ): Promise<string> {
-    const projectionState = await digest(JSON.stringify({
-        paymentStatus: payment.payment_status,
-        settlementStatus: payment.settlement_status,
-        disputeStatus: payment.dispute_status,
-        manualReviewReason: payment.manual_review_reason,
-        chargeId: payment.stripe_charge_id,
-        balanceTransactionId: payment.stripe_charge_balance_transaction_id,
-        refundedAmount: payment.refunded_amount,
-        transferredAmount: payment.transferred_amount,
-        reversedAmount: payment.reversed_amount,
-    }));
+    const projectionState = await digest(
+        JSON.stringify({
+            paymentStatus: payment.payment_status,
+            settlementStatus: payment.settlement_status,
+            disputeStatus: payment.dispute_status,
+            manualReviewReason: payment.manual_review_reason,
+            chargeId: payment.stripe_charge_id,
+            balanceTransactionId: payment.stripe_charge_balance_transaction_id,
+            refundedAmount: payment.refunded_amount,
+            transferredAmount: payment.transferred_amount,
+            reversedAmount: payment.reversed_amount,
+        }),
+    );
     return `payment:${payment.id}:${actorId}:${paymentStatus}:${payment.stripe_charge_id ?? "none"}:${projectionState}`;
 }
 
@@ -3495,16 +4015,34 @@ function providerPaymentTruthMismatches(
     expectedPaymentIntentId: string | undefined,
 ): string[] {
     const mismatches: string[] = [];
-    if (!expectedPaymentIntentId || intent.id !== expectedPaymentIntentId) mismatches.push("payment_intent_id");
-    if (numberAt(intent, "amount") !== payment.amount_total) mismatches.push("payment_intent_amount");
-    if (numberAt(intent, "amount_received") !== payment.amount_total) mismatches.push("payment_intent_amount_received");
-    if (stringAt(intent, "currency").toLowerCase() !== payment.currency) mismatches.push("payment_intent_currency");
-    if (stringAt(intent, "transfer_group") !== payment.transfer_group) mismatches.push("payment_intent_transfer_group");
+    if (!expectedPaymentIntentId || intent.id !== expectedPaymentIntentId) {
+        mismatches.push("payment_intent_id");
+    }
+    if (numberAt(intent, "amount") !== payment.amount_total) {
+        mismatches.push("payment_intent_amount");
+    }
+    if (numberAt(intent, "amount_received") !== payment.amount_total) {
+        mismatches.push("payment_intent_amount_received");
+    }
+    if (stringAt(intent, "currency").toLowerCase() !== payment.currency) {
+        mismatches.push("payment_intent_currency");
+    }
+    if (stringAt(intent, "transfer_group") !== payment.transfer_group) {
+        mismatches.push("payment_intent_transfer_group");
+    }
     const metadata = objectAt(intent, "metadata");
-    if (stringAt(metadata, "cms_payment_id") !== String(payment.id)) mismatches.push("metadata_cms_payment_id");
-    if (stringAt(metadata, "client_reference_id") !== payment.client_reference_id) mismatches.push("metadata_client_reference_id");
-    if (stringAt(metadata, "financial_terms_hash") !== payment.financial_terms_hash) mismatches.push("metadata_financial_terms_hash");
-    if (stringAt(metadata, "seller_cms_user_id") !== payment.seller_cms_user_id) mismatches.push("metadata_seller_cms_user_id");
+    if (stringAt(metadata, "cms_payment_id") !== String(payment.id)) {
+        mismatches.push("metadata_cms_payment_id");
+    }
+    if (stringAt(metadata, "client_reference_id") !== payment.client_reference_id) {
+        mismatches.push("metadata_client_reference_id");
+    }
+    if (stringAt(metadata, "financial_terms_hash") !== payment.financial_terms_hash) {
+        mismatches.push("metadata_financial_terms_hash");
+    }
+    if (stringAt(metadata, "seller_cms_user_id") !== payment.seller_cms_user_id) {
+        mismatches.push("metadata_seller_cms_user_id");
+    }
 
     const charge = isRecord(intent.latest_charge) ? intent.latest_charge : null;
     if (!charge) {
@@ -3515,13 +4053,27 @@ function providerPaymentTruthMismatches(
     if (!providerChargeId || (payment.stripe_charge_id && providerChargeId !== payment.stripe_charge_id)) {
         mismatches.push("charge_id");
     }
-    if (stripeObjectId(charge.payment_intent) !== intent.id) mismatches.push("charge_payment_intent");
-    if (numberAt(charge, "amount") !== payment.amount_total) mismatches.push("charge_amount");
-    if (numberAt(charge, "amount_captured") !== payment.amount_total) mismatches.push("charge_amount_captured");
-    if (stringAt(charge, "currency").toLowerCase() !== payment.currency) mismatches.push("charge_currency");
-    if (stringAt(charge, "transfer_group") !== payment.transfer_group) mismatches.push("charge_transfer_group");
-    if (charge.paid !== true) mismatches.push("charge_paid");
-    if (charge.captured !== true) mismatches.push("charge_captured");
+    if (stripeObjectId(charge.payment_intent) !== intent.id) {
+        mismatches.push("charge_payment_intent");
+    }
+    if (numberAt(charge, "amount") !== payment.amount_total) {
+        mismatches.push("charge_amount");
+    }
+    if (numberAt(charge, "amount_captured") !== payment.amount_total) {
+        mismatches.push("charge_amount_captured");
+    }
+    if (stringAt(charge, "currency").toLowerCase() !== payment.currency) {
+        mismatches.push("charge_currency");
+    }
+    if (stringAt(charge, "transfer_group") !== payment.transfer_group) {
+        mismatches.push("charge_transfer_group");
+    }
+    if (charge.paid !== true) {
+        mismatches.push("charge_paid");
+    }
+    if (charge.captured !== true) {
+        mismatches.push("charge_captured");
+    }
     const balanceTransaction = isRecord(charge.balance_transaction) ? charge.balance_transaction : null;
     if (!balanceTransaction) {
         mismatches.push("charge_balance_transaction_expansion");
@@ -3531,16 +4083,28 @@ function providerPaymentTruthMismatches(
         const balanceFee = numberAt(balanceTransaction, "fee");
         const balanceNet = numberAt(balanceTransaction, "net");
         const balanceCurrency = stringAt(balanceTransaction, "currency").toLowerCase();
-        if (!balanceTransactionId.startsWith("txn_")) mismatches.push("charge_balance_transaction_id");
-        if (balanceAmount !== payment.amount_total) mismatches.push("charge_balance_transaction_amount");
-        if (!Number.isSafeInteger(balanceFee) || balanceFee! < 0) mismatches.push("charge_balance_transaction_fee");
+        if (!balanceTransactionId.startsWith("txn_")) {
+            mismatches.push("charge_balance_transaction_id");
+        }
+        if (balanceAmount !== payment.amount_total) {
+            mismatches.push("charge_balance_transaction_amount");
+        }
+        if (!Number.isSafeInteger(balanceFee) || balanceFee! < 0) {
+            mismatches.push("charge_balance_transaction_fee");
+        }
         if (!Number.isSafeInteger(balanceNet) || balanceNet !== balanceAmount! - balanceFee!) {
             mismatches.push("charge_balance_transaction_net");
         }
-        if (balanceCurrency !== payment.currency) mismatches.push("charge_balance_transaction_currency");
-        if (!Array.isArray(balanceTransaction.fee_details)) mismatches.push("charge_balance_transaction_fee_details");
-        if (payment.stripe_charge_balance_transaction_id
-            && balanceTransactionId !== payment.stripe_charge_balance_transaction_id) {
+        if (balanceCurrency !== payment.currency) {
+            mismatches.push("charge_balance_transaction_currency");
+        }
+        if (!Array.isArray(balanceTransaction.fee_details)) {
+            mismatches.push("charge_balance_transaction_fee_details");
+        }
+        if (
+            payment.stripe_charge_balance_transaction_id &&
+            balanceTransactionId !== payment.stripe_charge_balance_transaction_id
+        ) {
             mismatches.push("charge_balance_transaction_replay_id");
         }
     }
@@ -3590,7 +4154,9 @@ async function buildQuarantinePaymentProjection(
 }
 
 async function paymentClientSecret(payment: ConnectPaymentRow): Promise<string> {
-    if (!payment.stripe_payment_intent_id) return "";
+    if (!payment.stripe_payment_intent_id) {
+        return "";
+    }
     const intent = await retrievePaymentIntent(payment.stripe_payment_intent_id);
     return intent.client_secret ?? "";
 }
@@ -3601,89 +4167,109 @@ async function createConnectedAccount(options: {
     email: string;
     displayName?: string | null;
 }): Promise<StripeAccount> {
-    return await stripeV2<StripeAccount>("/core/accounts", {
-        method: "POST",
-        body: JSON.stringify({
-            contact_email: options.email,
-            display_name: options.displayName ?? options.email.split("@")[0],
-            dashboard: "none",
-            identity: {
-                country: options.country.toLowerCase(),
-                entity_type: "individual",
-            },
-            defaults: {
-                currency: defaultCurrency(),
-                profile: {
-                    product_description: sellerActivityDescription(),
+    return await stripeV2<StripeAccount>(
+        "/core/accounts",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                contact_email: options.email,
+                display_name: options.displayName ?? options.email.split("@")[0],
+                dashboard: "none",
+                identity: {
+                    country: options.country.toLowerCase(),
+                    entity_type: "individual",
                 },
-                responsibilities: {
-                    fees_collector: "application",
-                    losses_collector: "application",
+                defaults: {
+                    currency: defaultCurrency(),
+                    profile: {
+                        product_description: sellerActivityDescription(),
+                    },
+                    responsibilities: {
+                        fees_collector: "application",
+                        losses_collector: "application",
+                    },
                 },
-            },
-            configuration: {
-                recipient: {
-                    capabilities: {
-                        stripe_balance: {
-                            stripe_transfers: { requested: true },
+                configuration: {
+                    recipient: {
+                        capabilities: {
+                            stripe_balance: {
+                                stripe_transfers: { requested: true },
+                            },
                         },
                     },
                 },
-            },
-            include: stripeV2AccountIncludes,
-        }),
-    }, { idempotencyKey: `cms_connect_account_v2_controlled_recipient_v2_${await digest(options.userId)}` });
+                include: stripeV2AccountIncludes,
+            }),
+        },
+        { idempotencyKey: `cms_connect_account_v2_controlled_recipient_v2_${await digest(options.userId)}` },
+    );
 }
 
 async function createCustomConnectedAccount(userId: string, accountToken: string): Promise<StripeAccount> {
-    return await stripeV2<StripeAccount>("/core/accounts", {
-        method: "POST",
-        body: JSON.stringify({
-            account_token: accountToken,
-            dashboard: "none",
-            identity: {
-                country: defaultCountry().toLowerCase(),
-            },
-            defaults: {
-                currency: defaultCurrency(),
-                profile: { product_description: sellerActivityDescription() },
-                responsibilities: {
-                    fees_collector: "application",
-                    losses_collector: "application",
+    return await stripeV2<StripeAccount>(
+        "/core/accounts",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                account_token: accountToken,
+                dashboard: "none",
+                identity: {
+                    country: defaultCountry().toLowerCase(),
                 },
-            },
-            configuration: {
-                recipient: {
-                    capabilities: {
-                        stripe_balance: {
-                            stripe_transfers: { requested: true },
+                defaults: {
+                    currency: defaultCurrency(),
+                    profile: { product_description: sellerActivityDescription() },
+                    responsibilities: {
+                        fees_collector: "application",
+                        losses_collector: "application",
+                    },
+                },
+                configuration: {
+                    recipient: {
+                        capabilities: {
+                            stripe_balance: {
+                                stripe_transfers: { requested: true },
+                            },
                         },
                     },
                 },
-            },
-            include: stripeV2AccountIncludes,
-            metadata: { cms_user_id: userId },
-        }),
-    }, { idempotencyKey: `cms_connect_custom_recipient_v2_${await digest(userId)}` });
+                include: stripeV2AccountIncludes,
+                metadata: { cms_user_id: userId },
+            }),
+        },
+        { idempotencyKey: `cms_connect_custom_recipient_v2_${await digest(userId)}` },
+    );
 }
 
 async function updateCustomConnectedAccount(accountId: string, accountToken: string): Promise<StripeAccount> {
-    return await stripeV2<StripeAccount>(`/core/accounts/${encodeURIComponent(accountId)}`, {
-        method: "POST",
-        body: JSON.stringify({
-            account_token: accountToken,
-        }),
-    }, { idempotencyKey: `cms_connect_custom_identity_${await digest(`${accountId}:${accountToken}`)}` });
+    return await stripeV2<StripeAccount>(
+        `/core/accounts/${encodeURIComponent(accountId)}`,
+        {
+            method: "POST",
+            body: JSON.stringify({
+                account_token: accountToken,
+            }),
+        },
+        { idempotencyKey: `cms_connect_custom_identity_${await digest(`${accountId}:${accountToken}`)}` },
+    );
 }
 
 function isApplicationCollectedAccount(account: StripeAccount | null): boolean {
-    if (!account || account.dashboard !== "none") return false;
-    return stringAt(objectAt(objectAt(account, "defaults"), "responsibilities"), "requirements_collector") === "application";
+    if (!account || account.dashboard !== "none") {
+        return false;
+    }
+    return (
+        stringAt(objectAt(objectAt(account, "defaults"), "responsibilities"), "requirements_collector") ===
+        "application"
+    );
 }
 
 function assertApplicationControlledRecipient(account: StripeAccount): void {
     if (!isApplicationCollectedAccount(account)) {
-        throw new HttpError(502, "Stripe did not create an application-controlled recipient account without Dashboard access");
+        throw new HttpError(
+            502,
+            "Stripe did not create an application-controlled recipient account without Dashboard access",
+        );
     }
 }
 
@@ -3691,10 +4277,14 @@ async function attachBankAccount(accountId: string, bankAccountToken: string): P
     const params = new URLSearchParams();
     params.set("external_account", bankAccountToken);
     params.set("default_for_currency", "true");
-    await stripeV1<JsonRecord>(`/accounts/${encodeURIComponent(accountId)}/external_accounts`, {
-        method: "POST",
-        body: params,
-    }, { idempotencyKey: `cms_connect_bank_${await digest(`${accountId}:${bankAccountToken}`)}` });
+    await stripeV1<JsonRecord>(
+        `/accounts/${encodeURIComponent(accountId)}/external_accounts`,
+        {
+            method: "POST",
+            body: params,
+        },
+        { idempotencyKey: `cms_connect_bank_${await digest(`${accountId}:${bankAccountToken}`)}` },
+    );
 }
 
 async function retrieveAccount(accountId: string, apiVersion: StripeAccountApiVersion): Promise<StripeAccount> {
@@ -3705,10 +4295,9 @@ async function retrieveAccount(accountId: string, apiVersion: StripeAccountApiVe
     for (const [index, value] of stripeV2AccountIncludes.entries()) {
         include.set(`include[${index}]`, value);
     }
-    return await stripeV2<StripeAccount>(
-        `/core/accounts/${encodeURIComponent(accountId)}?${include.toString()}`,
-        { method: "GET" },
-    );
+    return await stripeV2<StripeAccount>(`/core/accounts/${encodeURIComponent(accountId)}?${include.toString()}`, {
+        method: "GET",
+    });
 }
 
 async function createAccountLink(
@@ -3772,12 +4361,18 @@ async function createStripePaymentIntent(payment: ConnectPaymentRow): Promise<St
     params.set("metadata[financial_terms_hash]", payment.financial_terms_hash);
     params.set("metadata[seller_cms_user_id]", payment.seller_cms_user_id);
     params.set("expand[]", "latest_charge.balance_transaction");
-    if (payment.description) params.set("description", payment.description);
+    if (payment.description) {
+        params.set("description", payment.description);
+    }
 
-    return await stripeV1<StripePaymentIntent>("/payment_intents", {
-        method: "POST",
-        body: params,
-    }, { idempotencyKey: `payment:${payment.id}:${payment.financial_terms_hash}` });
+    return await stripeV1<StripePaymentIntent>(
+        "/payment_intents",
+        {
+            method: "POST",
+            body: params,
+        },
+        { idempotencyKey: `payment:${payment.id}:${payment.financial_terms_hash}` },
+    );
 }
 
 async function retrievePaymentIntent(paymentIntentId: string): Promise<StripePaymentIntent> {
@@ -3789,18 +4384,22 @@ async function retrievePaymentIntent(paymentIntentId: string): Promise<StripePay
     );
 }
 
-async function hydrateSucceededPaymentIntentProviderTruth(
-    intent: StripePaymentIntent,
-): Promise<StripePaymentIntent> {
+async function hydrateSucceededPaymentIntentProviderTruth(intent: StripePaymentIntent): Promise<StripePaymentIntent> {
     let charge: string | JsonRecord | null | undefined = intent.latest_charge;
-    if (typeof charge === "string") charge = await retrieveStripeCharge(charge);
-    if (!isRecord(charge)) return intent;
+    if (typeof charge === "string") {
+        charge = await retrieveStripeCharge(charge);
+    }
+    if (!isRecord(charge)) {
+        return intent;
+    }
 
     let balanceTransaction = charge.balance_transaction;
     if (typeof balanceTransaction === "string") {
         balanceTransaction = await retrieveStripeBalanceTransaction(balanceTransaction);
     }
-    if (balanceTransaction === charge.balance_transaction && charge === intent.latest_charge) return intent;
+    if (balanceTransaction === charge.balance_transaction && charge === intent.latest_charge) {
+        return intent;
+    }
     return {
         ...intent,
         latest_charge: {
@@ -3813,17 +4412,15 @@ async function hydrateSucceededPaymentIntentProviderTruth(
 async function retrieveStripeCharge(chargeId: string): Promise<JsonRecord> {
     const params = new URLSearchParams();
     params.set("expand[]", "balance_transaction");
-    return await stripeV1<JsonRecord>(
-        `/charges/${encodeURIComponent(chargeId)}?${params.toString()}`,
-        { method: "GET" },
-    );
+    return await stripeV1<JsonRecord>(`/charges/${encodeURIComponent(chargeId)}?${params.toString()}`, {
+        method: "GET",
+    });
 }
 
 async function retrieveStripeBalanceTransaction(balanceTransactionId: string): Promise<JsonRecord> {
-    return await stripeV1<JsonRecord>(
-        `/balance_transactions/${encodeURIComponent(balanceTransactionId)}`,
-        { method: "GET" },
-    );
+    return await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(balanceTransactionId)}`, {
+        method: "GET",
+    });
 }
 
 async function cancelStripePaymentIntent(paymentIntentId: string): Promise<StripePaymentIntent> {
@@ -3878,34 +4475,33 @@ async function updateBalanceSettings(
         params.set("payments[debit_negative_balances]", String(request.debitNegativeBalances));
     }
     const headers = stripeAccountId ? { "stripe-account": stripeAccountId } : undefined;
-    return await stripeV1<StripeBalanceSettings>("/balance_settings", {
-        method: "POST",
-        headers,
-        body: params,
-    }, { idempotencyKey });
+    return await stripeV1<StripeBalanceSettings>(
+        "/balance_settings",
+        {
+            method: "POST",
+            headers,
+            body: params,
+        },
+        { idempotencyKey },
+    );
 }
 
 async function assertPlatformPayoutProtection(): Promise<void> {
     const [settings, control] = await Promise.all([
         retrievePlatformBalanceSettings(),
-        getRowByField<PlatformPayoutControlRow>(
-            "platform_payout_controls",
-            "control_key",
-            "default",
-            "*",
-        ),
+        getRowByField<PlatformPayoutControlRow>("platform_payout_controls", "control_key", "default", "*"),
     ]);
-    if (!control) throw new HttpError(503, "platform payout protection state is unavailable");
+    if (!control) {
+        throw new HttpError(503, "platform payout protection state is unavailable");
+    }
     const interval = stringAt(objectAt(objectAt(objectAt(settings, "payments"), "payouts"), "schedule"), "interval");
     if (interval !== protectedPlatformPayoutInterval) {
         throw new HttpError(503, "protected payments require the configured automatic Stripe platform payout schedule");
     }
-    const providerMinimum = numberAt(
-        objectAt(objectAt(objectAt(settings, "payments"), "payouts"), "minimum_balance_by_currency"),
-        "eur",
-    ) ?? 0;
-    if (providerMinimum < control.required_minimum_amount
-        || providerMinimum < control.provider_minimum_amount) {
+    const providerMinimum =
+        numberAt(objectAt(objectAt(objectAt(settings, "payments"), "payouts"), "minimum_balance_by_currency"), "eur") ??
+        0;
+    if (providerMinimum < control.required_minimum_amount || providerMinimum < control.provider_minimum_amount) {
         throw new HttpError(503, "protected payments require the current Stripe platform minimum balance");
     }
 }
@@ -3921,16 +4517,22 @@ async function createStripeTransfer(
     params.set("amount", String(amount));
     params.set("currency", payment.currency);
     params.set("destination", payment.seller_stripe_account_id);
-    if (releaseKind !== "recovery") params.set("source_transaction", payment.stripe_charge_id!);
+    if (releaseKind !== "recovery") {
+        params.set("source_transaction", payment.stripe_charge_id!);
+    }
     params.set("transfer_group", payment.transfer_group);
     params.set("metadata[cms_payment_id]", String(payment.id));
     params.set("metadata[cms_release_authorization_id]", releaseAuthorizationId);
     params.set("metadata[cms_release_kind]", releaseKind);
     params.set("metadata[financial_terms_hash]", payment.financial_terms_hash);
-    return await stripeV1<StripeTransfer>("/transfers", {
-        method: "POST",
-        body: params,
-    }, { idempotencyKey });
+    return await stripeV1<StripeTransfer>(
+        "/transfers",
+        {
+            method: "POST",
+            body: params,
+        },
+        { idempotencyKey },
+    );
 }
 
 async function retrieveStripeTransfer(transferId: string): Promise<StripeTransfer> {
@@ -3945,21 +4547,22 @@ async function findStripeTransfer(
 ): Promise<StripeTransfer | null> {
     const params = new URLSearchParams({ transfer_group: payment.transfer_group, limit: "100" });
     const list = await stripeV1<JsonRecord>(`/transfers?${params.toString()}`, { method: "GET" });
-    const matches = recordArrayAt(list, "data").filter(transfer =>
-        Number(transfer.amount) === amount
-        && stringAt(transfer, "currency") === payment.currency
-        && stripeObjectId(transfer.destination) === payment.seller_stripe_account_id
-        && stringAt(objectAt(transfer, "metadata"), "cms_payment_id") === String(payment.id)
-        && stringAt(objectAt(transfer, "metadata"), "cms_release_authorization_id") === releaseAuthorizationId
-        && stringAt(objectAt(transfer, "metadata"), "cms_release_kind") === releaseKind
-        && (releaseKind === "recovery"
-            ? !stripeObjectId(transfer.source_transaction)
-            : stripeObjectId(transfer.source_transaction) === payment.stripe_charge_id)
+    const matches = recordArrayAt(list, "data").filter(
+        (transfer) =>
+            Number(transfer.amount) === amount &&
+            stringAt(transfer, "currency") === payment.currency &&
+            stripeObjectId(transfer.destination) === payment.seller_stripe_account_id &&
+            stringAt(objectAt(transfer, "metadata"), "cms_payment_id") === String(payment.id) &&
+            stringAt(objectAt(transfer, "metadata"), "cms_release_authorization_id") === releaseAuthorizationId &&
+            stringAt(objectAt(transfer, "metadata"), "cms_release_kind") === releaseKind &&
+            (releaseKind === "recovery"
+                ? !stripeObjectId(transfer.source_transaction)
+                : stripeObjectId(transfer.source_transaction) === payment.stripe_charge_id),
     );
     if (matches.length > 1 || (matches.length === 0 && list.has_more === true)) {
         throw new HttpError(409, "Stripe Transfer search is ambiguous");
     }
-    return matches[0] as StripeTransfer | undefined ?? null;
+    return (matches[0] as StripeTransfer | undefined) ?? null;
 }
 
 async function createStripeTransferReversal(
@@ -3971,10 +4574,14 @@ async function createStripeTransferReversal(
     const params = new URLSearchParams();
     params.set("amount", String(amount));
     params.set("metadata[operation_key]", operationKey);
-    return await stripeV1<JsonRecord>(`/transfers/${encodeURIComponent(transferId)}/reversals`, {
-        method: "POST",
-        body: params,
-    }, { idempotencyKey });
+    return await stripeV1<JsonRecord>(
+        `/transfers/${encodeURIComponent(transferId)}/reversals`,
+        {
+            method: "POST",
+            body: params,
+        },
+        { idempotencyKey },
+    );
 }
 
 async function retrieveStripeTransferReversal(transferId: string, reversalId: string): Promise<JsonRecord> {
@@ -3989,13 +4596,13 @@ async function findStripeTransferReversal(
     operationKey: string,
     amount: number,
 ): Promise<JsonRecord | null> {
-    const list = await stripeV1<JsonRecord>(
-        `/transfers/${encodeURIComponent(transferId)}/reversals?limit=100`,
-        { method: "GET" },
-    );
-    const matches = recordArrayAt(list, "data").filter(reversal =>
-        Number(reversal.amount) === amount
-        && stringAt(objectAt(reversal, "metadata"), "operation_key") === operationKey
+    const list = await stripeV1<JsonRecord>(`/transfers/${encodeURIComponent(transferId)}/reversals?limit=100`, {
+        method: "GET",
+    });
+    const matches = recordArrayAt(list, "data").filter(
+        (reversal) =>
+            Number(reversal.amount) === amount &&
+            stringAt(objectAt(reversal, "metadata"), "operation_key") === operationKey,
     );
     if (matches.length > 1 || (matches.length === 0 && list.has_more === true)) {
         throw new HttpError(409, "Stripe Transfer Reversal search is ambiguous");
@@ -4015,30 +4622,36 @@ async function createStripeRefund(
     params.set("amount", String(amount));
     params.set("metadata[refund_request_id]", refundRequestId);
     params.set("expand[]", "balance_transaction");
-    if (reason) params.set("metadata[commerce_reason]", reason);
+    if (reason) {
+        params.set("metadata[commerce_reason]", reason);
+    }
     return await stripeV1<StripeRefund>("/refunds", { method: "POST", body: params }, { idempotencyKey });
 }
 
 async function retrieveStripeRefund(refundId: string): Promise<StripeRefund> {
-    return await stripeV1<StripeRefund>(
-        `/refunds/${encodeURIComponent(refundId)}?expand[]=balance_transaction`,
-        { method: "GET" },
-    );
+    return await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refundId)}?expand[]=balance_transaction`, {
+        method: "GET",
+    });
 }
 
-async function findStripeRefund(chargeId: string, refundRequestId: string, amount: number): Promise<StripeRefund | null> {
+async function findStripeRefund(
+    chargeId: string,
+    refundRequestId: string,
+    amount: number,
+): Promise<StripeRefund | null> {
     const params = new URLSearchParams({ charge: chargeId, limit: "100" });
     params.set("expand[]", "data.balance_transaction");
     const list = await stripeV1<JsonRecord>(`/refunds?${params.toString()}`, { method: "GET" });
-    const matches = recordArrayAt(list, "data").filter(refund =>
-        Number(refund.amount) === amount
-        && stripeObjectId(refund.charge) === chargeId
-        && stringAt(objectAt(refund, "metadata"), "refund_request_id") === refundRequestId
+    const matches = recordArrayAt(list, "data").filter(
+        (refund) =>
+            Number(refund.amount) === amount &&
+            stripeObjectId(refund.charge) === chargeId &&
+            stringAt(objectAt(refund, "metadata"), "refund_request_id") === refundRequestId,
     );
     if (matches.length > 1 || (matches.length === 0 && list.has_more === true)) {
         throw new HttpError(409, "Stripe Refund search is ambiguous");
     }
-    return matches[0] as StripeRefund | undefined ?? null;
+    return (matches[0] as StripeRefund | undefined) ?? null;
 }
 
 async function updateStripeDisputeEvidence(
@@ -4047,28 +4660,38 @@ async function updateStripeDisputeEvidence(
     idempotencyKey: string,
 ): Promise<StripeDispute> {
     const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(evidence)) params.set(`evidence[${key}]`, String(value));
+    for (const [key, value] of Object.entries(evidence)) {
+        params.set(`evidence[${key}]`, String(value));
+    }
     params.set("submit", "true");
-    return await stripeV1<StripeDispute>(`/disputes/${encodeURIComponent(disputeId)}`, {
-        method: "POST",
-        body: params,
-    }, { idempotencyKey });
+    return await stripeV1<StripeDispute>(
+        `/disputes/${encodeURIComponent(disputeId)}`,
+        {
+            method: "POST",
+            body: params,
+        },
+        { idempotencyKey },
+    );
 }
 
 function publicWalletBalances(balance: StripeBalance): JsonRecord[] {
-    const amounts = new Map<string, {
-        available: number;
-        pending: number;
-        instantAvailable: number;
-        reserved: number;
-    }>();
-    const add = (
-        entries: unknown,
-        key: "available" | "pending" | "instantAvailable" | "reserved",
-    ): void => {
-        if (!Array.isArray(entries)) return;
+    const amounts = new Map<
+        string,
+        {
+            available: number;
+            pending: number;
+            instantAvailable: number;
+            reserved: number;
+        }
+    >();
+    const add = (entries: unknown, key: "available" | "pending" | "instantAvailable" | "reserved"): void => {
+        if (!Array.isArray(entries)) {
+            return;
+        }
         for (const entry of entries) {
-            if (!isRecord(entry) || typeof entry.currency !== "string" || !Number.isSafeInteger(entry.amount)) continue;
+            if (!isRecord(entry) || typeof entry.currency !== "string" || !Number.isSafeInteger(entry.amount)) {
+                continue;
+            }
             const currency = entry.currency.toLowerCase();
             const current = amounts.get(currency) ?? { available: 0, pending: 0, instantAvailable: 0, reserved: 0 };
             current[key] += entry.amount as number;
@@ -4107,7 +4730,10 @@ function publicSellerProviderRisk(
     };
 }
 
-function publicBalanceSettings(balanceSettings: StripeBalanceSettings, fallbackInterval = "stripe_default"): JsonRecord {
+function publicBalanceSettings(
+    balanceSettings: StripeBalanceSettings,
+    fallbackInterval = "stripe_default",
+): JsonRecord {
     const payments = objectAt(balanceSettings, "payments");
     const payouts = objectAt(payments, "payouts");
     const schedule = objectAt(payouts, "schedule");
@@ -4115,12 +4741,12 @@ function publicBalanceSettings(balanceSettings: StripeBalanceSettings, fallbackI
     return {
         interval: stringAt(schedule, "interval") || fallbackInterval,
         weeklyPayoutDays: stringArrayAt(schedule, "weekly_payout_days"),
-        monthlyPayoutDays: arrayAt(schedule, "monthly_payout_days")
-            .filter((value): value is number => Number.isSafeInteger(value)),
+        monthlyPayoutDays: arrayAt(schedule, "monthly_payout_days").filter((value): value is number =>
+            Number.isSafeInteger(value),
+        ),
         minimumBalanceByCurrency: objectAt(payouts, "minimum_balance_by_currency"),
-        debitNegativeBalances: typeof payments.debit_negative_balances === "boolean"
-            ? payments.debit_negative_balances
-            : null,
+        debitNegativeBalances:
+            typeof payments.debit_negative_balances === "boolean" ? payments.debit_negative_balances : null,
         delayDays: Number.isSafeInteger(settlementTiming.delay_days) ? settlementTiming.delay_days : null,
         delayDaysOverride: Number.isSafeInteger(settlementTiming.delay_days_override)
             ? settlementTiming.delay_days_override
@@ -4133,26 +4759,37 @@ function balanceSettingsMatchRequest(settings: StripeBalanceSettings, request: J
     const payments = objectAt(settings, "payments");
     const payouts = objectAt(payments, "payouts");
     const schedule = objectAt(payouts, "schedule");
-    if (stringAt(schedule, "interval") !== request.interval) return false;
+    if (stringAt(schedule, "interval") !== request.interval) {
+        return false;
+    }
     if (Array.isArray(request.weeklyPayoutDays)) {
-        if (!sameScalarSet(stringArrayAt(schedule, "weekly_payout_days"), request.weeklyPayoutDays)) return false;
+        if (!sameScalarSet(stringArrayAt(schedule, "weekly_payout_days"), request.weeklyPayoutDays)) {
+            return false;
+        }
     }
     if (Array.isArray(request.monthlyPayoutDays)) {
-        const actual = arrayAt(schedule, "monthly_payout_days").filter(value => Number.isSafeInteger(value));
-        if (!sameScalarSet(actual, request.monthlyPayoutDays)) return false;
+        const actual = arrayAt(schedule, "monthly_payout_days").filter((value) => Number.isSafeInteger(value));
+        if (!sameScalarSet(actual, request.monthlyPayoutDays)) {
+            return false;
+        }
     }
     if (Number.isSafeInteger(request.minimumBalanceEur)) {
         const providerMinimum = objectAt(payouts, "minimum_balance_by_currency").eur;
-        const normalizedProviderMinimum = providerMinimum === null || providerMinimum === undefined
-            ? 0
-            : providerMinimum;
-        if (normalizedProviderMinimum !== request.minimumBalanceEur) return false;
+        const normalizedProviderMinimum =
+            providerMinimum === null || providerMinimum === undefined ? 0 : providerMinimum;
+        if (normalizedProviderMinimum !== request.minimumBalanceEur) {
+            return false;
+        }
     }
     if (Number.isSafeInteger(request.delayDaysOverride)) {
-        if (objectAt(payments, "settlement_timing").delay_days_override !== request.delayDaysOverride) return false;
+        if (objectAt(payments, "settlement_timing").delay_days_override !== request.delayDaysOverride) {
+            return false;
+        }
     }
     if (typeof request.debitNegativeBalances === "boolean") {
-        if (payments.debit_negative_balances !== request.debitNegativeBalances) return false;
+        if (payments.debit_negative_balances !== request.debitNegativeBalances) {
+            return false;
+        }
     }
     return true;
 }
@@ -4174,7 +4811,8 @@ function accountPatchFromStripeV1(account: StripeAccount): JsonRecord {
         application_controlled_recipient: false,
         terms_accepted: stripeTermsAcceptedV1(account),
         provider_account_closed: false,
-        country: (typeof account.country === "string" && account.country ? account.country.toUpperCase() : defaultCountry()),
+        country:
+            typeof account.country === "string" && account.country ? account.country.toUpperCase() : defaultCountry(),
         business_type: validBusinessType(account.business_type) ? account.business_type : null,
         onboarding_status: accountStatusV1(account),
         charges_enabled: Boolean(account.charges_enabled),
@@ -4194,14 +4832,24 @@ function accountPatchFromStripeV1(account: StripeAccount): JsonRecord {
 function accountStatusV1(account: StripeAccount): string {
     const requirements = objectAt(account, "requirements");
     const disabledReason = stringAt(requirements, "disabled_reason");
-    if (disabledReason?.includes("rejected")) return "rejected";
+    if (disabledReason?.includes("rejected")) {
+        return "rejected";
+    }
     if (stringArrayAt(requirements, "past_due").length || stringArrayAt(requirements, "currently_due").length) {
         return "requirements_due";
     }
-    if (stringArrayAt(requirements, "pending_verification").length) return "pending_verification";
-    if (disabledReason) return "restricted";
-    if (account.payouts_enabled) return "enabled";
-    if (account.details_submitted) return "pending_verification";
+    if (stringArrayAt(requirements, "pending_verification").length) {
+        return "pending_verification";
+    }
+    if (disabledReason) {
+        return "restricted";
+    }
+    if (account.payouts_enabled) {
+        return "enabled";
+    }
+    if (account.details_submitted) {
+        return "pending_verification";
+    }
     return account.id ? "restricted" : "not_started";
 }
 
@@ -4219,17 +4867,19 @@ function accountPatchFromStripeV2(account: StripeAccount): JsonRecord {
     const currentlyDue = requirementDescriptions(requirementEntries, "currently_due");
     const eventuallyDue = requirementDescriptions(requirementEntries, "eventually_due");
     const pastDue = requirementDescriptions(requirementEntries, "past_due");
-    const pendingVerification = unique(requirementEntries
-        .filter(entry => stringAt(entry, "awaiting_action_from") === "stripe")
-        .map(requirementDescription)
-        .filter(Boolean));
-    const requirementErrors = requirementEntries.flatMap(entry =>
-        recordArrayAt(entry, "errors").map(error => ({
+    const pendingVerification = unique(
+        requirementEntries
+            .filter((entry) => stringAt(entry, "awaiting_action_from") === "stripe")
+            .map(requirementDescription)
+            .filter(Boolean),
+    );
+    const requirementErrors = requirementEntries.flatMap((entry) =>
+        recordArrayAt(entry, "errors").map((error) => ({
             requirement: requirementDescription(entry),
             ...error,
-        }))
+        })),
     );
-    const disabledReason = statusDetails.map(detail => stringAt(detail, "code")).find(Boolean) ?? null;
+    const disabledReason = statusDetails.map((detail) => stringAt(detail, "code")).find(Boolean) ?? null;
     const detailsSubmitted = currentlyDue.length === 0 && pastDue.length === 0;
 
     return {
@@ -4271,8 +4921,9 @@ function stripeTermsAcceptedV2(account: StripeAccount): boolean {
     const attestations = objectAt(identity, "attestations");
     const terms = objectAt(attestations, "terms_of_service");
     const acceptance = objectAt(terms, "account");
-    return acceptance.shown_and_accepted === true
-        || Boolean(numberAt(acceptance, "date") || stringAt(acceptance, "date"));
+    return (
+        acceptance.shown_and_accepted === true || Boolean(numberAt(acceptance, "date") || stringAt(acceptance, "date"))
+    );
 }
 
 function accountStatusV2(options: {
@@ -4283,20 +4934,32 @@ function accountStatusV2(options: {
     pastDue: string[];
     pendingVerification: string[];
 }): string {
-    if (options.account.closed === true || options.transferStatus === "unsupported") return "rejected";
-    if (options.pastDue.length || options.currentlyDue.length) return "requirements_due";
-    if (options.pendingVerification.length || options.transferStatus === "pending" || options.disabledReason === "requirements_pending_verification") {
+    if (options.account.closed === true || options.transferStatus === "unsupported") {
+        return "rejected";
+    }
+    if (options.pastDue.length || options.currentlyDue.length) {
+        return "requirements_due";
+    }
+    if (
+        options.pendingVerification.length ||
+        options.transferStatus === "pending" ||
+        options.disabledReason === "requirements_pending_verification"
+    ) {
         return "pending_verification";
     }
-    if (options.transferStatus === "active") return "enabled";
+    if (options.transferStatus === "active") {
+        return "enabled";
+    }
     return "restricted";
 }
 
 function requirementDescriptions(entries: JsonRecord[], status: string): string[] {
-    return unique(entries
-        .filter(entry => stringAt(objectAt(entry, "minimum_deadline"), "status") === status)
-        .map(requirementDescription)
-        .filter(Boolean));
+    return unique(
+        entries
+            .filter((entry) => stringAt(objectAt(entry, "minimum_deadline"), "status") === status)
+            .map(requirementDescription)
+            .filter(Boolean),
+    );
 }
 
 function requirementDescription(entry: JsonRecord): string {
@@ -4305,80 +4968,93 @@ function requirementDescription(entry: JsonRecord): string {
 
 function sellerCanReceivePayments(account: ConnectAccountRow): boolean {
     return Boolean(
-        account.stripe_account_id
-        && account.stripe_account_api_version === "v2"
-        && account.terms_accepted
-        && Boolean(account.marketplace_terms_accepted_at)
-        && !account.provider_account_closed
-        && account.onboarding_status === "enabled"
-        && stripeTransfersStatus(account) === "active"
-        && account.details_submitted
-        && account.application_controlled_recipient
-        && account.requirements_currently_due.length === 0
-        && account.requirements_past_due.length === 0
-        && account.requirements_pending_verification.length === 0
-        && !["restricted", "blocked", "manual_review"].includes(account.risk_status)
-        && account.outstanding_debt_amount === 0
-        && account.financial_exposure_amount === 0
-        && !account.financial_hold_reason
-        && !account.manual_payout_hold_started_at
+        account.stripe_account_id &&
+            account.stripe_account_api_version === "v2" &&
+            account.terms_accepted &&
+            Boolean(account.marketplace_terms_accepted_at) &&
+            !account.provider_account_closed &&
+            account.onboarding_status === "enabled" &&
+            stripeTransfersStatus(account) === "active" &&
+            account.details_submitted &&
+            account.application_controlled_recipient &&
+            account.requirements_currently_due.length === 0 &&
+            account.requirements_past_due.length === 0 &&
+            account.requirements_pending_verification.length === 0 &&
+            !["restricted", "blocked", "manual_review"].includes(account.risk_status) &&
+            account.outstanding_debt_amount === 0 &&
+            account.financial_exposure_amount === 0 &&
+            !account.financial_hold_reason &&
+            !account.manual_payout_hold_started_at,
     );
 }
 
 function sellerCanAcceptHeldPayments(account: ConnectAccountRow): boolean {
     return Boolean(
-        account.stripe_account_id
-        && account.stripe_account_api_version === "v2"
-        && account.application_controlled_recipient
-        && account.terms_accepted
-        && Boolean(account.marketplace_terms_accepted_at)
-        && !account.provider_account_closed
-        && account.onboarding_status !== "rejected"
-        && !["restricted", "blocked", "manual_review"].includes(account.risk_status)
-        && account.outstanding_debt_amount === 0
-        && account.financial_exposure_amount === 0
-        && !account.financial_hold_reason
-        && !account.manual_payout_hold_started_at
+        account.stripe_account_id &&
+            account.stripe_account_api_version === "v2" &&
+            account.application_controlled_recipient &&
+            account.terms_accepted &&
+            Boolean(account.marketplace_terms_accepted_at) &&
+            !account.provider_account_closed &&
+            account.onboarding_status !== "rejected" &&
+            !["restricted", "blocked", "manual_review"].includes(account.risk_status) &&
+            account.outstanding_debt_amount === 0 &&
+            account.financial_exposure_amount === 0 &&
+            !account.financial_hold_reason &&
+            !account.manual_payout_hold_started_at,
     );
 }
 
 function sellerStripeEnrollmentReady(account: ConnectAccountRow): boolean {
     return Boolean(
-        account.stripe_account_id
-        && account.stripe_account_api_version === "v2"
-        && account.application_controlled_recipient
-        && account.terms_accepted
-        && !account.provider_account_closed
-        && account.onboarding_status !== "rejected"
+        account.stripe_account_id &&
+            account.stripe_account_api_version === "v2" &&
+            account.application_controlled_recipient &&
+            account.terms_accepted &&
+            !account.provider_account_closed &&
+            account.onboarding_status !== "rejected",
     );
 }
 
 function stripeTransfersStatus(account: ConnectAccountRow): string {
     if (account.stripe_account_api_version === "v1") {
-        return normalizedCapabilityStatus(account.capabilities.transfers)
-            || (account.payouts_enabled ? "active" : "unrequested");
+        return (
+            normalizedCapabilityStatus(account.capabilities.transfers) ||
+            (account.payouts_enabled ? "active" : "unrequested")
+        );
     }
     const stripeBalance = objectAt(account.capabilities, "stripe_balance");
     return normalizedCapabilityStatus(objectAt(stripeBalance, "stripe_transfers").status) || "unrequested";
 }
 
 function bankPayoutsStatus(account: ConnectAccountRow): string {
-    if (account.stripe_account_api_version === "v1") return account.payouts_enabled ? "active" : "unrequested";
+    if (account.stripe_account_api_version === "v1") {
+        return account.payouts_enabled ? "active" : "unrequested";
+    }
     const stripeBalance = objectAt(account.capabilities, "stripe_balance");
     return normalizedCapabilityStatus(objectAt(stripeBalance, "payouts").status) || "unrequested";
 }
 
 function normalizedCapabilityStatus(value: unknown): string {
-    return typeof value === "string" && ["active", "pending", "restricted", "unsupported", "unrequested"].includes(value)
+    return typeof value === "string" &&
+        ["active", "pending", "restricted", "unsupported", "unrequested"].includes(value)
         ? value
         : "";
 }
 
 function sellerEnrollmentStatus(account: ConnectAccountRow): string {
-    if (!account.stripe_account_id) return "not_started";
-    if (account.provider_account_closed || account.onboarding_status === "rejected") return "rejected";
-    if (account.stripe_account_api_version !== "v2" || !account.application_controlled_recipient) return "rejected";
-    if (!account.terms_accepted || !account.marketplace_terms_accepted_at) return "terms_required";
+    if (!account.stripe_account_id) {
+        return "not_started";
+    }
+    if (account.provider_account_closed || account.onboarding_status === "rejected") {
+        return "rejected";
+    }
+    if (account.stripe_account_api_version !== "v2" || !account.application_controlled_recipient) {
+        return "rejected";
+    }
+    if (!account.terms_accepted || !account.marketplace_terms_accepted_at) {
+        return "terms_required";
+    }
     return "enrolled";
 }
 
@@ -4403,8 +5079,12 @@ function paymentStatusFromStripe(paymentIntent: StripePaymentIntent): string {
 
 function chargeId(paymentIntent: StripePaymentIntent): string | null {
     const latestCharge = paymentIntent.latest_charge;
-    if (typeof latestCharge === "string") return latestCharge;
-    if (isRecord(latestCharge) && typeof latestCharge.id === "string") return latestCharge.id;
+    if (typeof latestCharge === "string") {
+        return latestCharge;
+    }
+    if (isRecord(latestCharge) && typeof latestCharge.id === "string") {
+        return latestCharge.id;
+    }
     return null;
 }
 
@@ -4444,10 +5124,7 @@ function publicAccountStatus(
     return publicAccount(row, options);
 }
 
-function publicAccount(
-    row: ConnectAccountRow,
-    options: { currentTermsAccepted?: boolean } = {},
-): JsonRecord {
+function publicAccount(row: ConnectAccountRow, options: { currentTermsAccepted?: boolean } = {}): JsonRecord {
     const transferStatus = stripeTransfersStatus(row);
     const payoutStatus = bankPayoutsStatus(row);
     const marketplaceTermsAccepted = Boolean(row.marketplace_terms_accepted_at);
@@ -4457,9 +5134,7 @@ function publicAccount(
         stripeAccountId: row.stripe_account_id,
         stripeAccountApiVersion: row.stripe_account_api_version,
         connected: Boolean(row.stripe_account_id),
-        accountStatus: row.stripe_account_id
-            ? (row.provider_account_closed ? "closed" : "active")
-            : "missing",
+        accountStatus: row.stripe_account_id ? (row.provider_account_closed ? "closed" : "active") : "missing",
         termsStatus: row.terms_accepted && marketplaceTermsAccepted ? "accepted" : "required",
         stripeTermsStatus: row.terms_accepted ? "accepted" : "required",
         marketplaceTermsStatus: marketplaceTermsAccepted ? "accepted" : "required",
@@ -4533,9 +5208,10 @@ function publicPayment(row: ConnectPaymentRow): JsonRecord {
         actualStripeChargeFeeDetails: row.actual_stripe_charge_fee_details,
         actualPlatformMarginAfterStripeAmount: row.platform_retained_amount - row.actual_stripe_processing_fee_amount,
         paymentStatus: row.payment_status,
-        commercePaymentStatus: row.settlement_status === "manual_review" || row.manual_review_reason !== null
-            ? "manual_review"
-            : row.payment_status,
+        commercePaymentStatus:
+            row.settlement_status === "manual_review" || row.manual_review_reason !== null
+                ? "manual_review"
+                : row.payment_status,
         settlementStatus: row.settlement_status,
         disputeStatus: row.dispute_status,
         reconciliationPending: isTransientBalanceTransactionExpansionReview(row),
@@ -4609,10 +5285,13 @@ function publicTransferRecovery(recovery: TransferRecoveryRow, reversals: JsonRe
 
 async function loadPublicTransferRecovery(recovery: TransferRecoveryRow): Promise<JsonRecord> {
     const rows = await listRows<TransferReversalRow>(
-        `transfer_reversals?recovery_id=eq.${recovery.id}`
-        + `&select=${encodeURIComponent(transferReversalSelect)}&order=allocation_index.asc`,
+        `transfer_reversals?recovery_id=eq.${recovery.id}` +
+            `&select=${encodeURIComponent(transferReversalSelect)}&order=allocation_index.asc`,
     );
-    return publicTransferRecovery(recovery, rows.map(row => publicReversal(row as unknown as JsonRecord)));
+    return publicTransferRecovery(
+        recovery,
+        rows.map((row) => publicReversal(row as unknown as JsonRecord)),
+    );
 }
 
 function publicRefund(row: RefundRow): JsonRecord {
@@ -4652,15 +5331,14 @@ function normalizeProtectedRefundOperation(
         providerEventId: providerEventId || `operation:${operation.providerOperationId}:${operation.status}`,
         providerOperationId: operation.providerOperationId,
         operationType,
-        providerOperationObjectId: operationType === "reversal"
-            ? operation.stripeTransferReversalId
-            : operation.stripeRefundId,
+        providerOperationObjectId:
+            operationType === "reversal" ? operation.stripeTransferReversalId : operation.stripeRefundId,
         status: operation.status,
         amount: operation.amount,
         currency: operation.currency,
         occurredAt: operation.occurredAt,
         refundRequestId: operationType === "refund" ? operation.refundRequestId : null,
-        commerceRefundRequestId: operationType === "refund" ? operation.commerceRefundRequestId ?? null : null,
+        commerceRefundRequestId: operationType === "refund" ? (operation.commerceRefundRequestId ?? null) : null,
         providerSnapshot: operation.providerSnapshot ?? null,
     };
 }
@@ -4688,22 +5366,22 @@ async function publicDisputeWithContext(row: StripeDisputeRow): Promise<JsonReco
     const [payment, evidenceRows, approvalRows] = await Promise.all([
         requiredPayment(row.payment_id),
         listRows<JsonRecord>(
-            `stripe_dispute_evidence?dispute_id=eq.${row.id}`
-            + "&select=evidence_operation_id,staged_at,submitted_at"
-            + "&order=staged_at.desc",
+            `stripe_dispute_evidence?dispute_id=eq.${row.id}` +
+                "&select=evidence_operation_id,staged_at,submitted_at" +
+                "&order=staged_at.desc",
         ),
         listRows<JsonRecord>(
-            `irreversible_dispute_action_approvals?dispute_id=eq.${row.id}`
-            + "&select=action_type,status,first_actor_id,first_approved_at,second_actor_id,second_approved_at"
-            + "&order=created_at.desc",
+            `irreversible_dispute_action_approvals?dispute_id=eq.${row.id}` +
+                "&select=action_type,status,first_actor_id,first_approved_at,second_actor_id,second_approved_at" +
+                "&order=created_at.desc",
         ),
     ]);
     const staged = evidenceRows[0] ?? null;
-    const pendingApproval = approvalRows.find(approval => approval.status === "pending_second_approval") ?? null;
+    const pendingApproval = approvalRows.find((approval) => approval.status === "pending_second_approval") ?? null;
     return projectPublicDisputeWithContext(row, {
         clientReferenceId: payment.client_reference_id,
         staged,
-        evidenceSubmissionCount: evidenceRows.filter(evidence => evidence.submitted_at).length,
+        evidenceSubmissionCount: evidenceRows.filter((evidence) => evidence.submitted_at).length,
         pendingApproval,
     });
 }
@@ -4752,10 +5430,9 @@ function publicFinancialOperation(
         operationType: row.operation_type,
         status: row.status,
         amount: Number.isSafeInteger(row.request.amount) ? row.request.amount : 0,
-        currency: typeof row.request.currency === "string" ? row.request.currency : payment?.currency ?? "",
-        releaseAuthorizationId: typeof row.request.releaseAuthorizationId === "string"
-            ? row.request.releaseAuthorizationId
-            : null,
+        currency: typeof row.request.currency === "string" ? row.request.currency : (payment?.currency ?? ""),
+        releaseAuthorizationId:
+            typeof row.request.releaseAuthorizationId === "string" ? row.request.releaseAuthorizationId : null,
         refundRequestId: typeof row.request.refundRequestId === "string" ? row.request.refundRequestId : null,
         commerceRefundRequestId: Number.isSafeInteger(row.request.commerceRefundRequestId)
             ? row.request.commerceRefundRequestId
@@ -4776,15 +5453,30 @@ function publicFinancialOperation(
 }
 
 function redactFinancialOperationData(value: unknown): unknown {
-    if (Array.isArray(value)) return value.map(redactFinancialOperationData);
-    if (!isRecord(value)) return value;
+    if (Array.isArray(value)) {
+        return value.map(redactFinancialOperationData);
+    }
+    if (!isRecord(value)) {
+        return value;
+    }
     const redacted: JsonRecord = {};
     for (const [key, entry] of Object.entries(value)) {
         const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, "");
-        if ([
-            "clientsecret", "secret", "stripeapikey", "apikey", "authorization",
-            "accesstoken", "refreshtoken", "bankaccounttoken", "accounttoken",
-        ].includes(normalized)) continue;
+        if (
+            [
+                "clientsecret",
+                "secret",
+                "stripeapikey",
+                "apikey",
+                "authorization",
+                "accesstoken",
+                "refreshtoken",
+                "bankaccounttoken",
+                "accounttoken",
+            ].includes(normalized)
+        ) {
+            continue;
+        }
         redacted[key] = redactFinancialOperationData(entry);
     }
     return redacted;
@@ -4799,7 +5491,9 @@ function publicPaymentWithClientSecret(row: ConnectPaymentRow, clientSecret: str
 
 async function requiredPayment(paymentId: number): Promise<ConnectPaymentRow> {
     const payment = await getPaymentRow(paymentId);
-    if (!payment) throw new HttpError(404, "payment not found");
+    if (!payment) {
+        throw new HttpError(404, "payment not found");
+    }
     return payment;
 }
 
@@ -4817,16 +5511,19 @@ function assertPaymentReplay(
         dualApprovalThresholdAmount: number;
     },
 ): void {
-    const matches = payment.buyer_cms_user_id === expected.buyerUserId
-        && payment.seller_cms_user_id === expected.sellerUserId
-        && payment.seller_stripe_account_id === expected.sellerStripeAccountId
-        && payment.amount_total === expected.amountTotal
-        && payment.seller_transfer_amount === expected.sellerTransferAmount
-        && payment.currency === expected.currency
-        && payment.financial_terms_hash === expected.financialTermsHash
-        && payment.financial_revision === expected.financialRevision
-        && payment.dual_approval_threshold_amount === expected.dualApprovalThresholdAmount;
-    if (!matches) throw new HttpError(409, "protected payment replay does not match immutable financial terms");
+    const matches =
+        payment.buyer_cms_user_id === expected.buyerUserId &&
+        payment.seller_cms_user_id === expected.sellerUserId &&
+        payment.seller_stripe_account_id === expected.sellerStripeAccountId &&
+        payment.amount_total === expected.amountTotal &&
+        payment.seller_transfer_amount === expected.sellerTransferAmount &&
+        payment.currency === expected.currency &&
+        payment.financial_terms_hash === expected.financialTermsHash &&
+        payment.financial_revision === expected.financialRevision &&
+        payment.dual_approval_threshold_amount === expected.dualApprovalThresholdAmount;
+    if (!matches) {
+        throw new HttpError(409, "protected payment replay does not match immutable financial terms");
+    }
 }
 
 async function reserveFinancialOperation(
@@ -4843,9 +5540,13 @@ async function reserveFinancialOperation(
             p_request: options.request,
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
-    if (isRecord(value)) return value as FinancialOperationRow;
+    if (isRecord(value)) {
+        return value as FinancialOperationRow;
+    }
     return firstRow<FinancialOperationRow>(value);
 }
 
@@ -4867,7 +5568,9 @@ async function reserveTransferRecovery(
             p_reason: reason,
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
     const result = isRecord(value) ? value : firstRow<JsonRecord>(value);
     const recovery = result.recovery;
@@ -4877,11 +5580,13 @@ async function reserveTransferRecovery(
     }
     return {
         recovery: recovery as TransferRecoveryRow,
-        allocations: allocations.map(allocation => {
-            if (!isRecord(allocation)
-                || !isRecord(allocation.reversal)
-                || !isRecord(allocation.operation)
-                || !isRecord(allocation.transfer)) {
+        allocations: allocations.map((allocation) => {
+            if (
+                !isRecord(allocation) ||
+                !isRecord(allocation.reversal) ||
+                !isRecord(allocation.operation) ||
+                !isRecord(allocation.transfer)
+            ) {
                 throw new HttpError(502, "Supabase returned an invalid Transfer recovery allocation");
             }
             return {
@@ -4907,15 +5612,21 @@ async function reserveAccountFinancialOperation(
             p_request: options.request,
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
-    if (isRecord(value)) return value as FinancialOperationRow;
+    if (isRecord(value)) {
+        return value as FinancialOperationRow;
+    }
     return firstRow<FinancialOperationRow>(value);
 }
 
-async function reservePlatformFinancialOperation(
-    options: { businessKey: string; operationType: string; request: JsonRecord },
-): Promise<FinancialOperationRow> {
+async function reservePlatformFinancialOperation(options: {
+    businessKey: string;
+    operationType: string;
+    request: JsonRecord;
+}): Promise<FinancialOperationRow> {
     const response = await rest("rpc/reserve_platform_financial_operation", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -4925,13 +5636,20 @@ async function reservePlatformFinancialOperation(
             p_request: options.request,
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const value = await response.json();
-    if (isRecord(value)) return value as FinancialOperationRow;
+    if (isRecord(value)) {
+        return value as FinancialOperationRow;
+    }
     return firstRow<FinancialOperationRow>(value);
 }
 
-async function updateFinancialOperation(operationId: number, values: JsonRecord): Promise<FinancialOperationRow | null> {
+async function updateFinancialOperation(
+    operationId: number,
+    values: JsonRecord,
+): Promise<FinancialOperationRow | null> {
     return await updateRow<FinancialOperationRow>("financial_operations", operationId, values, operationSelect);
 }
 
@@ -4957,27 +5675,39 @@ async function enqueueCommerceRefundProjection(refundId: number): Promise<void> 
 
 function requiredOperationString(operation: FinancialOperationRow, name: string): string {
     const value = operation.request[name];
-    if (typeof value !== "string" || !value) throw new Error(`operation ${operation.id} has invalid ${name}`);
+    if (typeof value !== "string" || !value) {
+        throw new Error(`operation ${operation.id} has invalid ${name}`);
+    }
     return value;
 }
 
 function optionalOperationString(operation: FinancialOperationRow, name: string): string | null {
     const value = operation.request[name];
-    if (value === null || value === undefined) return null;
-    if (typeof value !== "string") throw new Error(`operation ${operation.id} has invalid ${name}`);
+    if (value === null || value === undefined) {
+        return null;
+    }
+    if (typeof value !== "string") {
+        throw new Error(`operation ${operation.id} has invalid ${name}`);
+    }
     return value;
 }
 
 function requiredOperationInteger(operation: FinancialOperationRow, name: string): number {
     const value = operation.request[name];
-    if (!Number.isSafeInteger(value)) throw new Error(`operation ${operation.id} has invalid ${name}`);
+    if (!Number.isSafeInteger(value)) {
+        throw new Error(`operation ${operation.id} has invalid ${name}`);
+    }
     return Number(value);
 }
 
 function optionalOperationInteger(operation: FinancialOperationRow, name: string): number | null {
     const value = operation.request[name];
-    if (value === null || value === undefined) return null;
-    if (!Number.isSafeInteger(value)) throw new Error(`operation ${operation.id} has invalid ${name}`);
+    if (value === null || value === undefined) {
+        return null;
+    }
+    if (!Number.isSafeInteger(value)) {
+        throw new Error(`operation ${operation.id} has invalid ${name}`);
+    }
     return Number(value);
 }
 
@@ -4996,16 +5726,29 @@ async function listTable(
         limit: String(queryLimit(params.get("limit"))),
     });
     const search = searchPattern(params.get("q"));
-    if (search) query.set("or", `(${searchFields.split(",").map(field => `${field}.ilike.${search}`).join(",")})`);
+    if (search) {
+        query.set(
+            "or",
+            `(${searchFields
+                .split(",")
+                .map((field) => `${field}.ilike.${search}`)
+                .join(",")})`,
+        );
+    }
     const status = params.get("status")?.trim();
-    if (status) query.set("status", `eq.${status}`);
+    if (status) {
+        query.set("status", `eq.${status}`);
+    }
     const rows = await listRows<JsonRecord>(`${table}?${query.toString()}`);
     return { [itemsKey]: rows, total: rows.length };
 }
 
 async function getTransferByAuthorization(releaseAuthorizationId: string): Promise<TransferRow | null> {
     return await getRowByField<TransferRow>(
-        "transfers", "release_authorization_id", releaseAuthorizationId, transferSelect,
+        "transfers",
+        "release_authorization_id",
+        releaseAuthorizationId,
+        transferSelect,
     );
 }
 
@@ -5017,17 +5760,19 @@ function assertTransferReplay(
     currency: string,
 ): void {
     if (
-        transfer.payment_id !== payment.id || transfer.amount !== amount || transfer.currency !== currency
-        || transfer.release_kind !== releaseKind
-        || transfer.source_charge_id !== (releaseKind === "recovery" ? null : payment.stripe_charge_id)
-        || transfer.destination_account_id !== payment.seller_stripe_account_id
-    ) throw new HttpError(409, "settlement release replay mismatch");
+        transfer.payment_id !== payment.id ||
+        transfer.amount !== amount ||
+        transfer.currency !== currency ||
+        transfer.release_kind !== releaseKind ||
+        transfer.source_charge_id !== (releaseKind === "recovery" ? null : payment.stripe_charge_id) ||
+        transfer.destination_account_id !== payment.seller_stripe_account_id
+    ) {
+        throw new HttpError(409, "settlement release replay mismatch");
+    }
 }
 
 async function sumSucceededAmounts(table: string, paymentId: number): Promise<number> {
-    const rows = await listRows<JsonRecord>(
-        `${table}?payment_id=eq.${paymentId}&status=eq.succeeded&select=amount`,
-    );
+    const rows = await listRows<JsonRecord>(`${table}?payment_id=eq.${paymentId}&status=eq.succeeded&select=amount`);
     return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
 }
 
@@ -5054,8 +5799,8 @@ async function sumConfirmedRecoveryAmount(recoveryId: number): Promise<number> {
 
 async function sumSettledTransferAmounts(paymentId: number): Promise<number> {
     const rows = await listRows<JsonRecord>(
-        `transfers?payment_id=eq.${paymentId}`
-        + "&status=in.(succeeded,partially_reversed,reversed)&select=amount,status",
+        `transfers?payment_id=eq.${paymentId}` +
+            "&status=in.(succeeded,partially_reversed,reversed)&select=amount,status",
     );
     return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
 }
@@ -5068,7 +5813,7 @@ async function sumSucceededRefundSellerRecovery(paymentId: number): Promise<numb
 }
 
 async function authorizedSellerAmountAfterRefunds(payment: ConnectPaymentRow): Promise<number> {
-    return payment.seller_transfer_amount - await sumSucceededRefundSellerRecovery(payment.id);
+    return payment.seller_transfer_amount - (await sumSucceededRefundSellerRecovery(payment.id));
 }
 
 function releasableDisputeStatus(status: string): boolean {
@@ -5081,7 +5826,9 @@ async function markPaymentManualReview(paymentId: number, reason: string, detail
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ p_payment_id: paymentId, p_reason: reason, p_details: details }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
 }
 
 async function recordSellerRecoveryExposure(
@@ -5094,7 +5841,9 @@ async function recordSellerRecoveryExposure(
     details: JsonRecord,
     recoveredAmount?: number,
 ): Promise<void> {
-    if (!Number.isSafeInteger(amount) || amount <= 0) return;
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+        return;
+    }
     const response = await rest("rpc/upsert_seller_recovery_exposure_and_refresh", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -5111,8 +5860,10 @@ async function recordSellerRecoveryExposure(
             p_recovered_amount: recoveredAmount,
         }),
     });
-    if (!response.ok) throw await restError(response);
-    const result = await response.json() as JsonRecord;
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const result = (await response.json()) as JsonRecord;
     const exposure = objectAt(result, "exposure");
     if (exposure.status === "debt") {
         await upsertProviderException(`seller-debt:${recoveryKey}`, {
@@ -5134,8 +5885,10 @@ async function sellerPayoutHoldRpc(name: string, body: JsonRecord): Promise<Json
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
     });
-    if (!response.ok) throw await restError(response);
-    return await response.json() as JsonRecord;
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    return (await response.json()) as JsonRecord;
 }
 
 async function platformPayoutControlRpc(name: string, body: JsonRecord): Promise<JsonRecord> {
@@ -5144,16 +5897,20 @@ async function platformPayoutControlRpc(name: string, body: JsonRecord): Promise
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
     });
-    if (!response.ok) throw await restError(response);
-    return await response.json() as JsonRecord;
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    return (await response.json()) as JsonRecord;
 }
 
 function platformPayoutControl(result: JsonRecord): PlatformPayoutControlRow {
     const control = objectAt(result, "control") as unknown as PlatformPayoutControlRow;
-    if (control.control_key !== "default"
-        || !Number.isSafeInteger(control.liability_revision)
-        || !Number.isSafeInteger(control.required_minimum_amount)
-        || !Number.isSafeInteger(control.provider_minimum_amount)) {
+    if (
+        control.control_key !== "default" ||
+        !Number.isSafeInteger(control.liability_revision) ||
+        !Number.isSafeInteger(control.required_minimum_amount) ||
+        !Number.isSafeInteger(control.provider_minimum_amount)
+    ) {
         throw new Error("Platform payout protection RPC returned invalid state");
     }
     return control;
@@ -5161,7 +5918,9 @@ function platformPayoutControl(result: JsonRecord): PlatformPayoutControlRow {
 
 function sellerRiskAccount(result: JsonRecord): ConnectAccountRow {
     const account = objectAt(result, "account") as unknown as ConnectAccountRow;
-    if (!account.cms_user_id) throw new Error("Seller payout hold RPC returned no account");
+    if (!account.cms_user_id) {
+        throw new Error("Seller payout hold RPC returned no account");
+    }
     return account;
 }
 
@@ -5172,7 +5931,9 @@ async function enforceSellerRecoveryPayoutHold(userId: string): Promise<boolean>
         p_owner: owner,
         p_require_risk: true,
     });
-    if (claim.claimed !== true) return false;
+    if (claim.claimed !== true) {
+        return false;
+    }
     return await applyClaimedSellerRecoveryPayoutHold(userId, owner, claim);
 }
 
@@ -5189,23 +5950,26 @@ async function applyClaimedSellerRecoveryPayoutHold(
         let appliedMinimum = account.provider_hold_minimum_amount;
         const holdKey = `seller-risk-hold:${userId}:${account.risk_revision}:${account.payout_hold_claimed_at ?? owner}`;
         try {
-            if (!account.stripe_account_id) throw new Error("Seller Stripe account is unavailable");
+            if (!account.stripe_account_id) {
+                throw new Error("Seller Stripe account is unavailable");
+            }
             const current = await retrieveConnectedBalanceSettings(account.stripe_account_id);
             const currentPayments = objectAt(current, "payments");
             const currentSchedule = objectAt(objectAt(currentPayments, "payouts"), "schedule");
-            const currentMinimum = numberAt(
-                objectAt(objectAt(currentPayments, "payouts"), "minimum_balance_by_currency"),
-                "eur",
-            ) ?? 0;
+            const currentMinimum =
+                numberAt(objectAt(objectAt(currentPayments, "payouts"), "minimum_balance_by_currency"), "eur") ?? 0;
             const currentInterval = stringAt(currentSchedule, "interval");
             if (!["manual", "daily", "weekly", "monthly"].includes(currentInterval)) {
                 throw new Error("Seller payout baseline has an unsupported interval");
             }
             const weeklyPayoutDays = stringArrayAt(currentSchedule, "weekly_payout_days");
-            const monthlyPayoutDays = arrayAt(currentSchedule, "monthly_payout_days")
-                .filter(value => Number.isSafeInteger(value));
-            if ((currentInterval === "weekly" && weeklyPayoutDays.length === 0)
-                || (currentInterval === "monthly" && monthlyPayoutDays.length === 0)) {
+            const monthlyPayoutDays = arrayAt(currentSchedule, "monthly_payout_days").filter((value) =>
+                Number.isSafeInteger(value),
+            );
+            if (
+                (currentInterval === "weekly" && weeklyPayoutDays.length === 0) ||
+                (currentInterval === "monthly" && monthlyPayoutDays.length === 0)
+            ) {
                 throw new Error("Seller payout baseline is missing its scheduled payout days");
             }
             const restoreSettings = account.manual_payout_hold_restore_settings ?? {
@@ -5268,8 +6032,12 @@ async function applyClaimedSellerRecoveryPayoutHold(
                 p_error: null,
                 p_restore_settings: restoreSettings,
             });
-            if (completed.accepted !== true) return false;
-            if (completed.needsReapply !== true) return true;
+            if (completed.accepted !== true) {
+                return false;
+            }
+            if (completed.needsReapply !== true) {
+                return true;
+            }
             claim = { claimed: true, account: objectAt(completed, "account") };
         } catch (error) {
             const message = `Could not enforce Stripe seller payout hold: ${errorMessage(error)}`;
@@ -5316,7 +6084,9 @@ async function restoreSellerAutomaticPayoutSchedule(userId: string): Promise<boo
         p_owner: owner,
         p_require_risk: false,
     });
-    if (claim.claimed !== true) return false;
+    if (claim.claimed !== true) {
+        return false;
+    }
     const account = sellerRiskAccount(claim);
     if (account.outstanding_debt_amount + account.financial_exposure_amount > 0) {
         return await applyClaimedSellerRecoveryPayoutHold(userId, owner, claim);
@@ -5324,30 +6094,37 @@ async function restoreSellerAutomaticPayoutSchedule(userId: string): Promise<boo
 
     let operation: FinancialOperationRow | null = null;
     try {
-        if (!account.stripe_account_id) throw new Error("Seller Stripe account is unavailable");
+        if (!account.stripe_account_id) {
+            throw new Error("Seller Stripe account is unavailable");
+        }
         if (!account.manual_payout_hold_started_at || !account.manual_payout_hold_restore_settings) {
             throw new Error("Seller payout hold restoration snapshot is unavailable");
         }
         const snapshot = account.manual_payout_hold_restore_settings;
         const restoreSettingKeys = new Set([
-            "interval", "weeklyPayoutDays", "monthlyPayoutDays", "minimumBalanceEur",
-            "delayDaysOverride", "debitNegativeBalances",
+            "interval",
+            "weeklyPayoutDays",
+            "monthlyPayoutDays",
+            "minimumBalanceEur",
+            "delayDaysOverride",
+            "debitNegativeBalances",
         ]);
-        if (Object.keys(snapshot).some(key => !restoreSettingKeys.has(key))) {
+        if (Object.keys(snapshot).some((key) => !restoreSettingKeys.has(key))) {
             throw new Error("Seller payout hold restoration snapshot contains unsupported settings");
         }
         const interval = stringAt(snapshot, "interval");
         const minimumBalanceEur = numberAt(snapshot, "minimumBalanceEur");
         const weeklyPayoutDays = stringArrayAt(snapshot, "weeklyPayoutDays");
-        const monthlyPayoutDays = arrayAt(snapshot, "monthlyPayoutDays")
-            .filter(value => Number.isSafeInteger(value));
-        if (!["manual", "daily", "weekly", "monthly"].includes(interval)
-            || !Number.isSafeInteger(minimumBalanceEur)
-            || minimumBalanceEur! < 0
-            || (interval === "weekly" && weeklyPayoutDays.length === 0)
-            || (interval === "monthly" && monthlyPayoutDays.length === 0)
-            || (interval !== "weekly" && weeklyPayoutDays.length > 0)
-            || (interval !== "monthly" && monthlyPayoutDays.length > 0)) {
+        const monthlyPayoutDays = arrayAt(snapshot, "monthlyPayoutDays").filter((value) => Number.isSafeInteger(value));
+        if (
+            !["manual", "daily", "weekly", "monthly"].includes(interval) ||
+            !Number.isSafeInteger(minimumBalanceEur) ||
+            minimumBalanceEur! < 0 ||
+            (interval === "weekly" && weeklyPayoutDays.length === 0) ||
+            (interval === "monthly" && monthlyPayoutDays.length === 0) ||
+            (interval !== "weekly" && weeklyPayoutDays.length > 0) ||
+            (interval !== "monthly" && monthlyPayoutDays.length > 0)
+        ) {
             throw new Error("Seller payout hold restoration snapshot is invalid");
         }
         const restoreRequest: JsonRecord = {
@@ -5390,7 +6167,9 @@ async function restoreSellerAutomaticPayoutSchedule(userId: string): Promise<boo
                 );
             } catch (updateError) {
                 const recovered = await retrieveConnectedBalanceSettings(account.stripe_account_id).catch(() => null);
-                if (!recovered || !balanceSettingsMatchRequest(recovered, restoreRequest)) throw updateError;
+                if (!recovered || !balanceSettingsMatchRequest(recovered, restoreRequest)) {
+                    throw updateError;
+                }
                 provider = recovered;
             }
         }
@@ -5409,7 +6188,9 @@ async function restoreSellerAutomaticPayoutSchedule(userId: string): Promise<boo
             p_expected_risk_revision: account.risk_revision,
             p_interval: interval,
         });
-        if (finalized.accepted !== true) return false;
+        if (finalized.accepted !== true) {
+            return false;
+        }
         if (finalized.superseded === true) {
             return await applyClaimedSellerRecoveryPayoutHold(userId, owner, {
                 claimed: true,
@@ -5486,7 +6267,9 @@ async function resolveProviderException(deduplicationKey: string): Promise<void>
 
 async function requiredDispute(disputeId: string): Promise<StripeDisputeRow> {
     const row = await getRowByField<StripeDisputeRow>("stripe_disputes", "stripe_dispute_id", disputeId, disputeSelect);
-    if (!row) throw new HttpError(404, "Stripe dispute not found");
+    if (!row) {
+        throw new HttpError(404, "Stripe dispute not found");
+    }
     return row;
 }
 
@@ -5504,7 +6287,9 @@ async function authorizeIrreversibleDisputeAction(options: {
     firstApprovedBy: string;
     secondApprovedBy?: string;
 }> {
-    if (options.actorKind !== "admin") throw new HttpError(403, "admin approval actor is required");
+    if (options.actorKind !== "admin") {
+        throw new HttpError(403, "admin approval actor is required");
+    }
     const payment = await requiredPayment(options.dispute.payment_id);
     const response = await rest("rpc/authorize_irreversible_dispute_action", {
         method: "POST",
@@ -5520,13 +6305,17 @@ async function authorizeIrreversibleDisputeAction(options: {
             p_payload_sha256: await digest(JSON.stringify(options.payload)),
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     const result = await response.json();
-    if (!isRecord(result)
-        || typeof result.approved !== "boolean"
-        || typeof result.dualApprovalRequired !== "boolean"
-        || typeof result.approvalStatus !== "string"
-        || typeof result.firstApprovedBy !== "string") {
+    if (
+        !isRecord(result) ||
+        typeof result.approved !== "boolean" ||
+        typeof result.dualApprovalRequired !== "boolean" ||
+        typeof result.approvalStatus !== "string" ||
+        typeof result.firstApprovedBy !== "string"
+    ) {
         throw new HttpError(502, "irreversible dispute approval returned an invalid response");
     }
     return {
@@ -5564,13 +6353,19 @@ async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaym
     const localContext = await readPaymentReconciliationLocalContext(payment.id);
     if (current.stripe_charge_id) {
         const refreshedPayment = localContext.payment as unknown as ConnectPaymentRow | null;
-        if (!refreshedPayment) throw new HttpError(404, "payment not found");
+        if (!refreshedPayment) {
+            throw new HttpError(404, "payment not found");
+        }
         current = refreshedPayment;
     }
     const refunds = localContext.refunds as unknown as RefundRow[];
     for (const refund of refunds) {
-        if (!refund.stripe_refund_id || refund.status === "succeeded") continue;
-        const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refund.stripe_refund_id)}`, { method: "GET" });
+        if (!refund.stripe_refund_id || refund.status === "succeeded") {
+            continue;
+        }
+        const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refund.stripe_refund_id)}`, {
+            method: "GET",
+        });
         await applyStripeRefund(refund, provider);
     }
     const ledger = await readPaymentReconciliationLedger(payment.id);
@@ -5581,9 +6376,10 @@ async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaym
     const authorizedSellerAmount = current.seller_transfer_amount - sellerRecoveryAmount;
     const netTransferredAmount = transferredAmount - reversedAmount;
     if (
-        refundedAmount > current.amount_total
-        || reversedAmount > transferredAmount || sellerRecoveryAmount > current.seller_transfer_amount
-        || netTransferredAmount > authorizedSellerAmount
+        refundedAmount > current.amount_total ||
+        reversedAmount > transferredAmount ||
+        sellerRecoveryAmount > current.seller_transfer_amount ||
+        netTransferredAmount > authorizedSellerAmount
     ) {
         await markPaymentManualReview(current.id, "provider ledger arithmetic divergence", {
             refundedAmount,
@@ -5596,24 +6392,31 @@ async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaym
         current = await requiredPayment(current.id);
         throw new HttpError(409, "provider ledger arithmetic divergence requires finance review");
     } else {
-        current = await updatePayment(current.id, {
-            refunded_amount: refundedAmount,
-            transferred_amount: transferredAmount,
-            reversed_amount: reversedAmount,
-            last_provider_sync_at: new Date().toISOString(),
-        }) ?? current;
+        current =
+            (await updatePayment(current.id, {
+                refunded_amount: refundedAmount,
+                transferred_amount: transferredAmount,
+                reversed_amount: reversedAmount,
+                last_provider_sync_at: new Date().toISOString(),
+            })) ?? current;
     }
     return current;
 }
 
 async function reconcileProviderDisputes(payment: ConnectPaymentRow): Promise<void> {
-    if (!payment.stripe_charge_id) return;
+    if (!payment.stripe_charge_id) {
+        return;
+    }
     const params = new URLSearchParams({ charge: payment.stripe_charge_id, limit: "100" });
     const listed = await stripeV1<JsonRecord>(`/disputes?${params.toString()}`, { method: "GET" });
-    if (listed.has_more === true) throw new HttpError(409, "Stripe dispute search is incomplete");
+    if (listed.has_more === true) {
+        throw new HttpError(409, "Stripe dispute search is incomplete");
+    }
     for (const value of recordArrayAt(listed, "data")) {
         const disputeId = stringAt(value, "id");
-        if (!disputeId) throw new Error("Stripe dispute search returned an object without id");
+        if (!disputeId) {
+            throw new Error("Stripe dispute search returned an object without id");
+        }
         await applyStripeDispute(
             value as StripeDispute,
             `provider-reconciliation:dispute:${disputeId}:${stringAt(value, "status") || "unknown"}`,
@@ -5622,13 +6425,19 @@ async function reconcileProviderDisputes(payment: ConnectPaymentRow): Promise<vo
 }
 
 async function reconcileProviderRefunds(payment: ConnectPaymentRow): Promise<void> {
-    if (!payment.stripe_charge_id) return;
+    if (!payment.stripe_charge_id) {
+        return;
+    }
     const params = new URLSearchParams({ charge: payment.stripe_charge_id, limit: "100" });
     const listed = await stripeV1<JsonRecord>(`/refunds?${params.toString()}`, { method: "GET" });
-    if (listed.has_more === true) throw new HttpError(409, "Stripe refund search is incomplete");
+    if (listed.has_more === true) {
+        throw new HttpError(409, "Stripe refund search is incomplete");
+    }
     for (const value of recordArrayAt(listed, "data")) {
         const refundId = stringAt(value, "id");
-        if (!refundId) throw new Error("Stripe refund search returned an object without id");
+        if (!refundId) {
+            throw new Error("Stripe refund search returned an object without id");
+        }
         const local = await getRowByField<RefundRow>("refunds", "stripe_refund_id", refundId, refundSelect);
         if (local) {
             await applyStripeRefund(local, value as StripeRefund);
@@ -5641,10 +6450,14 @@ async function reconcileProviderRefunds(payment: ConnectPaymentRow): Promise<voi
 async function reconcileProviderTransfers(payment: ConnectPaymentRow): Promise<void> {
     const params = new URLSearchParams({ transfer_group: payment.transfer_group, limit: "100" });
     const listed = await stripeV1<JsonRecord>(`/transfers?${params.toString()}`, { method: "GET" });
-    if (listed.has_more === true) throw new HttpError(409, "Stripe Transfer search is incomplete");
+    if (listed.has_more === true) {
+        throw new HttpError(409, "Stripe Transfer search is incomplete");
+    }
     for (const value of recordArrayAt(listed, "data")) {
         const transferId = stringAt(value, "id");
-        if (!transferId) throw new Error("Stripe Transfer search returned an object without id");
+        if (!transferId) {
+            throw new Error("Stripe Transfer search returned an object without id");
+        }
         const context = await readProviderTransferReconciliationContext(transferId);
         const local = context.transfer as unknown as TransferRow | null;
         if (!local) {
@@ -5661,9 +6474,8 @@ async function reconcileProviderTransfers(payment: ConnectPaymentRow): Promise<v
             });
         }
         await updateRow("transfers", local.id, {
-            status: value.reversed === true
-                ? "reversed"
-                : providerReversedAmount > 0 ? "partially_reversed" : "succeeded",
+            status:
+                value.reversed === true ? "reversed" : providerReversedAmount > 0 ? "partially_reversed" : "succeeded",
             provider_snapshot: value,
         });
     }
@@ -5689,7 +6501,9 @@ async function quarantineUntrackedProviderObject(
 
 async function processStripeEvent(row: JsonRecord): Promise<boolean> {
     const event = row.payload;
-    if (!isRecord(event)) throw new Error("stored Stripe event payload is invalid");
+    if (!isRecord(event)) {
+        throw new Error("stored Stripe event payload is invalid");
+    }
     const eventType = stringAt(event, "type");
     const apiVersion = stringAt(event, "api_version");
     const expectedApiVersion = eventType.startsWith("v2.") ? stripeV2ApiVersion : stripeV1ApiVersion;
@@ -5701,9 +6515,13 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
     const objectId = stringAt(object, "id") || stringAt(row, "object_id");
 
     if (eventType.startsWith("v2.core.account")) {
-        if (!objectId) throw new Error("Stripe Accounts v2 event has no related account id");
+        if (!objectId) {
+            throw new Error("Stripe Accounts v2 event has no related account id");
+        }
         const account = await getAccountRowByStripeAccountId(objectId);
-        if (!account) return false;
+        if (!account) {
+            return false;
+        }
         if (account.stripe_account_api_version !== "v2") {
             throw new Error("Stripe Accounts v2 event targets a non-v2 local account");
         }
@@ -5716,14 +6534,22 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
     }
 
     if (eventType.startsWith("payment_intent.")) {
-        if (!objectId) throw new Error("Stripe PaymentIntent event has no object id");
+        if (!objectId) {
+            throw new Error("Stripe PaymentIntent event has no object id");
+        }
         const payment = await getRowByField<ConnectPaymentRow>(
-            "payments", "stripe_payment_intent_id", objectId, paymentSelect,
+            "payments",
+            "stripe_payment_intent_id",
+            objectId,
+            paymentSelect,
         );
-        if (!payment) return false;
+        if (!payment) {
+            return false;
+        }
         const intent = await retrievePaymentIntent(objectId);
         const applied = await applyPaymentIntent(payment, intent, {
-            actorKind: "webhook", actorId: eventId,
+            actorKind: "webhook",
+            actorId: eventId,
         });
         await updatePayment(applied.id, {
             last_stripe_event_id: eventId,
@@ -5735,24 +6561,36 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
     if (eventType === "charge.succeeded" || eventType === "charge.failed") {
         const paymentIntentId = typeof object.payment_intent === "string" ? object.payment_intent : "";
         const payment = paymentIntentId
-            ? await getRowByField<ConnectPaymentRow>("payments", "stripe_payment_intent_id", paymentIntentId, paymentSelect)
-            : objectId ? await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", objectId, paymentSelect) : null;
-        if (!payment) return false;
+            ? await getRowByField<ConnectPaymentRow>(
+                  "payments",
+                  "stripe_payment_intent_id",
+                  paymentIntentId,
+                  paymentSelect,
+              )
+            : objectId
+              ? await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", objectId, paymentSelect)
+              : null;
+        if (!payment) {
+            return false;
+        }
         const providerPaymentIntentId = paymentIntentId || payment.stripe_payment_intent_id;
-        const providerIntent = providerPaymentIntentId
-            ? await retrievePaymentIntent(providerPaymentIntentId)
-            : null;
+        const providerIntent = providerPaymentIntentId ? await retrievePaymentIntent(providerPaymentIntentId) : null;
         const applied = !providerIntent
-            ? await quarantineProviderPaymentTruth(payment, { id: "missing", status: "succeeded", latest_charge: object }, [
-                "charge_payment_intent",
-            ], { actorKind: "webhook", actorId: eventId })
+            ? await quarantineProviderPaymentTruth(
+                  payment,
+                  { id: "missing", status: "succeeded", latest_charge: object },
+                  ["charge_payment_intent"],
+                  { actorKind: "webhook", actorId: eventId },
+              )
             : eventType === "charge.succeeded" && objectId !== chargeId(providerIntent)
-            ? await quarantineProviderPaymentTruth(payment, providerIntent, ["charge_event_id"], {
-                actorKind: "webhook", actorId: eventId,
-            })
-            : await applyPaymentIntent(payment, providerIntent, {
-                actorKind: "webhook", actorId: eventId,
-            });
+              ? await quarantineProviderPaymentTruth(payment, providerIntent, ["charge_event_id"], {
+                    actorKind: "webhook",
+                    actorId: eventId,
+                })
+              : await applyPaymentIntent(payment, providerIntent, {
+                    actorKind: "webhook",
+                    actorId: eventId,
+                });
         await updatePayment(applied.id, {
             last_stripe_event_id: eventId,
             last_provider_sync_at: new Date().toISOString(),
@@ -5764,8 +6602,12 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
         const refundId = eventType.startsWith("refund.") ? objectId : "";
         if (refundId) {
             const refund = await getRowByField<RefundRow>("refunds", "stripe_refund_id", refundId, refundSelect);
-            if (!refund) return false;
-            const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refundId)}`, { method: "GET" });
+            if (!refund) {
+                return false;
+            }
+            const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refundId)}`, {
+                method: "GET",
+            });
             await applyStripeRefund(refund, provider);
             await updatePayment(refund.payment_id, { last_stripe_event_id: eventId });
             return true;
@@ -5774,23 +6616,31 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
         const payment = chargeId
             ? await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", chargeId, paymentSelect)
             : null;
-        if (!payment) return false;
+        if (!payment) {
+            return false;
+        }
         await reconcilePayment(payment);
         await updatePayment(payment.id, { last_stripe_event_id: eventId });
         return true;
     }
 
     if (eventType.startsWith("charge.dispute.")) {
-        if (!objectId) throw new Error("Stripe dispute event has no object id");
+        if (!objectId) {
+            throw new Error("Stripe dispute event has no object id");
+        }
         const provider = await stripeV1<StripeDispute>(`/disputes/${encodeURIComponent(objectId)}`, { method: "GET" });
         await applyStripeDispute(provider, eventId, eventType, stringAt(row, "provider_created_at") || null);
         return true;
     }
 
     if (eventType.startsWith("transfer.")) {
-        if (!objectId) return false;
+        if (!objectId) {
+            return false;
+        }
         const transfer = await getRowByField<TransferRow>("transfers", "stripe_transfer_id", objectId, transferSelect);
-        if (!transfer) return false;
+        if (!transfer) {
+            return false;
+        }
         const amountReversed = Number(object.amount_reversed ?? 0);
         await updateRow("transfers", transfer.id, {
             status: object.reversed === true ? "reversed" : amountReversed > 0 ? "partially_reversed" : "succeeded",
@@ -5801,9 +6651,13 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
     }
 
     if (eventType === "account.updated") {
-        if (!objectId) return false;
+        if (!objectId) {
+            return false;
+        }
         const account = await getAccountRowByStripeAccountId(objectId);
-        if (!account) return false;
+        if (!account) {
+            return false;
+        }
         const provider = await retrieveAccount(objectId, account.stripe_account_api_version);
         await updateAccountRow(account.cms_user_id, {
             ...accountPatchFromStripe(provider, account.stripe_account_api_version),
@@ -5814,10 +6668,10 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
 
     if (eventType.startsWith("payout.")) {
         const stripeAccountId = stringAt(event, "account") || "platform";
-        if (!objectId) return false;
-        const account = stripeAccountId === "platform"
-            ? null
-            : await getAccountRowByStripeAccountId(stripeAccountId);
+        if (!objectId) {
+            return false;
+        }
+        const account = stripeAccountId === "platform" ? null : await getAccountRowByStripeAccountId(stripeAccountId);
         let providerSnapshot = object;
         let payoutTruthError: string | null = null;
         if (typeof providerSnapshot.automatic !== "boolean" && stringAt(providerSnapshot, "method") !== "instant") {
@@ -5830,28 +6684,27 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
         const manualPayout = providerSnapshot.automatic === false;
         const instantPayout = stringAt(providerSnapshot, "method") === "instant";
         const ambiguousPayout = !manualPayout && !instantPayout && providerSnapshot.automatic !== true;
-        const failedPayout = eventType === "payout.failed"
-            || stringAt(providerSnapshot, "status") === "failed";
-        const connectedEmergencyHold = Boolean(account && (
-            account.manual_payout_hold_started_at
-            || account.outstanding_debt_amount > 0
-            || account.financial_exposure_amount > 0
-        ));
+        const failedPayout = eventType === "payout.failed" || stringAt(providerSnapshot, "status") === "failed";
+        const connectedEmergencyHold = Boolean(
+            account &&
+                (account.manual_payout_hold_started_at ||
+                    account.outstanding_debt_amount > 0 ||
+                    account.financial_exposure_amount > 0),
+        );
         let platformControlDrift = false;
         if (!account && !manualPayout && !instantPayout && !ambiguousPayout) {
             try {
                 const [settings, control] = await Promise.all([
                     retrievePlatformBalanceSettings(),
-                    getRowByField<PlatformPayoutControlRow>(
-                        "platform_payout_controls", "control_key", "default", "*",
-                    ),
+                    getRowByField<PlatformPayoutControlRow>("platform_payout_controls", "control_key", "default", "*"),
                 ]);
                 const payouts = objectAt(objectAt(settings, "payments"), "payouts");
                 const interval = stringAt(objectAt(payouts, "schedule"), "interval");
                 const minimum = numberAt(objectAt(payouts, "minimum_balance_by_currency"), "eur") ?? 0;
-                platformControlDrift = !control
-                    || interval !== protectedPlatformPayoutInterval
-                    || minimum < Math.max(control.required_minimum_amount, control.provider_minimum_amount);
+                platformControlDrift =
+                    !control ||
+                    interval !== protectedPlatformPayoutInterval ||
+                    minimum < Math.max(control.required_minimum_amount, control.provider_minimum_amount);
             } catch {
                 platformControlDrift = true;
             }
@@ -5867,20 +6720,22 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
             failure_message: stringAt(providerSnapshot, "failure_message") || null,
             provider_snapshot: providerSnapshot,
         });
-        const unexpectedPayout = manualPayout || instantPayout || ambiguousPayout
-            || connectedEmergencyHold || platformControlDrift;
-        if (account && (failedPayout || unexpectedPayout)) await updateAccountRow(account.cms_user_id, {
-            risk_status: "manual_review",
-            financial_hold_reason: unexpectedPayout
-                ? ambiguousPayout
-                    ? "Stripe payout control mode is ambiguous"
-                    : connectedEmergencyHold
-                        ? "Automatic payout conflicts with an emergency seller hold"
-                        : platformControlDrift
+        const unexpectedPayout =
+            manualPayout || instantPayout || ambiguousPayout || connectedEmergencyHold || platformControlDrift;
+        if (account && (failedPayout || unexpectedPayout)) {
+            await updateAccountRow(account.cms_user_id, {
+                risk_status: "manual_review",
+                financial_hold_reason: unexpectedPayout
+                    ? ambiguousPayout
+                        ? "Stripe payout control mode is ambiguous"
+                        : connectedEmergencyHold
+                          ? "Automatic payout conflicts with an emergency seller hold"
+                          : platformControlDrift
                             ? "Automatic payout occurred while platform controls were inconsistent"
                             : "Unexpected manual or instant Stripe payout"
-                : "Stripe payout failed",
-        });
+                    : "Stripe payout failed",
+            });
+        }
         if (unexpectedPayout) {
             await upsertProviderException(`unexpected-payout:${stripeAccountId}:${objectId}`, {
                 exception_type: "unexpected_provider_payout",
@@ -5888,10 +6743,10 @@ async function processStripeEvent(row: JsonRecord): Promise<boolean> {
                 message: ambiguousPayout
                     ? "Stripe payout control mode could not be verified"
                     : connectedEmergencyHold
-                        ? "Stripe reported an automatic payout during an emergency seller hold"
-                        : platformControlDrift
-                            ? "Stripe reported an automatic platform payout while payout protection had drifted"
-                            : "Stripe reported a platform-controlled manual or instant payout",
+                      ? "Stripe reported an automatic payout during an emergency seller hold"
+                      : platformControlDrift
+                        ? "Stripe reported an automatic platform payout while payout protection had drifted"
+                        : "Stripe reported a platform-controlled manual or instant payout",
                 details: {
                     stripeAccountId,
                     stripePayoutId: objectId,
@@ -5932,27 +6787,36 @@ async function applyStripeRefund(refund: RefundRow, provider: StripeRefund): Pro
         });
         return;
     }
-    const balanceTransaction = status === "succeeded"
-        ? await resolveRefundBalanceTransaction(provider, refund)
-        : null;
-    const updatedRefund = await updateRow<RefundRow>("refunds", refund.id, {
-        status,
-        failure_reason: stringAt(provider, "failure_reason") || null,
-        stripe_balance_transaction_id: balanceTransaction ? stringAt(balanceTransaction, "id") : refund.stripe_balance_transaction_id,
-        actual_stripe_fee_amount: balanceTransaction ? numberAt(balanceTransaction, "fee") : refund.actual_stripe_fee_amount,
-        actual_stripe_net_amount: balanceTransaction ? numberAt(balanceTransaction, "net") : refund.actual_stripe_net_amount,
-        actual_stripe_fee_currency: balanceTransaction
-            ? stringAt(balanceTransaction, "currency").toLowerCase() : refund.actual_stripe_fee_currency,
-        actual_stripe_fee_details: balanceTransaction
-            ? recordArrayAt(balanceTransaction, "fee_details") : refund.actual_stripe_fee_details,
-        provider_snapshot: provider,
-    }, refundSelect) ?? refund;
+    const balanceTransaction = status === "succeeded" ? await resolveRefundBalanceTransaction(provider, refund) : null;
+    const updatedRefund =
+        (await updateRow<RefundRow>(
+            "refunds",
+            refund.id,
+            {
+                status,
+                failure_reason: stringAt(provider, "failure_reason") || null,
+                stripe_balance_transaction_id: balanceTransaction
+                    ? stringAt(balanceTransaction, "id")
+                    : refund.stripe_balance_transaction_id,
+                actual_stripe_fee_amount: balanceTransaction
+                    ? numberAt(balanceTransaction, "fee")
+                    : refund.actual_stripe_fee_amount,
+                actual_stripe_net_amount: balanceTransaction
+                    ? numberAt(balanceTransaction, "net")
+                    : refund.actual_stripe_net_amount,
+                actual_stripe_fee_currency: balanceTransaction
+                    ? stringAt(balanceTransaction, "currency").toLowerCase()
+                    : refund.actual_stripe_fee_currency,
+                actual_stripe_fee_details: balanceTransaction
+                    ? recordArrayAt(balanceTransaction, "fee_details")
+                    : refund.actual_stripe_fee_details,
+                provider_snapshot: provider,
+            },
+            refundSelect,
+        )) ?? refund;
     await updateFinancialOperation(refund.operation_id, {
-        status: status === "succeeded"
-            ? "succeeded"
-            : ["failed", "cancelled"].includes(status)
-                ? "failed"
-                : "processing",
+        status:
+            status === "succeeded" ? "succeeded" : ["failed", "cancelled"].includes(status) ? "failed" : "processing",
         stripe_object_id: provider.id,
         response: provider,
         last_error: ["failed", "cancelled"].includes(status)
@@ -5971,44 +6835,46 @@ async function applyStripeRefund(refund: RefundRow, provider: StripeRefund): Pro
         refunded_amount: refundedAmount,
         actual_stripe_refund_fee_amount: refundFeeAmount,
         actual_stripe_processing_fee_amount: payment.actual_stripe_charge_fee_amount + refundFeeAmount,
-        settlement_status: status === "failed"
-            ? "manual_review"
-            : status === "pending"
-                ? "refund_pending"
-                : payment.settlement_status === "manual_review"
+        settlement_status:
+            status === "failed"
+                ? "manual_review"
+                : status === "pending"
+                  ? "refund_pending"
+                  : payment.settlement_status === "manual_review"
                     ? "manual_review"
                     : refundedAmount >= payment.amount_total
-                        ? "refunded"
-                        : payment.transferred_amount - payment.reversed_amount >= authorizedSellerAmount
-                            ? "released"
-                            : "held",
+                      ? "refunded"
+                      : payment.transferred_amount - payment.reversed_amount >= authorizedSellerAmount
+                        ? "released"
+                        : "held",
         last_provider_sync_at: new Date().toISOString(),
     });
 }
 
-async function resolveRefundBalanceTransaction(
-    provider: StripeRefund,
-    refund: RefundRow,
-): Promise<JsonRecord> {
+async function resolveRefundBalanceTransaction(provider: StripeRefund, refund: RefundRow): Promise<JsonRecord> {
     const raw = provider.balance_transaction;
     const transaction = isRecord(raw)
         ? raw
         : typeof raw === "string" && raw.startsWith("txn_")
-            ? await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(raw)}`, { method: "GET" })
-            : null;
-    if (!transaction) throw new HttpError(409, "succeeded Stripe Refund omitted its balance transaction");
+          ? await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(raw)}`, { method: "GET" })
+          : null;
+    if (!transaction) {
+        throw new HttpError(409, "succeeded Stripe Refund omitted its balance transaction");
+    }
     const id = stringAt(transaction, "id");
     const amount = numberAt(transaction, "amount");
     const fee = numberAt(transaction, "fee");
     const net = numberAt(transaction, "net");
     const currency = stringAt(transaction, "currency").toLowerCase();
-    if (!id.startsWith("txn_")
-        || amount !== -refund.amount
-        || !Number.isSafeInteger(fee)
-        || !Number.isSafeInteger(net)
-        || net !== amount! - fee!
-        || currency !== refund.currency
-        || !Array.isArray(transaction.fee_details)) {
+    if (
+        !id.startsWith("txn_") ||
+        amount !== -refund.amount ||
+        !Number.isSafeInteger(fee) ||
+        !Number.isSafeInteger(net) ||
+        net !== amount! - fee! ||
+        currency !== refund.currency ||
+        !Array.isArray(transaction.fee_details)
+    ) {
         throw new HttpError(409, "Stripe Refund balance transaction does not match immutable refund truth");
     }
     if (refund.stripe_balance_transaction_id && refund.stripe_balance_transaction_id !== id) {
@@ -6027,7 +6893,9 @@ async function disputeFundsTruth(
 ): Promise<DisputeFundsTruth | null> {
     if (eventType === "charge.dispute.funds_withdrawn" || eventType === "charge.dispute.funds_reinstated") {
         const createdAt = eventCreatedAt ? Date.parse(eventCreatedAt) : Number.NaN;
-        if (!Number.isFinite(createdAt)) throw new Error("Stripe dispute funds event has no valid creation time");
+        if (!Number.isFinite(createdAt)) {
+            throw new Error("Stripe dispute funds event has no valid creation time");
+        }
         return {
             fundsWithdrawn: eventType === "charge.dispute.funds_withdrawn",
             eventAt: new Date(createdAt).toISOString(),
@@ -6041,31 +6909,39 @@ async function disputeFundsTruth(
             continue;
         }
         if (typeof entry === "string" && entry) {
-            transactions.push(await stripeV1<JsonRecord>(
-                `/balance_transactions/${encodeURIComponent(entry)}`,
-                { method: "GET" },
-            ));
+            transactions.push(
+                await stripeV1<JsonRecord>(`/balance_transactions/${encodeURIComponent(entry)}`, { method: "GET" }),
+            );
         }
     }
     const ordered = transactions
-        .filter(transaction => Number.isSafeInteger(transaction.created)
-            && Number.isSafeInteger(transaction.amount)
-            && Number(transaction.amount) !== 0
-            && stringAt(transaction, "id"))
-        .sort((left, right) => Number(right.created) - Number(left.created)
-            || stringAt(right, "id").localeCompare(stringAt(left, "id")));
+        .filter(
+            (transaction) =>
+                Number.isSafeInteger(transaction.created) &&
+                Number.isSafeInteger(transaction.amount) &&
+                Number(transaction.amount) !== 0 &&
+                stringAt(transaction, "id"),
+        )
+        .sort(
+            (left, right) =>
+                Number(right.created) - Number(left.created) ||
+                stringAt(right, "id").localeCompare(stringAt(left, "id")),
+        );
     const latest = ordered[0];
-    if (!latest) return null;
+    if (!latest) {
+        return null;
+    }
     const latestCreated = Number(latest.created);
-    const latestTransactions = ordered.filter(transaction => Number(transaction.created) === latestCreated);
-    const hasWithdrawal = latestTransactions.some(transaction => Number(transaction.amount) < 0);
-    const hasReinstatement = latestTransactions.some(transaction => Number(transaction.amount) > 0);
+    const latestTransactions = ordered.filter((transaction) => Number(transaction.created) === latestCreated);
+    const hasWithdrawal = latestTransactions.some((transaction) => Number(transaction.amount) < 0);
+    const hasReinstatement = latestTransactions.some((transaction) => Number(transaction.amount) > 0);
     return {
         fundsWithdrawn: hasWithdrawal,
         eventAt: new Date(latestCreated * 1000).toISOString(),
-        eventId: hasWithdrawal && hasReinstatement
-            ? "balance-transaction:same-second-conflict"
-            : `balance-transaction:${stringAt(latest, "id")}`,
+        eventId:
+            hasWithdrawal && hasReinstatement
+                ? "balance-transaction:same-second-conflict"
+                : `balance-transaction:${stringAt(latest, "id")}`,
     };
 }
 
@@ -6077,18 +6953,25 @@ async function applyStripeDispute(
 ): Promise<void> {
     const disputeId = provider.id;
     const charge = typeof provider.charge === "string" ? provider.charge : stringAt(objectAt(provider, "charge"), "id");
-    if (!charge) throw new Error("Stripe dispute has no charge id");
+    if (!charge) {
+        throw new Error("Stripe dispute has no charge id");
+    }
     const payment = await getRowByField<ConnectPaymentRow>("payments", "stripe_charge_id", charge, paymentSelect);
-    if (!payment) throw new Error(`Stripe dispute ${disputeId} has no local payment`);
+    if (!payment) {
+        throw new Error(`Stripe dispute ${disputeId} has no local payment`);
+    }
     const status = stringAt(provider, "status") || "needs_response";
     const evidenceDetails = objectAt(provider, "evidence_details");
     const dueBy = numberAt(evidenceDetails, "due_by");
     const existingDispute = await getRowByField<StripeDisputeRow>(
-        "stripe_disputes", "stripe_dispute_id", disputeId, disputeSelect,
+        "stripe_disputes",
+        "stripe_dispute_id",
+        disputeId,
+        disputeSelect,
     );
     const submissionCount = numberAt(evidenceDetails, "submission_count") ?? 0;
     const balanceTransactions = arrayAt(provider, "balance_transactions")
-        .map(entry => typeof entry === "string" ? entry : isRecord(entry) ? stringAt(entry, "id") : "")
+        .map((entry) => (typeof entry === "string" ? entry : isRecord(entry) ? stringAt(entry, "id") : ""))
         .filter(Boolean);
     const fundsTruth = await disputeFundsTruth(provider, eventId, eventType, eventCreatedAt);
     const values = {
@@ -6102,8 +6985,8 @@ async function applyStripeDispute(
         evidence_status: terminalDisputeStatus(status)
             ? "closed"
             : submissionCount > 0
-                ? "submitted"
-                : existingDispute?.evidence_status ?? "not_started",
+              ? "submitted"
+              : (existingDispute?.evidence_status ?? "not_started"),
         evidence_due_by: dueBy ? new Date(dueBy * 1000).toISOString() : null,
         is_charge_refundable: typeof provider.is_charge_refundable === "boolean" ? provider.is_charge_refundable : null,
         funds_withdrawn: existingDispute?.funds_withdrawn ?? false,
@@ -6121,36 +7004,54 @@ async function applyStripeDispute(
     }
     const fundsWithdrawn = dispute.funds_withdrawn;
     const closesWithoutLoss = ["won", "prevented", "warning_closed"].includes(status) && !fundsWithdrawn;
-    const localDisputeStatus = !closesWithoutLoss && fundsWithdrawn ? "open"
-        : status === "won" ? "won"
-        : status === "lost" ? "lost"
-        : status === "prevented" ? "prevented"
-        : status === "warning_closed" ? "warning_closed"
-        : status.includes("under_review") ? "under_review" : "open";
-    const preservesExistingManualReview = payment.settlement_status === "manual_review"
-        && payment.manual_review_reason !== `Stripe dispute ${disputeId} after Transfer`;
+    const localDisputeStatus =
+        !closesWithoutLoss && fundsWithdrawn
+            ? "open"
+            : status === "won"
+              ? "won"
+              : status === "lost"
+                ? "lost"
+                : status === "prevented"
+                  ? "prevented"
+                  : status === "warning_closed"
+                    ? "warning_closed"
+                    : status.includes("under_review")
+                      ? "under_review"
+                      : "open";
+    const preservesExistingManualReview =
+        payment.settlement_status === "manual_review" &&
+        payment.manual_review_reason !== `Stripe dispute ${disputeId} after Transfer`;
     const authorizedSellerAmount = await authorizedSellerAmountAfterRefunds(payment);
     const netTransferredAmount = payment.transferred_amount - payment.reversed_amount;
-    const safeSettlementStatus = payment.refunded_amount >= payment.amount_total
-        ? "refunded"
-        : netTransferredAmount >= authorizedSellerAmount ? "released" : "held";
+    const safeSettlementStatus =
+        payment.refunded_amount >= payment.amount_total
+            ? "refunded"
+            : netTransferredAmount >= authorizedSellerAmount
+              ? "released"
+              : "held";
     await updatePayment(payment.id, {
         dispute_status: localDisputeStatus,
         settlement_status: preservesExistingManualReview
             ? "manual_review"
             : closesWithoutLoss
-                ? safeSettlementStatus
-                : netTransferredAmount > 0 ? "manual_review" : "blocked",
+              ? safeSettlementStatus
+              : netTransferredAmount > 0
+                ? "manual_review"
+                : "blocked",
         manual_review_reason: preservesExistingManualReview
             ? payment.manual_review_reason
             : !closesWithoutLoss && netTransferredAmount > 0
-                ? `Stripe dispute ${disputeId} after Transfer`
-                : closesWithoutLoss ? null : payment.manual_review_reason,
+              ? `Stripe dispute ${disputeId} after Transfer`
+              : closesWithoutLoss
+                ? null
+                : payment.manual_review_reason,
         last_stripe_event_id: eventId.startsWith("evt_") ? eventId : payment.last_stripe_event_id,
         last_provider_sync_at: new Date().toISOString(),
     });
     await insertPaymentEvent(payment.id, "stripe_dispute_updated", "webhook", eventId, {
-        disputeId, status, amount: values.amount,
+        disputeId,
+        status,
+        amount: values.amount,
     });
     await enqueueCommerceProviderProjection(
         payment.id,
@@ -6166,47 +7067,71 @@ async function applyStripeDispute(
     );
     if (status === "lost" && sellerExposureAmount > 0) {
         await recordSellerRecoveryExposure(
-            payment, recoveryKey, "chargeback", "debt", sellerExposureAmount,
+            payment,
+            recoveryKey,
+            "chargeback",
+            "debt",
+            sellerExposureAmount,
             "Stripe dispute was lost before seller funds were fully recovered",
             { disputeId, status },
         );
     } else if ((!terminalDisputeStatus(status) || fundsWithdrawn) && sellerExposureAmount > 0) {
         await recordSellerRecoveryExposure(
-            payment, recoveryKey, "chargeback", "at_risk", sellerExposureAmount,
+            payment,
+            recoveryKey,
+            "chargeback",
+            "at_risk",
+            sellerExposureAmount,
             "Open Stripe dispute exposes transferred seller funds",
             { disputeId, status, fundsWithdrawn },
         );
     } else if (closesWithoutLoss) {
         const existingExposure = await getRowByField<JsonRecord>(
-            "seller_recovery_exposures", "recovery_key", recoveryKey, "*",
+            "seller_recovery_exposures",
+            "recovery_key",
+            recoveryKey,
+            "*",
         );
         const exposureAmount = Number(existingExposure?.amount ?? 0);
         if (exposureAmount > 0) {
             await recordSellerRecoveryExposure(
-                payment, recoveryKey, "chargeback", "recovered", exposureAmount,
+                payment,
+                recoveryKey,
+                "chargeback",
+                "recovered",
+                exposureAmount,
                 "Stripe dispute closed without an outstanding seller debt",
                 { disputeId, status },
             );
         }
     }
 
-    if ((!terminalDisputeStatus(status) || fundsWithdrawn)
-        && payment.transferred_amount > payment.reversed_amount) {
+    if ((!terminalDisputeStatus(status) || fundsWithdrawn) && payment.transferred_amount > payment.reversed_amount) {
         const recoveryAmount = Math.min(
             Number(provider.amount ?? 0),
             payment.transferred_amount - payment.reversed_amount,
         );
         if (recoveryAmount > 0) {
             try {
-                await executeTransferReversal(payment, `stripe-dispute:${dispute.id}`, recoveryAmount, `Stripe dispute ${disputeId}`);
+                await executeTransferReversal(
+                    payment,
+                    `stripe-dispute:${dispute.id}`,
+                    recoveryAmount,
+                    `Stripe dispute ${disputeId}`,
+                );
             } catch (error) {
                 await recordSellerRecoveryExposure(
-                    payment, recoveryKey, "chargeback", "debt", recoveryAmount,
+                    payment,
+                    recoveryKey,
+                    "chargeback",
+                    "debt",
+                    recoveryAmount,
                     "Stripe dispute Transfer recovery failed",
                     { disputeId, error: errorMessage(error) },
                 ).catch(() => null);
                 await markPaymentManualReview(payment.id, "Stripe dispute Transfer recovery failed", {
-                    disputeId, error: errorMessage(error),
+                    disputeId,
+                    error: errorMessage(error),
                 });
             }
         }
@@ -6218,8 +7143,10 @@ async function getStripeEvent(stripeAccountId: string, eventId: string): Promise
         `stripe_events?stripe_account_id=eq.${encodeURIComponent(stripeAccountId)}&event_id=eq.${encodeURIComponent(eventId)}&select=*&limit=1`,
         { method: "GET" },
     );
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as JsonRecord[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as JsonRecord[];
     return rows[0] ?? null;
 }
 
@@ -6232,17 +7159,14 @@ async function insertStripeEventDurably(values: JsonRecord): Promise<boolean> {
         },
         body: JSON.stringify(values),
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as JsonRecord[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as JsonRecord[];
     return rows.length > 0;
 }
 
-async function upsertRow<T>(
-    table: string,
-    conflictField: string,
-    select: string,
-    values: JsonRecord,
-): Promise<T> {
+async function upsertRow<T>(table: string, conflictField: string, select: string, values: JsonRecord): Promise<T> {
     const response = await rest(
         `${table}?on_conflict=${encodeURIComponent(conflictField)}&select=${encodeURIComponent(select)}`,
         {
@@ -6254,7 +7178,9 @@ async function upsertRow<T>(
             body: JSON.stringify(stripUndefined(values)),
         },
     );
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return firstRow<T>(await response.json());
 }
 
@@ -6263,21 +7189,27 @@ async function verifyStripeWebhookSignature(
     signatureHeader: string,
     secretName: "STRIPE_WEBHOOK_SECRET" | "STRIPE_CONNECT_WEBHOOK_SECRET" | "STRIPE_CONNECT_V2_WEBHOOK_SECRET",
 ): Promise<void> {
-    const fields = signatureHeader.split(",").map(part => part.trim().split("=", 2));
+    const fields = signatureHeader.split(",").map((part) => part.trim().split("=", 2));
     const timestampText = fields.find(([key]) => key === "t")?.[1] ?? "";
     const signatures = fields.filter(([key]) => key === "v1").map(([, value]) => value ?? "");
     const timestamp = Number(timestampText);
-    if (!Number.isSafeInteger(timestamp) || !signatures.length) throw new HttpError(400, "invalid Stripe signature header");
+    if (!Number.isSafeInteger(timestamp) || !signatures.length) {
+        throw new HttpError(400, "invalid Stripe signature header");
+    }
     if (Math.abs(Math.floor(Date.now() / 1000) - timestamp) > stripeWebhookToleranceSeconds) {
         throw new HttpError(400, "stale Stripe webhook signature");
     }
     const secret = requiredEnv(secretName);
     const key = await crypto.subtle.importKey(
-        "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
     );
     const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestampText}.${rawBody}`));
     const expected = bytesToHex(new Uint8Array(mac));
-    if (!signatures.some(signature => safeEqual(signature, expected))) {
+    if (!signatures.some((signature) => safeEqual(signature, expected))) {
         throw new HttpError(400, "invalid Stripe webhook signature");
     }
 }
@@ -6288,17 +7220,25 @@ function stripeEventCreatedAt(event: JsonRecord): string {
     }
     if (typeof event.created === "string") {
         const timestamp = Date.parse(event.created);
-        if (Number.isFinite(timestamp)) return new Date(timestamp).toISOString();
+        if (Number.isFinite(timestamp)) {
+            return new Date(timestamp).toISOString();
+        }
     }
     throw new HttpError(400, "Stripe event created timestamp is invalid");
 }
 
 function refundStatusFromStripe(refund: StripeRefund): string {
     switch (refund.status) {
-        case "succeeded": return "succeeded";
-        case "failed": case "canceled": return refund.status === "canceled" ? "cancelled" : "failed";
-        case "pending": case "requires_action": return "pending";
-        default: return "processing";
+        case "succeeded":
+            return "succeeded";
+        case "failed":
+        case "canceled":
+            return refund.status === "canceled" ? "cancelled" : "failed";
+        case "pending":
+        case "requires_action":
+            return "pending";
+        default:
+            return "processing";
     }
 }
 
@@ -6307,29 +7247,65 @@ function terminalDisputeStatus(status: string): boolean {
 }
 
 function sanitizeDisputeEvidence(value: unknown): JsonRecord {
-    if (!isRecord(value)) throw new HttpError(400, "evidence must be an object");
+    if (!isRecord(value)) {
+        throw new HttpError(400, "evidence must be an object");
+    }
     const allowed = new Set([
-        "access_activity_log", "billing_address", "cancellation_policy", "cancellation_policy_disclosure",
-        "cancellation_rebuttal", "customer_communication", "customer_email_address", "customer_name",
-        "customer_purchase_ip", "customer_signature", "duplicate_charge_documentation", "duplicate_charge_explanation",
-        "duplicate_charge_id", "product_description", "receipt", "refund_policy", "refund_policy_disclosure",
-        "refund_refusal_explanation", "service_date", "service_documentation", "shipping_address",
-        "shipping_carrier", "shipping_date", "shipping_documentation", "shipping_tracking_number",
-        "uncategorized_file", "uncategorized_text",
+        "access_activity_log",
+        "billing_address",
+        "cancellation_policy",
+        "cancellation_policy_disclosure",
+        "cancellation_rebuttal",
+        "customer_communication",
+        "customer_email_address",
+        "customer_name",
+        "customer_purchase_ip",
+        "customer_signature",
+        "duplicate_charge_documentation",
+        "duplicate_charge_explanation",
+        "duplicate_charge_id",
+        "product_description",
+        "receipt",
+        "refund_policy",
+        "refund_policy_disclosure",
+        "refund_refusal_explanation",
+        "service_date",
+        "service_documentation",
+        "shipping_address",
+        "shipping_carrier",
+        "shipping_date",
+        "shipping_documentation",
+        "shipping_tracking_number",
+        "uncategorized_file",
+        "uncategorized_text",
     ]);
     const sanitized: JsonRecord = {};
     for (const [key, entry] of Object.entries(value)) {
-        if (!allowed.has(key)) throw new HttpError(400, `unsupported Stripe evidence field: ${key}`);
+        if (!allowed.has(key)) {
+            throw new HttpError(400, `unsupported Stripe evidence field: ${key}`);
+        }
         if (typeof entry !== "string" || !entry.trim() || entry.length > 20_000) {
             throw new HttpError(400, `Stripe evidence field ${key} must be a non-empty string`);
         }
-        if (["customer_communication", "customer_signature", "duplicate_charge_documentation", "receipt", "service_documentation", "shipping_documentation", "uncategorized_file"].includes(key)
-            && !entry.startsWith("file_")) {
+        if (
+            [
+                "customer_communication",
+                "customer_signature",
+                "duplicate_charge_documentation",
+                "receipt",
+                "service_documentation",
+                "shipping_documentation",
+                "uncategorized_file",
+            ].includes(key) &&
+            !entry.startsWith("file_")
+        ) {
             throw new HttpError(400, `Stripe evidence field ${key} requires a Stripe file id`);
         }
         sanitized[key] = entry.trim();
     }
-    if (!Object.keys(sanitized).length) throw new HttpError(400, "at least one evidence field is required");
+    if (!Object.keys(sanitized).length) {
+        throw new HttpError(400, "at least one evidence field is required");
+    }
     return sanitized;
 }
 
@@ -6347,7 +7323,9 @@ function flattenDisputeEvidence(body: JsonRecord): JsonRecord {
         ["customerEmailAddress", "customer_email_address"],
     ];
     for (const [input, provider] of mappings) {
-        if (body[input] !== undefined && body[input] !== null && body[input] !== "") evidence[provider] = body[input];
+        if (body[input] !== undefined && body[input] !== null && body[input] !== "") {
+            evidence[provider] = body[input];
+        }
     }
     return evidence;
 }
@@ -6356,7 +7334,9 @@ function decodeBase64(value: string): Uint8Array {
     try {
         const binary = atob(value);
         const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
         return bytes;
     } catch {
         throw new HttpError(400, "base64 evidence is invalid");

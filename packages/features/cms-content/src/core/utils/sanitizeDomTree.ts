@@ -43,7 +43,9 @@ export function sanitizeDomTree(root: SanitizableElement): void {
             }
             if (URL_ATTRS.has(lower)) {
                 const value = el.getAttribute(name);
-                if (value && isDangerousUrl(value)) el.removeAttribute(name);
+                if (value && isDangerousUrl(value)) {
+                    el.removeAttribute(name);
+                }
             }
         }
     }

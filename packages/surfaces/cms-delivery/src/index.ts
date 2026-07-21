@@ -10,7 +10,7 @@
  * Pure on-demand rendering — no Playwright, no build-time pre-rendering.
  */
 
-export { default as DeliveryCms }      from "cms-delivery/DeliveryCms";
-export type { DeliveryCmsConfig }      from "cms-delivery/DeliveryCms";
-export type { ContentReader }     from "@bernouy/cms-content";
+export { default as DeliveryCms } from "cms-delivery/DeliveryCms";
+export type { DeliveryCmsConfig } from "cms-delivery/DeliveryCms";
+export type { ContentReader } from "@bernouy/cms-content";
 export type { HeadInjector, HeadInjectorContext } from "cms-delivery/interfaces/HeadInjector";

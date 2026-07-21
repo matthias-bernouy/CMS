@@ -41,8 +41,7 @@ describe("per-instance Compose rendering", () => {
     });
 
     composeTest("preserves an external cluster URL without requiring INSTANCE_ID", () => {
-        const mongoUrl =
-            "mongodb+srv://cms_user:password@cluster.example.test/cms-client?retryWrites=true&w=majority";
+        const mongoUrl = "mongodb+srv://cms_user:password@cluster.example.test/cms-client?retryWrites=true&w=majority";
         const config = renderCompose(instanceComposeFile, {
             ...requiredCmsEnvironment,
             DOMAIN: "external.example.test",
@@ -91,9 +90,7 @@ describe("shared infrastructure Compose rendering", () => {
 describe("deployment definition safeguards", () => {
     test("creates exactly the shared root and readWriteAnyDatabase roles", () => {
         const roleBindings = Array.from(
-            mongoBootstrapSource.matchAll(
-                /roles:\s*\[\{\s*role:\s*["']([^"']+)["'],\s*db:\s*["']([^"']+)["']\s*\}\]/g,
-            ),
+            mongoBootstrapSource.matchAll(/roles:\s*\[\{\s*role:\s*["']([^"']+)["'],\s*db:\s*["']([^"']+)["']\s*\}\]/g),
             (match) => ({ role: match[1], database: match[2] }),
         );
 
@@ -103,21 +100,15 @@ describe("deployment definition safeguards", () => {
         ]);
         expect(mongoBootstrapSource).not.toMatch(/role:\s*["']readWrite["']/);
         expect(mongoBootstrapSource).not.toContain("MONGO_APP_DATABASE");
-        expect(mongoBootstrapSource).toContain(
-            'assertOnlyRole(existingApp, appUsername, "readWriteAnyDatabase")',
-        );
+        expect(mongoBootstrapSource).toContain('assertOnlyRole(existingApp, appUsername, "readWriteAnyDatabase")');
     });
 
     test("requires 64-character hexadecimal root and application passwords", () => {
-        expect(mongoBootstrapSource).toContain(
-            'const rootPassword = requiredHexSecret("MONGO_INITDB_ROOT_PASSWORD")',
-        );
-        expect(mongoBootstrapSource).toContain(
-            'const appPassword = requiredHexSecret("MONGO_APP_PASSWORD")',
-        );
+        expect(mongoBootstrapSource).toContain('const rootPassword = requiredHexSecret("MONGO_INITDB_ROOT_PASSWORD")');
+        expect(mongoBootstrapSource).toContain('const appPassword = requiredHexSecret("MONGO_APP_PASSWORD")');
         expect(mongoBootstrapSource).toContain("/^[a-fA-F0-9]{64}$/");
-        expect(mongoPreflightSource).toContain('validate_hex_secret MONGO_INITDB_ROOT_PASSWORD');
-        expect(mongoPreflightSource).toContain('validate_hex_secret MONGO_APP_PASSWORD');
+        expect(mongoPreflightSource).toContain("validate_hex_secret MONGO_INITDB_ROOT_PASSWORD");
+        expect(mongoPreflightSource).toContain("validate_hex_secret MONGO_APP_PASSWORD");
         expect(mongoPreflightSource).toContain('exec /usr/local/bin/docker-entrypoint.sh "$@"');
     });
 

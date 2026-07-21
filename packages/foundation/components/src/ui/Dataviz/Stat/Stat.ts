@@ -24,9 +24,10 @@ export class Stat extends Component {
         const note = root.querySelector(".note") as HTMLElement;
         const url = this.getAttribute("url");
         const data = url ? await fetchJson(url) : null;
-        const raw = data && typeof data === "object"
-            ? (data as Record<string, unknown>)[this.getAttribute("field") ?? "value"]
-            : undefined;
+        const raw =
+            data && typeof data === "object"
+                ? (data as Record<string, unknown>)[this.getAttribute("field") ?? "value"]
+                : undefined;
         if (raw === undefined || raw === null) {
             value.textContent = "—";
             value.classList.add("is-empty");

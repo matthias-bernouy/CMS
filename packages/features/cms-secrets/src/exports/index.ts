@@ -8,13 +8,17 @@
  * import the subpath.
  */
 
-export type { SecretStore }     from "cms-secrets/interfaces/SecretStore";
-export type { SecretReader }    from "cms-secrets/interfaces/SecretReader";
-export { InMemorySecretStore }  from "cms-secrets/default-implementation/InMemorySecretStore";
-export { resolveSecretRefs }    from "cms-secrets/core/resolveSecretRefs";
+export type { SecretStore } from "cms-secrets/interfaces/SecretStore";
+export type { SecretReader } from "cms-secrets/interfaces/SecretReader";
+export { InMemorySecretStore } from "cms-secrets/default-implementation/InMemorySecretStore";
+export { resolveSecretRefs } from "cms-secrets/core/resolveSecretRefs";
 export { createSecretResolver } from "cms-secrets/core/createSecretResolver";
-export { SecretNotFound }       from "cms-secrets/core/SecretNotFound";
-export { ValidatingSecretStore, validateSecretKey, SecretValidationError } from "cms-secrets/core/ValidatingSecretStore";
+export { SecretNotFound } from "cms-secrets/core/SecretNotFound";
+export {
+    ValidatingSecretStore,
+    validateSecretKey,
+    SecretValidationError,
+} from "cms-secrets/core/ValidatingSecretStore";
 export {
     SECRET_KEY_MAX_LENGTH,
     SECRET_KEY_PATTERN,

@@ -18,13 +18,19 @@ export default async function updateFileContentEndpoint(req: Request, cms: Contr
     }
     const form = await req.formData();
     const file = form.get("file");
-    if (!(file instanceof File)) throw new InvalidParam("file", "multipart `file` expected.");
+    if (!(file instanceof File)) {
+        throw new InvalidParam("file", "multipart `file` expected.");
+    }
     const idRaw = form.get("id");
     const id = typeof idRaw === "string" && idRaw ? idRaw : null;
-    if (!id) throw new InvalidParam("id", "`id` of the file to update is required.");
+    if (!id) {
+        throw new InvalidParam("id", "`id` of the file to update is required.");
+    }
 
     const item = await updateFileContent(cms.filesMetadata, cms.filesBlob, id, file);
-    if (!item) return new Response("Not found", { status: 404 });
+    if (!item) {
+        return new Response("Not found", { status: 404 });
+    }
 
     await invalidatePagesReferencingFile(cms, id);
     return Response.json(item);

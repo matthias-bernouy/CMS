@@ -4,18 +4,13 @@ import type { DashboardSourceGroup } from "cms-control/components/admin/Resource
 
 describe("dashboard default selection", () => {
     test("selects the first source that actually has a dashboard", () => {
-        expect(defaultDashboardSource([
-            group("system-auth", 0),
-            group("commerce", 2),
-            group("delivery", 1),
-        ])).toBe("commerce");
+        expect(defaultDashboardSource([group("system-auth", 0), group("commerce", 2), group("delivery", 1)])).toBe(
+            "commerce",
+        );
     });
 
     test("falls back to the first source when every source is dashboard-less", () => {
-        expect(defaultDashboardSource([
-            group("system-auth", 0),
-            group("stripe-connect", 0),
-        ])).toBe("system-auth");
+        expect(defaultDashboardSource([group("system-auth", 0), group("stripe-connect", 0)])).toBe("system-auth");
     });
 });
 

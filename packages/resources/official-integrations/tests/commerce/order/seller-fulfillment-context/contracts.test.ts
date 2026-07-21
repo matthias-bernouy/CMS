@@ -1,17 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
-import {
-    ok,
-    orderId,
-    publicId,
-    scenarios,
-    sellerCmsUserId,
-    useRpcResult,
-} from "./fixtures";
+import { expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { ok, orderId, publicId, scenarios, sellerCmsUserId, useRpcResult } from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -43,12 +32,14 @@ describe("commerce seller fulfillment contexts", () => {
     }
 
     test("preserves a denied label authorization as data", async () => {
-        useRpcResult(ok({
-            public_id: publicId,
-            allowed: false,
-            seller_cms_user_id: sellerCmsUserId,
-            denial_reason: "must not leak",
-        }));
+        useRpcResult(
+            ok({
+                public_id: publicId,
+                allowed: false,
+                seller_cms_user_id: sellerCmsUserId,
+                denial_reason: "must not leak",
+            }),
+        );
 
         const response = await requestCommerce(scenarios[1]!.route, {
             userId: sellerCmsUserId,
@@ -64,13 +55,15 @@ describe("commerce seller fulfillment contexts", () => {
     });
 
     test("preserves a denied shipment-creation authorization as data", async () => {
-        useRpcResult(ok({
-            id: orderId,
-            public_id: publicId,
-            allowed: false,
-            seller_cms_user_id: sellerCmsUserId,
-            denial_reason: "must not leak",
-        }));
+        useRpcResult(
+            ok({
+                id: orderId,
+                public_id: publicId,
+                allowed: false,
+                seller_cms_user_id: sellerCmsUserId,
+                denial_reason: "must not leak",
+            }),
+        );
 
         const response = await requestCommerce(scenarios[2]!.route, {
             userId: sellerCmsUserId,

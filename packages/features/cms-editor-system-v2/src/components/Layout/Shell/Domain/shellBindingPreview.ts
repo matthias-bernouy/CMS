@@ -1,7 +1,4 @@
-import {
-    CMS_BINDING_ATTRIBUTES,
-    CMS_BINDING_CORE_TAG,
-} from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { serializableContentHtml } from "./Structure/structureDocument";
 
 export const BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
@@ -26,11 +23,15 @@ export function syncBindingPreviewCore(
 
 export function bindingPreviewCore(document: Document | null): HTMLElement | null {
     const root = document?.querySelector<HTMLElement>("[data-cms-editor-root]");
-    if (root?.matches(CMS_BINDING_CORE_TAG)) return root;
+    if (root?.matches(CMS_BINDING_CORE_TAG)) {
+        return root;
+    }
 
-    return root?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG)
-        ?? document?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG)
-        ?? null;
+    return (
+        root?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG) ??
+        document?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG) ??
+        null
+    );
 }
 
 export function syncViewFrameContent(
@@ -40,7 +41,9 @@ export function syncViewFrameContent(
 ): void {
     const editorContent = editorDocument?.querySelector<HTMLElement>("[data-cms-content]");
     const viewContent = viewDocument?.querySelector<HTMLElement>("[data-cms-content]");
-    if (!editorContent || !viewContent) return;
+    if (!editorContent || !viewContent) {
+        return;
+    }
 
     viewContent.innerHTML = serializableContentHtml(editorContent);
     syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
@@ -49,14 +52,21 @@ export function syncViewFrameContent(
 
 export function restartViewBindingRuntime(viewDocument: Document | null): void {
     const core = bindingPreviewCore(viewDocument) as BindingPreviewCoreElement | null;
-    if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) return;
+    if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) {
+        return;
+    }
 
-    if (startViewBindingRuntime(core)) return;
+    if (startViewBindingRuntime(core)) {
+        return;
+    }
 
-    viewDocument?.defaultView?.customElements.whenDefined(core.localName)
+    viewDocument?.defaultView?.customElements
+        .whenDefined(core.localName)
         .then(() => {
             viewDocument.defaultView?.customElements.upgrade(core);
-            if (!core.isConnected || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) return;
+            if (!core.isConnected || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) {
+                return;
+            }
             startViewBindingRuntime(core);
         })
         .catch(() => undefined);
@@ -68,16 +78,23 @@ type BindingPreviewCoreElement = HTMLElement & {
 };
 
 function startViewBindingRuntime(core: BindingPreviewCoreElement): boolean {
-    if (typeof core.startRuntime !== "function") return false;
+    if (typeof core.startRuntime !== "function") {
+        return false;
+    }
 
-    if (typeof core.runtime?.deactivate === "function") core.runtime.deactivate();
-    else core.runtime?.stop();
+    if (typeof core.runtime?.deactivate === "function") {
+        core.runtime.deactivate();
+    } else {
+        core.runtime?.stop();
+    }
     core.startRuntime();
     return true;
 }
 
 export function injectBindingPreviewStyle(document: Document): void {
-    if (document.getElementById(BINDING_PREVIEW_STYLE_ID)) return;
+    if (document.getElementById(BINDING_PREVIEW_STYLE_ID)) {
+        return;
+    }
 
     const style = document.createElement("style");
     style.id = BINDING_PREVIEW_STYLE_ID;
@@ -98,10 +115,5 @@ export function bindingPreviewCss(): string {
         return `${selectors.join(",")}{display:none!important}`;
     };
 
-    return [
-        hiddenFor("loaded"),
-        hiddenFor("loading"),
-        hiddenFor("empty"),
-        hiddenFor("error"),
-    ].join("\n");
+    return [hiddenFor("loaded"), hiddenFor("loading"), hiddenFor("empty"), hiddenFor("error")].join("\n");
 }

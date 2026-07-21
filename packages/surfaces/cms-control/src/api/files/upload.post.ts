@@ -16,7 +16,9 @@ export default async function uploadFileEndpoint(req: Request, cms: ControlCms) 
     }
     const form = await req.formData();
     const file = form.get("file");
-    if (!(file instanceof File)) throw new InvalidParam("file", "multipart `file` expected.");
+    if (!(file instanceof File)) {
+        throw new InvalidParam("file", "multipart `file` expected.");
+    }
     const parentRaw = form.get("parentId");
     const parentId = typeof parentRaw === "string" && parentRaw && parentRaw !== "null" ? parentRaw : null;
     const idRaw = form.get("id");

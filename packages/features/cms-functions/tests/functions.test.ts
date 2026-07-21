@@ -7,12 +7,7 @@ import {
     validateFunction,
 } from "@bernouy/cms-functions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import {
-    json,
-    productsSource,
-    proxyFunction,
-    updateMyProductFunction,
-} from "./helpers/functionFixtures";
+import { json, productsSource, proxyFunction, updateMyProductFunction } from "./helpers/functionFixtures";
 
 describe("cms functions", () => {
     test("projects and executes a function as a system source endpoint", async () => {
@@ -40,7 +35,7 @@ describe("cms functions", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ id: "p1", ownerUserId: "user-1", title: "New title" });
-        expect(requests.map(request => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
+        expect(requests.map((request) => `${request.method} ${new URL(request.url).pathname}`)).toEqual([
             "GET /products",
             "POST /products/update",
         ]);
@@ -73,9 +68,9 @@ describe("cms functions", () => {
         const fn = updateMyProductFunction();
         fn.method = "GET";
 
-        expect(await validateFunction(fn, { sources })).toEqual(expect.arrayContaining([
-            "function.steps.2.call cannot call POST from a GET function",
-        ]));
+        expect(await validateFunction(fn, { sources })).toEqual(
+            expect.arrayContaining(["function.steps.2.call cannot call POST from a GET function"]),
+        );
     });
 
     test("projects function access onto the system source endpoint", () => {
@@ -86,12 +81,17 @@ describe("cms functions", () => {
     });
 
     test("resolves concat expressions", () => {
-        expect(resolveFunctionValue({
-            $concat: ["campaign-", "$input.body.id", ":", "$item.email"],
-        }, {
-            input: { body: { id: "weekly" } },
-            item: { email: "ada@example.test" },
-        })).toBe("campaign-weekly:ada@example.test");
+        expect(
+            resolveFunctionValue(
+                {
+                    $concat: ["campaign-", "$input.body.id", ":", "$item.email"],
+                },
+                {
+                    input: { body: { id: "weekly" } },
+                    item: { email: "ada@example.test" },
+                },
+            ),
+        ).toBe("campaign-weekly:ada@example.test");
     });
 
     test("does not expose source error details without a declared function output", async () => {

@@ -1,11 +1,16 @@
-import html from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
-import { Component } from '@bernouy/components/base';
+import html from "./template.html" with { type: "text" };
+import css from "./style.css" with { type: "text" };
+import { Component } from "@bernouy/components/base";
 
 import "cms-control/components/media/CardMedia/CardMedia";
 import type { MediaItem, BreadcrumbEntry } from "cms-control/components/media/GridMedia/types";
-import { uploadFiles, createFolder, fetchItems, type LocalTypeFilter } from "cms-control/components/media/GridMedia/api";
-import { renderBreadcrumb, renderGrid } from '../GridMedia/view/render';
+import {
+    uploadFiles,
+    createFolder,
+    fetchItems,
+    type LocalTypeFilter,
+} from "cms-control/components/media/GridMedia/api";
+import { renderBreadcrumb, renderGrid } from "../GridMedia/view/render";
 
 export class MediaCenter extends Component {
     private _dialog: HTMLDialogElement | null = null;
@@ -22,7 +27,7 @@ export class MediaCenter extends Component {
     constructor() {
         super({
             css: css as unknown as string,
-            template: html as unknown as string
+            template: html as unknown as string,
         });
     }
 
@@ -35,7 +40,9 @@ export class MediaCenter extends Component {
         s.getElementById("btnClose")!.addEventListener("click", () => this._dialog?.close());
         s.getElementById("btnCancel")!.addEventListener("click", () => this._dialog?.close());
         this._dialog!.addEventListener("click", (e) => {
-            if (e.target === this._dialog) this._dialog?.close();
+            if (e.target === this._dialog) {
+                this._dialog?.close();
+            }
         });
 
         // New folder
@@ -46,14 +53,20 @@ export class MediaCenter extends Component {
         s.getElementById("nf-cancel")!.addEventListener("click", () => nfBackdrop.classList.remove("open"));
         s.getElementById("nf-confirm")!.addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
         nfInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") this._createFolder(nfInput, nfBackdrop);
-            if (e.key === "Escape") nfBackdrop.classList.remove("open");
+            if (e.key === "Enter") {
+                this._createFolder(nfInput, nfBackdrop);
+            }
+            if (e.key === "Escape") {
+                nfBackdrop.classList.remove("open");
+            }
         });
 
         const fileInput = s.getElementById("file-input") as HTMLInputElement;
         s.getElementById("btnUpload")!.addEventListener("click", () => fileInput.click());
         fileInput.addEventListener("change", async () => {
-            if (!fileInput.files?.length) return;
+            if (!fileInput.files?.length) {
+                return;
+            }
             await uploadFiles(fileInput.files, this._folder);
             fileInput.value = "";
             this._refresh();
@@ -63,13 +76,15 @@ export class MediaCenter extends Component {
 
         this._grid!.addEventListener("click", (e) => {
             const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
-            if (!card) return;
+            if (!card) {
+                return;
+            }
 
             const id = card.dataset.id!;
             const type = card.dataset.type;
 
             if (type === "folder") {
-                const folder = this._items.find(i => i.id === id);
+                const folder = this._items.find((i) => i.id === id);
                 this._navigateTo(id, folder?.label);
             } else {
                 this._select(card, id);
@@ -79,13 +94,17 @@ export class MediaCenter extends Component {
         // Double-click to confirm
         this._grid!.addEventListener("dblclick", (e) => {
             const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
-            if (!card || card.dataset.type === "folder") return;
+            if (!card || card.dataset.type === "folder") {
+                return;
+            }
             this._confirmSelection();
         });
 
         s.getElementById("breadcrumb")!.addEventListener("click", (e) => {
             const target = e.target as HTMLElement;
-            if (!target.classList.contains("bc-item")) return;
+            if (!target.classList.contains("bc-item")) {
+                return;
+            }
             const folder = target.dataset.folder || null;
             const index = parseInt(target.dataset.index || "-1");
             this._breadcrumb = this._breadcrumb.slice(0, index + 1);
@@ -147,30 +166,24 @@ export class MediaCenter extends Component {
 
     private _render() {
         renderGrid(this._grid!, this._items);
-        renderBreadcrumb(
-            this.shadowRoot!.getElementById("breadcrumb")!,
-            this._folder,
-            this._breadcrumb
-        );
+        renderBreadcrumb(this.shadowRoot!.getElementById("breadcrumb")!, this._folder, this._breadcrumb);
 
         const empty = this.shadowRoot!.getElementById("empty")!;
         empty.style.display = this._items.length === 0 ? "flex" : "none";
 
         const pathDisplay = this.shadowRoot!.getElementById("pathDisplay")!;
         if (this._breadcrumb.length > 0) {
-            pathDisplay.textContent = this._breadcrumb.map(b => b.label).join(" / ");
+            pathDisplay.textContent = this._breadcrumb.map((b) => b.label).join(" / ");
         } else {
             pathDisplay.textContent = "Root";
         }
     }
 
     private _select(card: HTMLElement, id: string) {
-        this._grid!.querySelectorAll("p9r-card-media.selected").forEach(el =>
-            el.classList.remove("selected")
-        );
+        this._grid!.querySelectorAll("p9r-card-media.selected").forEach((el) => el.classList.remove("selected"));
 
         card.classList.add("selected");
-        this._selectedItem = this._items.find(i => i.id === id) || null;
+        this._selectedItem = this._items.find((i) => i.id === id) || null;
         this._updateSelectButton();
     }
 
@@ -181,15 +194,19 @@ export class MediaCenter extends Component {
     }
 
     private _confirmSelection() {
-        if (!this._selectedItem) return;
+        if (!this._selectedItem) {
+            return;
+        }
         const src = this._selectedItem.absoluteURL ?? "";
-        this.dispatchEvent(new CustomEvent("select-item", {
-            // `mimetype` lets consumers gate on the real type — id URLs carry no
-            // extension, so SVG detection can't sniff the URL anymore.
-            detail: { src, alt: this._selectedItem.label, mimetype: this._selectedItem.mimetype },
-            bubbles: true,
-            composed: true
-        }));
+        this.dispatchEvent(
+            new CustomEvent("select-item", {
+                // `mimetype` lets consumers gate on the real type — id URLs carry no
+                // extension, so SVG detection can't sniff the URL anymore.
+                detail: { src, alt: this._selectedItem.label, mimetype: this._selectedItem.mimetype },
+                bubbles: true,
+                composed: true,
+            }),
+        );
         this._dialog?.close();
     }
 
@@ -214,7 +231,9 @@ export class MediaCenter extends Component {
 
     private async _createFolder(input: HTMLInputElement, backdrop: HTMLElement) {
         const name = input.value.trim();
-        if (!name) return;
+        if (!name) {
+            return;
+        }
         await createFolder(name, this._folder);
         backdrop.classList.remove("open");
         this._refresh();

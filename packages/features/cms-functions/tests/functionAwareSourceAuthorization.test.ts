@@ -1,10 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import { InMemoryFunctionRepository, withFunctionsSource } from "@bernouy/cms-functions";
-import {
-    handleSourceRequest,
-    InMemorySourceRepository,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { handleSourceRequest, InMemorySourceRepository, type SourceEndpoint } from "@bernouy/cms-sources";
 
 class AuthorizationAwareSourceRepository extends InMemorySourceRepository {
     fullLookupCount = 0;
@@ -26,24 +22,22 @@ describe("FunctionAwareSourceRepository authorization lookup", () => {
         const inner = new AuthorizationAwareSourceRepository();
         await inner.createSource({
             urn: "urn:shop",
-            endpoints: [{
-                urn: "urn:shop:getCart",
-                method: "GET",
-                targetUrl: "https://api.example.com/cart",
-            }],
+            endpoints: [
+                {
+                    urn: "urn:shop:getCart",
+                    method: "GET",
+                    targetUrl: "https://api.example.com/cart",
+                },
+            ],
         });
         const sources = withFunctionsSource(inner, new InMemoryFunctionRepository());
         const fetchImpl = mock(async () => new Response("unexpected"));
         const authorizeEndpoint = mock(async () => false);
 
-        const response = await handleSourceRequest(
-            sources,
-            new Request("http://local/.cms/sources/shop/getCart"),
-            {
-                prefix: "/.cms/sources/",
-                deps: { fetchImpl, authorizeEndpoint },
-            },
-        );
+        const response = await handleSourceRequest(sources, new Request("http://local/.cms/sources/shop/getCart"), {
+            prefix: "/.cms/sources/",
+            deps: { fetchImpl, authorizeEndpoint },
+        });
 
         expect(response.status).toBe(403);
         expect(inner.authorizationLookupCount).toBe(1);

@@ -23,7 +23,9 @@ function normalizePath(path: string): string {
 }
 
 async function hashFile(path: string): Promise<string> {
-    return createHash("sha256").update(await readFile(path)).digest("hex");
+    return createHash("sha256")
+        .update(await readFile(path))
+        .digest("hex");
 }
 
 async function manifestEntry(rootDir: string, path: string): Promise<BuildManifestEntry> {
@@ -38,7 +40,9 @@ async function manifestEntry(rootDir: string, path: string): Promise<BuildManife
             sha256: createHash("sha256").update(target).digest("hex"),
         };
     }
-    if (!stats.isFile()) throw new Error(`Unsupported build output at ${relative(rootDir, path)}`);
+    if (!stats.isFile()) {
+        throw new Error(`Unsupported build output at ${relative(rootDir, path)}`);
+    }
     return {
         path: normalizePath(relative(rootDir, path)),
         kind: "file",
@@ -55,8 +59,11 @@ async function collectTreeFiles(root: string): Promise<string[]> {
         entries.sort((left, right) => left.name.localeCompare(right.name));
         for (const entry of entries) {
             const path = join(directory, entry.name);
-            if (entry.isDirectory()) await visit(path);
-            else files.push(path);
+            if (entry.isDirectory()) {
+                await visit(path);
+            } else {
+                files.push(path);
+            }
         }
     }
     await visit(root);
@@ -71,10 +78,14 @@ async function discoverBuildOutputs(rootDir: string): Promise<string[]> {
         const entries = await readdir(directory, { withFileTypes: true });
         entries.sort((left, right) => left.name.localeCompare(right.name));
         for (const entry of entries) {
-            if (entry.isDirectory() && SKIPPED_DIRECTORIES.has(entry.name)) continue;
+            if (entry.isDirectory() && SKIPPED_DIRECTORIES.has(entry.name)) {
+                continue;
+            }
             const path = join(directory, entry.name);
             if (entry.isDirectory() && entry.name === "dist") {
-                for (const output of await collectTreeFiles(path)) outputs.add(output);
+                for (const output of await collectTreeFiles(path)) {
+                    outputs.add(output);
+                }
             } else if (entry.isDirectory()) {
                 await visit(path);
             } else if (entry.name.endsWith(".tsbuildinfo")) {
@@ -91,8 +102,12 @@ async function discoverBuildOutputs(rootDir: string): Promise<string[]> {
 export async function createBuildManifest(rootDir: string): Promise<BuildManifest> {
     const root = resolve(rootDir);
     const files: BuildManifestEntry[] = [];
-    for (const path of await discoverBuildOutputs(root)) files.push(await manifestEntry(root, path));
-    if (files.length === 0) throw new Error("No build outputs were found");
+    for (const path of await discoverBuildOutputs(root)) {
+        files.push(await manifestEntry(root, path));
+    }
+    if (files.length === 0) {
+        throw new Error("No build outputs were found");
+    }
     return { schemaVersion: 1, files };
 }
 
@@ -106,4 +121,6 @@ async function main(): Promise<void> {
     await writeFile(resolve(outputPath), `${JSON.stringify(manifest, null, 4)}\n`);
 }
 
-if (import.meta.main) await main();
+if (import.meta.main) {
+    await main();
+}

@@ -58,23 +58,27 @@ function paramsLabel(fn: CmsFunction): string {
 
 function bodyLabel(fn: CmsFunction): string {
     const body = fn.input?.body;
-    if (!body) return "No body";
+    if (!body) {
+        return "No body";
+    }
     if (body.type === "object") {
         const names = Object.keys(body.properties ?? {});
         return names.length ? `Body: ${names.join(", ")}` : "Body: object";
     }
-    if (body.type === "array") return "Body: array";
+    if (body.type === "array") {
+        return "Body: array";
+    }
     return `Body: ${body.type}`;
 }
 
 function inputLabel(fn: CmsFunction): string {
-    const labels = [paramsLabel(fn), bodyLabel(fn)].filter(label => !label.startsWith("No "));
+    const labels = [paramsLabel(fn), bodyLabel(fn)].filter((label) => !label.startsWith("No "));
     return labels.length ? labels.join(" / ") : "No input";
 }
 
 function outputLabel(fn: CmsFunction): string {
     const output = fn.output ?? [];
-    return output.length ? output.map(entry => entry.status).join(", ") : "No output";
+    return output.length ? output.map((entry) => entry.status).join(", ") : "No output";
 }
 
 function returnLabel(fn: CmsFunction): string {
@@ -91,17 +95,25 @@ function countLabel(count: number, singular: string): string {
 }
 
 function paramsSample(fn: CmsFunction): Record<string, unknown> {
-    return Object.fromEntries(Object.entries(fn.input?.params ?? {})
-        .map(([name, shape]) => [name, sampleValue(shape)]));
+    return Object.fromEntries(
+        Object.entries(fn.input?.params ?? {}).map(([name, shape]) => [name, sampleValue(shape)]),
+    );
 }
 
 function sampleValue(shape: DataShape): unknown {
     if (shape.type === "object") {
-        return Object.fromEntries(Object.entries(shape.properties ?? {})
-            .map(([name, child]) => [name, sampleValue(child)]));
+        return Object.fromEntries(
+            Object.entries(shape.properties ?? {}).map(([name, child]) => [name, sampleValue(child)]),
+        );
     }
-    if (shape.type === "array") return [];
-    if (shape.type === "number") return 0;
-    if (shape.type === "boolean") return false;
+    if (shape.type === "array") {
+        return [];
+    }
+    if (shape.type === "number") {
+        return 0;
+    }
+    if (shape.type === "boolean") {
+        return false;
+    }
     return "";
 }

@@ -25,7 +25,9 @@ function responseSequence(payloads: { status: number; body: string }[]): void {
 
 function deferredJson(payload: unknown): () => void {
     let release!: () => void;
-    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const gate = new Promise<void>((resolve) => {
+        release = resolve;
+    });
     globalThis.fetch = (async () => {
         await gate;
         return res(200, JSON.stringify(payload));
@@ -85,11 +87,7 @@ describe("Source — parity contract for body re-renders", () => {
     });
 
     test("raw HTML placeholders are restamped from the pristine body on each run", async () => {
-        jsonSequence([
-            { html: "<b>First</b>" },
-            { html: "<i>Second</i>" },
-            { html: "" },
-        ]);
+        jsonSequence([{ html: "<b>First</b>" }, { html: "<i>Second</i>" }, { html: "" }]);
         const src = el(`
             <section cms-source="/x">
                 <div class="html"><raw-html>{{ html | innerHTML }}</raw-html></div>
@@ -112,7 +110,12 @@ describe("Source — parity contract for body re-renders", () => {
 
     test("cms-repeat restamps nested repeats, empty arrays, and non-arrays across runs", async () => {
         jsonSequence([
-            { groups: [{ title: "A", tags: ["x", "y"] }, { title: "B", tags: ["z"] }] },
+            {
+                groups: [
+                    { title: "A", tags: ["x", "y"] },
+                    { title: "B", tags: ["z"] },
+                ],
+            },
             { groups: [{ title: "C", tags: [] }] },
             { groups: [] },
             { groups: "not-an-array" },
@@ -140,7 +143,9 @@ describe("Source — parity contract for body re-renders", () => {
 
         const warn = console.warn;
         const warnings: unknown[][] = [];
-        console.warn = (...args: unknown[]) => { warnings.push(args); };
+        console.warn = (...args: unknown[]) => {
+            warnings.push(args);
+        };
         try {
             await source.run();
         } finally {
@@ -221,11 +226,15 @@ describe("BindingRuntime — parity contract for repeated source boundaries", ()
             const href = String(url);
             if (href === "/outer") {
                 outerCalls++;
-                return res(200, JSON.stringify({
-                    items: outerCalls === 1
-                        ? [{ endpoint: "/inner-a" }]
-                        : [{ endpoint: "/inner-b" }, { endpoint: "/inner-c" }],
-                }));
+                return res(
+                    200,
+                    JSON.stringify({
+                        items:
+                            outerCalls === 1
+                                ? [{ endpoint: "/inner-a" }]
+                                : [{ endpoint: "/inner-b" }, { endpoint: "/inner-c" }],
+                    }),
+                );
             }
             const labels: Record<string, string> = {
                 "/inner-a": "A",

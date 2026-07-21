@@ -10,25 +10,29 @@ describe("GET /api/relations/page", () => {
         await sources.createSource({
             urn: "urn:offers",
             meta: { name: "Offers" },
-            endpoints: [{
-                urn: "urn:offers:offers",
-                method: "GET",
-                access: { mode: "public" },
-                targetUrl: "https://api.example.com/offers",
-                input: {
-                    params: [
-                        { name: "productId", in: "query", schema: { type: "string" } },
-                        { name: "limit", in: "query", schema: { type: "number" } },
-                        { name: "offset", in: "query", schema: { type: "number" } },
-                    ],
+            endpoints: [
+                {
+                    urn: "urn:offers:offers",
+                    method: "GET",
+                    access: { mode: "public" },
+                    targetUrl: "https://api.example.com/offers",
+                    input: {
+                        params: [
+                            { name: "productId", in: "query", schema: { type: "string" } },
+                            { name: "limit", in: "query", schema: { type: "number" } },
+                            { name: "offset", in: "query", schema: { type: "number" } },
+                        ],
+                    },
                 },
-            }],
+            ],
         });
         await relations.createRelation(productOffersRelation());
         const seen: string[] = [];
 
         const response = await getRelationPage(
-            new Request("http://localhost/cms/api/relations/page?relation=product-offers&fromId=product-1&limit=10&offset=20"),
+            new Request(
+                "http://localhost/cms/api/relations/page?relation=product-offers&fromId=product-1&limit=10&offset=20",
+            ),
             {
                 sources,
                 relations,

@@ -23,7 +23,11 @@ describe("executeEndpoint computed params", () => {
 
     test("computed params without context resolver return 500", async () => {
         const fetchImpl = okFetch();
-        const response = await executeEndpoint(ep({ input: { params: [computedParam] } }), new Request("http://local/x"), { fetchImpl });
+        const response = await executeEndpoint(
+            ep({ input: { params: [computedParam] } }),
+            new Request("http://local/x"),
+            { fetchImpl },
+        );
         expect(response.status).toBe(500);
         expect(await response.text()).toBe("computed params require a configured context resolver");
         expect(fetchImpl).not.toHaveBeenCalled();
@@ -31,17 +35,23 @@ describe("executeEndpoint computed params", () => {
 
     test("required computed userID absent returns 401", async () => {
         const fetchImpl = okFetch();
-        const response = await executeEndpoint(ep({ input: { params: [computedParam] } }), new Request("http://local/x"), {
-            fetchImpl,
-            resolveContext: async () => ({}),
-        });
+        const response = await executeEndpoint(
+            ep({ input: { params: [computedParam] } }),
+            new Request("http://local/x"),
+            {
+                fetchImpl,
+                resolveContext: async () => ({}),
+            },
+        );
         expect(response.status).toBe(401);
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
     test("endpoint with no headers proxies normally", async () => {
         const fetchImpl = okFetch();
-        const response = await executeEndpoint(ep({ responseKind: "file" }), new Request("http://local/x"), { fetchImpl });
+        const response = await executeEndpoint(ep({ responseKind: "file" }), new Request("http://local/x"), {
+            fetchImpl,
+        });
         expect(response.status).toBe(200);
         expect(fetchImpl).toHaveBeenCalledTimes(1);
     });

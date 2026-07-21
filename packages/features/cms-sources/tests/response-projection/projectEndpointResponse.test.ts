@@ -1,7 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    projectEndpointResponse,
-} from "cms-sources/core/response-projection/projectEndpointResponse";
+import { projectEndpointResponse } from "cms-sources/core/response-projection/projectEndpointResponse";
 import type { SourceEndpoint } from "cms-sources/interfaces/Source";
 
 const endpoint = (over: Partial<SourceEndpoint> = {}): SourceEndpoint => ({
@@ -48,10 +46,12 @@ describe("projectEndpointResponse", () => {
     test("uses default when no exact status is declared", async () => {
         const response = await projectEndpointResponse(
             endpoint({
-                output: [{
-                    status: "default",
-                    body: { type: "object", properties: { fallback: { type: "string" } } },
-                }],
+                output: [
+                    {
+                        status: "default",
+                        body: { type: "object", properties: { fallback: { type: "string" } } },
+                    },
+                ],
             }),
             new Request("http://local.test/source"),
             jsonResponse({ fallback: "yes", extra: "drop" }, 202),
@@ -64,10 +64,12 @@ describe("projectEndpointResponse", () => {
     test("rewrites transformed JSON headers and preserves safe cache policy", async () => {
         const response = await projectEndpointResponse(
             endpoint({
-                output: [{
-                    status: "200",
-                    body: { type: "object", properties: { id: { type: "string" } } },
-                }],
+                output: [
+                    {
+                        status: "200",
+                        body: { type: "object", properties: { id: { type: "string" } } },
+                    },
+                ],
             }),
             new Request("http://local.test/source"),
             new Response(JSON.stringify({ id: "1", secret: "drop" }), {
@@ -117,11 +119,17 @@ describe("projectEndpointResponse", () => {
 
     test("discards JSON no-body contracts and every HEAD body", async () => {
         let noBodyCancelled = false;
-        const noBodyUpstream = cancellableResponse(() => { noBodyCancelled = true; }, 202, {
-            "content-type": "application/json",
-            etag: "stale-body-etag",
-            "last-modified": "Tue, 01 Jan 2030 00:00:00 GMT",
-        });
+        const noBodyUpstream = cancellableResponse(
+            () => {
+                noBodyCancelled = true;
+            },
+            202,
+            {
+                "content-type": "application/json",
+                etag: "stale-body-etag",
+                "last-modified": "Tue, 01 Jan 2030 00:00:00 GMT",
+            },
+        );
         const noBody = await projectEndpointResponse(
             endpoint({ output: [{ status: "202" }] }),
             new Request("http://local.test/source"),
@@ -138,7 +146,9 @@ describe("projectEndpointResponse", () => {
         const head = await projectEndpointResponse(
             endpoint({ responseKind: "file", output: [{ status: "200" }] }),
             new Request("http://local.test/source", { method: "HEAD" }),
-            cancellableResponse(() => { headCancelled = true; }),
+            cancellableResponse(() => {
+                headCancelled = true;
+            }),
         );
         expect(head.body).toBeNull();
         expect(headCancelled).toBe(true);
@@ -153,10 +163,13 @@ function jsonResponse(value: unknown, status = 200): Response {
 }
 
 function cancellableResponse(cancel: () => void, status = 200, headers?: HeadersInit): Response {
-    return new Response(new ReadableStream<Uint8Array>({
-        start(controller) {
-            controller.enqueue(new TextEncoder().encode("upstream body"));
-        },
-        cancel,
-    }), { status, headers });
+    return new Response(
+        new ReadableStream<Uint8Array>({
+            start(controller) {
+                controller.enqueue(new TextEncoder().encode("upstream body"));
+            },
+            cancel,
+        }),
+        { status, headers },
+    );
 }

@@ -1,16 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    installCommerceTestEnvironment,
-    requestCommerce,
-    setRestResponder,
-} from "../../harness";
+import { capturedFetches, installCommerceTestEnvironment, requestCommerce, setRestResponder } from "../../harness";
 import { adminOfferDetail, nullOfferDetail, sellerOfferDetail } from "./expected";
-import {
-    managedOfferResponse,
-    managedOfferState,
-    useFullOfferDetailResponder,
-} from "./fixtures";
+import { managedOfferResponse, managedOfferState, useFullOfferDetailResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -61,11 +52,10 @@ describe("commerce offer detail selector and administrator contracts", () => {
         useFullOfferDetailResponder({ mainMedia: false });
 
         const response = await requestCommerce("/admin/offer?id=91", { userRole: null });
-        const body = await response.json() as Record<string, unknown>;
+        const body = (await response.json()) as Record<string, unknown>;
 
         expect(response.status).toBe(200);
         expect(body.mainImageMediaId).toBe("201");
-        expect((body.media as Array<Record<string, unknown>>).map(item => item.mediaId))
-            .toEqual([201, 202]);
+        expect((body.media as Array<Record<string, unknown>>).map((item) => item.mediaId)).toEqual([201, 202]);
     });
 });

@@ -1,7 +1,4 @@
-import {
-    CANVAS_BACKGROUND_CLICK_EVENT,
-    CANVAS_FRAME_READY_EVENT,
-} from "../../../Canvas/Canvas";
+import { CANVAS_BACKGROUND_CLICK_EVENT, CANVAS_FRAME_READY_EVENT } from "../../../Canvas/Canvas";
 import {
     TOPBAR_DELETE_EVENT,
     TOPBAR_EDITOR_MODE_CHANGE_EVENT,

@@ -14,16 +14,28 @@ describe("parseDataShape", () => {
     });
 
     test("object `required[]` is preserved, intersected with properties + deduped", () => {
-        const shape = { type: "object", properties: { a: { type: "string" }, b: { type: "number" } }, required: ["a", "a", "ghost"] };
+        const shape = {
+            type: "object",
+            properties: { a: { type: "string" }, b: { type: "number" } },
+            required: ["a", "a", "ghost"],
+        };
         expect(parseDataShape(shape as any, "body")).toEqual({
-            type: "object", properties: { a: { type: "string" }, b: { type: "number" } }, required: ["a"],
+            type: "object",
+            properties: { a: { type: "string" }, b: { type: "number" } },
+            required: ["a"],
         } as any);
     });
 
     test("required entries that aren't OWN properties are dropped (no prototype leakage)", () => {
-        const shape = { type: "object", properties: { a: { type: "string" } }, required: ["a", "toString", "hasOwnProperty"] };
+        const shape = {
+            type: "object",
+            properties: { a: { type: "string" } },
+            required: ["a", "toString", "hasOwnProperty"],
+        };
         expect(parseDataShape(shape as any, "body")).toEqual({
-            type: "object", properties: { a: { type: "string" } }, required: ["a"],
+            type: "object",
+            properties: { a: { type: "string" } },
+            required: ["a"],
         } as any);
     });
 
@@ -41,10 +53,12 @@ describe("parseDataShape", () => {
             },
         };
         expect(parseDataShape(shape, "body")).toEqual(shape);
-        expect(() => parseDataShape({ type: "string", nullable: "yes" } as any, "body"))
-            .toThrow(/body\.nullable.*boolean/);
-        expect(() => parseDataShape({ type: "string", nullable: null } as any, "body"))
-            .toThrow(/body\.nullable.*boolean/);
+        expect(() => parseDataShape({ type: "string", nullable: "yes" } as any, "body")).toThrow(
+            /body\.nullable.*boolean/,
+        );
+        expect(() => parseDataShape({ type: "string", nullable: null } as any, "body")).toThrow(
+            /body\.nullable.*boolean/,
+        );
     });
 
     test("unknown keys are dropped (normalised)", () => {
@@ -53,8 +67,10 @@ describe("parseDataShape", () => {
     });
 
     test("preserves a human-readable JSON Schema title", () => {
-        expect(parseDataShape({ type: "string", title: "Product brand" }, "body"))
-            .toEqual({ type: "string", title: "Product brand" });
+        expect(parseDataShape({ type: "string", title: "Product brand" }, "body")).toEqual({
+            type: "string",
+            title: "Product brand",
+        });
     });
 
     test("empty object properties collapse to a bare object", () => {
@@ -73,25 +89,35 @@ describe("parseDataShape", () => {
     test("unsafe property name (__proto__/constructor/prototype) → SourceValidationError", () => {
         const props = JSON.parse('{"__proto__": {"type": "string"}}');
         expect(() => parseDataShape({ type: "object", properties: props }, "body")).toThrow(/unsafe property name/);
-        expect(() => parseDataShape({ type: "object", properties: { constructor: { type: "string" } } } as any, "body"))
-            .toThrow(/unsafe property name/);
+        expect(() =>
+            parseDataShape({ type: "object", properties: { constructor: { type: "string" } } } as any, "body"),
+        ).toThrow(/unsafe property name/);
     });
 
     test("empty property name → SourceValidationError", () => {
-        expect(() => parseDataShape({ type: "object", properties: { "": { type: "string" } } }, "body"))
-            .toThrow(/body\.properties/);
+        expect(() => parseDataShape({ type: "object", properties: { "": { type: "string" } } }, "body")).toThrow(
+            /body\.properties/,
+        );
     });
 
     test("nesting at/under the depth cap passes; over it throws", () => {
-        const wrap = (n: number) => { let s: any = { type: "string" }; for (let i = 0; i < n; i++) s = { type: "array", items: s }; return s; };
-        expect(() => parseDataShape(wrap(9), "body")).not.toThrow();   // leaf at depth 9
+        const wrap = (n: number) => {
+            let s: any = { type: "string" };
+            for (let i = 0; i < n; i++) {
+                s = { type: "array", items: s };
+            }
+            return s;
+        };
+        expect(() => parseDataShape(wrap(9), "body")).not.toThrow(); // leaf at depth 9
         expect(() => parseDataShape(wrap(10), "body")).toThrow(/too deep/);
         expect(() => parseDataShape(wrap(50), "body")).toThrow(/too deep/);
     });
 
     test("a too-wide object (node-count cap) → SourceValidationError", () => {
         const properties: Record<string, unknown> = {};
-        for (let i = 0; i < 600; i++) properties[`f${i}`] = { type: "string" };
+        for (let i = 0; i < 600; i++) {
+            properties[`f${i}`] = { type: "string" };
+        }
         expect(() => parseDataShape({ type: "object", properties } as any, "body")).toThrow(/too many nodes/);
     });
 

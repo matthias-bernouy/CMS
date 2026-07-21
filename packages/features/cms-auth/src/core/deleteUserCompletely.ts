@@ -3,9 +3,9 @@ import type { LocalCredentialStore } from "cms-auth/interfaces/LocalCredentialSt
 import type { PatRepository } from "cms-auth/interfaces/PatRepository";
 
 export type UserDeletionStores<Role extends string> = {
-    users:       UsersRepository<Role>;
+    users: UsersRepository<Role>;
     credentials: LocalCredentialStore;
-    pats:        PatRepository;
+    pats: PatRepository;
 };
 
 /**
@@ -24,9 +24,13 @@ export async function deleteUserCompletely<Role extends string>(
 ): Promise<void> {
     if (user.provider === "local" && user.email) {
         const cred = await stores.credentials.getByEmail(user.email);
-        if (cred) await stores.credentials.delete(cred.sub);
+        if (cred) {
+            await stores.credentials.delete(cred.sub);
+        }
     }
     const pats = await stores.pats.list(user.sub);
-    for (const p of pats) await stores.pats.revoke(user.sub, p.id);
+    for (const p of pats) {
+        await stores.pats.revoke(user.sub, p.id);
+    }
     await stores.users.delete(user.sub);
 }

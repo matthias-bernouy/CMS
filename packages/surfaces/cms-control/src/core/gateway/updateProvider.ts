@@ -11,5 +11,7 @@ import type { SourceDto } from "../validation/gateway/parseSourceDto";
  */
 export async function updateSource(cms: ControlCms, dto: SourceDto): Promise<void> {
     const updated = await cms.sources.updateSource(sourceDtoToSource(dto));
-    if (!updated) throw new InvalidParam("urn", "unknown provider");
+    if (!updated) {
+        throw new InvalidParam("urn", "unknown provider");
+    }
 }

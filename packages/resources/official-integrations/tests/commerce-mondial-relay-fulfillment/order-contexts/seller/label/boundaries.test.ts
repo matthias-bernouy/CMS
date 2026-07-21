@@ -1,21 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { expectGenericFailure } from "../../shared/harness";
-import {
-    labelAuthorization,
-    sellerId,
-} from "../shared/fixtures";
-import {
-    executeSellerFunction,
-    sellerPostRequest,
-} from "../shared/harness";
+import { labelAuthorization, sellerId } from "../shared/fixtures";
+import { executeSellerFunction, sellerPostRequest } from "../shared/harness";
 import { sellerResponder, type SellerReplies } from "../shared/responders";
 
 const functionId = "requestShipmentLabelForMySale";
-const privateFailure = (status: number) => Response.json({
-    error: "private upstream failure",
-    recipientAddress: "7 Private Street",
-    providerPayload: { reference: "private-provider-reference" },
-}, { status });
+const privateFailure = (status: number) =>
+    Response.json(
+        {
+            error: "private upstream failure",
+            recipientAddress: "7 Private Street",
+            providerPayload: { reference: "private-provider-reference" },
+        },
+        { status },
+    );
 
 describe("seller shipment label boundaries", () => {
     test("rejects invalid JSON, body shapes, and unknown fields before calls", async () => {
@@ -34,11 +32,7 @@ describe("seller shipment label boundaries", () => {
         ];
 
         for (const [request, error] of cases) {
-            const { response, calls } = await executeSellerFunction(
-                functionId,
-                request,
-                sellerResponder(),
-            );
+            const { response, calls } = await executeSellerFunction(functionId, request, sellerResponder());
             expect(response.status).toBe(400);
             expect(await response.json()).toEqual({ error });
             expect(calls).toEqual([]);
@@ -79,13 +73,16 @@ describe("seller shipment label boundaries", () => {
     });
 
     test("returns the same 409 for denial and seller mismatch", async () => {
-        for (const authorization of [{
-            ...labelAuthorization,
-            allowed: false,
-        }, {
-            ...labelAuthorization,
-            sellerCmsUserId: "another-seller",
-        }]) {
+        for (const authorization of [
+            {
+                ...labelAuthorization,
+                allowed: false,
+            },
+            {
+                ...labelAuthorization,
+                sellerCmsUserId: "another-seller",
+            },
+        ]) {
             const { response, calls } = await executeSellerFunction(
                 functionId,
                 sellerPostRequest(functionId, { orderId: "42" }),
@@ -95,9 +92,7 @@ describe("seller shipment label boundaries", () => {
             expect(await response.json()).toEqual({
                 error: "Commerce has not authorized label access",
             });
-            expect(calls.map(call => call.url.pathname)).toEqual([
-                "/labelSellerContext",
-            ]);
+            expect(calls.map((call) => call.url.pathname)).toEqual(["/labelSellerContext"]);
         }
     });
 
@@ -154,10 +149,13 @@ describe("seller shipment label boundaries", () => {
         const incompleteCapabilities: Array<[unknown, unknown]> = [
             [{}, { labelUrl: "/.cms/sources/delivery/label?token=" }],
             [{ token: "x" }, { labelUrl: "/.cms/sources/delivery/label?token=x" }],
-            [{ expiresAt: "later" }, {
-                labelUrl: "/.cms/sources/delivery/label?token=",
-                expiresAt: "later",
-            }],
+            [
+                { expiresAt: "later" },
+                {
+                    labelUrl: "/.cms/sources/delivery/label?token=",
+                    expiresAt: "later",
+                },
+            ],
         ];
         for (const [capability, body] of incompleteCapabilities) {
             const result = await executeSellerFunction(

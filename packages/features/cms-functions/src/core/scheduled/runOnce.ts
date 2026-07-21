@@ -8,9 +8,9 @@ import type {
 } from "./types";
 
 export const DEFAULT_SCHEDULED_FUNCTION_LOGGER: ScheduledFunctionLogger = {
-    info: message => console.info(message),
-    warn: message => console.warn(message),
-    error: message => console.error(message),
+    info: (message) => console.info(message),
+    warn: (message) => console.warn(message),
+    error: (message) => console.error(message),
 };
 
 export async function runScheduledSystemFunctionOnce(
@@ -23,24 +23,32 @@ export async function runScheduledSystemFunctionOnce(
     const startedMs = now().getTime();
     try {
         const fn = await options.functions.getFunction(job.functionId);
-        if (!fn) return result(context, "missing", startedMs, now);
+        if (!fn) {
+            return result(context, "missing", startedMs, now);
+        }
         if (fn.method !== "POST" || fn.access?.mode !== "system") {
             logger.error(`[cms-functions] scheduled job ${job.functionId} is not a system POST function`);
             return result(context, "invalid", startedMs, now);
         }
-        const response = await executeFunction(fn, new Request("https://cms.internal/scheduled-function", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(job.body(context)),
-        }), {
-            sources: options.sources,
-            deps: options.deps,
-            identities: options.deps?.identities,
-            user: {},
-        });
+        const response = await executeFunction(
+            fn,
+            new Request("https://cms.internal/scheduled-function", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(job.body(context)),
+            }),
+            {
+                sources: options.sources,
+                deps: options.deps,
+                identities: options.deps?.identities,
+                user: {},
+            },
+        );
         const durationMs = Math.max(0, now().getTime() - startedMs);
         if (!response.ok) {
-            logger.error(`[cms-functions] scheduled job ${job.functionId} failed with status ${response.status} (${durationMs}ms)`);
+            logger.error(
+                `[cms-functions] scheduled job ${job.functionId} failed with status ${response.status} (${durationMs}ms)`,
+            );
             return {
                 functionId: job.functionId,
                 runId: context.runId,

@@ -7,7 +7,9 @@ export default async function getIntegrationAsset(req: Request, cms: ControlCms)
     const path = requiredSearchParam(url, "path");
     const version = optionalText(url.searchParams.get("version"));
     const asset = await cms.integrationCatalog.getAsset?.(kind, version, path);
-    if (!asset) return new Response("Not found", { status: 404 });
+    if (!asset) {
+        return new Response("Not found", { status: 404 });
+    }
 
     return new Response(arrayBuffer(asset.bytes), {
         headers: {
@@ -25,7 +27,9 @@ function arrayBuffer(bytes: Uint8Array): ArrayBuffer {
 
 function requiredSearchParam(url: URL, name: string): string {
     const value = optionalText(url.searchParams.get(name));
-    if (!value) throw new MissingParam(name);
+    if (!value) {
+        throw new MissingParam(name);
+    }
     return value;
 }
 

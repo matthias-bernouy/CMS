@@ -28,7 +28,9 @@ export async function writeFunctionsWithRollback<T>(
         for (const write of writes) {
             if (write.previous) {
                 const updated = await functionRepository.updateFunction(write.fn);
-                if (!updated) throw new IntegrationRuntimeError(`function disappeared during import: ${write.fn.id}`, 409);
+                if (!updated) {
+                    throw new IntegrationRuntimeError(`function disappeared during import: ${write.fn.id}`, 409);
+                }
                 completed.push(write);
                 artifacts.push({ type: "function", id: write.fn.id, action: "updated" });
             } else {
@@ -37,7 +39,7 @@ export async function writeFunctionsWithRollback<T>(
                 artifacts.push({ type: "function", id: write.fn.id, action: "created" });
             }
         }
-        return operation ? await operation(artifacts) : artifacts as T;
+        return operation ? await operation(artifacts) : (artifacts as T);
     } catch (error) {
         await rollbackFunctions(functionRepository, completed);
         throw error;
@@ -50,8 +52,11 @@ async function rollbackFunctions(
 ): Promise<void> {
     for (const write of completed.reverse()) {
         try {
-            if (write.previous) await functionRepository.updateFunction(write.previous);
-            else await functionRepository.deleteFunction(write.fn.id);
+            if (write.previous) {
+                await functionRepository.updateFunction(write.previous);
+            } else {
+                await functionRepository.deleteFunction(write.fn.id);
+            }
         } catch {
             // Best-effort rollback: keep restoring remaining functions.
         }

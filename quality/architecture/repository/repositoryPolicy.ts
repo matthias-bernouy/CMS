@@ -40,10 +40,12 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
         ignoredPaths: [CONTROL_COMPONENT_ASSET],
         browserEntryPaths: [CONTROL_COMPONENT_ENTRY],
         environmentReadBaseline: ENVIRONMENT_READ_BASELINE,
-        generatedAssets: [{
-            path: CONTROL_COMPONENT_ASSET,
-            generate: () => generateControlComponentAsset(rootDir),
-            normalize: normalizeControlAsset,
-        }],
+        generatedAssets: [
+            {
+                path: CONTROL_COMPONENT_ASSET,
+                generate: () => generateControlComponentAsset(rootDir),
+                normalize: normalizeControlAsset,
+            },
+        ],
     };
 }

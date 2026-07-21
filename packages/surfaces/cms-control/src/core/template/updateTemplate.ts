@@ -1,6 +1,6 @@
-import type { ControlCms } from 'cms-control/ControlCms';
-import InvalidParam from 'cms-control/errors/Http/InvalidParam';
-import type { TemplateUpdateDto } from '../validation/template/parseUpdateDto';
+import type { ControlCms } from "cms-control/ControlCms";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import type { TemplateUpdateDto } from "../validation/template/parseUpdateDto";
 import { assertContentRefsExist } from "@bernouy/cms-content";
 
 export async function updateTemplate(cms: ControlCms, dto: TemplateUpdateDto): Promise<void> {
@@ -12,5 +12,7 @@ export async function updateTemplate(cms: ControlCms, dto: TemplateUpdateDto): P
         description: dto.description,
         content: dto.content,
     });
-    if (!updated) throw new InvalidParam('id', 'Unknown template id.');
+    if (!updated) {
+        throw new InvalidParam("id", "Unknown template id.");
+    }
 }

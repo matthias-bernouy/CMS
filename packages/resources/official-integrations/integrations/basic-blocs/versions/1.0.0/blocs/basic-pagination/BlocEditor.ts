@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({ type: "color", label, attribute });
 
@@ -19,7 +14,12 @@ export class BasicPaginationEditor extends Editor {
                     { type: "text", label: "Page size", attribute: "page-size", defaultValue: "12" },
                     { type: "text", label: "Previous label", attribute: "previous-label", defaultValue: "Précédent" },
                     { type: "text", label: "Next label", attribute: "next-label", defaultValue: "Suivant" },
-                    { type: "text", label: "Summary template", attribute: "summary-template", defaultValue: "Page {page} sur {pages}" },
+                    {
+                        type: "text",
+                        label: "Summary template",
+                        attribute: "summary-template",
+                        defaultValue: "Page {page} sur {pages}",
+                    },
                     {
                         type: "segmented",
                         label: "Summary",

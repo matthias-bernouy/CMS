@@ -14,7 +14,6 @@
  * because generation is content-addressed (`ensureVariants` skips done work).
  */
 export class OptimizeQueue {
-
     private readonly inFlight = new Set<string>();
     private readonly waiting = new Map<string, () => Promise<void>>();
     private active = 0;
@@ -24,7 +23,9 @@ export class OptimizeQueue {
     /** Schedule `run` under a dedupe `key`. A key already waiting or running is
      *  a no-op. Fire-and-forget — never throws to the caller. */
     enqueue(key: string, run: () => Promise<void>): void {
-        if (this.inFlight.has(key) || this.waiting.has(key)) return;
+        if (this.inFlight.has(key) || this.waiting.has(key)) {
+            return;
+        }
         this.waiting.set(key, run);
         this._drain();
     }
@@ -32,13 +33,17 @@ export class OptimizeQueue {
     private _drain(): void {
         while (this.active < this.concurrency && this.waiting.size > 0) {
             const next = this.waiting.entries().next();
-            if (next.done) break;
+            if (next.done) {
+                break;
+            }
             const [key, run] = next.value;
             this.waiting.delete(key);
             this.inFlight.add(key);
             this.active++;
             void run()
-                .catch(() => { /* best-effort; a failed job re-enqueues on the next render */ })
+                .catch(() => {
+                    /* best-effort; a failed job re-enqueues on the next render */
+                })
                 .finally(() => {
                     this.inFlight.delete(key);
                     this.active--;
@@ -48,5 +53,7 @@ export class OptimizeQueue {
     }
 
     /** True while any job is waiting or running. */
-    get busy(): boolean { return this.active > 0 || this.waiting.size > 0; }
+    get busy(): boolean {
+        return this.active > 0 || this.waiting.size > 0;
+    }
 }

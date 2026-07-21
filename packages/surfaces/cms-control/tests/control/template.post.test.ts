@@ -6,7 +6,9 @@ function makeSystem() {
     const createCalls: Omit<TTemplate, "id">[] = [];
     const cms: any = {
         repository: {
-            createTemplate: async (t: Omit<TTemplate, "id">) => { createCalls.push(t); },
+            createTemplate: async (t: Omit<TTemplate, "id">) => {
+                createCalls.push(t);
+            },
         },
     };
     return { cms, createCalls };
@@ -23,22 +25,17 @@ function makeRequest(body: Record<string, unknown>) {
 describe("POST /api/template (create)", () => {
     test("throws when identifier is missing", async () => {
         const { cms } = makeSystem();
-        await expect(postTemplate(makeRequest({ name: "Hero" }), cms))
-            .rejects.toThrow(/Missing param identifier/);
+        await expect(postTemplate(makeRequest({ name: "Hero" }), cms)).rejects.toThrow(/Missing param identifier/);
     });
 
     test("throws when name is missing", async () => {
         const { cms } = makeSystem();
-        await expect(postTemplate(makeRequest({ identifier: "hero" }), cms))
-            .rejects.toThrow(/Missing param name/);
+        await expect(postTemplate(makeRequest({ identifier: "hero" }), cms)).rejects.toThrow(/Missing param name/);
     });
 
     test("happy path: persists identifier + category + default content + empty description", async () => {
         const { cms, createCalls } = makeSystem();
-        const res = await postTemplate(
-            makeRequest({ identifier: "hero-v1", name: "Hero", category: "landing" }),
-            cms,
-        );
+        const res = await postTemplate(makeRequest({ identifier: "hero-v1", name: "Hero", category: "landing" }), cms);
         expect(res.ok).toBe(true);
         expect(createCalls).toHaveLength(1);
         const t = createCalls[0]!;

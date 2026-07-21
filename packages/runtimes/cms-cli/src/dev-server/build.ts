@@ -18,7 +18,7 @@ const buildOptions = (entry: string) => ({
     entrypoints: [entry],
     target: "browser" as const,
     format: "iife" as const,
-    plugins: [p9rExternalsPlugin]
+    plugins: [p9rExternalsPlugin],
 });
 
 /**
@@ -60,18 +60,23 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
     const validation = validateBloc({
         tag: bloc.tag,
         native,
-        ...(viewSource   !== undefined ? { viewSource }   : {}),
+        ...(viewSource !== undefined ? { viewSource } : {}),
         ...(editorSource !== undefined ? { editorSource } : {}),
     });
     if (validation.errors.length > 0) {
-        throw new Error(`Validation failed for ${bloc.tag}:\n${validation.errors.map(e => "    • " + e).join("\n")}`);
+        throw new Error(`Validation failed for ${bloc.tag}:\n${validation.errors.map((e) => "    • " + e).join("\n")}`);
     }
 
     let viewJS = "";
     if (!native) {
-        if (!bloc.entry) throw new Error(`Missing view entry for ${bloc.tag}`);
+        if (!bloc.entry) {
+            throw new Error(`Missing view entry for ${bloc.tag}`);
+        }
         viewJS = await buildWithWrapper(
-            bloc.folder, bloc.entry, viewWrapperSrc, `view_${bloc.tag}`,
+            bloc.folder,
+            bloc.entry,
+            viewWrapperSrc,
+            `view_${bloc.tag}`,
             `view for ${bloc.tag}`,
         );
         viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", bloc.tag);
@@ -80,14 +85,22 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
     let editorJS: string | null;
     if (bloc.editorEntry) {
         editorJS = await buildWithWrapper(
-            bloc.folder, bloc.editorEntry, editorWrapperSrc, `editor_${bloc.tag}`,
+            bloc.folder,
+            bloc.editorEntry,
+            editorWrapperSrc,
+            `editor_${bloc.tag}`,
             `editor for ${bloc.tag}`,
         );
     } else if (!native) {
-        if (!bloc.entry) throw new Error(`Missing view entry for ${bloc.tag}`);
+        if (!bloc.entry) {
+            throw new Error(`Missing view entry for ${bloc.tag}`);
+        }
         editorJS = await buildWithWrapper(
-            bloc.folder, bloc.entry, (_spec) => opaqueEditorWrapperSrc(),
-            `opaque_${bloc.tag}`, `opaque editor for ${bloc.tag}`,
+            bloc.folder,
+            bloc.entry,
+            (_spec) => opaqueEditorWrapperSrc(),
+            `opaque_${bloc.tag}`,
+            `opaque editor for ${bloc.tag}`,
         );
     } else {
         throw new Error(`Native bloc "${bloc.tag}" requires an editor entry`);
@@ -97,18 +110,18 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
     const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
 
     editorJS = editorJS
-        .replaceAll("BE5_TAG_TO_BE_REPLACED",   bloc.tag)
+        .replaceAll("BE5_TAG_TO_BE_REPLACED", bloc.tag)
         .replaceAll("BE5_LABEL_TO_BE_REPLACED", jsStringLiteralContent(bloc.label))
         .replaceAll("BE5_GROUP_TO_BE_REPLACED", jsStringLiteralContent(bloc.group))
         .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", jsStringLiteralContent(bloc.description))
         .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral);
 
     return {
-        tag:         bloc.tag,
-        label:       bloc.label,
-        group:       bloc.group,
+        tag: bloc.tag,
+        label: bloc.label,
+        group: bloc.group,
         description: bloc.description,
-        folder:      bloc.folder,
+        folder: bloc.folder,
         viewJS,
         editorJS,
     };
@@ -120,7 +133,9 @@ function jsStringLiteralContent(value: string): string {
 
 async function readDefaultContent(bloc: DevBloc): Promise<string | undefined> {
     const rel = bloc.manifest.defaultContent;
-    if (!rel) return undefined;
+    if (!rel) {
+        return undefined;
+    }
     if (isAbsolute(rel) || rel.includes("\0")) {
         throw new Error(`Invalid defaultContent path for ${bloc.tag}: must be relative`);
     }
@@ -146,7 +161,9 @@ async function buildWithWrapper(
 ): Promise<string> {
     const wrapperPath = join(wrapperFolder, `.__p9r_dev_${slug}_${crypto.randomUUID()}.ts`);
     let rel = relative(wrapperFolder, userEntry).replace(/\\/g, "/");
-    if (!rel.startsWith(".")) rel = "./" + rel;
+    if (!rel.startsWith(".")) {
+        rel = "./" + rel;
+    }
 
     try {
         await writeFile(wrapperPath, wrapperSrc(rel));
@@ -159,12 +176,14 @@ async function buildWithWrapper(
 export async function buildAllDevBlocs(blocs: DevBloc[]): Promise<Map<string, BuiltBloc>> {
     const results = new Map<string, BuiltBloc>();
 
-    const builds = await Promise.allSettled(blocs.map(b => buildDevBloc(b)));
+    const builds = await Promise.allSettled(blocs.map((b) => buildDevBloc(b)));
 
     builds.forEach((outcome, i) => {
         const source = blocs[i]!;
         if (outcome.status === "rejected") {
-            console.error(`[build] ${source.tag}: ${outcome.reason instanceof Error ? outcome.reason.message : outcome.reason}`);
+            console.error(
+                `[build] ${source.tag}: ${outcome.reason instanceof Error ? outcome.reason.message : outcome.reason}`,
+            );
             return;
         }
         const built = outcome.value;
@@ -192,7 +211,9 @@ async function runBuild(entry: string, label: string): Promise<string> {
 }
 
 function formatError(e: unknown): string {
-    if (e instanceof AggregateError) return e.errors.map(formatError).join("\n");
+    if (e instanceof AggregateError) {
+        return e.errors.map(formatError).join("\n");
+    }
     const msg = (e as any)?.message ?? String(e);
     const pos = (e as any)?.position;
     const where = pos?.file ? `\n      at ${pos.file}:${pos.line ?? 0}:${pos.column ?? 0}` : "";
@@ -200,6 +221,8 @@ function formatError(e: unknown): string {
 }
 
 function formatLogs(logs: unknown[]): string {
-    if (!logs || logs.length === 0) return "  (no details from Bun.build)";
+    if (!logs || logs.length === 0) {
+        return "  (no details from Bun.build)";
+    }
     return logs.map(formatError).join("\n");
 }

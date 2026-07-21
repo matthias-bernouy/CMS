@@ -1,8 +1,4 @@
-import type {
-    CmsSourceStateForce,
-    EditorCatalog,
-    EditorDocument,
-} from "@bernouy/cms-content/editor";
+import type { CmsSourceStateForce, EditorCatalog, EditorDocument } from "@bernouy/cms-content/editor";
 
 import type { EditorRuntime, EditorDataSource } from "../../../../../../runtime";
 import type { TopBarEditorMode, TopBarViewport } from "../../../../TopBar/TopBar";
@@ -28,17 +24,17 @@ export type ShellState = {
 
 export function createShellState(): ShellState {
     return {
-        catalog:                  [],
-        dataSources:              [],
+        catalog: [],
+        dataSources: [],
         defaultTemplateSelection: {},
-        insertItems:              [],
-        runtime:                  null,
-        editorDocument:           null,
-        settingsMode:             "settings",
-        viewport:                 "bleed",
-        editorMode:               "edit",
-        sourceStateForce:         "loading",
-        pageConfig:               null,
-        chromeSyncPending:        false,
+        insertItems: [],
+        runtime: null,
+        editorDocument: null,
+        settingsMode: "settings",
+        viewport: "bleed",
+        editorMode: "edit",
+        sourceStateForce: "loading",
+        pageConfig: null,
+        chromeSyncPending: false,
     };
 }

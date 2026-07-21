@@ -4,7 +4,7 @@ import type { ConditionPickerCondition, ConditionPickerSource } from "./types";
 const STATES: CmsSourceState[] = ["loaded", "loading", "empty", "error"];
 
 export function sourceStateKey(sources: ConditionPickerSource[], editor: Editor, state: CmsSourceState): string {
-    return `${sources.findIndex(source => source.editor === editor)}:${state}`;
+    return `${sources.findIndex((source) => source.editor === editor)}:${state}`;
 }
 
 export function renderSourceStateMode(options: {
@@ -43,28 +43,39 @@ export function selectedSourceConditions(
     return conditions;
 }
 
-function renderSource(source: ConditionPickerSource, options: {
-    sources: ConditionPickerSource[];
-    selected: Set<string>;
-    onChange(): void;
-}): HTMLElement {
+function renderSource(
+    source: ConditionPickerSource,
+    options: {
+        sources: ConditionPickerSource[];
+        selected: Set<string>;
+        onChange(): void;
+    },
+): HTMLElement {
     const section = document.createElement("section");
     section.className = "source";
     section.append(textBlock("source-title", source.label));
-    if (source.sourceName) section.append(textBlock("source-name", `Source: ${source.sourceName}`));
+    if (source.sourceName) {
+        section.append(textBlock("source-name", `Source: ${source.sourceName}`));
+    }
 
     const states = document.createElement("div");
     states.className = "states";
-    for (const state of STATES) states.append(renderState(source, state, options));
+    for (const state of STATES) {
+        states.append(renderState(source, state, options));
+    }
     section.append(states);
     return section;
 }
 
-function renderState(source: ConditionPickerSource, state: CmsSourceState, options: {
-    sources: ConditionPickerSource[];
-    selected: Set<string>;
-    onChange(): void;
-}): HTMLElement {
+function renderState(
+    source: ConditionPickerSource,
+    state: CmsSourceState,
+    options: {
+        sources: ConditionPickerSource[];
+        selected: Set<string>;
+        onChange(): void;
+    },
+): HTMLElement {
     const key = sourceStateKey(options.sources, source.editor, state);
     const label = document.createElement("label");
     const input = document.createElement("input");

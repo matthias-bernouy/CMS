@@ -9,24 +9,38 @@ export function setupDragDrop(s: ShadowRoot, callbacks: DragDropCallbacks) {
     let internalDrag = false;
 
     fileInput.addEventListener("change", () => {
-        if (fileInput.files?.length) callbacks.onFiles(fileInput.files);
+        if (fileInput.files?.length) {
+            callbacks.onFiles(fileInput.files);
+        }
     });
 
-    s.getElementById("grid")!.addEventListener("dragstart", () => { internalDrag = true; });
-    document.addEventListener("dragend", () => { internalDrag = false; });
+    s.getElementById("grid")!.addEventListener("dragstart", () => {
+        internalDrag = true;
+    });
+    document.addEventListener("dragend", () => {
+        internalDrag = false;
+    });
 
     document.addEventListener("dragenter", (e) => {
         e.preventDefault();
-        if (internalDrag) return;
+        if (internalDrag) {
+            return;
+        }
         dragCounter++;
-        if (dragCounter === 1) dropOverlay.classList.add("visible");
+        if (dragCounter === 1) {
+            dropOverlay.classList.add("visible");
+        }
     });
 
     document.addEventListener("dragleave", (e) => {
         e.preventDefault();
-        if (internalDrag) return;
+        if (internalDrag) {
+            return;
+        }
         dragCounter--;
-        if (dragCounter === 0) dropOverlay.classList.remove("visible");
+        if (dragCounter === 0) {
+            dropOverlay.classList.remove("visible");
+        }
     });
 
     document.addEventListener("dragover", (e) => e.preventDefault());
@@ -35,13 +49,18 @@ export function setupDragDrop(s: ShadowRoot, callbacks: DragDropCallbacks) {
         e.preventDefault();
         dragCounter = 0;
         dropOverlay.classList.remove("visible");
-        if (internalDrag) { internalDrag = false; return; }
-        if (e.dataTransfer?.files.length) callbacks.onFiles(e.dataTransfer.files);
+        if (internalDrag) {
+            internalDrag = false;
+            return;
+        }
+        if (e.dataTransfer?.files.length) {
+            callbacks.onFiles(e.dataTransfer.files);
+        }
     });
 
     return {
         trigger() {
             fileInput.click();
-        }
+        },
     };
 }

@@ -24,7 +24,9 @@ function walk(
     fields: FlattenedDataShapeField[],
 ): void {
     if (isScalar(shape)) {
-        if (!path) return;
+        if (!path) {
+            return;
+        }
         fields.push({
             path,
             shape,
@@ -42,7 +44,9 @@ function walk(
         return;
     }
 
-    if (shape.type !== "object") return;
+    if (shape.type !== "object") {
+        return;
+    }
 
     const requiredProperties = new Set(shape.required ?? []);
     for (const [name, child] of Object.entries(shape.properties ?? {})) {
@@ -56,7 +60,11 @@ function isScalar(shape: DataShape): boolean {
 }
 
 function inputType(shape: DataShape): FlattenedInputType {
-    if (shape.type === "number") return "number";
-    if (shape.type === "boolean") return "boolean";
+    if (shape.type === "number") {
+        return "number";
+    }
+    if (shape.type === "boolean") {
+        return "boolean";
+    }
     return "text";
 }

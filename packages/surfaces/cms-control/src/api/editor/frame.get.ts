@@ -28,26 +28,25 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${document.content}</div>`;
     const composed = hardenStoredHtml(content);
 
-    return new Response(renderFrameDocument({
-        basePath,
-        title: document.name,
-        description: document.description ?? "",
-        composed,
-    }), {
-        headers: {
-            "Content-Type": "text/html; charset=utf-8",
+    return new Response(
+        renderFrameDocument({
+            basePath,
+            title: document.name,
+            description: document.description ?? "",
+            composed,
+        }),
+        {
+            headers: {
+                "Content-Type": "text/html; charset=utf-8",
+            },
         },
-    });
+    );
 }
 
 async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
     const id = url.searchParams.get("id");
     const path = url.searchParams.get("path");
-    const page = id
-        ? await cms.repository.getPageById(id)
-        : path
-        ? await cms.repository.getPage(path)
-        : null;
+    const page = id ? await cms.repository.getPageById(id) : path ? await cms.repository.getPage(path) : null;
 
     if (!page) {
         return redirectToPages(url);
@@ -58,20 +57,25 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
     const composed = wrapBindingCore(content);
     const hardened = hardenStoredHtml(composed);
 
-    return new Response(renderFrameDocument({
-        basePath,
-        title: page.title,
-        description: page.description,
-        composed: hardened,
-    }), {
-        headers: {
-            "Content-Type": "text/html; charset=utf-8",
+    return new Response(
+        renderFrameDocument({
+            basePath,
+            title: page.title,
+            description: page.description,
+            composed: hardened,
+        }),
+        {
+            headers: {
+                "Content-Type": "text/html; charset=utf-8",
+            },
         },
-    });
+    );
 }
 
 function frameType(value: string | null): EditorFrameType {
-    if (value === "template") return value;
+    if (value === "template") {
+        return value;
+    }
     return "page";
 }
 
@@ -109,8 +113,12 @@ function withEditorBindingCore(composed: string): string {
 
     return composed.replace(new RegExp(`<${CMS_BINDING_CORE_TAG}\\b([^>]*)>`, "i"), (_match, attrs: string) => {
         let nextAttrs = attrs;
-        if (!hasAttribute(nextAttrs, CMS_BINDING_ATTRIBUTES.bindingDisabled)) nextAttrs += ` ${CMS_BINDING_ATTRIBUTES.bindingDisabled}`;
-        if (!hasAttribute(nextAttrs, forceAttr)) nextAttrs += ` ${forceAttr}="loading"`;
+        if (!hasAttribute(nextAttrs, CMS_BINDING_ATTRIBUTES.bindingDisabled)) {
+            nextAttrs += ` ${CMS_BINDING_ATTRIBUTES.bindingDisabled}`;
+        }
+        if (!hasAttribute(nextAttrs, forceAttr)) {
+            nextAttrs += ` ${forceAttr}="loading"`;
+        }
         return `<${CMS_BINDING_CORE_TAG}${nextAttrs}>`;
     });
 }
@@ -134,11 +142,13 @@ function redirectToListing(url: URL, type: EditorFrameType): Response {
 function controlBasePath(pathname: string): string {
     const marker = "/api/editor/frame";
     const index = pathname.indexOf(marker);
-    if (index <= 0) return "";
+    if (index <= 0) {
+        return "";
+    }
 
     return pathname.slice(0, index);
 }
 
 function escapeHtml(value: string): string {
-    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;");
+    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }

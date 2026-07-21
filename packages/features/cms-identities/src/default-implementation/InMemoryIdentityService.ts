@@ -23,7 +23,9 @@ export class InMemoryIdentityService implements IdentityService {
         const subject = normalizeIdentitySubjectId(subjectId);
         const alias = normalizeBindableIdentityAlias(candidate);
         const existingSubject = this.subjectByAlias.get(aliasKey(alias));
-        if (existingSubject !== undefined && existingSubject !== subject) throw new IdentityAliasConflictError();
+        if (existingSubject !== undefined && existingSubject !== subject) {
+            throw new IdentityAliasConflictError();
+        }
 
         const subjectKey = subjectAuthorityKey(subject, alias);
         const existingAlias = this.aliasBySubjectAuthority.get(subjectKey);
@@ -38,17 +40,26 @@ export class InMemoryIdentityService implements IdentityService {
     async resolve(candidate: IdentityAlias, candidateTargetAuthority: string): Promise<IdentityValue | null> {
         const alias = normalizeIdentityAlias(candidate);
         const targetAuthority = normalizeTargetAuthority(candidateTargetAuthority);
-        const cmsSubjectId = alias.authority === CMS_IDENTITY_AUTHORITY
-            ? normalizeCmsIdentitySubjectId(alias.value)
-            : undefined;
-        if (alias.authority === targetAuthority) return cmsSubjectId ?? alias.value;
+        const cmsSubjectId =
+            alias.authority === CMS_IDENTITY_AUTHORITY ? normalizeCmsIdentitySubjectId(alias.value) : undefined;
+        if (alias.authority === targetAuthority) {
+            return cmsSubjectId ?? alias.value;
+        }
 
         const subjectId = cmsSubjectId ?? this.subjectByAlias.get(aliasKey(alias));
-        if (!subjectId) return null;
-        if (targetAuthority === CMS_IDENTITY_AUTHORITY) return subjectId;
-        return this.aliasBySubjectAuthority.get(subjectAuthorityKey(subjectId, {
-            authority: targetAuthority,
-            kind: alias.kind,
-        })) ?? null;
+        if (!subjectId) {
+            return null;
+        }
+        if (targetAuthority === CMS_IDENTITY_AUTHORITY) {
+            return subjectId;
+        }
+        return (
+            this.aliasBySubjectAuthority.get(
+                subjectAuthorityKey(subjectId, {
+                    authority: targetAuthority,
+                    kind: alias.kind,
+                }),
+            ) ?? null
+        );
     }
 }

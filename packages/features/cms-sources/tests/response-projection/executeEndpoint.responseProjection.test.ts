@@ -1,7 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import {
-    executeEndpoint,
-} from "cms-sources/core/executeEndpoint";
+import { executeEndpoint } from "cms-sources/core/executeEndpoint";
 import type { ResponseProjectionEvent } from "cms-sources/core/response-projection/projectEndpointResponse";
 import { ep } from "../helpers/executeEndpointFixtures";
 
@@ -19,16 +17,20 @@ describe("executeEndpoint response projection integration", () => {
             event = reported;
             throw new Error("observer failure must be neutral");
         });
-        const response = await executeEndpoint(ep({
-            output: undefined,
-            targetUrl: "https://api.example.com/private?token=secret",
-            headers: [{ name: "Authorization", source: { from: "static", value: "Bearer secret" } }],
-        }), new Request("http://local.test/source?private=value", {
-            headers: { cookie: "session=secret" },
-        }), {
-            fetchImpl: mock(async () => upstream),
-            reportResponseProjectionEvent,
-        });
+        const response = await executeEndpoint(
+            ep({
+                output: undefined,
+                targetUrl: "https://api.example.com/private?token=secret",
+                headers: [{ name: "Authorization", source: { from: "static", value: "Bearer secret" } }],
+            }),
+            new Request("http://local.test/source?private=value", {
+                headers: { cookie: "session=secret" },
+            }),
+            {
+                fetchImpl: mock(async () => upstream),
+                reportResponseProjectionEvent,
+            },
+        );
 
         expect(response.status).toBe(201);
         expect(response.body).not.toBeNull();
@@ -72,15 +74,24 @@ describe("executeEndpoint response projection integration", () => {
 
     test("preserves an unmatched status in compatibility mode and reports it", async () => {
         let event: ResponseProjectionEvent | undefined;
-        const response = await executeEndpoint(ep({
-            output: [{ status: "200", body: { type: "object" } }],
-        }), new Request("http://local.test/source"), {
-            fetchImpl: mock(async () => new Response(JSON.stringify({ error: "invalid input" }), {
-                status: 400,
-                headers: { "content-type": "application/json" },
-            })),
-            reportResponseProjectionEvent: (reported) => { event = reported; },
-        });
+        const response = await executeEndpoint(
+            ep({
+                output: [{ status: "200", body: { type: "object" } }],
+            }),
+            new Request("http://local.test/source"),
+            {
+                fetchImpl: mock(
+                    async () =>
+                        new Response(JSON.stringify({ error: "invalid input" }), {
+                            status: 400,
+                            headers: { "content-type": "application/json" },
+                        }),
+                ),
+                reportResponseProjectionEvent: (reported) => {
+                    event = reported;
+                },
+            },
+        );
 
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "invalid input" });
@@ -95,14 +106,20 @@ describe("executeEndpoint response projection integration", () => {
     test("reports a media mismatch, cancels upstream, and correlates the generic error", async () => {
         let cancelled = false;
         let event: ResponseProjectionEvent | undefined;
-        const fetchImpl = mock(async () => new Response(new ReadableStream<Uint8Array>({
-            start(controller) {
-                controller.enqueue(new TextEncoder().encode("sensitive upstream payload"));
-            },
-            cancel() {
-                cancelled = true;
-            },
-        }), { headers: { "content-type": "text/plain" } }));
+        const fetchImpl = mock(
+            async () =>
+                new Response(
+                    new ReadableStream<Uint8Array>({
+                        start(controller) {
+                            controller.enqueue(new TextEncoder().encode("sensitive upstream payload"));
+                        },
+                        cancel() {
+                            cancelled = true;
+                        },
+                    }),
+                    { headers: { "content-type": "text/plain" } },
+                ),
+        );
         const reportResponseProjectionEvent = mock((reported: ResponseProjectionEvent) => {
             event = reported;
         });
@@ -132,36 +149,58 @@ describe("executeEndpoint response projection integration", () => {
     });
 
     test("projects declared JSON through the executor", async () => {
-        const response = await executeEndpoint(ep({
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: { publicName: { type: "string" } },
-                },
-            }],
-        }), new Request("http://local.test/source"), {
-            fetchImpl: mock(async () => new Response(JSON.stringify({
-                publicName: "Ada",
-                accessToken: "must-not-leak",
-            }), { headers: { "content-type": "application/json" } })),
-        });
+        const response = await executeEndpoint(
+            ep({
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: { publicName: { type: "string" } },
+                        },
+                    },
+                ],
+            }),
+            new Request("http://local.test/source"),
+            {
+                fetchImpl: mock(
+                    async () =>
+                        new Response(
+                            JSON.stringify({
+                                publicName: "Ada",
+                                accessToken: "must-not-leak",
+                            }),
+                            { headers: { "content-type": "application/json" } },
+                        ),
+                ),
+            },
+        );
 
         expect(await response.json()).toEqual({ publicName: "Ada" });
     });
 
     test("keeps the timeout boundary around a declared response body", async () => {
-        const fetchImpl = mock(async () => new Response(new ReadableStream<Uint8Array>({
-            pull(controller) {
-                const error = new Error("response body timed out");
-                error.name = "AbortError";
-                controller.error(error);
-            },
-        }), { headers: { "content-type": "application/json" } }));
+        const fetchImpl = mock(
+            async () =>
+                new Response(
+                    new ReadableStream<Uint8Array>({
+                        pull(controller) {
+                            const error = new Error("response body timed out");
+                            error.name = "AbortError";
+                            controller.error(error);
+                        },
+                    }),
+                    { headers: { "content-type": "application/json" } },
+                ),
+        );
 
-        const response = await executeEndpoint(ep({
-            output: [{ status: "200", body: { type: "object" } }],
-        }), new Request("http://local.test/source"), { fetchImpl });
+        const response = await executeEndpoint(
+            ep({
+                output: [{ status: "200", body: { type: "object" } }],
+            }),
+            new Request("http://local.test/source"),
+            { fetchImpl },
+        );
 
         expect(response.status).toBe(504);
         expect(await response.text()).toBe("Source Timeout");

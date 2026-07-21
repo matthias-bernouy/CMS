@@ -12,7 +12,10 @@ const SAVED_EVENT = "secret:saved";
 
 export async function fetchKeys(api: string): Promise<string[]> {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
-    if (!res.ok) { showToast("Failed to load credentials", { type: "error" }); return []; }
+    if (!res.ok) {
+        showToast("Failed to load credentials", { type: "error" });
+        return [];
+    }
     return res.json();
 }
 
@@ -33,7 +36,11 @@ export async function createCredential(
     let error = `HTTP ${res.status}`;
     try {
         const body = await res.json();
-        if (body && typeof body.error === "string") error = body.error;
-    } catch { /* not JSON */ }
+        if (body && typeof body.error === "string") {
+            error = body.error;
+        }
+    } catch {
+        /* not JSON */
+    }
     return { ok: false, error };
 }

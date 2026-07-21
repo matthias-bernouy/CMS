@@ -1,33 +1,33 @@
 import type { AuthEmailRecipient, Emailer, OutboundEmail } from "cms-auth/interfaces/Emailer";
 
 export type SmtpEmailerConfig = {
-    host:      string;
-    port:      number;
-    secure:    boolean;
-    username:  string;
-    password:  string;
+    host: string;
+    port: number;
+    secure: boolean;
+    username: string;
+    password: string;
     fromEmail: string;
     fromName?: string;
-    replyTo?:  string;
+    replyTo?: string;
     transportFactory?: SmtpTransportFactory;
 };
 
 export type SmtpTransportConfig = {
-    host:   string;
-    port:   number;
+    host: string;
+    port: number;
     secure: boolean;
-    auth:   {
+    auth: {
         user: string;
         pass: string;
     };
 };
 
 export type SmtpSendMailInput = {
-    from:     string;
-    to:       string;
-    subject:  string;
-    text:     string;
-    html?:    string;
+    from: string;
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
     replyTo?: string;
 };
 
@@ -43,34 +43,38 @@ export class SmtpEmailer implements Emailer {
     async send(input: OutboundEmail): Promise<void> {
         const transport = await this.createTransport();
         await transport.sendMail({
-            from:     formatMailbox({ email: this.config.fromEmail, displayName: this.config.fromName }),
-            to:       formatMailbox(input.to),
-            subject:  input.subject,
-            text:     input.text,
-            html:     input.html,
-            replyTo:  this.config.replyTo || undefined,
+            from: formatMailbox({ email: this.config.fromEmail, displayName: this.config.fromName }),
+            to: formatMailbox(input.to),
+            subject: input.subject,
+            text: input.text,
+            html: input.html,
+            replyTo: this.config.replyTo || undefined,
         });
     }
 
     private async createTransport(): Promise<SmtpTransport> {
         const transportConfig: SmtpTransportConfig = {
-            host:   this.config.host,
-            port:   this.config.port,
+            host: this.config.host,
+            port: this.config.port,
             secure: this.config.secure,
-            auth:   {
+            auth: {
                 user: this.config.username,
                 pass: this.config.password,
             },
         };
-        if (this.config.transportFactory) return this.config.transportFactory(transportConfig);
+        if (this.config.transportFactory) {
+            return this.config.transportFactory(transportConfig);
+        }
         return createNodemailerTransport(transportConfig);
     }
 }
 
 async function createNodemailerTransport(config: SmtpTransportConfig): Promise<SmtpTransport> {
-    const nodemailer = await import("nodemailer") as NodemailerModule;
+    const nodemailer = (await import("nodemailer")) as NodemailerModule;
     const createTransport = nodemailer.createTransport ?? nodemailer.default?.createTransport;
-    if (!createTransport) throw new Error("nodemailer.createTransport is not available.");
+    if (!createTransport) {
+        throw new Error("nodemailer.createTransport is not available.");
+    }
     return createTransport(config) as SmtpTransport;
 }
 
@@ -83,6 +87,8 @@ type NodemailerModule = {
 
 function formatMailbox(input: AuthEmailRecipient): string {
     const name = input.displayName?.trim();
-    if (!name) return input.email;
+    if (!name) {
+        return input.email;
+    }
     return `"${name.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}" <${input.email}>`;
 }

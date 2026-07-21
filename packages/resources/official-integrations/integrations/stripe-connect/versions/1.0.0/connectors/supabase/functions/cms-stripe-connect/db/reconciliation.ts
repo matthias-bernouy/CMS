@@ -44,9 +44,7 @@ export type FinancialOperationRecoveryContext = {
     refund: JsonRecord | null;
 };
 
-export async function readReconciliationOperations(
-    limit: number,
-): Promise<ReconciliationOperationRead[]> {
+export async function readReconciliationOperations(limit: number): Promise<ReconciliationOperationRead[]> {
     return await callRpcRows<ReconciliationOperationRead>("read_reconciliation_operations", {
         p_limit: limit,
     });
@@ -62,31 +60,26 @@ export async function claimReconciliationProjectionBatch(
     });
 }
 
-export async function readPaymentReconciliationLedger(
-    paymentId: number,
-): Promise<PaymentReconciliationLedgerRead> {
-    return await callRpcObject<PaymentReconciliationLedgerRead>(
-        "read_payment_reconciliation_ledger",
-        { p_payment_id: paymentId },
-    );
+export async function readPaymentReconciliationLedger(paymentId: number): Promise<PaymentReconciliationLedgerRead> {
+    return await callRpcObject<PaymentReconciliationLedgerRead>("read_payment_reconciliation_ledger", {
+        p_payment_id: paymentId,
+    });
 }
 
 export async function readPaymentReconciliationLocalContext(
     paymentId: number,
 ): Promise<PaymentReconciliationLocalContext> {
-    return await callRpcObject<PaymentReconciliationLocalContext>(
-        "read_payment_reconciliation_local_context",
-        { p_payment_id: paymentId },
-    );
+    return await callRpcObject<PaymentReconciliationLocalContext>("read_payment_reconciliation_local_context", {
+        p_payment_id: paymentId,
+    });
 }
 
 export async function readProviderTransferReconciliationContext(
     stripeTransferId: string,
 ): Promise<ProviderTransferReconciliationContext> {
-    return await callRpcObject<ProviderTransferReconciliationContext>(
-        "read_provider_transfer_reconciliation_context",
-        { p_stripe_transfer_id: stripeTransferId },
-    );
+    return await callRpcObject<ProviderTransferReconciliationContext>("read_provider_transfer_reconciliation_context", {
+        p_stripe_transfer_id: stripeTransferId,
+    });
 }
 
 export async function readFinancialOperationRecoveryContext(
@@ -94,20 +87,14 @@ export async function readFinancialOperationRecoveryContext(
     operationId: number,
     recoveryRequestId: string | null,
 ): Promise<FinancialOperationRecoveryContext> {
-    return await callRpcObject<FinancialOperationRecoveryContext>(
-        "read_financial_operation_recovery_context",
-        {
-            p_payment_id: paymentId,
-            p_operation_id: operationId,
-            p_recovery_request_id: recoveryRequestId,
-        },
-    );
+    return await callRpcObject<FinancialOperationRecoveryContext>("read_financial_operation_recovery_context", {
+        p_payment_id: paymentId,
+        p_operation_id: operationId,
+        p_recovery_request_id: recoveryRequestId,
+    });
 }
 
-export async function resolveProviderExceptionRow(
-    deduplicationKey: string,
-    resolvedAt: string,
-): Promise<void> {
+export async function resolveProviderExceptionRow(deduplicationKey: string, resolvedAt: string): Promise<void> {
     const query = new URLSearchParams();
     query.set("deduplication_key", `eq.${deduplicationKey}`);
     query.set("status", "neq.resolved");
@@ -123,5 +110,7 @@ export async function resolveProviderExceptionRow(
             resolved_by: "provider-reconciliation",
         }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
 }

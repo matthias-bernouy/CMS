@@ -34,9 +34,7 @@ describe("package coverage comparison", () => {
             "example",
         );
 
-        expect(regressions).toContain(
-            "example: covered source disappeared: packages/features/example/src/covered.ts",
-        );
+        expect(regressions).toContain("example: covered source disappeared: packages/features/example/src/covered.ts");
         expect(regressions).toContain("example: newly uncovered source: packages/features/example/src/new.ts");
     });
 
@@ -56,20 +54,21 @@ describe("package coverage comparison", () => {
             "M\tpackages/features/example/src/modified.ts",
         ].join("\n");
         const removed = parseRemovedOrRenamedPaths(changes);
-        expect(removed).toEqual(new Set([
-            "packages/features/example/src/covered.ts",
-            "packages/features/example/src/old.ts",
-        ]));
-        expect(comparePackageCoverage(
-            packageCoverage(),
-            packageCoverage({
-                coveredSourceFiles: [],
-                uncoveredSourceFiles: ["packages/features/example/src/uncovered.ts"],
-                files: { covered: 0, total: 1 },
-            }),
-            "example",
-            removed,
-        )).not.toContain("example: covered source disappeared: packages/features/example/src/covered.ts");
+        expect(removed).toEqual(
+            new Set(["packages/features/example/src/covered.ts", "packages/features/example/src/old.ts"]),
+        );
+        expect(
+            comparePackageCoverage(
+                packageCoverage(),
+                packageCoverage({
+                    coveredSourceFiles: [],
+                    uncoveredSourceFiles: ["packages/features/example/src/uncovered.ts"],
+                    files: { covered: 0, total: 1 },
+                }),
+                "example",
+                removed,
+            ),
+        ).not.toContain("example: covered source disappeared: packages/features/example/src/covered.ts");
     });
 
     test("preserves uncovered state across a Git rename without hiding a covered-to-uncovered regression", () => {
@@ -108,21 +107,19 @@ describe("package coverage comparison", () => {
     });
 
     test("allows a package to leave the baseline only with a deleted or renamed manifest", () => {
-        expect(isPackageRemovalAllowed(
-            "packages/features/example",
-            new Set(["packages/features/example/package.json"]),
-        )).toBeTrue();
-        expect(isPackageRemovalAllowed(
-            "packages/features/example",
-            new Set(["packages/features/example/src/index.ts"]),
-        )).toBeFalse();
-        expect(comparePackageCoverage(
-            packageCoverage(),
-            packageCoverage({ path: "packages/features/renamed-example" }),
-            "example",
-            new Set(["packages/features/example/package.json"]),
-        )).not.toContain(
-            "example: path changed from packages/features/example to packages/features/renamed-example",
-        );
+        expect(
+            isPackageRemovalAllowed("packages/features/example", new Set(["packages/features/example/package.json"])),
+        ).toBeTrue();
+        expect(
+            isPackageRemovalAllowed("packages/features/example", new Set(["packages/features/example/src/index.ts"])),
+        ).toBeFalse();
+        expect(
+            comparePackageCoverage(
+                packageCoverage(),
+                packageCoverage({ path: "packages/features/renamed-example" }),
+                "example",
+                new Set(["packages/features/example/package.json"]),
+            ),
+        ).not.toContain("example: path changed from packages/features/example to packages/features/renamed-example");
     });
 });

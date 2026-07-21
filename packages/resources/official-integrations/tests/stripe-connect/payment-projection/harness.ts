@@ -25,12 +25,7 @@ export type PaymentProjectionHarness = {
         clearStripeRequests(): void;
     };
     request(userId: string, endpoint: string, params?: Record<string, string>): Promise<Response>;
-    submit(
-        userId: string,
-        endpoint: string,
-        body: unknown,
-        params?: Record<string, string>,
-    ): Promise<Response>;
+    submit(userId: string, endpoint: string, body: unknown, params?: Record<string, string>): Promise<Response>;
 };
 
 export type CreatePaymentProjectionHarness = () => Promise<PaymentProjectionHarness>;
@@ -52,16 +47,16 @@ export async function createPaymentProjectionFixture(
     clientReferenceId: string,
 ): Promise<PaymentProjectionFixture> {
     const harness = await createHarness();
-    await successfulJson(await harness.submit(
-        sellerUserId,
-        "createConnectOnboardingSessionForUser",
-        { email: "projection-seller@example.test" },
-        { userId: sellerUserId },
-    ));
-    const created = await successfulJson(await harness.submit(
-        buyerUserId,
-        "createProtectedPayment",
-        {
+    await successfulJson(
+        await harness.submit(
+            sellerUserId,
+            "createConnectOnboardingSessionForUser",
+            { email: "projection-seller@example.test" },
+            { userId: sellerUserId },
+        ),
+    );
+    const created = await successfulJson(
+        await harness.submit(buyerUserId, "createProtectedPayment", {
             sellerUserId,
             amountTotal: 1200,
             sellerTransferAmount: 1080,
@@ -71,8 +66,8 @@ export async function createPaymentProjectionFixture(
             financialRevision: 1,
             dualApprovalThresholdAmount: 1000,
             description: "Projection order",
-        },
-    ));
+        }),
+    );
     const paymentId = Number(created.paymentId);
     const paymentIntentId = String(created.stripePaymentIntentId);
     if (!Number.isSafeInteger(paymentId) || !paymentIntentId.startsWith("pi_")) {
@@ -83,11 +78,7 @@ export async function createPaymentProjectionFixture(
         clientReferenceId,
         paymentId,
         paymentIntentId,
-        read: async () => await harness.request(
-            buyerUserId,
-            "getProtectedPayment",
-            { paymentId: String(paymentId) },
-        ),
+        read: async () => await harness.request(buyerUserId, "getProtectedPayment", { paymentId: String(paymentId) }),
         resetRequests() {
             harness.rest.clearPostgrestRequests();
             harness.rest.clearStripeRequests();
@@ -110,13 +101,11 @@ export async function successfulJson(response: Response): Promise<JsonRecord> {
 }
 
 export function postgrestCalls(fixture: PaymentProjectionFixture): Array<[string, string]> {
-    return fixture.rest.postgrestRequests.map(request => [request.method, request.table]);
+    return fixture.rest.postgrestRequests.map((request) => [request.method, request.table]);
 }
 
 export async function transferGroup(clientReferenceId: string): Promise<string> {
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(clientReferenceId));
-    const hex = [...new Uint8Array(digest)]
-        .map(byte => byte.toString(16).padStart(2, "0"))
-        .join("");
+    const hex = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
     return `cms_order_${hex}`;
 }

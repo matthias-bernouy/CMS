@@ -46,15 +46,17 @@ describe("FsIntegrationDefinitionRepository", () => {
         const stableRepo = new FsIntegrationDefinitionRepository(root);
         const latestRepo = new FsIntegrationDefinitionRepository({ root, defaultChannel: "latest" });
 
-        expect(await stableRepo.list()).toEqual([{
-            schema: "cms.integration.index.v1",
-            kind: "demo",
-            label: "Demo",
-            category: "Testing",
-            stable: "1.0.0",
-            latest: "1.0.1",
-            versions: ["1.0.0", "1.0.1"],
-        }]);
+        expect(await stableRepo.list()).toEqual([
+            {
+                schema: "cms.integration.index.v1",
+                kind: "demo",
+                label: "Demo",
+                category: "Testing",
+                stable: "1.0.0",
+                latest: "1.0.1",
+                versions: ["1.0.0", "1.0.1"],
+            },
+        ]);
         expect((await stableRepo.get("demo"))?.version).toBe("1.0.0");
         expect((await latestRepo.get("demo"))?.version).toBe("1.0.1");
         expect((await stableRepo.get("demo", "1.0.1"))?.description).toBe("Patch release");
@@ -69,9 +71,7 @@ describe("FsIntegrationDefinitionRepository", () => {
         writeJson(join(integrationRoot, "integration.json"), {
             kind: "minimal",
             label: "Minimal",
-            versions: [
-                { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
-            ],
+            versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
         });
         writeJson(join(integrationRoot, "versions", "1.0.0", "definition.json"), {
             kind: "minimal",
@@ -95,25 +95,28 @@ describe("FsIntegrationDefinitionRepository", () => {
             kind: "bloc-pack",
             label: "Bloc Pack",
             stable: "1.0.0",
-            versions: [
-                { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
-            ],
+            versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
         });
         writeJson(join(versionRoot, "definition.json"), {
             kind: "bloc-pack",
             label: "Bloc Pack",
             version: "1.0.0",
             inputs: [],
-            artifacts: [{
-                type: "bloc",
-                bloc: {
-                    tag: "demo-card",
-                    name: "Demo card",
-                    path: "blocs/demo-card",
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "demo-card",
+                        name: "Demo card",
+                        path: "blocs/demo-card",
+                    },
                 },
-            }],
+            ],
         });
-        writeFileSync(join(blocRoot, "Bloc.ts"), `customElements.define("BE5_TAG_TO_BE_REPLACED", class extends HTMLElement {});`);
+        writeFileSync(
+            join(blocRoot, "Bloc.ts"),
+            `customElements.define("BE5_TAG_TO_BE_REPLACED", class extends HTMLElement {});`,
+        );
         writeFileSync(join(blocRoot, "default.html"), `<demo-card></demo-card>`);
         writeJson(join(blocRoot, "manifest.json"), { defaultContent: "./default.html" });
 
@@ -122,7 +125,9 @@ describe("FsIntegrationDefinitionRepository", () => {
         const artifact = definition?.artifacts?.[0];
 
         expect(artifact?.type).toBe("bloc");
-        if (artifact?.type !== "bloc") throw new Error("expected bloc artifact");
+        if (artifact?.type !== "bloc") {
+            throw new Error("expected bloc artifact");
+        }
         expect(artifact.bloc.viewJS).toContain("BE5_TAG_TO_BE_REPLACED");
         expect(artifact.bloc.source?.["Bloc.ts"]).toBeTruthy();
         expect(artifact.bloc.source?.["manifest.json"]).toBeTruthy();
@@ -137,9 +142,7 @@ describe("FsIntegrationDefinitionRepository", () => {
             kind: "..foo",
             label: "Dot Foo",
             stable: "1.0.0",
-            versions: [
-                { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
-            ],
+            versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
         });
 
         const repo = new FsIntegrationDefinitionRepository(root);

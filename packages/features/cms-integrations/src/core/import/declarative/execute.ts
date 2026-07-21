@@ -10,14 +10,8 @@ import type {
     IntegrationImportOptions,
     IntegrationImportResult,
 } from "../../../interfaces/IntegrationImport";
-import {
-    writeDeclarativeArtifactStack,
-    type DeclarativeArtifactWriteResults,
-} from "./artifactWriteStack";
-import {
-    applyIntegrationAccessGrants,
-    buildIntegrationAccessGrants,
-} from "./accessGrants";
+import { writeDeclarativeArtifactStack, type DeclarativeArtifactWriteResults } from "./artifactWriteStack";
+import { applyIntegrationAccessGrants, buildIntegrationAccessGrants } from "./accessGrants";
 import {
     buildBlocArtifacts,
     buildDashboardArtifacts,
@@ -36,12 +30,7 @@ import {
     buildInputSecretWrites,
     sensitiveInputs,
 } from "./secrets";
-import {
-    buildDashboardWrites,
-    buildFunctionWrites,
-    buildSourceWrites,
-    importBlocArtifacts,
-} from "./writeBuilders";
+import { buildDashboardWrites, buildFunctionWrites, buildSourceWrites, importBlocArtifacts } from "./writeBuilders";
 import { buildSourceOverlayWrites } from "./sourceOverlayWriteBuilders";
 import { buildTriggerWrites } from "./triggerWriteBuilders";
 
@@ -51,7 +40,9 @@ export async function executeDeclarativeIntegration<T>(
     answers: TemplateContext["answers"],
     options: IntegrationImportOptions,
     commit?: (result: IntegrationImportResult) => Promise<T>,
-): Promise<{ result: { importResult: IntegrationImportResult } | { importResult: IntegrationImportResult; committed: T } }> {
+): Promise<{
+    result: { importResult: IntegrationImportResult } | { importResult: IntegrationImportResult; committed: T };
+}> {
     const dependencies = await resolveDependencyContext(definition, deps.installations);
     const secretInputNames = sensitiveInputs(definition);
     const inputSecretWrites = buildInputSecretWrites(definition.secrets ?? [], answers, secretInputNames);
@@ -60,17 +51,17 @@ export async function executeDeclarativeIntegration<T>(
     assertUniqueSecretWrites(secretWrites);
     const baseContext: TemplateContext = {
         answers,
-        secrets: Object.fromEntries(secretWrites.map(secret => [secret.input, secretKeyToRef(secret.key)])),
+        secrets: Object.fromEntries(secretWrites.map((secret) => [secret.input, secretKeyToRef(secret.key)])),
         dependencies,
-        generated: Object.fromEntries(generatedSecretWrites.map(secret => [secret.input, secret.value])),
+        generated: Object.fromEntries(generatedSecretWrites.map((secret) => [secret.input, secret.value])),
         secretInputs: secretInputNames,
     };
     const connectorDeployments = buildConnectorDeployments(definition, {
         ...baseContext,
-        connectorSecrets: Object.fromEntries(secretWrites.map(secret => [secret.input, secret.value])),
+        connectorSecrets: Object.fromEntries(secretWrites.map((secret) => [secret.input, secret.value])),
     });
 
-    return writeSecretsWithRollback(deps.secrets, secretWrites, async secretResults => {
+    return writeSecretsWithRollback(deps.secrets, secretWrites, async (secretResults) => {
         const connectorDeployResult = await deployConnectorDeployments(deps, connectorDeployments, baseContext);
         const context: TemplateContext = { ...baseContext, connectors: connectorDeployResult.outputs };
         const sourceArtifacts = buildSourceArtifacts(definition, context);
@@ -81,7 +72,7 @@ export async function executeDeclarativeIntegration<T>(
         const dashboardArtifacts = buildDashboardArtifacts(definition, context);
         const dependencySourceIds = new Set(
             Object.values(dependencies)
-                .map(dependency => dependency.sourceId)
+                .map((dependency) => dependency.sourceId)
                 .filter((sourceId): sourceId is string => typeof sourceId === "string"),
         );
         const dashboardWrites = await buildDashboardWrites(
@@ -105,7 +96,7 @@ export async function executeDeclarativeIntegration<T>(
         );
         const blocArtifacts = buildBlocArtifacts(definition, context);
 
-        return writeSourcesWithRollback(deps.sources, sourceWrites, async sourceResults => {
+        return writeSourcesWithRollback(deps.sources, sourceWrites, async (sourceResults) => {
             const functionWrites = await buildFunctionWrites(deps, functionArtifacts, options);
             const triggerWrites = await buildTriggerWrites(deps, triggerArtifacts, options);
             const finish = async (results: DeclarativeArtifactWriteResults) => {
@@ -125,9 +116,7 @@ export async function executeDeclarativeIntegration<T>(
                     ...(secretResults.length ? { secrets: secretResults } : {}),
                     ...(connectorDeployResult.results.length ? { connectors: connectorDeployResult.results } : {}),
                 };
-                return commit
-                    ? { importResult, committed: await commit(importResult) }
-                    : { importResult };
+                return commit ? { importResult, committed: await commit(importResult) } : { importResult };
             };
             return writeDeclarativeArtifactStack({
                 deps,

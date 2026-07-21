@@ -1,10 +1,5 @@
 import type { Source } from "@bernouy/cms-sources";
-import type {
-    DashboardColumn,
-    DashboardDto,
-    DashboardFilter,
-    DashboardWidget,
-} from "../../interfaces/Dashboard";
+import type { DashboardColumn, DashboardDto, DashboardFilter, DashboardWidget } from "../../interfaces/Dashboard";
 import { validateAction } from "./actions";
 import { validateDataRef } from "./endpointRefs";
 import { validateSection } from "./fields";
@@ -39,7 +34,9 @@ export function validateTableWidget(
     if (widget.selection?.opens && !widgetIds.has(widget.selection.opens)) {
         errors.push(`${path}.selection.opens references unknown widget "${widget.selection.opens}"`);
     }
-    widget.actions?.forEach((action, index) => validateAction(action, `${path}.actions.${index}`, dashboard, source, errors));
+    widget.actions?.forEach((action, index) =>
+        validateAction(action, `${path}.actions.${index}`, dashboard, source, errors),
+    );
 }
 
 export function validateDetailWidget(
@@ -53,21 +50,22 @@ export function validateDetailWidget(
     validateBinding(widget.title, `${path}.title`, errors);
     validateBinding(widget.status, `${path}.status`, errors);
     const visibilityFieldIds = detailFieldIds(widget);
-    widget.actions?.forEach((action, index) => validateAction(
-        action,
-        `${path}.actions.${index}`,
-        dashboard,
-        source,
-        errors,
-        visibilityFieldIds,
-    ));
-    if (!Array.isArray(widget.main) || widget.main.length === 0) errors.push(`${path}.main must contain at least one section`);
+    widget.actions?.forEach((action, index) =>
+        validateAction(action, `${path}.actions.${index}`, dashboard, source, errors, visibilityFieldIds),
+    );
+    if (!Array.isArray(widget.main) || widget.main.length === 0) {
+        errors.push(`${path}.main must contain at least one section`);
+    }
     const fieldIds = new Set<string>();
     if (Array.isArray(widget.main)) {
-        widget.main.forEach((section, index) => validateSection(section, `${path}.main.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
+        widget.main.forEach((section, index) =>
+            validateSection(section, `${path}.main.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds),
+        );
     }
     if (Array.isArray(widget.aside)) {
-        widget.aside.forEach((section, index) => validateSection(section, `${path}.aside.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
+        widget.aside.forEach((section, index) =>
+            validateSection(section, `${path}.aside.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds),
+        );
     }
 }
 
@@ -76,10 +74,12 @@ function detailFieldIds(widget: Extract<DashboardWidget, { widget: "w-detail" }>
         ...(Array.isArray(widget.main) ? widget.main : []),
         ...(Array.isArray(widget.aside) ? widget.aside : []),
     ];
-    return new Set(sections
-        .flatMap(section => Array.isArray(section?.fields) ? section.fields : [])
-        .map(field => field?.id)
-        .filter(Boolean));
+    return new Set(
+        sections
+            .flatMap((section) => (Array.isArray(section?.fields) ? section.fields : []))
+            .map((field) => field?.id)
+            .filter(Boolean),
+    );
 }
 
 export function validateNavigationListWidget(
@@ -98,27 +98,44 @@ export function validateNavigationListWidget(
     if (widget.selection?.opens && !widgetIds.has(widget.selection.opens)) {
         errors.push(`${path}.selection.opens references unknown widget "${widget.selection.opens}"`);
     }
-    widget.actions?.forEach((action, index) => validateAction(action, `${path}.actions.${index}`, dashboard, source, errors));
+    widget.actions?.forEach((action, index) =>
+        validateAction(action, `${path}.actions.${index}`, dashboard, source, errors),
+    );
     if (widget.reorderable) {
-        const action = widget.actions?.find(item => item.id === widget.reorderable!.action);
-        if (!action) errors.push(`${path}.reorderable.action references unknown action "${widget.reorderable.action}"`);
-        else if (!action.endpoint) errors.push(`${path}.reorderable.action must declare an endpoint`);
+        const action = widget.actions?.find((item) => item.id === widget.reorderable!.action);
+        if (!action) {
+            errors.push(`${path}.reorderable.action references unknown action "${widget.reorderable.action}"`);
+        } else if (!action.endpoint) {
+            errors.push(`${path}.reorderable.action must declare an endpoint`);
+        }
     }
 }
 
 function validateColumn(column: DashboardColumn, path: string, errors: string[]): void {
     validateRequiredId(`${path}.id`, column.id, errors);
-    if (!column.label) errors.push(`${path}.label is required`);
+    if (!column.label) {
+        errors.push(`${path}.label is required`);
+    }
     validateRequiredPath("path", column.path, path, errors);
-    if (column.format !== undefined && !["text", "badge", "date", "money"].includes(column.format)) errors.push(`${path}.format is not supported`);
+    if (column.format !== undefined && !["text", "badge", "date", "money"].includes(column.format)) {
+        errors.push(`${path}.format is not supported`);
+    }
 }
 
 function validateFilter(filter: DashboardFilter, path: string, errors: string[]): void {
     validateRequiredId(`${path}.id`, filter.id, errors);
-    if (!filter.label) errors.push(`${path}.label is required`);
+    if (!filter.label) {
+        errors.push(`${path}.label is required`);
+    }
     validatePath("path", filter.path, path, errors);
     validateId(`${path}.param`, filter.param, errors);
-    if (!filter.path && !filter.param) errors.push(`${path} must declare path or param`);
-    if (filter.type !== undefined && filter.type !== "text" && filter.type !== "select") errors.push(`${path}.type is not supported`);
-    if (filter.type === "select") validateOptions(filter.options, `${path}.options`, errors);
+    if (!filter.path && !filter.param) {
+        errors.push(`${path} must declare path or param`);
+    }
+    if (filter.type !== undefined && filter.type !== "text" && filter.type !== "select") {
+        errors.push(`${path}.type is not supported`);
+    }
+    if (filter.type === "select") {
+        validateOptions(filter.options, `${path}.options`, errors);
+    }
 }

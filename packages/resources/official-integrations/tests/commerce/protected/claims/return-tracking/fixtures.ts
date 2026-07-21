@@ -63,10 +63,7 @@ export const shipment = {
     lastError: "private provider detail",
 };
 
-export const publicEvents = events.map(({
-    providerEventKey: _providerEventKey,
-    ...event
-}) => event);
+export const publicEvents = events.map(({ providerEventKey: _providerEventKey, ...event }) => event);
 
 export const publicShipment = {
     id: shipment.id,

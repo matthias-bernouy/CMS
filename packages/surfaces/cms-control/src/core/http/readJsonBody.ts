@@ -1,4 +1,4 @@
-import InvalidParam from 'cms-control/errors/Http/InvalidParam';
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /**
  * Parse the request body as JSON. Returns a guaranteed-object value; throws
@@ -7,8 +7,8 @@ import InvalidParam from 'cms-control/errors/Http/InvalidParam';
  */
 export async function readJsonBody(req: Request): Promise<Record<string, unknown>> {
     const body = await req.json().catch(() => null);
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-        throw new InvalidParam('body', 'JSON object expected.');
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+        throw new InvalidParam("body", "JSON object expected.");
     }
     return body as Record<string, unknown>;
 }

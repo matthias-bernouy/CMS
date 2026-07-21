@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({
     type: "color",
@@ -17,9 +12,7 @@ export class CommerceStripePaymentEditor extends Editor {
             {
                 kind: "self",
                 label: "Payment bindings",
-                settings: [
-                    { type: "text", label: "Commerce order id", attribute: "order-id", required: true },
-                ],
+                settings: [{ type: "text", label: "Commerce order id", attribute: "order-id", required: true }],
             },
             {
                 kind: "self",

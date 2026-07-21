@@ -1,6 +1,37 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceStatusCondition, applySourceStatusConditions, asCondition, asFieldCondition, asInterpolation, asRepeat, asSource, asSourceBody, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceBody, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
+import {
+    CMS_BINDING_ATTRIBUTES,
+    CMS_BINDING_CORE_TAG,
+    CMS_BINDING_RUNTIME_ATTRIBUTES,
+    CMS_SOURCE_STATES,
+    CMS_SOURCE_TRIGGERS,
+    applySourceStatusCondition,
+    applySourceStatusConditions,
+    asCondition,
+    asFieldCondition,
+    asInterpolation,
+    asRepeat,
+    asSource,
+    asSourceBody,
+    asSourceStatusCondition,
+    asSourceStatusConditions,
+    clearBindingRuntimeState,
+    clearSourceStatusCondition,
+    isCmsSourceState,
+    isCmsSourceTrigger,
+    isInterpolation,
+    parseCondition,
+    parseInterpolation,
+    parseRepeat,
+    parseSource,
+    parseSourceBody,
+    parseSourceStatusCondition,
+    parseSourceStatusConditionDetails,
+    parseSourceStatusConditions,
+    sourceStatusConditionDetailsFromElement,
+    sourceStatusConditionFromElement,
+} from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
@@ -24,33 +55,42 @@ describe("editor binding syntax", () => {
         expect(asSource(" /api/plans ")).toBe("/api/plans");
         expect(asSource("https://example.com/api/plans")).toBe("https://example.com/api/plans");
         expect(asSource({ url: " /api/plans ", alias: " plans " })).toBe("/api/plans as plans");
-        expect(asSource({
-            url: "/.cms/sources/catalog/search",
-            alias: "addresses",
-            params: {
-                q: { from: "queryParam", name: "address" },
-                delivery: { from: "state", name: "deliveryAddress" },
-                limit: { from: "raw", value: 5 },
-                type: { from: "raw", value: "housenumber street" },
-                empty: { from: "raw", value: "" },
-                skipped: undefined,
-            },
-        })).toBe("/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses");
-        expect(asSource({
-            url: "/api/plans?",
-            params: { q: { from: "raw", value: "hello" } },
-        })).toBe("/api/plans?q=hello");
-        expect(asSource({
-            url: "/api/plans?existing=1#results",
-            params: { q: { from: "queryParam", name: "search" } },
-        })).toBe("/api/plans?existing=1&q=#{search}#results");
+        expect(
+            asSource({
+                url: "/.cms/sources/catalog/search",
+                alias: "addresses",
+                params: {
+                    q: { from: "queryParam", name: "address" },
+                    delivery: { from: "state", name: "deliveryAddress" },
+                    limit: { from: "raw", value: 5 },
+                    type: { from: "raw", value: "housenumber street" },
+                    empty: { from: "raw", value: "" },
+                    skipped: undefined,
+                },
+            }),
+        ).toBe(
+            "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses",
+        );
+        expect(
+            asSource({
+                url: "/api/plans?",
+                params: { q: { from: "raw", value: "hello" } },
+            }),
+        ).toBe("/api/plans?q=hello");
+        expect(
+            asSource({
+                url: "/api/plans?existing=1#results",
+                params: { q: { from: "queryParam", name: "search" } },
+            }),
+        ).toBe("/api/plans?existing=1&q=#{search}#results");
     });
 
     test("parses source bindings", () => {
         expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
         expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
-        expect(parseSource("  /.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "))
-            .toEqual({ url: "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
+        expect(
+            parseSource("  /.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "),
+        ).toEqual({ url: "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
     });
@@ -117,14 +157,23 @@ describe("editor binding syntax", () => {
 
         expect(asSourceStatusCondition("loading")).toBe("$source.loading");
         expect(asSourceStatusCondition("loading", "source-1")).toBe("$sources.source-1.loading");
-        expect(asSourceStatusConditions([{ sourceId: "source-1", state: "loading" }, { sourceId: "source-2", state: "empty" }]))
-            .toBe("$sources.source-1.loading || $sources.source-2.empty");
+        expect(
+            asSourceStatusConditions([
+                { sourceId: "source-1", state: "loading" },
+                { sourceId: "source-2", state: "empty" },
+            ]),
+        ).toBe("$sources.source-1.loading || $sources.source-2.empty");
         expect(() => asSourceStatusCondition("loading", "bad id")).toThrow("Invalid source status id");
         expect(parseSourceStatusCondition(" $source.error ")).toBe("error");
         expect(parseSourceStatusCondition("$sources.source-1.error")).toBe("error");
-        expect(parseSourceStatusConditionDetails("$sources.source-1.error")).toEqual({ sourceId: "source-1", state: "error" });
-        expect(parseSourceStatusConditions("$sources.source-1.loading || $sources.source-2.empty"))
-            .toEqual([{ sourceId: "source-1", state: "loading" }, { sourceId: "source-2", state: "empty" }]);
+        expect(parseSourceStatusConditionDetails("$sources.source-1.error")).toEqual({
+            sourceId: "source-1",
+            state: "error",
+        });
+        expect(parseSourceStatusConditions("$sources.source-1.loading || $sources.source-2.empty")).toEqual([
+            { sourceId: "source-1", state: "loading" },
+            { sourceId: "source-2", state: "empty" },
+        ]);
         expect(parseSourceStatusCondition("$source.unknown")).toBeNull();
 
         applySourceStatusCondition(element, "empty", "plans");
@@ -176,7 +225,9 @@ describe("editor binding syntax", () => {
     });
 
     test("clears binding runtime state from serialized content", () => {
-        const { document } = parseHTML("<main cms-ready><section cms-source=\"/api\" cms-ready><p>Plan</p></section></main>");
+        const { document } = parseHTML(
+            '<main cms-ready><section cms-source="/api" cms-ready><p>Plan</p></section></main>',
+        );
         const content = document.querySelector("main")!;
         clearBindingRuntimeState(content);
 

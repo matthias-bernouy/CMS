@@ -1,12 +1,6 @@
-export const WORKSPACE_LAYERS = [
-    "foundation",
-    "features",
-    "resources",
-    "surfaces",
-    "runtimes",
-] as const;
+export const WORKSPACE_LAYERS = ["foundation", "features", "resources", "surfaces", "runtimes"] as const;
 
-export type WorkspaceLayer = typeof WORKSPACE_LAYERS[number];
+export type WorkspaceLayer = (typeof WORKSPACE_LAYERS)[number];
 
 export type ArchitectureViolationKind =
     | "reversed-layer-dependency"
@@ -75,18 +69,21 @@ export interface SourceImport {
     typeOnly: boolean;
 }
 
-export const CODE_EXTENSIONS = new Set([
-    ".ts", ".tsx", ".js", ".jsx", ".mts", ".cts", ".mjs", ".cjs",
-]);
+export const CODE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".cts", ".mjs", ".cjs"]);
 
 export const DEFAULT_ADAPTER_SUBPATHS = [
-    "fs", "http", "mongo", "mongodb", "node", "postgres", "postgresql", "redis", "s3", "supabase",
+    "fs",
+    "http",
+    "mongo",
+    "mongodb",
+    "node",
+    "postgres",
+    "postgresql",
+    "redis",
+    "s3",
+    "supabase",
 ];
 
-export const DEFAULT_INFRASTRUCTURE_MODULES = [
-    "mongodb", "pg", "postgres", "redis", "ioredis", "minio", "mysql2",
-];
+export const DEFAULT_INFRASTRUCTURE_MODULES = ["mongodb", "pg", "postgres", "redis", "ioredis", "minio", "mysql2"];
 
-export const IGNORED_DIRECTORY_NAMES = new Set([
-    ".git", ".coverage-rate", "coverage", "dist", "node_modules",
-]);
+export const IGNORED_DIRECTORY_NAMES = new Set([".git", ".coverage-rate", "coverage", "dist", "node_modules"]);

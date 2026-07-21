@@ -25,10 +25,10 @@ export async function uploadFile(
     validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
     const item = await metadata.createFile({
-        name:        file.name,
+        name: file.name,
         parentId,
-        size:        file.size,
-        mimeType:    file.type || "application/octet-stream",
+        size: file.size,
+        mimeType: file.type || "application/octet-stream",
         contentHash: sha256Hex(bytes),
         ...(id ? { id } : {}),
     });

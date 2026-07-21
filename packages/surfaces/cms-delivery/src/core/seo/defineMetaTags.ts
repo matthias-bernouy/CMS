@@ -17,7 +17,7 @@ export function defineMetaTags(
     head.appendChild(title);
 
     const metaDescription = document.createElement("meta");
-    metaDescription.setAttribute("name",    "description");
+    metaDescription.setAttribute("name", "description");
     metaDescription.setAttribute("content", page.description);
     head.appendChild(metaDescription);
 
@@ -31,7 +31,7 @@ export function defineMetaTags(
     const host = settings.site?.host?.trim().replace(/\/+$/, "") ?? "";
     if (host) {
         const canonical = document.createElement("link");
-        canonical.setAttribute("rel",  "canonical");
+        canonical.setAttribute("rel", "canonical");
         canonical.setAttribute("href", `${host}${page.path}`);
         head.appendChild(canonical);
     }

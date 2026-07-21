@@ -60,16 +60,20 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             root: "connectors/supabase",
             dataApiSchemas: [],
             schemas: [{ path: "schema.sql" }],
-            functions: [{
-                name: "cms-connector",
-                directory: "functions/cms-connector",
-                configPath: "supabase.config.toml",
-                secrets: { CMS_API_KEY: generated },
-            }],
+            functions: [
+                {
+                    name: "cms-connector",
+                    directory: "functions/cms-connector",
+                    configPath: "supabase.config.toml",
+                    secrets: { CMS_API_KEY: generated },
+                },
+            ],
         });
         expect(observed?.context.generated.cmsApiKey).toBe(generated);
         const installed = await sources.getSource("urn:main");
-        expect(installed?.endpoints[0]?.targetUrl).toBe("https://project.supabase.co/functions/v1/cms-connector/health");
+        expect(installed?.endpoints[0]?.targetUrl).toBe(
+            "https://project.supabase.co/functions/v1/cms-connector/health",
+        );
         expect(installed?.endpoints[0]?.headers?.[0]?.source).toEqual({
             from: "secret",
             ref: "${CONNECTOR_MAIN_API_KEY}",
@@ -115,11 +119,13 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
 
-        await expect(importIntegration(
-            { sources, secrets },
-            { kind: "connector-source", answers: { id: "main" }, options: {} },
-            [connectorBackedDefinition()],
-        )).rejects.toThrow(/connector deployer "supabase" not configured/);
+        await expect(
+            importIntegration(
+                { sources, secrets },
+                { kind: "connector-source", answers: { id: "main" }, options: {} },
+                [connectorBackedDefinition()],
+            ),
+        ).rejects.toThrow(/connector deployer "supabase" not configured/);
 
         expect(await secrets.listKeys()).toEqual([]);
         expect(await sources.getSource("urn:main")).toBeNull();

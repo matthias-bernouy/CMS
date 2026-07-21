@@ -13,9 +13,7 @@ import {
 
 const isoTimestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
-export function registerPaymentProjectionContracts(
-    createHarness: CreatePaymentProjectionHarness,
-): void {
+export function registerPaymentProjectionContracts(createHarness: CreatePaymentProjectionHarness): void {
     describe("stripe-connect payment provider projection contracts", () => {
         test("preserves the exact successful provider projection and privacy boundary", async () => {
             const fixture = await createPaymentProjectionFixture(createHarness, "projection-success");
@@ -34,7 +32,7 @@ export function registerPaymentProjectionContracts(
                 ["GET", "payments"],
                 ["POST", "rpc/apply_payment_provider_projection"],
             ]);
-            expect(fixture.rest.stripeRequests.map(request => [request.method, request.pathname])).toEqual([
+            expect(fixture.rest.stripeRequests.map((request) => [request.method, request.pathname])).toEqual([
                 ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
             ]);
         });
@@ -44,11 +42,11 @@ export function registerPaymentProjectionContracts(
             fixture.rest.setPaymentIntentSucceeded(fixture.paymentIntentId);
             fixture.resetRequests();
 
-            const body = await successfulJson(await fixture.request(
-                buyerUserId,
-                "getProtectedPaymentByClientReference",
-                { clientReferenceId: fixture.clientReferenceId },
-            ));
+            const body = await successfulJson(
+                await fixture.request(buyerUserId, "getProtectedPaymentByClientReference", {
+                    clientReferenceId: fixture.clientReferenceId,
+                }),
+            );
             const payment = body.payment as JsonRecord;
 
             expect(body).toEqual({
@@ -59,7 +57,7 @@ export function registerPaymentProjectionContracts(
                 ["GET", "payments"],
                 ["POST", "rpc/apply_payment_provider_projection"],
             ]);
-            expect(fixture.rest.stripeRequests.map(request => [request.method, request.pathname])).toEqual([
+            expect(fixture.rest.stripeRequests.map((request) => [request.method, request.pathname])).toEqual([
                 ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
             ]);
         });
@@ -120,36 +118,85 @@ export function registerPaymentProjectionContracts(
 }
 
 const successfulPaymentKeys = [
-    "paymentId", "providerPaymentId", "clientReferenceId", "financialTermsHash",
-    "financialRevision", "buyerUserId", "sellerUserId", "stripePaymentIntentId",
-    "stripeChargeId", "providerEventId", "transferGroup", "currency", "amountTotal", "sellerTransferAmount",
-    "platformRetainedAmount", "refundedAmount", "transferredAmount", "reversedAmount",
+    "paymentId",
+    "providerPaymentId",
+    "clientReferenceId",
+    "financialTermsHash",
+    "financialRevision",
+    "buyerUserId",
+    "sellerUserId",
+    "stripePaymentIntentId",
+    "stripeChargeId",
+    "providerEventId",
+    "transferGroup",
+    "currency",
+    "amountTotal",
+    "sellerTransferAmount",
+    "platformRetainedAmount",
+    "refundedAmount",
+    "transferredAmount",
+    "reversedAmount",
     "stripeChargeBalanceTransactionId",
-    "actualStripeChargeFeeAmount", "actualStripeRefundFeeAmount", "actualStripeProcessingFeeAmount",
-    "actualStripeChargeNetAmount", "actualStripeFeeCurrency", "actualStripeChargeFeeDetails",
-    "actualPlatformMarginAfterStripeAmount", "paymentStatus", "commercePaymentStatus",
-    "settlementStatus", "disputeStatus", "reconciliationPending", "manualReviewReason",
-    "paidAt", "cancelledAt", "lastProviderSyncAt", "occurredAt", "createdAt",
+    "actualStripeChargeFeeAmount",
+    "actualStripeRefundFeeAmount",
+    "actualStripeProcessingFeeAmount",
+    "actualStripeChargeNetAmount",
+    "actualStripeFeeCurrency",
+    "actualStripeChargeFeeDetails",
+    "actualPlatformMarginAfterStripeAmount",
+    "paymentStatus",
+    "commercePaymentStatus",
+    "settlementStatus",
+    "disputeStatus",
+    "reconciliationPending",
+    "manualReviewReason",
+    "paidAt",
+    "cancelledAt",
+    "lastProviderSyncAt",
+    "occurredAt",
+    "createdAt",
     "updatedAt",
 ];
 
 async function successfulPayment(body: JsonRecord, clientReferenceId: string): Promise<JsonRecord> {
     return {
-        paymentId: 1, providerPaymentId: 1, clientReferenceId, financialTermsHash,
-        financialRevision: 1, buyerUserId, sellerUserId, stripePaymentIntentId: "pi_1",
-        stripeChargeId: "ch_1", stripeChargeBalanceTransactionId: "txn_charge_1",
-        providerEventId: null, transferGroup: await transferGroup(clientReferenceId),
-        currency: "eur", amountTotal: 1200, sellerTransferAmount: 1080,
-        platformRetainedAmount: 120, refundedAmount: 0, transferredAmount: 0,
-        reversedAmount: 0, actualStripeChargeFeeAmount: 65,
-        actualStripeRefundFeeAmount: 0, actualStripeProcessingFeeAmount: 65,
-        actualStripeChargeNetAmount: 1135, actualStripeFeeCurrency: "eur",
+        paymentId: 1,
+        providerPaymentId: 1,
+        clientReferenceId,
+        financialTermsHash,
+        financialRevision: 1,
+        buyerUserId,
+        sellerUserId,
+        stripePaymentIntentId: "pi_1",
+        stripeChargeId: "ch_1",
+        stripeChargeBalanceTransactionId: "txn_charge_1",
+        providerEventId: null,
+        transferGroup: await transferGroup(clientReferenceId),
+        currency: "eur",
+        amountTotal: 1200,
+        sellerTransferAmount: 1080,
+        platformRetainedAmount: 120,
+        refundedAmount: 0,
+        transferredAmount: 0,
+        reversedAmount: 0,
+        actualStripeChargeFeeAmount: 65,
+        actualStripeRefundFeeAmount: 0,
+        actualStripeProcessingFeeAmount: 65,
+        actualStripeChargeNetAmount: 1135,
+        actualStripeFeeCurrency: "eur",
         actualStripeChargeFeeDetails: [{ type: "stripe_fee", amount: 65, currency: "eur" }],
-        actualPlatformMarginAfterStripeAmount: 55, paymentStatus: "succeeded",
-        commercePaymentStatus: "succeeded", settlementStatus: "held", disputeStatus: "none",
-        reconciliationPending: false, manualReviewReason: null,
-        paidAt: body.paidAt, cancelledAt: null, lastProviderSyncAt: body.lastProviderSyncAt,
-        occurredAt: "2026-07-06T12:10:00.000Z", createdAt: "2026-07-06T12:05:00.000Z",
+        actualPlatformMarginAfterStripeAmount: 55,
+        paymentStatus: "succeeded",
+        commercePaymentStatus: "succeeded",
+        settlementStatus: "held",
+        disputeStatus: "none",
+        reconciliationPending: false,
+        manualReviewReason: null,
+        paidAt: body.paidAt,
+        cancelledAt: null,
+        lastProviderSyncAt: body.lastProviderSyncAt,
+        occurredAt: "2026-07-06T12:10:00.000Z",
+        createdAt: "2026-07-06T12:05:00.000Z",
         updatedAt: "2026-07-06T12:10:00.000Z",
     };
 }

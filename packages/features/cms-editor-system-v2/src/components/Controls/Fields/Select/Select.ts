@@ -19,13 +19,15 @@ export class Select extends HTMLElement {
         syncFieldCopy(this);
         const current = this.getAttribute("value");
         const options = this._parseOptions();
-        this.shadowRoot!.querySelector("select")!.replaceChildren(...options.map((option) => {
-            const element = document.createElement("option");
-            element.textContent = option.label;
-            element.value = option.value;
-            element.selected = option.value === current;
-            return element;
-        }));
+        this.shadowRoot!.querySelector("select")!.replaceChildren(
+            ...options.map((option) => {
+                const element = document.createElement("option");
+                element.textContent = option.label;
+                element.value = option.value;
+                element.selected = option.value === current;
+                return element;
+            }),
+        );
     }
 
     private _parseOptions(): SelectOption[] {
@@ -33,13 +35,14 @@ export class Select extends HTMLElement {
         try {
             const parsed = JSON.parse(raw) as unknown;
             if (Array.isArray(parsed)) {
-                return parsed
-                    .filter((item): item is SelectOption => {
-                        return Boolean(item)
-                            && typeof item === "object"
-                            && typeof (item as SelectOption).label === "string"
-                            && typeof (item as SelectOption).value === "string";
-                    });
+                return parsed.filter((item): item is SelectOption => {
+                    return (
+                        Boolean(item) &&
+                        typeof item === "object" &&
+                        typeof (item as SelectOption).label === "string" &&
+                        typeof (item as SelectOption).value === "string"
+                    );
+                });
             }
         } catch {
             // Fall through to the comma-separated format.

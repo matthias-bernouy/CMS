@@ -15,7 +15,8 @@ type ExampleProduct = {
     description: string;
     media: DashboardMediaItem[];
     tags: string[];
-    visibility: string; updated: string;
+    visibility: string;
+    updated: string;
 };
 const PRODUCTS: ExampleProduct[] = [
     product("prod_1001", "Racket Pro 300", "Active", "Babolat", "Tennis rackets", "Online store", "Today"),
@@ -25,21 +26,39 @@ const PRODUCTS: ExampleProduct[] = [
 ];
 export function mountDashboardWidgetExample(root: HTMLElement, selectedId: string | null): void {
     root.replaceChildren();
-    const selected = selectedId ? PRODUCTS.find(item => item.id === selectedId) ?? null : null;
+    const selected = selectedId ? (PRODUCTS.find((item) => item.id === selectedId) ?? null) : null;
     root.append(selected ? detailElement(selected) : tableElement());
 }
 
 export function updateDashboardWidgetExampleField(rowKey: string, field: string, value: WDetailFieldValue): void {
-    const product = PRODUCTS.find(item => item.id === rowKey);
-    if (!product) return;
-    if (field === "title" && typeof value === "string") product.title = value;
-    if (field === "status" && typeof value === "string") product.status = value;
-    if (field === "vendor" && typeof value === "string") product.vendor = value;
-    if (field === "category" && typeof value === "string") product.category = value;
-    if (field === "description" && typeof value === "string") product.description = value;
-    if (field === "visibility" && typeof value === "string") product.visibility = value;
-    if (field === "tags" && isStringArray(value)) product.tags = value;
-    if (field === "media" && isMediaItems(value)) product.media = value;
+    const product = PRODUCTS.find((item) => item.id === rowKey);
+    if (!product) {
+        return;
+    }
+    if (field === "title" && typeof value === "string") {
+        product.title = value;
+    }
+    if (field === "status" && typeof value === "string") {
+        product.status = value;
+    }
+    if (field === "vendor" && typeof value === "string") {
+        product.vendor = value;
+    }
+    if (field === "category" && typeof value === "string") {
+        product.category = value;
+    }
+    if (field === "description" && typeof value === "string") {
+        product.description = value;
+    }
+    if (field === "visibility" && typeof value === "string") {
+        product.visibility = value;
+    }
+    if (field === "tags" && isStringArray(value)) {
+        product.tags = value;
+    }
+    if (field === "media" && isMediaItems(value)) {
+        product.media = value;
+    }
 }
 function tableElement(): DashboardWTable {
     const element = document.createElement("cms-dashboard-w-table") as unknown as DashboardWTable;
@@ -112,15 +131,43 @@ function detailData(product: ExampleProduct): WDetailData {
             {
                 title: "Status",
                 fields: [
-                    { id: "status", label: "Publication", input: "select", value: product.status, options: options("Active", "Draft", "Archived") },
-                    { id: "visibility", label: "Visibility", input: "select", value: product.visibility, options: options("Online store", "Hidden") },
+                    {
+                        id: "status",
+                        label: "Publication",
+                        input: "select",
+                        value: product.status,
+                        options: options("Active", "Draft", "Archived"),
+                    },
+                    {
+                        id: "visibility",
+                        label: "Visibility",
+                        input: "select",
+                        value: product.visibility,
+                        options: options("Online store", "Hidden"),
+                    },
                 ],
             },
             {
                 title: "Organization",
                 fields: [
-                    { id: "vendor", label: "Vendor", input: "combobox", value: product.vendor, options: options("Adidas", "Nike", "Section Making"), placeholder: "Search or add a vendor", creatable: true },
-                    { id: "tags", label: "Tags", input: "tokens", value: product.tags, options: options("Sport", "Featured", "Training"), placeholder: "Search or add tags", creatable: true },
+                    {
+                        id: "vendor",
+                        label: "Vendor",
+                        input: "combobox",
+                        value: product.vendor,
+                        options: options("Adidas", "Nike", "Section Making"),
+                        placeholder: "Search or add a vendor",
+                        creatable: true,
+                    },
+                    {
+                        id: "tags",
+                        label: "Tags",
+                        input: "tokens",
+                        value: product.tags,
+                        options: options("Sport", "Featured", "Training"),
+                        placeholder: "Search or add tags",
+                        creatable: true,
+                    },
                     { id: "id", label: "Resource id", input: "readonly", value: product.id },
                 ],
             },
@@ -128,8 +175,43 @@ function detailData(product: ExampleProduct): WDetailData {
     };
 }
 
-function product(id: string, title: string, status: string, vendor: string, category: string, visibility: string, updated: string): ExampleProduct { return { id, title, status, vendor, category, visibility, updated, description: "Editable sandbox content before any data source is wired.", media: media(id, title), tags: ["Sport", "Featured"] }; }
-function options(...values: string[]): Array<{ label: string; value: string }> { return values.map(value => ({ label: value, value })); }
-function media(id: string, title: string): DashboardMediaItem[] { return [{ id: `${id}_media_1`, url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=420&q=80", alt: `${title} media` }]; }
-function isStringArray(value: WDetailFieldValue): value is string[] { return Array.isArray(value) && value.every(item => typeof item === "string"); }
-function isMediaItems(value: WDetailFieldValue): value is DashboardMediaItem[] { return Array.isArray(value) && value.every(item => typeof item === "object" && item !== null && "url" in item); }
+function product(
+    id: string,
+    title: string,
+    status: string,
+    vendor: string,
+    category: string,
+    visibility: string,
+    updated: string,
+): ExampleProduct {
+    return {
+        id,
+        title,
+        status,
+        vendor,
+        category,
+        visibility,
+        updated,
+        description: "Editable sandbox content before any data source is wired.",
+        media: media(id, title),
+        tags: ["Sport", "Featured"],
+    };
+}
+function options(...values: string[]): Array<{ label: string; value: string }> {
+    return values.map((value) => ({ label: value, value }));
+}
+function media(id: string, title: string): DashboardMediaItem[] {
+    return [
+        {
+            id: `${id}_media_1`,
+            url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=420&q=80",
+            alt: `${title} media`,
+        },
+    ];
+}
+function isStringArray(value: WDetailFieldValue): value is string[] {
+    return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+function isMediaItems(value: WDetailFieldValue): value is DashboardMediaItem[] {
+    return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && "url" in item);
+}

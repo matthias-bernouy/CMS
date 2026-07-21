@@ -23,7 +23,7 @@ export function detailData(
         title: textAt(scope, widget.title?.path, widget.title?.fallback ?? widget.id),
         status: widget.status ? textAt(scope, widget.status.path, widget.status.fallback) : undefined,
         actions: (widget.actions ?? [])
-            .filter(action => matchesDashboardVisibility(action.visibleWhen, { fields, resource }))
+            .filter((action) => matchesDashboardVisibility(action.visibleWhen, { fields, resource }))
             .map(actionData),
         main: sections(widget.main, resource, fields, options, sourceId, schemas),
         aside: sections(widget.aside ?? [], resource, fields, options, sourceId, schemas),
@@ -31,8 +31,8 @@ export function detailData(
 }
 
 export function fieldValues(widget: DetailWidget, resource: unknown): Record<string, unknown> {
-    const all = [...widget.main, ...(widget.aside ?? [])].flatMap(section => section.fields);
-    return Object.fromEntries(all.map(field => [field.id, valueAt(resource, field.path)]));
+    const all = [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
+    return Object.fromEntries(all.map((field) => [field.id, valueAt(resource, field.path)]));
 }
 
 function sections(
@@ -43,12 +43,12 @@ function sections(
     sourceId: string,
     schemas: DetailSchemas,
 ): WDetailSection[] {
-    return sections.map(section => ({
+    return sections.map((section) => ({
         title: section.title,
         ...(section.description ? { description: section.description } : {}),
         fields: section.fields
-            .filter(field => matchesDashboardVisibility(field.visibleWhen, { fields, resource }))
-            .map(field => detailField(field, resource, fields, options, sourceId, schemas)),
+            .filter((field) => matchesDashboardVisibility(field.visibleWhen, { fields, resource }))
+            .map((field) => detailField(field, resource, fields, options, sourceId, schemas)),
     }));
 }
 
@@ -69,5 +69,5 @@ function isActionIcon(value: string | undefined): value is "archive" | "download
 }
 
 function record(value: unknown): Record<string, unknown> {
-    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }

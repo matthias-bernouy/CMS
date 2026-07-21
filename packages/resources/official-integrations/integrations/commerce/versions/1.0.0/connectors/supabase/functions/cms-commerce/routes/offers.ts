@@ -33,8 +33,12 @@ export async function getOffer(request: Request, scope: "public" | "admin" | "se
     }
     const id = optionalId(url.searchParams.get("id"));
     const slug = text(url.searchParams.get("slug"));
-    if (id === null && !slug) throw new HttpError(400, "id or slug is required");
-    if (scope === "public") return await getPublicOfferReadModel(id, slug);
+    if (id === null && !slug) {
+        throw new HttpError(400, "id or slug is required");
+    }
+    if (scope === "public") {
+        return await getPublicOfferReadModel(id, slug);
+    }
     return json(camelize(await getManagedOfferReadModel(request, scope, id, slug)));
 }
 
@@ -51,7 +55,9 @@ export async function updateMyOffer(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const body = await readJsonObject(request);
     const payload = sellerOfferPayload(body);
-    if (!Object.keys(payload).length) throw new HttpError(400, "at least one offer field is required");
+    if (!Object.keys(payload).length) {
+        throw new HttpError(400, "at least one offer field is required");
+    }
     const result = await rpc("update_my_offer", {
         p_offer_id: integer(url.searchParams.get("id"), "id", true),
         p_cms_user_id: cmsUserId(request),

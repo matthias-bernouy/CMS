@@ -7,18 +7,24 @@ import {
 
 describe("workflow mapping editor", () => {
     test("derives selectable references from nested response contracts", () => {
-        expect(referencesFromShape({
-            type: "object",
-            properties: {
-                order: {
+        expect(
+            referencesFromShape(
+                {
                     type: "object",
                     properties: {
-                        id: { type: "string" },
-                        total: { type: "number" },
+                        order: {
+                            type: "object",
+                            properties: {
+                                id: { type: "string" },
+                                total: { type: "number" },
+                            },
+                        },
                     },
                 },
-            },
-        }, "$response.body", "Response body")).toEqual([
+                "$response.body",
+                "Response body",
+            ),
+        ).toEqual([
             expect.objectContaining({ value: "$response.body" }),
             expect.objectContaining({ value: "$response.body.order" }),
             expect.objectContaining({ value: "$response.body.order.id", shape: { type: "string" } }),
@@ -44,10 +50,12 @@ describe("workflow mapping editor", () => {
             expect.objectContaining({ path: "order.id", required: true }),
             expect.objectContaining({ path: "notify", shape: { type: "boolean" } }),
         ]);
-        expect(mappedObject({
-            "order.id": { mode: "reference", value: "$response.body.order.id" },
-            notify: { mode: "literal", value: "true" },
-        })).toEqual({
+        expect(
+            mappedObject({
+                "order.id": { mode: "reference", value: "$response.body.order.id" },
+                notify: { mode: "literal", value: "true" },
+            }),
+        ).toEqual({
             order: { id: "$response.body.order.id" },
             notify: true,
         });

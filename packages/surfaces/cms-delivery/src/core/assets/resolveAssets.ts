@@ -18,13 +18,13 @@ export type AssetsManifest = {
      *  `renderPage` injects its `<script>` only when the composed HTML uses
      *  the `<cms-binding-core>` tag (default Shell does; a custom one may not). */
     bindingCoreUrl: string;
-    styleUrl:     string;
+    styleUrl: string;
     /** The bloc-bundle URL(s) covering the page's blocs — one `/blocset`
      *  bundle today (the page's exact set); becomes several stable group
      *  URLs once blocs are grouped by signature. */
-    blocUrls:     string[];
+    blocUrls: string[];
     /** `[componentUrl, ...blocUrls]` — convenience for emission in order. */
-    scriptUrls:   string[];
+    scriptUrls: string[];
 };
 
 /**
@@ -46,53 +46,56 @@ export type AssetsManifest = {
  * Parallel resolution is a no-op on the warm path and only pays when the
  * process just started.
  */
-export async function resolveRuntimeAssets(
-    delivery: DeliveryCms,
-    usedTags: string[],
-): Promise<AssetsManifest> {
-    const prefix              = delivery.cmsPathPrefix;
-    const componentJsUrl      = `${prefix}/assets/component.js`;
+export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: string[]): Promise<AssetsManifest> {
+    const prefix = delivery.cmsPathPrefix;
+    const componentJsUrl = `${prefix}/assets/component.js`;
     const componentJsCacheKey = P9R_CACHE.js(componentJsUrl);
-    const bindingCoreJsUrl      = `${prefix}/assets/cms-binding-core.js`;
+    const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = P9R_CACHE.js(bindingCoreJsUrl);
 
     // Partition the page's blocs into the stable signature groups that cover
     // them + a fallback bundle for any tag the manifest doesn't know yet.
-    const manifest  = await getBlocGroupManifest(delivery);
-    const groupIds  = new Set<string>();
+    const manifest = await getBlocGroupManifest(delivery);
+    const groupIds = new Set<string>();
     const uncovered: string[] = [];
     for (const tag of new Set(usedTags)) {
         const gid = manifest.tagToGroup.get(tag);
-        if (gid) groupIds.add(gid);
-        else uncovered.push(tag);
+        if (gid) {
+            groupIds.add(gid);
+        } else {
+            uncovered.push(tag);
+        }
     }
 
     // One sorted tag set per bundle. Deterministic order → a stable <script>
     // sequence. Group tags come from the manifest (already the full group);
     // the uncovered remainder is its own per-page bundle.
     const bundles: string[][] = [
-        ...[...groupIds].sort().map(gid => manifest.groups.get(gid)!),
+        ...[...groupIds].sort().map((gid) => manifest.groups.get(gid)!),
         ...(uncovered.length ? [uncovered.sort()] : []),
     ];
 
     const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(componentJsCacheKey,   delivery.cache, generateComponentJsEntry),
+        getOrGenerateEntryAsync(componentJsCacheKey, delivery.cache, generateComponentJsEntry),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
-        getOrGenerateEntryAsync(P9R_CACHE.STYLE,       delivery.cache, () => generateStyleEntry(delivery.repository)),
-        ...bundles.map(tags => getOrGenerateEntryAsync(
-            P9R_CACHE.blocset(tags), delivery.cache, () => generateBlocSetEntry(tags, delivery.repository),
-        )),
+        getOrGenerateEntryAsync(P9R_CACHE.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
+        ...bundles.map((tags) =>
+            getOrGenerateEntryAsync(P9R_CACHE.blocset(tags), delivery.cache, () =>
+                generateBlocSetEntry(tags, delivery.repository),
+            ),
+        ),
     ]);
 
-    const componentUrl   = `${componentJsUrl}?v=${componentEntry!.hash}`;
+    const componentUrl = `${componentJsUrl}?v=${componentEntry!.hash}`;
     const bindingCoreUrl = `${bindingCoreJsUrl}?v=${bindingCoreEntry!.hash}`;
-    const styleUrl       = `${prefix}/style?v=${styleEntry!.hash}`;
-    const blocAssets     = bundles
+    const styleUrl = `${prefix}/style?v=${styleEntry!.hash}`;
+    const blocAssets = bundles
         .map((tags, i) => ({ tags, entry: bundleEntries[i]! }))
-        .filter(asset => asset.entry.raw.length > 0);
-    const blocUrls       = blocAssets.map(({ tags, entry }) =>
-        `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${entry.hash}`);
-    const scriptUrls     = [componentUrl, ...blocUrls];
+        .filter((asset) => asset.entry.raw.length > 0);
+    const blocUrls = blocAssets.map(
+        ({ tags, entry }) => `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${entry.hash}`,
+    );
+    const scriptUrls = [componentUrl, ...blocUrls];
 
     return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
 }

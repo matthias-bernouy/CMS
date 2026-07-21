@@ -10,11 +10,17 @@ import { deleteUserCompletely } from "@bernouy/cms-auth";
  *  local-credential and PAT stores. */
 export default async function deleteUser(req: Request, cms: ControlCms) {
     const sub = new URL(req.url).searchParams.get("sub");
-    if (!sub) throw new MissingParam("sub");
+    if (!sub) {
+        throw new MissingParam("sub");
+    }
 
     const user = await cms.users.getBySub(sub);
-    if (!user) throw new InvalidParam("sub", "unknown user");
-    if (await isLastAdmin(cms.users, sub)) throw new HttpError(403, "Cannot delete the last admin — promote another admin first.");
+    if (!user) {
+        throw new InvalidParam("sub", "unknown user");
+    }
+    if (await isLastAdmin(cms.users, sub)) {
+        throw new HttpError(403, "Cannot delete the last admin — promote another admin first.");
+    }
 
     await deleteUserCompletely({ users: cms.users, credentials: cms.credentials, pats: cms.pats }, user);
     return Response.json({ ok: true });

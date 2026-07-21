@@ -1,10 +1,5 @@
 import type { TextCapability } from "@bernouy/cms-content/editor";
-import {
-    richTextActionIcon,
-    type RichTextAction,
-    richTextActions,
-    richTextActionTitle,
-} from "./richTextActions";
+import { richTextActionIcon, type RichTextAction, richTextActions, richTextActionTitle } from "./richTextActions";
 
 export function renderRichTextToolbar(
     toolbar: HTMLElement,
@@ -15,10 +10,12 @@ export function renderRichTextToolbar(
     },
 ): void {
     toolbar.replaceChildren();
-    if (capability.size) toolbar.append(
-        renderSizeButton("decrease", handlers.textSize),
-        renderSizeButton("increase", handlers.textSize),
-    );
+    if (capability.size) {
+        toolbar.append(
+            renderSizeButton("decrease", handlers.textSize),
+            renderSizeButton("increase", handlers.textSize),
+        );
+    }
 
     for (const action of richTextActions(capability)) {
         const button = document.createElement("button");

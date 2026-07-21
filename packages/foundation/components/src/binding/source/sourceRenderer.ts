@@ -48,7 +48,9 @@ export class SourceRenderer {
     }
 
     clear(): void {
-        if (this.options.inPlace) return;
+        if (this.options.inPlace) {
+            return;
+        }
         this.bodyRegion?.unmount();
         this.bodyRegion = null;
         this.el.replaceChildren();

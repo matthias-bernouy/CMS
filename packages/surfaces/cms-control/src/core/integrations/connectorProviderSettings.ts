@@ -40,8 +40,9 @@ export async function updateConnectorProviderSettings(
     };
 
     if (!accessToken) {
-        const accessTokenConfigured = (await cms.secrets.listKeys())
-            .includes(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY);
+        const accessTokenConfigured = (await cms.secrets.listKeys()).includes(
+            SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
+        );
         if (dto.enabled && !accessTokenConfigured) {
             throw new InvalidParam("accessToken", "is required when the provider is enabled");
         }
@@ -66,8 +67,11 @@ export async function updateConnectorProviderSettings(
         };
     } catch (error) {
         try {
-            if (previousToken === null) await cms.secrets.delete(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY);
-            else await cms.secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, previousToken);
+            if (previousToken === null) {
+                await cms.secrets.delete(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY);
+            } else {
+                await cms.secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, previousToken);
+            }
         } catch {
             // Preserve the provider write error if best-effort secret rollback fails.
         }

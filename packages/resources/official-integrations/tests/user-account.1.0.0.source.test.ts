@@ -28,7 +28,8 @@ type JsonRecord = Record<string, unknown>;
 const sourcePrefix = "/.cms/sources/";
 const functionsBaseUrl = "https://project.supabase.co/functions/v1";
 const supabaseUrl = "https://project.supabase.co";
-const edgeFunctionUrl = "../integrations/user-account/versions/1.0.0/connectors/supabase/functions/cms-user-account/index.ts";
+const edgeFunctionUrl =
+    "../integrations/user-account/versions/1.0.0/connectors/supabase/functions/cms-user-account/index.ts";
 
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
@@ -36,11 +37,19 @@ let activeEnv: Record<string, string> = {};
 let activeFetch: typeof fetch = realFetch;
 let edgeHandler: EdgeHandler | undefined;
 
-(globalThis as { Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown } }).Deno = {
+(
+    globalThis as {
+        Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown };
+    }
+).Deno = {
     env: { get: (key) => activeEnv[key] },
     serve(handler) {
         edgeHandler = handler;
-        return { shutdown() { /* test stub */ } };
+        return {
+            shutdown() {
+                /* test stub */
+            },
+        };
     },
 };
 globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
@@ -54,108 +63,157 @@ describe("user-account 1.0.0 source", () => {
     test("updates, reads, lists, and deletes personal information through the installed CMS source", async () => {
         const harness = await createHarness();
 
-        await okJson(await sourceJson(harness, "createExtraField", {
-            id: "company",
-            label: "Company",
-            type: "string",
-            multiple: true,
-            showInDashboardTable: true,
-            options: [
-                { id: "agency", value: "agency", label: "Agency", position: 0 },
-                { id: "club", value: "club", label: "Club", position: 1 },
-            ],
-        }));
-        await okJson(await sourceJson(harness, "createExtraField", {
-            id: "employeeCount",
-            label: "Employees",
-            type: "number",
-        }));
-        const reorderedFields = await okJson(await sourceJson(harness, "reorderExtraFields", {
-            ids: ["employeeCount", "company"],
-        }));
+        await okJson(
+            await sourceJson(harness, "createExtraField", {
+                id: "company",
+                label: "Company",
+                type: "string",
+                multiple: true,
+                showInDashboardTable: true,
+                options: [
+                    { id: "agency", value: "agency", label: "Agency", position: 0 },
+                    { id: "club", value: "club", label: "Club", position: 1 },
+                ],
+            }),
+        );
+        await okJson(
+            await sourceJson(harness, "createExtraField", {
+                id: "employeeCount",
+                label: "Employees",
+                type: "number",
+            }),
+        );
+        const reorderedFields = await okJson(
+            await sourceJson(harness, "reorderExtraFields", {
+                ids: ["employeeCount", "company"],
+            }),
+        );
         const field = await okJson(await sourceRequest(harness, "getExtraField", { id: "company" }));
-        const unrestrictedField = await okJson(await sourceJson(harness, "createExtraField", {
-            id: "company",
-            label: "Company",
-            type: "string",
-            hasAllowedValues: false,
-            options: [{ id: "agency", value: "agency", label: "Agency" }],
-        }));
-        const upsertedField = await okJson(await sourceJson(harness, "createExtraField", {
-            id: "company",
-            label: "Company",
-            type: "string",
-            required: "true",
-            multiple: "true",
-            hasAllowedValues: true,
-            showInDashboardTable: "true",
-            options: [
-                { id: "club", value: "club", label: "Club", position: 99 },
-                { id: "agency", value: "agency", label: "Agency", position: 42 },
-            ],
-        }));
+        const unrestrictedField = await okJson(
+            await sourceJson(harness, "createExtraField", {
+                id: "company",
+                label: "Company",
+                type: "string",
+                hasAllowedValues: false,
+                options: [{ id: "agency", value: "agency", label: "Agency" }],
+            }),
+        );
+        const upsertedField = await okJson(
+            await sourceJson(harness, "createExtraField", {
+                id: "company",
+                label: "Company",
+                type: "string",
+                required: "true",
+                multiple: "true",
+                hasAllowedValues: true,
+                showInDashboardTable: "true",
+                options: [
+                    { id: "club", value: "club", label: "Club", position: 99 },
+                    { id: "agency", value: "agency", label: "Agency", position: 42 },
+                ],
+            }),
+        );
         const missing = await okJson(await sourceRequest(harness, "getAccount"));
-        const updated = await okJson(await sourceJson(harness, "updateAccount", {
-            phone: " +33600000000 ",
-            givenName: " Test ",
-            surname: " User ",
-            birthDate: "1992-04-18",
-            addressLine1: " 12 rue des Tests ",
-            addressLine2: "Bâtiment B",
-            addressLine3: "Appartement 4",
-            postalCode: "75001",
-            city: "Paris",
-            region: "Île-de-France",
-            countryCode: "fr",
-            locale: "fr-FR",
-            timezone: "Europe/Paris",
-            metadata: { company: ["club"], employeeCount: "12" },
-        }));
+        const updated = await okJson(
+            await sourceJson(harness, "updateAccount", {
+                phone: " +33600000000 ",
+                givenName: " Test ",
+                surname: " User ",
+                birthDate: "1992-04-18",
+                addressLine1: " 12 rue des Tests ",
+                addressLine2: "Bâtiment B",
+                addressLine3: "Appartement 4",
+                postalCode: "75001",
+                city: "Paris",
+                region: "Île-de-France",
+                countryCode: "fr",
+                locale: "fr-FR",
+                timezone: "Europe/Paris",
+                metadata: { company: ["club"], employeeCount: "12" },
+            }),
+        );
         const invalidBirthDate = await sourceJson(harness, "updateAccount", { birthDate: "2020-02-31" });
         const invalidCountry = await sourceJson(harness, "updateAccount", { countryCode: "France" });
-        const metadataUpdated = await okJson(await sourceJson(harness, "updateAccountMetadata", {
-            company: "agency",
-            employeeCount: "13",
-        }));
-        const adminCreated = await okJson(await sourceJson(harness, "createUserPersonalInformation", {
-            givenName: "Admin",
-            surname: "Target",
-            metadata: { company: ["agency"] },
-        }, { userId: "target-user" }));
+        const metadataUpdated = await okJson(
+            await sourceJson(harness, "updateAccountMetadata", {
+                company: "agency",
+                employeeCount: "13",
+            }),
+        );
+        const adminCreated = await okJson(
+            await sourceJson(
+                harness,
+                "createUserPersonalInformation",
+                {
+                    givenName: "Admin",
+                    surname: "Target",
+                    metadata: { company: ["agency"] },
+                },
+                { userId: "target-user" },
+            ),
+        );
         const listed = await okJson(await sourceRequest(harness, "listAccounts", { q: "target", limit: "20" }));
         const fetched = await okJson(await sourceRequest(harness, "getAccountByUserId", { userId: "target-user" }));
-        const deleted = await okJson(await sourceDelete(harness, "deleteUserPersonalInformation", { userId: "target-user" }));
+        const deleted = await okJson(
+            await sourceDelete(harness, "deleteUserPersonalInformation", { userId: "target-user" }),
+        );
         const installedDashboard = await harness.dashboards.getDashboard("user-account-users");
         const fieldsDashboard = await harness.dashboards.getDashboard("user-account-fields");
         const materializedOverlays = await harness.materializedOverlays();
         const dashboard = installedDashboard
             ? applyDashboardSourceOverlays(installedDashboard, materializedOverlays)
             : null;
-        const accountsTable = dashboard?.views.find(view => view.id === "accountsTable") as JsonRecord | undefined;
-        const accountDetail = dashboard?.views.find(view => view.id === "accountDetail") as JsonRecord | undefined;
-        const extraFieldsTable = fieldsDashboard?.views.find(view => view.id === "extraFieldsTable") as JsonRecord | undefined;
-        const extraFieldDetail = fieldsDashboard?.views.find(view => view.id === "extraFieldDetail") as JsonRecord | undefined;
+        const accountsTable = dashboard?.views.find((view) => view.id === "accountsTable") as JsonRecord | undefined;
+        const accountDetail = dashboard?.views.find((view) => view.id === "accountDetail") as JsonRecord | undefined;
+        const extraFieldsTable = fieldsDashboard?.views.find((view) => view.id === "extraFieldsTable") as
+            | JsonRecord
+            | undefined;
+        const extraFieldDetail = fieldsDashboard?.views.find((view) => view.id === "extraFieldDetail") as
+            | JsonRecord
+            | undefined;
         const source = await harness.sources.getSource("urn:user-account");
-        const createExtraFieldEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:createExtraField");
-        const reorderExtraFieldsEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:reorderExtraFields");
-        const deleteExtraFieldEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:deleteExtraField");
-        const updateEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:updateAccount");
-        const updateMetadataEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:updateAccountMetadata");
-        const getEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:getAccount");
-        const getByUserIdEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:user-account:getAccountByUserId");
-        const accountForm = harness.importedBlocs.find(bloc => bloc.tag.includes("user-account-form"));
-        const accountAvatar = harness.importedBlocs.find(bloc => bloc.tag.includes("user-account-avatar"));
+        const createExtraFieldEndpoint = source?.endpoints.find(
+            (endpoint) => endpoint.urn === "urn:user-account:createExtraField",
+        );
+        const reorderExtraFieldsEndpoint = source?.endpoints.find(
+            (endpoint) => endpoint.urn === "urn:user-account:reorderExtraFields",
+        );
+        const deleteExtraFieldEndpoint = source?.endpoints.find(
+            (endpoint) => endpoint.urn === "urn:user-account:deleteExtraField",
+        );
+        const updateEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:user-account:updateAccount");
+        const updateMetadataEndpoint = source?.endpoints.find(
+            (endpoint) => endpoint.urn === "urn:user-account:updateAccountMetadata",
+        );
+        const getEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:user-account:getAccount");
+        const getByUserIdEndpoint = source?.endpoints.find(
+            (endpoint) => endpoint.urn === "urn:user-account:getAccountByUserId",
+        );
+        const accountForm = harness.importedBlocs.find((bloc) => bloc.tag.includes("user-account-form"));
+        const accountAvatar = harness.importedBlocs.find((bloc) => bloc.tag.includes("user-account-avatar"));
         const accountFormTemplate = decodeBlocSource(accountForm, "template.html");
         const accountAvatarTemplate = decodeBlocSource(accountAvatar, "template.html");
         const accountAvatarStyle = decodeBlocSource(accountAvatar, "style.css");
 
         expect(missing).toMatchObject({ exists: false, userId: "user-123" });
-        expect(source?.meta).toMatchObject({ icon: "assets/user-personal-information.svg", svg: expect.stringContaining("<svg") });
-        expect(getByUserIdEndpoint?.input?.params?.find(param => param.name === "userId")
-            ?.schema?.semantic?.authority).toBe("cms");
-        expect(installedDashboard?.meta).toMatchObject({ icon: "assets/users.svg", svg: expect.stringContaining("<svg") });
-        expect(fieldsDashboard?.meta).toMatchObject({ icon: "assets/fields.svg", svg: expect.stringContaining("<svg") });
-        expect(field).toMatchObject({ field: { id: "company", label: "Company", type: "string", multiple: true, showInDashboardTable: true } });
+        expect(source?.meta).toMatchObject({
+            icon: "assets/user-personal-information.svg",
+            svg: expect.stringContaining("<svg"),
+        });
+        expect(
+            getByUserIdEndpoint?.input?.params?.find((param) => param.name === "userId")?.schema?.semantic?.authority,
+        ).toBe("cms");
+        expect(installedDashboard?.meta).toMatchObject({
+            icon: "assets/users.svg",
+            svg: expect.stringContaining("<svg"),
+        });
+        expect(fieldsDashboard?.meta).toMatchObject({
+            icon: "assets/fields.svg",
+            svg: expect.stringContaining("<svg"),
+        });
+        expect(field).toMatchObject({
+            field: { id: "company", label: "Company", type: "string", multiple: true, showInDashboardTable: true },
+        });
         expect(reorderedFields).toEqual({ ids: ["employeeCount", "company"] });
         expect(unrestrictedField).toMatchObject({ field: { id: "company" } });
         expect(unrestrictedField.field.options).toBeUndefined();
@@ -163,12 +221,21 @@ describe("user-account 1.0.0 source", () => {
             { id: "agency", value: "agency", label: "Agency", position: 0 },
             { id: "club", value: "club", label: "Club", position: 1 },
         ]);
-        expect(upsertedField).toMatchObject({ field: { id: "company", label: "Company", type: "string", required: true, multiple: true, showInDashboardTable: true } });
+        expect(upsertedField).toMatchObject({
+            field: {
+                id: "company",
+                label: "Company",
+                type: "string",
+                required: true,
+                multiple: true,
+                showInDashboardTable: true,
+            },
+        });
         expect(upsertedField.field.options).toEqual([
             { id: "club", value: "club", label: "Club", position: 0 },
             { id: "agency", value: "agency", label: "Agency", position: 1 },
         ]);
-        expect(materializedOverlays[0]?.fields.find(item => item.id === "company")?.options).toEqual([
+        expect(materializedOverlays[0]?.fields.find((item) => item.id === "company")?.options).toEqual([
             { value: "club", label: "Club" },
             { value: "agency", label: "Agency" },
         ]);
@@ -201,12 +268,25 @@ describe("user-account 1.0.0 source", () => {
         });
         expect(adminCreated).toMatchObject({ exists: true, userId: "target-user", metadata: { company: ["agency"] } });
         expect(adminCreated).toEqual(fetched);
-        expect(listed.accounts).toEqual([expect.objectContaining({ userId: "target-user", givenName: "Admin", surname: "Target", metadata: { company: ["agency"] } })]);
-        expect(fetched).toMatchObject({ exists: true, userId: "target-user", givenName: "Admin", surname: "Target", metadata: { company: ["agency"] } });
+        expect(listed.accounts).toEqual([
+            expect.objectContaining({
+                userId: "target-user",
+                givenName: "Admin",
+                surname: "Target",
+                metadata: { company: ["agency"] },
+            }),
+        ]);
+        expect(fetched).toMatchObject({
+            exists: true,
+            userId: "target-user",
+            givenName: "Admin",
+            surname: "Target",
+            metadata: { company: ["agency"] },
+        });
         expect(deleted).toEqual({ deleted: true, userId: "target-user" });
-        expect(harness.rest.rows("accounts").map(row => row.cms_user_id)).toEqual(["user-123"]);
+        expect(harness.rest.rows("accounts").map((row) => row.cms_user_id)).toEqual(["user-123"]);
         expect(accountsTable?.selection).toEqual({ opens: "accountDetail" });
-        expect((accountsTable?.columns as JsonRecord[]).map(column => column.id)).toContain("company");
+        expect((accountsTable?.columns as JsonRecord[]).map((column) => column.id)).toContain("company");
         expect(accountDetail?.source).toEqual({ endpoint: "getAccountByUserId", params: { userId: "$selection.id" } });
         expect(fieldsDashboard?.source).toBe("user-account");
         expect(extraFieldsTable).toMatchObject({
@@ -217,10 +297,15 @@ describe("user-account 1.0.0 source", () => {
             },
             reorderable: { action: "reorderExtraFields" },
         });
-        expect(extraFieldsTable?.actions).toEqual(expect.arrayContaining([
-            expect.objectContaining({ id: "newExtraField", selection: { opens: "extraFieldDetail" } }),
-            expect.objectContaining({ id: "reorderExtraFields", endpoint: { endpoint: "reorderExtraFields", body: { ids: "$value" } } }),
-        ]));
+        expect(extraFieldsTable?.actions).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ id: "newExtraField", selection: { opens: "extraFieldDetail" } }),
+                expect.objectContaining({
+                    id: "reorderExtraFields",
+                    endpoint: { endpoint: "reorderExtraFields", body: { ids: "$value" } },
+                }),
+            ]),
+        );
         expect(extraFieldDetail?.source).toEqual({
             endpoint: "getExtraField",
             params: { id: "$selection.id" },
@@ -229,21 +314,31 @@ describe("user-account 1.0.0 source", () => {
         expect(createExtraFieldEndpoint?.effects).toEqual({ invalidatesSchema: true });
         expect(reorderExtraFieldsEndpoint?.effects).toEqual({ invalidatesSchema: true });
         expect(deleteExtraFieldEndpoint?.effects).toEqual({ invalidatesSchema: true });
-        expect(extraFieldDetail?.actions).toEqual(expect.arrayContaining([
-            expect.objectContaining({
-                id: "deleteExtraField",
-                confirm: "Delete this field definition? Existing user metadata values will be kept.",
-                visibleWhen: { value: "$field.id", notEquals: "" },
-            }),
-        ]));
-        expect(extraFieldDetail?.main).toEqual(expect.arrayContaining([
-            expect.objectContaining({
-                fields: expect.arrayContaining([
-                    expect.objectContaining({ id: "id", type: "readonly", visibleWhen: { value: "$field.id", notEquals: "" } }),
-                ]),
-            }),
-        ]));
-        expect((accountDetail?.main as JsonRecord[]).find(section => section.id === "additionalInformation")).toMatchObject({
+        expect(extraFieldDetail?.actions).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: "deleteExtraField",
+                    confirm: "Delete this field definition? Existing user metadata values will be kept.",
+                    visibleWhen: { value: "$field.id", notEquals: "" },
+                }),
+            ]),
+        );
+        expect(extraFieldDetail?.main).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    fields: expect.arrayContaining([
+                        expect.objectContaining({
+                            id: "id",
+                            type: "readonly",
+                            visibleWhen: { value: "$field.id", notEquals: "" },
+                        }),
+                    ]),
+                }),
+            ]),
+        );
+        expect(
+            (accountDetail?.main as JsonRecord[]).find((section) => section.id === "additionalInformation"),
+        ).toMatchObject({
             id: "additionalInformation",
             title: "Additional information",
             fields: expect.arrayContaining([
@@ -259,7 +354,7 @@ describe("user-account 1.0.0 source", () => {
                 expect.objectContaining({ id: "employeeCount", type: "number" }),
             ]),
         });
-        expect((accountDetail?.aside as JsonRecord[]).find(section => section.id === "avatar")).toMatchObject({
+        expect((accountDetail?.aside as JsonRecord[]).find((section) => section.id === "avatar")).toMatchObject({
             fields: [expect.objectContaining({ id: "avatarPreview", path: "avatarUrl", format: "image" })],
         });
         expect(updateEndpoint?.input?.body).toMatchObject({
@@ -289,80 +384,97 @@ describe("user-account 1.0.0 source", () => {
         });
         expect(accountFormTemplate).toContain('name="givenName"');
         expect(accountFormTemplate).toContain('name="surname"');
-        expect(accountFormTemplate).toContain('name="birthDate" label="Date de naissance" type="date" autocomplete="bday" min="1900-01-01"');
+        expect(accountFormTemplate).toContain(
+            'name="birthDate" label="Date de naissance" type="date" autocomplete="bday" min="1900-01-01"',
+        );
         expect(accountFormTemplate).not.toContain('date-format="day-month-year"');
         expect(accountFormTemplate).not.toContain('placeholder="jj/mm/aaaa"');
         expect(accountFormTemplate).not.toContain("invalid-date-message");
-        expect(accountFormTemplate).toContain('data-account-button>Enregistrer</basic-button>');
+        expect(accountFormTemplate).toContain("data-account-button>Enregistrer</basic-button>");
         expect(accountFormTemplate).toContain('name="addressLine3"');
         expect(accountFormTemplate).toContain('name="countryCode"');
         expect(accountFormTemplate).toContain('data-account-field="login-email" data-auth-load');
-        expect(accountFormTemplate).toContain('data-auth-email label="Adresse e-mail" type="email" autocomplete="email" value="{{ subject.email }}" disabled');
+        expect(accountFormTemplate).toContain(
+            'data-auth-email label="Adresse e-mail" type="email" autocomplete="email" value="{{ subject.email }}" disabled',
+        );
         expect(accountFormTemplate).not.toContain('name="email"');
-        expect(accountFormTemplate.indexOf('data-account-field="birth-date"'))
-            .toBeLessThan(accountFormTemplate.indexOf('data-account-field="login-email"'));
-        expect(accountFormTemplate.indexOf('data-account-field="login-email"'))
-            .toBeLessThan(accountFormTemplate.indexOf('data-account-field="phone"'));
-        expect(accountForm?.viewJS).toContain('extends Composition');
-        expect(accountForm?.viewJS).toContain('`${prefix}/system-auth/me`');
-        expect(accountForm?.viewJS).toContain('this.querySelector(\'[data-account-field="birth-date"]\'), "max", currentLocalDate()');
-        expect(accountFormTemplate).toContain('<basic-input');
+        expect(accountFormTemplate.indexOf('data-account-field="birth-date"')).toBeLessThan(
+            accountFormTemplate.indexOf('data-account-field="login-email"'),
+        );
+        expect(accountFormTemplate.indexOf('data-account-field="login-email"')).toBeLessThan(
+            accountFormTemplate.indexOf('data-account-field="phone"'),
+        );
+        expect(accountForm?.viewJS).toContain("extends Composition");
+        expect(accountForm?.viewJS).toContain("`${prefix}/system-auth/me`");
+        expect(accountForm?.viewJS).toContain(
+            'this.querySelector(\'[data-account-field="birth-date"]\'), "max", currentLocalDate()',
+        );
+        expect(accountFormTemplate).toContain("<basic-input");
         expect(accountFormTemplate).toContain('<basic-button type="submit"');
         expect(accountFormTemplate).toContain('<user-account-avatar data-avatar-input name="file"');
         expect(accountFormTemplate).toContain('<basic-grid min="lg" max="none"');
-        expect(accountFormTemplate).toContain('<basic-stack');
+        expect(accountFormTemplate).toContain("<basic-stack");
         expect(accountFormTemplate).toContain('<basic-skeleton shape="circle" width="7rem" height="7rem"');
         expect(accountFormTemplate).toContain('label="Chargement de vos informations"');
-        expect(accountFormTemplate).not.toContain('>Chargement…</p>');
-        expect(accountFormTemplate).not.toContain('Mes informations');
-        expect(accountFormTemplate).not.toContain('data-account-title');
-        expect(accountFormTemplate).not.toContain('<p9r-grid');
-        expect(accountFormTemplate).not.toContain('<p9r-stack');
-        expect(accountFormTemplate).toContain('<basic-toast data-toast-kind="success" role="status" aria-live="polite"');
-        expect(accountFormTemplate).toContain('<basic-toast data-toast-kind="error" role="alert" aria-live="assertive"');
-        expect(accountFormTemplate).not.toContain('<basic-toast type=');
+        expect(accountFormTemplate).not.toContain(">Chargement…</p>");
+        expect(accountFormTemplate).not.toContain("Mes informations");
+        expect(accountFormTemplate).not.toContain("data-account-title");
+        expect(accountFormTemplate).not.toContain("<p9r-grid");
+        expect(accountFormTemplate).not.toContain("<p9r-stack");
+        expect(accountFormTemplate).toContain(
+            '<basic-toast data-toast-kind="success" role="status" aria-live="polite"',
+        );
+        expect(accountFormTemplate).toContain(
+            '<basic-toast data-toast-kind="error" role="alert" aria-live="assertive"',
+        );
+        expect(accountFormTemplate).not.toContain("<basic-toast type=");
         expect(accountFormTemplate).not.toContain('<p cms-condition="save.ok"');
-        expect(accountFormTemplate).not.toContain('<cms-binding-core');
-        expect(accountFormTemplate).not.toContain('<style');
+        expect(accountFormTemplate).not.toContain("<cms-binding-core");
+        expect(accountFormTemplate).not.toContain("<style");
         expect(accountAvatarTemplate).toContain('class="action"');
-        expect(accountAvatarStyle).toContain('.picker:hover .action');
-        expect(accountAvatar?.viewJS).toContain('extends Component');
-        expect(accountAvatar?.viewJS).toContain('URL.createObjectURL(file)');
+        expect(accountAvatarStyle).toContain(".picker:hover .action");
+        expect(accountAvatar?.viewJS).toContain("extends Component");
+        expect(accountAvatar?.viewJS).toContain("URL.createObjectURL(file)");
         expect(accountFormTemplate).not.toContain('cms-source-publish="user-account:avatar-updated"');
         expect(accountFormTemplate).not.toContain('cms-reload-on="user-account:avatar-updated"');
         expect(accountFormTemplate).not.toContain('cms-source-publish="user-account:updated"');
         expect(accountFormTemplate).not.toContain('cms-reload-on="user-account:updated"');
         expect(accountForm?.viewJS).toContain('this.querySelector("[data-avatar-form]")?.requestSubmit()');
         expect(accountForm?.viewJS).toContain('fileId.includes("{{")');
-        expect(accountForm?.viewJS).toContain('this.avatarObserver.observe(this');
+        expect(accountForm?.viewJS).toContain("this.avatarObserver.observe(this");
         expect(accountFormTemplate).not.toContain('name="avatarUrl"');
-        expect(accountFormTemplate.indexOf('<user-account-avatar'))
-            .toBeLessThan(accountFormTemplate.indexOf('<basic-skeleton shape="circle"'));
+        expect(accountFormTemplate.indexOf("<user-account-avatar")).toBeLessThan(
+            accountFormTemplate.indexOf('<basic-skeleton shape="circle"'),
+        );
         expect(accountFormTemplate).toContain('cms-source-trigger="submit"');
         expect(accountFormTemplate).toContain('value="{{ givenName }}"');
-        expect(accountForm?.editorJS).toContain('show-birth-date');
-        expect(accountForm?.editorJS).toContain('show-address-line-3');
+        expect(accountForm?.editorJS).toContain("show-birth-date");
+        expect(accountForm?.editorJS).toContain("show-address-line-3");
 
         const removedField = await okJson(await sourceDelete(harness, "deleteExtraField", { id: "company" }));
         const fieldsAfterRemoval = await okJson(await sourceRequest(harness, "listExtraFields"));
         const accountAfterRemoval = await okJson(await sourceRequest(harness, "getAccount"));
         expect(removedField).toEqual({ deleted: true, id: "company" });
-        expect(fieldsAfterRemoval.fields).not.toEqual(expect.arrayContaining([expect.objectContaining({ id: "company" })]));
+        expect(fieldsAfterRemoval.fields).not.toEqual(
+            expect.arrayContaining([expect.objectContaining({ id: "company" })]),
+        );
         expect(accountAfterRemoval).toMatchObject({ metadata: { employeeCount: 13 } });
         expect(accountAfterRemoval.metadata.company).toBeUndefined();
     });
 
     test("rejects unknown and disallowed flat metadata fields", async () => {
         const harness = await createHarness();
-        await okJson(await sourceJson(harness, "createExtraField", {
-            id: "level",
-            label: "Level",
-            type: "string",
-            options: [
-                { value: "club", label: "Club" },
-                { value: "competition", label: "Competition" },
-            ],
-        }));
+        await okJson(
+            await sourceJson(harness, "createExtraField", {
+                id: "level",
+                label: "Level",
+                type: "string",
+                options: [
+                    { value: "club", label: "Club" },
+                    { value: "competition", label: "Competition" },
+                ],
+            }),
+        );
 
         const unknown = await sourceJson(harness, "updateAccountMetadata", { hiddenRole: "admin" });
         const disallowed = await sourceJson(harness, "updateAccountMetadata", { level: "professional" });
@@ -375,7 +487,13 @@ describe("user-account 1.0.0 source", () => {
 
     test("stores and serves only the avatar referenced by the account row", async () => {
         const harness = await createHarness();
-        const upload = await okJson(await sourceUpload(harness, "uploadAccountAvatar", new File(["avatar"], "avatar.png", { type: "image/png" })));
+        const upload = await okJson(
+            await sourceUpload(
+                harness,
+                "uploadAccountAvatar",
+                new File(["avatar"], "avatar.png", { type: "image/png" }),
+            ),
+        );
         const fileId = String(upload.avatarFileId);
 
         const file = await sourceRequest(harness, "getAccountAvatar", { fileId });
@@ -411,7 +529,9 @@ function decodeBlocSource(bloc: IntegrationBlocArtifact | undefined, path: strin
 
 async function createHarness() {
     const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("user-account");
-    if (!definition) throw new Error("user-account definition not found");
+    if (!definition) {
+        throw new Error("user-account definition not found");
+    }
 
     const sources = new InMemorySourceRepository();
     const sourceOverlays = new InMemorySourceOverlayRepository();
@@ -484,14 +604,16 @@ async function createHarness() {
             }
             return await handler(request);
         } catch (error) {
-            return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
+            return new Response(error instanceof Error ? (error.stack ?? error.message) : String(error), {
+                status: 599,
+            });
         }
     };
     const overlayDeps = {
         fetchImpl: sourceFetch,
         resolveSecret: async (ref: string): Promise<string | undefined> => {
             const key = secretRefToKey(ref) ?? ref;
-            return await secrets.get(key) ?? undefined;
+            return (await secrets.get(key)) ?? undefined;
         },
     };
     const overlaySources = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: overlayDeps });
@@ -509,13 +631,15 @@ async function createHarness() {
         rest,
         async materializedOverlays() {
             const source = await sources.getSource("urn:user-account");
-            if (!source) throw new Error("user-account source not installed");
+            if (!source) {
+                throw new Error("user-account source not installed");
+            }
             return await materializeSourceOverlays(source, await sourceOverlays.getAllOverlays(), overlayDeps);
         },
         sourceFetch,
         async resolveSecret(ref: string): Promise<string | undefined> {
             const key = secretRefToKey(ref) ?? ref;
-            return await secrets.get(key) ?? undefined;
+            return (await secrets.get(key)) ?? undefined;
         },
     };
 }
@@ -532,17 +656,29 @@ class UserAccountSupabaseMock {
         const url = new URL(request.url);
         const method = request.method.toUpperCase();
 
-        if (url.origin !== supabaseUrl) throw new Error(`unexpected fetch: ${method} ${request.url}`);
+        if (url.origin !== supabaseUrl) {
+            throw new Error(`unexpected fetch: ${method} ${request.url}`);
+        }
         expect(request.headers.get("apikey")).toBe("supabase-secret-key");
         expect(request.headers.get("authorization")).toBe("Bearer supabase-secret-key");
-        if (url.pathname.startsWith("/storage/v1/object/")) return await this.storageFetch(request, url, method);
-        if (!url.pathname.startsWith("/rest/v1/")) throw new Error(`unexpected fetch: ${method} ${request.url}`);
+        if (url.pathname.startsWith("/storage/v1/object/")) {
+            return await this.storageFetch(request, url, method);
+        }
+        if (!url.pathname.startsWith("/rest/v1/")) {
+            throw new Error(`unexpected fetch: ${method} ${request.url}`);
+        }
 
         expect(request.headers.get("accept-profile")).toBe("user_account");
-        if (method !== "GET" && method !== "HEAD") expect(request.headers.get("content-profile")).toBe("user_account");
+        if (method !== "GET" && method !== "HEAD") {
+            expect(request.headers.get("content-profile")).toBe("user_account");
+        }
         const table = decodeURIComponent(url.pathname.slice("/rest/v1/".length));
-        if (!this.tables[table]) throw new Error(`unexpected table: ${table}`);
-        if (method === "GET") return jsonResponse(this.select(table, url));
+        if (!this.tables[table]) {
+            throw new Error(`unexpected table: ${table}`);
+        }
+        if (method === "GET") {
+            return jsonResponse(this.select(table, url));
+        }
         if (method === "POST") {
             const row = JSON.parse(await request.text()) as JsonRecord;
             const inserted = this.insert(table, row, url.searchParams.get("on_conflict") === "id");
@@ -550,7 +686,7 @@ class UserAccountSupabaseMock {
         }
         if (method === "PATCH") {
             const patch = JSON.parse(await request.text()) as JsonRecord;
-            const rows = this.selectRefs(table, url).map(row => this.update(table, row, patch));
+            const rows = this.selectRefs(table, url).map((row) => this.update(table, row, patch));
             return jsonResponse(rows);
         }
         if (method === "DELETE") {
@@ -561,7 +697,7 @@ class UserAccountSupabaseMock {
     }
 
     rows(table: string): JsonRecord[] {
-        return this.tables[table]!.map(row => ({ ...row }));
+        return this.tables[table]!.map((row) => ({ ...row }));
     }
 
     private async storageFetch(request: Request, url: URL, method: string): Promise<Response> {
@@ -579,14 +715,16 @@ class UserAccountSupabaseMock {
         }
         if (method === "GET") {
             const object = this.storageObjects.get(objectPath);
-            if (!object) return jsonResponse({ message: "not found" }, 404);
+            if (!object) {
+                return jsonResponse({ message: "not found" }, 404);
+            }
             return new Response(object.body, { status: 200, headers: object.headers });
         }
         throw new Error(`unexpected storage method: ${method} ${url}`);
     }
 
     private select(table: string, url: URL): JsonRecord[] {
-        return this.selectRefs(table, url).map(row => ({ ...row }));
+        return this.selectRefs(table, url).map((row) => ({ ...row }));
     }
 
     private selectRefs(table: string, url: URL): JsonRecord[] {
@@ -594,16 +732,28 @@ class UserAccountSupabaseMock {
         const userId = filterValue(url.searchParams.get("cms_user_id"));
         const id = filterValue(url.searchParams.get("id"));
         const or = url.searchParams.get("or");
-        if (userId?.operator === "eq") rows = rows.filter(row => same(row.cms_user_id, userId.value));
-        if (id?.operator === "eq") rows = rows.filter(row => same(row.id, id.value));
+        if (userId?.operator === "eq") {
+            rows = rows.filter((row) => same(row.cms_user_id, userId.value));
+        }
+        if (id?.operator === "eq") {
+            rows = rows.filter((row) => same(row.id, id.value));
+        }
         if (or) {
             const search = or.match(/ilike\.\*([^*]+)\*/)?.[1]?.toLowerCase() ?? "";
-            rows = rows.filter(row => ["cms_user_id", "phone", "given_name", "surname", "display_name"].some(key => String(row[key] ?? "").toLowerCase().includes(search)));
+            rows = rows.filter((row) =>
+                ["cms_user_id", "phone", "given_name", "surname", "display_name"].some((key) =>
+                    String(row[key] ?? "")
+                        .toLowerCase()
+                        .includes(search),
+                ),
+            );
         }
         if (table === "extra_fields") {
-            rows = [...rows].sort((left, right) =>
-                Number(left.position ?? 0) - Number(right.position ?? 0)
-                || String(left.id).localeCompare(String(right.id)));
+            rows = [...rows].sort(
+                (left, right) =>
+                    Number(left.position ?? 0) - Number(right.position ?? 0) ||
+                    String(left.id).localeCompare(String(right.id)),
+            );
         }
         return rows;
     }
@@ -611,12 +761,22 @@ class UserAccountSupabaseMock {
     private insert(table: string, value: JsonRecord, upsert = false): JsonRecord {
         const now = "2026-07-06T11:00:00.000Z";
         if (table === "extra_fields" && upsert) {
-            const existing = this.tables[table]!.find(row => same(row.id, value.id));
-            if (existing) return this.update(table, existing, value);
+            const existing = this.tables[table]!.find((row) => same(row.id, value.id));
+            if (existing) {
+                return this.update(table, existing, value);
+            }
         }
-        const row = table === "extra_fields"
-            ? { required: false, show_in_dashboard_table: false, position: this.tables[table]!.length, ...value, created_at: now, updated_at: now }
-            : { ...value, created_at: now, updated_at: now };
+        const row =
+            table === "extra_fields"
+                ? {
+                      required: false,
+                      show_in_dashboard_table: false,
+                      position: this.tables[table]!.length,
+                      ...value,
+                      created_at: now,
+                      updated_at: now,
+                  }
+                : { ...value, created_at: now, updated_at: now };
         this.tables[table]!.push(row);
         return { ...row };
     }
@@ -630,10 +790,13 @@ class UserAccountSupabaseMock {
         const userId = filterValue(url.searchParams.get("cms_user_id"));
         const id = filterValue(url.searchParams.get("id"));
         const deleted: JsonRecord[] = [];
-        this.tables[table] = this.tables[table]!.filter(row => {
-            const match = (userId?.operator === "eq" && same(row.cms_user_id, userId.value))
-                || (id?.operator === "eq" && same(row.id, id.value));
-            if (match) deleted.push(table === "extra_fields" ? { id: row.id } : { cms_user_id: row.cms_user_id });
+        this.tables[table] = this.tables[table]!.filter((row) => {
+            const match =
+                (userId?.operator === "eq" && same(row.cms_user_id, userId.value)) ||
+                (id?.operator === "eq" && same(row.id, id.value));
+            if (match) {
+                deleted.push(table === "extra_fields" ? { id: row.id } : { cms_user_id: row.cms_user_id });
+            }
             return !match;
         });
         return deleted;
@@ -641,38 +804,67 @@ class UserAccountSupabaseMock {
 }
 
 async function loadEdgeHandler(): Promise<EdgeHandler> {
-    if (!edgeHandler) await import(edgeFunctionUrl);
-    if (!edgeHandler) throw new Error("cms-user-account edge handler was not registered");
+    if (!edgeHandler) {
+        await import(edgeFunctionUrl);
+    }
+    if (!edgeHandler) {
+        throw new Error("cms-user-account edge handler was not registered");
+    }
     return edgeHandler;
 }
 
-async function sourceRequest(harness: Harness, endpoint: string, params: Record<string, string> = {}): Promise<Response> {
+async function sourceRequest(
+    harness: Harness,
+    endpoint: string,
+    params: Record<string, string> = {},
+): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}user-account/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await proxySource(harness, new Request(url));
 }
 
-async function sourceJson(harness: Harness, endpoint: string, body: unknown, params: Record<string, string> = {}): Promise<Response> {
+async function sourceJson(
+    harness: Harness,
+    endpoint: string,
+    body: unknown,
+    params: Record<string, string> = {},
+): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}user-account/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-    return await proxySource(harness, new Request(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-    }));
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
+    return await proxySource(
+        harness,
+        new Request(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+        }),
+    );
 }
 
-async function sourceUpload(harness: Harness, endpoint: string, file: File, params: Record<string, string> = {}): Promise<Response> {
+async function sourceUpload(
+    harness: Harness,
+    endpoint: string,
+    file: File,
+    params: Record<string, string> = {},
+): Promise<Response> {
     const form = new FormData();
     form.set("file", file);
     const url = new URL(`http://cms.local${sourcePrefix}user-account/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await proxySource(harness, new Request(url, { method: "POST", body: form }));
 }
 
 async function sourceDelete(harness: Harness, endpoint: string, params: Record<string, string>): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}user-account/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return await proxySource(harness, new Request(url, { method: "DELETE" }));
 }
 
@@ -701,7 +893,9 @@ function jsonResponse(data: unknown, status = 200): Response {
 }
 
 function filterValue(value: string | null): { operator: string; value: string } | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     const [operator, ...rest] = value.split(".");
     return { operator: operator ?? "", value: rest.join(".") };
 }
@@ -711,7 +905,7 @@ function same(a: unknown, b: unknown): boolean {
 }
 
 async function jsonBody(response: Response): Promise<JsonRecord> {
-    return await response.json() as JsonRecord;
+    return (await response.json()) as JsonRecord;
 }
 
 async function okJson(response: Response): Promise<JsonRecord> {

@@ -22,7 +22,7 @@ export function createSourceOverlayFetchProbe(respond: SourceOverlayFetchRespond
         fetchImpl,
         observations,
         count(pathname: string): number {
-            return observations.filter(entry => new URL(entry.url).pathname === pathname).length;
+            return observations.filter((entry) => new URL(entry.url).pathname === pathname).length;
         },
     };
 }

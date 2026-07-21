@@ -5,15 +5,8 @@ import {
 } from "../interfaces/Source";
 import type { IdentityService } from "@bernouy/cms-identities";
 import { buildUpstreamUrl, type SourceComputedContext } from "./buildUpstreamUrl";
-import {
-    buildForwardHeaders,
-    hasComputedHeaders,
-    hasComputedParams,
-} from "./endpointHeaders";
-import {
-    projectEndpointResponse,
-    type ResponseProjectionOptions,
-} from "./response-projection/projectEndpointResponse";
+import { buildForwardHeaders, hasComputedHeaders, hasComputedParams } from "./endpointHeaders";
+import { projectEndpointResponse, type ResponseProjectionOptions } from "./response-projection/projectEndpointResponse";
 import { bindResponseIdentities } from "./response-projection/bindResponseIdentities";
 import type { UndeclaredUpstreamStatus } from "./upstreamFailure";
 import { upstreamBody } from "./upstreamBody";
@@ -73,14 +66,20 @@ export async function executeEndpoint(
     }
     const computed = needsContext && deps?.resolveContext ? await deps.resolveContext(request) : {};
     const built = buildUpstreamUrl(endpoint, new URL(request.url).searchParams, computed);
-    if (!built.ok) return new Response(built.message, { status: built.status });
+    if (!built.ok) {
+        return new Response(built.message, { status: built.status });
+    }
 
     // Request: start from an EMPTY Headers object (inbound cookie / authorization never leak).
     const fwd = await buildForwardHeaders(endpoint, request, built.headers, computed, deps);
-    if (!fwd.ok) return fwd.response;
+    if (!fwd.ok) {
+        return fwd.response;
+    }
 
     const body = await upstreamBody(endpoint, request);
-    if (!body.ok) return body.response;
+    if (!body.ok) {
+        return body.response;
+    }
 
     const doFetch = deps?.fetchImpl ?? fetch;
     const ac = new AbortController();
@@ -89,23 +88,20 @@ export async function executeEndpoint(
 
     try {
         const init: RequestInit & { duplex?: "half" } = {
-            method:   endpoint.method,
-            headers:  fwd.headers,
+            method: endpoint.method,
+            headers: fwd.headers,
             redirect: "manual",
-            signal:   ac.signal,
+            signal: ac.signal,
         };
         if (body.body !== undefined) {
             init.body = body.body;
-            if (body.streaming) init.duplex = "half";
+            if (body.streaming) {
+                init.duplex = "half";
+            }
         }
         const upstream = await doFetch(built.url, init);
         const projected = await projectSourceResponse(endpoint, request, upstream, deps);
-        const bindingError = await bindResponseIdentities(
-            endpoint,
-            projected,
-            computed,
-            deps?.identities,
-        );
+        const bindingError = await bindResponseIdentities(endpoint, projected, computed, deps?.identities);
         return bindingError ?? projected;
     } catch (err) {
         const aborted = (err as { name?: string })?.name === "AbortError";
@@ -116,10 +112,12 @@ export async function executeEndpoint(
 }
 
 function validEndpointTimeout(timeoutMs: number | undefined): number {
-    if (timeoutMs === undefined
-        || !Number.isSafeInteger(timeoutMs)
-        || timeoutMs < 1
-        || timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS) {
+    if (
+        timeoutMs === undefined ||
+        !Number.isSafeInteger(timeoutMs) ||
+        timeoutMs < 1 ||
+        timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS
+    ) {
         return DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS;
     }
     return timeoutMs;
@@ -132,9 +130,8 @@ async function projectSourceResponse(
     deps: ExecutorDeps | undefined,
 ): Promise<Response> {
     const declared = hasResponseContract(endpoint, upstream.status);
-    const legacyStrictFailure = !declared
-        && deps?.reportFailure !== undefined
-        && deps.responseProjectionMode !== "compatibility";
+    const legacyStrictFailure =
+        !declared && deps?.reportFailure !== undefined && deps.responseProjectionMode !== "compatibility";
     const projected = await projectEndpointResponse(endpoint, request, upstream, {
         responseProjectionMode: legacyStrictFailure ? "strict" : deps?.responseProjectionMode,
         reportResponseProjectionEvent: deps?.reportResponseProjectionEvent,
@@ -146,7 +143,7 @@ async function projectSourceResponse(
 }
 
 function hasResponseContract(endpoint: SourceEndpoint, status: number): boolean {
-    return endpoint.output?.some(output => output.status === String(status) || output.status === "default") === true;
+    return endpoint.output?.some((output) => output.status === String(status) || output.status === "default") === true;
 }
 
 function reportUndeclaredStatus(

@@ -10,7 +10,9 @@ import { deleteIdentityProvider } from "@bernouy/cms-auth";
  *  provider's users keep their `sub` + role). */
 export default async function deleteProvider(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
-    if (typeof body.id !== "string" || !body.id) throw new MissingParam("id");
+    if (typeof body.id !== "string" || !body.id) {
+        throw new MissingParam("id");
+    }
 
     await deleteIdentityProvider(cms, body.id);
     return new Response();

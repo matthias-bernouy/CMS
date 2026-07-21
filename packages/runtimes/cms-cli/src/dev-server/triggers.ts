@@ -20,7 +20,7 @@ export class LocalFsTriggerRepository implements TriggerRepository {
 
     async createTrigger(trigger: TriggerRecord): Promise<TriggerRecord> {
         const triggers = await this.readAll();
-        if (triggers.some(candidate => candidate.id === trigger.id)) {
+        if (triggers.some((candidate) => candidate.id === trigger.id)) {
             throw new DuplicateTriggerError(trigger.id);
         }
         triggers.push(structuredClone(trigger));
@@ -30,8 +30,10 @@ export class LocalFsTriggerRepository implements TriggerRepository {
 
     async updateTrigger(trigger: TriggerRecord): Promise<TriggerRecord | null> {
         const triggers = await this.readAll();
-        const index = triggers.findIndex(candidate => candidate.id === trigger.id);
-        if (index < 0) return null;
+        const index = triggers.findIndex((candidate) => candidate.id === trigger.id);
+        if (index < 0) {
+            return null;
+        }
         triggers[index] = structuredClone(trigger);
         await this.writeAll(triggers);
         return structuredClone(trigger);
@@ -39,31 +41,35 @@ export class LocalFsTriggerRepository implements TriggerRepository {
 
     async deleteTrigger(id: string): Promise<boolean> {
         const triggers = await this.readAll();
-        const next = triggers.filter(trigger => trigger.id !== id);
-        if (next.length === triggers.length) return false;
+        const next = triggers.filter((trigger) => trigger.id !== id);
+        if (next.length === triggers.length) {
+            return false;
+        }
         await this.writeAll(next);
         return true;
     }
 
     async getTrigger(id: string): Promise<TriggerRecord | null> {
-        const found = (await this.readAll()).find(trigger => trigger.id === id);
+        const found = (await this.readAll()).find((trigger) => trigger.id === id);
         return found ? structuredClone(found) : null;
     }
 
     async getAllTriggers(): Promise<TriggerRecord[]> {
-        return (await this.readAll()).map(trigger => structuredClone(trigger));
+        return (await this.readAll()).map((trigger) => structuredClone(trigger));
     }
 
     async findEndpointTriggers(source: string, endpoint: string): Promise<TriggerRecord[]> {
         return (await this.readAll())
-            .filter(trigger => matchesEndpointTriggerScope(trigger, source, endpoint))
-            .map(trigger => structuredClone(trigger));
+            .filter((trigger) => matchesEndpointTriggerScope(trigger, source, endpoint))
+            .map((trigger) => structuredClone(trigger));
     }
 
     async setEnabled(id: string, enabled: boolean): Promise<TriggerRecord | null> {
         const triggers = await this.readAll();
-        const index = triggers.findIndex(trigger => trigger.id === id);
-        if (index < 0) return null;
+        const index = triggers.findIndex((trigger) => trigger.id === id);
+        if (index < 0) {
+            return null;
+        }
         triggers[index] = { ...triggers[index]!, enabled };
         await this.writeAll(triggers);
         return structuredClone(triggers[index]!);
@@ -71,18 +77,24 @@ export class LocalFsTriggerRepository implements TriggerRepository {
 
     async recordRun(id: string, lastRun: TriggerLastRun): Promise<TriggerRecord | null> {
         const triggers = await this.readAll();
-        const index = triggers.findIndex(trigger => trigger.id === id);
-        if (index < 0) return null;
+        const index = triggers.findIndex((trigger) => trigger.id === id);
+        if (index < 0) {
+            return null;
+        }
         triggers[index] = { ...triggers[index]!, lastRun: structuredClone(lastRun) };
         await this.writeAll(triggers);
         return structuredClone(triggers[index]!);
     }
 
     private async readAll(): Promise<TriggerRecord[]> {
-        if (!existsSync(this.file)) return [];
+        if (!existsSync(this.file)) {
+            return [];
+        }
         const parsed = JSON.parse(await readFile(this.file, "utf-8")) as unknown;
-        if (!Array.isArray(parsed)) return [];
-        return parsed.filter(isTrigger).map(trigger => structuredClone(trigger));
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+        return parsed.filter(isTrigger).map((trigger) => structuredClone(trigger));
     }
 
     private async writeAll(triggers: TriggerRecord[]): Promise<void> {
@@ -93,11 +105,13 @@ export class LocalFsTriggerRepository implements TriggerRepository {
 }
 
 function isTrigger(value: unknown): value is TriggerRecord {
-    return !!value
-        && typeof value === "object"
-        && !Array.isArray(value)
-        && typeof (value as { id?: unknown }).id === "string"
-        && typeof (value as { enabled?: unknown }).enabled === "boolean"
-        && typeof (value as { event?: { phase?: unknown } }).event?.phase === "string"
-        && typeof (value as { function?: { id?: unknown } }).function?.id === "string";
+    return (
+        !!value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        typeof (value as { id?: unknown }).id === "string" &&
+        typeof (value as { enabled?: unknown }).enabled === "boolean" &&
+        typeof (value as { event?: { phase?: unknown } }).event?.phase === "string" &&
+        typeof (value as { function?: { id?: unknown } }).function?.id === "string"
+    );
 }

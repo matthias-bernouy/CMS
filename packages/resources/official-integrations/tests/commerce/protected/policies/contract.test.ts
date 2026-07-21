@@ -36,7 +36,9 @@ describe("protected C2C financial policy contract", () => {
         expect(deadlineWorker).toContain("v_candidate.id, 'approved', 'system', 'deadline-worker:'");
         expect(schema).toContain("actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')");
         expect(schema).toContain("requested_by_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system')");
-        expect(schema).toContain("actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system', 'provider')");
+        expect(schema).toContain(
+            "actor_kind in ('buyer', 'seller', 'support', 'finance', 'admin', 'system', 'provider')",
+        );
         expect(schema).toContain("authorized_by_kind in ('finance', 'admin', 'system')");
         expect(reviewRefund).toContain("dual approval requires a second admin actor");
         expect(reviewRefund).toContain("'admin', p_actor_id");
@@ -47,18 +49,22 @@ describe("protected C2C financial policy contract", () => {
     test("publishes aggregate payout controls as required payment and release inputs", async () => {
         const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source");
-        const endpoint = source.source.endpoints.find((candidate: any) => candidate.endpointId === "prepareProtectedPayment");
+        const endpoint = source.source.endpoints.find(
+            (candidate: any) => candidate.endpointId === "prepareProtectedPayment",
+        );
         const body = endpoint.output[0].body;
 
         expect(endpoint.access).toBe("system");
-        expect(body.required).toEqual(expect.arrayContaining([
-            "payoutDelayDays",
-            "sellerReserveLiabilityDays",
-            "sellerRequiredMinimumBalanceAmount",
-            "platformRequiredMinimumBalanceAmount",
-            "platformLiabilityRevision",
-            "platformPayoutChangeDirection",
-        ]));
+        expect(body.required).toEqual(
+            expect.arrayContaining([
+                "payoutDelayDays",
+                "sellerReserveLiabilityDays",
+                "sellerRequiredMinimumBalanceAmount",
+                "platformRequiredMinimumBalanceAmount",
+                "platformLiabilityRevision",
+                "platformPayoutChangeDirection",
+            ]),
+        );
         expect(body.properties).toMatchObject({
             payoutDelayDays: { type: "number" },
             sellerReserveLiabilityDays: { type: "number" },
@@ -74,11 +80,9 @@ describe("protected C2C financial policy contract", () => {
             (candidate: any) => candidate.endpointId === "authorizeDueOrderReleases",
         ).output[0].body.properties.authorizations.items;
         for (const releaseShape of [releaseBody, dueReleaseItem]) {
-            expect(releaseShape.required).toEqual(expect.arrayContaining([
-                "sellerId",
-                "sellerRequiredMinimumBalanceAmount",
-                "payoutDelayDays",
-            ]));
+            expect(releaseShape.required).toEqual(
+                expect.arrayContaining(["sellerId", "sellerRequiredMinimumBalanceAmount", "payoutDelayDays"]),
+            );
             expect(releaseShape.properties).toMatchObject({
                 sellerId: {
                     type: "string",
@@ -153,9 +157,7 @@ describe("protected C2C financial policy contract", () => {
         const cancellationBranchStart = projection.indexOf("\n            else", claimBranchStart);
         expect(claimBranchStart).toBeGreaterThanOrEqual(0);
         expect(cancellationBranchStart).toBeGreaterThan(claimBranchStart);
-        expect(projection.slice(claimBranchStart, cancellationBranchStart)).not.toContain(
-            "restore_order_inventory",
-        );
+        expect(projection.slice(claimBranchStart, cancellationBranchStart)).not.toContain("restore_order_inventory");
     });
 
     test("fails closed without an explicitly audited fee policy", async () => {
@@ -209,11 +211,7 @@ describe("protected C2C financial policy contract", () => {
 
     test("returns the original result for an exact cancellation replay", async () => {
         const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
-        const cancellation = functionSql(
-            schema,
-            "request_order_cancellation",
-            "review_order_cancellation",
-        );
+        const cancellation = functionSql(schema, "request_order_cancellation", "review_order_cancellation");
 
         expect(cancellation).toContain("requested_by_kind = p_actor_kind");
         expect(cancellation).toContain("requested_by = p_actor_id");
@@ -248,9 +246,7 @@ describe("protected C2C financial policy contract", () => {
         expect(successBranch).toContain("v_settlement.status = 'manual_review'");
         expect(successBranch).toContain("v_settlement.manual_review_reason in (");
         expect(successBranch).toContain("'provider_payment_manual_review_nonrecoverable'");
-        expect(projection).toContain(
-            "'Stripe payment provider truth mismatch: charge_balance_transaction_expansion'",
-        );
+        expect(projection).toContain("'Stripe payment provider truth mismatch: charge_balance_transaction_expansion'");
         expect(manualQualification).toContain("p_status = 'manual_review'");
         expect(manualQualification).toContain("v_provider_review_reason = v_transient_provider_review_reason");
         expect(manualQualification).toContain("p_provider_snapshot->>'paymentStatus' in ('failed', 'succeeded')");
@@ -261,10 +257,14 @@ describe("protected C2C financial policy contract", () => {
         expect(manualQualification).toContain("p_provider_snapshot->>'clientReferenceId' = v_order.public_id::text");
         expect(manualQualification).toContain("'amountTotal', v_terms.buyer_total_amount");
         expect(manualQualification).toContain("lower(p_provider_snapshot->>'currency') = v_terms.currency");
-        expect(manualQualification).toContain("p_provider_snapshot->>'financialTermsHash' = v_terms.financial_terms_hash");
+        expect(manualQualification).toContain(
+            "p_provider_snapshot->>'financialTermsHash' = v_terms.financial_terms_hash",
+        );
         expect(manualQualification).toContain("p_provider_payment_intent_id is not null");
         expect(manualQualification).toContain("p_provider_charge_id is not null");
-        expect(manualQualification).toContain("p_provider_snapshot->>'stripePaymentIntentId' = p_provider_payment_intent_id");
+        expect(manualQualification).toContain(
+            "p_provider_snapshot->>'stripePaymentIntentId' = p_provider_payment_intent_id",
+        );
         expect(manualQualification).toContain("p_provider_snapshot->>'stripeChargeId' = p_provider_charge_id");
         expect(manualQualification).toContain("p_provider_snapshot->>'stripeChargeBalanceTransactionId'");
         expect(manualQualification).toContain("p_occurred_at = v_snapshot_updated_at");
@@ -303,14 +303,18 @@ describe("protected C2C financial policy contract", () => {
         expect(successBranch).toContain("financial_exception.reason = 'Ambiguous provider payment state'");
         expect(successBranch).toContain("'Provider payment requires non-automatic manual review'");
         expect(successBranch).toContain("financial_exception.details->>'recoverable' = 'false'");
-        expect(successBranch).toContain("financial_exception.details->>'providerPaymentId' = p_provider_payment_id::text");
+        expect(successBranch).toContain(
+            "financial_exception.details->>'providerPaymentId' = p_provider_payment_id::text",
+        );
         expect(successBranch).toContain("financial_exception.details->>'providerManualReviewReason'");
         expect(successBranch).toContain("financial_exception.details->>'recoverable' = 'true'");
         expect(successBranch).toContain("financial_exception.details->>'providerOccurredAt'");
         expect(successBranch).toContain("v_review_occurred_at :=");
         expect(successBranch).toContain("p_occurred_at > v_review_occurred_at");
         expect(successBranch).toContain("financial_exception.status in ('open', 'investigating')");
-        expect(successBranch).toContain("and not exists (\n                select 1\n                from commerce.financial_exceptions");
+        expect(successBranch).toContain(
+            "and not exists (\n                select 1\n                from commerce.financial_exceptions",
+        );
         expect(successBranch).toContain("from commerce.provider_projection_events provider_event");
         expect(successBranch).toContain("provider_event.event_type like 'payment.%'");
         expect(successBranch).toContain("provider_event.provider_event_id <> p_provider_event_id");
@@ -342,8 +346,12 @@ describe("protected C2C financial policy contract", () => {
         expect(successBranch).toContain("and v_fulfillment.blocking_reason is null");
         expect(successBranch).toContain("and v_fulfillment.release_eligible_at is null");
         expect(projection).toContain("'paymentReviewRecovered', v_recovered_ambiguous_payment");
-        expect(manualReviewBranch).toContain("'ambiguous-payment-state:' || v_order.id || ':' || p_provider_payment_id");
-        expect(manualReviewBranch).toContain("'provider-payment-review:' || v_order.id || ':' || p_provider_payment_id");
+        expect(manualReviewBranch).toContain(
+            "'ambiguous-payment-state:' || v_order.id || ':' || p_provider_payment_id",
+        );
+        expect(manualReviewBranch).toContain(
+            "'provider-payment-review:' || v_order.id || ':' || p_provider_payment_id",
+        );
         expect(manualReviewBranch).toContain("'provider_payment_manual_review_nonrecoverable'");
         expect(manualReviewBranch).toContain("if v_payment_review_transition_safe then");
         expect(manualReviewBranch).toContain("and status = 'held'");
@@ -366,27 +374,39 @@ describe("protected C2C financial policy contract", () => {
         const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source");
         const financialIds = new Set([
-            "c2cPolicies", "createC2cPolicyRevision", "protectedPayments", "protectedPayment",
-            "claims", "claim", "resolveOrderClaim", "refundRequests", "refundRequest",
-            "requestOrderRefund", "reviewOrderRefund", "authorizeOrderRelease",
-            "reviewOrderCancellation", "listCommerceExceptions",
+            "c2cPolicies",
+            "createC2cPolicyRevision",
+            "protectedPayments",
+            "protectedPayment",
+            "claims",
+            "claim",
+            "resolveOrderClaim",
+            "refundRequests",
+            "refundRequest",
+            "requestOrderRefund",
+            "reviewOrderRefund",
+            "authorizeOrderRelease",
+            "reviewOrderCancellation",
+            "listCommerceExceptions",
         ]);
         const financialEndpoints = source.source.endpoints.filter((item: any) => financialIds.has(item.endpointId));
         expect(financialEndpoints).toHaveLength(financialIds.size);
         for (const endpoint of financialEndpoints) {
             expect(endpoint.access).toEqual({ mode: "admin" });
-            expect(endpoint.headers).toEqual(expect.arrayContaining([
-                { name: "x-cms-user-id", source: { from: "computed", ref: "userID" } },
-                { name: "x-cms-user-role", source: { from: "computed", ref: "userRole" } },
-            ]));
+            expect(endpoint.headers).toEqual(
+                expect.arrayContaining([
+                    { name: "x-cms-user-id", source: { from: "computed", ref: "userID" } },
+                    { name: "x-cms-user-role", source: { from: "computed", ref: "userRole" } },
+                ]),
+            );
         }
     });
 
     test("publishes protected C2C revisions from the admin settings dashboard with CAS and typed controls", async () => {
         const definition = JSON.parse(await readFile(resolve(integrationRoot, "definition.json"), "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
-        const dashboard = definition.artifacts.find((artifact: any) =>
-            artifact.dashboard?.id === "{{answers.id}}-configuration"
+        const dashboard = definition.artifacts.find(
+            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-configuration",
         ).dashboard;
         const detail = dashboard.views.find((view: any) => view.id === "protectedC2cPolicySettings");
         const action = detail.actions.find((candidate: any) => candidate.id === "publishProtectedC2cPolicyRevision");
@@ -404,24 +424,39 @@ describe("protected C2C financial policy contract", () => {
                 body: { expectedSettingsVersion: "$resource.settings.version" },
             },
         });
-        expect(Object.keys(action.endpoint.body).sort()).toEqual(endpoint.body.required.concat([
-            "buyerFeeMinimumAmount", "buyerFeeMaximumAmount", "sellerFeeMinimumAmount",
-            "sellerFeeMaximumAmount", "subsidyReason", "subsidyMaximumDeficitAmount",
-        ]).sort());
+        expect(Object.keys(action.endpoint.body).sort()).toEqual(
+            endpoint.body.required
+                .concat([
+                    "buyerFeeMinimumAmount",
+                    "buyerFeeMaximumAmount",
+                    "sellerFeeMinimumAmount",
+                    "sellerFeeMaximumAmount",
+                    "subsidyReason",
+                    "subsidyMaximumDeficitAmount",
+                ])
+                .sort(),
+        );
         expect(JSON.stringify(action.endpoint.body)).not.toMatch(/PolicyId|activeC2c/i);
         expect(fieldById.costEstimatesConfigured).toMatchObject({ type: "checkbox" });
         expect(fieldById.subsidyOverride).toMatchObject({ type: "checkbox" });
         for (const id of [
-            "buyerFeeRateBps", "sellerFeeRateBps", "sellerReserveRateBps",
-            "claimRatioReviewBps", "chargebackRatioReviewBps",
+            "buyerFeeRateBps",
+            "sellerFeeRateBps",
+            "sellerReserveRateBps",
+            "claimRatioReviewBps",
+            "chargebackRatioReviewBps",
         ]) {
             expect(fieldById[id]).toMatchObject({ type: "number", min: 0, step: 1 });
         }
         expect(fieldById.buyerFeeBasis.options.map((item: any) => item.value)).toEqual([
-            "merchandise", "merchandise_and_shipping",
+            "merchandise",
+            "merchandise_and_shipping",
         ]);
         expect(fieldById.buyerFeeRefundPolicy.options.map((item: any) => item.value)).toEqual([
-            "always", "never", "proportional", "resolution_defined",
+            "always",
+            "never",
+            "proportional",
+            "resolution_defined",
         ]);
         expect(fieldById.sellerFeeRefundPolicy.options.map((item: any) => item.value)).toEqual(["never"]);
     });
@@ -429,10 +464,13 @@ describe("protected C2C financial policy contract", () => {
     test("serializes protected C2C publication and rejects stale settings versions", async () => {
         const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
         const createRevision = functionSql(schema, "create_c2c_policy_revision", "refresh_seller_risk_state");
-        const route = await readFile(resolve(
-            integrationRoot,
-            "connectors/supabase/functions/cms-commerce/routes/configuration/protected-policies.ts",
-        ), "utf8");
+        const route = await readFile(
+            resolve(
+                integrationRoot,
+                "connectors/supabase/functions/cms-commerce/routes/configuration/protected-policies.ts",
+            ),
+            "utf8",
+        );
 
         expect(createRevision).toContain("pg_advisory_xact_lock(hashtextextended('commerce-c2c-policy', 0))");
         expect(createRevision).toContain("from commerce.settings where id = 'default' for update");
@@ -460,7 +498,11 @@ describe("protected C2C financial policy contract", () => {
 
     test("finalizes provider-absent cancellation without creating a fake payment liability", async () => {
         const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
-        const absent = functionSql(schema, "record_absent_order_payment_cancellation", "record_order_payment_projection");
+        const absent = functionSql(
+            schema,
+            "record_absent_order_payment_cancellation",
+            "record_order_payment_projection",
+        );
         const prepare = functionSql(schema, "prepare_protected_payment", "ensure_payment_cancellation_request");
         const aggregate = schema.slice(
             schema.indexOf("create or replace view commerce.platform_payout_order_contribution_projection"),
@@ -478,8 +520,12 @@ describe("protected C2C financial policy contract", () => {
     });
 
     test("keeps claim evidence private and requires carrier proof before resolving a required return", async () => {
-        const schema = await Bun.file(new URL("../../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url)).text();
-        const definition = await Bun.file(new URL("../../../../integrations/commerce/versions/1.0.0/definition.json", import.meta.url)).json() as Record<string, unknown>;
+        const schema = await Bun.file(
+            new URL("../../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+        ).text();
+        const definition = (await Bun.file(
+            new URL("../../../../integrations/commerce/versions/1.0.0/definition.json", import.meta.url),
+        ).json()) as Record<string, unknown>;
         const serialized = JSON.stringify(definition);
 
         expect(schema).toContain("'commerce-claim-evidence', 'commerce-claim-evidence', false");
@@ -490,12 +536,15 @@ describe("protected C2C financial policy contract", () => {
         expect(serialized).toContain("uploadMySaleClaimEvidence");
         expect(serialized).toContain("claimEvidenceFile");
         expect(serialized).toContain("recordClaimReturnDelivery");
-        const sourceArtifact = (definition.artifacts as Array<Record<string, unknown>>)
-            .find(artifact => artifact.type === "source") as { source?: { endpoints?: Array<Record<string, unknown>> } } | undefined;
-        const claimEndpoint = sourceArtifact?.source?.endpoints?.find(endpoint => endpoint.endpointId === "claim");
+        const sourceArtifact = (definition.artifacts as Array<Record<string, unknown>>).find(
+            (artifact) => artifact.type === "source",
+        ) as { source?: { endpoints?: Array<Record<string, unknown>> } } | undefined;
+        const claimEndpoint = sourceArtifact?.source?.endpoints?.find((endpoint) => endpoint.endpointId === "claim");
         expect(JSON.stringify(claimEndpoint)).not.toContain("storagePath");
-        const evidenceEndpoints = sourceArtifact?.source?.endpoints?.filter(endpoint =>
-            String(endpoint.endpointId ?? "").toLowerCase().includes("claimevidence")
+        const evidenceEndpoints = sourceArtifact?.source?.endpoints?.filter((endpoint) =>
+            String(endpoint.endpointId ?? "")
+                .toLowerCase()
+                .includes("claimevidence"),
         );
         expect(JSON.stringify(evidenceEndpoints)).not.toContain("storagePath");
     });
@@ -507,16 +556,10 @@ describe("protected C2C financial policy contract", () => {
             "get_order_fulfillment_authorization",
             "get_order_label_authorization",
         );
-        const reservation = functionSql(
-            schema,
-            "reserve_order_shipment_creation",
-            "claim_pending_shipment_creations",
-        );
+        const reservation = functionSql(schema, "reserve_order_shipment_creation", "claim_pending_shipment_creations");
 
         for (const boundary of [authorization, reservation]) {
-            expect(boundary).toContain(
-                "('awaiting_shipment', 'shipment_creating', 'label_created')",
-            );
+            expect(boundary).toContain("('awaiting_shipment', 'shipment_creating', 'label_created')");
         }
         expect(reservation).toContain("v_operation.status in ('failed', 'requested')");
         expect(reservation).toContain("v_operation.claimed_at < now() - interval '5 minutes'");
@@ -531,12 +574,9 @@ describe("protected C2C financial policy contract", () => {
             "record_delivery_reconciliation_health",
         );
 
-        expect(labelAuthorization).toContain(
-            "fulfillment.status in ('label_created', 'seller_handoff_declared')",
-        );
+        expect(labelAuthorization).toContain("fulfillment.status in ('label_created', 'seller_handoff_declared')");
         expect(labelAuthorization).not.toContain("'carrier_accepted'");
     });
-
 });
 
 function functionSql(schema: string, start: string, end: string): string {

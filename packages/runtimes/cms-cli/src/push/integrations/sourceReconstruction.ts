@@ -20,11 +20,11 @@ export function reconstructSource(value: unknown): Source {
     return sourceDtoToSource({
         id: r.id,
         meta: r.meta ?? { name: r.id },
-        endpoints: (r.endpoints ?? []).map(e => ({
+        endpoints: (r.endpoints ?? []).map((e) => ({
             endpointId: e.endpointId,
             method: e.method,
             targetUrl: e.targetUrl,
-            params: (e.params ?? []).map(p => ({
+            params: (e.params ?? []).map((p) => ({
                 name: p.name,
                 in: p.in,
                 ...(p.type ? { type: p.type } : {}),

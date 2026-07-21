@@ -13,7 +13,9 @@ class BasicRedirect extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (!this.isConnected) return;
+        if (!this.isConnected) {
+            return;
+        }
         this.render();
         this.redirect();
     }
@@ -36,18 +38,26 @@ class BasicRedirect extends HTMLElement {
             <a hidden></a>
         `;
 
-        if (!isFramed()) return;
+        if (!isFramed()) {
+            return;
+        }
         this.style.display = "block";
         const preview = this.root.querySelector(".preview");
         preview.textContent = page ? `Redirection vers ${page}` : "Choisissez une page de redirection";
     }
 
     redirect() {
-        if (isFramed() || this.hasRedirected) return;
+        if (isFramed() || this.hasRedirected) {
+            return;
+        }
         const page = this.getAttribute("page") || "";
-        if (!isInternalPage(page)) return;
+        if (!isInternalPage(page)) {
+            return;
+        }
         const target = new URL(page, window.location.href);
-        if (target.href === window.location.href) return;
+        if (target.href === window.location.href) {
+            return;
+        }
         this.hasRedirected = true;
         const anchor = this.root.querySelector("a");
         anchor.href = target.href;

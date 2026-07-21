@@ -1,7 +1,4 @@
-import type {
-    ColorSetting,
-    SettingLabelDisplay,
-} from "@bernouy/cms-content/editor";
+import type { ColorSetting, SettingLabelDisplay } from "@bernouy/cms-content/editor";
 import type { SettingsViewThemeToken } from "../SettingsView";
 
 type RenderFieldLabel = (label: string, display: SettingLabelDisplay | undefined) => HTMLElement | null;
@@ -16,7 +13,9 @@ export function renderColorSetting(
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
     const label = renderFieldLabel(setting.label, setting.labelDisplay);
-    if (label) wrapper.append(label);
+    if (label) {
+        wrapper.append(label);
+    }
 
     const controls = document.createElement("div");
     controls.className = "color-custom";
@@ -33,7 +32,9 @@ export function renderColorSetting(
     apply.textContent = "Apply";
     apply.disabled = setting.disabled === true;
     apply.addEventListener("click", () => {
-        if (!setting.disabled) emitColorChange(input.value.trim());
+        if (!setting.disabled) {
+            emitColorChange(input.value.trim());
+        }
     });
 
     controls.append(picker, input, apply);
@@ -81,11 +82,16 @@ function createTokenSelect(
         }
         group.append(option);
     }
-    const selected = Array.from(select.querySelectorAll("option"))
-        .find((option) => option.value === (setting.defaultValue ?? ""));
-    if (selected) selected.selected = true;
+    const selected = Array.from(select.querySelectorAll("option")).find(
+        (option) => option.value === (setting.defaultValue ?? ""),
+    );
+    if (selected) {
+        selected.selected = true;
+    }
     select.addEventListener("change", () => {
-        if (setting.disabled || !select.value) return;
+        if (setting.disabled || !select.value) {
+            return;
+        }
         input.value = select.value;
         picker.value = colorPickerValue(select.value);
         emitColorChange(select.value);
@@ -120,12 +126,16 @@ function wireColorInputs(
     emitColorChange: EmitColorChange,
 ): void {
     picker.addEventListener("input", () => {
-        if (setting.disabled) return;
+        if (setting.disabled) {
+            return;
+        }
         input.value = picker.value;
         emitColorChange(picker.value);
     });
     input.addEventListener("change", () => {
-        if (setting.disabled) return;
+        if (setting.disabled) {
+            return;
+        }
         picker.value = colorPickerValue(input.value);
         emitColorChange(input.value.trim());
     });
@@ -133,9 +143,15 @@ function wireColorInputs(
 
 function colorPickerValue(value: string | undefined): string {
     const normalized = value?.trim() ?? "";
-    if (/^#[\da-f]{6}$/i.test(normalized)) return normalized;
+    if (/^#[\da-f]{6}$/i.test(normalized)) {
+        return normalized;
+    }
     if (/^#[\da-f]{3}$/i.test(normalized)) {
-        return `#${normalized.slice(1).split("").map(character => character.repeat(2)).join("")}`;
+        return `#${normalized
+            .slice(1)
+            .split("")
+            .map((character) => character.repeat(2))
+            .join("")}`;
     }
     return "#000000";
 }

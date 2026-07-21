@@ -1,8 +1,12 @@
 export function valueAt(value: unknown, path: string | undefined): unknown {
-    if (!path) return value;
+    if (!path) {
+        return value;
+    }
     let current = value;
     for (const segment of path.split(".").filter(Boolean)) {
-        if (!isRecord(current)) return undefined;
+        if (!isRecord(current)) {
+            return undefined;
+        }
         current = current[segment];
     }
     return current;
@@ -15,7 +19,9 @@ export function arrayAt(value: unknown, path: string | undefined): unknown[] {
 
 export function textAt(value: unknown, path: string | undefined): string {
     const found = valueAt(value, path);
-    if (found === null || found === undefined) return "";
+    if (found === null || found === undefined) {
+        return "";
+    }
     return String(found);
 }
 

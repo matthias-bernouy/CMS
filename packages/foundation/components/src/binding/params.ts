@@ -54,8 +54,11 @@ export function resolveState(template: string, doc: Document = document): string
  */
 export function setParam(name: string, value: string): void {
     const params = currentParams();
-    if (value === "") params.delete(name);
-    else params.set(name, value);
+    if (value === "") {
+        params.delete(name);
+    } else {
+        params.set(name, value);
+    }
     const qs = params.toString();
     history.replaceState(history.state, "", location.pathname + (qs ? `?${qs}` : "") + location.hash);
     document.dispatchEvent(new Event(PARAMS_CHANGE_EVENT));
@@ -67,13 +70,20 @@ export function currentState(name: string, doc: Document = document): string {
 
 export function setState(name: string, value: string, doc: Document = document): void {
     const key = name.trim();
-    if (!key) return;
+    if (!key) {
+        return;
+    }
     const state = stateForDocument(doc);
     const next = value;
     const previous = state.get(key) ?? "";
-    if (next === "") state.delete(key);
-    else state.set(key, next);
-    if (next !== previous) doc.dispatchEvent(new Event(STATE_CHANGE_EVENT));
+    if (next === "") {
+        state.delete(key);
+    } else {
+        state.set(key, next);
+    }
+    if (next !== previous) {
+        doc.dispatchEvent(new Event(STATE_CHANGE_EVENT));
+    }
 }
 
 function stateForDocument(doc: Document): Map<string, string> {

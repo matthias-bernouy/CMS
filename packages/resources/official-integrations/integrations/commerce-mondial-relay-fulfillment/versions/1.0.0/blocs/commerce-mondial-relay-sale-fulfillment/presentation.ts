@@ -23,7 +23,9 @@ export function renderFulfillment(host, result, shipment) {
     host.handoffButton.textContent = host.text("handoff-label", "J’ai déposé le colis");
     host.handoffButton.hidden = status !== "label_ready" || handoffDeclared || carrierAccepted;
     syncLink(host.trackingLink, shipment?.trackingUrl, host.text("tracking-label", "Suivre le colis"));
-    if (awaitingCarrierScan) host.latest.textContent = "En attente du premier scan Mondial Relay.";
+    if (awaitingCarrierScan) {
+        host.latest.textContent = "En attente du premier scan Mondial Relay.";
+    }
     host.setStatus("", false);
 }
 
@@ -52,8 +54,11 @@ function syncTheme(host) {
         ["text-color", "--fulfillment-text"],
     ]) {
         const value = host.getAttribute(attribute)?.trim();
-        if (value) host.style.setProperty(property, value);
-        else host.style.removeProperty(property);
+        if (value) {
+            host.style.setProperty(property, value);
+        } else {
+            host.style.removeProperty(property);
+        }
     }
     const accent = host.getAttribute("accent-color")?.trim() || "var(--secondary-base)";
     const background = host.getAttribute("background-color")?.trim() || "var(--bg-surface)";

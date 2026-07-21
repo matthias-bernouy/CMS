@@ -6,24 +6,19 @@ import { rpc } from "../../../../core/rest.ts";
 import type { JsonRecord } from "../../../../core/types.ts";
 
 const fulfillmentFunction = "get_order_fulfillment_seller_context";
-const shipmentCreationFunction =
-    "get_order_shipment_creation_seller_context";
+const shipmentCreationFunction = "get_order_shipment_creation_seller_context";
 const labelFunction = "get_order_label_seller_context";
 const fulfillmentFields = ["id", "public_id", "order_number"] as const;
-const shipmentCreationFields = [
-    "id", "public_id", "allowed", "seller_cms_user_id",
-] as const;
+const shipmentCreationFields = ["id", "public_id", "allowed", "seller_cms_user_id"] as const;
 const labelFields = ["public_id", "allowed", "seller_cms_user_id"] as const;
 
-export async function getOrderFulfillmentSellerContext(
-    request: Request,
-): Promise<Response> {
+export async function getOrderFulfillmentSellerContext(request: Request): Promise<Response> {
     const context = await loadSellerContext(request, fulfillmentFunction);
     if (
-        !hasFields(context, fulfillmentFields)
-        || !Number.isSafeInteger(context.id)
-        || typeof context.public_id !== "string"
-        || typeof context.order_number !== "string"
+        !hasFields(context, fulfillmentFields) ||
+        !Number.isSafeInteger(context.id) ||
+        typeof context.public_id !== "string" ||
+        typeof context.order_number !== "string"
     ) {
         throw invalidResponse(fulfillmentFunction);
     }
@@ -34,16 +29,14 @@ export async function getOrderFulfillmentSellerContext(
     });
 }
 
-export async function getOrderShipmentCreationSellerContext(
-    request: Request,
-): Promise<Response> {
+export async function getOrderShipmentCreationSellerContext(request: Request): Promise<Response> {
     const context = await loadSellerContext(request, shipmentCreationFunction);
     if (
-        !hasFields(context, shipmentCreationFields)
-        || !Number.isSafeInteger(context.id)
-        || typeof context.public_id !== "string"
-        || typeof context.allowed !== "boolean"
-        || typeof context.seller_cms_user_id !== "string"
+        !hasFields(context, shipmentCreationFields) ||
+        !Number.isSafeInteger(context.id) ||
+        typeof context.public_id !== "string" ||
+        typeof context.allowed !== "boolean" ||
+        typeof context.seller_cms_user_id !== "string"
     ) {
         throw invalidResponse(shipmentCreationFunction);
     }
@@ -55,15 +48,13 @@ export async function getOrderShipmentCreationSellerContext(
     });
 }
 
-export async function getOrderLabelSellerContext(
-    request: Request,
-): Promise<Response> {
+export async function getOrderLabelSellerContext(request: Request): Promise<Response> {
     const context = await loadSellerContext(request, labelFunction);
     if (
-        !hasFields(context, labelFields)
-        || typeof context.public_id !== "string"
-        || typeof context.allowed !== "boolean"
-        || typeof context.seller_cms_user_id !== "string"
+        !hasFields(context, labelFields) ||
+        typeof context.public_id !== "string" ||
+        typeof context.allowed !== "boolean" ||
+        typeof context.seller_cms_user_id !== "string"
     ) {
         throw invalidResponse(labelFunction);
     }
@@ -74,10 +65,7 @@ export async function getOrderLabelSellerContext(
     });
 }
 
-async function loadSellerContext(
-    request: Request,
-    functionName: string,
-): Promise<JsonRecord> {
+async function loadSellerContext(request: Request, functionName: string): Promise<JsonRecord> {
     const selector = new URL(request.url).searchParams.get("orderId");
     const orderId = integer(selector, "orderId", true)!;
     const actor = cmsUserId(request);
@@ -100,11 +88,8 @@ async function loadSellerContext(
     return value.context;
 }
 
-function hasFields(
-    value: unknown,
-    fields: readonly string[],
-): value is JsonRecord {
-    return isRecord(value) && fields.every(field => Object.hasOwn(value, field));
+function hasFields(value: unknown, fields: readonly string[]): value is JsonRecord {
+    return isRecord(value) && fields.every((field) => Object.hasOwn(value, field));
 }
 
 function invalidResponse(functionName: string): HttpError {

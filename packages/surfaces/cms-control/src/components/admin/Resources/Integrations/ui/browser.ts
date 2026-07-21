@@ -18,17 +18,22 @@ export function renderInstallations(host: IntegrationBrowserHost): void {
     const root = host.query<HTMLElement>("[data-installations]");
     const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
     root.replaceChildren();
-    if (rows.length) root.append(cloneElement("installed-head"), ...rows.map(row => installationRow(host, row)));
+    if (rows.length) {
+        root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
+    }
     host.query<HTMLElement>("[data-installations-empty]").hidden = rows.length > 0;
 }
 
 export function availableDefinitions(host: IntegrationBrowserHost): IntegrationDefinition[] {
     const counts = installedCounts(host.installations);
-    return host.definitions.filter(definition => !counts.has(definition.kind));
+    return host.definitions.filter((definition) => !counts.has(definition.kind));
 }
 
-export function definitionFor(host: IntegrationBrowserHost, installation: IntegrationInstallationRow): IntegrationDefinition | undefined {
-    return host.definitions.find(definition => definition.kind === installation.id);
+export function definitionFor(
+    host: IntegrationBrowserHost,
+    installation: IntegrationInstallationRow,
+): IntegrationDefinition | undefined {
+    return host.definitions.find((definition) => definition.kind === installation.id);
 }
 
 function installationRow(host: IntegrationBrowserHost, installation: IntegrationInstallationRow): HTMLElement {
@@ -44,7 +49,10 @@ function installationRow(host: IntegrationBrowserHost, installation: Integration
         status.textContent = statusLabel(installation.status);
         status.classList.add(`status-${installation.status}`);
     }
-    appendBadges(row.querySelector<HTMLElement>("[data-badges]")!, definition ? artifactLabels(definition) : ["Unknown"]);
+    appendBadges(
+        row.querySelector<HTMLElement>("[data-badges]")!,
+        definition ? artifactLabels(definition) : ["Unknown"],
+    );
     text(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
     return row;
 }

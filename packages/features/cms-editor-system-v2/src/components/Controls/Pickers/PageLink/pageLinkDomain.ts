@@ -13,17 +13,31 @@ export type PageLinkModeOptions = {
 
 export function allowedLinkModes(options: PageLinkModeOptions): LinkMode[] {
     const modes: LinkMode[] = [];
-    if (options.allowPage) modes.push("page");
-    if (options.allowExternal) modes.push("external");
-    if (options.allowMedia) modes.push("media");
+    if (options.allowPage) {
+        modes.push("page");
+    }
+    if (options.allowExternal) {
+        modes.push("external");
+    }
+    if (options.allowMedia) {
+        modes.push("media");
+    }
     return modes;
 }
 
 export function modeForLinkValue(value: string, options: PageLinkModeOptions): LinkMode {
-    if (value && isMediaLink(value)) return "media";
-    if (value && isExternalLink(value)) return "external";
-    if (!options.allowPage && !options.allowExternal && options.allowMedia) return "media";
-    if (!options.allowPage && options.allowExternal) return "external";
+    if (value && isMediaLink(value)) {
+        return "media";
+    }
+    if (value && isExternalLink(value)) {
+        return "external";
+    }
+    if (!options.allowPage && !options.allowExternal && options.allowMedia) {
+        return "media";
+    }
+    if (!options.allowPage && options.allowExternal) {
+        return "external";
+    }
     return "page";
 }
 
@@ -36,17 +50,22 @@ export function isMediaLink(value: string): boolean {
 }
 
 export function isImageMediaLink(value: string): boolean {
-    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value)
-        || value.includes("/.cms/files/by-id/");
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value) || value.includes("/.cms/files/by-id/");
 }
 
 export function mediaDisplayName(value: string, isImage: boolean, mediaLabel = ""): string {
-    if (mediaLabel) return mediaLabel;
-    if (value.includes("/.cms/files/by-id/")) return isImage ? "Image" : "Selected file";
+    if (mediaLabel) {
+        return mediaLabel;
+    }
+    if (value.includes("/.cms/files/by-id/")) {
+        return isImage ? "Image" : "Selected file";
+    }
 
     const clean = value.split(/[?#]/, 1)[0] ?? value;
     const segment = clean.split("/").filter(Boolean).at(-1);
-    if (!segment) return "File";
+    if (!segment) {
+        return "File";
+    }
 
     try {
         return decodeURIComponent(segment);
@@ -60,7 +79,11 @@ export function mediaSelectionLabel(isImage: boolean): string {
 }
 
 export function linkSummaryFallback(mode: LinkMode): string {
-    if (mode === "external") return "External URL";
-    if (mode === "media") return "File";
+    if (mode === "external") {
+        return "External URL";
+    }
+    if (mode === "media") {
+        return "File";
+    }
     return "Internal page";
 }

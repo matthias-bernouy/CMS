@@ -35,8 +35,7 @@ describe("cms-files URL helpers", () => {
 
     test("builds variant URLs from by-id URLs without string replacement in callers", () => {
         expect(cmsImageVariantPath("a b", 320)).toBe("/.cms/img/a%20b/320.webp");
-        expect(cmsImageVariantUrlFromByIdUrl("/cms/.cms/files/by-id/a%20b", 640))
-            .toBe("/cms/.cms/img/a%20b/640.webp");
+        expect(cmsImageVariantUrlFromByIdUrl("/cms/.cms/files/by-id/a%20b", 640)).toBe("/cms/.cms/img/a%20b/640.webp");
     });
 
     test("adds cache-bust versions", () => {

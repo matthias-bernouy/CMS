@@ -1,8 +1,5 @@
 import { findIntegration } from "../catalog";
-import {
-    DuplicateIntegrationInstallationError,
-    IntegrationInputError,
-} from "../errors";
+import { DuplicateIntegrationInstallationError, IntegrationInputError } from "../errors";
 import {
     declarativeSecretBindingNames,
     importDeclarativeIntegrationWithCommit,
@@ -11,24 +8,25 @@ import {
 import { integrationInstallationId } from "./ids";
 import { successRun } from "./runs";
 import { assertSecretKeysAvailable } from "./secretRefs";
-import {
-    installationLabel,
-    sanitizeAnswers,
-    sanitizeDefinitionSnapshot,
-    updateSecretRefs,
-} from "./snapshots";
+import { installationLabel, sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
 import type {
     RunIntegrationInstallationCreateRequest,
     RunIntegrationInstallationResult,
 } from "./runIntegrationInstallation";
 import type { IntegrationInstallationCreate } from "../../interfaces/IntegrationInstallationRepository";
 
-export async function runCreate(request: RunIntegrationInstallationCreateRequest): Promise<RunIntegrationInstallationResult> {
+export async function runCreate(
+    request: RunIntegrationInstallationCreateRequest,
+): Promise<RunIntegrationInstallationResult> {
     const definition = findIntegration(request.dto.kind, request.siteIntegrations);
-    if (!definition) throw new IntegrationInputError("kind", `unknown integration "${request.dto.kind}"`);
+    if (!definition) {
+        throw new IntegrationInputError("kind", `unknown integration "${request.dto.kind}"`);
+    }
 
     const integrationId = integrationInstallationId(request.dto.kind);
-    if (await request.installations.get(integrationId)) throw new DuplicateIntegrationInstallationError(integrationId);
+    if (await request.installations.get(integrationId)) {
+        throw new DuplicateIntegrationInstallationError(integrationId);
+    }
 
     const secretInputs = declarativeSecretBindingNames(definition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, request.dto.answers);
@@ -41,7 +39,7 @@ export async function runCreate(request: RunIntegrationInstallationCreateRequest
         definition,
         request.dto.answers,
         request.dto.options,
-        async result => {
+        async (result) => {
             const run = successRun(1, startedAt, result);
             const base: IntegrationInstallationCreate = {
                 id: integrationId,

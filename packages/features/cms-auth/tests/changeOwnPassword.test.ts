@@ -28,24 +28,18 @@ describe("changeOwnPassword", () => {
 
     test("rejects non-local users", async () => {
         const credentials = new InMemoryLocalCredentialStore();
-        await expect(changeOwnPassword(
-            { credentials },
-            user({ provider: "oidc" }),
-            "old-password",
-            "new-password",
-        )).rejects.toMatchObject({ field: "provider" });
+        await expect(
+            changeOwnPassword({ credentials }, user({ provider: "oidc" }), "old-password", "new-password"),
+        ).rejects.toMatchObject({ field: "provider" });
     });
 
     test("rejects an incorrect current password", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         await credentials.create({ email: "a@x.com", password: "old-password" });
 
-        await expect(changeOwnPassword(
-            { credentials },
-            user(),
-            "wrong-password",
-            "new-password",
-        )).rejects.toBeInstanceOf(AuthValidationError);
+        await expect(
+            changeOwnPassword({ credentials }, user(), "wrong-password", "new-password"),
+        ).rejects.toBeInstanceOf(AuthValidationError);
         expect(await credentials.verify("a@x.com", "old-password")).not.toBeNull();
     });
 });

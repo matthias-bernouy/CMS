@@ -6,20 +6,20 @@ import type { TPageRef, TSystem } from "@bernouy/cms-content";
 
 /** Subset of `TSystem` actually pushable from disk. */
 export type SystemPayload = {
-    site:   Partial<TSystem["site"]>;
+    site: Partial<TSystem["site"]>;
     editor: Partial<TSystem["editor"]>;
     theme?: TSystem["theme"];
 };
 
 export type LocalSystem = {
-    payload:  SystemPayload;
-    hash:     string;
+    payload: SystemPayload;
+    hash: string;
     /** Paths referenced by system pages — drive forward-compat validation. */
     pageRefs: string[];
 };
 
 const SYSTEM_FILE = "system.json";
-const THEME_FILE  = "theme.css";
+const THEME_FILE = "theme.css";
 
 /**
  * Read `<siteDir>/system.json` (optional) + inline `<siteDir>/theme.css` (optional)
@@ -28,17 +28,19 @@ const THEME_FILE  = "theme.css";
  */
 export async function scanSystem(siteDir: string): Promise<LocalSystem | null> {
     const systemPath = join(siteDir, SYSTEM_FILE);
-    const themePath  = join(siteDir, THEME_FILE);
+    const themePath = join(siteDir, THEME_FILE);
 
     const hasSystem = existsSync(systemPath);
-    const hasTheme  = existsSync(themePath);
-    if (!hasSystem && !hasTheme) return null;
+    const hasTheme = existsSync(themePath);
+    if (!hasSystem && !hasTheme) {
+        return null;
+    }
 
     const raw: Partial<SystemPayload> = hasSystem ? await readJson(systemPath) : {};
     const payload: SystemPayload = {
-        site:   raw.site   ?? {},
+        site: raw.site ?? {},
         editor: raw.editor ?? {},
-        theme:  raw.theme,
+        theme: raw.theme,
     };
 
     if (hasTheme) {
@@ -47,7 +49,7 @@ export async function scanSystem(siteDir: string): Promise<LocalSystem | null> {
 
     return {
         payload,
-        hash:     canonicalSystemHash(payload),
+        hash: canonicalSystemHash(payload),
         pageRefs: collectPageRefs(payload),
     };
 }
@@ -74,5 +76,7 @@ function collectPageRefs(payload: SystemPayload): string[] {
 }
 
 function pushPath(out: string[], ref: TPageRef | undefined): void {
-    if (ref && typeof ref === "object" && "path" in ref && ref.path) out.push(ref.path);
+    if (ref && typeof ref === "object" && "path" in ref && ref.path) {
+        out.push(ref.path);
+    }
 }

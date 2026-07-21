@@ -15,64 +15,89 @@ type Endpoint = {
     output?: Array<{ status?: string; body?: DataShape }>;
 };
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
 
 describe("commerce claim evidence strict Source contracts", () => {
     test("keeps endpoint access and file response declarations", async () => {
         const endpoints = await evidenceEndpoints();
 
-        expect(endpoints.map(endpoint => ({
-            endpointId: endpoint.endpointId,
-            method: endpoint.method,
-            access: endpoint.access,
-            target: endpoint.targetUrl.split("/cms-commerce").at(-1),
-            params: endpoint.params?.map(param => [param.name, param.required === true]),
-            response: [endpoint.responseKind ?? "json", endpoint.mediaType ?? null],
-            statuses: endpoint.output?.map(output => output.status),
-        }))).toEqual([
+        expect(
+            endpoints.map((endpoint) => ({
+                endpointId: endpoint.endpointId,
+                method: endpoint.method,
+                access: endpoint.access,
+                target: endpoint.targetUrl.split("/cms-commerce").at(-1),
+                params: endpoint.params?.map((param) => [param.name, param.required === true]),
+                response: [endpoint.responseKind ?? "json", endpoint.mediaType ?? null],
+                statuses: endpoint.output?.map((output) => output.status),
+            })),
+        ).toEqual([
             {
                 endpointId: "uploadMyOrderClaimEvidence",
-                method: "POST", access: "auth", target: "/me/order/claim/evidence",
-                params: [["claimId", true]], response: ["json", null], statuses: ["201"],
+                method: "POST",
+                access: "auth",
+                target: "/me/order/claim/evidence",
+                params: [["claimId", true]],
+                response: ["json", null],
+                statuses: ["201"],
             },
             {
                 endpointId: "myOrderClaimEvidenceFile",
-                method: "GET", access: "auth", target: "/me/order/claim/evidence",
+                method: "GET",
+                access: "auth",
+                target: "/me/order/claim/evidence",
                 params: [["evidenceId", true]],
-                response: ["file", "application/octet-stream"], statuses: ["200"],
+                response: ["file", "application/octet-stream"],
+                statuses: ["200"],
             },
             {
                 endpointId: "uploadMySaleClaimEvidence",
-                method: "POST", access: "auth", target: "/me/sale/claim/evidence",
-                params: [["claimId", true]], response: ["json", null], statuses: ["201"],
+                method: "POST",
+                access: "auth",
+                target: "/me/sale/claim/evidence",
+                params: [["claimId", true]],
+                response: ["json", null],
+                statuses: ["201"],
             },
             {
                 endpointId: "mySaleClaimEvidenceFile",
-                method: "GET", access: "auth", target: "/me/sale/claim/evidence",
+                method: "GET",
+                access: "auth",
+                target: "/me/sale/claim/evidence",
                 params: [["evidenceId", true]],
-                response: ["file", "application/octet-stream"], statuses: ["200"],
+                response: ["file", "application/octet-stream"],
+                statuses: ["200"],
             },
             {
                 endpointId: "claimEvidenceFile",
-                method: "GET", access: { mode: "admin" }, target: "/admin/claim/evidence",
+                method: "GET",
+                access: { mode: "admin" },
+                target: "/admin/claim/evidence",
                 params: [["evidenceId", true]],
-                response: ["file", "application/octet-stream"], statuses: ["200", "404"],
+                response: ["file", "application/octet-stream"],
+                statuses: ["200", "404"],
             },
             {
                 endpointId: "claimEvidenceItems",
-                method: "GET", access: { mode: "admin" },
+                method: "GET",
+                access: { mode: "admin" },
                 target: "/admin/claim/evidence-items",
-                params: [["claimId", true], ["limit", false], ["offset", false]],
-                response: ["json", null], statuses: ["200"],
+                params: [
+                    ["claimId", true],
+                    ["limit", false],
+                    ["offset", false],
+                ],
+                response: ["json", null],
+                statuses: ["200"],
             },
             {
                 endpointId: "claimEvidenceItem",
-                method: "GET", access: { mode: "admin" },
-                target: "/admin/claim/evidence-item", params: [["id", true]],
-                response: ["json", null], statuses: ["200"],
+                method: "GET",
+                access: { mode: "admin" },
+                target: "/admin/claim/evidence-item",
+                params: [["id", true]],
+                response: ["json", null],
+                statuses: ["200"],
             },
         ]);
     });
@@ -86,12 +111,11 @@ describe("commerce claim evidence strict Source contracts", () => {
             submittedBy: "must-not-leak",
         };
 
-        expect(projectStrictDataShape(
-            raw,
-            outputShape(endpoints, "uploadMyOrderClaimEvidence", "201"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual({
+        expect(
+            projectStrictDataShape(raw, outputShape(endpoints, "uploadMyOrderClaimEvidence", "201"), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual({
             id: attachedEvidence.id,
             claimId: attachedEvidence.claimId,
             submittedByKind: "buyer",
@@ -102,12 +126,14 @@ describe("commerce claim evidence strict Source contracts", () => {
             description: "Opening proof",
             createdAt: attachedEvidence.createdAt,
         });
-        expect(projectStrictDataShape(
-            { ...raw, submittedByKind: "seller", description: null },
-            outputShape(endpoints, "uploadMySaleClaimEvidence", "201"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual({
+        expect(
+            projectStrictDataShape(
+                { ...raw, submittedByKind: "seller", description: null },
+                outputShape(endpoints, "uploadMySaleClaimEvidence", "201"),
+                "response",
+                { enforceRequired: false },
+            ),
+        ).toEqual({
             id: attachedEvidence.id,
             claimId: attachedEvidence.claimId,
             submittedByKind: "seller",
@@ -124,33 +150,40 @@ describe("commerce claim evidence strict Source contracts", () => {
     test("records the existing buyer nullable-description mismatch separately", async () => {
         const endpoints = await evidenceEndpoints();
 
-        expect(() => projectStrictDataShape(
-            { ...attachedEvidence, description: null },
-            outputShape(endpoints, "uploadMyOrderClaimEvidence", "201"),
-            "response",
-            { enforceRequired: false },
-        )).toThrow();
+        expect(() =>
+            projectStrictDataShape(
+                { ...attachedEvidence, description: null },
+                outputShape(endpoints, "uploadMyOrderClaimEvidence", "201"),
+                "response",
+                { enforceRequired: false },
+            ),
+        ).toThrow();
     });
 });
 
 async function evidenceEndpoints(): Promise<Endpoint[]> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));
     return definition.artifacts
-        .find((artifact: any) => artifact.source)?.source?.endpoints
-        .filter((endpoint: Endpoint) => [
-            "uploadMyOrderClaimEvidence", "myOrderClaimEvidenceFile",
-            "uploadMySaleClaimEvidence", "mySaleClaimEvidenceFile",
-            "claimEvidenceFile", "claimEvidenceItems", "claimEvidenceItem",
-        ].includes(endpoint.endpointId));
+        .find((artifact: any) => artifact.source)
+        ?.source?.endpoints.filter((endpoint: Endpoint) =>
+            [
+                "uploadMyOrderClaimEvidence",
+                "myOrderClaimEvidenceFile",
+                "uploadMySaleClaimEvidence",
+                "mySaleClaimEvidenceFile",
+                "claimEvidenceFile",
+                "claimEvidenceItems",
+                "claimEvidenceItem",
+            ].includes(endpoint.endpointId),
+        );
 }
 
-function outputShape(
-    endpoints: Endpoint[],
-    endpointId: string,
-    status: string,
-): DataShape {
-    const shape = endpoints.find(endpoint => endpoint.endpointId === endpointId)
-        ?.output?.find(output => output.status === status)?.body;
-    if (!shape) throw new Error(`Missing ${endpointId} ${status} output shape`);
+function outputShape(endpoints: Endpoint[], endpointId: string, status: string): DataShape {
+    const shape = endpoints
+        .find((endpoint) => endpoint.endpointId === endpointId)
+        ?.output?.find((output) => output.status === status)?.body;
+    if (!shape) {
+        throw new Error(`Missing ${endpointId} ${status} output shape`);
+    }
     return shape;
 }

@@ -24,13 +24,15 @@ describe("@bernouy/cms-integrations installation secret safety", () => {
             dto: { kind: "shared-secret-one", answers: { id: "one", apiKey: "one" }, options: {} },
         });
 
-        await expect(runIntegrationInstallation({
-            mode: "create",
-            deps: { sources, secrets },
-            installations,
-            siteIntegrations: [secondDefinition],
-            dto: { kind: "shared-secret-two", answers: { id: "two", apiKey: "two" }, options: {} },
-        })).rejects.toThrow(/already used/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "create",
+                deps: { sources, secrets },
+                installations,
+                siteIntegrations: [secondDefinition],
+                dto: { kind: "shared-secret-two", answers: { id: "two", apiKey: "two" }, options: {} },
+            }),
+        ).rejects.toThrow(/already used/);
 
         expect(await sources.getSource("urn:two")).toBeNull();
         expect(await secrets.get("SHARED_API_KEY")).toBe("one");
@@ -86,10 +88,7 @@ function envSecretDefinition(): IntegrationDefinition {
     return {
         kind: "env-secret",
         label: "Env Secret",
-        inputs: [
-            ...secretInputs(),
-            { name: "environment", label: "Environment", type: "text", required: true },
-        ],
+        inputs: [...secretInputs(), { name: "environment", label: "Environment", type: "text", required: true }],
         secrets: [{ input: "apiKey", key: "TOKEN_{{env answers.environment}}" }],
         artifacts: [sourceArtifact("{{answers.id}}")],
     };

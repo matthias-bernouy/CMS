@@ -80,7 +80,9 @@ class BasicChipGroup extends HTMLElement {
     }
 
     attributeChangedCallback(name) {
-        if (!this.isConnected) return;
+        if (!this.isConnected) {
+            return;
+        }
         if (name === "value") {
             this.applyValues(this.normalizeValues(this.getAttribute("value")));
         } else if (name === "mode" && !this.multiple) {
@@ -100,7 +102,7 @@ class BasicChipGroup extends HTMLElement {
 
     get value() {
         const values = this.selectedValues();
-        return this.multiple ? values : (values[0] || "");
+        return this.multiple ? values : values[0] || "";
     }
 
     set value(value) {
@@ -129,8 +131,11 @@ class BasicChipGroup extends HTMLElement {
         this.labelElement.hidden = !this.labelElement.textContent;
         const accessibleLabel = this.getAttribute("accessible-label") || "";
         const groupLabel = this.labelElement.textContent || accessibleLabel;
-        if (groupLabel) this.choicesElement.setAttribute("aria-label", groupLabel);
-        else this.choicesElement.removeAttribute("aria-label");
+        if (groupLabel) {
+            this.choicesElement.setAttribute("aria-label", groupLabel);
+        } else {
+            this.choicesElement.removeAttribute("aria-label");
+        }
 
         this.syncDisabled();
         this.updateFormValue();
@@ -161,21 +166,34 @@ class BasicChipGroup extends HTMLElement {
 
     initialValues() {
         const explicitValue = this.getAttribute("value");
-        if (explicitValue !== null) return this.normalizeValues(explicitValue);
-        return this.chips().filter(chip => chip.hasAttribute("selected")).map(chip => chip.value);
+        if (explicitValue !== null) {
+            return this.normalizeValues(explicitValue);
+        }
+        return this.chips()
+            .filter((chip) => chip.hasAttribute("selected"))
+            .map((chip) => chip.value);
     }
 
     normalizeValues(value) {
-        if (Array.isArray(value)) return value.map(String).filter(Boolean);
+        if (Array.isArray(value)) {
+            return value.map(String).filter(Boolean);
+        }
         const raw = String(value ?? "").trim();
-        if (!raw) return [];
+        if (!raw) {
+            return [];
+        }
         try {
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+            if (Array.isArray(parsed)) {
+                return parsed.map(String).filter(Boolean);
+            }
         } catch {
             // Comma-separated values are convenient in authored HTML.
         }
-        return raw.split(",").map(item => item.trim()).filter(Boolean);
+        return raw
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
     }
 
     chips() {
@@ -183,22 +201,31 @@ class BasicChipGroup extends HTMLElement {
     }
 
     selectedValues() {
-        return this.chips().filter(chip => chip.selected).map(chip => chip.value).filter(Boolean);
+        return this.chips()
+            .filter((chip) => chip.selected)
+            .map((chip) => chip.value)
+            .filter(Boolean);
     }
 
     applyValues(values) {
         const selected = new Set(this.multiple ? values : values.slice(0, 1));
-        for (const chip of this.chips()) chip.selected = selected.has(chip.value);
+        for (const chip of this.chips()) {
+            chip.selected = selected.has(chip.value);
+        }
     }
 
     setValues(values, emit) {
         this.applyValues(values);
         this.updateFormValue();
-        if (emit) this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        if (emit) {
+            this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        }
     }
 
     upgradeProperty(name) {
-        if (!Object.prototype.hasOwnProperty.call(this, name)) return;
+        if (!Object.prototype.hasOwnProperty.call(this, name)) {
+            return;
+        }
         const value = this[name];
         delete this[name];
         this[name] = value;
@@ -207,7 +234,9 @@ class BasicChipGroup extends HTMLElement {
     syncDisabled() {
         for (const chip of this.chips()) {
             if (this.disabled) {
-                if (!chip.disabled) chip.setAttribute("data-disabled-by-group", "");
+                if (!chip.disabled) {
+                    chip.setAttribute("data-disabled-by-group", "");
+                }
                 chip.disabled = true;
             } else if (chip.hasAttribute("data-disabled-by-group")) {
                 chip.removeAttribute("data-disabled-by-group");
@@ -222,7 +251,9 @@ class BasicChipGroup extends HTMLElement {
             this.internals.setFormValue(null);
         } else if (this.multiple) {
             const data = new FormData();
-            for (const value of values) data.append(this.name, value);
+            for (const value of values) {
+                data.append(this.name, value);
+            }
             this.internals.setFormValue(data);
         } else {
             this.internals.setFormValue(values[0]);
@@ -242,12 +273,19 @@ class BasicChipGroup extends HTMLElement {
         this.errorElement.hidden = !this.errorElement.textContent;
     }
 
-    onToggle = event => {
-        if (this.disabled) return;
-        const chip = event.composedPath().find(node => node instanceof HTMLElement && node.tagName === "BASIC-CHIP");
-        if (!chip || chip.parentElement !== this || chip.disabled) return;
-        if (this.multiple) chip.selected = !chip.selected;
-        else if (!chip.selected) this.applyValues([chip.value]);
+    onToggle = (event) => {
+        if (this.disabled) {
+            return;
+        }
+        const chip = event.composedPath().find((node) => node instanceof HTMLElement && node.tagName === "BASIC-CHIP");
+        if (!chip || chip.parentElement !== this || chip.disabled) {
+            return;
+        }
+        if (this.multiple) {
+            chip.selected = !chip.selected;
+        } else if (!chip.selected) {
+            this.applyValues([chip.value]);
+        }
         this.updateFormValue();
         this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     };

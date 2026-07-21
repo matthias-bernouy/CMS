@@ -1,8 +1,5 @@
 import { setValueAt, valueAt } from "../../../runtime/expressions";
-import {
-    DashboardWReorderableList,
-    type ReorderableListData,
-} from "../../w-reorderable-list/WReorderableList";
+import { DashboardWReorderableList, type ReorderableListData } from "../../w-reorderable-list/WReorderableList";
 import type { WDetailField, WDetailFieldValue } from "../types";
 import { createTableEditor, readTableEditor } from "./editors";
 import { bindFieldControl } from "./shared";
@@ -24,10 +21,14 @@ export function createTableControl(field: WDetailField): HTMLElement {
         cell.textContent = column.label;
         header.append(cell);
     }
-    if (field.editable) header.append(document.createElement("span"));
+    if (field.editable) {
+        header.append(document.createElement("span"));
+    }
     root.append(header);
 
-    for (const row of tableRows(field.value)) root.append(tableRow(field, row));
+    for (const row of tableRows(field.value)) {
+        root.append(tableRow(field, row));
+    }
     if (field.editable) {
         const add = document.createElement("button");
         add.type = "button";
@@ -45,7 +46,7 @@ export function createReorderableListControl(field: WDetailField): HTMLElement {
         items: tableRows(field.value),
         itemKey: field.itemKey ?? "id",
         ...(field.positionPath ? { positionPath: field.positionPath } : {}),
-        fields: (field.reorderableFields ?? []).map(item => ({ ...item })),
+        fields: (field.reorderableFields ?? []).map((item) => ({ ...item })),
         ...(field.addLabel ? { addLabel: field.addLabel } : {}),
         ...(field.minItems !== undefined ? { minItems: field.minItems } : {}),
         ...(field.maxItems !== undefined ? { maxItems: field.maxItems } : {}),
@@ -81,9 +82,11 @@ export function tableRow(field: WDetailField, row: Record<string, unknown>): HTM
 }
 
 export function readTableValue(field: WDetailField, control: HTMLElement): Record<string, unknown>[] {
-    if (!field.editable) return structuredClone(tableRows(field.value));
+    if (!field.editable) {
+        return structuredClone(tableRows(field.value));
+    }
     return Array.from(control.querySelectorAll<HTMLElement>("[data-table-row]"))
-        .map(row => readTableRow(field, row))
+        .map((row) => readTableRow(field, row))
         .filter(hasTableValue);
 }
 
@@ -95,22 +98,30 @@ function readTableRow(field: WDetailField, row: HTMLElement): Record<string, unk
     const value = structuredClone(tableRowSources.get(row) ?? {});
     for (const column of field.columns ?? []) {
         const input = row.querySelector<HTMLElement>(`[data-table-column="${cssEscape(column.key)}"]`);
-        if (!input) continue;
+        if (!input) {
+            continue;
+        }
         setValueAt(value, column.path, readTableEditor(column, input));
     }
     return value;
 }
 
 function tableRows(value: WDetailFieldValue): Record<string, unknown>[] {
-    if (!Array.isArray(value)) return [];
-    return value.filter((item): item is Record<string, unknown> => (
-        item !== null && typeof item === "object" && !Array.isArray(item)
-    ));
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return value.filter(
+        (item): item is Record<string, unknown> => item !== null && typeof item === "object" && !Array.isArray(item),
+    );
 }
 
 function hasTableValue(value: unknown): boolean {
-    if (Array.isArray(value)) return value.some(hasTableValue);
-    if (isRecord(value)) return Object.values(value).some(hasTableValue);
+    if (Array.isArray(value)) {
+        return value.some(hasTableValue);
+    }
+    if (isRecord(value)) {
+        return Object.values(value).some(hasTableValue);
+    }
     return String(value ?? "").trim().length > 0;
 }
 
@@ -119,17 +130,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function tableCellDisplayValue(value: unknown): string {
-    if (Array.isArray(value)) return value.map(item => String(item)).join(", ");
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item)).join(", ");
+    }
     return value === null || value === undefined ? "" : String(value);
 }
 
 function tableColumns(columns: WDetailField["columns"], editable: boolean): string {
     return [
-        ...(columns ?? []).map(column => column.width ?? "minmax(8rem, 1fr)"),
+        ...(columns ?? []).map((column) => column.width ?? "minmax(8rem, 1fr)"),
         ...(editable ? ["72px"] : []),
     ].join(" ");
 }
 
 function cssEscape(value: string): string {
-    return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/"/g, "\\\"");
+    return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/"/g, '\\"');
 }

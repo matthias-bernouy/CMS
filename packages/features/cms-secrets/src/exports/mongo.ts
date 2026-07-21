@@ -6,5 +6,6 @@
 
 export {
     EncryptedMongoSecretStore,
-    type EncryptedSecretDocument, type EncryptedMongoSecretStoreConfig,
+    type EncryptedSecretDocument,
+    type EncryptedMongoSecretStoreConfig,
 } from "cms-secrets/default-implementation/EncryptedMongoSecretStore";

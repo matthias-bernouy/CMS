@@ -15,18 +15,24 @@ describe("basic-blocs 1.0.0", () => {
         expect(definition?.version).toBe("1.0.0");
 
         const artifacts = definition?.artifacts ?? [];
-        const button = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-button");
-        const card = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-card");
-        const grid = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-grid");
-        const stack = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-stack");
-        const toast = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-toast");
-        const skeleton = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-skeleton");
-        const image = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "img");
-        const pagination = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-pagination");
+        const button = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-button");
+        const card = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-card");
+        const grid = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-grid");
+        const stack = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-stack");
+        const toast = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-toast");
+        const skeleton = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-skeleton",
+        );
+        const image = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "img");
+        const pagination = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-pagination",
+        );
 
         expect(button?.type).toBe("bloc");
         expect(card?.type).toBe("bloc");
-        if (button?.type !== "bloc" || card?.type !== "bloc") throw new Error("expected bloc artifacts");
+        if (button?.type !== "bloc" || card?.type !== "bloc") {
+            throw new Error("expected bloc artifacts");
+        }
 
         expect(button.bloc.viewJS).toContain("BE5_TAG_TO_BE_REPLACED");
         expect(button.bloc.source?.["manifest.json"]).toBeTruthy();
@@ -45,7 +51,9 @@ describe("basic-blocs 1.0.0", () => {
         expect(grid?.type === "bloc" ? grid.bloc.editorJS : "").not.toContain("Column count");
         expect(stack?.type === "bloc" ? stack.bloc.source?.["style.css"] : undefined).toBeTruthy();
         expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('color("Text", "text-color")');
-        expect(stack?.type === "bloc" ? decodeSource(stack.bloc.source?.["style.css"]) : "").toContain(':host([justify-content="space-between"])');
+        expect(stack?.type === "bloc" ? decodeSource(stack.bloc.source?.["style.css"]) : "").toContain(
+            ':host([justify-content="space-between"])',
+        );
         expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('attribute: "direction"');
         expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('attribute: "justify-content"');
         expect(stack?.type === "bloc" ? stack.bloc.editorJS : "").toContain('attribute: "wrap"');
@@ -62,27 +70,53 @@ describe("basic-blocs 1.0.0", () => {
         expect(skeleton?.type === "bloc" ? skeleton.bloc.viewJS : "").toContain('part="surface"');
         expect(skeleton?.type === "bloc" ? skeleton.bloc.editorJS : "").toContain('attribute: "animation"');
         expect(skeleton?.type === "bloc" ? skeleton.bloc.editorJS : "").toContain('color("Base", "base-color")');
-        expect(image?.type === "bloc" ? decodeSource(image.bloc.source?.["manifest.json"]) : "").toContain('"runtime": "native"');
-        expect(image?.type === "bloc" ? decodeSource(image.bloc.source?.["default.html"]) : "").toContain('<img src="" alt="" loading="lazy" decoding="async">');
+        expect(image?.type === "bloc" ? decodeSource(image.bloc.source?.["manifest.json"]) : "").toContain(
+            '"runtime": "native"',
+        );
+        expect(image?.type === "bloc" ? decodeSource(image.bloc.source?.["default.html"]) : "").toContain(
+            '<img src="" alt="" loading="lazy" decoding="async">',
+        );
         expect(image?.type === "bloc" ? image.bloc.editorJS : "").toContain('attribute: "src"');
-        expect(pagination?.type === "bloc" ? decodeSource(pagination.bloc.source?.["template.html"]) : "").toContain("<nav");
-        expect(pagination?.type === "bloc" ? decodeSource(pagination.bloc.source?.["style.css"]) : "").toContain(":host");
-        expect(pagination?.type === "bloc" ? pagination.bloc.viewJS : "").toContain('CustomEvent("basic-pagination:change"');
+        expect(pagination?.type === "bloc" ? decodeSource(pagination.bloc.source?.["template.html"]) : "").toContain(
+            "<nav",
+        );
+        expect(pagination?.type === "bloc" ? decodeSource(pagination.bloc.source?.["style.css"]) : "").toContain(
+            ":host",
+        );
+        expect(pagination?.type === "bloc" ? pagination.bloc.viewJS : "").toContain(
+            'CustomEvent("basic-pagination:change"',
+        );
 
-        const input = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-input");
-        const textarea = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-textarea");
-        const select = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-select");
-        const checkbox = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-checkbox");
-        const fileInput = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-file-input");
-        const form = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "form");
-        const redirect = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-redirect");
+        const input = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-input");
+        const textarea = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-textarea",
+        );
+        const select = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-select");
+        const checkbox = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-checkbox",
+        );
+        const fileInput = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-file-input",
+        );
+        const form = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "form");
+        const redirect = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-redirect",
+        );
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("static formAssociated = true");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("part=\"label\"");
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain('part="label"');
         expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("form.requestSubmit()");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(":host([hidden]) { display: none !important; }");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(":host { display: block; box-sizing: border-box; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%;");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(".field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0;");
-        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain("input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch;");
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
+            ":host([hidden]) { display: none !important; }",
+        );
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
+            ":host { display: block; box-sizing: border-box; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%;",
+        );
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
+            ".field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; min-inline-size: 0;",
+        );
+        expect(input?.type === "bloc" ? input.bloc.viewJS : "").toContain(
+            "input { box-sizing: border-box; width: auto; inline-size: auto; min-width: 0; min-inline-size: 0; max-width: 100%; max-inline-size: 100%; justify-self: stretch;",
+        );
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain("visibleWhen");
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('attribute: "autocomplete"');
         expect(input?.type === "bloc" ? input.bloc.editorJS : "").toContain('type: "color"');
@@ -98,8 +132,12 @@ describe("basic-blocs 1.0.0", () => {
         expect(select?.type === "bloc" ? select.bloc.editorJS : "").toContain('attribute: "presentation"');
         expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain(':host([appearance="switch"])');
         expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain("formDisabledCallback(disabled)");
-        expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain("this.checked ? this.value : this.uncheckedValue");
-        expect(checkbox?.type === "bloc" ? checkbox.bloc.editorJS : "").toContain('{ label: "Switch", value: "switch" }');
+        expect(checkbox?.type === "bloc" ? checkbox.bloc.viewJS : "").toContain(
+            "this.checked ? this.value : this.uncheckedValue",
+        );
+        expect(checkbox?.type === "bloc" ? checkbox.bloc.editorJS : "").toContain(
+            '{ label: "Switch", value: "switch" }',
+        );
         expect(fileInput?.type === "bloc" ? fileInput.bloc.viewJS : "").toContain("static formAssociated = true");
         expect(fileInput?.type === "bloc" ? fileInput.bloc.viewJS : "").toContain("data.append(this.name, file)");
         expect(fileInput?.type === "bloc" ? fileInput.bloc.viewJS : "").toContain('slot name="preview"');
@@ -121,10 +159,14 @@ describe("basic-blocs 1.0.0", () => {
         expect(button.bloc.viewJS).toContain("var(--primary-foreground, var(--primary-contrasted, Canvas))");
         expect(button.bloc.viewJS).toContain("requestFormSubmit");
 
-        const chip = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-chip");
-        const chipGroup = artifacts.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "basic-chip-group");
+        const chip = artifacts.find((artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-chip");
+        const chipGroup = artifacts.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-chip-group",
+        );
         expect(chip?.type === "bloc" ? chip.bloc.viewJS : "").toContain("var(--primary-base, CanvasText)");
-        expect(chip?.type === "bloc" ? chip.bloc.viewJS : "").toContain("var(--primary-foreground, var(--primary-contrasted, Canvas))");
+        expect(chip?.type === "bloc" ? chip.bloc.viewJS : "").toContain(
+            "var(--primary-foreground, var(--primary-contrasted, Canvas))",
+        );
         expect(chipGroup?.type === "bloc" ? chipGroup.bloc.viewJS : "").toContain("formDisabledCallback(disabled)");
         expect(chipGroup?.type === "bloc" ? chipGroup.bloc.viewJS : "").toContain('part="error"');
         expect(chipGroup?.type === "bloc" ? chipGroup.bloc.editorJS : "").toContain('attribute: "accessible-label"');
@@ -133,9 +175,9 @@ describe("basic-blocs 1.0.0", () => {
     test("builds imported bloc artifacts", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifacts = definition?.artifacts?.filter(artifact => artifact.type === "bloc") ?? [];
+        const artifacts = definition?.artifacts?.filter((artifact) => artifact.type === "bloc") ?? [];
 
-        expect(artifacts.map(artifact => artifact.bloc.tag).sort()).toEqual([
+        expect(artifacts.map((artifact) => artifact.bloc.tag).sort()).toEqual([
             "basic-button",
             "basic-card",
             "basic-checkbox",
@@ -159,12 +201,14 @@ describe("basic-blocs 1.0.0", () => {
         for (const artifact of artifacts) {
             const bloc = artifact.bloc;
             expect(bloc.viewJS).toBeTruthy();
-            expect(validateBloc({
-                tag: bloc.tag,
-                native: isNativeBlocTag(bloc.tag),
-                viewSource: bloc.viewJS,
-                ...(bloc.editorJS ? { editorSource: bloc.editorJS } : {}),
-            }).errors).toEqual([]);
+            expect(
+                validateBloc({
+                    tag: bloc.tag,
+                    native: isNativeBlocTag(bloc.tag),
+                    viewSource: bloc.viewJS,
+                    ...(bloc.editorJS ? { editorSource: bloc.editorJS } : {}),
+                }).errors,
+            ).toEqual([]);
             const built = await prepare_bloc(
                 new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
                 bloc.editorJS ? new File([bloc.editorJS], "BlocEditor.ts", { type: "application/typescript" }) : null,
@@ -179,17 +223,21 @@ describe("basic-blocs 1.0.0", () => {
 
             expect(built.id).toBe(bloc.tag);
             expect(built.editorJS).toContain("registerEditor");
-            if (!isNativeBlocTag(bloc.tag)) expect(built.viewJS).toContain(bloc.tag);
+            if (!isNativeBlocTag(bloc.tag)) {
+                expect(built.viewJS).toContain(bloc.tag);
+            }
         }
     });
 
     test("submits the parent form when Enter is pressed in a Basic input", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifact = definition?.artifacts?.find(artifact =>
-            artifact.type === "bloc" && artifact.bloc.tag === "basic-input"
+        const artifact = definition?.artifacts?.find(
+            (artifact) => artifact.type === "bloc" && artifact.bloc.tag === "basic-input",
         );
-        if (!artifact || artifact.type !== "bloc") throw new Error("expected basic-input artifact");
+        if (!artifact || artifact.type !== "bloc") {
+            throw new Error("expected basic-input artifact");
+        }
 
         const bloc = artifact.bloc;
         const built = await prepare_bloc(
@@ -213,17 +261,19 @@ describe("basic-blocs 1.0.0", () => {
         document.body.append(form);
 
         let submitCount = 0;
-        form.addEventListener("submit", event => {
+        form.addEventListener("submit", (event) => {
             event.preventDefault();
             submitCount++;
         });
         const internalInput = input.shadowRoot?.querySelector("input");
         expect(internalInput).not.toBeNull();
-        internalInput?.dispatchEvent(new KeyboardEvent("keydown", {
-            key: "Enter",
-            bubbles: true,
-            cancelable: true,
-        }));
+        internalInput?.dispatchEvent(
+            new KeyboardEvent("keydown", {
+                key: "Enter",
+                bubbles: true,
+                cancelable: true,
+            }),
+        );
 
         expect(submitCount).toBe(1);
         const field = input.shadowRoot?.querySelector<HTMLElement>(".field");
@@ -253,8 +303,9 @@ describe("basic-blocs 1.0.0", () => {
             internalDateInput.dispatchEvent(new Event("input", { bubbles: true }));
         }
         dateInput.dispatchEvent(new Event("invalid"));
-        expect(dateInput.shadowRoot?.querySelector(".error")?.textContent)
-            .toBe("Enter a valid date in DD/MM/YYYY format.");
+        expect(dateInput.shadowRoot?.querySelector(".error")?.textContent).toBe(
+            "Enter a valid date in DD/MM/YYYY format.",
+        );
 
         const requiredInput = document.createElement("basic-input");
         requiredInput.setAttribute("required", "");
@@ -271,15 +322,21 @@ describe("basic-blocs 1.0.0", () => {
     test("pagination emits stable page, limit, and offset details", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifacts = definition?.artifacts?.filter(artifact => artifact.type === "bloc") ?? [];
+        const artifacts = definition?.artifacts?.filter((artifact) => artifact.type === "bloc") ?? [];
 
         for (const tag of ["basic-pagination"]) {
-            if (customElements.get(tag)) continue;
-            const artifact = artifacts.find(candidate => candidate.bloc.tag === tag);
-            if (!artifact || artifact.type !== "bloc") throw new Error(`expected ${tag} artifact`);
+            if (customElements.get(tag)) {
+                continue;
+            }
+            const artifact = artifacts.find((candidate) => candidate.bloc.tag === tag);
+            if (!artifact || artifact.type !== "bloc") {
+                throw new Error(`expected ${tag} artifact`);
+            }
             const built = await prepare_bloc(
                 new File([artifact.bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
-                artifact.bloc.editorJS ? new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "application/typescript" }) : null,
+                artifact.bloc.editorJS
+                    ? new File([artifact.bloc.editorJS], "BlocEditor.ts", { type: "application/typescript" })
+                    : null,
                 artifact.bloc.name,
                 artifact.bloc.group ?? "",
                 artifact.bloc.description ?? "",
@@ -293,14 +350,17 @@ describe("basic-blocs 1.0.0", () => {
             new Function(built.viewJS)();
         }
 
-        const pagination = document.createElement("basic-pagination") as HTMLElement & { page: number; changePage(page: number): void };
+        const pagination = document.createElement("basic-pagination") as HTMLElement & {
+            page: number;
+            changePage(page: number): void;
+        };
         pagination.setAttribute("page", "1");
         pagination.setAttribute("page-size", "12");
         pagination.setAttribute("total", "30");
         document.body.append(pagination);
 
         let detail: { page: number; limit: number; offset: number } | undefined;
-        pagination.addEventListener("basic-pagination:change", event => {
+        pagination.addEventListener("basic-pagination:change", (event) => {
             detail = (event as CustomEvent<typeof detail>).detail;
         });
         pagination.changePage(2);
@@ -314,13 +374,16 @@ describe("basic-blocs 1.0.0", () => {
     test("select mirrors Basic options and participates in form state", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifacts = definition?.artifacts?.filter(artifact =>
-            artifact.type === "bloc" && ["basic-option", "basic-select"].includes(artifact.bloc.tag)
-        ) ?? [];
+        const artifacts =
+            definition?.artifacts?.filter(
+                (artifact) => artifact.type === "bloc" && ["basic-option", "basic-select"].includes(artifact.bloc.tag),
+            ) ?? [];
         expect(artifacts).toHaveLength(2);
 
         for (const artifact of artifacts) {
-            if (artifact.type !== "bloc") continue;
+            if (artifact.type !== "bloc") {
+                continue;
+            }
             const bloc = artifact.bloc;
             const built = await prepare_bloc(
                 new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -360,9 +423,7 @@ describe("basic-blocs 1.0.0", () => {
 
         const control = select.shadowRoot?.querySelector<HTMLButtonElement>(".control");
         const listbox = select.shadowRoot?.querySelector<HTMLElement>(".listbox");
-        const optionButtons = () => Array.from(
-            select.shadowRoot?.querySelectorAll<HTMLButtonElement>(".option") ?? [],
-        );
+        const optionButtons = () => Array.from(select.shadowRoot?.querySelectorAll<HTMLButtonElement>(".option") ?? []);
         const error = select.shadowRoot?.querySelector(".error");
         const nativeControl = select.shadowRoot?.querySelector<HTMLSelectElement>(".native-control");
         expect(nativeControl?.tagName).toBe("SELECT");
@@ -416,11 +477,13 @@ describe("basic-blocs 1.0.0", () => {
         multipleSelect.shadowRoot?.querySelector<HTMLButtonElement>(".option")?.click();
         expect(multipleSelect.value).toEqual(["wilson"]);
         expect(multipleSelect.shadowRoot?.querySelector(".listbox")?.hasAttribute("hidden")).toBe(false);
-        multipleSelect.shadowRoot?.querySelector(".listbox")?.dispatchEvent(new KeyboardEvent("keydown", {
-            key: "Escape",
-            bubbles: true,
-            cancelable: true,
-        }));
+        multipleSelect.shadowRoot?.querySelector(".listbox")?.dispatchEvent(
+            new KeyboardEvent("keydown", {
+                key: "Escape",
+                bubbles: true,
+                cancelable: true,
+            }),
+        );
         expect(multipleSelect.shadowRoot?.querySelector(".listbox")?.hasAttribute("hidden")).toBe(true);
         multipleSelect.remove();
         select.remove();
@@ -430,11 +493,15 @@ describe("basic-blocs 1.0.0", () => {
         if (!customElements.get("basic-select") || !customElements.get("basic-option")) {
             const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
             const definition = await repo.get("basic-blocs");
-            const artifacts = definition?.artifacts?.filter(artifact =>
-                artifact.type === "bloc" && ["basic-option", "basic-select"].includes(artifact.bloc.tag)
-            ) ?? [];
+            const artifacts =
+                definition?.artifacts?.filter(
+                    (artifact) =>
+                        artifact.type === "bloc" && ["basic-option", "basic-select"].includes(artifact.bloc.tag),
+                ) ?? [];
             for (const artifact of artifacts) {
-                if (artifact.type !== "bloc" || customElements.get(artifact.bloc.tag)) continue;
+                if (artifact.type !== "bloc" || customElements.get(artifact.bloc.tag)) {
+                    continue;
+                }
                 const bloc = artifact.bloc;
                 const built = await prepare_bloc(
                     new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -454,18 +521,28 @@ describe("basic-blocs 1.0.0", () => {
         let matches = true;
         let changeListener: ((event: Event) => void) | undefined;
         const query = {
-            get matches() { return matches; },
+            get matches() {
+                return matches;
+            },
             media: "(hover: none) and (pointer: coarse)",
             onchange: null,
             addEventListener: (type: string, listener: EventListenerOrEventListenerObject) => {
-                if (type === "change" && typeof listener === "function") changeListener = listener;
+                if (type === "change" && typeof listener === "function") {
+                    changeListener = listener;
+                }
             },
             removeEventListener: (type: string, listener: EventListenerOrEventListenerObject) => {
-                if (type === "change" && listener === changeListener) changeListener = undefined;
+                if (type === "change" && listener === changeListener) {
+                    changeListener = undefined;
+                }
             },
-            addListener: (listener: (event: Event) => void) => { changeListener = listener; },
+            addListener: (listener: (event: Event) => void) => {
+                changeListener = listener;
+            },
             removeListener: (listener: (event: Event) => void) => {
-                if (listener === changeListener) changeListener = undefined;
+                if (listener === changeListener) {
+                    changeListener = undefined;
+                }
             },
             dispatchEvent: () => true,
         } as unknown as MediaQueryList;
@@ -578,10 +655,13 @@ describe("basic-blocs 1.0.0", () => {
             expect(select.getAttribute("data-resolved-presentation")).toBe("native");
             expect(nativeControl?.multiple).toBe(true);
             let submittedValue: string | FormData | null = null;
-            select.internals.setFormValue = value => { submittedValue = value; };
+            select.internals.setFormValue = (value) => {
+                submittedValue = value;
+            };
             if (nativeControl) {
-                for (const option of nativeControl.options)
+                for (const option of nativeControl.options) {
                     option.selected = ["head", "future"].includes(option.value);
+                }
                 nativeControl.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
             }
             expect(select.value).toEqual(["head", "future"]);
@@ -589,18 +669,23 @@ describe("basic-blocs 1.0.0", () => {
             expect((submittedValue as FormData).getAll("brand")).toEqual(["head", "future"]);
         } finally {
             select.remove();
-            if (matchMediaDescriptor) Object.defineProperty(window, "matchMedia", matchMediaDescriptor);
-            else Reflect.deleteProperty(window, "matchMedia");
+            if (matchMediaDescriptor) {
+                Object.defineProperty(window, "matchMedia", matchMediaDescriptor);
+            } else {
+                Reflect.deleteProperty(window, "matchMedia");
+            }
         }
     });
 
     test("grid derives its tracks from minimum and maximum item widths", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifact = definition?.artifacts?.find(candidate =>
-            candidate.type === "bloc" && candidate.bloc.tag === "basic-grid"
+        const artifact = definition?.artifacts?.find(
+            (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-grid",
         );
-        if (!artifact || artifact.type !== "bloc") throw new Error("expected basic-grid artifact");
+        if (!artifact || artifact.type !== "bloc") {
+            throw new Error("expected basic-grid artifact");
+        }
 
         const bloc = artifact.bloc;
         const encodedStyles = bloc.source?.["style.css"];
@@ -618,10 +703,12 @@ describe("basic-blocs 1.0.0", () => {
     test("button preserves submitter data and exposes generic layout and icon controls", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifact = definition?.artifacts?.find(candidate =>
-            candidate.type === "bloc" && candidate.bloc.tag === "basic-button"
+        const artifact = definition?.artifacts?.find(
+            (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-button",
         );
-        if (!artifact || artifact.type !== "bloc") throw new Error("expected basic-button artifact");
+        if (!artifact || artifact.type !== "bloc") {
+            throw new Error("expected basic-button artifact");
+        }
         const bloc = artifact.bloc;
         const built = await prepare_bloc(
             new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -653,8 +740,8 @@ describe("basic-blocs 1.0.0", () => {
 
         let submitCount = 0;
         const formValues: unknown[] = [];
-        button.internals.setFormValue = value => formValues.push(value);
-        form.addEventListener("submit", event => {
+        button.internals.setFormValue = (value) => formValues.push(value);
+        form.addEventListener("submit", (event) => {
             event.preventDefault();
             submitCount++;
         });
@@ -674,10 +761,12 @@ describe("basic-blocs 1.0.0", () => {
     test("card exposes generic regions, appearances, density, and theme colors", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifact = definition?.artifacts?.find(candidate =>
-            candidate.type === "bloc" && candidate.bloc.tag === "basic-card"
+        const artifact = definition?.artifacts?.find(
+            (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-card",
         );
-        if (!artifact || artifact.type !== "bloc") throw new Error("expected basic-card artifact");
+        if (!artifact || artifact.type !== "bloc") {
+            throw new Error("expected basic-card artifact");
+        }
         const bloc = artifact.bloc;
         const built = await prepare_bloc(
             new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -723,13 +812,17 @@ describe("basic-blocs 1.0.0", () => {
     test("keeps user chip selections after applying a dynamic default value", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifacts = definition?.artifacts?.filter(artifact =>
-            artifact.type === "bloc" && ["basic-chip", "basic-chip-group"].includes(artifact.bloc.tag)
-        ) ?? [];
+        const artifacts =
+            definition?.artifacts?.filter(
+                (artifact) =>
+                    artifact.type === "bloc" && ["basic-chip", "basic-chip-group"].includes(artifact.bloc.tag),
+            ) ?? [];
         expect(artifacts).toHaveLength(2);
 
         for (const artifact of artifacts) {
-            if (artifact.type !== "bloc") continue;
+            if (artifact.type !== "bloc") {
+                continue;
+            }
             const bloc = artifact.bloc;
             const built = await prepare_bloc(
                 new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -806,10 +899,12 @@ describe("basic-blocs 1.0.0", () => {
     test("does not show a required file error before validation", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifact = definition?.artifacts?.find(candidate =>
-            candidate.type === "bloc" && candidate.bloc.tag === "basic-file-input"
+        const artifact = definition?.artifacts?.find(
+            (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-file-input",
         );
-        if (!artifact || artifact.type !== "bloc") throw new Error("expected basic-file-input artifact");
+        if (!artifact || artifact.type !== "bloc") {
+            throw new Error("expected basic-file-input artifact");
+        }
         const bloc = artifact.bloc;
         const built = await prepare_bloc(
             new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -837,10 +932,12 @@ describe("basic-blocs 1.0.0", () => {
     test("checkbox supports bound boolean state and themeable custom visuals", async () => {
         const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
         const definition = await repo.get("basic-blocs");
-        const artifact = definition?.artifacts?.find(candidate =>
-            candidate.type === "bloc" && candidate.bloc.tag === "basic-checkbox"
+        const artifact = definition?.artifacts?.find(
+            (candidate) => candidate.type === "bloc" && candidate.bloc.tag === "basic-checkbox",
         );
-        if (!artifact || artifact.type !== "bloc") throw new Error("expected basic-checkbox artifact");
+        if (!artifact || artifact.type !== "bloc") {
+            throw new Error("expected basic-checkbox artifact");
+        }
         const bloc = artifact.bloc;
         const built = await prepare_bloc(
             new File([bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
@@ -906,11 +1003,17 @@ describe("basic-blocs 1.0.0", () => {
 });
 
 function decodeDefaultContent(source: Record<string, string> | undefined): string | undefined {
-    if (!source) return undefined;
+    if (!source) {
+        return undefined;
+    }
     const manifestRaw = source["manifest.json"];
-    if (!manifestRaw) return undefined;
+    if (!manifestRaw) {
+        return undefined;
+    }
     const manifest = JSON.parse(Buffer.from(manifestRaw, "base64").toString("utf-8")) as { defaultContent?: string };
-    if (!manifest.defaultContent) return undefined;
+    if (!manifest.defaultContent) {
+        return undefined;
+    }
     const path = manifest.defaultContent.replace(/^\.\//, "");
     const encoded = source[path];
     return encoded ? Buffer.from(encoded, "base64").toString("utf-8") : undefined;

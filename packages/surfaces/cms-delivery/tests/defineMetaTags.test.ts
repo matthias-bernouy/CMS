@@ -8,7 +8,13 @@ const settings = (favicon?: string) => ({ site: { favicon } }) as TSystem;
 
 function faviconHref(rawFavicon: string | undefined, fallback = "/default.ico"): string {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
-    defineMetaTags(document as unknown as Document, document.head as unknown as HTMLElement, page, settings(rawFavicon), fallback);
+    defineMetaTags(
+        document as unknown as Document,
+        document.head as unknown as HTMLElement,
+        page,
+        settings(rawFavicon),
+        fallback,
+    );
     return document.querySelector('link[rel="icon"]')!.getAttribute("href")!;
 }
 

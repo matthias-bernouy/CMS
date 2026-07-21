@@ -11,10 +11,14 @@ export class HorizontalNavbar extends Component {
     }
 
     override connectedCallback(): void {
-        if (this._bound) return;
+        if (this._bound) {
+            return;
+        }
         const nav = this.shadowRoot!.querySelector<HTMLElement>(".navbar");
         const burger = this.shadowRoot!.querySelector<HTMLButtonElement>(".burger");
-        if (!nav || !burger) return;
+        if (!nav || !burger) {
+            return;
+        }
         burger.addEventListener("click", () => {
             const open = nav.classList.toggle("is-open");
             burger.setAttribute("aria-expanded", String(open));

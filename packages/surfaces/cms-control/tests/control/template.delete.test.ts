@@ -5,7 +5,9 @@ function makeSystem() {
     const deleteCalls: string[] = [];
     const cms: any = {
         repository: {
-            deleteTemplate: async (id: string) => { deleteCalls.push(id); },
+            deleteTemplate: async (id: string) => {
+                deleteCalls.push(id);
+            },
         },
     };
     return { cms, deleteCalls };
@@ -13,7 +15,9 @@ function makeSystem() {
 
 function makeRequest(query: Record<string, string>) {
     const url = new URL("http://localhost/cms/api/template");
-    for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
+    for (const [k, v] of Object.entries(query)) {
+        url.searchParams.set(k, v);
+    }
     return new Request(url.toString(), { method: "DELETE" });
 }
 

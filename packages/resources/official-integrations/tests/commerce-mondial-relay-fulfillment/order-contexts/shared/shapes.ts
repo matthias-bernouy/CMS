@@ -14,18 +14,17 @@ export const array = (items: DataShape): DataShape => ({
     items,
 });
 
-export const object = (
-    properties?: Record<string, DataShape>,
-    required?: string[],
-): DataShape => ({
+export const object = (properties?: Record<string, DataShape>, required?: string[]): DataShape => ({
     type: "object",
     ...(properties ? { properties } : {}),
     ...(required ? { required } : {}),
 });
 
 export function computedUserHeader() {
-    return [{
-        name: "x-cms-user-id",
-        source: { from: "computed" as const, ref: "userID" as const },
-    }];
+    return [
+        {
+            name: "x-cms-user-id",
+            source: { from: "computed" as const, ref: "userID" as const },
+        },
+    ];
 }

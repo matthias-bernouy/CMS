@@ -1,8 +1,4 @@
-import type {
-    DashboardEmbeddedLookupRef,
-    DashboardField,
-    DashboardWidget,
-} from "@bernouy/cms-dashboards";
+import type { DashboardEmbeddedLookupRef, DashboardField, DashboardWidget } from "@bernouy/cms-dashboards";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
@@ -18,33 +14,46 @@ export function nestedLookupKey(fieldId: string, nestedId: string): string {
 }
 
 export function detailLookupTargets(widget: DetailWidget): DetailLookupTarget[] {
-    return detailFields(widget).flatMap(field => {
-        if (isLookupField(field)) return [{ key: field.id, lookup: field.lookup!, selectedField: field }];
-        if (field.type === "table") return field.columns.flatMap(column => (
-            column.editable === true && column.type === "combobox" && column.lookup
-                ? [{ key: nestedLookupKey(field.id, column.id), lookup: column.lookup }]
-                : []
-        ));
-        if (field.type === "reorderable-list") return field.fields.flatMap(item => (
-            item.type === "combobox" && item.lookup
-                ? [{ key: nestedLookupKey(field.id, item.id), lookup: item.lookup }]
-                : []
-        ));
+    return detailFields(widget).flatMap((field) => {
+        if (isLookupField(field)) {
+            return [{ key: field.id, lookup: field.lookup!, selectedField: field }];
+        }
+        if (field.type === "table") {
+            return field.columns.flatMap((column) =>
+                column.editable === true && column.type === "combobox" && column.lookup
+                    ? [{ key: nestedLookupKey(field.id, column.id), lookup: column.lookup }]
+                    : [],
+            );
+        }
+        if (field.type === "reorderable-list") {
+            return field.fields.flatMap((item) =>
+                item.type === "combobox" && item.lookup
+                    ? [{ key: nestedLookupKey(field.id, item.id), lookup: item.lookup }]
+                    : [],
+            );
+        }
         return [];
     });
 }
 
 export function allLookupTargetKeys(widget: DetailWidget): Set<string> {
-    return new Set(detailLookupTargets(widget).map(target => target.key));
+    return new Set(detailLookupTargets(widget).map((target) => target.key));
 }
 
 export function lookupTargetKeysDependingOn(widget: DetailWidget, changedFieldId: string): Set<string> {
-    if (!changedFieldId) return new Set();
-    return new Set(detailLookupTargets(widget).filter(target => (
-        Object.values(target.lookup.params ?? {}).some(expression => (
-            expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`)
-        ))
-    )).map(target => target.key));
+    if (!changedFieldId) {
+        return new Set();
+    }
+    return new Set(
+        detailLookupTargets(widget)
+            .filter((target) =>
+                Object.values(target.lookup.params ?? {}).some(
+                    (expression) =>
+                        expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`),
+                ),
+            )
+            .map((target) => target.key),
+    );
 }
 
 export function isLookupField(field: DashboardField): field is LookupField {
@@ -52,5 +61,5 @@ export function isLookupField(field: DashboardField): field is LookupField {
 }
 
 function detailFields(widget: DetailWidget): DashboardField[] {
-    return [...widget.main, ...(widget.aside ?? [])].flatMap(section => section.fields);
+    return [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
 }

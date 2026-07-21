@@ -19,16 +19,16 @@
 
 /** Authn output: identity only, never a role. Shared with the auth backends. */
 export type Identity = {
-    sub:          string;            // stable, opaque; primary key
-    email?:       string;
+    sub: string; // stable, opaque; primary key
+    email?: string;
     /** Which provider authenticated this identity (e.g. "local", "google").
      *  Provenance only — NOT authz. Set by the auth backend. */
-    provider?:    string;
+    provider?: string;
 };
 
 export type TUser<Role extends string = string> = Identity & {
-    role:       Role;
-    createdAt:  Date;
+    role: Role;
+    createdAt: Date;
     lastSeenAt: Date;
 };
 
@@ -36,25 +36,24 @@ export type UsersListOptions = {
     /** Exact, case-insensitive email match. PII is encrypted at rest (only a
      *  blind index exists), so substring search and email sorting are not
      *  possible — both implementations honor this. */
-    search?:     string;
+    search?: string;
     /** Exact role filter. */
-    role?:       string;
-    sortBy?:     "createdAt" | "lastSeenAt";
-    sortOrder?:  "asc" | "desc";
+    role?: string;
+    sortBy?: "createdAt" | "lastSeenAt";
+    sortOrder?: "asc" | "desc";
     /** 1-based. Omit for the full (unbounded) listing. */
     pagination?: { page: number; limit: number };
 };
 
 export type UsersPage<Role extends string = string> = {
-    users:   TUser<Role>[];
-    total:   number;
-    page:    number;
-    limit:   number;
+    users: TUser<Role>[];
+    total: number;
+    page: number;
+    limit: number;
     hasMore: boolean;
 };
 
 export interface UsersRepository<Role extends string = string> {
-
     /** Login hook: create the user with `defaultRole` if `sub` is new, else
      *  refresh its profile + `lastSeenAt` and KEEP its existing role. */
     upsert(identity: Identity, defaultRole: Role): Promise<TUser<Role>>;

@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    installCommerceTestEnvironment,
-    jsonResponse,
-    requestCommerce,
-    setRestResponder,
-} from "../harness";
+import { installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
 
 installCommerceTestEnvironment();
 
@@ -23,12 +18,22 @@ const order = {
 };
 const publicDefinitions = [
     {
-        key: "weight", label: "Weight", field_type: "number", unit: "g",
-        enabled: true, public_readable: true, position: 10,
+        key: "weight",
+        label: "Weight",
+        field_type: "number",
+        unit: "g",
+        enabled: true,
+        public_readable: true,
+        position: 10,
     },
     {
-        key: "publicNote", label: "Delivery note", field_type: "string", unit: null,
-        enabled: true, public_readable: true, position: 20,
+        key: "publicNote",
+        label: "Delivery note",
+        field_type: "string",
+        unit: null,
+        enabled: true,
+        public_readable: true,
+        position: 20,
     },
 ];
 const expectedMetadata = { publicNote: "Leave at reception", weight: 305 };
@@ -40,12 +45,15 @@ const expectedEntries = [
 describe("commerce buyer order metadata", () => {
     test("returns only enabled public metadata on buyer list and detail responses", async () => {
         let detailQueries = 0;
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rpc/list_order_read_model")) {
                 return jsonResponse({
-                    state: "ok", orders: [order], operations: [],
-                    definitions: publicDefinitions, total: 1,
+                    state: "ok",
+                    orders: [order],
+                    operations: [],
+                    definitions: publicDefinitions,
+                    total: 1,
                 });
             }
             if (url.pathname.endsWith("/rpc/get_order_detail_read_model")) {
@@ -57,8 +65,8 @@ describe("commerce buyer order metadata", () => {
 
         const listResponse = await requestCommerce("/me/orders", { userId: buyerId });
         const detailResponse = await requestCommerce("/me/order?id=42", { userId: buyerId });
-        const list = await listResponse.json() as Record<string, any>;
-        const detail = await detailResponse.json() as Record<string, any>;
+        const list = (await listResponse.json()) as Record<string, any>;
+        const detail = (await detailResponse.json()) as Record<string, any>;
 
         expect(listResponse.status).toBe(200);
         expect(detailResponse.status).toBe(200);
@@ -72,18 +80,22 @@ describe("commerce buyer order metadata", () => {
     });
 
     test("closes buyer metadata when no definition is both enabled and public", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rpc/list_order_read_model")) {
                 return jsonResponse({
-                    state: "ok", orders: [order], operations: [], definitions: [], total: 1,
+                    state: "ok",
+                    orders: [order],
+                    operations: [],
+                    definitions: [],
+                    total: 1,
                 });
             }
             return jsonResponse([]);
         });
 
         const response = await requestCommerce("/me/orders", { userId: buyerId });
-        const body = await response.json() as Record<string, any>;
+        const body = (await response.json()) as Record<string, any>;
 
         expect(response.status).toBe(200);
         expect(body.items[0].metadata).toEqual({});
@@ -93,8 +105,17 @@ describe("commerce buyer order metadata", () => {
 
 function detailEnvelope(definitions: Record<string, unknown>[]): Record<string, unknown> {
     return {
-        state: "ok", order, lines: [], events: [], seller: null, operation: null,
-        financial_terms: null, fulfillment: null, settlement: null, claim: null,
-        authorization: null, definitions,
+        state: "ok",
+        order,
+        lines: [],
+        events: [],
+        seller: null,
+        operation: null,
+        financial_terms: null,
+        fulfillment: null,
+        settlement: null,
+        claim: null,
+        authorization: null,
+        definitions,
     };
 }

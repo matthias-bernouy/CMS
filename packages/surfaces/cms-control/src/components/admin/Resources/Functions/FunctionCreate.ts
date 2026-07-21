@@ -1,11 +1,6 @@
 import type { CmsFunction, FunctionCondition, FunctionStep, FunctionValue } from "@bernouy/cms-functions";
 import "cms-control/components/admin/ShellDetail/ShellDetail";
-import {
-    createFunctionDefinition,
-    fetchFunctionCatalog,
-    route,
-    type FunctionCatalogSource,
-} from "./api";
+import { createFunctionDefinition, fetchFunctionCatalog, route, type FunctionCatalogSource } from "./api";
 import css from "./create.css" with { type: "text" };
 import template from "./create.template.html" with { type: "text" };
 import stepTemplate from "./step.template.html" with { type: "text" };
@@ -59,7 +54,9 @@ export class CmsFunctionCreate extends HTMLElement {
     private saveButton: HTMLButtonElement | null = null;
 
     connectedCallback(): void {
-        if (this.initialized) return;
+        if (this.initialized) {
+            return;
+        }
         this.initialized = true;
         void this.load();
     }
@@ -98,7 +95,9 @@ export class CmsFunctionCreate extends HTMLElement {
         this.saveButton = this.querySelector("[data-role='save']");
         this.querySelector("[data-role='add-call']")?.addEventListener("click", () => this.addCall());
         this.querySelector("[data-role='add-assert']")?.addEventListener("click", () => this.addAssert());
-        this.querySelector("[data-role='collapse']")?.addEventListener("click", event => this.togglePanels(event.currentTarget as HTMLButtonElement));
+        this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) =>
+            this.togglePanels(event.currentTarget as HTMLButtonElement),
+        );
         this.bindGuidance();
         this.saveButton?.addEventListener("click", () => void this.save());
         this.renderInputSchemas();
@@ -110,16 +109,20 @@ export class CmsFunctionCreate extends HTMLElement {
         const name = this.querySelector<HTMLInputElement>("[data-field='name']");
         const id = this.querySelector<HTMLInputElement>("[data-field='id']");
         let idWasEdited = false;
-        id?.addEventListener("input", () => idWasEdited = true);
+        id?.addEventListener("input", () => (idWasEdited = true));
         name?.addEventListener("input", () => {
-            if (id && !idWasEdited) id.value = identifier(name.value);
+            if (id && !idWasEdited) {
+                id.value = identifier(name.value);
+            }
         });
     }
 
     private togglePanels(button: HTMLButtonElement): void {
         const panels = Array.from(this.querySelectorAll<HTMLDetailsElement>("details.editor-panel"));
-        const shouldOpen = panels.some(panel => !panel.open);
-        for (const panel of panels) panel.open = shouldOpen;
+        const shouldOpen = panels.some((panel) => !panel.open);
+        for (const panel of panels) {
+            panel.open = shouldOpen;
+        }
         button.textContent = shouldOpen ? "Collapse all" : "Expand all";
     }
 
@@ -149,24 +152,36 @@ export class CmsFunctionCreate extends HTMLElement {
     }
 
     private renderSteps(): void {
-        if (!this.stepsRoot) return;
+        if (!this.stepsRoot) {
+            return;
+        }
         this.stepsRoot.replaceChildren(...this.steps.map((step, index) => this.stepCard(step, index)));
         const empty = this.querySelector<HTMLElement>("[data-role='steps-empty']");
-        if (empty) empty.hidden = this.steps.length > 0;
+        if (empty) {
+            empty.hidden = this.steps.length > 0;
+        }
         this.renderReturnPicker();
     }
 
     private renderInputSchemas(): void {
         const paramsRoot = this.querySelector<HTMLElement>("[data-role='params-schema']");
         const bodyRoot = this.querySelector<HTMLElement>("[data-role='body-schema']");
-        paramsRoot?.replaceChildren(schemaFieldsEditor(this.paramsFields, () => {
-            this.renderInputSchemas();
-            this.renderSteps();
-        }, false));
-        bodyRoot?.replaceChildren(schemaFieldsEditor(this.bodyFields, () => {
-            this.renderInputSchemas();
-            this.renderSteps();
-        }));
+        paramsRoot?.replaceChildren(
+            schemaFieldsEditor(
+                this.paramsFields,
+                () => {
+                    this.renderInputSchemas();
+                    this.renderSteps();
+                },
+                false,
+            ),
+        );
+        bodyRoot?.replaceChildren(
+            schemaFieldsEditor(this.bodyFields, () => {
+                this.renderInputSchemas();
+                this.renderSteps();
+            }),
+        );
     }
 
     private stepCard(step: StepDraft, index: number): HTMLElement {
@@ -177,44 +192,61 @@ export class CmsFunctionCreate extends HTMLElement {
         body.innerHTML = stepTemplate as unknown as string;
         card.append(body.content.cloneNode(true));
         card.querySelector<HTMLElement>("[data-role='kind']")!.textContent = step.kind === "call" ? "CALL" : "RULE";
-        card.querySelector<HTMLElement>("[data-role='title']")!.textContent = step.kind === "call"
-            ? step.id || `Step ${index + 1}`
-            : `Business rule ${index + 1}`;
-        card.querySelector<HTMLElement>("[data-role='subtitle']")!.textContent = step.kind === "call"
-            ? `${step.source || "Choose a source"}.${step.endpoint || "endpoint"}`
-            : "Execution stops when this condition fails";
+        card.querySelector<HTMLElement>("[data-role='title']")!.textContent =
+            step.kind === "call" ? step.id || `Step ${index + 1}` : `Business rule ${index + 1}`;
+        card.querySelector<HTMLElement>("[data-role='subtitle']")!.textContent =
+            step.kind === "call"
+                ? `${step.source || "Choose a source"}.${step.endpoint || "endpoint"}`
+                : "Execution stops when this condition fails";
         const fields = card.querySelector<HTMLElement>(".step-fields")!;
-        if (step.kind === "call") this.renderCallFields(fields, step);
-        else this.renderAssertFields(fields, step);
-        card.querySelector("[data-remove]")?.addEventListener("click", event => {
+        if (step.kind === "call") {
+            this.renderCallFields(fields, step);
+        } else {
+            this.renderAssertFields(fields, step);
+        }
+        card.querySelector("[data-remove]")?.addEventListener("click", (event) => {
             event.preventDefault();
             this.steps.splice(index, 1);
             this.renderSteps();
         });
-        card.querySelector("[data-move='up']")?.addEventListener("click", event => { event.preventDefault(); this.move(index, -1); });
-        card.querySelector("[data-move='down']")?.addEventListener("click", event => { event.preventDefault(); this.move(index, 1); });
+        card.querySelector("[data-move='up']")?.addEventListener("click", (event) => {
+            event.preventDefault();
+            this.move(index, -1);
+        });
+        card.querySelector("[data-move='down']")?.addEventListener("click", (event) => {
+            event.preventDefault();
+            this.move(index, 1);
+        });
         return card;
     }
 
     private renderCallFields(root: HTMLElement, step: CallDraft): void {
-        const id = input(step.id, value => step.id = value);
-        const source = select(this.catalog.map(item => [item.id, item.label]), step.source, value => {
-            step.source = value;
-            step.endpoint = this.catalog.find(item => item.id === value)?.endpoints[0]?.endpointId ?? "";
-            step.params = {};
-            step.body = {};
-            this.renderSteps();
-        });
-        const endpoints = this.catalog.find(item => item.id === step.source)?.endpoints ?? [];
-        const endpoint = select(endpoints.map(item => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, value => {
-            step.endpoint = value;
-            step.params = {};
-            step.body = {};
-            this.renderSteps();
-        });
-        const contract = endpoints.find(item => item.endpointId === step.endpoint);
+        const id = input(step.id, (value) => (step.id = value));
+        const source = select(
+            this.catalog.map((item) => [item.id, item.label]),
+            step.source,
+            (value) => {
+                step.source = value;
+                step.endpoint = this.catalog.find((item) => item.id === value)?.endpoints[0]?.endpointId ?? "";
+                step.params = {};
+                step.body = {};
+                this.renderSteps();
+            },
+        );
+        const endpoints = this.catalog.find((item) => item.id === step.source)?.endpoints ?? [];
+        const endpoint = select(
+            endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]),
+            step.endpoint,
+            (value) => {
+                step.endpoint = value;
+                step.params = {};
+                step.body = {};
+                this.renderSteps();
+            },
+        );
+        const contract = endpoints.find((item) => item.endpointId === step.endpoint);
         const references = this.referencesBefore(this.steps.indexOf(step));
-        const paramTargets: MappingTarget[] = (contract?.params ?? []).map(param => ({
+        const paramTargets: MappingTarget[] = (contract?.params ?? []).map((param) => ({
             path: param.name,
             label: param.name,
             required: param.required,
@@ -224,44 +256,75 @@ export class CmsFunctionCreate extends HTMLElement {
             },
         }));
         const bodyTargets = targetsFromShape(contract?.body);
-        root.append(grid(
-            field("Step identifier", id),
-            field("Source", source),
-            field("Endpoint", endpoint),
-            mappingGroup("Parameter mapping", mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters.")),
-            mappingGroup("Body mapping", mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body.")),
-        ));
+        root.append(
+            grid(
+                field("Step identifier", id),
+                field("Source", source),
+                field("Endpoint", endpoint),
+                mappingGroup(
+                    "Parameter mapping",
+                    mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters."),
+                ),
+                mappingGroup(
+                    "Body mapping",
+                    mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body."),
+                ),
+            ),
+        );
     }
 
     private renderAssertFields(root: HTMLElement, step: AssertDraft): void {
-        const operator = select([
-            ["equals", "Equals"], ["notEquals", "Not equals"], ["exists", "Exists"], ["in", "In"],
-            ["gt", "Greater than"], ["gte", "Greater or equal"], ["lt", "Less than"], ["lte", "Less or equal"],
-        ], step.operator, value => {
-            step.operator = value as AssertDraft["operator"];
-            this.renderSteps();
-        });
+        const operator = select(
+            [
+                ["equals", "Equals"],
+                ["notEquals", "Not equals"],
+                ["exists", "Exists"],
+                ["in", "In"],
+                ["gt", "Greater than"],
+                ["gte", "Greater or equal"],
+                ["lt", "Less than"],
+                ["lte", "Less or equal"],
+            ],
+            step.operator,
+            (value) => {
+                step.operator = value as AssertDraft["operator"];
+                this.renderSteps();
+            },
+        );
         const references = this.referencesBefore(this.steps.indexOf(step));
-        const children = [
-            field("Operator", operator),
-            field("Value to inspect", valuePicker(step.left, references)),
-        ];
-        if (step.operator !== "exists") children.push(field("Expected value", valuePicker(step.right, references)));
-        children.push(field("Failure status", input(step.status, value => step.status = value, "403", "number")));
-        children.push(field("Failure message", input(step.error, value => step.error = value, "Condition failed")));
+        const children = [field("Operator", operator), field("Value to inspect", valuePicker(step.left, references))];
+        if (step.operator !== "exists") {
+            children.push(field("Expected value", valuePicker(step.right, references)));
+        }
+        children.push(
+            field(
+                "Failure status",
+                input(step.status, (value) => (step.status = value), "403", "number"),
+            ),
+        );
+        children.push(
+            field(
+                "Failure message",
+                input(step.error, (value) => (step.error = value), "Condition failed"),
+            ),
+        );
         root.append(grid(...children));
     }
 
     private renderReturnPicker(): void {
         const root = this.querySelector<HTMLElement>("[data-role='return-picker']");
-        root?.replaceChildren(valuePicker(this.returnValue, this.referencesBefore(this.steps.length), "No response body"));
+        root?.replaceChildren(
+            valuePicker(this.returnValue, this.referencesBefore(this.steps.length), "No response body"),
+        );
     }
 
     private referencesBefore(stepIndex: number): ReferenceOption[] {
         const params = paramsFromFields(this.paramsFields);
         const body = objectShapeFromFields(this.bodyFields);
         const references: ReferenceOption[] = [
-            ...Object.entries(params).flatMap(([name, shape]) => referencesFromShape(shape, `$input.params.${name}`, `Input parameter / ${name}`)),
+            ...Object.entries(params).flatMap(([name, shape]) =>
+                referencesFromShape(shape, `$input.params.${name}`, `Input parameter / ${name}`),
+            ),
             ...referencesFromShape(body, "$input.body", "Input body"),
             {
                 value: "$ctx.user.id",
@@ -270,29 +333,38 @@ export class CmsFunctionCreate extends HTMLElement {
             },
             { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } },
         ];
-        this.steps.slice(0, stepIndex).forEach(step => {
-            if (step.kind !== "call") return;
+        this.steps.slice(0, stepIndex).forEach((step) => {
+            if (step.kind !== "call") {
+                return;
+            }
             const endpoint = this.endpointContract(step);
-            const output = endpoint?.output?.find(entry => /^2\d\d$/.test(entry.status))?.body
-                ?? endpoint?.output?.find(entry => entry.status === "default")?.body;
+            const output =
+                endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status))?.body ??
+                endpoint?.output?.find((entry) => entry.status === "default")?.body;
             references.push(...referencesFromShape(output, `$steps.${step.id}`, `Step ${step.id}`));
         });
         return references;
     }
 
     private endpointContract(step: CallDraft) {
-        return this.catalog.find(source => source.id === step.source)?.endpoints.find(endpoint => endpoint.endpointId === step.endpoint);
+        return this.catalog
+            .find((source) => source.id === step.source)
+            ?.endpoints.find((endpoint) => endpoint.endpointId === step.endpoint);
     }
 
     private move(index: number, offset: number): void {
         const target = index + offset;
-        if (target < 0 || target >= this.steps.length) return;
+        if (target < 0 || target >= this.steps.length) {
+            return;
+        }
         [this.steps[index], this.steps[target]] = [this.steps[target]!, this.steps[index]!];
         this.renderSteps();
     }
 
     private async save(): Promise<void> {
-        if (!this.saveButton) return;
+        if (!this.saveButton) {
+            return;
+        }
         this.setMessage("Validating function...", "");
         this.saveButton.disabled = true;
         try {
@@ -315,20 +387,25 @@ export class CmsFunctionCreate extends HTMLElement {
         const body = advancedBody ?? objectShapeFromFields(this.bodyFields);
         const advancedOutput = parseOptional(value(this, "output"), "Output contract");
         const returnBody = this.returnValue.value ? resolvedDraftValue(this.returnValue) : undefined;
-        const returnShape = this.referencesBefore(this.steps.length).find(reference => reference.value === this.returnValue.value)?.shape;
+        const returnShape = this.referencesBefore(this.steps.length).find(
+            (reference) => reference.value === this.returnValue.value,
+        )?.shape;
         const returnStatus = Number(value(this, "return-status") || 200);
-        const output = advancedOutput ?? (returnShape ? [{ status: String(returnStatus), body: returnShape }] : undefined);
+        const output =
+            advancedOutput ?? (returnShape ? [{ status: String(returnStatus), body: returnShape }] : undefined);
         const definition: CmsFunction = {
             id,
             method: value(this, "method") as CmsFunction["method"],
             access: { mode: value(this, "access") as NonNullable<CmsFunction["access"]>["mode"] },
             meta: { name: name || id, ...(description ? { description } : {}) },
             input: {
-                ...(Object.keys(params as Record<string, unknown>).length ? { params: params as NonNullable<CmsFunction["input"]>["params"] } : {}),
+                ...(Object.keys(params as Record<string, unknown>).length
+                    ? { params: params as NonNullable<CmsFunction["input"]>["params"] }
+                    : {}),
                 ...(body !== undefined ? { body: body as NonNullable<CmsFunction["input"]>["body"] } : {}),
             },
             ...(output !== undefined ? { output: output as CmsFunction["output"] } : {}),
-            steps: this.steps.map(step => buildStep(step)),
+            steps: this.steps.map((step) => buildStep(step)),
             return: {
                 status: returnStatus,
                 ...(returnBody !== undefined ? { body: returnBody } : {}),
@@ -338,13 +415,17 @@ export class CmsFunctionCreate extends HTMLElement {
     }
 
     private setMessage(text: string, kind: "" | "error"): void {
-        if (!this.message) return;
+        if (!this.message) {
+            return;
+        }
         this.message.className = `message ${kind}`.trim();
         this.message.textContent = text;
     }
 }
 
-if (!customElements.get("cms-function-create")) customElements.define("cms-function-create", CmsFunctionCreate);
+if (!customElements.get("cms-function-create")) {
+    customElements.define("cms-function-create", CmsFunctionCreate);
+}
 
 function buildStep(step: StepDraft): FunctionStep {
     if (step.kind === "call") {
@@ -361,9 +442,10 @@ function buildStep(step: StepDraft): FunctionStep {
         };
     }
     const left = resolvedDraftValue(step.left);
-    const condition = step.operator === "exists"
-        ? { exists: left }
-        : { [step.operator]: [left, resolvedDraftValue(step.right)] } as FunctionCondition;
+    const condition =
+        step.operator === "exists"
+            ? { exists: left }
+            : ({ [step.operator]: [left, resolvedDraftValue(step.right)] } as FunctionCondition);
     return {
         assert: {
             condition,
@@ -374,13 +456,18 @@ function buildStep(step: StepDraft): FunctionStep {
 
 function mappedDraft(draft: Record<string, ValueDraft>): FunctionValue | undefined {
     const root = draft[""];
-    if (root?.value) return resolvedDraftValue(root);
+    if (root?.value) {
+        return resolvedDraftValue(root);
+    }
     const mapped = mappedObject(draft);
     return Object.keys(mapped).length ? mapped : undefined;
 }
 
 function value(root: ParentNode, fieldName: string): string {
-    return root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[data-field="${fieldName}"]`)?.value ?? "";
+    return (
+        root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[data-field="${fieldName}"]`)
+            ?.value ?? ""
+    );
 }
 
 function parseOptional(raw: string, label: string): unknown {
@@ -426,7 +513,11 @@ function input(current: string, onChange: (value: string) => void, placeholder =
     return el;
 }
 
-function select(options: Array<[string, string]>, current: string, onChange: (value: string) => void): HTMLSelectElement {
+function select(
+    options: Array<[string, string]>,
+    current: string,
+    onChange: (value: string) => void,
+): HTMLSelectElement {
     const el = document.createElement("select");
     for (const [optionValue, label] of options) {
         const option = document.createElement("option");
@@ -440,8 +531,12 @@ function select(options: Array<[string, string]>, current: string, onChange: (va
 }
 
 function identifier(value: string): string {
-    const words = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
-    return words.map((word, index) => index ? word[0]?.toUpperCase() + word.slice(1) : word.toLowerCase()).join("");
+    const words =
+        value
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .match(/[A-Za-z0-9]+/g) ?? [];
+    return words.map((word, index) => (index ? word[0]?.toUpperCase() + word.slice(1) : word.toLowerCase())).join("");
 }
 
 function dataShapeType(value: string | undefined): "string" | "number" | "boolean" | "object" | "array" {

@@ -9,7 +9,6 @@ export type RouteHandler = (req: Request) => Response | Promise<Response>;
 export type Middleware = (req: Request, next: () => Promise<Response>) => Promise<Response>;
 
 export interface Runner {
-
     readonly basePath: string;
 
     /**
@@ -18,7 +17,12 @@ export interface Runner {
      * @param path The URL path (can include dynamic segments like /article/:id)
      * @param handler The function to execute when the route is matched
      */
-    addEndpoint(method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS', path: string, handler: RouteHandler, middleware?: Middleware[]): void;
+    addEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        path: string,
+        handler: RouteHandler,
+        middleware?: Middleware[],
+    ): void;
 
     /**
      * Adds a global middleware that runs before every request.
@@ -54,9 +58,9 @@ export interface Runner {
      * Subsequent calls replace the previous default.
      */
     setDefaultEndpoint(
-        method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS',
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
         handler: RouteHandler,
-        middlewares?: Middleware[]
+        middlewares?: Middleware[],
     ): void;
 
     /**

@@ -46,16 +46,22 @@ export class SourceOverlaySchemaCache {
         load: () => Promise<SourceOverlayField[] | null>,
     ): Promise<SourceOverlayField[] | null> {
         const fingerprint = await schemaFingerprint(source, overlay);
-        if (!fingerprint) return await load();
+        if (!fingerprint) {
+            return await load();
+        }
 
         const key = `${overlay.sourceId}:${overlay.id}:${fingerprint}`;
         const now = this.now();
         this.purgeExpired(now);
         const cached = this.entries.get(key);
-        if (cached) return structuredClone(cached.fields);
+        if (cached) {
+            return structuredClone(cached.fields);
+        }
 
         const active = this.pending.get(key);
-        if (active) return cloneNullableFields(await active.promise);
+        if (active) {
+            return cloneNullableFields(await active.promise);
+        }
 
         const invalidationRevision = this.invalidationRevision;
         const promise = load();
@@ -73,7 +79,9 @@ export class SourceOverlaySchemaCache {
             }
             return cloneNullableFields(fields);
         } finally {
-            if (this.pending.get(key) === pending) this.pending.delete(key);
+            if (this.pending.get(key) === pending) {
+                this.pending.delete(key);
+            }
         }
     }
 
@@ -85,35 +93,47 @@ export class SourceOverlaySchemaCache {
 
     private purgeExpired(now: number): void {
         for (const [key, entry] of this.entries) {
-            if (entry.expiresAt <= now) this.entries.delete(key);
+            if (entry.expiresAt <= now) {
+                this.entries.delete(key);
+            }
         }
     }
 }
 
 async function schemaFingerprint(source: Source, overlay: SourceOverlay): Promise<string | null> {
     const endpointId = overlay.fieldSource?.endpointId;
-    if (!endpointId) return null;
-    const endpoint = source.endpoints.find(candidate => parseUrn(candidate.urn)?.endpoint === endpointId);
+    if (!endpointId) {
+        return null;
+    }
+    const endpoint = source.endpoints.find((candidate) => parseUrn(candidate.urn)?.endpoint === endpointId);
     // Contextual or effectful endpoints remain execution-scoped and must never cross callers.
-    if (!endpoint
-        || endpoint.method !== "GET"
-        || endpoint.effects !== undefined
-        || hasComputedParams(endpoint)
-        || hasComputedHeaders(endpoint)) return null;
+    if (
+        !endpoint ||
+        endpoint.method !== "GET" ||
+        endpoint.effects !== undefined ||
+        hasComputedParams(endpoint) ||
+        hasComputedHeaders(endpoint)
+    ) {
+        return null;
+    }
     const revision = canonicalJson({
         source: { urn: source.urn, fieldSourceEndpoint: endpoint },
         overlay,
     });
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(revision));
-    return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function canonicalJson(value: unknown): string {
-    if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
-    if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+    if (value === null || typeof value !== "object") {
+        return JSON.stringify(value) ?? "null";
+    }
+    if (Array.isArray(value)) {
+        return `[${value.map(canonicalJson).join(",")}]`;
+    }
     const entries = Object.entries(value as Record<string, unknown>)
         .filter(([, entry]) => entry !== undefined)
-        .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
     return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
 }
 
@@ -126,8 +146,12 @@ function deleteMatching<T extends SourceOverlaySchemaCacheSelector>(
     selector: SourceOverlaySchemaCacheSelector,
 ): void {
     for (const [key, entry] of entries) {
-        if (selector.sourceId !== undefined && selector.sourceId !== entry.sourceId) continue;
-        if (selector.overlayId !== undefined && selector.overlayId !== entry.overlayId) continue;
+        if (selector.sourceId !== undefined && selector.sourceId !== entry.sourceId) {
+            continue;
+        }
+        if (selector.overlayId !== undefined && selector.overlayId !== entry.overlayId) {
+            continue;
+        }
         entries.delete(key);
     }
 }

@@ -18,7 +18,7 @@ export function setupFeatures(host: GridMedia, s: ShadowRoot) {
 
     const ctxMenu = setupContextMenu(s, {
         onRename: (item) => rename.open(item),
-        onDelete: (id)   => host._confirmDelete(id),
+        onDelete: (id) => host._confirmDelete(id),
     });
 
     const rename = setupRename(s, {
@@ -44,7 +44,9 @@ export function setupFeatures(host: GridMedia, s: ShadowRoot) {
 
     const detail = setupDetail(host.detail, {
         onSave: async (id, data) => {
-            if (await api.saveItemMetadata(id, data)) host.detail.close();
+            if (await api.saveItemMetadata(id, data)) {
+                host.detail.close();
+            }
         },
         onReplace: async (id, file) => {
             if (await api.replaceFileContent(id, file)) {
@@ -53,7 +55,9 @@ export function setupFeatures(host: GridMedia, s: ShadowRoot) {
             }
         },
         onDelete: async (id) => {
-            if (!confirm("Delete this file?")) return;
+            if (!confirm("Delete this file?")) {
+                return;
+            }
             if (await api.deleteItem(id)) {
                 host.detail.close();
                 refresh();

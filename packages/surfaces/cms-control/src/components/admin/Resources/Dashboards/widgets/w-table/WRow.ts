@@ -56,13 +56,17 @@ template.innerHTML = `
 
 export class DashboardWRow extends HTMLElement {
     private readonly onClick = (event: Event): void => {
-        if ((event.target as Element | null)?.closest("input")) return;
+        if ((event.target as Element | null)?.closest("input")) {
+            return;
+        }
         this.select();
     };
 
     private readonly onKeydown = (event: Event): void => {
         const key = event instanceof KeyboardEvent ? event.key : "";
-        if (key !== "Enter" && key !== " ") return;
+        if (key !== "Enter" && key !== " ") {
+            return;
+        }
         event.preventDefault();
         this.select();
     };
@@ -93,13 +97,19 @@ export class DashboardWRow extends HTMLElement {
 
     set checked(value: boolean) {
         const input = this.shadowRoot?.querySelector<HTMLInputElement>("[data-check]");
-        if (input) input.checked = value;
+        if (input) {
+            input.checked = value;
+        }
     }
 
     private select(): void {
-        if (!this.collection || !this.rowKey) return;
+        if (!this.collection || !this.rowKey) {
+            return;
+        }
         emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
     }
 }
 
-if (!customElements.get("cms-dashboard-w-row")) customElements.define("cms-dashboard-w-row", DashboardWRow);
+if (!customElements.get("cms-dashboard-w-row")) {
+    customElements.define("cms-dashboard-w-row", DashboardWRow);
+}

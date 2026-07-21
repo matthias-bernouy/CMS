@@ -4,7 +4,7 @@ import { AuthValidationError, isBuiltinProvider } from "cms-auth/core/validation
 
 export type IdentityProviderStores<Role extends string> = {
     identityProviders: IdentityProviderRepository;
-    users:             UsersRepository<Role>;
+    users: UsersRepository<Role>;
 };
 
 const BUILTIN_EDIT_FIELDS: (keyof IdentityProviderPatch)[] = [
@@ -33,12 +33,14 @@ export async function deleteIdentityProvider<Role extends string>(
     id: string,
 ): Promise<boolean> {
     const provider = await stores.identityProviders.get(id);
-    if (!provider) return false;
+    if (!provider) {
+        return false;
+    }
 
     if (isBuiltinProvider(provider.kind)) {
         throw new AuthValidationError("id", "builtin provider cannot be removed (disable it instead)");
     }
-    if (provider.enabled && !await isAdminReachableAfterRemoving(stores, id)) {
+    if (provider.enabled && !(await isAdminReachableAfterRemoving(stores, id))) {
         throw new AuthValidationError("id", "cannot remove: no admin could sign in afterwards");
     }
 
@@ -51,17 +53,21 @@ export async function updateIdentityProvider<Role extends string>(
     patch: IdentityProviderPatch,
 ) {
     const existing = await stores.identityProviders.get(id);
-    if (!existing) throw new AuthValidationError("id", "unknown provider");
+    if (!existing) {
+        throw new AuthValidationError("id", "unknown provider");
+    }
 
     const editsFields = BUILTIN_EDIT_FIELDS.some((key) => key in patch);
     if (isBuiltinProvider(existing.kind) && editsFields) {
         throw new AuthValidationError("id", "builtin provider fields are not editable");
     }
-    if (patch.enabled === false && existing.enabled && !await isAdminReachableAfterRemoving(stores, id)) {
+    if (patch.enabled === false && existing.enabled && !(await isAdminReachableAfterRemoving(stores, id))) {
         throw new AuthValidationError("enabled", "cannot disable: no admin could sign in afterwards");
     }
 
     const updated = await stores.identityProviders.update(id, patch);
-    if (!updated) throw new AuthValidationError("id", "unknown provider");
+    if (!updated) {
+        throw new AuthValidationError("id", "unknown provider");
+    }
     return updated;
 }

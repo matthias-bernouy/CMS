@@ -13,11 +13,13 @@ export class StructureTreeEmitter {
     ) {}
 
     selectEditor(editor: Editor): void {
-        this.host.dispatchEvent(new CustomEvent("editor-v2:select-editor", {
-            bubbles: true,
-            composed: true,
-            detail: { editor },
-        }));
+        this.host.dispatchEvent(
+            new CustomEvent("editor-v2:select-editor", {
+                bubbles: true,
+                composed: true,
+                detail: { editor },
+            }),
+        );
     }
 
     emitAction(
@@ -32,23 +34,25 @@ export class StructureTreeEmitter {
         sourceConditions?: ConditionPickerCondition[],
         conditionExpression?: string,
     ): void {
-        this.host.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
-            bubbles: true,
-            composed: true,
-            detail: {
-                action,
-                editor,
-                sourceEditor,
-                item,
-                dataSource,
-                sourceBinding,
-                sourceConditions,
-                conditionExpression,
-                entry: item?.kind === "block" ? item.entry : undefined,
-                slot,
-                sourceState,
-            },
-        }));
+        this.host.dispatchEvent(
+            new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    action,
+                    editor,
+                    sourceEditor,
+                    item,
+                    dataSource,
+                    sourceBinding,
+                    sourceConditions,
+                    conditionExpression,
+                    entry: item?.kind === "block" ? item.entry : undefined,
+                    slot,
+                    sourceState,
+                },
+            }),
+        );
     }
 
     closeContextMenu(): void {

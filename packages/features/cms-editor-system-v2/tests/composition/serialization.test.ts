@@ -5,12 +5,8 @@ import {
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
 } from "@bernouy/components/base";
-import {
-    serializableContentHtml,
-} from "../../src/components/Layout/Shell/Domain/Structure/structureDocument";
-import {
-    syncViewFrameContent,
-} from "../../src/components/Layout/Shell/Domain/shellBindingPreview";
+import { serializableContentHtml } from "../../src/components/Layout/Shell/Domain/Structure/structureDocument";
+import { syncViewFrameContent } from "../../src/components/Layout/Shell/Domain/shellBindingPreview";
 
 function editorDocument() {
     return parseHTML(`
@@ -30,9 +26,7 @@ function editorDocument() {
 describe("composition serialization", () => {
     test("serializes authored input instead of generated Light DOM", () => {
         const document = editorDocument();
-        const content = serializableContentHtml(
-            document.querySelector<HTMLElement>("[data-cms-content]"),
-        );
+        const content = serializableContentHtml(document.querySelector<HTMLElement>("[data-cms-content]"));
 
         expect(content).toContain(`<span data-authored="">Authored input</span>`);
         expect(content).not.toContain(COMPOSITION_RUNTIME_ATTRIBUTE);

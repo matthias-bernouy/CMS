@@ -5,10 +5,7 @@ export const sourceOverlay: SourceOverlay = {
     id: "user-account-extra-fields",
     sourceId: "user-account",
     input: [{ endpointId: "createUserPersonalInformation", editable: "admin" }],
-    output: [
-        { endpointId: "listAccounts", path: "accounts[]" },
-        { endpointId: "getAccountByUserId" },
-    ],
+    output: [{ endpointId: "listAccounts", path: "accounts[]" }, { endpointId: "getAccountByUserId" }],
     sections: [{ id: "accountFields", label: "Personal information" }],
     fields: [
         { id: "company", label: "Company", type: "string", section: "accountFields", showInDashboardTable: true },
@@ -60,20 +57,24 @@ export const dashboard: Dashboard = {
             widget: "w-detail",
             id: "accountDetail",
             source: { endpoint: "getAccountByUserId", params: { userId: "$selection.id" } },
-            actions: [{
-                id: "save",
-                label: "Save",
-                endpoint: {
-                    endpoint: "createUserPersonalInformation",
-                    params: { userId: "$resource.userId" },
-                    body: { displayName: "$field.displayName" },
+            actions: [
+                {
+                    id: "save",
+                    label: "Save",
+                    endpoint: {
+                        endpoint: "createUserPersonalInformation",
+                        params: { userId: "$resource.userId" },
+                        body: { displayName: "$field.displayName" },
+                    },
                 },
-            }],
-            main: [{
-                id: "accountFields",
-                title: "Personal information",
-                fields: [{ id: "displayName", label: "Name", path: "displayName", type: "text" }],
-            }],
+            ],
+            main: [
+                {
+                    id: "accountFields",
+                    title: "Personal information",
+                    fields: [{ id: "displayName", label: "Name", path: "displayName", type: "text" }],
+                },
+            ],
         },
     ],
 };

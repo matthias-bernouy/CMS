@@ -6,7 +6,9 @@ afterEach(resetDom);
 
 function commentCount(node: Node): number {
     let count = node.nodeType === Node.COMMENT_NODE ? 1 : 0;
-    for (const child of Array.from(node.childNodes)) count += commentCount(child);
+    for (const child of Array.from(node.childNodes)) {
+        count += commentCount(child);
+    }
     return count;
 }
 
@@ -33,8 +35,12 @@ describe("Source — editor template restore", () => {
         expect(text(src.querySelector('[cms-condition="$source.loading"]'))).toBe("Loading");
         expect(text(src.querySelector('[cms-condition="$source.error"]'))).toBe("Failed: {{ status }}");
         expect(text(src.querySelector('[cms-condition="$source.empty"]'))).toBe("Nothing");
-        expect(Array.from(src.children).map((el) => el.getAttribute("cms-condition") ?? "none"))
-            .toEqual(["$source.loaded", "$source.loading", "$source.error", "$source.empty"]);
+        expect(Array.from(src.children).map((el) => el.getAttribute("cms-condition") ?? "none")).toEqual([
+            "$source.loaded",
+            "$source.loading",
+            "$source.error",
+            "$source.empty",
+        ]);
     });
 
     test("renderTemplate() preserves an authored <template> wrapper", async () => {
@@ -66,11 +72,12 @@ describe("Source — editor template restore", () => {
             return {
                 ok: true,
                 status: 200,
-                text: async () => JSON.stringify({
-                    visible: call === 1,
-                    items: call === 1 ? [{ name: "Ada" }] : [{ name: "Grace" }, { name: "Lin" }],
-                    html: call === 1 ? "<b>First</b>" : "<i>Second</i>",
-                }),
+                text: async () =>
+                    JSON.stringify({
+                        visible: call === 1,
+                        items: call === 1 ? [{ name: "Ada" }] : [{ name: "Grace" }, { name: "Lin" }],
+                        html: call === 1 ? "<b>First</b>" : "<i>Second</i>",
+                    }),
             } as unknown as Response;
         }) as unknown as typeof fetch;
         const src = el(`

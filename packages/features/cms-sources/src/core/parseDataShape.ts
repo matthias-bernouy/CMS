@@ -33,14 +33,24 @@ export function dataShapeAtPath(
 ): DataShape | undefined {
     let current = shape;
     for (const part of pathParts(path)) {
-        if (!current) return undefined;
+        if (!current) {
+            return undefined;
+        }
         if (current.type === "array") {
             current = current.items;
-            if (!current) return undefined;
-            if (ARRAY_INDEX.test(part)) continue;
-            if (!options.implicitArrayItems) return undefined;
+            if (!current) {
+                return undefined;
+            }
+            if (ARRAY_INDEX.test(part)) {
+                continue;
+            }
+            if (!options.implicitArrayItems) {
+                return undefined;
+            }
         }
-        if (current.type !== "object") return undefined;
+        if (current.type !== "object") {
+            return undefined;
+        }
         current = current.properties?.[part];
     }
     return current;
@@ -49,8 +59,12 @@ export function dataShapeAtPath(
 export function dataValueAtPath(value: unknown, path: string | readonly string[]): unknown {
     let current = value;
     for (const part of pathParts(path)) {
-        if (current === null || current === undefined || typeof current !== "object") return undefined;
-        if (!Object.hasOwn(current, part)) return undefined;
+        if (current === null || current === undefined || typeof current !== "object") {
+            return undefined;
+        }
+        if (!Object.hasOwn(current, part)) {
+            return undefined;
+        }
         current = (current as Record<string, unknown>)[part];
     }
     return current;
@@ -61,8 +75,12 @@ function pathParts(path: string | readonly string[]): string[] {
 }
 
 function walkShape(value: unknown, path: string, depth: number, count: { n: number }): DataShape {
-    if (depth >= MAX_DEPTH) throw new SourceValidationError(path, "shape nested too deep");
-    if (++count.n > MAX_NODES) throw new SourceValidationError(path, "shape has too many nodes");
+    if (depth >= MAX_DEPTH) {
+        throw new SourceValidationError(path, "shape nested too deep");
+    }
+    if (++count.n > MAX_NODES) {
+        throw new SourceValidationError(path, "shape has too many nodes");
+    }
     if (typeof value !== "object" || value === null || Array.isArray(value)) {
         throw new SourceValidationError(path, "expected a shape object");
     }
@@ -78,11 +96,16 @@ function walkShape(value: unknown, path: string, depth: number, count: { n: numb
         }
         shape.nullable = v.nullable;
     }
-    if (typeof v.title === "string" && v.title.trim()) shape.title = v.title.trim();
-    if (v.semantic === "user-id") shape.semantic = { kind: "user-id" };
-    else if (typeof v.semantic === "object" && v.semantic !== null && !Array.isArray(v.semantic)) {
+    if (typeof v.title === "string" && v.title.trim()) {
+        shape.title = v.title.trim();
+    }
+    if (v.semantic === "user-id") {
+        shape.semantic = { kind: "user-id" };
+    } else if (typeof v.semantic === "object" && v.semantic !== null && !Array.isArray(v.semantic)) {
         const semantic = v.semantic as Record<string, unknown>;
-        if (semantic.kind !== "user-id") throw new SourceValidationError(`${path}.semantic.kind`, "must be user-id");
+        if (semantic.kind !== "user-id") {
+            throw new SourceValidationError(`${path}.semantic.kind`, "must be user-id");
+        }
         shape.semantic = {
             kind: "user-id",
             ...(typeof semantic.authority === "string" && semantic.authority.trim()
@@ -99,7 +122,9 @@ function walkShape(value: unknown, path: string, depth: number, count: { n: numb
         }
         const props: Record<string, DataShape> = {};
         for (const [key, child] of Object.entries(v.properties as Record<string, unknown>)) {
-            if (!key) throw new SourceValidationError(`${path}.properties`, "property name cannot be empty");
+            if (!key) {
+                throw new SourceValidationError(`${path}.properties`, "property name cannot be empty");
+            }
             // Untrusted keys: a `__proto__`/`constructor`/`prototype` property would
             // corrupt the object's prototype on assignment — reject outright.
             if (key === "__proto__" || key === "constructor" || key === "prototype") {
@@ -107,12 +132,18 @@ function walkShape(value: unknown, path: string, depth: number, count: { n: numb
             }
             props[key] = walkShape(child, `${path}.properties.${key}`, depth + 1, count);
         }
-        if (Object.keys(props).length) shape.properties = props;
+        if (Object.keys(props).length) {
+            shape.properties = props;
+        }
         // `required`: keep only declared OWN property names (defensive), deduped.
         // `Object.hasOwn` (not `in`) so prototype members like "toString" don't pass.
         if (Array.isArray(v.required)) {
-            const req = [...new Set(v.required.filter((r): r is string => typeof r === "string" && Object.hasOwn(props, r)))];
-            if (req.length) shape.required = req;
+            const req = [
+                ...new Set(v.required.filter((r): r is string => typeof r === "string" && Object.hasOwn(props, r))),
+            ];
+            if (req.length) {
+                shape.required = req;
+            }
         }
     } else if (type === "array" && v.items != null) {
         shape.items = walkShape(v.items, `${path}.items`, depth + 1, count);

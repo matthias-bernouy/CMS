@@ -35,9 +35,7 @@ describe("commerce offer filter schema boundaries", () => {
     test("trims the category before calling the schema RPC", async () => {
         useFilterSchemaResponder();
 
-        const response = await requestCommerce(
-            "/offer-filter-schema?category=%20sports%2Ftennis%20",
-        );
+        const response = await requestCommerce("/offer-filter-schema?category=%20sports%2Ftennis%20");
 
         expect(response.status).toBe(200);
         expect(capturedFetches()[0]!.body).toEqual({

@@ -3,7 +3,16 @@ import { readJsonObject, requiredText, integer, text } from "../core/records.ts"
 import { json } from "../core/http.ts";
 import { camelize } from "../core/records.ts";
 import { rpc } from "../core/rest.ts";
-import { getOrderDeliveryQuoteAuthorization, lockOrderFinancialTerms, pendingPlatformPayoutLiabilityAuthorizations, recordOrderPayment, recordOrderSettlement, recordOrderStripeDispute, recordPlatformPayoutLiabilityApplied, refreshPlatformPayoutLiability } from "../routes/order/financials.ts";
+import {
+    getOrderDeliveryQuoteAuthorization,
+    lockOrderFinancialTerms,
+    pendingPlatformPayoutLiabilityAuthorizations,
+    recordOrderPayment,
+    recordOrderSettlement,
+    recordOrderStripeDispute,
+    recordPlatformPayoutLiabilityApplied,
+    refreshPlatformPayoutLiability,
+} from "../routes/order/financials.ts";
 import {
     claimPendingShipmentCancellations,
     claimPendingShipmentCreations,
@@ -28,22 +37,30 @@ import {
 } from "../routes/order/read-model/contexts/index.ts";
 import { getOfferNegotiationContext } from "../routes/offer/contexts.ts";
 import { getCurrentSellerIdentity, verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
-import { getOrderPaymentContext, getProtectedCheckoutSellerContext, getProtectedPaymentSellerContext } from "../routes/orders.ts";
+import {
+    getOrderPaymentContext,
+    getProtectedCheckoutSellerContext,
+    getProtectedPaymentSellerContext,
+} from "../routes/orders.ts";
 
 export async function handleInternalSettlementRoute(route: string, request: Request): Promise<Response | null> {
-    if (route === "/system/seller/payout-eligibility") return post(request, verifyPendingSellerPayoutEligibility);
+    if (route === "/system/seller/payout-eligibility") {
+        return post(request, verifyPendingSellerPayoutEligibility);
+    }
     if (route === "/system/seller/identity") {
         return request.method === "GET" ? await getCurrentSellerIdentity(request) : methodNotAllowed("GET");
     }
-    if (route === "/system/protected-checkout/seller-context") return post(request, getProtectedCheckoutSellerContext);
-    if (route === "/system/protected-payment/seller-context") return post(request, getProtectedPaymentSellerContext);
+    if (route === "/system/protected-checkout/seller-context") {
+        return post(request, getProtectedCheckoutSellerContext);
+    }
+    if (route === "/system/protected-payment/seller-context") {
+        return post(request, getProtectedPaymentSellerContext);
+    }
     if (route === "/system/order/payment-context") {
         return request.method === "GET" ? await getOrderPaymentContext(request) : methodNotAllowed("GET");
     }
     if (route === "/system/order/fulfillment/seller-context") {
-        return request.method === "GET"
-            ? await getOrderFulfillmentSellerContext(request)
-            : methodNotAllowed("GET");
+        return request.method === "GET" ? await getOrderFulfillmentSellerContext(request) : methodNotAllowed("GET");
     }
     if (route === "/system/order/shipment-creation/seller-context") {
         return request.method === "GET"
@@ -51,14 +68,14 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
             : methodNotAllowed("GET");
     }
     if (route === "/system/order/label/seller-context") {
-        return request.method === "GET"
-            ? await getOrderLabelSellerContext(request)
-            : methodNotAllowed("GET");
+        return request.method === "GET" ? await getOrderLabelSellerContext(request) : methodNotAllowed("GET");
     }
     if (route === "/system/offer/negotiation-context") {
         return request.method === "GET" ? await getOfferNegotiationContext(request) : methodNotAllowed("GET");
     }
-    if (route === "/system/order/financial-terms/lock") return post(request, lockOrderFinancialTerms);
+    if (route === "/system/order/financial-terms/lock") {
+        return post(request, lockOrderFinancialTerms);
+    }
     if (route === "/system/order/delivery-quote/authorization") {
         return request.method === "GET" ? await getOrderDeliveryQuoteAuthorization(request) : methodNotAllowed("GET");
     }
@@ -68,31 +85,63 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     if (route === "/system/order/delivery-selection-context") {
         return request.method === "GET" ? await getOrderDeliverySelectionContext(request) : methodNotAllowed("GET");
     }
-    if (route === "/system/order/payment") return post(request, recordOrderPayment);
-    if (route === "/system/order/fulfillment") return post(request, recordOrderFulfillment);
-    if (route === "/system/order/settlement") return post(request, recordOrderSettlement);
-    if (route === "/system/order/stripe-dispute") return post(request, recordOrderStripeDispute);
-    if (route === "/system/platform-payout-liability/refresh") return post(request, refreshPlatformPayoutLiability);
-    if (route === "/system/platform-payout-liability/pending") return post(request, pendingPlatformPayoutLiabilityAuthorizations);
-    if (route === "/system/platform-payout-liability/applied") return post(request, recordPlatformPayoutLiabilityApplied);
-    if (route === "/system/claim/return-delivery") return post(request, recordClaimReturnDelivery);
+    if (route === "/system/order/payment") {
+        return post(request, recordOrderPayment);
+    }
+    if (route === "/system/order/fulfillment") {
+        return post(request, recordOrderFulfillment);
+    }
+    if (route === "/system/order/settlement") {
+        return post(request, recordOrderSettlement);
+    }
+    if (route === "/system/order/stripe-dispute") {
+        return post(request, recordOrderStripeDispute);
+    }
+    if (route === "/system/platform-payout-liability/refresh") {
+        return post(request, refreshPlatformPayoutLiability);
+    }
+    if (route === "/system/platform-payout-liability/pending") {
+        return post(request, pendingPlatformPayoutLiabilityAuthorizations);
+    }
+    if (route === "/system/platform-payout-liability/applied") {
+        return post(request, recordPlatformPayoutLiabilityApplied);
+    }
+    if (route === "/system/claim/return-delivery") {
+        return post(request, recordClaimReturnDelivery);
+    }
     if (route === "/system/claim/return-authorization") {
         return request.method === "GET" ? await getClaimReturnAuthorization(request) : methodNotAllowed("GET");
     }
     if (route === "/system/order/fulfillment/authorization") {
         return request.method === "GET" ? await getOrderFulfillmentAuthorization(request) : methodNotAllowed("GET");
     }
-    if (route === "/system/order/shipment-creation/reserve") return post(request, reserveOrderShipmentCreation);
-    if (route === "/system/order/shipment-creations/claim") return post(request, claimPendingShipmentCreations);
-    if (route === "/system/order/shipment-creation/complete") return post(request, completeOrderShipmentCreation);
-    if (route === "/system/order/shipment-creation/fail") return post(request, failOrderShipmentCreation);
+    if (route === "/system/order/shipment-creation/reserve") {
+        return post(request, reserveOrderShipmentCreation);
+    }
+    if (route === "/system/order/shipment-creations/claim") {
+        return post(request, claimPendingShipmentCreations);
+    }
+    if (route === "/system/order/shipment-creation/complete") {
+        return post(request, completeOrderShipmentCreation);
+    }
+    if (route === "/system/order/shipment-creation/fail") {
+        return post(request, failOrderShipmentCreation);
+    }
     if (route === "/system/order/label/authorization") {
         return request.method === "GET" ? await getOrderLabelAuthorization(request) : methodNotAllowed("GET");
     }
-    if (route === "/system/order/shipment-cancellations/claim") return post(request, claimPendingShipmentCancellations);
-    if (route === "/system/order/shipment-cancellation/complete") return post(request, completeOrderShipmentCancellation);
-    if (route === "/system/order/shipment-cancellation/fail") return post(request, failOrderShipmentCancellation);
-    if (route === "/system/delivery/reconciliation-health") return post(request, recordDeliveryReconciliationHealth);
+    if (route === "/system/order/shipment-cancellations/claim") {
+        return post(request, claimPendingShipmentCancellations);
+    }
+    if (route === "/system/order/shipment-cancellation/complete") {
+        return post(request, completeOrderShipmentCancellation);
+    }
+    if (route === "/system/order/shipment-cancellation/fail") {
+        return post(request, failOrderShipmentCancellation);
+    }
+    if (route === "/system/delivery/reconciliation-health") {
+        return post(request, recordDeliveryReconciliationHealth);
+    }
     if (route === "/system/delivery/order-reconciliation-health") {
         return post(request, recordDeliveryOrderReconciliationHealth);
     }
@@ -106,7 +155,9 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
         return request.method === "POST" ? await pendingOrderRefundAuthorizations(request) : methodNotAllowed("POST");
     }
     if (route === "/system/order/payment-cancellations/pending") {
-        return request.method === "POST" ? await pendingPaymentCancellationAuthorizations(request) : methodNotAllowed("POST");
+        return request.method === "POST"
+            ? await pendingPaymentCancellationAuthorizations(request)
+            : methodNotAllowed("POST");
     }
     if (route === "/system/outbox/claim") {
         return request.method === "POST" ? await claimCommerceOutbox(request) : methodNotAllowed("POST");

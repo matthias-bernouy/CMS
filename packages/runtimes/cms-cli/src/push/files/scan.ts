@@ -3,7 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
 import { CMS_FILES_REGISTRY_NAME, sha256Hex } from "@bernouy/cms-files";
 
-const FILES_SUBDIR    = "files";
+const FILES_SUBDIR = "files";
 
 export type LocalFile = {
     /** POSIX path relative to `<siteDir>/files`, e.g. "images/hero.png". */
@@ -11,16 +11,16 @@ export type LocalFile = {
     /** Basename, e.g. "hero.png". */
     name: string;
     /** POSIX parent-dir path ("" at the root), e.g. "images". */
-    dir:  string;
+    dir: string;
     /** Absolute filesystem path. */
-    abs:  string;
+    abs: string;
     size: number;
     /** sha256 of the file bytes — drives change detection. */
     hash: string;
     /** The dev registry uuid for this path, sent as the upload `id` so the remote
      *  `_id` matches dev. Undefined only when the registry is missing the path
      *  (stale/uncommitted) — the remote then mints its own id (warned at scan). */
-    id?:  string;
+    id?: string;
 };
 
 /**
@@ -31,7 +31,9 @@ export type LocalFile = {
  */
 export async function scanFiles(siteDir: string): Promise<LocalFile[]> {
     const root = join(siteDir, FILES_SUBDIR);
-    if (!existsSync(root)) return [];
+    if (!existsSync(root)) {
+        return [];
+    }
 
     const out: LocalFile[] = [];
     await walk(root, "", out);
@@ -47,12 +49,20 @@ export async function scanFiles(siteDir: string): Promise<LocalFile[]> {
     const missing: string[] = [];
     for (const f of out) {
         const id = byPath[f.path];
-        if (id) f.id = id; else missing.push(f.path);
+        if (id) {
+            f.id = id;
+        } else {
+            missing.push(f.path);
+        }
     }
     if (missing.length) {
         console.warn(`! ${missing.length} media file(s) have no id in ${CMS_FILES_REGISTRY_NAME}:`);
-        for (const p of missing.slice(0, 10)) console.warn(`    ${p}`);
-        if (missing.length > 10) console.warn(`    … and ${missing.length - 10} more`);
+        for (const p of missing.slice(0, 10)) {
+            console.warn(`    ${p}`);
+        }
+        if (missing.length > 10) {
+            console.warn(`    … and ${missing.length - 10} more`);
+        }
         console.warn(`  Run \`p9r files reindex\` and commit ${CMS_FILES_REGISTRY_NAME} before pushing —`);
         console.warn(`  otherwise the remote mints its own ids and their by-id URLs will not match.`);
     }
@@ -63,17 +73,23 @@ export async function scanFiles(siteDir: string): Promise<LocalFile[]> {
  *  warning above, and the reindex/gate steps are where that gets fixed). */
 async function loadRegistryByPath(siteDir: string): Promise<Record<string, string>> {
     const p = join(siteDir, CMS_FILES_REGISTRY_NAME);
-    if (!existsSync(p)) return {};
+    if (!existsSync(p)) {
+        return {};
+    }
     try {
         const reg = JSON.parse(await readFile(p, "utf-8")) as { byPath?: Record<string, string> };
         return reg.byPath ?? {};
-    } catch { return {}; }
+    } catch {
+        return {};
+    }
 }
 
 async function walk(absDir: string, relDir: string, out: LocalFile[]): Promise<void> {
     const entries = await readdir(absDir, { withFileTypes: true });
     for (const e of entries) {
-        if (e.name.startsWith(".")) continue;
+        if (e.name.startsWith(".")) {
+            continue;
+        }
         const abs = join(absDir, e.name);
         const rel = relDir ? posix.join(relDir, e.name) : e.name;
         if (e.isDirectory()) {
@@ -83,7 +99,7 @@ async function walk(absDir: string, relDir: string, out: LocalFile[]): Promise<v
             out.push({
                 path: rel,
                 name: e.name,
-                dir:  relDir,
+                dir: relDir,
                 abs,
                 size: bytes.byteLength,
                 hash: sha256Hex(bytes),

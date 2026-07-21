@@ -4,11 +4,11 @@ import { pageRefToString } from "@bernouy/cms-content";
 
 const HEADERS_JSON = (token: string) => ({
     "Authorization": `Bearer ${token}`,
-    "Content-Type":  "application/json",
+    "Content-Type": "application/json",
 });
 
 type RemoteSystem = {
-    site:   Record<string, unknown>;
+    site: Record<string, unknown>;
     editor: Record<string, unknown>;
     theme?: TSystem["theme"];
 };
@@ -17,8 +17,10 @@ type RemoteSystem = {
 export async function fetchRemoteSystem(adminBase: URL, token: string): Promise<RemoteSystem> {
     const url = new URL("api/system/settings", adminBase).href;
     const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    const data = await res.json() as RemoteSystem;
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    const data = (await res.json()) as RemoteSystem;
     return { site: data.site ?? {}, editor: data.editor ?? {}, theme: data.theme };
 }
 
@@ -28,10 +30,14 @@ export async function fetchRemoteSystem(adminBase: URL, token: string): Promise<
  * declared on disk — everything else is left untouched server-side.
  */
 export function projectRemote(local: SystemPayload, remote: RemoteSystem): SystemPayload {
-    const site:   Record<string, unknown> = {};
+    const site: Record<string, unknown> = {};
     const editor: Record<string, unknown> = {};
-    for (const k of Object.keys(local.site))   site[k]   = remote.site[k];
-    for (const k of Object.keys(local.editor)) editor[k] = remote.editor[k];
+    for (const k of Object.keys(local.site)) {
+        site[k] = remote.site[k];
+    }
+    for (const k of Object.keys(local.editor)) {
+        editor[k] = remote.editor[k];
+    }
     return {
         site: site as SystemPayload["site"],
         editor: editor as SystemPayload["editor"],
@@ -43,22 +49,29 @@ export function projectRemote(local: SystemPayload, remote: RemoteSystem): Syste
 export function flatten(payload: SystemPayload): Record<string, unknown> {
     const body: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(payload.site)) {
-        if (k === "notFound" || k === "forbidden" || k === "serverError" || k === "login") body[`site.${k}`] = pageRefToString(v as TPageRef);
-        else if (typeof v === "string")              body[`site.${k}`] = v;
+        if (k === "notFound" || k === "forbidden" || k === "serverError" || k === "login") {
+            body[`site.${k}`] = pageRefToString(v as TPageRef);
+        } else if (typeof v === "string") {
+            body[`site.${k}`] = v;
+        }
     }
     for (const [k, v] of Object.entries(payload.editor)) {
-        if (typeof v === "string") body[`editor.${k}`] = v;
+        if (typeof v === "string") {
+            body[`editor.${k}`] = v;
+        }
     }
-    if (payload.theme) body.theme = payload.theme;
+    if (payload.theme) {
+        body.theme = payload.theme;
+    }
     return body;
 }
 
 export async function postSystem(adminBase: URL, token: string, body: Record<string, unknown>): Promise<void> {
     const url = new URL("api/system/settings", adminBase).href;
     const res = await fetch(url, {
-        method:  "POST",
+        method: "POST",
         headers: HEADERS_JSON(token),
-        body:    JSON.stringify(body),
+        body: JSON.stringify(body),
     });
     if (!res.ok) {
         const text = await res.text().catch(() => "");

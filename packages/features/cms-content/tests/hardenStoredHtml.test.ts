@@ -9,7 +9,11 @@ function survivingHandlers(htmlOut: string): string[] {
     const { document } = parseHTML(`<!DOCTYPE html><html><body>${htmlOut}</body></html>`);
     const names: string[] = [];
     for (const el of Array.from(document.body.querySelectorAll("*"))) {
-        for (const n of el.getAttributeNames()) if (n.toLowerCase().startsWith("on")) names.push(n);
+        for (const n of el.getAttributeNames()) {
+            if (n.toLowerCase().startsWith("on")) {
+                names.push(n);
+            }
+        }
     }
     return names;
 }
@@ -28,9 +32,9 @@ describe("hardenStoredHtml — neutralizes stored-XSS vectors", () => {
     test("no event-handler attribute survives, whatever the separator", () => {
         for (const p of [
             `<img src=x onerror=alert(1)>`,
-            `<img src=x/onerror=alert(1)>`,   // onerror here is part of the src URL, not a handler
-            `<svg/onload=alert(1)>`,           // slash after tag name → onload IS a real attribute
-            `<img/src/onerror=alert(1)>`,      // slash-separated attributes → onerror IS real
+            `<img src=x/onerror=alert(1)>`, // onerror here is part of the src URL, not a handler
+            `<svg/onload=alert(1)>`, // slash after tag name → onload IS a real attribute
+            `<img/src/onerror=alert(1)>`, // slash-separated attributes → onerror IS real
             `<div onclick="evil()">hi</div>`,
             `<body ONLOAD=alert(1)>`,
         ]) {
@@ -72,14 +76,18 @@ describe("hardenStoredHtml — preserves legitimate content", () => {
     });
 
     test("keeps safe SVG links and data:image resources", () => {
-        const out = hardenStoredHtml(`<svg><a href="/x"><rect></rect></a><image href="data:image/png;base64,iVBORw0KGgo="></image></svg>`);
+        const out = hardenStoredHtml(
+            `<svg><a href="/x"><rect></rect></a><image href="data:image/png;base64,iVBORw0KGgo="></image></svg>`,
+        );
         expect(out.toLowerCase()).toContain("<a");
         expect(out).toContain('href="/x"');
         expect(out).toContain("data:image/png");
     });
 
     test("drops SVG data documents from SVG resource URLs", () => {
-        const out = hardenStoredHtml(`<svg><image href="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"></image></svg>`);
+        const out = hardenStoredHtml(
+            `<svg><image href="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"></image></svg>`,
+        );
         expect(out).not.toContain("data:image/svg");
     });
 

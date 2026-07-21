@@ -1,9 +1,6 @@
 import { InMemoryFunctionRepository, type CmsFunction } from "@bernouy/cms-functions";
 import { InMemorySourceRepository, type SourceEndpoint } from "@bernouy/cms-sources";
-import {
-    InMemoryTriggerRepository,
-    type TriggerRecord,
-} from "@bernouy/cms-triggers";
+import { InMemoryTriggerRepository, type TriggerRecord } from "@bernouy/cms-triggers";
 
 export const endpoint: SourceEndpoint = {
     urn: "urn:orders:createOrder",
@@ -18,26 +15,28 @@ export async function fixture() {
     const calls: Array<{ url: string; body?: unknown }> = [];
     await sources.createSource({
         urn: "urn:notifications",
-        endpoints: [{
-            urn: "urn:notifications:send",
-            method: "POST",
-            targetUrl: "https://api.example.com/notify",
-            input: {
-                params: [
-                    { name: "order", in: "query", schema: { type: "string" } },
-                    { name: "source", in: "query", schema: { type: "string" } },
-                    { name: "actor", in: "query", schema: { type: "string" } },
-                ],
-                body: {
-                    type: "object",
-                    properties: {
-                        method: { type: "string" },
-                        email: { type: "string" },
+        endpoints: [
+            {
+                urn: "urn:notifications:send",
+                method: "POST",
+                targetUrl: "https://api.example.com/notify",
+                input: {
+                    params: [
+                        { name: "order", in: "query", schema: { type: "string" } },
+                        { name: "source", in: "query", schema: { type: "string" } },
+                        { name: "actor", in: "query", schema: { type: "string" } },
+                    ],
+                    body: {
+                        type: "object",
+                        properties: {
+                            method: { type: "string" },
+                            email: { type: "string" },
+                        },
                     },
                 },
+                output: [{ status: "200", body: { type: "object", properties: { ok: { type: "boolean" } } } }],
             },
-            output: [{ status: "200", body: { type: "object", properties: { ok: { type: "boolean" } } } }],
-        }],
+        ],
     });
     await functions.createFunction(notifyOrderFunction);
     return { triggers, functions, sources, calls };
@@ -60,19 +59,21 @@ export const notifyOrderFunction: CmsFunction = {
             },
         },
     },
-    steps: [{
-        id: "send",
-        call: {
-            source: "notifications",
-            endpoint: "send",
-            params: {
-                order: "$input.params.order",
-                source: "$input.params.source",
-                actor: "$input.params.actor",
+    steps: [
+        {
+            id: "send",
+            call: {
+                source: "notifications",
+                endpoint: "send",
+                params: {
+                    order: "$input.params.order",
+                    source: "$input.params.source",
+                    actor: "$input.params.actor",
+                },
+                body: "$input.body",
             },
-            body: "$input.body",
         },
-    }],
+    ],
     return: { status: 204 },
 };
 
@@ -95,6 +96,6 @@ export function jsonRequest(body: unknown): Request {
 }
 
 export async function tick(): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 0));
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 }

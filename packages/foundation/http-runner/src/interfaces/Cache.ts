@@ -10,7 +10,7 @@ export type CacheEntry = {
      * hash, hence a new URL, hence a fresh fetch.
      */
     hash: string;
-}
+};
 
 export interface Cache {
     get(key: string): CacheEntry | null;

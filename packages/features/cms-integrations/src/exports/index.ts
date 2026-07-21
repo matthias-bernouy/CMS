@@ -89,12 +89,8 @@ export {
     parseIntegrationImportRequest,
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
-export {
-    parseIntegrationDefinition,
-} from "../core/parsing/definition";
-export {
-    importIntegration,
-} from "../core/importIntegration";
+export { parseIntegrationDefinition } from "../core/parsing/definition";
+export { importIntegration } from "../core/importIntegration";
 export {
     integrationInstallationId,
     runIntegrationInstallation,
@@ -112,9 +108,5 @@ export {
     emptyIntegrationCspExtras,
     type IntegrationCspExtras,
 } from "../core/security/csp";
-export {
-    InMemoryIntegrationInstallationRepository,
-} from "../default-implementation/InMemoryIntegrationInstallationRepository";
-export {
-    InMemoryIntegrationConnectorProviderRepository,
-} from "../default-implementation/InMemoryIntegrationConnectorProviderRepository";
+export { InMemoryIntegrationInstallationRepository } from "../default-implementation/InMemoryIntegrationInstallationRepository";
+export { InMemoryIntegrationConnectorProviderRepository } from "../default-implementation/InMemoryIntegrationConnectorProviderRepository";

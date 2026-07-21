@@ -13,10 +13,11 @@ const string = (nullable = false): DataShape => ({
 });
 const number = (): DataShape => ({ type: "number" });
 const boolean = (): DataShape => ({ type: "boolean" });
-const object = (
-    properties: Record<string, DataShape>,
-    required = Object.keys(properties),
-): DataShape => ({ type: "object", properties, required });
+const object = (properties: Record<string, DataShape>, required = Object.keys(properties)): DataShape => ({
+    type: "object",
+    properties,
+    required,
+});
 const array = (items: DataShape): DataShape => ({ type: "array", items });
 
 const eventShape = object({
@@ -44,44 +45,48 @@ const trackingFields = {
 
 export async function claimTrackingSources(): Promise<InMemorySourceRepository> {
     const sources = new InMemorySourceRepository();
-    await sources.createSource(source("commerce", [
-        get(
-            "commerce",
-            "getClaimReturnAuthorization",
-            "https://commerce.test/system/claim/return-authorization",
-            [{ name: "claimId", type: "number", required: true }],
-            object({
-                allowed: boolean(),
-                reason: string(),
-                claimId: number(),
-                claimPublicId: string(),
-                claimStatus: string(),
-                claimVersion: number(),
-                returnShipByAt: string(true),
-                returnDeliveryStatus: string(true),
-                orderId: number(),
-                orderPublicId: string(),
-                orderNumber: string(),
-                buyerCmsUserId: string(),
-                sellerId: number(),
-                sellerCmsUserId: string(),
-                deliveryQuoteId: string(),
-                merchandiseSubtotalMinorAmount: number(),
-                currency: string(),
-            }),
-            { mode: "system" },
-        ),
-    ]));
-    await sources.createSource(source("delivery", [
-        get(
-            "delivery",
-            "shipmentForExternalOrder",
-            "https://delivery.test/system/shipment-for-external-order",
-            [{ name: "externalOrderId", type: "string", required: true }],
-            object({ items: array(object(trackingFields)) }),
-            { mode: "system" },
-        ),
-    ]));
+    await sources.createSource(
+        source("commerce", [
+            get(
+                "commerce",
+                "getClaimReturnAuthorization",
+                "https://commerce.test/system/claim/return-authorization",
+                [{ name: "claimId", type: "number", required: true }],
+                object({
+                    allowed: boolean(),
+                    reason: string(),
+                    claimId: number(),
+                    claimPublicId: string(),
+                    claimStatus: string(),
+                    claimVersion: number(),
+                    returnShipByAt: string(true),
+                    returnDeliveryStatus: string(true),
+                    orderId: number(),
+                    orderPublicId: string(),
+                    orderNumber: string(),
+                    buyerCmsUserId: string(),
+                    sellerId: number(),
+                    sellerCmsUserId: string(),
+                    deliveryQuoteId: string(),
+                    merchandiseSubtotalMinorAmount: number(),
+                    currency: string(),
+                }),
+                { mode: "system" },
+            ),
+        ]),
+    );
+    await sources.createSource(
+        source("delivery", [
+            get(
+                "delivery",
+                "shipmentForExternalOrder",
+                "https://delivery.test/system/shipment-for-external-order",
+                [{ name: "externalOrderId", type: "string", required: true }],
+                object({ items: array(object(trackingFields)) }),
+                { mode: "system" },
+            ),
+        ]),
+    );
     return sources;
 }
 
@@ -109,7 +114,7 @@ function get(
         access,
         targetUrl,
         input: {
-            params: params.map(param => ({
+            params: params.map((param) => ({
                 name: param.name,
                 in: "query",
                 required: param.required,

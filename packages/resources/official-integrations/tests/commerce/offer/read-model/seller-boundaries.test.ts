@@ -28,28 +28,31 @@ describe("commerce seller offer read boundaries", () => {
     });
 
     test("returns the empty seller page before validating an unknown display status", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             expect(resourceName(request)).toBe(sellerReadModelRpc);
-            return jsonResponse(sellerBundle({
-                seller_exists: false,
-                workflow_states: [],
-            }));
+            return jsonResponse(
+                sellerBundle({
+                    seller_exists: false,
+                    workflow_states: [],
+                }),
+            );
         });
 
-        const response = await requestCommerce(
-            "/me/offers?status=unknown&limit=4&offset=8",
-            { userId: "user-without-seller" },
-        );
+        const response = await requestCommerce("/me/offers?status=unknown&limit=4&offset=8", {
+            userId: "user-without-seller",
+        });
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 4, offset: 8 });
         expect(resources()).toEqual([sellerReadModelRpc]);
-        expect(rpcBodies()).toEqual([{
-            p_cms_user_id: "user-without-seller",
-            p_status: "unknown",
-            p_limit: 4,
-            p_offset: 8,
-        }]);
+        expect(rpcBodies()).toEqual([
+            {
+                p_cms_user_id: "user-without-seller",
+                p_status: "unknown",
+                p_limit: 4,
+                p_offset: 8,
+            },
+        ]);
     });
 
     test("rejects an unknown display status after resolving the seller and workflow states", async () => {
@@ -62,12 +65,14 @@ describe("commerce seller offer read boundaries", () => {
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "status is invalid" });
         expect(resources()).toEqual([sellerReadModelRpc]);
-        expect(rpcBodies()).toEqual([{
-            p_cms_user_id: "seller-user-123",
-            p_status: "unknown",
-            p_limit: 50,
-            p_offset: 0,
-        }]);
+        expect(rpcBodies()).toEqual([
+            {
+                p_cms_user_id: "seller-user-123",
+                p_status: "unknown",
+                p_limit: 50,
+                p_offset: 0,
+            },
+        ]);
     });
 
     test("rejects an invalid limit before identity or PostgREST work", async () => {
@@ -117,27 +122,30 @@ describe("commerce seller offer read boundaries", () => {
     test("sanitizes PostgREST search syntax and clamps pagination", async () => {
         useSellerResponder();
 
-        const response = await requestCommerce(
-            "/me/offers?q=Blade%2C%28Pro%29%2A&limit=150&offset=-4",
-            { userId: "seller-user-123" },
-        );
+        const response = await requestCommerce("/me/offers?q=Blade%2C%28Pro%29%2A&limit=150&offset=-4", {
+            userId: "seller-user-123",
+        });
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ items: [], total: 0, limit: 100, offset: 0 });
-        expect(rpcBodies()).toEqual([{
-            p_cms_user_id: "seller-user-123",
-            p_query: "Blade  Pro  ",
-            p_limit: 100,
-            p_offset: 0,
-        }]);
+        expect(rpcBodies()).toEqual([
+            {
+                p_cms_user_id: "seller-user-123",
+                p_query: "Blade  Pro  ",
+                p_limit: 100,
+                p_offset: 0,
+            },
+        ]);
         expect(resources()).toEqual([sellerReadModelRpc]);
     });
 });
 
 function useSellerResponder(overrides: Record<string, unknown> = {}): void {
-    setRestResponder(request => {
+    setRestResponder((request) => {
         const resource = resourceName(request);
-        if (resource === sellerReadModelRpc) return jsonResponse(sellerBundle(overrides));
+        if (resource === sellerReadModelRpc) {
+            return jsonResponse(sellerBundle(overrides));
+        }
         throw new Error(`Unexpected seller offer request: ${request.url}`);
     });
 }
@@ -156,11 +164,11 @@ function sellerBundle(overrides: Record<string, unknown> = {}): Record<string, u
 }
 
 function rpcBodies(): Record<string, unknown>[] {
-    return capturedFetches().map(call => call.body);
+    return capturedFetches().map((call) => call.body);
 }
 
 function resources(): string[] {
-    return capturedFetches().map(call => resourceName(call));
+    return capturedFetches().map((call) => resourceName(call));
 }
 
 function resourceName(request: Request | { url: string }): string {

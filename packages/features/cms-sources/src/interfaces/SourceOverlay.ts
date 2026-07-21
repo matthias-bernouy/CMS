@@ -1,10 +1,10 @@
 import type { DataShape } from "./DataShape";
 
 export const SOURCE_OVERLAY_FIELD_TYPES = ["string", "number", "boolean"] as const;
-export type SourceOverlayFieldType = typeof SOURCE_OVERLAY_FIELD_TYPES[number];
+export type SourceOverlayFieldType = (typeof SOURCE_OVERLAY_FIELD_TYPES)[number];
 
 export const SOURCE_OVERLAY_EDITABLE_SCOPES = ["self", "admin", "all"] as const;
-export type SourceOverlayEditableScope = typeof SOURCE_OVERLAY_EDITABLE_SCOPES[number];
+export type SourceOverlayEditableScope = (typeof SOURCE_OVERLAY_EDITABLE_SCOPES)[number];
 
 export const SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES = [
     "text",
@@ -16,7 +16,7 @@ export const SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES = [
     "tokens",
     "readonly",
 ] as const;
-export type SourceOverlayDashboardFieldType = typeof SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES[number];
+export type SourceOverlayDashboardFieldType = (typeof SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES)[number];
 
 export type SourceOverlayDashboardOption = {
     value: string;

@@ -1,8 +1,10 @@
-export type WTableCell = string | {
-    title: string;
-    meta?: string;
-    tone?: "default" | "muted" | "badge";
-};
+export type WTableCell =
+    | string
+    | {
+          title: string;
+          meta?: string;
+          tone?: "default" | "muted" | "badge";
+      };
 
 export type WTableColumn = {
     key: string;

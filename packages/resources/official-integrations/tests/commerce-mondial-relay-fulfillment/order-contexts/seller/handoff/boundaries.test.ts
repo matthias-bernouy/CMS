@@ -23,11 +23,7 @@ describe("seller shipment handoff boundaries", () => {
             [{ orderId: "42", extra: true }, "body.extra is not allowed"],
         ];
         for (const [body, error] of cases) {
-            const result = await executeSellerFunction(
-                functionId,
-                request(body),
-                sellerResponder(),
-            );
+            const result = await executeSellerFunction(functionId, request(body), sellerResponder());
             expect(result.response.status).toBe(400);
             expect(await result.response.json()).toEqual({ error });
             expect(result.calls).toEqual([]);
@@ -39,11 +35,9 @@ describe("seller shipment handoff boundaries", () => {
             [request(), privateFailure(400, "id or publicId is required")],
             [request({ orderId: "42" }), privateFailure(404, "sale not found")],
         ] as const) {
-            const result = await executeSellerFunction(
-                functionId, incoming, sellerResponder({ sale: upstream }),
-            );
+            const result = await executeSellerFunction(functionId, incoming, sellerResponder({ sale: upstream }));
             await expectGenericFailure(result.response);
-            expect(result.calls.map(call => call.url.pathname)).toEqual(["/sellerContext"]);
+            expect(result.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext"]);
         }
     });
 
@@ -51,18 +45,14 @@ describe("seller shipment handoff boundaries", () => {
         const fallback = sellerResponder({
             sale: { ...sellerSale, publicId: undefined },
         });
-        const result = await executeSellerFunction(
-            functionId,
-            request({ orderId: "42" }),
-            outgoing => new URL(outgoing.url).pathname === "/declareSellerHandoff"
+        const result = await executeSellerFunction(functionId, request({ orderId: "42" }), (outgoing) =>
+            new URL(outgoing.url).pathname === "/declareSellerHandoff"
                 ? privateFailure(400, "externalOrderId is required")
                 : fallback(outgoing),
         );
 
         await expectGenericFailure(result.response);
-        expect(result.calls.map(call => call.url.pathname)).toEqual([
-            "/sellerContext", "/declareSellerHandoff",
-        ]);
+        expect(result.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/declareSellerHandoff"]);
         expect(result.calls[1]?.body).toEqual({});
     });
 
@@ -78,9 +68,7 @@ describe("seller shipment handoff boundaries", () => {
             );
 
             await expectGenericFailure(result.response);
-            expect(result.calls.map(call => call.url.pathname)).toEqual([
-                "/sellerContext", "/declareSellerHandoff",
-            ]);
+            expect(result.calls.map((call) => call.url.pathname)).toEqual(["/sellerContext", "/declareSellerHandoff"]);
         }
     });
 
@@ -88,16 +76,14 @@ describe("seller shipment handoff boundaries", () => {
         const fallback = sellerResponder({
             handoff: { id: "shipment-42", externalOrderId: sellerSale.publicId, status: "label_ready" },
         });
-        const result = await executeSellerFunction(
-            functionId,
-            request({ orderId: "42" }),
-            outgoing => new URL(outgoing.url).pathname === "/recordFulfillment"
+        const result = await executeSellerFunction(functionId, request({ orderId: "42" }), (outgoing) =>
+            new URL(outgoing.url).pathname === "/recordFulfillment"
                 ? privateFailure(400, "occurredAt is required")
                 : fallback(outgoing),
         );
 
         await expectGenericFailure(result.response);
-        expect(result.calls.map(call => call.url.pathname)).toEqual(expectedPaths());
+        expect(result.calls.map((call) => call.url.pathname)).toEqual(expectedPaths());
         expect(result.calls[2]?.body).toEqual({
             orderPublicId: sellerSale.publicId,
             providerEventId: "mondial-relay||seller_handoff|",
@@ -115,7 +101,7 @@ describe("seller shipment handoff boundaries", () => {
         );
 
         await expectGenericFailure(result.response);
-        expect(result.calls.map(call => call.url.pathname)).toEqual(expectedPaths());
+        expect(result.calls.map((call) => call.url.pathname)).toEqual(expectedPaths());
         expect(result.calls[1]?.body).toEqual({ externalOrderId: sellerSale.publicId });
         expect(result.calls[2]?.body).toMatchObject({
             providerEventId: expectedEventId(),
@@ -136,12 +122,8 @@ describe("seller shipment handoff boundaries", () => {
                 : Response.json(replayFulfillment);
         };
 
-        const failed = await executeSellerFunction(
-            functionId, request({ orderId: "42" }), responder,
-        );
-        const repaired = await executeSellerFunction(
-            functionId, request({ orderId: "42" }), responder,
-        );
+        const failed = await executeSellerFunction(functionId, request({ orderId: "42" }), responder);
+        const repaired = await executeSellerFunction(functionId, request({ orderId: "42" }), responder);
 
         await expectGenericFailure(failed.response);
         expect(repaired.response.status).toBe(200);
@@ -150,8 +132,8 @@ describe("seller shipment handoff boundaries", () => {
             shipment: handoff,
             fulfillment: withoutUndefined(replayFulfillment),
         });
-        expect(failed.calls.map(call => call.url.pathname)).toEqual(expectedPaths());
-        expect(repaired.calls.map(call => call.url.pathname)).toEqual(expectedPaths());
+        expect(failed.calls.map((call) => call.url.pathname)).toEqual(expectedPaths());
+        expect(repaired.calls.map((call) => call.url.pathname)).toEqual(expectedPaths());
         expect(failed.calls[2]?.body).toEqual(repaired.calls[2]?.body);
         expect(repaired.calls[2]?.body).toMatchObject({ providerEventId: expectedEventId() });
         expect(JSON.stringify(body)).not.toContain("idempotentReplay");
@@ -160,11 +142,14 @@ describe("seller shipment handoff boundaries", () => {
 });
 
 function privateFailure(status: number, error: string): Response {
-    return Response.json({
-        error,
-        recipientAddress: "7 Private Street",
-        providerPayload: { reference: "private-provider-reference" },
-    }, { status });
+    return Response.json(
+        {
+            error,
+            recipientAddress: "7 Private Street",
+            providerPayload: { reference: "private-provider-reference" },
+        },
+        { status },
+    );
 }
 
 function expectedEventId(): string {

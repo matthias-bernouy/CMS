@@ -15,9 +15,9 @@ describe("TtlCache", () => {
 
         expect(cache.get("page:/a")?.raw).toEqual(entry("A").raw); // fresh
         t += 99;
-        expect(cache.get("page:/a")).not.toBeNull();               // still inside the window
-        t += 2;                                                     // past 100ms now
-        expect(cache.get("page:/a")).toBeNull();                   // expired → forces a re-render
+        expect(cache.get("page:/a")).not.toBeNull(); // still inside the window
+        t += 2; // past 100ms now
+        expect(cache.get("page:/a")).toBeNull(); // expired → forces a re-render
     });
 
     test("a re-set after expiry starts a fresh window", () => {
@@ -25,8 +25,8 @@ describe("TtlCache", () => {
         const cache = new TtlCache({ ttlMs: 10, now: () => t });
         cache.set("k", entry("x"));
         t = 100;
-        expect(cache.get("k")).toBeNull();        // expired + dropped
-        cache.set("k", entry("y"));               // fresh window from t=100
+        expect(cache.get("k")).toBeNull(); // expired + dropped
+        cache.set("k", entry("y")); // fresh window from t=100
         expect(cache.get("k")?.raw).toEqual(entry("y").raw);
     });
 
@@ -34,12 +34,12 @@ describe("TtlCache", () => {
         const cache = new TtlCache({ ttlMs: 10_000, now: () => 0 });
         cache.set("page:/a", entry("a"));
         cache.set("page:/b", entry("b"));
-        cache.set("bloc:x",  entry("c"));
+        cache.set("bloc:x", entry("c"));
 
         cache.delete("page:/a");
         expect(cache.get("page:/a")).toBeNull();
 
-        cache.deleteMatching(k => k.startsWith("page:"));
+        cache.deleteMatching((k) => k.startsWith("page:"));
         expect(cache.get("page:/b")).toBeNull();
         expect(cache.get("bloc:x")).not.toBeNull(); // non-page entry kept
     });

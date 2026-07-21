@@ -1,6 +1,12 @@
 import type {
-    CmsFilesMetadataRepository, FilesListOptions, NewFolder, NewFile, ItemPatch,
-    FolderItem, FileItem, FilesItem,
+    CmsFilesMetadataRepository,
+    FilesListOptions,
+    NewFolder,
+    NewFile,
+    ItemPatch,
+    FolderItem,
+    FileItem,
+    FilesItem,
 } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import { validateItemName } from "cms-files/core/validation";
 
@@ -29,12 +35,22 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
         return this.inner.updateItem(id, next);
     }
 
-    listChildren(parentId: string | null, opts?: FilesListOptions) { return this.inner.listChildren(parentId, opts); }
-    getItem(id: string)                                            { return this.inner.getItem(id); }
-    getItemByPath(path: string)                                    { return this.inner.getItemByPath(path); }
-    listSubtree(folderId: string)                                  { return this.inner.listSubtree(folderId); }
+    listChildren(parentId: string | null, opts?: FilesListOptions) {
+        return this.inner.listChildren(parentId, opts);
+    }
+    getItem(id: string) {
+        return this.inner.getItem(id);
+    }
+    getItemByPath(path: string) {
+        return this.inner.getItemByPath(path);
+    }
+    listSubtree(folderId: string) {
+        return this.inner.listSubtree(folderId);
+    }
     updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }) {
         return this.inner.updateFileContent(id, fields);
     }
-    deleteItem(id: string, opts?: { recursive?: boolean })         { return this.inner.deleteItem(id, opts); }
+    deleteItem(id: string, opts?: { recursive?: boolean }) {
+        return this.inner.deleteItem(id, opts);
+    }
 }

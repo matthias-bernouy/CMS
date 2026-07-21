@@ -41,7 +41,7 @@ function appendMediaPreview(card: HTMLElement, item: MediaItem) {
         img.loading = "lazy";
         card.appendChild(img);
     } else {
-        const ext = item.label.split('.').pop()?.toUpperCase() || "FILE";
+        const ext = item.label.split(".").pop()?.toUpperCase() || "FILE";
         const icon = document.createElement("span");
         icon.slot = "image";
         icon.innerHTML = `
@@ -51,7 +51,8 @@ function appendMediaPreview(card: HTMLElement, item: MediaItem) {
             </svg>
             <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">${ext}</span>
         `;
-        icon.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;color:var(--text-muted,#94a3b8);";
+        icon.style.cssText =
+            "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;color:var(--text-muted,#94a3b8);";
         card.appendChild(icon);
     }
 }

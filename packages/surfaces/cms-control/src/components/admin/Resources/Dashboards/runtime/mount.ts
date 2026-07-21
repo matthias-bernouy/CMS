@@ -6,7 +6,13 @@ import "./../widgets/w-navigation-list/WNavigationList";
 import "./../widgets/w-detail/WDetail";
 import { detailReloadEvent } from "./reload";
 import { relationDetailSectionElement } from "./mountRelations";
-import { appendSourceContent, jsonAttr, navigationItemsTemplate, sourceWrapper, tableRowsTemplate } from "./mountSource";
+import {
+    appendSourceContent,
+    jsonAttr,
+    navigationItemsTemplate,
+    sourceWrapper,
+    tableRowsTemplate,
+} from "./mountSource";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -18,33 +24,65 @@ export function mountDashboardWidgets(
 ): void {
     const core = document.createElement("cms-binding-core");
     core.className = "dashboard-widget-binding";
-    core.replaceChildren(...widgets.map((widget, index) =>
-        widgetElement(widget, context, `${key}.${index}`, tabState, detail),
-    ));
+    core.replaceChildren(
+        ...widgets.map((widget, index) => widgetElement(widget, context, `${key}.${index}`, tabState, detail)),
+    );
     root.replaceChildren(core);
 }
 
-function widgetElement(widget: DashboardRuntimeWidget, context: RenderContext, key: string, tabState: Map<string, number>, detail: DetailSelection | null): HTMLElement {
-    if (widget.widget === "w-section") return sectionElement(widget, context, key, tabState, detail);
-    if (widget.widget === "w-tabs") return tabsElement(widget, context, key, tabState, detail);
-    if (widget.widget === "w-table") return tableElement(widget, context);
-    if (widget.widget === "w-navigation-list") return navigationListElement(widget, context);
-    if (widget.widget === "w-detail") return detailElement(widget, context, detail);
+function widgetElement(
+    widget: DashboardRuntimeWidget,
+    context: RenderContext,
+    key: string,
+    tabState: Map<string, number>,
+    detail: DetailSelection | null,
+): HTMLElement {
+    if (widget.widget === "w-section") {
+        return sectionElement(widget, context, key, tabState, detail);
+    }
+    if (widget.widget === "w-tabs") {
+        return tabsElement(widget, context, key, tabState, detail);
+    }
+    if (widget.widget === "w-table") {
+        return tableElement(widget, context);
+    }
+    if (widget.widget === "w-navigation-list") {
+        return navigationListElement(widget, context);
+    }
+    if (widget.widget === "w-detail") {
+        return detailElement(widget, context, detail);
+    }
     return document.createElement("span");
 }
 
-function sectionElement(widget: Extract<DashboardWidget, { widget: "w-section" }>, context: RenderContext, key: string, tabState: Map<string, number>, detail: DetailSelection | null): HTMLElement {
+function sectionElement(
+    widget: Extract<DashboardWidget, { widget: "w-section" }>,
+    context: RenderContext,
+    key: string,
+    tabState: Map<string, number>,
+    detail: DetailSelection | null,
+): HTMLElement {
     const element = document.createElement("cms-dashboard-w-section");
     element.setAttribute("heading", widget.title);
-    if (widget.description) element.setAttribute("description", widget.description);
+    if (widget.description) {
+        element.setAttribute("description", widget.description);
+    }
     const stack = document.createElement("div");
     stack.className = "widget-stack";
-    stack.append(...widget.children.map((child, index) => widgetElement(child, context, `${key}.${index}`, tabState, detail)));
+    stack.append(
+        ...widget.children.map((child, index) => widgetElement(child, context, `${key}.${index}`, tabState, detail)),
+    );
     element.append(stack);
     return element;
 }
 
-function tabsElement(widget: Extract<DashboardWidget, { widget: "w-tabs" }>, context: RenderContext, key: string, tabState: Map<string, number>, detail: DetailSelection | null): HTMLElement {
+function tabsElement(
+    widget: Extract<DashboardWidget, { widget: "w-tabs" }>,
+    context: RenderContext,
+    key: string,
+    tabState: Map<string, number>,
+    detail: DetailSelection | null,
+): HTMLElement {
     const panel = document.createElement("section");
     panel.className = "tabs-panel";
     const tabs = document.createElement("div");
@@ -63,7 +101,13 @@ function tabsElement(widget: Extract<DashboardWidget, { widget: "w-tabs" }>, con
         button.textContent = tab.label;
         tabs.append(button);
     }
-    if (active) body.append(...active.children.map((child, index) => widgetElement(child, context, `${key}.${activeIndex}.${index}`, tabState, detail)));
+    if (active) {
+        body.append(
+            ...active.children.map((child, index) =>
+                widgetElement(child, context, `${key}.${activeIndex}.${index}`, tabState, detail),
+            ),
+        );
+    }
     panel.append(tabs, body);
     return panel;
 }
@@ -78,7 +122,10 @@ function tableElement(widget: Extract<DashboardWidget, { widget: "w-table" }>, c
     return wrapper;
 }
 
-function navigationListElement(widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>, context: RenderContext): HTMLElement {
+function navigationListElement(
+    widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
+    context: RenderContext,
+): HTMLElement {
     const wrapper = sourceWrapper(context.dashboard.source, widget.source, {}, "dashboardData");
     const element = document.createElement("cms-dashboard-w-navigation-list");
     element.setAttribute("data-config-json", jsonAttr(widget));
@@ -87,10 +134,22 @@ function navigationListElement(widget: Extract<DashboardWidget, { widget: "w-nav
     return wrapper;
 }
 
-function detailElement(widget: RuntimeDetailWidget, context: RenderContext, detail: DetailSelection | null): HTMLElement {
+function detailElement(
+    widget: RuntimeDetailWidget,
+    context: RenderContext,
+    detail: DetailSelection | null,
+): HTMLElement {
     const rowKey = detail?.row ?? "";
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData");
-    wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
+    const wrapper = sourceWrapper(
+        context.dashboard.source,
+        widget.source,
+        { selection: { id: rowKey } },
+        "dashboardData",
+    );
+    wrapper.setAttribute(
+        "cms-reload-on",
+        detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey),
+    );
     const element = document.createElement("cms-dashboard-w-detail");
     element.setAttribute("data-config-json", jsonAttr(widget));
     element.setAttribute("data-source-json", "{{ dashboardData | json }}");

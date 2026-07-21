@@ -14,12 +14,16 @@ installCommerceTestEnvironment();
 
 describe("commerce order list boundaries", () => {
     test("preserves safe-integer deep offsets and exact totals on empty pages", async () => {
-        setRestResponder(async request => {
+        setRestResponder(async (request) => {
             if (resourceName(request.url) !== "list_order_read_model") {
                 throw new Error(`Unexpected deep-offset request: ${request.url}`);
             }
             return jsonResponse({
-                state: "ok", orders: [], operations: [], definitions: [], total: 4,
+                state: "ok",
+                orders: [],
+                operations: [],
+                definitions: [],
+                total: 4,
             });
         });
         const offset = 3_000_000_000;
@@ -44,20 +48,20 @@ describe("commerce order list boundaries", () => {
 
         const missingIdentity = await requestCommerce("/me/orders?sellerId=invalid");
         expect({ status: missingIdentity.status, body: await missingIdentity.json() }).toEqual({
-            status: 401, body: { error: "missing CMS user id" },
+            status: 401,
+            body: { error: "missing CMS user id" },
         });
         for (const route of ["/me/orders", "/admin/orders"]) {
             const response = await requestCommerce(`${route}?sellerId=invalid`, { userId: buyerId });
             expect({ route, status: response.status, body: await response.json() }).toEqual({
-                route, status: 400, body: { error: "sellerId must be an integer" },
+                route,
+                status: 400,
+                body: { error: "sellerId must be an integer" },
             });
         }
         expect(capturedFetches()).toHaveLength(0);
 
-        const seller = await requestCommerce(
-            "/me/sales?sellerId=invalid&limit=2&offset=2",
-            { userId: sellerUserId },
-        );
+        const seller = await requestCommerce("/me/sales?sellerId=invalid&limit=2&offset=2", { userId: sellerUserId });
         expect(seller.status).toBe(200);
         expect(await seller.json()).toEqual(expectedSellerList);
         expect(callsFor("list_order_read_model")[0]!.body.p_seller_id).toBeNull();
@@ -67,7 +71,9 @@ describe("commerce order list boundaries", () => {
         for (const route of ["/me/orders", "/me/sales", "/admin/orders"]) {
             const response = await requestCommerce(`${route}?offset=invalid`, { userId: "actor" });
             expect({ route, status: response.status, body: await response.json() }).toEqual({
-                route, status: 400, body: { error: "offset must be an integer" },
+                route,
+                status: 400,
+                body: { error: "offset must be an integer" },
             });
         }
         expect(capturedFetches()).toHaveLength(0);
@@ -84,7 +90,9 @@ describe("commerce order list boundaries", () => {
             const before = capturedFetches().length;
             const response = await requestCommerce(route, options);
             expect({ route, status: response.status, body: await response.json() }).toEqual({
-                route, status: 502, body: { error: "order list unavailable" },
+                route,
+                status: 502,
+                body: { error: "order list unavailable" },
             });
             const calls = capturedFetches().slice(before);
             expect(calls).toHaveLength(1);

@@ -20,44 +20,54 @@ describe("dashboard dynamic schema refresh", () => {
             const request = new Request(input, init);
             requests.push(request);
             if (new URL(request.url).searchParams.get("categoryId") === "10") {
-                return new Promise<Response>(resolve => { resolveRefresh = resolve; });
+                return new Promise<Response>((resolve) => {
+                    resolveRefresh = resolve;
+                });
             }
             return Response.json({ fields: [{ id: "weight", label: "Weight", type: "number" }] });
         }) as typeof fetch;
         const detail = document.createElement("cms-dashboard-w-detail");
         const actions: WidgetActionDetail[] = [];
-        detail.addEventListener(WIDGET_ACTION_EVENT, event => {
+        detail.addEventListener(WIDGET_ACTION_EVENT, (event) => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
-        detail.setAttribute("data-config-json", JSON.stringify({
-            widget: "w-detail",
-            id: "productDetail",
-            source: { endpoint: "product" },
-            actions: [{ id: "save", label: "Save", endpoint: { endpoint: "upsertProduct" } }],
-            main: [{
-                id: "main",
-                title: "Product",
-                fields: [
-                    { id: "primaryCategoryId", label: "Category", path: "primaryCategoryId", type: "number" },
+        detail.setAttribute(
+            "data-config-json",
+            JSON.stringify({
+                widget: "w-detail",
+                id: "productDetail",
+                source: { endpoint: "product" },
+                actions: [{ id: "save", label: "Save", endpoint: { endpoint: "upsertProduct" } }],
+                main: [
                     {
-                        id: "metadata",
-                        label: "Metadata",
-                        path: "metadata",
-                        type: "schema",
-                        schema: {
-                            endpoint: "categoryProductFields",
-                            params: { categoryId: "$field.primaryCategoryId" },
-                            itemsPath: "fields",
-                        },
+                        id: "main",
+                        title: "Product",
+                        fields: [
+                            { id: "primaryCategoryId", label: "Category", path: "primaryCategoryId", type: "number" },
+                            {
+                                id: "metadata",
+                                label: "Metadata",
+                                path: "metadata",
+                                type: "schema",
+                                schema: {
+                                    endpoint: "categoryProductFields",
+                                    params: { categoryId: "$field.primaryCategoryId" },
+                                    itemsPath: "fields",
+                                },
+                            },
+                        ],
                     },
                 ],
-            }],
-        }));
-        detail.setAttribute("data-source-json", JSON.stringify({
-            id: 42,
-            primaryCategoryId: 9,
-            metadata: { weight: 300 },
-        }));
+            }),
+        );
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({
+                id: 42,
+                primaryCategoryId: 9,
+                metadata: { weight: 300 },
+            }),
+        );
         detail.setAttribute("data-row-key", "42");
         detail.setAttribute("data-source-id", "commerce");
         document.body.append(detail);
@@ -66,7 +76,7 @@ describe("dashboard dynamic schema refresh", () => {
 
         const dynamicField = detail.shadowRoot!.querySelector<HTMLElement>("[data-schema-key='weight']")!;
         dynamicField.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
         expect(requests).toHaveLength(1);
 
         const category = detail.shadowRoot!.querySelector<HTMLElement & { value: string }>(

@@ -11,10 +11,12 @@ export function sourceUrl(value: string): string {
 
 export function parseSourceSpec(value: string): SourceSpec {
     const match = SOURCE_ALIAS_PATTERN.exec(value);
-    if (!match) return { url: value.trim() };
+    if (!match) {
+        return { url: value.trim() };
+    }
 
     return {
-        url:   match[1]!.trim(),
+        url: match[1]!.trim(),
         alias: match[2]!,
     };
 }

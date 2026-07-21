@@ -24,6 +24,8 @@ const AS_FORM = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
 
 export function parseRepeat(value: string): RepeatSpec {
     const m = value.match(AS_FORM);
-    if (m) return { path: m[1]!, name: m[2]! };
+    if (m) {
+        return { path: m[1]!, name: m[2]! };
+    }
     return { path: value.trim() };
 }

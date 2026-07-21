@@ -25,7 +25,9 @@ export function validateEndpoint(endpoint: SourceEndpoint, errors: string[]): vo
     validateTimeout(endpoint, errors);
     validateAccess(endpoint, errors);
     const target = validateSourceTargetUrl(endpoint.targetUrl);
-    if (!target.ok) errors.push(`invalid targetUrl for "${endpoint.urn}": ${target.reason}`);
+    if (!target.ok) {
+        errors.push(`invalid targetUrl for "${endpoint.urn}": ${target.reason}`);
+    }
     validateParams(endpoint, errors);
     validateResponseKind(endpoint, errors);
     validateHeaders(endpoint, errors);
@@ -34,10 +36,14 @@ export function validateEndpoint(endpoint: SourceEndpoint, errors: string[]): vo
 }
 
 function validateTimeout(endpoint: SourceEndpoint, errors: string[]): void {
-    if (endpoint.timeoutMs === undefined) return;
-    if (!Number.isSafeInteger(endpoint.timeoutMs)
-        || endpoint.timeoutMs < 1
-        || endpoint.timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS) {
+    if (endpoint.timeoutMs === undefined) {
+        return;
+    }
+    if (
+        !Number.isSafeInteger(endpoint.timeoutMs) ||
+        endpoint.timeoutMs < 1 ||
+        endpoint.timeoutMs > MAX_SOURCE_ENDPOINT_TIMEOUT_MS
+    ) {
         errors.push(
             `invalid timeoutMs for "${endpoint.urn}": expected an integer between 1 and ${MAX_SOURCE_ENDPOINT_TIMEOUT_MS}`,
         );
@@ -50,15 +56,19 @@ function validateIdentityBindings(endpoint: SourceEndpoint, errors: string[]): v
             errors.push(`empty identity binding path for "${endpoint.urn}"`);
             continue;
         }
-        const shapes = (endpoint.output ?? []).map(output => dataShapeAtPath(output.body, binding.responsePath));
-        if (!shapes.some(shape => shape?.semantic?.kind === "user-id" && shape.semantic.authority)) {
-            errors.push(`identity binding path is not a qualified user-id for "${endpoint.urn}": "${binding.responsePath}"`);
+        const shapes = (endpoint.output ?? []).map((output) => dataShapeAtPath(output.body, binding.responsePath));
+        if (!shapes.some((shape) => shape?.semantic?.kind === "user-id" && shape.semantic.authority)) {
+            errors.push(
+                `identity binding path is not a qualified user-id for "${endpoint.urn}": "${binding.responsePath}"`,
+            );
         }
     }
 }
 
 function validateAccess(endpoint: SourceEndpoint, errors: string[]): void {
-    if (endpoint.access === undefined) return;
+    if (endpoint.access === undefined) {
+        return;
+    }
     if (!isSourceEndpointAccessMode(endpoint.access.mode)) {
         errors.push(`invalid access mode for "${endpoint.urn}": "${(endpoint.access as { mode?: unknown }).mode}"`);
     }
@@ -71,10 +81,14 @@ function validateParams(endpoint: SourceEndpoint, errors: string[]): void {
             errors.push(`param without name for "${endpoint.urn}"`);
             continue;
         }
-        if (seen.has(param.name)) errors.push(`duplicate param for "${endpoint.urn}": "${param.name}"`);
+        if (seen.has(param.name)) {
+            errors.push(`duplicate param for "${endpoint.urn}": "${param.name}"`);
+        }
         seen.add(param.name);
         if (!(PARAM_INS as readonly string[]).includes(param.in)) {
-            errors.push(`invalid param location for "${endpoint.urn}": "${param.in}" (expected ${PARAM_INS.join("|")})`);
+            errors.push(
+                `invalid param location for "${endpoint.urn}": "${param.in}" (expected ${PARAM_INS.join("|")})`,
+            );
         }
         validateParamSource(endpoint, param, errors);
         if (param.in === "header" && (!isValidHeaderName(param.name) || isForbiddenHeaderName(param.name))) {
@@ -85,7 +99,9 @@ function validateParams(endpoint: SourceEndpoint, errors: string[]): void {
 
 function validateParamSource(endpoint: SourceEndpoint, param: EndpointParam, errors: string[]): void {
     if (param.source?.from === "computed") {
-        if (param.in === "path") errors.push(`computed param is not supported for path in "${endpoint.urn}": "${param.name}"`);
+        if (param.in === "path") {
+            errors.push(`computed param is not supported for path in "${endpoint.urn}": "${param.name}"`);
+        }
         if (!(COMPUTED_PARAM_REFS as readonly string[]).includes(param.source.ref)) {
             errors.push(`invalid computed ref for "${endpoint.urn}": "${param.source.ref}"`);
         }
@@ -98,7 +114,9 @@ function validateResponseKind(endpoint: SourceEndpoint, errors: string[]): void 
     if (endpoint.responseKind !== undefined && !(RESPONSE_KINDS as readonly string[]).includes(endpoint.responseKind)) {
         errors.push(`invalid responseKind for "${endpoint.urn}": "${endpoint.responseKind}"`);
     }
-    if (endpoint.mediaType !== undefined && !endpoint.mediaType.trim()) errors.push(`empty mediaType for "${endpoint.urn}"`);
+    if (endpoint.mediaType !== undefined && !endpoint.mediaType.trim()) {
+        errors.push(`empty mediaType for "${endpoint.urn}"`);
+    }
 }
 
 function validateHeaders(endpoint: SourceEndpoint, errors: string[]): void {
@@ -113,18 +131,30 @@ function validateHeaders(endpoint: SourceEndpoint, errors: string[]): void {
             continue;
         }
         const key = header.name.toLowerCase();
-        if (seen.has(key)) errors.push(`duplicate header for "${endpoint.urn}": "${header.name}"`);
+        if (seen.has(key)) {
+            errors.push(`duplicate header for "${endpoint.urn}": "${header.name}"`);
+        }
         seen.add(key);
         validateHeaderSource(endpoint, header, errors);
     }
 }
 
-function validateHeaderSource(endpoint: SourceEndpoint, header: NonNullable<SourceEndpoint["headers"]>[number], errors: string[]): void {
-    if (header.source.from === "static" && !isValidHeaderValue(header.source.value)) errors.push(`invalid header value for "${endpoint.urn}": "${header.name}"`);
-    if (header.source.from === "secret" && !header.source.ref) errors.push(`secret header without ref for "${endpoint.urn}": "${header.name}"`);
+function validateHeaderSource(
+    endpoint: SourceEndpoint,
+    header: NonNullable<SourceEndpoint["headers"]>[number],
+    errors: string[],
+): void {
+    if (header.source.from === "static" && !isValidHeaderValue(header.source.value)) {
+        errors.push(`invalid header value for "${endpoint.urn}": "${header.name}"`);
+    }
+    if (header.source.from === "secret" && !header.source.ref) {
+        errors.push(`secret header without ref for "${endpoint.urn}": "${header.name}"`);
+    }
     if (header.source.from === "secret") {
         const prefix = (header.source as { prefix?: unknown }).prefix;
-        if (prefix !== undefined && (typeof prefix !== "string" || !isValidHeaderValue(prefix))) errors.push(`invalid header prefix for "${endpoint.urn}": "${header.name}"`);
+        if (prefix !== undefined && (typeof prefix !== "string" || !isValidHeaderValue(prefix))) {
+            errors.push(`invalid header prefix for "${endpoint.urn}": "${header.name}"`);
+        }
     }
     if (header.source.from === "computed" && !(COMPUTED_PARAM_REFS as readonly string[]).includes(header.source.ref)) {
         errors.push(`invalid computed ref for "${endpoint.urn}": "${header.source.ref}"`);
@@ -141,8 +171,14 @@ function validateResponses(endpoint: SourceEndpoint, errors: string[]): void {
     }
     const seen = new Set<string>();
     for (const response of endpoint.output) {
-        if (!isValidResponseStatus(response.status)) errors.push(`invalid response status for "${endpoint.urn}": "${response.status}" (expected an HTTP code or "default")`);
-        if (seen.has(response.status)) errors.push(`duplicate response status for "${endpoint.urn}": "${response.status}"`);
+        if (!isValidResponseStatus(response.status)) {
+            errors.push(
+                `invalid response status for "${endpoint.urn}": "${response.status}" (expected an HTTP code or "default")`,
+            );
+        }
+        if (seen.has(response.status)) {
+            errors.push(`duplicate response status for "${endpoint.urn}": "${response.status}"`);
+        }
         validateTriggerResponse(endpoint, response, errors);
         seen.add(response.status);
     }

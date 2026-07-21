@@ -2,31 +2,36 @@ import { collectReferences } from "../expressions";
 import { shapeHasPath } from "./shapes";
 import type { ValidationState } from "./state";
 
-export function validateReferences(
-    value: unknown,
-    path: string,
-    state: ValidationState,
-    inLoop: boolean,
-): void {
+export function validateReferences(value: unknown, path: string, state: ValidationState, inLoop: boolean): void {
     for (const ref of collectReferences(value)) {
         if (ref === "$item" || ref.startsWith("$item.")) {
-            if (!inLoop) state.errors.push(`${path} has an invalid reference "${ref}"`);
+            if (!inLoop) {
+                state.errors.push(`${path} has an invalid reference "${ref}"`);
+            }
             continue;
         }
         if (ref === "$index") {
-            if (!inLoop) state.errors.push(`${path} has an invalid reference "${ref}"`);
+            if (!inLoop) {
+                state.errors.push(`${path} has an invalid reference "${ref}"`);
+            }
             continue;
         }
         if (ref.startsWith("$input.params.")) {
             const name = ref.slice("$input.params.".length).split(".")[0] ?? "";
-            if (!state.fn.input?.params?.[name]) state.errors.push(`${path} references unknown input param "${name}"`);
+            if (!state.fn.input?.params?.[name]) {
+                state.errors.push(`${path} references unknown input param "${name}"`);
+            }
             continue;
         }
         if (ref.startsWith("$input.body")) {
-            if (!state.fn.input?.body) state.errors.push(`${path} references input body but no body shape is declared`);
+            if (!state.fn.input?.body) {
+                state.errors.push(`${path} references input body but no body shape is declared`);
+            }
             continue;
         }
-        if (ref.startsWith("$ctx.user.")) continue;
+        if (ref.startsWith("$ctx.user.")) {
+            continue;
+        }
         if (ref.startsWith("$steps.")) {
             validateStepReference(ref, path, state);
             continue;

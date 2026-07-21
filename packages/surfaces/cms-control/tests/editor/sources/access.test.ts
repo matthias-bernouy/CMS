@@ -20,10 +20,7 @@ describe("GET /api/editor/sources access", () => {
 
         const body = await listEditorSources(sources);
 
-        expect(body.map(source => source.endpointUrn)).toEqual([
-            "urn:access:public",
-            "urn:access:auth",
-        ]);
+        expect(body.map((source) => source.endpointUrn)).toEqual(["urn:access:public", "urn:access:auth"]);
     });
 
     test("keeps the public system authentication actions authorable", async () => {
@@ -31,11 +28,11 @@ describe("GET /api/editor/sources access", () => {
 
         const body = await listEditorSources(sources);
 
-        expect(SYSTEM_AUTH_SOURCE.endpoints.every(endpoint => endpoint.access?.mode === "public")).toBe(true);
-        expect(body.map(source => source.endpointUrn)).toEqual(
-            SYSTEM_AUTH_SOURCE.endpoints.map(endpoint => endpoint.urn),
+        expect(SYSTEM_AUTH_SOURCE.endpoints.every((endpoint) => endpoint.access?.mode === "public")).toBe(true);
+        expect(body.map((source) => source.endpointUrn)).toEqual(
+            SYSTEM_AUTH_SOURCE.endpoints.map((endpoint) => endpoint.urn),
         );
-        const login = body.find(source => source.endpointUrn === "urn:system-auth:login");
+        const login = body.find((source) => source.endpointUrn === "urn:system-auth:login");
         expect(login).toMatchObject({
             provider: "system-auth",
             providerUrn: "urn:system-auth",
@@ -63,7 +60,7 @@ describe("GET /api/editor/sources access", () => {
 
         const body = await listEditorSources(sources);
 
-        expect(body.map(source => source.endpointUrn)).toEqual([
+        expect(body.map((source) => source.endpointUrn)).toEqual([
             "urn:system-functions:publicFunction",
             "urn:system-functions:authFunction",
         ]);

@@ -28,7 +28,7 @@ export type Filter = (value: unknown) => unknown;
 export type FilterMap = Record<string, Filter>;
 
 const BUILTIN_FILTERS: FilterMap = {
-    urlencode: value => encodeURIComponent(value == null ? "" : String(value)),
+    urlencode: (value) => encodeURIComponent(value == null ? "" : String(value)),
 };
 
 /** `{{ path }}` or `{{ path | filter }}`. Paths are word chars, `$`, `.`, and `-`;
@@ -38,8 +38,10 @@ const TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
 export function interpolateString(str: string, scope: Scope, filters: FilterMap = {}): string {
     return str.replace(TOKEN, (_whole: string, path: string, filter: string | undefined) => {
         const res = lookup(scope, path);
-        if (!res.found) return ""; // absent in the whole scope chain → blank
-        const fn = filter ? filters[filter] ?? BUILTIN_FILTERS[filter] : undefined;
+        if (!res.found) {
+            return ""; // absent in the whole scope chain → blank
+        }
+        const fn = filter ? (filters[filter] ?? BUILTIN_FILTERS[filter]) : undefined;
         const value = fn ? fn(res.value) : res.value;
         return value == null ? "" : String(value);
     });

@@ -1,8 +1,5 @@
 import type { Editor } from "@bernouy/cms-content/editor";
-import {
-    COMPOSITION_OUTPUT_ATTRIBUTE,
-    isCompositionRuntimeElement,
-} from "@bernouy/components/base";
+import { COMPOSITION_OUTPUT_ATTRIBUTE, isCompositionRuntimeElement } from "@bernouy/components/base";
 
 const STYLE_ID = "cms-editor-v2-highlight-style";
 const HIGHLIGHT_ATTR = "data-cms-editor-v2-highlight";
@@ -21,8 +18,8 @@ export class FrameHighlight {
 
         if (options.scrollIntoView) {
             (targets[0] ?? editor.target).scrollIntoView({
-                block:    "center",
-                inline:   "nearest",
+                block: "center",
+                inline: "nearest",
                 behavior: "smooth",
             });
         }
@@ -32,7 +29,9 @@ export class FrameHighlight {
         doc.body.append(this._overlay);
 
         this._resizeObserver = new ResizeObserver(() => this.update());
-        for (const target of targets) this._resizeObserver.observe(target);
+        for (const target of targets) {
+            this._resizeObserver.observe(target);
+        }
         doc.defaultView?.addEventListener("scroll", this.update, true);
         doc.defaultView?.addEventListener("resize", this.update);
         this.update();
@@ -56,9 +55,13 @@ export class FrameHighlight {
     }
 
     private readonly update = (): void => {
-        if (!this._target || !this._overlay) return;
+        if (!this._target || !this._overlay) {
+            return;
+        }
         const win = this._target.ownerDocument.defaultView;
-        if (!win) return;
+        if (!win) {
+            return;
+        }
 
         const rect = unionRect(this._measurementTargets(this._target));
         this._overlay.style.left = `${rect.left + win.scrollX}px`;
@@ -68,19 +71,23 @@ export class FrameHighlight {
     };
 
     private _measurementTargets(target: HTMLElement): HTMLElement[] {
-        if (!isCompositionRuntimeElement(target)) return [target];
+        if (!isCompositionRuntimeElement(target)) {
+            return [target];
+        }
 
-        const output = Array.from(target.children).find(element => (
-            element.hasAttribute(COMPOSITION_OUTPUT_ATTRIBUTE)
-        ));
+        const output = Array.from(target.children).find((element) =>
+            element.hasAttribute(COMPOSITION_OUTPUT_ATTRIBUTE),
+        );
         const children = output
-            ? Array.from(output.children).flatMap(element => visibleBoxes(element as HTMLElement))
+            ? Array.from(output.children).flatMap((element) => visibleBoxes(element as HTMLElement))
             : [];
         return children.length > 0 ? children : [target];
     }
 
     private _ensureStyle(doc: Document): void {
-        if (doc.getElementById(STYLE_ID)) return;
+        if (doc.getElementById(STYLE_ID)) {
+            return;
+        }
 
         const style = doc.createElement("style");
         style.id = STYLE_ID;
@@ -101,15 +108,17 @@ export class FrameHighlight {
 
 function visibleBoxes(element: HTMLElement): HTMLElement[] {
     const rect = element.getBoundingClientRect();
-    if (rect.width > 0 || rect.height > 0) return [element];
-    return Array.from(element.children).flatMap(child => visibleBoxes(child as HTMLElement));
+    if (rect.width > 0 || rect.height > 0) {
+        return [element];
+    }
+    return Array.from(element.children).flatMap((child) => visibleBoxes(child as HTMLElement));
 }
 
 function unionRect(elements: HTMLElement[]): DOMRect {
-    const rects = elements.map(element => element.getBoundingClientRect());
-    const left = Math.min(...rects.map(rect => rect.left));
-    const top = Math.min(...rects.map(rect => rect.top));
-    const right = Math.max(...rects.map(rect => rect.right));
-    const bottom = Math.max(...rects.map(rect => rect.bottom));
+    const rects = elements.map((element) => element.getBoundingClientRect());
+    const left = Math.min(...rects.map((rect) => rect.left));
+    const top = Math.min(...rects.map((rect) => rect.top));
+    const right = Math.max(...rects.map((rect) => rect.right));
+    const bottom = Math.max(...rects.map((rect) => rect.bottom));
     return new DOMRect(left, top, right - left, bottom - top);
 }

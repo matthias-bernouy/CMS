@@ -14,9 +14,13 @@ export class NavItem extends Component {
 
     override connectedCallback(): void {
         this._syncLink();
-        if (this._bound) return;
+        if (this._bound) {
+            return;
+        }
         const slot = this.shadowRoot!.querySelector<HTMLSlotElement>('slot[name="items"]');
-        if (!slot) return;
+        if (!slot) {
+            return;
+        }
         const sync = () => this.toggleAttribute("has-dropdown", slot.assignedElements().length > 0);
         slot.addEventListener("slotchange", sync);
         sync();
@@ -29,14 +33,25 @@ export class NavItem extends Component {
 
     private _syncLink(): void {
         const a = this.shadowRoot?.querySelector<HTMLAnchorElement>("a.label");
-        if (!a) return;
+        if (!a) {
+            return;
+        }
         const href = this.getAttribute("href");
         const target = this.getAttribute("target");
-        if (href) a.setAttribute("href", href);
-        else a.removeAttribute("href");
-        if (target && target !== "_self") a.setAttribute("target", target);
-        else a.removeAttribute("target");
-        if (target === "_blank") a.setAttribute("rel", "noopener noreferrer");
-        else a.removeAttribute("rel");
+        if (href) {
+            a.setAttribute("href", href);
+        } else {
+            a.removeAttribute("href");
+        }
+        if (target && target !== "_self") {
+            a.setAttribute("target", target);
+        } else {
+            a.removeAttribute("target");
+        }
+        if (target === "_blank") {
+            a.setAttribute("rel", "noopener noreferrer");
+        } else {
+            a.removeAttribute("rel");
+        }
     }
 }

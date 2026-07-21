@@ -171,10 +171,7 @@ export class UserAccountFormEditor extends Editor {
             {
                 kind: "self",
                 label: "Regional preferences",
-                settings: [
-                    visibility("Locale", "show-locale"),
-                    visibility("Timezone", "show-timezone"),
-                ],
+                settings: [visibility("Locale", "show-locale"), visibility("Timezone", "show-timezone")],
             },
             {
                 kind: "self",

@@ -1,8 +1,4 @@
-import {
-    type Editor,
-    type EditorDocument,
-    type CmsSourceState,
-} from "@bernouy/cms-content/editor";
+import { type Editor, type EditorDocument, type CmsSourceState } from "@bernouy/cms-content/editor";
 
 import type { EditorRuntime, EditorDataSource } from "../../../../../runtime";
 import type { StructureTreeActionDetail } from "../../../StructureTree/StructureTree";
@@ -39,23 +35,39 @@ export class ShellMutations {
     handleStructureAction(detail: StructureTreeActionDetail): void {
         const { action, editor, entry, item, sourceEditor, sourceState } = detail;
         const blockItem = item ?? (entry ? { kind: "block" as const, entry } : null);
-        if (action === "duplicate" && editor) this.editor.duplicateEditor(editor);
-        else if (action === "delete" && editor) this.editor.deleteEditor(editor);
-        else if (action === "copy" && editor) this.editor.copyEditor(editor);
-        else if (action === "paste-after") this.editor.pasteAfter(editor ?? null);
-        else if (action === "set-source" && editor && detail.dataSource) this.bindings.setSource(editor, detail.dataSource, detail.sourceBinding);
-        else if (action === "remove-source" && editor) this.bindings.removeSource(editor);
-        else if (action === "configure-repeat" && editor) this.bindings.openRepeatPicker(editor);
-        else if (action === "remove-repeat" && editor) this.bindings.removeRepeat(editor);
-        else if (action === "set-condition" && editor && detail.conditionExpression) this.bindings.setCondition(editor, detail.conditionExpression);
-        else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState) this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
-        else if (action === "set-source-status-conditions" && editor && detail.sourceConditions) this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
-        else if (action === "remove-source-status-condition" && editor) this.bindings.removeSourceStatusCondition(editor);
-        else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
+        if (action === "duplicate" && editor) {
+            this.editor.duplicateEditor(editor);
+        } else if (action === "delete" && editor) {
+            this.editor.deleteEditor(editor);
+        } else if (action === "copy" && editor) {
+            this.editor.copyEditor(editor);
+        } else if (action === "paste-after") {
+            this.editor.pasteAfter(editor ?? null);
+        } else if (action === "set-source" && editor && detail.dataSource) {
+            this.bindings.setSource(editor, detail.dataSource, detail.sourceBinding);
+        } else if (action === "remove-source" && editor) {
+            this.bindings.removeSource(editor);
+        } else if (action === "configure-repeat" && editor) {
+            this.bindings.openRepeatPicker(editor);
+        } else if (action === "remove-repeat" && editor) {
+            this.bindings.removeRepeat(editor);
+        } else if (action === "set-condition" && editor && detail.conditionExpression) {
+            this.bindings.setCondition(editor, detail.conditionExpression);
+        } else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState) {
+            this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
+        } else if (action === "set-source-status-conditions" && editor && detail.sourceConditions) {
+            this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
+        } else if (action === "remove-source-status-condition" && editor) {
+            this.bindings.removeSourceStatusCondition(editor);
+        } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
             this.editor.moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
-        } else if (action === "replace" && editor && blockItem) this.content.replaceEditor(editor, blockItem, detail.slot);
-        else if (action === "add-root" && blockItem) this.content.addRoot(blockItem);
-        else if (editor && blockItem) this.content.addChild(editor, blockItem, detail.slot);
+        } else if (action === "replace" && editor && blockItem) {
+            this.content.replaceEditor(editor, blockItem, detail.slot);
+        } else if (action === "add-root" && blockItem) {
+            this.content.addRoot(blockItem);
+        } else if (editor && blockItem) {
+            this.content.addChild(editor, blockItem, detail.slot);
+        }
     }
 
     applyRepeatSelection(path: string, alias: string): void {
@@ -94,7 +106,10 @@ export class ShellMutations {
         this.bindings.setCondition(editor, expression);
     }
 
-    setSourceStatusConditions(editor: Editor, conditions: Array<{ sourceEditor: Editor; sourceState: CmsSourceState }>): void {
+    setSourceStatusConditions(
+        editor: Editor,
+        conditions: Array<{ sourceEditor: Editor; sourceState: CmsSourceState }>,
+    ): void {
         this.bindings.setSourceStatusConditions(editor, conditions);
     }
 

@@ -1,5 +1,11 @@
 import { randomUUIDv7 } from "bun";
-import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
+import type {
+    BlocListItemResponse,
+    CmsRepository,
+    PageLink,
+    PageMeta,
+    PagesQuery,
+} from "cms-content/interfaces/CmsRepository";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
@@ -21,12 +27,11 @@ import { isPublishedPage } from "cms-content/core/publication";
  * gets for free through serialization.
  */
 export class InMemoryCmsRepository implements CmsRepository {
-
     // ── Storage ──
 
-    private _blocs         = new Map<string, TBloc>();          // by tag (= TBloc.id)
-    private _pages         = new Map<string, TPage>();          // by path (unique key)
-    private _templates     = new Map<string, TTemplate>();      // by id
+    private _blocs = new Map<string, TBloc>(); // by tag (= TBloc.id)
+    private _pages = new Map<string, TPage>(); // by path (unique key)
+    private _templates = new Map<string, TTemplate>(); // by id
     private _system: TSystem = defaultSystem();
 
     // ── Blocs ──
@@ -45,18 +50,18 @@ export class InMemoryCmsRepository implements CmsRepository {
     }
 
     async getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
-        return Array.from(this._blocs.values()).map(b => ({
-            id:       b.id,
+        return Array.from(this._blocs.values()).map((b) => ({
+            id: b.id,
             editorJS: b.editorJS,
-            viewJS:   b.viewJS,
+            viewJS: b.viewJS,
         }));
     }
 
     async getBlocsList(): Promise<BlocListItemResponse[]> {
-        return Array.from(this._blocs.values()).map(b => ({
-            id:          b.id,
-            name:        b.name,
-            group:       b.group       || "",
+        return Array.from(this._blocs.values()).map((b) => ({
+            id: b.id,
+            name: b.name,
+            group: b.group || "",
             description: b.description || "",
         }));
     }
@@ -78,7 +83,7 @@ export class InMemoryCmsRepository implements CmsRepository {
     }
 
     async getAllPages(): Promise<TPage[]> {
-        return Array.from(this._pages.values()).map(p => ({ ...p }));
+        return Array.from(this._pages.values()).map((p) => ({ ...p }));
     }
 
     async getPublishedPage(path: string): Promise<TPage | null> {
@@ -92,84 +97,98 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async insertPage(path: string, title: string): Promise<void> {
         const page: TPage = {
-            id:          randomUUIDv7(),
+            id: randomUUIDv7(),
             path,
             title,
-            content:     "<p></p>",
+            content: "<p></p>",
             description: "",
-            tags:        [],
-            visible:     false,
+            tags: [],
+            visible: false,
         };
         this._pages.set(page.path, page);
     }
 
     async getPageById(id: string): Promise<TPage | null> {
         for (const p of this._pages.values()) {
-            if (p.id === id) return { ...p };
+            if (p.id === id) {
+                return { ...p };
+            }
         }
         return null;
     }
 
     async updatePage(page: Partial<TPage>): Promise<void> {
-        if (!page.id) throw new Error("updatePage requires `id` on the input.");
+        if (!page.id) {
+            throw new Error("updatePage requires `id` on the input.");
+        }
         const entry = this._findPageEntryById(page.id);
-        if (!entry) return;
+        if (!entry) {
+            return;
+        }
         const [oldPath, existing] = entry;
         const merged: TPage = { ...existing, ...page } as TPage;
         // Path may have changed — re-index under the new key so `getPage`
         // doesn't keep returning the stale entry at the old path.
-        if (oldPath !== merged.path) this._pages.delete(oldPath);
+        if (oldPath !== merged.path) {
+            this._pages.delete(oldPath);
+        }
         this._pages.set(merged.path, merged);
     }
 
     async deletePage(id: string): Promise<void> {
         const entry = this._findPageEntryById(id);
-        if (entry) this._pages.delete(entry[0]);
+        if (entry) {
+            this._pages.delete(entry[0]);
+        }
     }
 
     async getLinks(): Promise<PageLink[]> {
-        return Array.from(this._pages.values()).map(p => ({
-            path:  p.path,
+        return Array.from(this._pages.values()).map((p) => ({
+            path: p.path,
             title: p.title,
         }));
     }
 
     async getPagesMetadata(opts: PagesQuery = {}): Promise<PageMeta[]> {
         return filterAndSortPages(
-            Array.from(this._pages.values()).map(p => ({
-                id:      p.id,
-                path:    p.path,
-                title:   p.title,
-                tags:    [...p.tags],
+            Array.from(this._pages.values()).map((p) => ({
+                id: p.id,
+                path: p.path,
+                title: p.title,
+                tags: [...p.tags],
                 visible: p.visible,
             })),
             opts,
         );
     }
 
-    async getTemplatesMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; createdAt: string }[]> {
-        return Array.from(this._templates.values()).map(t => ({
-            id:         t.id,
+    async getTemplatesMetadata(): Promise<
+        { id: string; identifier: string; name: string; category: string; createdAt: string }[]
+    > {
+        return Array.from(this._templates.values()).map((t) => ({
+            id: t.id,
             identifier: t.identifier,
-            name:       t.name,
-            category:   t.category,
-            createdAt:  t.createdAt.toDateString(),
+            name: t.name,
+            category: t.category,
+            createdAt: t.createdAt.toDateString(),
         }));
     }
 
     async getTagCounts() {
         return countValues(
-            Array.from(this._pages.values()).flatMap(p => normalizeTags((p as { tags: unknown }).tags)),
+            Array.from(this._pages.values()).flatMap((p) => normalizeTags((p as { tags: unknown }).tags)),
         );
     }
 
     async getCategoryCounts(_resource: "templates") {
-        return countValues(Array.from(this._templates.values()).map(t => t.category));
+        return countValues(Array.from(this._templates.values()).map((t) => t.category));
     }
 
     private _findPageEntryById(id: string): [string, TPage] | null {
         for (const [path, page] of this._pages) {
-            if (page.id === id) return [path, page];
+            if (page.id === id) {
+                return [path, page];
+            }
         }
         return null;
     }
@@ -206,26 +225,32 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async getTemplateByIdentifier(identifier: string): Promise<TTemplate | null> {
         for (const t of this._templates.values()) {
-            if (t.identifier === identifier) return { ...t };
+            if (t.identifier === identifier) {
+                return { ...t };
+            }
         }
         return null;
     }
 
     async getAllTemplates(): Promise<TTemplate[]> {
-        return Array.from(this._templates.values()).map(t => ({ ...t }));
+        return Array.from(this._templates.values()).map((t) => ({ ...t }));
     }
 
     async getTemplateCategories(): Promise<string[]> {
         const set = new Set<string>();
         for (const t of this._templates.values()) {
-            if (t.category) set.add(t.category);
+            if (t.category) {
+                set.add(t.category);
+            }
         }
         return Array.from(set).sort();
     }
 
     async updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
         const existing = this._templates.get(id);
-        if (!existing) return null;
+        if (!existing) {
+            return null;
+        }
         // Strip immutable fields so callers can't rewrite them.
         const { id: _, identifier: __, createdAt: ___, ...rest } = data;
         const updated: TTemplate = { ...existing, ...rest };
@@ -236,5 +261,4 @@ export class InMemoryCmsRepository implements CmsRepository {
     async deleteTemplate(id: string): Promise<void> {
         this._templates.delete(id);
     }
-
 }

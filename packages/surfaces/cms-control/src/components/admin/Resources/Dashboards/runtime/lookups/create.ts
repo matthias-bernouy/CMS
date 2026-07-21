@@ -21,7 +21,9 @@ export async function executeLookupCreate(
     const widget = findDetailWidget(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
     const create = field?.lookup?.create;
-    if (!widget || !field || !create || create.mode !== "inline") return undefined;
+    if (!widget || !field || !create || create.mode !== "inline") {
+        return undefined;
+    }
 
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
     const resource = itemFrom(data, widget.source);
@@ -29,7 +31,9 @@ export async function executeLookupCreate(
     const previousValue = (previousDraft[fieldId] ?? baseFields[fieldId]) as unknown;
     const nextValue = nextDraft[fieldId];
     const createdValue = createdInput(previousValue, nextValue);
-    if (!createdValue) return undefined;
+    if (!createdValue) {
+        return undefined;
+    }
 
     const created = await sendSourceJson(group.source.id, create, endpointMethod(group, groups, create), {
         resource,
@@ -37,7 +41,9 @@ export async function executeLookupCreate(
         value: createdValue,
     });
     const createdId = valueAt(created, create.valuePath);
-    if (createdId === undefined || createdId === null || createdId === "") return undefined;
+    if (createdId === undefined || createdId === null || createdId === "") {
+        return undefined;
+    }
     const id = String(createdId);
     return {
         value: replaceCreatedValue(nextValue, createdValue, id),
@@ -46,33 +52,47 @@ export async function executeLookupCreate(
 }
 
 function textValue(value: unknown): string {
-    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return String(value);
+    }
     return typeof value === "string" ? value.trim() : "";
 }
 
 function createdInput(previous: unknown, next: unknown): string {
     if (Array.isArray(next)) {
         const previousValues = new Set(arrayValue(previous));
-        return arrayValue(next).find(value => !previousValues.has(value)) ?? "";
+        return arrayValue(next).find((value) => !previousValues.has(value)) ?? "";
     }
     return typeof next === "string" ? next.trim() : "";
 }
 
 function replaceCreatedValue(next: unknown, created: string, id: string): unknown {
-    if (Array.isArray(next)) return arrayValue(next).map(value => value === created ? id : value);
+    if (Array.isArray(next)) {
+        return arrayValue(next).map((value) => (value === created ? id : value));
+    }
     return id;
 }
 
 function arrayValue(value: unknown): string[] {
-    if (Array.isArray(value)) return value.map(item => String(item)).filter(Boolean);
-    return typeof value === "string" ? value.split(",").map(item => item.trim()).filter(Boolean) : [];
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item)).filter(Boolean);
+    }
+    return typeof value === "string"
+        ? value
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean)
+        : [];
 }
 
 function lookupField(widget: DetailWidget, fieldId: string): LookupField | null {
-    const fields = [...widget.main, ...(widget.aside ?? [])].flatMap(section => section.fields);
-    return fields.find((field): field is LookupField =>
-        (field.type === "combobox" || field.type === "tokens") && field.id === fieldId,
-    ) ?? null;
+    const fields = [...widget.main, ...(widget.aside ?? [])].flatMap((section) => section.fields);
+    return (
+        fields.find(
+            (field): field is LookupField =>
+                (field.type === "combobox" || field.type === "tokens") && field.id === fieldId,
+        ) ?? null
+    );
 }
 
 function endpointMethod(
@@ -81,23 +101,32 @@ function endpointMethod(
     ref: { sourceId?: string; endpoint: string },
 ): string {
     const sourceId = ref.sourceId ?? group.source.id;
-    const endpoint = groups.find(candidate => candidate.source.id === sourceId)
-        ?.endpoints.find(candidate => candidate.endpointId === ref.endpoint);
-    if (!endpoint) throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    const endpoint = groups
+        .find((candidate) => candidate.source.id === sourceId)
+        ?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
+    if (!endpoint) {
+        throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    }
     return endpoint.method;
 }
 
 function findDetailWidget(widgets: DashboardWidget[], id: string): DetailWidget | null {
     for (const widget of widgets) {
-        if (widget.widget === "w-detail" && widget.id === id) return widget;
+        if (widget.widget === "w-detail" && widget.id === id) {
+            return widget;
+        }
         if (widget.widget === "w-section") {
             const found = findDetailWidget(widget.children, id);
-            if (found) return found;
+            if (found) {
+                return found;
+            }
         }
         if (widget.widget === "w-tabs") {
             for (const tab of widget.tabs) {
                 const found = findDetailWidget(tab.children, id);
-                if (found) return found;
+                if (found) {
+                    return found;
+                }
             }
         }
     }

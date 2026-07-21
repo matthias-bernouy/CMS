@@ -6,8 +6,12 @@ import { parseDataShape, type DataShape } from "@bernouy/cms-sources";
  *  is surface parsing (InvalidParam); the shape rules (type whitelist, depth/node
  *  caps, proto guard) are the gateway's `parseDataShape`. */
 export function parseShapeField(raw: unknown, path: string): DataShape | undefined {
-    if (raw == null || raw === "") return undefined;
-    if (typeof raw !== "string") throw new InvalidParam(path, "expected a JSON string");
+    if (raw == null || raw === "") {
+        return undefined;
+    }
+    if (typeof raw !== "string") {
+        throw new InvalidParam(path, "expected a JSON string");
+    }
     let parsed: unknown;
     try {
         parsed = JSON.parse(raw);

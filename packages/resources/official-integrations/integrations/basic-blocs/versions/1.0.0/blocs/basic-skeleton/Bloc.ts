@@ -22,7 +22,9 @@ export class BasicSkeleton extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.syncPresentation();
+        if (this.isConnected) {
+            this.syncPresentation();
+        }
     }
 
     render() {
@@ -96,8 +98,11 @@ export class BasicSkeleton extends HTMLElement {
             ["width", "--cms-skeleton-width"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
 
         if (this.getAttribute("aria-hidden") === "true") {

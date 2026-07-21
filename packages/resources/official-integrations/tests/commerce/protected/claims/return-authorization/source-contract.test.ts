@@ -2,15 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import {
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useReturnAuthorizationResponder } from "./fixtures";
-import {
-    claimId,
-    expectedAuthorization,
-} from "./raw";
+import { claimId, expectedAuthorization } from "./raw";
 
 type Endpoint = {
     endpointId: string;
@@ -24,10 +18,7 @@ type Endpoint = {
 
 installCommerceTestEnvironment();
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
 const route = `/system/claim/return-authorization?claimId=${claimId}`;
 
 describe("commerce claim return authorization Source contract", () => {
@@ -45,20 +36,24 @@ describe("commerce claim return authorization Source contract", () => {
             method: "GET",
             access: "system",
             targetUrl: "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/system/claim/return-authorization",
-            params: [{
-                name: "claimId",
-                in: "query",
-                type: "number",
-                required: true,
-            }],
-            headers: [{
-                name: "authorization",
-                source: {
-                    from: "secret",
-                    ref: "{{secrets.cmsApiKey}}",
-                    prefix: "Bearer ",
+            params: [
+                {
+                    name: "claimId",
+                    in: "query",
+                    type: "number",
+                    required: true,
                 },
-            }],
+            ],
+            headers: [
+                {
+                    name: "authorization",
+                    source: {
+                        from: "secret",
+                        ref: "{{secrets.cmsApiKey}}",
+                        prefix: "Bearer ",
+                    },
+                },
+            ],
         });
         expect(Object.keys(shape.properties ?? {})).toEqual(Object.keys(expectedAuthorization));
         expect(shape.required).toEqual([
@@ -86,11 +81,7 @@ describe("commerce claim return authorization Source contract", () => {
         const shape = responseShape(await authorizationEndpoint());
 
         expect(response.status).toBe(200);
-        expect(projectStrictDataShape(
-            await response.json(),
-            shape,
-            "response",
-        )).toEqual(expectedAuthorization);
+        expect(projectStrictDataShape(await response.json(), shape, "response")).toEqual(expectedAuthorization);
     });
 
     test("records the existing missing-financial-row mismatch separately", async () => {
@@ -104,27 +95,30 @@ describe("commerce claim return authorization Source contract", () => {
             ...withoutFinancialTerms
         } = expectedAuthorization;
 
-        expect(() => projectStrictDataShape(raw, shape, "response"))
-            .toThrow("response.deliveryQuoteId is required");
-        expect(projectStrictDataShape(raw, shape, "response", {
-            enforceRequired: false,
-        })).toEqual(withoutFinancialTerms);
+        expect(() => projectStrictDataShape(raw, shape, "response")).toThrow("response.deliveryQuoteId is required");
+        expect(
+            projectStrictDataShape(raw, shape, "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(withoutFinancialTerms);
     });
 });
 
 async function authorizationEndpoint(): Promise<Endpoint> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));
     const endpoint = definition.artifacts
-        .find((artifact: any) => artifact.source)?.source?.endpoints
-        .find((candidate: Endpoint) => (
-            candidate.endpointId === "getClaimReturnAuthorization"
-        ));
-    if (!endpoint) throw new Error("Missing getClaimReturnAuthorization endpoint");
+        .find((artifact: any) => artifact.source)
+        ?.source?.endpoints.find((candidate: Endpoint) => candidate.endpointId === "getClaimReturnAuthorization");
+    if (!endpoint) {
+        throw new Error("Missing getClaimReturnAuthorization endpoint");
+    }
     return endpoint;
 }
 
 function responseShape(endpoint: Endpoint): DataShape {
-    const shape = endpoint.output?.find(output => output.status === "200")?.body;
-    if (!shape) throw new Error("Missing getClaimReturnAuthorization 200 shape");
+    const shape = endpoint.output?.find((output) => output.status === "200")?.body;
+    if (!shape) {
+        throw new Error("Missing getClaimReturnAuthorization 200 shape");
+    }
     return shape;
 }

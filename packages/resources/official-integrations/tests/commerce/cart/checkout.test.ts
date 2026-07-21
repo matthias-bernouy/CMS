@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectRpc,
-    installCommerceTestEnvironment,
-    jsonResponse,
-    requestCommerce,
-    setRestResponder,
-} from "../harness";
+import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
 
 installCommerceTestEnvironment();
 
@@ -13,9 +7,11 @@ const userId = "buyer-user-456";
 
 describe("commerce cart checkout route", () => {
     test("maps trusted checkout inputs and returns 201 for a new checkout", async () => {
-        setRestResponder(request => new URL(request.url).pathname.endsWith("/custom_field_definitions")
-            ? jsonResponse([])
-            : jsonResponse({ checkout_group_id: "group-1", orders: [], idempotent_replay: false }));
+        setRestResponder((request) =>
+            new URL(request.url).pathname.endsWith("/custom_field_definitions")
+                ? jsonResponse([])
+                : jsonResponse({ checkout_group_id: "group-1", orders: [], idempotent_replay: false }),
+        );
 
         const response = await requestCommerce("/me/cart/checkout", {
             userId,
@@ -48,9 +44,11 @@ describe("commerce cart checkout route", () => {
     });
 
     test("returns 200 for an idempotent replay and defaults optional objects", async () => {
-        setRestResponder(request => new URL(request.url).pathname.endsWith("/custom_field_definitions")
-            ? jsonResponse([])
-            : jsonResponse({ checkout_group_id: "group-1", orders: [], idempotent_replay: true }));
+        setRestResponder((request) =>
+            new URL(request.url).pathname.endsWith("/custom_field_definitions")
+                ? jsonResponse([])
+                : jsonResponse({ checkout_group_id: "group-1", orders: [], idempotent_replay: true }),
+        );
 
         const response = await requestCommerce("/me/cart/checkout", {
             userId,

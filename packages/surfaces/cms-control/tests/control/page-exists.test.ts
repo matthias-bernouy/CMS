@@ -6,7 +6,9 @@ function makeSystem(paths: string[]) {
     const cms: any = {
         repository: {
             getPage: async (path: string): Promise<TPage | null> => {
-                if (!paths.includes(path)) return null;
+                if (!paths.includes(path)) {
+                    return null;
+                }
                 return {
                     id: `page-${path}`,
                     path,
@@ -24,12 +26,13 @@ function makeSystem(paths: string[]) {
 
 function makeRequest(query: Record<string, string>): Request {
     const url = new URL("http://localhost/cms/api/page-exists");
-    for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
+    for (const [k, v] of Object.entries(query)) {
+        url.searchParams.set(k, v);
+    }
     return new Request(url.toString());
 }
 
 describe("GET /api/page-exists", () => {
-
     test("returns 400 when `path` is missing", async () => {
         const res = await pageExists(makeRequest({}), makeSystem([]));
         expect(res.status).toBe(400);

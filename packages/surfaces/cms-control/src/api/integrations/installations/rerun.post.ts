@@ -3,14 +3,13 @@ import { importBlocArtifact } from "cms-control/core/bloc/importBlocArtifact";
 import { definitionsForRerun } from "cms-control/core/integrations/definitions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import MissingParam from "cms-control/errors/Http/MissingParam";
-import {
-    runIntegrationInstallation,
-    type IntegrationImportDeps,
-} from "@bernouy/cms-integrations";
+import { runIntegrationInstallation, type IntegrationImportDeps } from "@bernouy/cms-integrations";
 
 export default async function postIntegrationInstallationRerun(req: Request, cms: ControlCms) {
     const id = new URL(req.url).searchParams.get("id");
-    if (!id) throw new MissingParam("id");
+    if (!id) {
+        throw new MissingParam("id");
+    }
     const body = await readOptionalJsonBody(req);
     const definitions = await definitionsForRerun(cms.integrationCatalog, cms.integrationInstallations, id, body);
     const blocRepository = cms.integrationBlocRepository ?? cms.repository;
@@ -25,7 +24,8 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
         ...(cms.triggers ? { triggers: cms.triggers } : {}),
         ...(cms.sourceOverlays ? { sourceOverlays: cms.sourceOverlays } : {}),
         blocs: {
-            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
+            importBloc: (artifact, options) =>
+                importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
     };
@@ -42,7 +42,9 @@ export default async function postIntegrationInstallationRerun(req: Request, cms
 
 async function readOptionalJsonBody(req: Request): Promise<Record<string, unknown>> {
     const text = await req.text();
-    if (!text.trim()) return {};
+    if (!text.trim()) {
+        return {};
+    }
     let body: unknown;
     try {
         body = JSON.parse(text);

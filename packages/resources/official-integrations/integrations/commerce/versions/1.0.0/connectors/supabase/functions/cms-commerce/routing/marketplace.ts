@@ -1,11 +1,5 @@
 import { methodNotAllowed } from "../core/http.ts";
-import {
-    checkoutCart,
-    clearCart,
-    getCart,
-    removeCartItem,
-    upsertCartItem,
-} from "../routes/cart/index.ts";
+import { checkoutCart, clearCart, getCart, removeCartItem, upsertCartItem } from "../routes/cart/index.ts";
 import { listOfferConditions } from "../routes/offer-workflow.ts";
 import {
     createMyOffer,
@@ -15,7 +9,13 @@ import {
     submitMyOfferPrice,
     updateMyOffer,
 } from "../routes/offers.ts";
-import { getOfferImageFile, removeOfferImage, reorderOfferImages, replaceOfferImage, uploadOfferImage } from "../routes/offer/media.ts";
+import {
+    getOfferImageFile,
+    removeOfferImage,
+    reorderOfferImages,
+    replaceOfferImage,
+    uploadOfferImage,
+} from "../routes/offer/media.ts";
 import { estimateOfferPrice } from "../routes/offer/estimate.ts";
 import { createOrder } from "../routes/orders.ts";
 import { cancelMyOrder, cancelMySale } from "../routes/order/cancellations.ts";
@@ -43,21 +43,33 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
         return request.method === "GET" ? await estimateOfferPrice(request) : methodNotAllowed("GET");
     }
     if (route === "/me/seller") {
-        if (request.method === "GET") return await getMySeller(request);
-        if (request.method === "POST") return await registerMySeller(request);
+        if (request.method === "GET") {
+            return await getMySeller(request);
+        }
+        if (request.method === "POST") {
+            return await registerMySeller(request);
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/seller/update") {
         return request.method === "POST" ? await updateMySeller(request) : methodNotAllowed("POST");
     }
     if (route === "/me/offers") {
-        if (request.method === "GET") return await listOffers(request, "self");
-        if (request.method === "POST") return await createMyOffer(request);
+        if (request.method === "GET") {
+            return await listOffers(request, "self");
+        }
+        if (request.method === "POST") {
+            return await createMyOffer(request);
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/offer") {
-        if (request.method === "GET") return await getOffer(request, "self");
-        if (request.method === "POST") return await updateMyOffer(request);
+        if (request.method === "GET") {
+            return await getOffer(request, "self");
+        }
+        if (request.method === "POST") {
+            return await updateMyOffer(request);
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/offer/submit") {
@@ -67,9 +79,15 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
         return request.method === "POST" ? await submitMyOfferPrice(request) : methodNotAllowed("POST");
     }
     if (route === "/me/offer/image") {
-        if (request.method === "GET") return await getOfferImageFile(request, "self");
-        if (request.method === "POST") return await uploadOfferImage(request, "self");
-        if (request.method === "DELETE") return await removeOfferImage(request, "self");
+        if (request.method === "GET") {
+            return await getOfferImageFile(request, "self");
+        }
+        if (request.method === "POST") {
+            return await uploadOfferImage(request, "self");
+        }
+        if (request.method === "DELETE") {
+            return await removeOfferImage(request, "self");
+        }
         return methodNotAllowed("GET", "POST", "DELETE");
     }
     if (route === "/me/offer/image/replace") {
@@ -82,8 +100,12 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
         return request.method === "GET" ? await getCart(request) : methodNotAllowed("GET");
     }
     if (route === "/me/cart/item") {
-        if (request.method === "POST") return await upsertCartItem(request);
-        if (request.method === "DELETE") return await removeCartItem(request);
+        if (request.method === "POST") {
+            return await upsertCartItem(request);
+        }
+        if (request.method === "DELETE") {
+            return await removeCartItem(request);
+        }
         return methodNotAllowed("POST", "DELETE");
     }
     if (route === "/me/cart/clear") {
@@ -93,8 +115,12 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
         return request.method === "POST" ? await checkoutCart(request) : methodNotAllowed("POST");
     }
     if (route === "/me/orders") {
-        if (request.method === "GET") return await listMyOrders(request);
-        if (request.method === "POST") return await createOrder(request);
+        if (request.method === "GET") {
+            return await listMyOrders(request);
+        }
+        if (request.method === "POST") {
+            return await createOrder(request);
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/order") {
@@ -113,16 +139,24 @@ export async function handleMarketplaceRoute(route: string, request: Request): P
         return request.method === "POST" ? await openMyOrderClaim(request) : methodNotAllowed("POST");
     }
     if (route === "/me/order/claim/evidence") {
-        if (request.method === "POST") return await uploadMyClaimEvidence(request, "buyer");
-        if (request.method === "GET") return await getClaimEvidenceFile(request, "buyer");
+        if (request.method === "POST") {
+            return await uploadMyClaimEvidence(request, "buyer");
+        }
+        if (request.method === "GET") {
+            return await getClaimEvidenceFile(request, "buyer");
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/sale/claim/respond") {
         return request.method === "POST" ? await respondToMySaleClaim(request) : methodNotAllowed("POST");
     }
     if (route === "/me/sale/claim/evidence") {
-        if (request.method === "POST") return await uploadMyClaimEvidence(request, "seller");
-        if (request.method === "GET") return await getClaimEvidenceFile(request, "seller");
+        if (request.method === "POST") {
+            return await uploadMyClaimEvidence(request, "seller");
+        }
+        if (request.method === "GET") {
+            return await getClaimEvidenceFile(request, "seller");
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/me/order/cancel") {

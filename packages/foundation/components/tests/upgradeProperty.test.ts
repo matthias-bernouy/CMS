@@ -3,10 +3,16 @@ import { upgradeProperty } from "../src/base/Component";
 
 // A minimal element with a reflecting accessor, like the toolkit's form controls.
 class UpProbe extends HTMLElement {
-    get checked() { return this.hasAttribute("checked"); }
-    set checked(v: boolean) { v ? this.setAttribute("checked", "") : this.removeAttribute("checked"); }
+    get checked() {
+        return this.hasAttribute("checked");
+    }
+    set checked(v: boolean) {
+        v ? this.setAttribute("checked", "") : this.removeAttribute("checked");
+    }
 }
-if (!customElements.get("up-probe")) customElements.define("up-probe", UpProbe);
+if (!customElements.get("up-probe")) {
+    customElements.define("up-probe", UpProbe);
+}
 
 describe("upgradeProperty", () => {
     test("routes a value set BEFORE upgrade through the prototype setter", () => {
@@ -19,7 +25,7 @@ describe("upgradeProperty", () => {
         upgradeProperty(el, "checked");
 
         expect(Object.prototype.hasOwnProperty.call(el, "checked")).toBe(false); // shadow removed
-        expect(el.hasAttribute("checked")).toBe(true);                           // re-applied via setter
+        expect(el.hasAttribute("checked")).toBe(true); // re-applied via setter
         expect(el.checked).toBe(true);
     });
 

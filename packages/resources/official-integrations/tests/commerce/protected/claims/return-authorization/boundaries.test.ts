@@ -1,14 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { capturedFetches, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useReturnAuthorizationResponder } from "./fixtures";
-import {
-    claimId,
-    sellerRow,
-} from "./raw";
+import { claimId, sellerRow } from "./raw";
 
 installCommerceTestEnvironment();
 
@@ -45,12 +38,8 @@ describe("commerce claim return authorization boundaries", () => {
     test("preserves zero, negative, and large safe-integer lookup semantics", async () => {
         useReturnAuthorizationResponder({ claim: null });
 
-        const zero = await requestCommerce(
-            "/system/claim/return-authorization?claimId=0",
-        );
-        const negative = await requestCommerce(
-            "/system/claim/return-authorization?claimId=-7",
-        );
+        const zero = await requestCommerce("/system/claim/return-authorization?claimId=0");
+        const negative = await requestCommerce("/system/claim/return-authorization?claimId=-7");
         const large = await requestCommerce(route);
 
         expect(await responseBody(zero)).toEqual({
@@ -65,12 +54,14 @@ describe("commerce claim return authorization boundaries", () => {
             status: 404,
             body: { error: "claim not found" },
         });
-        expect(capturedFetches().map(call => {
-            const url = new URL(call.url);
-            return url.pathname.endsWith("/rpc/get_claim_return_authorization_context")
-                ? `eq.${call.body.p_claim_id}`
-                : url.searchParams.get("id");
-        })).toEqual(["eq.0", "eq.-7", `eq.${claimId}`]);
+        expect(
+            capturedFetches().map((call) => {
+                const url = new URL(call.url);
+                return url.pathname.endsWith("/rpc/get_claim_return_authorization_context")
+                    ? `eq.${call.body.p_claim_id}`
+                    : url.searchParams.get("id");
+            }),
+        ).toEqual(["eq.0", "eq.-7", `eq.${claimId}`]);
     });
 
     test("keeps missing and incomplete participant errors distinct", async () => {
@@ -125,8 +116,6 @@ async function responseBody(response: Response): Promise<{
 }> {
     return {
         status: response.status,
-        body: response.headers.get("content-type")?.includes("json")
-            ? await response.json()
-            : await response.text(),
+        body: response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text(),
     };
 }

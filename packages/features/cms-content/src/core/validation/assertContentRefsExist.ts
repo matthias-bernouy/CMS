@@ -16,15 +16,23 @@ export type ContentRefsReader = {
  * when the content actually contains bloc refs.
  */
 export async function assertContentRefsExist(repository: ContentRefsReader, content: string): Promise<void> {
-    if (!content) return;
+    if (!content) {
+        return;
+    }
 
     const { blocs } = extractRefs(content);
-    if (blocs.size === 0) return;
+    if (blocs.size === 0) {
+        return;
+    }
 
     const missing: string[] = [];
 
-    const known = new Set((await repository.getBlocsList()).map(b => b.id));
-    for (const tag of blocs) if (!known.has(tag)) missing.push(`bloc "${tag}"`);
+    const known = new Set((await repository.getBlocsList()).map((b) => b.id));
+    for (const tag of blocs) {
+        if (!known.has(tag)) {
+            missing.push(`bloc "${tag}"`);
+        }
+    }
 
     if (missing.length > 0) {
         throw new ContentValidationError("content", `unknown reference(s): ${missing.join(", ")}`);

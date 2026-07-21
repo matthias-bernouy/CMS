@@ -62,7 +62,10 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
         this.renderRoute();
     }
 
-    openSetup(definition: IntegrationDefinition, options: { answers?: Record<string, unknown>; error?: string } = {}): void {
+    openSetup(
+        definition: IntegrationDefinition,
+        options: { answers?: Record<string, unknown>; error?: string } = {},
+    ): void {
         if (options.answers || options.error) {
             renderSetupError(this, definition, options);
             return;
@@ -76,11 +79,15 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
         this.renderRoute();
     }
 
-    waitForBoundData(predicate: () => boolean, timeoutMs?: number): Promise<void> { return waitForBoundData(this, predicate, timeoutMs); }
+    waitForBoundData(predicate: () => boolean, timeoutMs?: number): Promise<void> {
+        return waitForBoundData(this, predicate, timeoutMs);
+    }
 
     query<T extends Element>(selector: string): T {
         const element = this.querySelector(selector);
-        if (!element) throw new Error(`Missing element: ${selector}`);
+        if (!element) {
+            throw new Error(`Missing element: ${selector}`);
+        }
         return element as T;
     }
 
@@ -90,8 +97,12 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
 
     private renderRoute(): void {
         const route = currentIntegrationRoute();
-        if (route.view === "installation") return this.showInstallation(route.id);
-        if (route.view === "setup") return this.showSetup(route.kind);
+        if (route.view === "installation") {
+            return this.showInstallation(route.id);
+        }
+        if (route.view === "setup") {
+            return this.showSetup(route.kind);
+        }
         this.showList(route.tab);
     }
 
@@ -105,7 +116,7 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
     }
 
     private showInstallation(integrationId: string): void {
-        if (!this.installations.some(installation => installation.id === integrationId)) {
+        if (!this.installations.some((installation) => installation.id === integrationId)) {
             replaceIntegrationRoute({ view: "list", tab: "installed" });
             this.showList("installed");
             return;
@@ -119,7 +130,7 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
     }
 
     private showSetup(kind: string): void {
-        const definition = this.definitions.find(item => item.kind === kind);
+        const definition = this.definitions.find((item) => item.kind === kind);
         if (!definition) {
             replaceIntegrationRoute({ view: "list", tab: "catalogue" });
             this.showList("catalogue");
@@ -144,4 +155,6 @@ export class IntegrationBrowser extends HTMLElement implements IntegrationBrowse
     }
 }
 
-if (!customElements.get("cms-integrations-admin")) customElements.define("cms-integrations-admin", IntegrationBrowser);
+if (!customElements.get("cms-integrations-admin")) {
+    customElements.define("cms-integrations-admin", IntegrationBrowser);
+}

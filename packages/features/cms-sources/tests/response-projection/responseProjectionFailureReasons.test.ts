@@ -50,9 +50,10 @@ const cases: FailureCase[] = [
     {
         reason: "invalid_utf8",
         endpoint,
-        upstream: () => new Response(new Uint8Array([0xc3, 0x28]), {
-            headers: { "content-type": "application/json" },
-        }),
+        upstream: () =>
+            new Response(new Uint8Array([0xc3, 0x28]), {
+                headers: { "content-type": "application/json" },
+            }),
         hasTypeMetadata: true,
     },
     {
@@ -64,19 +65,24 @@ const cases: FailureCase[] = [
     {
         reason: "body_read_error",
         endpoint,
-        upstream: () => new Response(new ReadableStream({
-            pull(controller) {
-                controller.error(new Error("private stream failure"));
-            },
-        }), { headers: { "content-type": "application/json" } }),
+        upstream: () =>
+            new Response(
+                new ReadableStream({
+                    pull(controller) {
+                        controller.error(new Error("private stream failure"));
+                    },
+                }),
+                { headers: { "content-type": "application/json" } },
+            ),
         hasTypeMetadata: true,
     },
     {
         reason: "body_too_large",
         endpoint: () => endpoint({ output: [{ status: "200", body: { type: "string" } }] }),
-        upstream: () => new Response(JSON.stringify("x".repeat(MAX_PROJECTED_JSON_BYTES)), {
-            headers: { "content-type": "application/json" },
-        }),
+        upstream: () =>
+            new Response(JSON.stringify("x".repeat(MAX_PROJECTED_JSON_BYTES)), {
+                headers: { "content-type": "application/json" },
+            }),
         hasTypeMetadata: true,
     },
 ];
@@ -91,7 +97,7 @@ describe("response projection failure reasons", () => {
                 failure.upstream(),
                 {
                     responseProjectionMode: failure.mode,
-                    reportResponseProjectionEvent: event => events.push(event),
+                    reportResponseProjectionEvent: (event) => events.push(event),
                 },
             );
             const correlationId = response.headers.get("x-correlation-id");

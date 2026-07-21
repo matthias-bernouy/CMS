@@ -27,9 +27,9 @@ describe("bloc.post tag validation", () => {
         "foo/bar",
         "bloc with space",
         "bloc;rm -rf /",
-        "a",              // too short / no dash — not a valid custom element name
-        "BLOC-UP",        // uppercase
-        "1-bloc",         // starts with digit
+        "a", // too short / no dash — not a valid custom element name
+        "BLOC-UP", // uppercase
+        "1-bloc", // starts with digit
     ])("rejects dangerous tag %p with 400", async (tag) => {
         const res = await importBloc(makeReq(tag), makeSystem());
         expect(res.status).toBe(400);

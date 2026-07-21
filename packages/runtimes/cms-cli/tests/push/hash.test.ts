@@ -2,11 +2,11 @@ import { describe, test, expect } from "bun:test";
 import { canonicalHash } from "cms-cli/push/pages/scan";
 
 const base = {
-    title:       "About",
+    title: "About",
     description: "Story",
-    visible:     true,
-    tags:        ["a", "b"],
-    content:     "<p>hi</p>",
+    visible: true,
+    tags: ["a", "b"],
+    content: "<p>hi</p>",
 };
 
 describe("canonicalHash", () => {
@@ -21,10 +21,10 @@ describe("canonicalHash", () => {
 
     test("changes when any tracked field changes", () => {
         const original = canonicalHash(base);
-        expect(canonicalHash({ ...base, title:       "Other" })).not.toBe(original);
+        expect(canonicalHash({ ...base, title: "Other" })).not.toBe(original);
         expect(canonicalHash({ ...base, description: "Other" })).not.toBe(original);
-        expect(canonicalHash({ ...base, visible:     false   })).not.toBe(original);
-        expect(canonicalHash({ ...base, tags:        ["c"]   })).not.toBe(original);
-        expect(canonicalHash({ ...base, content:     "x"     })).not.toBe(original);
+        expect(canonicalHash({ ...base, visible: false })).not.toBe(original);
+        expect(canonicalHash({ ...base, tags: ["c"] })).not.toBe(original);
+        expect(canonicalHash({ ...base, content: "x" })).not.toBe(original);
     });
 });

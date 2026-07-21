@@ -12,21 +12,21 @@
 export type IdentityProviderKind = "local" | "oidc";
 
 export type IdentityProvider = {
-    id:           string;              // unique per tenant
-    kind:         IdentityProviderKind;
-    displayName:  string;
-    enabled:      boolean;             // the builtin `local` is disable-able, not deletable
-    icon?:        string;
+    id: string; // unique per tenant
+    kind: IdentityProviderKind;
+    displayName: string;
+    enabled: boolean; // the builtin `local` is disable-able, not deletable
+    icon?: string;
     // OIDC backend fields (absent for `local`):
-    issuer?:                string;
+    issuer?: string;
     authorizationEndpoint?: string;
-    tokenEndpoint?:         string;
-    jwksUri?:               string;
-    clientId?:              string;    // public OAuth client id
-    clientSecretRef?:       string;    // key into the encrypted SecretStore — never the secret itself
-    scopes?:                string[];
-    createdAt:    Date;
-    updatedAt:    Date;
+    tokenEndpoint?: string;
+    jwksUri?: string;
+    clientId?: string; // public OAuth client id
+    clientSecretRef?: string; // key into the encrypted SecretStore — never the secret itself
+    scopes?: string[];
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 /** Non-secret descriptor exposed by the public `/auth/methods` endpoint so the
@@ -34,13 +34,13 @@ export type IdentityProvider = {
  *  Discriminated by which field is set: `loginUrl` → render a redirect button;
  *  `fields` → render a credentials form. Exactly one is present. */
 export type LoginMethod = {
-    id:          string;
+    id: string;
     displayName: string;
-    icon?:       string;
+    icon?: string;
     /** Redirect providers: where the bloc sends the browser to start login. */
-    loginUrl?:   string;
+    loginUrl?: string;
     /** Credentials providers: the fields the bloc must collect and POST. */
-    fields?:     ("email" | "password")[];
+    fields?: ("email" | "password")[];
 };
 
 export type NewIdentityProvider = Omit<IdentityProvider, "createdAt" | "updatedAt">;

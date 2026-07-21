@@ -1,7 +1,4 @@
-import {
-    executeAuthSystemSourceEndpoint,
-    type PublicAuthRoutesConfig,
-} from "@bernouy/cms-auth";
+import { executeAuthSystemSourceEndpoint, type PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import {
     executeFunctionSystemSourceEndpoint,
     SYSTEM_FUNCTIONS_SOURCE_URN,
@@ -38,38 +35,38 @@ export function mountControlSourceProxy(
     };
     const authorizeEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
         const subject = await state.auth.getSubject(req).catch(() => null);
-        if (!subject) return false;
-        if (!sourceEndpointAccessAllows(
-            sourceEndpointAccessMode(endpoint),
-            controlCallerAccessMode(subject.role),
-        )) {
+        if (!subject) {
             return false;
         }
-        if (subject.role === ADMIN_ROLE) return true;
+        if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), controlCallerAccessMode(subject.role))) {
+            return false;
+        }
+        if (subject.role === ADMIN_ROLE) {
+            return true;
+        }
         const definitions = await state.roles.list();
         return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
     };
     const sourceDeps = { resolveSecret, resolveContext, identities: state.identities };
-    const overlaySources = state.sources && state.sourceOverlays
-        ? new SourceOverlaySourceRepository(state.sources, state.sourceOverlays, { deps: sourceDeps })
-        : state.sources;
-    const proxiedSources = overlaySources && state.functions
-        ? withFunctionsSource(overlaySources, state.functions)
-        : overlaySources;
-    const interceptEndpoint = state.triggers && state.functions && overlaySources
-        ? createTriggerInterceptor({
-            triggers: state.triggers,
-            functions: state.functions,
-            sources: overlaySources,
-            deps: sourceDeps,
-            resolveUser: async (req) => {
-                const subject = await state.auth.getSubject(req).catch(() => null);
-                return subject
-                    ? { id: subject.identifier, role: subject.role }
-                    : {};
-            },
-        })
-        : undefined;
+    const overlaySources =
+        state.sources && state.sourceOverlays
+            ? new SourceOverlaySourceRepository(state.sources, state.sourceOverlays, { deps: sourceDeps })
+            : state.sources;
+    const proxiedSources =
+        overlaySources && state.functions ? withFunctionsSource(overlaySources, state.functions) : overlaySources;
+    const interceptEndpoint =
+        state.triggers && state.functions && overlaySources
+            ? createTriggerInterceptor({
+                  triggers: state.triggers,
+                  functions: state.functions,
+                  sources: overlaySources,
+                  deps: sourceDeps,
+                  resolveUser: async (req) => {
+                      const subject = await state.auth.getSubject(req).catch(() => null);
+                      return subject ? { id: subject.identifier, role: subject.role } : {};
+                  },
+              })
+            : undefined;
     const executeSystemEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
         if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
             if (!state.functions || !overlaySources) {
@@ -80,34 +77,43 @@ export function mountControlSourceProxy(
                 functions: state.functions,
                 sources: overlaySources,
                 deps: sourceDeps,
-                resolveUser: async () => subject
-                    ? { id: subject.identifier, role: subject.role }
-                    : {},
+                resolveUser: async () => (subject ? { id: subject.identifier, role: subject.role } : {}),
             });
         }
-        if (controlPublicAuth) return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, req);
+        if (controlPublicAuth) {
+            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, req);
+        }
         return new Response("system source executor not configured", { status: 501 });
     };
-    runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
-        const prefix = sourcesPrefix(runner.basePath);
-        for (const method of SOURCE_PROXY_METHODS) {
-            proxyRunner.setDefaultEndpoint(method, (req) =>
-                handleSourceRequest(proxiedSources, req, {
-                    prefix,
-                    deps: {
-                        resolveSecret,
-                        resolveContext,
-                        executeSystemEndpoint,
-                        authorizeEndpoint,
-                        ...(interceptEndpoint ? { interceptEndpoint } : {}),
-                    },
-                }));
-        }
-    }, [authGuard]);
+    runner.group(
+        CMS_SOURCES_ROUTE,
+        (proxyRunner) => {
+            const prefix = sourcesPrefix(runner.basePath);
+            for (const method of SOURCE_PROXY_METHODS) {
+                proxyRunner.setDefaultEndpoint(method, (req) =>
+                    handleSourceRequest(proxiedSources, req, {
+                        prefix,
+                        deps: {
+                            resolveSecret,
+                            resolveContext,
+                            executeSystemEndpoint,
+                            authorizeEndpoint,
+                            ...(interceptEndpoint ? { interceptEndpoint } : {}),
+                        },
+                    }),
+                );
+            }
+        },
+        [authGuard],
+    );
 }
 
 function controlCallerAccessMode(roleId: string): SourceEndpointAccessMode {
-    if (roleId === PUBLIC_ROLE) return "public";
-    if (roleId === USER_ROLE) return "auth";
+    if (roleId === PUBLIC_ROLE) {
+        return "public";
+    }
+    if (roleId === USER_ROLE) {
+        return "auth";
+    }
     return "admin";
 }

@@ -7,10 +7,7 @@ export function bindFieldControl(control: HTMLElement, field: WDetailField): voi
     control.dataset.fieldControl = field.id;
 }
 
-export function optionElement(
-    option: { label: string; value: string },
-    value: string,
-): HTMLOptionElement {
+export function optionElement(option: { label: string; value: string }, value: string): HTMLOptionElement {
     const element = document.createElement("option");
     element.value = option.value;
     element.textContent = option.label;

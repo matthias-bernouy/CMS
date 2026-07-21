@@ -21,17 +21,25 @@ export async function discoverWorkspacePackages(
         try {
             entries = await readdir(layerRoot, { withFileTypes: true });
         } catch (error) {
-            if (isMissingPathError(error)) continue;
+            if (isMissingPathError(error)) {
+                continue;
+            }
             throw error;
         }
 
         for (const entry of entries) {
-            if (!entry.isDirectory()) continue;
+            if (!entry.isDirectory()) {
+                continue;
+            }
             const packageRoot = join(layerRoot, entry.name);
             const relativeRoot = toRelativePath(rootDir, packageRoot);
-            if (isIgnored(relativeRoot, ignoredPaths)) continue;
+            if (isIgnored(relativeRoot, ignoredPaths)) {
+                continue;
+            }
             const manifest = await readManifest(join(packageRoot, "package.json"));
-            if (!manifest?.name) continue;
+            if (!manifest?.name) {
+                continue;
+            }
             packages.push({
                 name: manifest.name,
                 layer,
@@ -50,33 +58,38 @@ async function readManifest(path: string): Promise<PackageManifest | undefined> 
     try {
         return JSON.parse(await readFile(path, "utf8")) as PackageManifest;
     } catch (error) {
-        if (isMissingPathError(error)) return undefined;
+        if (isMissingPathError(error)) {
+            return undefined;
+        }
         throw error;
     }
 }
 
-async function readPackagePathAliases(
-    packageRoot: string,
-    packageName: string,
-): Promise<PackagePathAlias[]> {
+async function readPackagePathAliases(packageRoot: string, packageName: string): Promise<PackagePathAlias[]> {
     const aliases: PackagePathAlias[] = [];
     const tsconfigPath = join(packageRoot, "tsconfig.json");
     try {
         const parsed = ts.parseConfigFileTextToJson(tsconfigPath, await readFile(tsconfigPath, "utf8"));
-        if (parsed.error) throw new Error(ts.flattenDiagnosticMessageText(parsed.error.messageText, "\n"));
+        if (parsed.error) {
+            throw new Error(ts.flattenDiagnosticMessageText(parsed.error.messageText, "\n"));
+        }
         const options = parsed.config?.compilerOptions as { baseUrl?: unknown; paths?: unknown } | undefined;
-        const baseDir = typeof options?.baseUrl === "string"
-            ? resolve(packageRoot, options.baseUrl)
-            : packageRoot;
+        const baseDir = typeof options?.baseUrl === "string" ? resolve(packageRoot, options.baseUrl) : packageRoot;
         if (options?.paths && typeof options.paths === "object") {
             for (const [pattern, rawTargets] of Object.entries(options.paths as Record<string, unknown>)) {
-                if (!Array.isArray(rawTargets)) continue;
+                if (!Array.isArray(rawTargets)) {
+                    continue;
+                }
                 const targets = rawTargets.filter((target): target is string => typeof target === "string");
-                if (targets.length > 0) aliases.push({ pattern, targets, baseDir });
+                if (targets.length > 0) {
+                    aliases.push({ pattern, targets, baseDir });
+                }
             }
         }
     } catch (error) {
-        if (!isMissingPathError(error)) throw error;
+        if (!isMissingPathError(error)) {
+            throw error;
+        }
     }
 
     const conventionalName = packageName.split("/").at(-1)!;

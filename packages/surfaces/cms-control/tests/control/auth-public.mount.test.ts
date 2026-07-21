@@ -21,19 +21,39 @@ class CaptureRunner implements Runner {
     readonly endpoints = new Map<string, number>();
     readonly handlers = new Map<string, RouteHandler>();
 
-    constructor(readonly basePath: string = "/", private readonly root: CaptureRunner | null = null) {}
+    constructor(
+        readonly basePath: string = "/",
+        private readonly root: CaptureRunner | null = null,
+    ) {}
 
-    addEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", path: string, _handler: RouteHandler, middlewares: Middleware[] = []): void {
+    addEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        path: string,
+        _handler: RouteHandler,
+        middlewares: Middleware[] = [],
+    ): void {
         this.target.endpoints.set(`${method} ${joinPath(this.basePath, path)}`, middlewares.length);
         this.target.handlers.set(`${method} ${joinPath(this.basePath, path)}`, _handler);
     }
     use() {}
-    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("GET", path, handler, middlewares); }
-    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("POST", path, handler, middlewares); }
-    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PATCH", path, handler, middlewares); }
-    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("DELETE", path, handler, middlewares); }
-    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PUT", path, handler, middlewares); }
-    getRequestIP() { return undefined; }
+    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("GET", path, handler, middlewares);
+    }
+    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("POST", path, handler, middlewares);
+    }
+    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PATCH", path, handler, middlewares);
+    }
+    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("DELETE", path, handler, middlewares);
+    }
+    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PUT", path, handler, middlewares);
+    }
+    getRequestIP() {
+        return undefined;
+    }
     removeRoutesByPathPrefix() {}
     start() {}
     stop() {}
@@ -42,7 +62,11 @@ class CaptureRunner implements Runner {
         callback(new GroupRunner(joinPath(this.basePath, prefix), this.target, middlewares));
     }
 
-    setDefaultEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", _handler: RouteHandler, middlewares: Middleware[] = []): void {
+    setDefaultEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        _handler: RouteHandler,
+        middlewares: Middleware[] = [],
+    ): void {
         this.target.endpoints.set(`${method} ${this.basePath}`, middlewares.length);
         this.target.handlers.set(`${method} ${this.basePath}`, _handler);
     }
@@ -53,15 +77,28 @@ class CaptureRunner implements Runner {
 }
 
 class GroupRunner extends CaptureRunner {
-    constructor(basePath: string, root: CaptureRunner, private readonly groupMiddlewares: Middleware[]) {
+    constructor(
+        basePath: string,
+        root: CaptureRunner,
+        private readonly groupMiddlewares: Middleware[],
+    ) {
         super(basePath, root);
     }
 
-    override addEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", path: string, handler: RouteHandler, middlewares: Middleware[] = []): void {
+    override addEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        path: string,
+        handler: RouteHandler,
+        middlewares: Middleware[] = [],
+    ): void {
         super.addEndpoint(method, path, handler, [...this.groupMiddlewares, ...middlewares]);
     }
 
-    override setDefaultEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", handler: RouteHandler, middlewares: Middleware[] = []): void {
+    override setDefaultEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        handler: RouteHandler,
+        middlewares: Middleware[] = [],
+    ): void {
         super.setDefaultEndpoint(method, handler, [...this.groupMiddlewares, ...middlewares]);
     }
 
@@ -128,11 +165,13 @@ describe("Control public auth mount", () => {
         const gatewayPost = runner.handlers.get("POST /.cms/sources");
         expect(gatewayPost).toBeDefined();
 
-        const res = await gatewayPost!(new Request("http://control/.cms/sources/system-auth/signup", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email: "ada@example.com", password: "password-1" }),
-        }));
+        const res = await gatewayPost!(
+            new Request("http://control/.cms/sources/system-auth/signup", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ email: "ada@example.com", password: "password-1" }),
+            }),
+        );
 
         expect(res.status).toBe(404);
         expect(await credentials.getByEmail("ada@example.com")).toBeNull();
@@ -143,22 +182,26 @@ describe("Control public auth mount", () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:operator-context",
-            endpoints: [{
-                urn: "urn:operator-context:current",
-                method: "GET",
-                access: { mode: "admin" },
-                targetUrl: "https://operator.test/context",
-                input: {
-                    params: [{
-                        name: "role",
-                        in: "query",
-                        required: true,
-                        source: { from: "computed", ref: "userRole" },
-                        schema: { type: "string" },
-                    }],
+            endpoints: [
+                {
+                    urn: "urn:operator-context:current",
+                    method: "GET",
+                    access: { mode: "admin" },
+                    targetUrl: "https://operator.test/context",
+                    input: {
+                        params: [
+                            {
+                                name: "role",
+                                in: "query",
+                                required: true,
+                                source: { from: "computed", ref: "userRole" },
+                                schema: { type: "string" },
+                            },
+                        ],
+                    },
+                    output: [{ status: "200", body: { type: "object" } }],
                 },
-                output: [{ status: "200", body: { type: "object" } }],
-            }],
+            ],
         });
         const cms = new ControlCms(
             runner,
@@ -196,23 +239,29 @@ describe("Control public auth mount", () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:operator-actions",
-            endpoints: [{
-                urn: "urn:operator-actions:refund",
-                method: "POST",
-                access: { mode: "admin", roles: ["legacy-role"] } as any,
-                targetUrl: "https://operator.test/refund",
-                output: [{ status: "200", body: { type: "object" } }],
-            }],
+            endpoints: [
+                {
+                    urn: "urn:operator-actions:refund",
+                    method: "POST",
+                    access: { mode: "admin", roles: ["legacy-role"] } as any,
+                    targetUrl: "https://operator.test/refund",
+                    output: [{ status: "200", body: { type: "object" } }],
+                },
+            ],
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ ok: true }));
         try {
             const admin = await mountedSourceHandler("admin", sources);
-            const allowed = await admin(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
+            const allowed = await admin(
+                new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }),
+            );
             expect(allowed.status).toBe(200);
             expect(fetchSpy).toHaveBeenCalledTimes(1);
 
             const legacy = await mountedSourceHandler("legacy-role", sources);
-            const denied = await legacy(new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }));
+            const denied = await legacy(
+                new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }),
+            );
             expect(denied.status).toBe(403);
             expect(fetchSpy).toHaveBeenCalledTimes(1);
         } finally {
@@ -242,7 +291,9 @@ async function mountedSourceHandler(role: CMS_ROLES, sources: InMemorySourceRepo
     );
     await cms.ready;
     const handler = runner.handlers.get("POST /.cms/sources");
-    if (!handler) throw new Error("Control source handler was not mounted");
+    if (!handler) {
+        throw new Error("Control source handler was not mounted");
+    }
     return handler;
 }
 

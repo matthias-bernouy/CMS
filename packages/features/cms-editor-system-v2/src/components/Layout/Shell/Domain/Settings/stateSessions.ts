@@ -1,8 +1,4 @@
-import {
-    type EditableState,
-    type EditableStateSession,
-    type Editor,
-} from "@bernouy/cms-content/editor";
+import { type EditableState, type EditableStateSession, type Editor } from "@bernouy/cms-content/editor";
 
 import type { StructureNode } from "../../../../../runtime";
 
@@ -38,7 +34,9 @@ export function exitStateSession(
 ): void {
     const sessions = sessionsByEditor.get(editor);
     const session = sessions?.get(stateId);
-    if (!sessions || !session) return;
+    if (!sessions || !session) {
+        return;
+    }
 
     session.exit();
     sessions.delete(stateId);
@@ -50,7 +48,9 @@ export function exitAllStateSessions(
 ): void {
     for (const node of flattenStructure(nodes)) {
         const sessions = sessionsByEditor.get(node.editor);
-        if (!sessions) continue;
+        if (!sessions) {
+            continue;
+        }
 
         for (const session of sessions.values()) {
             session.exit();
@@ -60,5 +60,5 @@ export function exitAllStateSessions(
 }
 
 function flattenStructure(nodes: StructureNode[]): StructureNode[] {
-    return nodes.flatMap(node => [node, ...flattenStructure(node.children)]);
+    return nodes.flatMap((node) => [node, ...flattenStructure(node.children)]);
 }

@@ -79,20 +79,28 @@ function currentPageIdentifier(): string | null {
 
 function shellResource(shell: Shell): EditorResource {
     const resource = shell.getAttribute("resource");
-    if (resource === "template") return resource;
+    if (resource === "template") {
+        return resource;
+    }
     return "page";
 }
 
 function configureShell(shell: Element): void {
-    if (!(shell instanceof Shell)) return;
-    if (configuredShells.has(shell)) return;
+    if (!(shell instanceof Shell)) {
+        return;
+    }
+    if (configuredShells.has(shell)) {
+        return;
+    }
 
     configuredShells.add(shell);
     shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
     shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
 
     void configureShellCatalogAndFrame(shell);
-    if (currentPageIdentifier()) void loadDocumentConfig(shell, shellResource(shell), currentPageIdentifier()!);
+    if (currentPageIdentifier()) {
+        void loadDocumentConfig(shell, shellResource(shell), currentPageIdentifier()!);
+    }
 }
 
 async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
@@ -109,11 +117,17 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
     shell.setDefaultTemplateSelection({
         category: settings.editor?.layoutCategory || undefined,
     });
-    const themeTokens = (settings.theme?.sources ?? []).flatMap((source) => source.categories.flatMap((category) =>
-        category.tokens
-            .filter((token) => token.type === "color")
-            .map((token) => ({ label: token.label, variable: token.variable, category: `${source.label} · ${category.label}` })),
-    ));
+    const themeTokens = (settings.theme?.sources ?? []).flatMap((source) =>
+        source.categories.flatMap((category) =>
+            category.tokens
+                .filter((token) => token.type === "color")
+                .map((token) => ({
+                    label: token.label,
+                    variable: token.variable,
+                    category: `${source.label} · ${category.label}`,
+                })),
+        ),
+    );
     const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view") as
         | (HTMLElement & { setThemeTokens(tokens: typeof themeTokens): void })
         | null;
@@ -125,9 +139,7 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
         ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}`
         : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
 
-    shell.shadowRoot
-        ?.querySelector("cms-editor-v2-canvas")
-        ?.setAttribute("frame-url", frameUrl);
+    shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
 }
 
 async function loadInsertItems(): Promise<BlockPickerItem[]> {
@@ -144,29 +156,35 @@ async function loadEditorSettings(): Promise<EditorSettingsResponse> {
 
 async function loadTemplateItems(): Promise<BlockPickerItem[]> {
     const templates = await fetchJson<TemplateListItem[]>("template/list", []);
-    const details = await Promise.all(templates.map(template => fetchJson<TemplateDetail>(`template?id=${encodeURIComponent(template.id)}`, {
-        ...template,
-        content: "",
-    })));
+    const details = await Promise.all(
+        templates.map((template) =>
+            fetchJson<TemplateDetail>(`template?id=${encodeURIComponent(template.id)}`, {
+                ...template,
+                content: "",
+            }),
+        ),
+    );
 
     return details
-        .filter(template => template.content)
-        .map(template => ({
-            kind:        "template",
-            id:          template.id,
-            label:       template.name,
+        .filter((template) => template.content)
+        .map((template) => ({
+            kind: "template",
+            id: template.id,
+            label: template.name,
             description: template.description,
-            category:    template.category || "Templates",
-            icon:        "T",
-            content:     template.content ?? "",
+            category: template.category || "Templates",
+            icon: "T",
+            content: template.content ?? "",
         }));
 }
 
 async function fetchJson<T>(path: string, fallback: T): Promise<T> {
     try {
         const response = await fetch(`${getMetaBasePath()}/api/${path}`);
-        if (!response.ok) return fallback;
-        return await response.json() as T;
+        if (!response.ok) {
+            return fallback;
+        }
+        return (await response.json()) as T;
     } catch (error) {
         console.error("[editor] failed to load picker source", path, error);
         return fallback;
@@ -187,10 +205,7 @@ async function loadEditorCatalogOnce(): Promise<EditorCatalog> {
         console.error("[editor] editor catalog script failed", error);
     }
 
-    return mergeEditorCatalogs(
-        createControlEditorCatalog(),
-        runtime.getCatalog(),
-    );
+    return mergeEditorCatalogs(createControlEditorCatalog(), runtime.getCatalog());
 }
 
 function installEditorCatalogRuntime(): EditorCatalogRuntime {
@@ -200,14 +215,16 @@ function installEditorCatalogRuntime(): EditorCatalogRuntime {
         Editor,
         registerEditor(entry: EditorCatalogRegistration): void {
             try {
-                entries.push(createEditorCatalogEntry(entry, {
-                    tag:         entry.tag ?? "unknown-bloc",
-                    label:       entry.label ?? entry.tag ?? "Unknown bloc",
-                    description: entry.description,
-                    category:    entry.category,
-                    defaultContent: entry.defaultContent,
-                    bloc:        entry.bloc,
-                }));
+                entries.push(
+                    createEditorCatalogEntry(entry, {
+                        tag: entry.tag ?? "unknown-bloc",
+                        label: entry.label ?? entry.tag ?? "Unknown bloc",
+                        description: entry.description,
+                        category: entry.category,
+                        defaultContent: entry.defaultContent,
+                        bloc: entry.bloc,
+                    }),
+                );
             } catch (error) {
                 console.error("[editor] invalid editor catalog entry", entry, error);
             }
@@ -259,14 +276,14 @@ async function loadPageConfig(shell: Shell, pageId: string): Promise<void> {
         return;
     }
 
-    const page = await response.json() as PageConfigDetailResponse;
+    const page = (await response.json()) as PageConfigDetailResponse;
     shell.setPageConfig({
-        id:          page.id,
-        title:       page.title,
-        path:        page.path,
+        id: page.id,
+        title: page.title,
+        path: page.path,
         description: page.description,
-        tags:        page.tags,
-        published:   page.published,
+        tags: page.tags,
+        published: page.published,
         defaultTemplateCategory: page.defaultTemplateCategory,
     });
 }
@@ -282,20 +299,22 @@ async function loadReusableConfig(shell: Shell, resource: "template", id: string
         return;
     }
 
-    const detail = await response.json() as TemplateDetail;
+    const detail = (await response.json()) as TemplateDetail;
     shell.setPageConfig({
-        id:          detail.id,
-        title:       detail.name,
-        path:        detail.identifier,
+        id: detail.id,
+        title: detail.name,
+        path: detail.identifier,
         description: detail.description ?? "",
-        tags:        detail.category ? [detail.category] : [],
-        published:   true,
+        tags: detail.category ? [detail.category] : [],
+        published: true,
     });
 }
 
 async function onSaveDocument(event: CustomEvent<EditorV2SaveDocumentDetail>): Promise<void> {
     const shell = event.currentTarget;
-    if (!(shell instanceof Shell)) return;
+    if (!(shell instanceof Shell)) {
+        return;
+    }
 
     try {
         await saveDocument(shellResource(shell), event.detail.page, event.detail.content);
@@ -308,7 +327,9 @@ async function onSaveDocument(event: CustomEvent<EditorV2SaveDocumentDetail>): P
 
 async function onDeleteDocument(event: Event): Promise<void> {
     const shell = event.currentTarget;
-    if (!(shell instanceof Shell)) return;
+    if (!(shell instanceof Shell)) {
+        return;
+    }
 
     const resource = shellResource(shell);
     const id = currentPageIdentifier();
@@ -317,7 +338,9 @@ async function onDeleteDocument(event: Event): Promise<void> {
         return;
     }
 
-    if (!window.confirm(`Delete this ${resource}? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete this ${resource}? This cannot be undone.`)) {
+        return;
+    }
 
     try {
         await deleteDocument(resource, id);
@@ -339,17 +362,17 @@ async function saveDocument(resource: EditorResource, page: EditorV2PageConfig, 
 
 async function savePage(page: EditorV2PageConfig, content: string): Promise<void> {
     const response = await fetch(`${getMetaBasePath()}/api/page`, {
-        method:  "PUT",
+        method: "PUT",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            id:          page.id,
-            title:       page.title,
-            path:        page.path,
+            id: page.id,
+            title: page.title,
+            path: page.path,
             description: page.description,
-            visible:     page.published,
-            tags:        page.tags,
+            visible: page.published,
+            tags: page.tags,
             content,
         }),
     });
@@ -361,14 +384,14 @@ async function savePage(page: EditorV2PageConfig, content: string): Promise<void
 
 async function saveReusable(resource: "template", page: EditorV2PageConfig, content: string): Promise<void> {
     const response = await fetch(`${getMetaBasePath()}/api/${resource}`, {
-        method:  "PUT",
+        method: "PUT",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            id:          page.id,
-            name:        page.title,
-            category:    page.tags[0] ?? "",
+            id: page.id,
+            name: page.title,
+            category: page.tags[0] ?? "",
             description: page.description,
             content,
         }),
@@ -398,21 +421,19 @@ function resourceLabel(resource: EditorResource): string {
 }
 
 function configureExistingShells(): void {
-    document
-        .querySelectorAll("cms-editor-shell")
-        .forEach(configureShell);
+    document.querySelectorAll("cms-editor-shell").forEach(configureShell);
 }
 
 function configureAddedShells(node: Node): void {
-    if (!(node instanceof Element)) return;
+    if (!(node instanceof Element)) {
+        return;
+    }
 
     if (node.matches("cms-editor-shell")) {
         configureShell(node);
     }
 
-    node
-        .querySelectorAll("cms-editor-shell")
-        .forEach(configureShell);
+    node.querySelectorAll("cms-editor-shell").forEach(configureShell);
 }
 
 customElements.whenDefined("cms-editor-shell").then(() => {

@@ -16,7 +16,9 @@ export function applyParamSyncSetting(
     setting: Pick<SettingControl, "attribute">,
     value: string | boolean,
 ): boolean {
-    if (!isParamSyncSetting(setting)) return false;
+    if (!isParamSyncSetting(setting)) {
+        return false;
+    }
 
     const target = editor.target;
     const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
@@ -61,7 +63,9 @@ export function settingsWithParamSync(editor: Editor, sections: SettingSection[]
 
 export function paramSyncSettings(editor: Editor): SettingSection | null {
     const target = editor.target;
-    if (!hasStandardValueSurface(target)) return null;
+    if (!hasStandardValueSurface(target)) {
+        return null;
+    }
 
     const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
@@ -107,7 +111,9 @@ export function paramSyncSettings(editor: Editor): SettingSection | null {
 }
 
 export function isParamSyncSetting(setting: Pick<SettingControl, "attribute">): boolean {
-    return setting.attribute === PARAM_SYNC_ENABLE_SETTING
-        || setting.attribute === PARAM_SYNC_USE_NAME_SETTING
-        || setting.attribute === PARAM_SYNC_NAME_SETTING;
+    return (
+        setting.attribute === PARAM_SYNC_ENABLE_SETTING ||
+        setting.attribute === PARAM_SYNC_USE_NAME_SETTING ||
+        setting.attribute === PARAM_SYNC_NAME_SETTING
+    );
 }

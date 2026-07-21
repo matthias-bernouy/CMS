@@ -9,24 +9,42 @@
  */
 
 // ── Entities ───────────────────────────────────────────────────────────
-export type { TBloc }            from "cms-content/interfaces/blocs";
-export type { TPage, TPageRef }  from "cms-content/interfaces/pages";
-export type { TTemplate }        from "cms-content/interfaces/templates";
-export type { TSystem }          from "cms-content/interfaces/settings";
+export type { TBloc } from "cms-content/interfaces/blocs";
+export type { TPage, TPageRef } from "cms-content/interfaces/pages";
+export type { TTemplate } from "cms-content/interfaces/templates";
+export type { TSystem } from "cms-content/interfaces/settings";
 export type {
-    ThemeCategory, ThemeDefinition, ThemeMode, ThemeSettings, ThemeSource, ThemeToken, ThemeTokenType,
+    ThemeCategory,
+    ThemeDefinition,
+    ThemeMode,
+    ThemeSettings,
+    ThemeSource,
+    ThemeToken,
+    ThemeTokenType,
 } from "cms-content/interfaces/theme";
 export { wrapBindingCore } from "cms-content/interfaces/settings";
 
 // ── Repository seam ────────────────────────────────────────────────────
 export type { ContentReader } from "cms-content/interfaces/ContentReader";
 export type {
-    CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery, ValueCount,
+    CmsRepository,
+    BlocListItemResponse,
+    PageLink,
+    PageMeta,
+    PagesQuery,
+    ValueCount,
 } from "cms-content/interfaces/CmsRepository";
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
-export { filterAndSortPages }    from "cms-content/core/pagesQuery";
+export { filterAndSortPages } from "cms-content/core/pagesQuery";
 export { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
-export { allTokens, defaultThemeSettings, generateThemeCss, organizeThemeSettings, themeSettingsFromCss, validateThemeSettings } from "cms-content/core/theme";
+export {
+    allTokens,
+    defaultThemeSettings,
+    generateThemeCss,
+    organizeThemeSettings,
+    themeSettingsFromCss,
+    validateThemeSettings,
+} from "cms-content/core/theme";
 export { countValues, normalizeTags } from "cms-content/core/counts";
 export { isPublishedPage } from "cms-content/core/publication";
 export { ContentValidationError, ContentConflictError, DuplicateBlocTagError } from "cms-content/core/errors";
@@ -40,8 +58,12 @@ export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-co
 export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";
 export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/validation/assertContentRefsExist";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
-export { validatePagePath, validatePageTitle, validatePagePatch }   from "cms-content/core/validation/pages";
-export { validateTemplateIdentifier, validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/templates";
+export { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/pages";
+export {
+    validateTemplateIdentifier,
+    validateTemplateCreate,
+    validateTemplatePatch,
+} from "cms-content/core/validation/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/pageRef";
 
@@ -54,4 +76,4 @@ export * from "cms-content/core/validation/predicates";
 export * from "cms-content/core/utils/contentRefs";
 export { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";
 export { sanitizeSvgTree } from "cms-content/core/utils/sanitizeSvgTree";
-export { escapeRegex }     from "cms-content/core/utils/escapeRegex";
+export { escapeRegex } from "cms-content/core/utils/escapeRegex";

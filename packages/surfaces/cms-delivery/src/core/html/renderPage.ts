@@ -9,7 +9,12 @@ import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
-import { buildAssetPreloads, buildBindingCloak, buildFoucShell, buildStylesheetLink } from "cms-delivery/core/head/buildAssets";
+import {
+    buildAssetPreloads,
+    buildBindingCloak,
+    buildFoucShell,
+    buildStylesheetLink,
+} from "cms-delivery/core/head/buildAssets";
 import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
@@ -45,7 +50,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 
     const blocList = await ctx.repository.getBlocsList();
     const usedTags = await createBlocUsageResolver(blocList, ctx.repository)(composed);
-    const assets   = await ctx.resolveAssets(usedTags);
+    const assets = await ctx.resolveAssets(usedTags);
     const hasBindingCore = document.querySelector(CMS_BINDING_CORE_TAG) !== null;
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS
@@ -54,20 +59,17 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // URLs would otherwise be blocked by `style-src 'self'` /
     // `default-src 'self'`. Same-origin assets contribute nothing — the
     // unique-host set naturally drops them via Set semantics.
-    const styleHosts  = uniqueOrigins([assets.styleUrl]);
-    const scriptHosts = uniqueOrigins([
-        ...assets.scriptUrls,
-        ...(hasBindingCore ? [assets.bindingCoreUrl] : []),
-    ]);
+    const styleHosts = uniqueOrigins([assets.styleUrl]);
+    const scriptHosts = uniqueOrigins([...assets.scriptUrls, ...(hasBindingCore ? [assets.bindingCoreUrl] : [])]);
     const integrationCsp = ctx.integrationInstallations
         ? collectIntegrationInstallationCspExtras(await ctx.integrationInstallations.list())
         : null;
     const cspExtras = {
         connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
-        mediaExtras:   mergeUnique(settings.security.mediaExtras,   integrationCsp?.mediaExtras),
-        styleExtras:   mergeUnique(styleHosts,                       integrationCsp?.styleExtras),
-        scriptExtras:  mergeUnique(scriptHosts,                      integrationCsp?.scriptExtras),
-        frameExtras:   mergeUnique([],                               integrationCsp?.frameExtras),
+        mediaExtras: mergeUnique(settings.security.mediaExtras, integrationCsp?.mediaExtras),
+        styleExtras: mergeUnique(styleHosts, integrationCsp?.styleExtras),
+        scriptExtras: mergeUnique(scriptHosts, integrationCsp?.scriptExtras),
+        frameExtras: mergeUnique([], integrationCsp?.frameExtras),
     };
 
     // <head> assembly, in exact document order. Consumer-supplied head
@@ -80,16 +82,18 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // `buildMetaCsp` is `prepend`ed inside the helper so it ends up FIRST
     // regardless of the call order here — meta-borne CSP only governs
     // resources requested AFTER its position in the document.
-    buildHtmlBasics    (document, head, settings);
-    buildMetaCsp       (document, head, cspExtras);
-    for (const inject of ctx.headInjectors) inject({ document, head, usedTags });
-    buildPreconnect    (document, head);
-    buildAssetPreloads (document, head, assets, { includeBindingCore: hasBindingCore });
-    buildBindingCloak  (document, head, hasBindingCore);
-    buildFoucShell     (document, head, usedTags);
-    defineMetaTags     (document, head, page, settings, ctx.defaultFaviconUrl);
+    buildHtmlBasics(document, head, settings);
+    buildMetaCsp(document, head, cspExtras);
+    for (const inject of ctx.headInjectors) {
+        inject({ document, head, usedTags });
+    }
+    buildPreconnect(document, head);
+    buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
+    buildBindingCloak(document, head, hasBindingCore);
+    buildFoucShell(document, head, usedTags);
+    defineMetaTags(document, head, page, settings, ctx.defaultFaviconUrl);
     buildStylesheetLink(document, head, assets);
-    buildScriptTags    (document, head, assets);
+    buildScriptTags(document, head, assets);
 
     // System bloc: load the data-binding runtime only when the page uses the
     // activation root. Pages are wrapped by default for now.
@@ -103,8 +107,13 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // Stamp every by-id media URL with `?v=<contentHash>` (cache bust), expand
     // raster <img>s whose variants are ready into responsive srcsets, and collect
     // the rest for background optimization (served as originals until ready).
-    const unoptimized = await injectMediaVersions(document, { files: ctx.filesMetadata, variantStore: ctx.variantStore });
-    if (unoptimized.length > 0) ctx.optimizePage?.(page.path, unoptimized);
+    const unoptimized = await injectMediaVersions(document, {
+        files: ctx.filesMetadata,
+        variantStore: ctx.variantStore,
+    });
+    if (unoptimized.length > 0) {
+        ctx.optimizePage?.(page.path, unoptimized);
+    }
 
     return compress(document.toString(), "text/html");
 }
@@ -112,7 +121,11 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 function uniqueOrigins(urls: string[]): string[] {
     const out = new Set<string>();
     for (const u of urls) {
-        try { out.add(new URL(u).origin); } catch { /* relative URL → no origin to whitelist */ }
+        try {
+            out.add(new URL(u).origin);
+        } catch {
+            /* relative URL → no origin to whitelist */
+        }
     }
     return [...out];
 }

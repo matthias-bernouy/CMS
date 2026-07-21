@@ -28,7 +28,7 @@ export class FunctionAwareSourceRepository implements SourceRepository {
             };
         }
         if (inner.invalidateSchema) {
-            this.invalidateSchema = scope => inner.invalidateSchema!(scope);
+            this.invalidateSchema = (scope) => inner.invalidateSchema!(scope);
         }
     }
 
@@ -45,19 +45,23 @@ export class FunctionAwareSourceRepository implements SourceRepository {
     }
 
     async getSource(urn: string): Promise<Source | null> {
-        if (urn === SYSTEM_FUNCTIONS_SOURCE_URN) return this.functionSources.getSource(urn);
+        if (urn === SYSTEM_FUNCTIONS_SOURCE_URN) {
+            return this.functionSources.getSource(urn);
+        }
         return this.inner.getSource(urn);
     }
 
     async getAllSources(): Promise<Source[]> {
         return [
             ...(await this.functionSources.getAllSources()),
-            ...(await this.inner.getAllSources()).filter(source => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN),
+            ...(await this.inner.getAllSources()).filter((source) => source.urn !== SYSTEM_FUNCTIONS_SOURCE_URN),
         ];
     }
 
     async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
-        if (systemSourceUrnOf(urn) === SYSTEM_FUNCTIONS_SOURCE_URN) return this.functionSources.getEndpoint(urn);
+        if (systemSourceUrnOf(urn) === SYSTEM_FUNCTIONS_SOURCE_URN) {
+            return this.functionSources.getEndpoint(urn);
+        }
         return this.inner.getEndpoint(urn);
     }
 }

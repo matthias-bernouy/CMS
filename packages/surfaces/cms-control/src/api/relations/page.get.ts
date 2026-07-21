@@ -13,11 +13,17 @@ export default async function getRelationPage(req: Request, cms: ControlCms): Pr
     const url = new URL(req.url);
     const relationId = url.searchParams.get("relation") ?? "";
     const fromId = url.searchParams.get("fromId") ?? "";
-    if (!relationId) return new Response("missing relation", { status: 400 });
-    if (!fromId) return new Response("missing fromId", { status: 400 });
+    if (!relationId) {
+        return new Response("missing relation", { status: 400 });
+    }
+    if (!fromId) {
+        return new Response("missing fromId", { status: 400 });
+    }
 
     const relation = await extensions.relations.getRelation(relationId);
-    if (!relation) return new Response("relation not found", { status: 404 });
+    if (!relation) {
+        return new Response("relation not found", { status: 404 });
+    }
 
     try {
         const result = await resolveRelationPage(
@@ -67,7 +73,9 @@ function setPath(target: Record<string, unknown>, path: string, value: unknown):
 }
 
 function integerParam(value: string | null): number | undefined {
-    if (value === null || value === "") return undefined;
+    if (value === null || value === "") {
+        return undefined;
+    }
     const parsed = Number(value);
     return Number.isInteger(parsed) ? parsed : undefined;
 }

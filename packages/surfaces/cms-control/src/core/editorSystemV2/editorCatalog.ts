@@ -1,8 +1,6 @@
 import { CMS_BINDING_CORE_TAG, type EditorCatalog } from "@bernouy/cms-content/editor";
 import { BindingCore } from "@bernouy/components";
-import {
-    BindingCoreEditor,
-} from "cms-control/core/editorSystemV2/builtInEditors";
+import { BindingCoreEditor } from "cms-control/core/editorSystemV2/builtInEditors";
 
 export function createControlEditorCatalog(): EditorCatalog {
     return [

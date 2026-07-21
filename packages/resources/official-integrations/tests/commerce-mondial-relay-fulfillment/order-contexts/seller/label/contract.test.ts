@@ -1,15 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadFulfillmentFunction } from "../../shared/harness";
-import {
-    labelAuthorization,
-    labelCapability,
-    orderPublicId,
-    sellerId,
-} from "../shared/fixtures";
-import {
-    executeSellerFunction,
-    sellerPostRequest,
-} from "../shared/harness";
+import { labelAuthorization, labelCapability, orderPublicId, sellerId } from "../shared/fixtures";
+import { executeSellerFunction, sellerPostRequest } from "../shared/harness";
 import { sellerResponder } from "../shared/responders";
 
 const functionId = "requestShipmentLabelForMySale";
@@ -27,10 +19,12 @@ describe("seller shipment label contract", () => {
                 required: ["orderId"],
             },
         });
-        expect(fn.output).toEqual([{
-            status: "200",
-            body: { type: "object" },
-        }]);
+        expect(fn.output).toEqual([
+            {
+                status: "200",
+                body: { type: "object" },
+            },
+        ]);
     });
 
     test("returns only the same-origin capability and preserves call order", async () => {
@@ -64,10 +58,7 @@ describe("seller shipment label contract", () => {
             labelUrl: `/.cms/sources/delivery/label?token=${labelCapability.token}`,
             expiresAt: labelCapability.expiresAt,
         });
-        expect(Object.keys(body as object).sort()).toEqual([
-            "expiresAt",
-            "labelUrl",
-        ]);
+        expect(Object.keys(body as object).sort()).toEqual(["expiresAt", "labelUrl"]);
         const serialized = JSON.stringify(body);
         for (const privateValue of [
             "Private Buyer",
@@ -77,24 +68,31 @@ describe("seller shipment label contract", () => {
             sellerId,
             orderPublicId,
             "provider.test",
-        ]) expect(serialized).not.toContain(privateValue);
+        ]) {
+            expect(serialized).not.toContain(privateValue);
+        }
 
-        expect(calls.map(call => ({
-            target: `${call.url.pathname}${call.url.search}`,
-            method: call.method,
-            body: call.body,
-            userId: call.userId,
-        }))).toEqual([{
-            target: "/labelSellerContext?orderId=42",
-            method: "GET",
-            body: undefined,
-            userId: sellerId,
-        }, {
-            target: "/issueLabelAccess",
-            method: "POST",
-            body: { externalOrderId: orderPublicId, sellerCmsUserId: sellerId },
-            userId: null,
-        }]);
+        expect(
+            calls.map((call) => ({
+                target: `${call.url.pathname}${call.url.search}`,
+                method: call.method,
+                body: call.body,
+                userId: call.userId,
+            })),
+        ).toEqual([
+            {
+                target: "/labelSellerContext?orderId=42",
+                method: "GET",
+                body: undefined,
+                userId: sellerId,
+            },
+            {
+                target: "/issueLabelAccess",
+                method: "POST",
+                body: { externalOrderId: orderPublicId, sellerCmsUserId: sellerId },
+                userId: null,
+            },
+        ]);
     });
 
     test("mints a fresh capability on every execution", async () => {
@@ -105,23 +103,22 @@ describe("seller shipment label contract", () => {
                 return fallback(request);
             }
             mintCount++;
-            return Response.json({
-                token: `fresh-token-${mintCount}`,
-                expiresAt: `2026-07-21T08:${10 + mintCount}:00.000Z`,
-            }, { status: 201 });
+            return Response.json(
+                {
+                    token: `fresh-token-${mintCount}`,
+                    expiresAt: `2026-07-21T08:${10 + mintCount}:00.000Z`,
+                },
+                { status: 201 },
+            );
         };
 
         const executions = [];
         for (const _ of [1, 2]) {
-            executions.push(await executeSellerFunction(
-                functionId,
-                sellerPostRequest(functionId, { orderId: "42" }),
-                responder,
-            ));
+            executions.push(
+                await executeSellerFunction(functionId, sellerPostRequest(functionId, { orderId: "42" }), responder),
+            );
         }
-        const bodies = await Promise.all(executions.map(({ response }) =>
-            response.json()
-        ));
+        const bodies = await Promise.all(executions.map(({ response }) => response.json()));
 
         expect(mintCount).toBe(2);
         expect(executions.map(({ calls }) => calls.length)).toEqual([2, 2]);

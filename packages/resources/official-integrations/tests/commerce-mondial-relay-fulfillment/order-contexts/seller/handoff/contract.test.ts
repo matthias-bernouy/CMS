@@ -1,16 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadFulfillmentFunction } from "../../shared/harness";
-import {
-    fulfillment,
-    handoff,
-    orderPublicId,
-    replayFulfillment,
-    sellerId,
-} from "../shared/fixtures";
-import {
-    executeSellerFunction,
-    sellerPostRequest,
-} from "../shared/harness";
+import { fulfillment, handoff, orderPublicId, replayFulfillment, sellerId } from "../shared/fixtures";
+import { executeSellerFunction, sellerPostRequest } from "../shared/harness";
 import { sellerResponder } from "../shared/responders";
 
 const functionId = "declareShipmentHandoffForMySale";
@@ -28,39 +19,60 @@ describe("seller shipment handoff contract", () => {
         expect(body).toEqual({ shipment: handoff, fulfillment });
         expect(Object.keys(body)).toEqual(["shipment", "fulfillment"]);
         expect(Object.keys(body.shipment)).toEqual([
-            "id", "externalOrderId", "expeditionNumber", "status",
+            "id",
+            "externalOrderId",
+            "expeditionNumber",
+            "status",
             "sellerHandoffDeclaredAt",
         ]);
         expect(Object.keys(body.fulfillment)).toEqual([
-            "orderId", "orderPublicId", "status", "providerReference",
-            "carrierAcceptedAt", "sellerHandoffDeclaredAt",
-            "recipientHandoffAt", "recipientHandoffFirstObservedAt",
-            "claimWindowStartedAt", "claimByAt", "releaseEligibleAt",
-            "blockingReason", "version",
+            "orderId",
+            "orderPublicId",
+            "status",
+            "providerReference",
+            "carrierAcceptedAt",
+            "sellerHandoffDeclaredAt",
+            "recipientHandoffAt",
+            "recipientHandoffFirstObservedAt",
+            "claimWindowStartedAt",
+            "claimByAt",
+            "releaseEligibleAt",
+            "blockingReason",
+            "version",
         ]);
         expect(JSON.stringify(body)).not.toContain("Private");
         expect(JSON.stringify(body)).not.toContain("financial-hash");
         expect(JSON.stringify(body)).not.toContain("idempotentReplay");
 
-        expect(calls.map(call => ({
-            method: call.method,
-            path: call.url.pathname,
-            params: Object.fromEntries(call.url.searchParams),
-            body: call.body,
-            userId: call.userId,
-        }))).toEqual([
+        expect(
+            calls.map((call) => ({
+                method: call.method,
+                path: call.url.pathname,
+                params: Object.fromEntries(call.url.searchParams),
+                body: call.body,
+                userId: call.userId,
+            })),
+        ).toEqual([
             {
-                method: "GET", path: "/sellerContext",
+                method: "GET",
+                path: "/sellerContext",
                 params: { orderId: "42" },
-                body: undefined, userId: sellerId,
+                body: undefined,
+                userId: sellerId,
             },
             {
-                method: "POST", path: "/declareSellerHandoff", params: {},
-                body: { externalOrderId: orderPublicId }, userId: sellerId,
+                method: "POST",
+                path: "/declareSellerHandoff",
+                params: {},
+                body: { externalOrderId: orderPublicId },
+                userId: sellerId,
             },
             {
-                method: "POST", path: "/recordFulfillment", params: {},
-                body: expectedProjectionBody(), userId: null,
+                method: "POST",
+                path: "/recordFulfillment",
+                params: {},
+                body: expectedProjectionBody(),
+                userId: null,
             },
         ]);
     });
@@ -73,9 +85,7 @@ describe("seller shipment handoff contract", () => {
                 return fallback(request);
             }
             projectionCount += 1;
-            return Response.json(
-                projectionCount === 1 ? fulfillment : replayFulfillment,
-            );
+            return Response.json(projectionCount === 1 ? fulfillment : replayFulfillment);
         };
 
         const first = await executeSellerFunction(
@@ -98,8 +108,8 @@ describe("seller shipment handoff contract", () => {
             fulfillment: withoutUndefined(replayFulfillment),
         });
         expect(Object.hasOwn(replayBody.fulfillment, "orderPublicId")).toBe(false);
-        expect(first.calls.map(call => call.url.pathname)).toEqual(expectedPaths());
-        expect(replay.calls.map(call => call.url.pathname)).toEqual(expectedPaths());
+        expect(first.calls.map((call) => call.url.pathname)).toEqual(expectedPaths());
+        expect(replay.calls.map((call) => call.url.pathname)).toEqual(expectedPaths());
         expect(first.calls[2]?.body).toEqual(expectedProjectionBody());
         expect(replay.calls[2]?.body).toEqual(expectedProjectionBody());
     });

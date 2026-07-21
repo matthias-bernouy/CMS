@@ -15,12 +15,24 @@ export async function runDashboardLookupCreate(
     target?: EventTarget | null,
 ): Promise<void> {
     const { group, dashboard, detail } = context;
-    if (!change.created || !group || !dashboard || !detail) return;
+    if (!change.created || !group || !dashboard || !detail) {
+        return;
+    }
     const key = detailKey(detail.collection, change.rowKey);
     const nextDraft = context.drafts.get(key) ?? {};
     try {
-        const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft, context.groups ?? [group]);
-        if (result === undefined) return;
+        const result = await executeLookupCreate(
+            group,
+            dashboard,
+            detail,
+            change.field,
+            previousDraft,
+            nextDraft,
+            context.groups ?? [group],
+        );
+        if (result === undefined) {
+            return;
+        }
         context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
         applyLookupCreate(target, change.field, result.value, result.option);
         showToast("Item created", { type: "success" });

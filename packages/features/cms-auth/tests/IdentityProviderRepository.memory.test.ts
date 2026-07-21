@@ -3,8 +3,14 @@ import { InMemoryIdentityProviderRepository } from "cms-auth/default-implementat
 import type { NewIdentityProvider } from "cms-auth/interfaces/IdentityProvider";
 
 const repo = () => new InMemoryIdentityProviderRepository();
-const oidc = (id: string): NewIdentityProvider =>
-    ({ id, kind: "oidc", displayName: id, enabled: true, issuer: "https://kc", clientId: "c" });
+const oidc = (id: string): NewIdentityProvider => ({
+    id,
+    kind: "oidc",
+    displayName: id,
+    enabled: true,
+    issuer: "https://kc",
+    clientId: "c",
+});
 
 describe("InMemoryIdentityProviderRepository", () => {
     test("create stamps timestamps and is readable by id", async () => {

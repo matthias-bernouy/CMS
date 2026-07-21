@@ -20,10 +20,12 @@ export function declareBindingDataScopes(
 
 function declareSourceDataScope(editor: Editor, dataSources: readonly EditorDataSource[]): void {
     const source = parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-    if (!source) return;
+    if (!source) {
+        return;
+    }
 
     const schemaUrl = source.url.split("?")[0] ?? source.url;
-    const dataSource = dataSources.find(candidate => candidate.url === schemaUrl);
+    const dataSource = dataSources.find((candidate) => candidate.url === schemaUrl);
     editor.declareDataScope({
         name: source.alias ?? "data",
         label: dataSource?.label ?? source.url,
@@ -34,13 +36,17 @@ function declareSourceDataScope(editor: Editor, dataSources: readonly EditorData
 
 function parseSourceBinding(value: string): { url: string; alias?: string } | null {
     const parsed = parseSource(value) as string | { url: string; alias?: string } | null;
-    if (!parsed) return null;
+    if (!parsed) {
+        return null;
+    }
     return typeof parsed === "string" ? { url: parsed } : parsed;
 }
 
 function declareRepeatDataScope(editor: Editor, registry: EditorRegistry): void {
     const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
-    if (!repeat?.alias) return;
+    if (!repeat?.alias) {
+        return;
+    }
 
     const field = findDataField(registry.collectDataScopes(editor.target), repeat.path);
     editor.declareDataScope({
@@ -52,13 +58,14 @@ function declareRepeatDataScope(editor: Editor, registry: EditorRegistry): void 
 
 function findDataField(scopes: DataScope[], path: string): DataField | undefined {
     for (const scope of scopes) {
-        const field = path === scope.name
-            ? findDataFieldInList(scope.fields, ".")
-            : undefined;
-        const match = field
-            ?? findDataFieldInList(scope.fields, path)
-            ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
-        if (match) return match;
+        const field = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
+        const match =
+            field ??
+            findDataFieldInList(scope.fields, path) ??
+            findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
+        if (match) {
+            return match;
+        }
     }
 
     return undefined;
@@ -66,9 +73,13 @@ function findDataField(scopes: DataScope[], path: string): DataField | undefined
 
 function findDataFieldInList(fields: DataField[], path: string): DataField | undefined {
     for (const field of fields) {
-        if (field.path === path) return field;
+        if (field.path === path) {
+            return field;
+        }
         const child = field.children ? findDataFieldInList(field.children, path) : undefined;
-        if (child) return child;
+        if (child) {
+            return child;
+        }
     }
 
     return undefined;

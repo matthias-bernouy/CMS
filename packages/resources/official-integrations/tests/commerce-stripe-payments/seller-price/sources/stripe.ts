@@ -1,17 +1,5 @@
-import {
-    makeEndpointUrn,
-    type DataShape,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
-import {
-    boolean,
-    computedHeader,
-    object,
-    openObject,
-    query,
-    strings,
-    text,
-} from "./shapes";
+import { makeEndpointUrn, type DataShape, type SourceEndpoint } from "@bernouy/cms-sources";
+import { boolean, computedHeader, object, openObject, query, strings, text } from "./shapes";
 
 const statusRequired = [
     "exists",
@@ -39,16 +27,19 @@ const statusRequired = [
     "pendingVerification",
 ];
 
-const enrollmentRequired = statusRequired.filter(name => ![
-    "payoutsEnabled",
-    "applicationControlledRecipient",
-    "detailsSubmitted",
-    "chargesEnabled",
-    "currentlyDue",
-    "eventuallyDue",
-    "pastDue",
-    "pendingVerification",
-].includes(name));
+const enrollmentRequired = statusRequired.filter(
+    (name) =>
+        ![
+            "payoutsEnabled",
+            "applicationControlledRecipient",
+            "detailsSubmitted",
+            "chargesEnabled",
+            "currentlyDue",
+            "eventuallyDue",
+            "pastDue",
+            "pendingVerification",
+        ].includes(name),
+);
 
 export function stripeEndpoints(): SourceEndpoint[] {
     return [connectStatus(), enrollSeller()];
@@ -61,10 +52,7 @@ function connectStatus(): SourceEndpoint {
         access: { mode: "auth" },
         targetUrl: "https://stripe.test/status",
         headers: [computedHeader("x-user-id")],
-        input: { params: [
-            query("marketplaceTermsVersion"),
-            query("marketplaceTermsHash"),
-        ] },
+        input: { params: [query("marketplaceTermsVersion"), query("marketplaceTermsHash")] },
         output: [
             {
                 status: "200",
@@ -83,13 +71,15 @@ function enrollSeller(): SourceEndpoint {
         access: { mode: "auth" },
         targetUrl: "https://stripe.test/enrollment",
         headers: [computedHeader("x-user-id")],
-        input: { body: object({
-            accountToken: text(),
-            contactEmail: text(),
-            marketplaceTermsAccepted: boolean(),
-            marketplaceTermsVersion: text(),
-            marketplaceTermsHash: text(),
-        }) },
+        input: {
+            body: object({
+                accountToken: text(),
+                contactEmail: text(),
+                marketplaceTermsAccepted: boolean(),
+                marketplaceTermsVersion: text(),
+                marketplaceTermsHash: text(),
+            }),
+        },
         output: [
             {
                 status: "200",

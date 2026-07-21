@@ -16,20 +16,72 @@ const defaultStatusLabels = {
 
 export class CommerceNegotiationList extends Composition {
     static observedAttributes = [
-        "accept-label", "button-accent-color", "button-background-color", "button-border-color",
-        "button-text-color", "card-appearance", "card-background-color", "card-border-color",
-        "card-density", "card-muted-text-color", "card-text-color", "copy", "empty-filtered-message",
-        "empty-filtered-title", "empty-message", "empty-title", "error-message", "expiration-label", "field-accent-color",
-        "field-background-color", "field-border-color", "field-text-color", "grid-gap", "grid-max",
-        "grid-min", "initial-role", "locale", "page-param", "page-size", "proposed-label", "received-label",
-        "reference-label", "reject-label", "show-expiration", "show-message", "show-reference-price",
-        "role-accent-color", "role-background-color", "role-border-color", "role-param",
-        "role-selected-background-color", "role-selected-text-color", "role-text-color",
-        "show-header", "show-role-tabs", "skeleton-base-color", "skeleton-highlight-color", "source-id", "source-prefix",
-        "status-label", "success-accept-message", "success-reject-message", "success-withdraw-message",
-        "sent-label", "status-param", "sync-url", "text-color", "title", "toast-background-color", "toast-border-color", "toast-error-background-color",
-        "toast-error-border-color", "toast-error-text-color", "toast-text-color", "withdraw-label",
-        ...statuses.map(status => `label-${status}`),
+        "accept-label",
+        "button-accent-color",
+        "button-background-color",
+        "button-border-color",
+        "button-text-color",
+        "card-appearance",
+        "card-background-color",
+        "card-border-color",
+        "card-density",
+        "card-muted-text-color",
+        "card-text-color",
+        "copy",
+        "empty-filtered-message",
+        "empty-filtered-title",
+        "empty-message",
+        "empty-title",
+        "error-message",
+        "expiration-label",
+        "field-accent-color",
+        "field-background-color",
+        "field-border-color",
+        "field-text-color",
+        "grid-gap",
+        "grid-max",
+        "grid-min",
+        "initial-role",
+        "locale",
+        "page-param",
+        "page-size",
+        "proposed-label",
+        "received-label",
+        "reference-label",
+        "reject-label",
+        "show-expiration",
+        "show-message",
+        "show-reference-price",
+        "role-accent-color",
+        "role-background-color",
+        "role-border-color",
+        "role-param",
+        "role-selected-background-color",
+        "role-selected-text-color",
+        "role-text-color",
+        "show-header",
+        "show-role-tabs",
+        "skeleton-base-color",
+        "skeleton-highlight-color",
+        "source-id",
+        "source-prefix",
+        "status-label",
+        "success-accept-message",
+        "success-reject-message",
+        "success-withdraw-message",
+        "sent-label",
+        "status-param",
+        "sync-url",
+        "text-color",
+        "title",
+        "toast-background-color",
+        "toast-border-color",
+        "toast-error-background-color",
+        "toast-error-border-color",
+        "toast-error-text-color",
+        "toast-text-color",
+        "withdraw-label",
+        ...statuses.map((status) => `label-${status}`),
     ];
 
     constructor() {
@@ -50,8 +102,11 @@ export class CommerceNegotiationList extends Composition {
         this.addEventListener("click", this.onActionClick);
         this.readUrlState();
         this.syncPresentation();
-        if (isFramed()) this.showPreview();
-        else void this.load();
+        if (isFramed()) {
+            this.showPreview();
+        } else {
+            void this.load();
+        }
     }
 
     disconnectedCallback() {
@@ -62,8 +117,12 @@ export class CommerceNegotiationList extends Composition {
     }
 
     attributeChangedCallback(name) {
-        if (!this.isConnected) return;
-        if (name === "initial-role") this.role = this.getAttribute("initial-role") === "buyer" ? "buyer" : "seller";
+        if (!this.isConnected) {
+            return;
+        }
+        if (name === "initial-role") {
+            this.role = this.getAttribute("initial-role") === "buyer" ? "buyer" : "seller";
+        }
         queueMicrotask(() => {
             this.syncPresentation();
             this.renderItems();
@@ -78,7 +137,9 @@ export class CommerceNegotiationList extends Composition {
         this.controller?.abort();
         const controller = new AbortController();
         this.controller = controller;
-        if (!silent) this.showLoading();
+        if (!silent) {
+            this.showLoading();
+        }
         const pageSize = positiveInteger(this.getAttribute("page-size"), 12);
         try {
             const result = await this.requestSource("myProposals", {
@@ -90,18 +151,25 @@ export class CommerceNegotiationList extends Composition {
                 },
                 signal: controller.signal,
             });
-            if (controller.signal.aborted) return;
+            if (controller.signal.aborted) {
+                return;
+            }
             this.items = Array.isArray(result.items) ? result.items.filter(isProposal) : [];
             this.total = nonNegativeInteger(result.total, this.items.length);
             this.renderItems();
         } catch (error) {
-            if (controller.signal.aborted) return;
+            if (controller.signal.aborted) {
+                return;
+            }
             if (!silent) {
                 this.items = [];
                 this.total = 0;
                 this.renderItems();
             }
-            this.showToast(errorMessage(error, this.getAttribute("error-message") || "Impossible de charger les offres de prix."), true);
+            this.showToast(
+                errorMessage(error, this.getAttribute("error-message") || "Impossible de charger les offres de prix."),
+                true,
+            );
         }
     }
 
@@ -126,14 +194,19 @@ export class CommerceNegotiationList extends Composition {
 
     syncPresentation() {
         setText(this.querySelector("[data-title]"), this.getAttribute("title") || "Mes offres de prix");
-        setText(this.querySelector("[data-copy]"), this.getAttribute("copy") || "Retrouve les propositions reçues et celles que tu as envoyées.");
+        setText(
+            this.querySelector("[data-copy]"),
+            this.getAttribute("copy") || "Retrouve les propositions reçues et celles que tu as envoyées.",
+        );
         setHidden(this.querySelector("[data-header]"), this.getAttribute("show-header") === "false");
         copyAttribute(this, this.querySelector("[data-layout]"), "text-color");
 
         const roleFilter = this.querySelector("[data-role-filter]");
         setHidden(roleFilter, this.getAttribute("show-role-tabs") === "false");
         setAttribute(roleFilter, "value", this.role);
-        if (roleFilter.value !== this.role) roleFilter.value = this.role;
+        if (roleFilter.value !== this.role) {
+            roleFilter.value = this.role;
+        }
         const receivedChip = this.querySelector("[data-received-chip]");
         const sentChip = this.querySelector("[data-sent-chip]");
         receivedChip.toggleAttribute("selected", this.role === "seller");
@@ -141,8 +214,12 @@ export class CommerceNegotiationList extends Composition {
         setText(receivedChip, this.getAttribute("received-label") || "Offres reçues");
         setText(sentChip, this.getAttribute("sent-label") || "Offres envoyées");
         copyColors(this, roleFilter, "role", [
-            "accent-color", "text-color", "background-color", "border-color",
-            "selected-background-color", "selected-text-color",
+            "accent-color",
+            "text-color",
+            "background-color",
+            "border-color",
+            "selected-background-color",
+            "selected-text-color",
         ]);
 
         const statusFilter = this.querySelector("[data-status-filter]");
@@ -173,7 +250,9 @@ export class CommerceNegotiationList extends Composition {
     renderItems() {
         const grid = this.querySelector("[data-items]");
         const itemTemplate = this.querySelector("[data-item-template]");
-        if (!grid || !itemTemplate) return;
+        if (!grid || !itemTemplate) {
+            return;
+        }
         grid.replaceChildren();
         for (const proposal of this.items) {
             const fragment = itemTemplate.content.cloneNode(true);
@@ -184,11 +263,26 @@ export class CommerceNegotiationList extends Composition {
             copyColors(this, card, "card", ["text-color", "background-color", "border-color", "muted-text-color"]);
             setText(fragment.querySelector("[data-offer-title]"), proposal.offerTitle);
             setText(fragment.querySelector("[data-status]"), this.statusLabel(proposal.status));
-            setText(fragment.querySelector("[data-proposed-label]"), this.getAttribute("proposed-label") || "Prix proposé");
-            setText(fragment.querySelector("[data-proposed-amount]"), this.formatMoney(proposal.proposedAmount, proposal.currency));
-            setText(fragment.querySelector("[data-reference-label]"), this.getAttribute("reference-label") || "Prix initial");
-            setText(fragment.querySelector("[data-reference-amount]"), this.formatMoney(proposal.referenceAmount, proposal.currency));
-            setHidden(fragment.querySelector("[data-reference-group]"), this.getAttribute("show-reference-price") === "false");
+            setText(
+                fragment.querySelector("[data-proposed-label]"),
+                this.getAttribute("proposed-label") || "Prix proposé",
+            );
+            setText(
+                fragment.querySelector("[data-proposed-amount]"),
+                this.formatMoney(proposal.proposedAmount, proposal.currency),
+            );
+            setText(
+                fragment.querySelector("[data-reference-label]"),
+                this.getAttribute("reference-label") || "Prix initial",
+            );
+            setText(
+                fragment.querySelector("[data-reference-amount]"),
+                this.formatMoney(proposal.referenceAmount, proposal.currency),
+            );
+            setHidden(
+                fragment.querySelector("[data-reference-group]"),
+                this.getAttribute("show-reference-price") === "false",
+            );
 
             const message = fragment.querySelector("[data-message]");
             setHidden(message, this.getAttribute("show-message") === "false" || !proposal.buyerMessage);
@@ -208,7 +302,9 @@ export class CommerceNegotiationList extends Composition {
             setText(accept, this.getAttribute("accept-label") || "Accepter");
             setText(reject, this.getAttribute("reject-label") || "Refuser");
             setText(withdraw, this.getAttribute("withdraw-label") || "Retirer");
-            for (const button of [accept, reject, withdraw]) copyColors(this, button, "button", ["accent-color", "text-color", "background-color", "border-color"]);
+            for (const button of [accept, reject, withdraw]) {
+                copyColors(this, button, "button", ["accent-color", "text-color", "background-color", "border-color"]);
+            }
             grid.append(fragment);
         }
 
@@ -218,39 +314,60 @@ export class CommerceNegotiationList extends Composition {
         setHidden(empty, this.items.length !== 0);
         copyColors(this, empty, "card", ["text-color", "background-color", "border-color", "muted-text-color"]);
         const unfiltered = this.status === "all";
-        setText(this.querySelector("[data-empty-title]"), unfiltered
-            ? this.getAttribute("empty-title") || (this.role === "seller" ? "Aucune offre reçue pour le moment" : "Aucune offre envoyée pour le moment")
-            : this.getAttribute("empty-filtered-title") || "Aucune offre avec ce statut");
-        setText(this.querySelector("[data-empty-message]"), unfiltered
-            ? this.getAttribute("empty-message") || (this.role === "seller"
-                ? "Les propositions envoyées par les acheteurs apparaîtront ici."
-                : "Les propositions que tu envoies apparaîtront ici.")
-            : this.getAttribute("empty-filtered-message") || "Essaie un autre statut pour retrouver tes offres.");
+        setText(
+            this.querySelector("[data-empty-title]"),
+            unfiltered
+                ? this.getAttribute("empty-title") ||
+                      (this.role === "seller"
+                          ? "Aucune offre reçue pour le moment"
+                          : "Aucune offre envoyée pour le moment")
+                : this.getAttribute("empty-filtered-title") || "Aucune offre avec ce statut",
+        );
+        setText(
+            this.querySelector("[data-empty-message]"),
+            unfiltered
+                ? this.getAttribute("empty-message") ||
+                      (this.role === "seller"
+                          ? "Les propositions envoyées par les acheteurs apparaîtront ici."
+                          : "Les propositions que tu envoies apparaîtront ici.")
+                : this.getAttribute("empty-filtered-message") || "Essaie un autre statut pour retrouver tes offres.",
+        );
         const pagination = this.querySelector("[data-pagination]");
         setAttribute(pagination, "page", String(this.page));
         setAttribute(pagination, "total", String(this.total));
         setHidden(pagination, this.total <= positiveInteger(this.getAttribute("page-size"), 12));
     }
 
-    onFilterChange = event => {
+    onFilterChange = (event) => {
         if (event.target?.matches?.("[data-role-filter]")) {
             const role = event.target.value;
-            if (role !== "buyer" && role !== "seller") return;
+            if (role !== "buyer" && role !== "seller") {
+                return;
+            }
             this.role = role;
         } else if (event.target?.matches?.("[data-status-filter]")) {
             const status = String(event.target.value || "all");
-            if (!statuses.includes(status)) return;
+            if (!statuses.includes(status)) {
+                return;
+            }
             this.status = status;
-        } else return;
+        } else {
+            return;
+        }
         this.page = 1;
         this.writeUrlState();
         this.syncPresentation();
-        if (isFramed()) this.showPreview();
-        else void this.load();
+        if (isFramed()) {
+            this.showPreview();
+        } else {
+            void this.load();
+        }
     };
 
-    onPageChange = event => {
-        if (!event.target?.matches?.("[data-pagination]")) return;
+    onPageChange = (event) => {
+        if (!event.target?.matches?.("[data-pagination]")) {
+            return;
+        }
         this.page = positiveInteger(event.detail?.page, 1);
         this.writeUrlState();
         void this.load();
@@ -258,79 +375,125 @@ export class CommerceNegotiationList extends Composition {
     };
 
     readUrlState() {
-        if (this.getAttribute("sync-url") === "false" || typeof location === "undefined") return;
+        if (this.getAttribute("sync-url") === "false" || typeof location === "undefined") {
+            return;
+        }
         const params = new URLSearchParams(location.search);
         const role = params.get(this.getAttribute("role-param") || "role");
         const status = params.get(this.getAttribute("status-param") || "status");
-        if (role === "buyer" || role === "seller") this.role = role;
-        if (status && statuses.includes(status)) this.status = status;
+        if (role === "buyer" || role === "seller") {
+            this.role = role;
+        }
+        if (status && statuses.includes(status)) {
+            this.status = status;
+        }
         this.page = positiveInteger(params.get(this.getAttribute("page-param") || "page"), 1);
     }
 
     writeUrlState() {
-        if (this.getAttribute("sync-url") === "false" || typeof location === "undefined" || typeof history === "undefined") return;
+        if (
+            this.getAttribute("sync-url") === "false" ||
+            typeof location === "undefined" ||
+            typeof history === "undefined"
+        ) {
+            return;
+        }
         const url = new URL(location.href);
         const roleParam = this.getAttribute("role-param") || "role";
         const statusParam = this.getAttribute("status-param") || "status";
         const pageParam = this.getAttribute("page-param") || "page";
         const initialRole = this.getAttribute("initial-role") === "buyer" ? "buyer" : "seller";
-        if (this.role === initialRole) url.searchParams.delete(roleParam);
-        else url.searchParams.set(roleParam, this.role);
-        if (this.status === "all") url.searchParams.delete(statusParam);
-        else url.searchParams.set(statusParam, this.status);
-        if (this.page <= 1) url.searchParams.delete(pageParam);
-        else url.searchParams.set(pageParam, String(this.page));
+        if (this.role === initialRole) {
+            url.searchParams.delete(roleParam);
+        } else {
+            url.searchParams.set(roleParam, this.role);
+        }
+        if (this.status === "all") {
+            url.searchParams.delete(statusParam);
+        } else {
+            url.searchParams.set(statusParam, this.status);
+        }
+        if (this.page <= 1) {
+            url.searchParams.delete(pageParam);
+        } else {
+            url.searchParams.set(pageParam, String(this.page));
+        }
         history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
     }
 
-    onActionClick = event => {
-        const button = event.composedPath().find(node => node instanceof HTMLElement && node.matches?.("[data-action]"));
-        if (!button || button.disabled) return;
+    onActionClick = (event) => {
+        const button = event
+            .composedPath()
+            .find((node) => node instanceof HTMLElement && node.matches?.("[data-action]"));
+        if (!button || button.disabled) {
+            return;
+        }
         const card = button.closest("[data-proposal-card]");
-        const proposal = this.items.find(item => String(item.id) === card?.dataset.proposalId);
-        if (!proposal) return;
+        const proposal = this.items.find((item) => String(item.id) === card?.dataset.proposalId);
+        if (!proposal) {
+            return;
+        }
         void this.performAction(proposal, button.dataset.action, card);
     };
 
     async performAction(proposal, action, card) {
-        if (!["accept", "reject", "withdraw"].includes(action)) return;
+        if (!["accept", "reject", "withdraw"].includes(action)) {
+            return;
+        }
         const buttons = Array.from(card.querySelectorAll("[data-action]"));
-        for (const button of buttons) button.disabled = true;
+        for (const button of buttons) {
+            button.disabled = true;
+        }
         try {
-            const updated = action === "withdraw"
-                ? await this.requestSource("withdrawMyProposal", {
-                    method: "POST",
-                    body: { id: proposal.id, expectedVersion: proposal.version },
-                })
-                : await this.requestSource("respondToProposal", {
-                    method: "POST",
-                    body: { id: proposal.id, expectedVersion: proposal.version, action },
-                });
-            const index = this.items.findIndex(item => item.id === proposal.id);
-            if (index >= 0 && isProposal(updated)) this.items[index] = updated;
+            const updated =
+                action === "withdraw"
+                    ? await this.requestSource("withdrawMyProposal", {
+                          method: "POST",
+                          body: { id: proposal.id, expectedVersion: proposal.version },
+                      })
+                    : await this.requestSource("respondToProposal", {
+                          method: "POST",
+                          body: { id: proposal.id, expectedVersion: proposal.version, action },
+                      });
+            const index = this.items.findIndex((item) => item.id === proposal.id);
+            if (index >= 0 && isProposal(updated)) {
+                this.items[index] = updated;
+            }
             this.renderItems();
-            const message = action === "accept"
-                ? this.getAttribute("success-accept-message") || "L’offre a été acceptée."
-                : action === "reject"
-                    ? this.getAttribute("success-reject-message") || "L’offre a été refusée."
-                    : this.getAttribute("success-withdraw-message") || "Ton offre a été retirée.";
+            const message =
+                action === "accept"
+                    ? this.getAttribute("success-accept-message") || "L’offre a été acceptée."
+                    : action === "reject"
+                      ? this.getAttribute("success-reject-message") || "L’offre a été refusée."
+                      : this.getAttribute("success-withdraw-message") || "Ton offre a été retirée.";
             this.showToast(message, false);
             const eventName = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "withdrawn";
-            this.dispatchEvent(new CustomEvent(`commerce-negotiation:${eventName}`, {
-                bubbles: true,
-                composed: true,
-                detail: updated,
-            }));
-            if (!isFramed()) void this.load(true);
+            this.dispatchEvent(
+                new CustomEvent(`commerce-negotiation:${eventName}`, {
+                    bubbles: true,
+                    composed: true,
+                    detail: updated,
+                }),
+            );
+            if (!isFramed()) {
+                void this.load(true);
+            }
         } catch (error) {
-            for (const button of buttons) button.disabled = false;
-            this.showToast(errorMessage(error, this.getAttribute("error-message") || "Impossible de mettre à jour cette offre."), true);
+            for (const button of buttons) {
+                button.disabled = false;
+            }
+            this.showToast(
+                errorMessage(error, this.getAttribute("error-message") || "Impossible de mettre à jour cette offre."),
+                true,
+            );
         }
     }
 
     async requestSource(endpoint, options = {}) {
         const url = new URL(this.sourceUrl(endpoint), this.ownerDocument.baseURI);
-        for (const [name, value] of Object.entries(options.query || {})) url.searchParams.set(name, String(value));
+        for (const [name, value] of Object.entries(options.query || {})) {
+            url.searchParams.set(name, String(value));
+        }
         const response = await fetch(url, {
             credentials: "include",
             method: options.method || "GET",
@@ -342,8 +505,14 @@ export class CommerceNegotiationList extends Composition {
             ...(options.body ? { body: JSON.stringify(options.body) } : {}),
         });
         const body = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(body && typeof body.error === "string" ? body.error : `${response.status} ${response.statusText}`);
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Réponse invalide du service.");
+        if (!response.ok) {
+            throw new Error(
+                body && typeof body.error === "string" ? body.error : `${response.status} ${response.statusText}`,
+            );
+        }
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            throw new Error("Réponse invalide du service.");
+        }
         return body;
     }
 
@@ -371,7 +540,9 @@ export class CommerceNegotiationList extends Composition {
 
     formatExpiration(value) {
         const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return "";
+        if (Number.isNaN(date.getTime())) {
+            return "";
+        }
         const label = this.getAttribute("expiration-label") || "Expire le {date}";
         const formatted = new Intl.DateTimeFormat(this.getAttribute("locale") || "fr-FR", {
             dateStyle: "medium",
@@ -388,8 +559,9 @@ export class CommerceNegotiationList extends Composition {
     }
 
     showToast(message, error) {
-        const toast = this.querySelector("[data-toast-template]")?.content.firstElementChild?.cloneNode(true)
-            ?? this.ownerDocument.createElement("basic-toast");
+        const toast =
+            this.querySelector("[data-toast-template]")?.content.firstElementChild?.cloneNode(true) ??
+            this.ownerDocument.createElement("basic-toast");
         toast.setAttribute("role", error ? "alert" : "status");
         toast.textContent = message;
         const prefix = error ? "toast-error" : "toast";
@@ -399,10 +571,17 @@ export class CommerceNegotiationList extends Composition {
 }
 
 function isProposal(value) {
-    return value && typeof value === "object" && Number.isSafeInteger(value.id)
-        && typeof value.offerTitle === "string" && Number.isSafeInteger(value.proposedAmount)
-        && Number.isSafeInteger(value.referenceAmount) && typeof value.currency === "string"
-        && statuses.includes(value.status) && Number.isSafeInteger(value.version);
+    return (
+        value &&
+        typeof value === "object" &&
+        Number.isSafeInteger(value.id) &&
+        typeof value.offerTitle === "string" &&
+        Number.isSafeInteger(value.proposedAmount) &&
+        Number.isSafeInteger(value.referenceAmount) &&
+        typeof value.currency === "string" &&
+        statuses.includes(value.status) &&
+        Number.isSafeInteger(value.version)
+    );
 }
 
 function positiveInteger(value, fallback = null) {
@@ -416,29 +595,45 @@ function nonNegativeInteger(value, fallback) {
 }
 
 function setText(element, value) {
-    if (element && element.textContent !== value) element.textContent = value;
+    if (element && element.textContent !== value) {
+        element.textContent = value;
+    }
 }
 
 function setAttribute(element, name, value) {
-    if (element && element.getAttribute(name) !== value) element.setAttribute(name, value);
+    if (element && element.getAttribute(name) !== value) {
+        element.setAttribute(name, value);
+    }
 }
 
 function copyAttribute(source, target, sourceName, targetName = sourceName) {
-    if (!target) return;
+    if (!target) {
+        return;
+    }
     const value = source.getAttribute(sourceName)?.trim();
-    if (value) target.setAttribute(targetName, value);
-    else target.removeAttribute(targetName);
+    if (value) {
+        target.setAttribute(targetName, value);
+    } else {
+        target.removeAttribute(targetName);
+    }
 }
 
 function copyColors(source, target, prefix, names) {
-    for (const name of names) copyAttribute(source, target, `${prefix}-${name}`, name);
+    for (const name of names) {
+        copyAttribute(source, target, `${prefix}-${name}`, name);
+    }
 }
 
 function setHidden(element, hidden) {
-    if (!element) return;
+    if (!element) {
+        return;
+    }
     element.toggleAttribute("hidden", hidden);
-    if (hidden) element.style.setProperty("display", "none", "important");
-    else element.style.removeProperty("display");
+    if (hidden) {
+        element.style.setProperty("display", "none", "important");
+    } else {
+        element.style.removeProperty("display");
+    }
 }
 
 function errorMessage(error, fallback) {
@@ -448,11 +643,20 @@ function errorMessage(error, fallback) {
 }
 
 function isFrenchUserMessage(value) {
-    return Boolean(value) && /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|ton|ta|tes|votre|vos|offre|prix|montant|proposition|conditions|annonce|réponse)\b/i.test(value);
+    return (
+        Boolean(value) &&
+        /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|ton|ta|tes|votre|vos|offre|prix|montant|proposition|conditions|annonce|réponse)\b/i.test(
+            value,
+        )
+    );
 }
 
 function isFramed() {
-    try { return window.self !== window.top; } catch { return true; }
+    try {
+        return window.self !== window.top;
+    } catch {
+        return true;
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceNegotiationList);

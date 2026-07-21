@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type SettingSection,
-    type TextCapability,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
 export class BasicOptionEditor extends Editor {
     protected override settings(): SettingSection[] {
         return [

@@ -5,22 +5,22 @@ import { join, relative, sep } from "node:path";
 import { parseFrontmatter } from "../shared/frontmatter";
 
 export type PageFrontmatter = {
-    title:       string;
+    title: string;
     description: string;
-    visible:     boolean;
-    tags:        string[];
+    visible: boolean;
+    tags: string[];
 };
 
 export type LocalPage = {
     /** URL path served by the CMS (e.g. `/`, `/about`, `/blog/post-1`). */
-    path:        string;
+    path: string;
     /** Filesystem path relative to siteDir, kept for error messages. */
-    file:        string;
+    file: string;
     frontmatter: PageFrontmatter;
     /** HTML body — frontmatter stripped. */
-    content:     string;
+    content: string;
     /** sha256 of the canonical payload (frontmatter fields + content). */
-    hash:        string;
+    hash: string;
 };
 
 const PAGES_SUBDIR = "pages";
@@ -31,7 +31,9 @@ const PAGES_SUBDIR = "pages";
  */
 export async function scanPages(siteDir: string): Promise<LocalPage[]> {
     const root = join(siteDir, PAGES_SUBDIR);
-    if (!existsSync(root)) return [];
+    if (!existsSync(root)) {
+        return [];
+    }
 
     const files: string[] = [];
     await walk(root, files);
@@ -41,17 +43,17 @@ export async function scanPages(siteDir: string): Promise<LocalPage[]> {
         const raw = await readFile(file, "utf-8");
         const { frontmatter, content } = parseFrontmatter(raw);
         const fm: PageFrontmatter = {
-            title:       frontmatter.title       ?? "",
+            title: frontmatter.title ?? "",
             description: frontmatter.description ?? "",
-            visible:     frontmatter.visible     ?? true,
-            tags:        frontmatter.tags        ?? [],
+            visible: frontmatter.visible ?? true,
+            tags: frontmatter.tags ?? [],
         };
         pages.push({
-            path:    fileToUrlPath(relative(root, file)),
-            file:    relative(siteDir, file),
+            path: fileToUrlPath(relative(root, file)),
+            file: relative(siteDir, file),
             frontmatter: fm,
             content,
-            hash:    canonicalHash({ ...fm, content }),
+            hash: canonicalHash({ ...fm, content }),
         });
     }
     return pages;
@@ -64,11 +66,11 @@ export async function scanPages(siteDir: string): Promise<LocalPage[]> {
  */
 export function canonicalHash(payload: PageFrontmatter & { content: string }): string {
     const canonical = JSON.stringify({
-        title:       payload.title,
+        title: payload.title,
         description: payload.description,
-        visible:     payload.visible,
-        tags:        [...payload.tags].sort(),
-        content:     payload.content,
+        visible: payload.visible,
+        tags: [...payload.tags].sort(),
+        content: payload.content,
     });
     return createHash("sha256").update(canonical).digest("hex");
 }
@@ -76,7 +78,9 @@ export function canonicalHash(payload: PageFrontmatter & { content: string }): s
 async function walk(dir: string, out: string[]): Promise<void> {
     const entries = await readdir(dir);
     for (const entry of entries) {
-        if (entry.startsWith(".")) continue;
+        if (entry.startsWith(".")) {
+            continue;
+        }
         const full = join(dir, entry);
         const s = await stat(full);
         if (s.isDirectory()) {
@@ -88,8 +92,10 @@ async function walk(dir: string, out: string[]): Promise<void> {
 }
 
 function fileToUrlPath(rel: string): string {
-    const noExt    = rel.replace(/\.html$/, "");
-    const segments = noExt.split(sep).filter(s => s !== "index");
-    if (segments.length === 0) return "/";
+    const noExt = rel.replace(/\.html$/, "");
+    const segments = noExt.split(sep).filter((s) => s !== "index");
+    if (segments.length === 0) {
+        return "/";
+    }
     return "/" + segments.join("/");
 }

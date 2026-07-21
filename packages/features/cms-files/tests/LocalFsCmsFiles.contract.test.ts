@@ -40,7 +40,11 @@ describe("LocalFsCmsFiles contract", () => {
         expect(await read(await store.get(file.id))).toEqual(bytes("hello"));
         expect(await store.exists(file.id)).toBe(true);
 
-        const refreshed = await store.updateFileContent(file.id, { size: 5, mimeType: "text/plain", contentHash: "ignored" });
+        const refreshed = await store.updateFileContent(file.id, {
+            size: 5,
+            mimeType: "text/plain",
+            contentHash: "ignored",
+        });
         expect(refreshed?.size).toBe(5);
         expect(refreshed?.contentHash).toMatch(/^[a-f0-9]{64}$/);
 

@@ -11,14 +11,12 @@ export type StructureDragDropContext = {
     isDescendantNode(candidate: EditorStructureNode, parent: EditorStructureNode): boolean;
 };
 
-export function onStructureDragStart(
-    state: StructureDragDropState,
-    node: EditorStructureNode,
-    event: DragEvent,
-): void {
+export function onStructureDragStart(state: StructureDragDropState, node: EditorStructureNode, event: DragEvent): void {
     state.draggedNode = node;
     event.dataTransfer?.setData("text/plain", node.label);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+    }
 }
 
 export function onStructureDragOver(
@@ -28,13 +26,17 @@ export function onStructureDragOver(
     event: DragEvent,
     context: StructureDragDropContext,
 ): void {
-    if (!canDropOnNode(state, node, context)) return;
+    if (!canDropOnNode(state, node, context)) {
+        return;
+    }
     event.preventDefault();
     context.clearDropRow();
     const position = structureDropPosition(row, event);
     row.classList.add(position === "before" ? "drop-before" : "drop-after");
     state.dropRow = row;
-    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "move";
+    }
 }
 
 export function onStructureDrop(
@@ -43,7 +45,9 @@ export function onStructureDrop(
     event: DragEvent,
     context: StructureDragDropContext,
 ): void {
-    if (!canDropOnNode(state, node, context)) return;
+    if (!canDropOnNode(state, node, context)) {
+        return;
+    }
     event.preventDefault();
     const position = structureDropPosition(event.currentTarget as HTMLElement, event);
     context.emitMove(position === "before" ? "move-before" : "move-after", node, state.draggedNode!);
@@ -70,5 +74,7 @@ function canDropOnNode(
     node: EditorStructureNode,
     context: StructureDragDropContext,
 ): state is { draggedNode: EditorStructureNode; dropRow: HTMLElement | null } {
-    return Boolean(state.draggedNode && state.draggedNode !== node && !context.isDescendantNode(node, state.draggedNode));
+    return Boolean(
+        state.draggedNode && state.draggedNode !== node && !context.isDescendantNode(node, state.draggedNode),
+    );
 }

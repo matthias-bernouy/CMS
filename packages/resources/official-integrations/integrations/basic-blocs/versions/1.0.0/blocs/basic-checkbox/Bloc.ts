@@ -137,7 +137,9 @@ class BasicCheckbox extends HTMLElement {
         this.removeEventListener("invalid", this.onInvalid);
     }
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
     formResetCallback() {
         this.showValidation = false;
@@ -148,13 +150,18 @@ class BasicCheckbox extends HTMLElement {
     }
     get checked() {
         const state = this.getAttribute("checked-state");
-        if (state !== null) return ["true", "1", "yes", "on"].includes(state.trim().toLowerCase());
+        if (state !== null) {
+            return ["true", "1", "yes", "on"].includes(state.trim().toLowerCase());
+        }
         const value = this.getAttribute("checked");
         return value !== null && !["false", "0", "no", "off"].includes(value.trim().toLowerCase());
     }
     set checked(value) {
-        if (this.hasAttribute("checked-state")) this.setAttribute("checked-state", String(Boolean(value)));
-        else this.toggleAttribute("checked", Boolean(value));
+        if (this.hasAttribute("checked-state")) {
+            this.setAttribute("checked-state", String(Boolean(value)));
+        } else {
+            this.toggleAttribute("checked", Boolean(value));
+        }
     }
     get value() {
         return this.getAttribute("value") || "on";
@@ -184,11 +191,16 @@ class BasicCheckbox extends HTMLElement {
         this.control.required = this.hasAttribute("required");
         this.control.value = this.value;
         const accessibleLabel = this.getAttribute("accessible-label") || "";
-        if (accessibleLabel) this.control.setAttribute("aria-label", accessibleLabel);
-        else this.control.removeAttribute("aria-label");
-        if (this.getAttribute("appearance") === "switch")
+        if (accessibleLabel) {
+            this.control.setAttribute("aria-label", accessibleLabel);
+        } else {
+            this.control.removeAttribute("aria-label");
+        }
+        if (this.getAttribute("appearance") === "switch") {
             this.control.setAttribute("role", "switch");
-        else this.control.removeAttribute("role");
+        } else {
+            this.control.removeAttribute("role");
+        }
         this.updateFormValue();
     }
     syncColors() {
@@ -200,8 +212,11 @@ class BasicCheckbox extends HTMLElement {
             ["text-color", "--cms-input-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.labelElement.style.setProperty(property, value);
-            else this.labelElement.style.removeProperty(property);
+            if (value) {
+                this.labelElement.style.setProperty(property, value);
+            } else {
+                this.labelElement.style.removeProperty(property);
+            }
         }
     }
     updateFormValue() {
@@ -212,23 +227,19 @@ class BasicCheckbox extends HTMLElement {
             this.errorElement.hidden = true;
             return;
         }
-        this.internals.setFormValue(
-            this.checked ? this.value : this.uncheckedValue,
-        );
-        if (this.control.validity.valid) this.internals.setValidity({});
-        else
-            this.internals.setValidity(
-                this.control.validity,
-                this.control.validationMessage,
-                this.control,
-            );
-        this.errorElement.textContent = this.showValidation
-            ? this.control.validationMessage || ""
-            : "";
+        this.internals.setFormValue(this.checked ? this.value : this.uncheckedValue);
+        if (this.control.validity.valid) {
+            this.internals.setValidity({});
+        } else {
+            this.internals.setValidity(this.control.validity, this.control.validationMessage, this.control);
+        }
+        this.errorElement.textContent = this.showValidation ? this.control.validationMessage || "" : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }
     upgradeProperty(name) {
-        if (!Object.prototype.hasOwnProperty.call(this, name)) return;
+        if (!Object.prototype.hasOwnProperty.call(this, name)) {
+            return;
+        }
         const value = this[name];
         delete this[name];
         this[name] = value;
@@ -236,9 +247,7 @@ class BasicCheckbox extends HTMLElement {
     onChange = () => {
         this.checked = this.control.checked;
         this.updateFormValue();
-        this.dispatchEvent(
-            new Event("change", { bubbles: true, composed: true }),
-        );
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     };
     onInvalid = () => {
         this.showValidation = true;

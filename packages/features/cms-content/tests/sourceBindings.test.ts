@@ -3,10 +3,12 @@ import { collectCmsSourceBindings } from "@bernouy/cms-content";
 
 describe("collectCmsSourceBindings", () => {
     test("extracts source URLs, aliases, methods, and triggers", () => {
-        expect(collectCmsSourceBindings(`
+        expect(
+            collectCmsSourceBindings(`
             <section cms-source="/.cms/sources/catalog/search?q=#{q} as products"></section>
             <form cms-source="/.cms/sources/newsletter/subscribe" cms-source-method="post" cms-source-trigger="submit"></form>
-        `)).toEqual([
+        `),
+        ).toEqual([
             {
                 url: "/.cms/sources/catalog/search?q=#{q}",
                 alias: "products",
@@ -22,13 +24,17 @@ describe("collectCmsSourceBindings", () => {
     });
 
     test("ignores empty source attributes and normalizes invalid options", () => {
-        expect(collectCmsSourceBindings(`
+        expect(
+            collectCmsSourceBindings(`
             <section cms-source=" "></section>
             <section cms-source="/api/items" cms-source-method="TRACE" cms-source-trigger="hover"></section>
-        `)).toEqual([{
-            url: "/api/items",
-            method: "GET",
-            trigger: "auto",
-        }]);
+        `),
+        ).toEqual([
+            {
+                url: "/api/items",
+                method: "GET",
+                trigger: "auto",
+            },
+        ]);
     });
 });

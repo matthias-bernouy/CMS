@@ -1,32 +1,33 @@
 import { Glob } from "bun";
 import { join, resolve } from "node:path";
 
-const CONTROL_RENDERED_TEMPLATES = new Set([
-    "login.html",
-    "forbidden.html",
-]);
+const CONTROL_RENDERED_TEMPLATES = new Set(["login.html", "forbidden.html"]);
 
 export async function scanStaticFolder() {
     const rootDir = resolve(import.meta.dir, "../../../static");
 
     const glob = new Glob("**/*");
 
-    const files: { relativePath: string, absolutePath: string }[] = []
+    const files: { relativePath: string; absolutePath: string }[] = [];
     for (const scannedPath of glob.scanSync(rootDir)) {
         const relativePath = toRouteRelativePath(scannedPath);
         // Full-page auth templates are rendered explicitly by ControlCms because
         // the login page is intentionally unguarded while the static tree is not.
         // These root-relative paths are the canonical render targets.
-        if (CONTROL_RENDERED_TEMPLATES.has(relativePath)) continue;
+        if (CONTROL_RENDERED_TEMPLATES.has(relativePath)) {
+            continue;
+        }
         // Skip per-folder template wrappers — they're consumed by `prepareHtml`,
         // not exposed as routes.
-        if (relativePath.split("/").some(seg => seg === "_template.html")) continue;
+        if (relativePath.split("/").some((seg) => seg === "_template.html")) {
+            continue;
+        }
 
         const absolutePath = join(rootDir, relativePath);
         files.push({
             relativePath,
-            absolutePath
-        })
+            absolutePath,
+        });
     }
 
     return files;

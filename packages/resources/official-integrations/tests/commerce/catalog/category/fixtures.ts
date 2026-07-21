@@ -12,11 +12,11 @@ export function useCategoryResponder(options: CategoryResponderOptions = {}): vo
     const category = options.category === undefined ? categoryRow : options.category;
     const parent = options.parent === undefined ? parentRow : options.parent;
     const fields = options.fields ?? categoryFieldRows;
-    setRestResponder(async request => {
+    setRestResponder(async (request) => {
         const url = new URL(request.url);
         const resource = url.pathname.split("/").at(-1);
         if (resource === "get_category_read_model") {
-            const body = await request.clone().json() as Record<string, unknown>;
+            const body = (await request.clone().json()) as Record<string, unknown>;
             if (!category || (body.p_scope === "public" && category.status !== "active")) {
                 return jsonResponse({ state: "not_found" });
             }

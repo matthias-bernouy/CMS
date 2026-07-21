@@ -1,7 +1,11 @@
 import type { Collection, Db } from "mongodb";
 import type { EncryptedBlob } from "@bernouy/envelope-crypto";
 import type {
-    UsersRepository, Identity, TUser, UsersListOptions, UsersPage,
+    UsersRepository,
+    Identity,
+    TUser,
+    UsersListOptions,
+    UsersPage,
 } from "cms-auth/interfaces/UsersRepository";
 import type { FieldCrypto } from "@bernouy/envelope-crypto";
 
@@ -18,17 +22,16 @@ import type { FieldCrypto } from "@bernouy/envelope-crypto";
 export type MongoUsersConfig = { collectionPrefix?: string };
 
 type UserDoc<Role extends string> = {
-    _id:             string;
-    role:            Role;
-    createdAt:       Date;
-    lastSeenAt:      Date;
-    provider?:       string;          // provenance (not PII): "local", "google"…
-    emailEnc?:       EncryptedBlob;
-    emailIndex?:     string;          // HMAC(email) — exact-match lookup
+    _id: string;
+    role: Role;
+    createdAt: Date;
+    lastSeenAt: Date;
+    provider?: string; // provenance (not PII): "local", "google"…
+    emailEnc?: EncryptedBlob;
+    emailIndex?: string; // HMAC(email) — exact-match lookup
 };
 
 export class MongoUsersRepository<Role extends string = string> implements UsersRepository<Role> {
-
     private readonly _prefix: string;
 
     constructor(
@@ -47,10 +50,12 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         const now = new Date();
         const $set: Partial<UserDoc<Role>> = { lastSeenAt: now };
         if (identity.email !== undefined) {
-            $set.emailEnc   = await this.fieldCrypto.encrypt(identity.email);
+            $set.emailEnc = await this.fieldCrypto.encrypt(identity.email);
             $set.emailIndex = this.fieldCrypto.blindIndex(identity.email);
         }
-        if (identity.provider !== undefined) $set.provider = identity.provider;
+        if (identity.provider !== undefined) {
+            $set.provider = identity.provider;
+        }
         const d = await this.col.findOneAndUpdate(
             { _id: identity.sub },
             { $set, $setOnInsert: { role: defaultRole, createdAt: now } },
@@ -80,8 +85,12 @@ export class MongoUsersRepository<Role extends string = string> implements Users
 
     async list(opts: UsersListOptions = {}): Promise<UsersPage<Role>> {
         const filter: Record<string, unknown> = {};
-        if (opts.role)   filter.role = opts.role;
-        if (opts.search) filter.emailIndex = this.fieldCrypto.blindIndex(opts.search); // exact email only
+        if (opts.role) {
+            filter.role = opts.role;
+        }
+        if (opts.search) {
+            filter.emailIndex = this.fieldCrypto.blindIndex(opts.search); // exact email only
+        }
 
         // PII can't be sorted server-side (encrypted); fall back to createdAt.
         const sortField = opts.sortBy === "createdAt" || opts.sortBy === "lastSeenAt" ? opts.sortBy : "createdAt";
@@ -89,19 +98,25 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         const total = await this.col.countDocuments(filter);
 
         let cursor = this.col.find(filter).sort(sort);
-        if (opts.pagination) cursor = cursor.skip((opts.pagination.page - 1) * opts.pagination.limit).limit(opts.pagination.limit);
+        if (opts.pagination) {
+            cursor = cursor.skip((opts.pagination.page - 1) * opts.pagination.limit).limit(opts.pagination.limit);
+        }
         const docs = await cursor.toArray();
 
-        const page  = opts.pagination?.page  ?? 1;
+        const page = opts.pagination?.page ?? 1;
         const limit = opts.pagination?.limit ?? total;
-        const users = await Promise.all(docs.map(d => this._fromDoc(d)));
+        const users = await Promise.all(docs.map((d) => this._fromDoc(d)));
         return { users, total, page, limit, hasMore: (page - 1) * limit + docs.length < total };
     }
 
     private async _fromDoc(d: UserDoc<Role>): Promise<TUser<Role>> {
         const out: TUser<Role> = { sub: d._id, role: d.role, createdAt: d.createdAt, lastSeenAt: d.lastSeenAt };
-        if (d.provider)       out.provider    = d.provider;
-        if (d.emailEnc)       out.email       = await this.fieldCrypto.decrypt(d.emailEnc);
+        if (d.provider) {
+            out.provider = d.provider;
+        }
+        if (d.emailEnc) {
+            out.email = await this.fieldCrypto.decrypt(d.emailEnc);
+        }
         return out;
     }
 }

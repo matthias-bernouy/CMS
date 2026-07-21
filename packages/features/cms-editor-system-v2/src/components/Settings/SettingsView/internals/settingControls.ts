@@ -8,13 +8,7 @@ import type {
 } from "@bernouy/cms-content/editor";
 import type { SettingsViewThemeToken } from "../SettingsView";
 import { renderColorSetting } from "./colorSetting";
-import {
-    applyDisabled,
-    setDataScopes,
-    wirePageLinkControl,
-    wireTextControl,
-    wireToggleControl,
-} from "./controlWiring";
+import { applyDisabled, setDataScopes, wirePageLinkControl, wireTextControl, wireToggleControl } from "./controlWiring";
 import type { EndpointSettingController } from "./endpointSetting";
 import { settingIcon } from "./icons";
 
@@ -59,15 +53,22 @@ export class SettingControlRenderer {
             const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
             const selector = setting.type === "textarea" ? "textarea" : "select";
             const control = createSettingControl(tag, setting);
-            if (setting.type === "textarea") setDataScopes(control, this.dataScopes());
-            else control.setAttribute("options", JSON.stringify(setting.options));
+            if (setting.type === "textarea") {
+                setDataScopes(control, this.dataScopes());
+            } else {
+                control.setAttribute("options", JSON.stringify(setting.options));
+            }
             wireTextControl(control, selector, setting, emit);
             return control;
         }
-        if (setting.type === "segmented") return this.renderSegmented(setting);
+        if (setting.type === "segmented") {
+            return this.renderSegmented(setting);
+        }
         if (setting.type === "toggle") {
             const control = createSettingControl("cms-editor-v2-toggle", setting);
-            if (setting.defaultValue) control.setAttribute("checked", "");
+            if (setting.defaultValue) {
+                control.setAttribute("checked", "");
+            }
             wireToggleControl(control, setting, emit);
             return control;
         }
@@ -79,7 +80,9 @@ export class SettingControlRenderer {
             wirePageLinkControl(control, setting, emit);
             return control;
         }
-        if (setting.type === "endpoint-picker") return this.endpointSettings.render(setting);
+        if (setting.type === "endpoint-picker") {
+            return this.endpointSettings.render(setting);
+        }
         if (setting.type === "color") {
             return renderColorSetting(setting, this.themeTokens(), renderFieldLabel, emit);
         }
@@ -103,9 +106,13 @@ export class SettingControlRenderer {
             button.title = option.ariaLabel ?? option.label;
             button.ariaLabel = option.ariaLabel ?? option.label;
             button.ariaPressed = String(option.value === setting.defaultValue);
-            button.append(...renderOptionContent(setting.display, option.display, option.icon ?? setting.icon, option.label));
+            button.append(
+                ...renderOptionContent(setting.display, option.display, option.icon ?? setting.icon, option.label),
+            );
             button.addEventListener("click", () => {
-                if (setting.disabled) return;
+                if (setting.disabled) {
+                    return;
+                }
                 for (const item of Array.from(control.querySelectorAll("button"))) {
                     item.ariaPressed = String(item === button);
                 }
@@ -113,7 +120,9 @@ export class SettingControlRenderer {
             });
             control.append(button);
         }
-        if (label) wrapper.append(label);
+        if (label) {
+            wrapper.append(label);
+        }
         wrapper.append(control);
         return wrapper;
     }
@@ -127,14 +136,20 @@ export function createSettingControl(tag: string, setting: SettingControl): HTML
     if (setting.ariaLabel || (setting.labelDisplay && setting.labelDisplay !== "visible")) {
         control.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
     }
-    if (setting.help) control.setAttribute("hint", setting.help);
-    if (setting.placeholder) control.setAttribute("placeholder", setting.placeholder);
+    if (setting.help) {
+        control.setAttribute("hint", setting.help);
+    }
+    if (setting.placeholder) {
+        control.setAttribute("placeholder", setting.placeholder);
+    }
     applyDisabled(control, setting);
     return control;
 }
 
 export function renderFieldLabel(label: string, display: SettingLabelDisplay | undefined): HTMLElement | null {
-    if (display === "hidden") return null;
+    if (display === "hidden") {
+        return null;
+    }
     const element = document.createElement("div");
     element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
     element.textContent = label;

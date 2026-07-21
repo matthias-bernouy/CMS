@@ -1,10 +1,9 @@
 import { Component } from "@bernouy/components/base";
 
-import template from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import template from "./template.html" with { type: "text" };
+import css from "./style.css" with { type: "text" };
 
 export class Card extends Component {
-
     constructor() {
         super({
             css,
@@ -38,8 +37,10 @@ export class Card extends Component {
 }
 
 function hasAssignedContent(slot: HTMLSlotElement): boolean {
-    return slot.assignedNodes({ flatten: true }).some(node => {
-        if (node.nodeType !== Node.TEXT_NODE) return true;
+    return slot.assignedNodes({ flatten: true }).some((node) => {
+        if (node.nodeType !== Node.TEXT_NODE) {
+            return true;
+        }
         return node.textContent?.trim() !== "";
     });
 }

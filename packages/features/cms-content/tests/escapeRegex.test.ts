@@ -16,6 +16,6 @@ describe("escapeRegex", () => {
         const value = "a.b(c)*";
         const re = new RegExp(`^${escapeRegex(value)}$`);
         expect(re.test("a.b(c)*")).toBe(true);
-        expect(re.test("aXb(c)")).toBe(false);   // '.' / '*' must not act as wildcards
+        expect(re.test("aXb(c)")).toBe(false); // '.' / '*' must not act as wildcards
     });
 });

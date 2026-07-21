@@ -30,13 +30,17 @@ export function schemaFieldsEditor(fields: SchemaFieldDraft[], onChange: () => v
 }
 
 export function paramsFromFields(fields: SchemaFieldDraft[]): Record<string, MappingShape> {
-    return Object.fromEntries(fields.filter(field => field.name.trim()).map(field => [field.name.trim(), { type: field.type }]));
+    return Object.fromEntries(
+        fields.filter((field) => field.name.trim()).map((field) => [field.name.trim(), { type: field.type }]),
+    );
 }
 
 export function objectShapeFromFields(fields: SchemaFieldDraft[]): MappingShape | undefined {
     const properties = paramsFromFields(fields);
-    if (!Object.keys(properties).length) return undefined;
-    const required = fields.filter(field => field.required && field.name.trim()).map(field => field.name.trim());
+    if (!Object.keys(properties).length) {
+        return undefined;
+    }
+    const required = fields.filter((field) => field.required && field.name.trim()).map((field) => field.name.trim());
     return {
         type: "object",
         properties,
@@ -58,7 +62,7 @@ function schemaFieldRow(
     name.value = field.name;
     name.placeholder = "fieldName";
     name.setAttribute("aria-label", "Field name");
-    name.addEventListener("input", () => field.name = name.value);
+    name.addEventListener("input", () => (field.name = name.value));
     name.addEventListener("change", onChange);
 
     const type = document.createElement("select");

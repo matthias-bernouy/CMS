@@ -10,13 +10,11 @@ export function privateAuthResponse(body: BodyInit | null, init: ResponseInit = 
 }
 
 /** JSON variant of {@link privateAuthResponse}. */
-export function privateAuthJsonResponse(
-    body: unknown,
-    status = 200,
-    headers: HeadersInit = {},
-): Response {
+export function privateAuthJsonResponse(body: unknown, status = 200, headers: HeadersInit = {}): Response {
     const out = new Headers(headers);
-    if (!out.has("Content-Type")) out.set("Content-Type", "application/json");
+    if (!out.has("Content-Type")) {
+        out.set("Content-Type", "application/json");
+    }
     return privateAuthResponse(JSON.stringify(body), { status, headers: out });
 }
 
@@ -29,12 +27,21 @@ function privateAuthHeaders(input: HeadersInit | undefined): Headers {
 }
 
 function mergeVary(headers: Headers, required: readonly string[]): void {
-    const current = headers.get("Vary")?.split(",").map(value => value.trim()).filter(Boolean) ?? [];
-    if (current.includes("*")) return;
+    const current =
+        headers
+            .get("Vary")
+            ?.split(",")
+            .map((value) => value.trim())
+            .filter(Boolean) ?? [];
+    if (current.includes("*")) {
+        return;
+    }
 
-    const normalized = new Set(current.map(value => value.toLowerCase()));
+    const normalized = new Set(current.map((value) => value.toLowerCase()));
     for (const value of required) {
-        if (!normalized.has(value.toLowerCase())) current.push(value);
+        if (!normalized.has(value.toLowerCase())) {
+            current.push(value);
+        }
     }
     headers.set("Vary", current.join(", "));
 }

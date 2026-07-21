@@ -17,7 +17,9 @@ export function normalizeIdentityAlias(alias: IdentityAlias): IdentityAlias {
 
     const authority = normalizeAuthority(alias.authority, "Identity alias authority is required");
     if (typeof alias.value === "string") {
-        if (!alias.value.trim()) throw new InvalidIdentityError("Identity alias value is required");
+        if (!alias.value.trim()) {
+            throw new InvalidIdentityError("Identity alias value is required");
+        }
     } else if (typeof alias.value !== "number" || !Number.isFinite(alias.value)) {
         throw new InvalidIdentityError("Identity alias value must be a finite string or number");
     }
@@ -51,6 +53,8 @@ export function normalizeTargetAuthority(authority: IdentityAuthority): Identity
 }
 
 function normalizeAuthority(authority: IdentityAuthority, message: string): IdentityAuthority {
-    if (typeof authority !== "string" || !authority.trim()) throw new InvalidIdentityError(message);
+    if (typeof authority !== "string" || !authority.trim()) {
+        throw new InvalidIdentityError(message);
+    }
     return authority.trim();
 }

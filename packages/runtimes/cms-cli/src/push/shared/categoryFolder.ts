@@ -19,11 +19,13 @@ export function folderToCategory(folder: string): string {
  * the admin UI before the next pull.
  */
 export function categoryToFolder(category: string): string {
-    if (!category) return UNCATEGORIZED_FOLDER;
+    if (!category) {
+        return UNCATEGORIZED_FOLDER;
+    }
     if (!isValidCategoryFolder(category)) {
         throw new Error(
             `Category "${category}" can't be used as a folder name — ` +
-            `rename it from the admin UI (no "/", "\\" or hidden-folder names).`,
+                `rename it from the admin UI (no "/", "\\" or hidden-folder names).`,
         );
     }
     return category;

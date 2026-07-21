@@ -7,8 +7,7 @@ import {
     uploadFile,
 } from "@bernouy/cms-files";
 
-const file = (name: string, content: string, type = "text/plain") =>
-    new File([content], name, { type });
+const file = (name: string, content: string, type = "text/plain") => new File([content], name, { type });
 
 describe("files core failure boundaries", () => {
     test.failing("preserves a pre-existing file when replacement blob storage fails", async () => {
@@ -21,13 +20,7 @@ describe("files core failure boundaries", () => {
             throw new Error("blob unavailable");
         };
 
-        await expect(uploadFile(
-            metadata,
-            blob,
-            file("replacement.txt", "NEW"),
-            null,
-            existing.id,
-        )).rejects.toThrow();
+        await expect(uploadFile(metadata, blob, file("replacement.txt", "NEW"), null, existing.id)).rejects.toThrow();
 
         expect(await metadata.getItem(existing.id)).toEqual(before);
         expect(await readBlobText(blob, existing.id)).toBe("OLD");
@@ -43,12 +36,9 @@ describe("files core failure boundaries", () => {
             throw new Error("metadata unavailable");
         };
 
-        await expect(updateFileContent(
-            metadata,
-            blob,
-            existing.id,
-            file("stable.txt", "NEW"),
-        )).rejects.toThrow("metadata unavailable");
+        await expect(updateFileContent(metadata, blob, existing.id, file("stable.txt", "NEW"))).rejects.toThrow(
+            "metadata unavailable",
+        );
 
         expect(await metadata.getItem(existing.id)).toEqual(before);
         expect(await readBlobText(blob, existing.id)).toBe("OLD");
@@ -62,7 +52,9 @@ describe("files core failure boundaries", () => {
         let unavailable = true;
 
         blob.delete = async (id) => {
-            if (unavailable) throw new Error("blob unavailable");
+            if (unavailable) {
+                throw new Error("blob unavailable");
+            }
             return deleteBlob(id);
         };
 

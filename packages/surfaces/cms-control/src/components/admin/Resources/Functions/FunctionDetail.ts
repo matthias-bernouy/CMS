@@ -1,5 +1,11 @@
 import "cms-control/components/admin/ShellDetail/ShellDetail";
-import { currentFunctionId, executeFunctionDetail, fetchFunctionDetail, type FunctionDetail, type FunctionExecutionResult } from "./api";
+import {
+    currentFunctionId,
+    executeFunctionDetail,
+    fetchFunctionDetail,
+    type FunctionDetail,
+    type FunctionExecutionResult,
+} from "./api";
 import { backLink, button, detailSection, div, keyValues, pre, schemaBlock, state, styleNode, title } from "./dom";
 import { initialDraft, readFallbackDraft, readPathDraft, stringify } from "./draft";
 import { executeFields, hydrateExecuteFields, seedDependents } from "./fields";
@@ -15,13 +21,17 @@ export class CmsFunctionDetail extends HTMLElement {
     private resultMessage: HTMLElement | null = null;
     private resultBody: HTMLPreElement | null = null;
     connectedCallback(): void {
-        if (this.initialized) return;
+        if (this.initialized) {
+            return;
+        }
         this.initialized = true;
         void this.load();
     }
     private async load(): Promise<void> {
         const id = currentFunctionId();
-        if (!id) return this.renderState("Missing function id.");
+        if (!id) {
+            return this.renderState("Missing function id.");
+        }
         this.renderState("Loading function...");
         try {
             this.detail = await fetchFunctionDetail(id);
@@ -32,16 +42,28 @@ export class CmsFunctionDetail extends HTMLElement {
         }
     }
     private resetDraft(): void {
-        if (this.detail) this.draft = initialDraft(this.detail.paramsSample, this.detail.bodySample ?? {});
+        if (this.detail) {
+            this.draft = initialDraft(this.detail.paramsSample, this.detail.bodySample ?? {});
+        }
     }
     private renderState(message: string): void {
         this.replaceChildren(styleNode(css as unknown as string), state(message));
     }
     private renderDetail(): void {
-        if (!this.detail) return;
+        if (!this.detail) {
+            return;
+        }
         const shell = document.createElement("cms-shell-detail");
         shell.className = "functions-shell";
-        shell.append(backLink(), title(this.detail), this.headerActions(), this.inputsSection(), this.resultSection(), this.summarySection(), this.contractSection());
+        shell.append(
+            backLink(),
+            title(this.detail),
+            this.headerActions(),
+            this.inputsSection(),
+            this.resultSection(),
+            this.summarySection(),
+            this.contractSection(),
+        );
         this.replaceChildren(styleNode(css as unknown as string), shell);
         this.bindRefs();
         void hydrateExecuteFields(this, this.detail, this.draft);
@@ -69,7 +91,9 @@ export class CmsFunctionDetail extends HTMLElement {
     }
     private inputsSection(): HTMLElement {
         const section = detailSection("main", "Inputs");
-        if (this.detail) section.append(executeFields(this.detail, this.draft, path => void this.onInputChange(path)));
+        if (this.detail) {
+            section.append(executeFields(this.detail, this.draft, (path) => void this.onInputChange(path)));
+        }
         return section;
     }
     private resultSection(): HTMLElement {
@@ -88,36 +112,73 @@ export class CmsFunctionDetail extends HTMLElement {
     private summarySection(): HTMLElement {
         const d = this.detail!;
         const section = detailSection("aside", "Function");
-        section.append(keyValues([["Id", d.id], ["Method", d.method], ["Access", d.access], ["Input", d.inputLabel], ["Steps", d.stepsLabel], ["Return", d.returnLabel]]));
+        section.append(
+            keyValues([
+                ["Id", d.id],
+                ["Method", d.method],
+                ["Access", d.access],
+                ["Input", d.inputLabel],
+                ["Steps", d.stepsLabel],
+                ["Return", d.returnLabel],
+            ]),
+        );
         return section;
     }
     private contractSection(): HTMLElement {
         const d = this.detail!;
         const section = detailSection("aside", "Contract");
         const details = document.createElement("details");
-        details.append(summary("Schemas"), schemaBlock("Params", d.params ?? null), schemaBlock("Body", d.body ?? null), schemaBlock("Output", d.output ?? null));
+        details.append(
+            summary("Schemas"),
+            schemaBlock("Params", d.params ?? null),
+            schemaBlock("Body", d.body ?? null),
+            schemaBlock("Output", d.output ?? null),
+        );
         section.append(details);
         return section;
     }
     private async onInputChange(path?: string): Promise<void> {
         this.clearResult();
-        if (path && this.detail) await seedDependents(this, this.detail, path, this.draft);
+        if (path && this.detail) {
+            await seedDependents(this, this.detail, path, this.draft);
+        }
     }
     private async execute(): Promise<void> {
-        if (!this.detail || !this.runButton) return;
+        if (!this.detail || !this.runButton) {
+            return;
+        }
         try {
-            this.draft = this.detail.ui?.execute?.fields?.length ? readPathDraft(this, this.draft) : readFallbackDraft(this, Boolean(this.detail.body));
+            this.draft = this.detail.ui?.execute?.fields?.length
+                ? readPathDraft(this, this.draft)
+                : readFallbackDraft(this, Boolean(this.detail.body));
         } catch (error) {
-            this.showResult({ ok: false, status: 0, contentType: "application/json", body: { error: error instanceof Error ? error.message : "Invalid input" } });
+            this.showResult({
+                ok: false,
+                status: 0,
+                contentType: "application/json",
+                body: { error: error instanceof Error ? error.message : "Invalid input" },
+            });
             return;
         }
         this.runButton.disabled = true;
         this.runButton.textContent = "Running...";
         this.showPending();
         try {
-            this.showResult(await executeFunctionDetail({ id: this.detail.id, params: this.draft.params, body: this.draft.body, includeBody: Boolean(this.detail.body) }));
+            this.showResult(
+                await executeFunctionDetail({
+                    id: this.detail.id,
+                    params: this.draft.params,
+                    body: this.draft.body,
+                    includeBody: Boolean(this.detail.body),
+                }),
+            );
         } catch (error) {
-            this.showResult({ ok: false, status: 0, contentType: "application/json", body: { error: error instanceof Error ? error.message : "Execution failed" } });
+            this.showResult({
+                ok: false,
+                status: 0,
+                contentType: "application/json",
+                body: { error: error instanceof Error ? error.message : "Execution failed" },
+            });
         } finally {
             this.runButton.disabled = false;
             this.runButton.textContent = "Run";
@@ -130,18 +191,29 @@ export class CmsFunctionDetail extends HTMLElement {
         this.setResult("status", "Not executed", "Run the function to see its result.", "");
     }
     private showResult(result: FunctionExecutionResult): void {
-        this.setResult(`status ${result.ok ? "ok" : "error"}`, result.status ? String(result.status) : "Invalid input", readableResult(result), stringify(result.body));
+        this.setResult(
+            `status ${result.ok ? "ok" : "error"}`,
+            result.status ? String(result.status) : "Invalid input",
+            readableResult(result),
+            stringify(result.body),
+        );
     }
     private setResult(statusClass: string, status: string, message: string, body: string): void {
         if (this.resultStatus) {
             this.resultStatus.className = statusClass;
             this.resultStatus.textContent = status;
         }
-        if (this.resultMessage) this.resultMessage.textContent = message;
-        if (this.resultBody) this.resultBody.textContent = body;
+        if (this.resultMessage) {
+            this.resultMessage.textContent = message;
+        }
+        if (this.resultBody) {
+            this.resultBody.textContent = body;
+        }
     }
 }
-if (!customElements.get("cms-function-detail")) customElements.define("cms-function-detail", CmsFunctionDetail);
+if (!customElements.get("cms-function-detail")) {
+    customElements.define("cms-function-detail", CmsFunctionDetail);
+}
 function summary(text: string): HTMLElement {
     const el = document.createElement("summary");
     el.textContent = text;

@@ -14,12 +14,17 @@ export type SourceEndpointInterceptor = (
     request: Request,
     next: (req: Request) => Promise<Response>,
 ) => Promise<Response>;
-export type SourceAuthorizationResult = boolean | {
-    authorized: boolean;
-    status?: 401 | 403;
-    body?: string;
-};
-export type SourceEndpointAuthorizer = (endpoint: SourceEndpoint, request: Request) => SourceAuthorizationResult | Promise<SourceAuthorizationResult>;
+export type SourceAuthorizationResult =
+    | boolean
+    | {
+          authorized: boolean;
+          status?: 401 | 403;
+          body?: string;
+      };
+export type SourceEndpointAuthorizer = (
+    endpoint: SourceEndpoint,
+    request: Request,
+) => SourceAuthorizationResult | Promise<SourceAuthorizationResult>;
 export type SourceHandlerDeps = ExecutorDeps & {
     executeSystemEndpoint?: SourceSystemExecutor;
     authorizeEndpoint?: SourceEndpointAuthorizer;
@@ -49,10 +54,14 @@ export async function handleSourceRequest(
     request: Request,
     opts: { prefix: string; deps?: SourceHandlerDeps },
 ): Promise<Response> {
-    if (!source) return new Response("data source not configured", { status: 501 });
+    if (!source) {
+        return new Response("data source not configured", { status: 501 });
+    }
 
     const url = new URL(request.url);
-    if (!url.pathname.startsWith(opts.prefix)) return new Response("Not Found", { status: 404 });
+    if (!url.pathname.startsWith(opts.prefix)) {
+        return new Response("Not Found", { status: 404 });
+    }
 
     const segments = url.pathname.slice(opts.prefix.length).split("/").filter(Boolean).map(decodeURIComponent);
 
@@ -72,7 +81,9 @@ export async function handleSourceRequest(
     const resolved = source.getEndpointForAuthorization
         ? await resolveEndpoint(source, segments, request.method)
         : authorizationResolved;
-    if (!resolved.ok) return unresolvedEndpointResponse(resolved.reason);
+    if (!resolved.ok) {
+        return unresolvedEndpointResponse(resolved.reason);
+    }
     if (!sameAuthorizationDescriptor(authorizationResolved.endpoint, resolved.endpoint)) {
         return new Response("source endpoint changed", { status: 409 });
     }
@@ -87,14 +98,8 @@ export async function handleSourceRequest(
         : dispatch(request);
 }
 
-function invalidateSchemaAfterSuccess(
-    source: SourceRepository,
-    endpoint: SourceEndpoint,
-    response: Response,
-): void {
-    if (response.status >= 200
-        && response.status < 300
-        && endpoint.effects?.invalidatesSchema) {
+function invalidateSchemaAfterSuccess(source: SourceRepository, endpoint: SourceEndpoint, response: Response): void {
+    if (response.status >= 200 && response.status < 300 && endpoint.effects?.invalidatesSchema) {
         const sourceId = parseUrn(endpoint.urn)?.source;
         source.invalidateSchema?.(sourceId ? { sourceId } : undefined);
     }
@@ -105,9 +110,11 @@ function unresolvedEndpointResponse(reason: "not_found" | "method_not_allowed"):
 }
 
 function sameAuthorizationDescriptor(base: SourceEndpoint, enriched: SourceEndpoint): boolean {
-    return base.urn === enriched.urn
-        && base.method === enriched.method
-        && sourceEndpointAccessMode(base) === sourceEndpointAccessMode(enriched);
+    return (
+        base.urn === enriched.urn &&
+        base.method === enriched.method &&
+        sourceEndpointAccessMode(base) === sourceEndpointAccessMode(enriched)
+    );
 }
 
 async function dispatchEndpoint(
@@ -130,11 +137,15 @@ export function isSourceAuthorized(result: SourceAuthorizationResult): boolean {
 }
 
 export function sourceAuthorizationStatus(result: SourceAuthorizationResult): 401 | 403 {
-    if (typeof result === "object" && result !== null && (result.status === 401 || result.status === 403)) return result.status;
+    if (typeof result === "object" && result !== null && (result.status === 401 || result.status === 403)) {
+        return result.status;
+    }
     return 403;
 }
 
 export function sourceAuthorizationBody(result: SourceAuthorizationResult, status: 401 | 403): string {
-    if (typeof result === "object" && result !== null && typeof result.body === "string") return result.body;
+    if (typeof result === "object" && result !== null && typeof result.body === "string") {
+        return result.body;
+    }
     return status === 401 ? "Unauthorized" : "Forbidden";
 }

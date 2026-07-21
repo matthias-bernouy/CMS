@@ -20,7 +20,9 @@ function renderFieldList(fields: RenderableField[], emptyMessage: string): HTMLE
     const list = document.createElement("ul");
     list.className = "fields";
 
-    for (const field of fields) list.append(renderField(field, 0));
+    for (const field of fields) {
+        list.append(renderField(field, 0));
+    }
 
     if (list.children.length === 0) {
         const empty = document.createElement("p");
@@ -55,7 +57,9 @@ function renderField(field: RenderableField, depth: number): HTMLElement {
     if (field.children?.length) {
         const children = document.createElement("ul");
         children.className = "field-children";
-        for (const child of field.children) children.append(renderField(child, depth + 1));
+        for (const child of field.children) {
+            children.append(renderField(child, depth + 1));
+        }
         item.append(children);
     }
 

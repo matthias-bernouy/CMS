@@ -14,13 +14,15 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
         const secrets = new InMemorySecretStore();
         const installations = new InMemoryIntegrationInstallationRepository();
 
-        await expect(runIntegrationInstallation({
-            mode: "create",
-            deps: { sources, secrets },
-            installations,
-            siteIntegrations: [TEST_SECRET_SOURCE_DEFINITION],
-            dto: { kind: "test-secret-source", answers: { id: "secret-source-main" }, options: {} },
-        })).rejects.toThrow(/apiKey/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "create",
+                deps: { sources, secrets },
+                installations,
+                siteIntegrations: [TEST_SECRET_SOURCE_DEFINITION],
+                dto: { kind: "test-secret-source", answers: { id: "secret-source-main" }, options: {} },
+            }),
+        ).rejects.toThrow(/apiKey/);
 
         expect(await installations.get("test-secret-source")).toBeNull();
     });
@@ -48,7 +50,7 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
 
         expect(result.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "updated" }]);
         expect(result.installation.runCount).toBe(2);
-        expect(result.installation.runs.map(run => run.status)).toEqual(["success", "success"]);
+        expect(result.installation.runs.map((run) => run.status)).toEqual(["success", "success"]);
         expect(JSON.stringify(result.installation)).not.toContain("sk_test");
     });
 
@@ -84,13 +86,16 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
         ]);
 
         const installation = await installations.get(definition.kind);
-        const completedRunIds = results.flatMap(result =>
-            result.status === "fulfilled" ? [result.value.run.id] : []);
-        const storedRunIds = installation?.runs.map(run => run.id) ?? [];
-        const storedRunNumbers = installation?.runs.map(run => run.runNumber) ?? [];
+        const completedRunIds = results.flatMap((result) =>
+            result.status === "fulfilled" ? [result.value.run.id] : [],
+        );
+        const storedRunIds = installation?.runs.map((run) => run.id) ?? [];
+        const storedRunNumbers = installation?.runs.map((run) => run.runNumber) ?? [];
 
         expect(completedRunIds.length).toBeGreaterThanOrEqual(1);
-        for (const runId of completedRunIds) expect(storedRunIds).toContain(runId);
+        for (const runId of completedRunIds) {
+            expect(storedRunIds).toContain(runId);
+        }
         expect(new Set(storedRunNumbers).size).toBe(storedRunNumbers.length);
         expect(installation?.runCount).toBe(Math.max(...storedRunNumbers));
     });
@@ -138,18 +143,20 @@ describe("@bernouy/cms-integrations installation lifecycle", () => {
             dto: { kind: "test-secret-source", answers: { id: "secret-source-main", apiKey: "sk_test" }, options: {} },
         });
 
-        await expect(runIntegrationInstallation({
-            mode: "rerun",
-            deps: { sources, secrets },
-            installations,
-            integrationId: "test-secret-source",
-            body: { answers: { id: "secret-source-other" } },
-        })).rejects.toThrow(/cannot be changed/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "rerun",
+                deps: { sources, secrets },
+                installations,
+                integrationId: "test-secret-source",
+                body: { answers: { id: "secret-source-other" } },
+            }),
+        ).rejects.toThrow(/cannot be changed/);
 
         const installation = await installations.get("test-secret-source");
         expect(installation?.status).toBe("failed");
         expect(installation?.runCount).toBe(2);
-        expect(installation?.runs.map(run => run.status)).toEqual(["success", "failed"]);
+        expect(installation?.runs.map((run) => run.status)).toEqual(["success", "failed"]);
     });
 });
 

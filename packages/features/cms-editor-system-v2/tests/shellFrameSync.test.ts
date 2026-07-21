@@ -1,10 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import {
-    COMPOSITION_INPUT_ATTRIBUTE,
-    COMPOSITION_RUNTIME_ATTRIBUTE,
-} from "@bernouy/components/composition-runtime";
+import { COMPOSITION_INPUT_ATTRIBUTE, COMPOSITION_RUNTIME_ATTRIBUTE } from "@bernouy/components/composition-runtime";
 
 import type { ShellControllerParts } from "../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
 
@@ -29,13 +26,13 @@ function installDom(): void {
 }
 
 const workspaceDomGlobals = {
-    document:              globalThis.document,
-    customElements:        globalThis.customElements,
-    Element:               globalThis.Element,
-    HTMLElement:           globalThis.HTMLElement,
-    CustomEvent:           globalThis.CustomEvent,
-    Event:                 globalThis.Event,
-    Node:                  globalThis.Node,
+    document: globalThis.document,
+    customElements: globalThis.customElements,
+    Element: globalThis.Element,
+    HTMLElement: globalThis.HTMLElement,
+    CustomEvent: globalThis.CustomEvent,
+    Event: globalThis.Event,
+    Node: globalThis.Node,
     requestAnimationFrame: globalThis.requestAnimationFrame,
 };
 
@@ -52,7 +49,7 @@ function frameDetail(kind: "editor" | "view", document: Document) {
         kind,
         document,
         frame: globalThis.document.createElement("iframe"),
-        url:   "/frame",
+        url: "/frame",
     };
 }
 
@@ -90,8 +87,9 @@ describe("Shell frame binding sync", () => {
         shellParts(shell).commands.handleFrameReady(frameDetail("view", viewDocument));
         shellParts(shell).commands.handleFrameReady(frameDetail("editor", editorDocument));
 
-        expect(viewDocument.querySelector("[data-cms-content]")?.innerHTML)
-            .toBe(`<section cms-source="/api/plans"><p>{{ plan.name }}</p></section>`);
+        expect(viewDocument.querySelector("[data-cms-content]")?.innerHTML).toBe(
+            `<section cms-source="/api/plans"><p>{{ plan.name }}</p></section>`,
+        );
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
         expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
         expect(calls).toEqual(["stop", "start"]);
@@ -115,8 +113,9 @@ describe("Shell frame binding sync", () => {
         document.body.append(shell);
         shellParts(shell).frames.frameDocument = editorDocument;
 
-        expect(shellParts(shell).commands.getContentHtml().trim())
-            .toBe(`<section cms-source="/api/plans"><p>Plan</p></section>`);
+        expect(shellParts(shell).commands.getContentHtml().trim()).toBe(
+            `<section cms-source="/api/plans"><p>Plan</p></section>`,
+        );
     });
 
     test("serializes composition inputs instead of generated Light DOM", async () => {

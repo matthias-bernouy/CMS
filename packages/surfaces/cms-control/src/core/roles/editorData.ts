@@ -11,7 +11,7 @@ export type CmsPermGroup = { feature: string; label: string; permissions: { id: 
 export type SourcePermGroup = { provider: string; label: string; endpoints: { id: string; label: string }[] };
 
 export type RoleEditorData = {
-    role:    { id: string; label: string; builtin: boolean; grants: string[] };
+    role: { id: string; label: string; builtin: boolean; grants: string[] };
     catalog: { cms: CmsPermGroup[]; gateway: SourcePermGroup[] };
 };
 
@@ -23,19 +23,23 @@ export type RoleEditorData = {
  * and is not editable → rejected.
  */
 export async function roleEditorData(cms: ControlCms, id: string): Promise<RoleEditorData> {
-    if (id === ADMIN_ROLE) throw new InvalidParam("id", "the admin super-role is not editable");
+    if (id === ADMIN_ROLE) {
+        throw new InvalidParam("id", "the admin super-role is not editable");
+    }
 
     const def = await cms.roles.get(id);
-    if (!def) throw new InvalidParam("id", "unknown role");
+    if (!def) {
+        throw new InvalidParam("id", "unknown role");
+    }
 
     const cmsGroups: CmsPermGroup[] = CMS_PERMISSION_CATALOGUE.map((f) => ({
-        feature:     f.feature,
-        label:       f.label,
+        feature: f.feature,
+        label: f.label,
         permissions: f.verbs.map((v) => ({ id: cmsPermission(f.feature, v), verb: v })),
     }));
 
     return {
-        role:    { id: def.id, label: def.label, builtin: !!def.builtin, grants: def.grants.map((g) => g.permission) },
+        role: { id: def.id, label: def.label, builtin: !!def.builtin, grants: def.grants.map((g) => g.permission) },
         catalog: { cms: cmsGroups, gateway: await sourcePermGroups(cms, id) },
     };
 }
@@ -44,15 +48,21 @@ export async function roleEditorData(cms: ControlCms, id: string): Promise<RoleE
  *  name (fallback: its id, then its urn). Empty when sources are not configured. */
 async function sourcePermGroups(cms: ControlCms, roleId: string): Promise<SourcePermGroup[]> {
     let sources: SourceRepository | null = null;
-    try { sources = cms.sources; } catch { sources = null; }
-    if (!sources) return [];
+    try {
+        sources = cms.sources;
+    } catch {
+        sources = null;
+    }
+    if (!sources) {
+        return [];
+    }
 
     const providers = await sources.getAllSources();
     return providers
         .filter(isGrantableGatewaySource)
         .map((p) => ({
-            provider:  p.urn,
-            label:     p.meta?.name ?? parseUrn(p.urn)?.source ?? p.urn,
+            provider: p.urn,
+            label: p.meta?.name ?? parseUrn(p.urn)?.source ?? p.urn,
             endpoints: p.endpoints
                 .filter((e) => roleCanBeGrantedEndpoint(roleId, e))
                 .map((e) => ({ id: e.urn, label: e.meta?.name ?? e.urn })),

@@ -27,15 +27,17 @@ describe("commerce seller offer read-model failures", () => {
     });
 
     test("rejects non-numeric totals even when every array is present", async () => {
-        setRestResponder(() => jsonResponse({
-            seller_exists: true,
-            status_valid: true,
-            rows: [],
-            workflow_states: [],
-            media: [],
-            active_price_proposals: [],
-            total: null,
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                seller_exists: true,
+                status_valid: true,
+                rows: [],
+                workflow_states: [],
+                media: [],
+                active_price_proposals: [],
+                total: null,
+            }),
+        );
 
         const response = await requestCommerce("/me/offers", { userId: "seller-user-123" });
 

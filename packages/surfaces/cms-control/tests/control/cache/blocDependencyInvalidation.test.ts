@@ -16,7 +16,7 @@ function system() {
                 { path: "/", content: "<site-header></site-header>" },
                 { path: "/article", content: "<article-card></article-card>" },
             ],
-            getBlocsList: async () => Object.keys(views).map(id => ({ id })),
+            getBlocsList: async () => Object.keys(views).map((id) => ({ id })),
             getBlocViewJS: async (tag: string) => views[tag] ?? null,
         },
         cache: { delete: (key: string) => deleted.push(key) },

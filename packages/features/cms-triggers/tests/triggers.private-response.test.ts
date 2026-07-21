@@ -1,24 +1,20 @@
 import { describe, expect, test } from "bun:test";
 import { projectEndpointResponse } from "@bernouy/cms-sources";
 import { createTriggerInterceptor } from "@bernouy/cms-triggers";
-import {
-    endpoint,
-    fixture,
-    jsonRequest,
-    tick,
-    trigger,
-} from "./helpers/triggerFixtures";
+import { endpoint, fixture, jsonRequest, tick, trigger } from "./helpers/triggerFixtures";
 
 const projectedEndpoint = {
     ...endpoint,
-    output: [{
-        status: "201",
-        body: { type: "object" as const, properties: { id: { type: "string" as const } } },
-        triggerBody: {
-            type: "object" as const,
-            properties: { authorizationId: { type: "string" as const } },
+    output: [
+        {
+            status: "201",
+            body: { type: "object" as const, properties: { id: { type: "string" as const } } },
+            triggerBody: {
+                type: "object" as const,
+                properties: { authorizationId: { type: "string" as const } },
+            },
         },
-    }],
+    ],
 };
 
 describe("cms-triggers private response projection", () => {
@@ -40,13 +36,15 @@ describe("cms-triggers private response projection", () => {
 
     test("keeps the response body limit for private projections", async () => {
         const { triggers, functions, sources, calls } = await fixture();
-        await triggers.createTrigger(trigger({
-            id: "bounded-private",
-            event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
-            mode: "sync",
-            condition: { exists: "$response.body.authorizationId" },
-            function: { id: "notifyOrder" },
-        }));
+        await triggers.createTrigger(
+            trigger({
+                id: "bounded-private",
+                event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
+                mode: "sync",
+                condition: { exists: "$response.body.authorizationId" },
+                function: { id: "notifyOrder" },
+            }),
+        );
 
         const request = jsonRequest({ ok: true });
         const interceptEndpoint = createTriggerInterceptor({
@@ -55,11 +53,13 @@ describe("cms-triggers private response projection", () => {
             sources,
             maxBodyBytes: 32,
         });
-        const response = await interceptEndpoint(projectedEndpoint, request, req => projectEndpointResponse(
-            projectedEndpoint,
-            req,
-            Response.json({ id: "order-1", authorizationId: "x".repeat(100) }, { status: 201 }),
-        ));
+        const response = await interceptEndpoint(projectedEndpoint, request, (req) =>
+            projectEndpointResponse(
+                projectedEndpoint,
+                req,
+                Response.json({ id: "order-1", authorizationId: "x".repeat(100) }, { status: 201 }),
+            ),
+        );
 
         expect(await response.json()).toEqual({ id: "order-1" });
         expect(calls).toEqual([]);
@@ -73,20 +73,22 @@ const expectedCall = {
 
 async function runPrivateResponseTrigger(mode: "sync" | "async") {
     const { triggers, functions, sources, calls } = await fixture();
-    await triggers.createTrigger(trigger({
-        id: `notify-private-${mode}`,
-        event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
-        mode,
-        function: {
-            id: "notifyOrder",
-            params: {
-                order: "$response.body.authorizationId",
-                source: "$endpoint.source",
-                actor: "$ctx.user.id",
+    await triggers.createTrigger(
+        trigger({
+            id: `notify-private-${mode}`,
+            event: { kind: "endpoint", source: "orders", endpoint: "createOrder", phase: "response" },
+            mode,
+            function: {
+                id: "notifyOrder",
+                params: {
+                    order: "$response.body.authorizationId",
+                    source: "$endpoint.source",
+                    actor: "$ctx.user.id",
+                },
+                body: { method: "$request.method", email: "$request.body.customer.email" },
             },
-            body: { method: "$request.method", email: "$request.body.customer.email" },
-        },
-    }));
+        }),
+    );
     const interceptEndpoint = createTriggerInterceptor({
         triggers,
         functions,
@@ -103,10 +105,12 @@ async function runPrivateResponseTrigger(mode: "sync" | "async") {
         resolveUser: async () => ({ id: "user-1" }),
     });
     const request = jsonRequest({ customer: { email: "a@example.test" } });
-    const response = await interceptEndpoint(projectedEndpoint, request, req => projectEndpointResponse(
-        projectedEndpoint,
-        req,
-        Response.json({ id: "order-1", authorizationId: "authorization-1" }, { status: 201 }),
-    ));
+    const response = await interceptEndpoint(projectedEndpoint, request, (req) =>
+        projectEndpointResponse(
+            projectedEndpoint,
+            req,
+            Response.json({ id: "order-1", authorizationId: "authorization-1" }, { status: 201 }),
+        ),
+    );
     return { response, calls, triggers };
 }

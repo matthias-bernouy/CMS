@@ -1,12 +1,12 @@
-import template from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import template from "./template.html" with { type: "text" };
+import css from "./style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 
 export class CropSystem extends Component {
     constructor() {
         super({
             css: css as unknown as string,
-            template: template as unknown as string
+            template: template as unknown as string,
         });
     }
 
@@ -20,7 +20,9 @@ export class CropSystem extends Component {
         cancelBtn.addEventListener("click", () => this.close());
 
         backdrop.addEventListener("click", (e) => {
-            if (e.target === backdrop) this.close();
+            if (e.target === backdrop) {
+                this.close();
+            }
         });
 
         applyBtn.addEventListener("click", () => {
@@ -29,9 +31,9 @@ export class CropSystem extends Component {
         });
 
         const ratioButtons = this.shadowRoot!.querySelectorAll(".ratio-btn");
-        ratioButtons.forEach(btn => {
+        ratioButtons.forEach((btn) => {
             btn.addEventListener("click", () => {
-                ratioButtons.forEach(b => b.classList.remove("active"));
+                ratioButtons.forEach((b) => b.classList.remove("active"));
                 btn.classList.add("active");
             });
         });

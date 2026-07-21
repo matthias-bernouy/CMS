@@ -21,7 +21,9 @@ export function extractRefs(html: string): { blocs: Set<string> } {
     const blocs = new Set<string>();
     for (const m of html.matchAll(TAG_RE)) {
         const tag = (m[1] ?? "").toLowerCase();
-        if (RESERVED_PREFIXES.some(p => tag.startsWith(p))) continue;
+        if (RESERVED_PREFIXES.some((p) => tag.startsWith(p))) {
+            continue;
+        }
         blocs.add(tag);
     }
     return { blocs };

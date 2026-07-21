@@ -1,15 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
-import {
-    ok,
-    scenarios,
-    sellerCmsUserId,
-    useRpcResult,
-} from "./fixtures";
+import { capturedFetches, installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { ok, scenarios, sellerCmsUserId, useRpcResult } from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -60,21 +51,20 @@ describe("commerce seller fulfillment context boundaries", () => {
         for (const scenario of scenarios) {
             const route = scenario.route.split("?")[0]!;
             for (const id of ids) {
-                const response = await requestCommerce(
-                    `${route}?orderId=${id}`,
-                    { userId: `  ${sellerCmsUserId}  ` },
-                );
+                const response = await requestCommerce(`${route}?orderId=${id}`, { userId: `  ${sellerCmsUserId}  ` });
                 expect(response.status).toBe(404);
                 expect(await response.json()).toEqual({
                     error: "sale not found",
                 });
             }
         }
-        expect(capturedFetches().map(call => call.body)).toEqual(
-            scenarios.flatMap(() => ids.map(p_order_id => ({
-                p_order_id,
-                p_seller_cms_user_id: sellerCmsUserId,
-            }))),
+        expect(capturedFetches().map((call) => call.body)).toEqual(
+            scenarios.flatMap(() =>
+                ids.map((p_order_id) => ({
+                    p_order_id,
+                    p_seller_cms_user_id: sellerCmsUserId,
+                })),
+            ),
         );
     });
 
@@ -91,10 +81,7 @@ describe("commerce seller fulfillment context boundaries", () => {
                 const response = await requestCommerce(scenario.route, {
                     userId: sellerCmsUserId,
                 });
-                expect(await responseBody(response)).toEqual([
-                    status,
-                    { error },
-                ]);
+                expect(await responseBody(response)).toEqual([status, { error }]);
             }
         }
     });
@@ -142,8 +129,6 @@ describe("commerce seller fulfillment context boundaries", () => {
 async function responseBody(response: Response): Promise<[number, unknown]> {
     return [
         response.status,
-        response.headers.get("content-type")?.includes("json")
-            ? await response.json()
-            : await response.text(),
+        response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text(),
     ];
 }

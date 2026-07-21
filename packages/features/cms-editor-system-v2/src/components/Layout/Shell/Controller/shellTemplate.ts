@@ -5,10 +5,8 @@ import componentCss from "../style.css" with { type: "text" };
 
 export function createShellTemplate(): HTMLTemplateElement {
     const template = document.createElement("template");
-    template.innerHTML = `<style>${[
-        componentCss,
-        pageSettingsCss,
-        pageSettingsTagsCss,
-    ].map(css => String(css)).join("\n")}</style>${String(templateHtml)}`;
+    template.innerHTML = `<style>${[componentCss, pageSettingsCss, pageSettingsTagsCss]
+        .map((css) => String(css))
+        .join("\n")}</style>${String(templateHtml)}`;
     return template;
 }

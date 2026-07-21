@@ -1,13 +1,20 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import BlocServer      from "cms-delivery/endpoints/bloc.server";
-import BlocSetServer   from "cms-delivery/endpoints/blocset.server";
-import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
-import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
-import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
+import BlocServer from "cms-delivery/endpoints/bloc.server";
+import BlocSetServer from "cms-delivery/endpoints/blocset.server";
+import RobotsServer from "cms-delivery/endpoints/robots.txt.server";
+import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
+import FaviconServer from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth";
-import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
+import {
+    CMS_FILES_ROUTE,
+    CMS_IMAGE_VARIANT_ROUTE,
+    filesPrefix,
+    imageVariantPrefix,
+    serveFilesRequest,
+    serveVariantRequest,
+} from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
@@ -31,15 +38,14 @@ import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerS
  * does a single DB lookup and either renders or 404s. No boot-time hydration,
  * no registry to keep in sync with page CRUD.
  */
-export function registerDeliveryEndpoints(delivery: DeliveryCms){
-
+export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     const runner = delivery.runner;
 
-    runner.addEndpoint("GET", "/.cms/bloc",                (req) => BlocServer     (req, delivery));
-    runner.addEndpoint("GET", "/.cms/blocset",             (req) => BlocSetServer  (req, delivery));
-    runner.addEndpoint("GET", "/.cms/assets/component.js",        (req) => ComponentServer  (req, delivery));
+    runner.addEndpoint("GET", "/.cms/bloc", (req) => BlocServer(req, delivery));
+    runner.addEndpoint("GET", "/.cms/blocset", (req) => BlocSetServer(req, delivery));
+    runner.addEndpoint("GET", "/.cms/assets/component.js", (req) => ComponentServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (req) => BindingCoreServer(req, delivery));
-    runner.addEndpoint("GET", "/.cms/assets/favicon",             (req) => FaviconServer    (req, delivery));
+    runner.addEndpoint("GET", "/.cms/assets/favicon", (req) => FaviconServer(req, delivery));
 
     if (delivery.auth) {
         runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
@@ -47,7 +53,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
         });
     }
 
-    runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
+    runner.addEndpoint("GET", "/robots.txt", (req) => RobotsServer(req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
 
     // Shared `.cms/*` handlers — Control mounts the same three, admin-guarded.
@@ -63,12 +69,14 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
             delivery.cache,
             () => generateStyleEntry(delivery.repository),
             publicAssetCacheControl(req),
-        ));
+        ),
+    );
 
     runner.group(CMS_FILES_ROUTE, (filesRunner) => {
         const prefix = filesPrefix(runner.basePath);
         filesRunner.setDefaultEndpoint("GET", (req) =>
-            serveFilesRequest({ metadata: delivery.filesMetadata, blob: delivery.filesBlob }, req, { prefix }));
+            serveFilesRequest({ metadata: delivery.filesMetadata, blob: delivery.filesBlob }, req, { prefix }),
+        );
     });
 
     registerDeliverySourceProxy(delivery);
@@ -78,14 +86,19 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     if (delivery.variantStoreOrNull && delivery.filesMetadataOrNull && delivery.filesBlobOrNull) {
         runner.group(CMS_IMAGE_VARIANT_ROUTE, (imgRunner) => {
             const prefix = imageVariantPrefix(runner.basePath);
-            imgRunner.setDefaultEndpoint("GET", (req) => serveVariantRequest({
-                metadata:     delivery.filesMetadata,
-                sourceBlob:   delivery.filesBlob,
-                variantStore: delivery.variantStoreOrNull!,
-            }, req, { prefix }));
+            imgRunner.setDefaultEndpoint("GET", (req) =>
+                serveVariantRequest(
+                    {
+                        metadata: delivery.filesMetadata,
+                        sourceBlob: delivery.filesBlob,
+                        variantStore: delivery.variantStoreOrNull!,
+                    },
+                    req,
+                    { prefix },
+                ),
+            );
         });
     }
 
     runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
-
 }

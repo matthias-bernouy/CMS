@@ -12,22 +12,10 @@ import type { SettingsView } from "../../../Settings/SettingsView/SettingsView";
 import type { EditorDataSource } from "../../../../runtime";
 import type { FrameHighlight } from "./Core/FrameHighlight";
 import type { SelectOptions } from "./shellTypes";
-import {
-    applyParamSyncSetting,
-    settingsWithParamSync,
-} from "../Domain/Settings/paramSync";
-import {
-    applyPageStateSetting,
-    settingsWithPageState,
-} from "../Domain/Settings/pageState";
-import {
-    getTextValue,
-    resolveSettingsValues,
-} from "../Domain/Settings/settingsValues";
-import {
-    exitAllStateSessions,
-    toggleStateSession,
-} from "../Domain/Settings/stateSessions";
+import { applyParamSyncSetting, settingsWithParamSync } from "../Domain/Settings/paramSync";
+import { applyPageStateSetting, settingsWithPageState } from "../Domain/Settings/pageState";
+import { getTextValue, resolveSettingsValues } from "../Domain/Settings/settingsValues";
+import { exitAllStateSessions, toggleStateSession } from "../Domain/Settings/stateSessions";
 
 type SelectionContext = {
     runtime(): EditorRuntime | null;
@@ -45,7 +33,9 @@ export class ShellSelection {
 
     select(editor: Editor | null, options: SelectOptions = {}): void {
         const runtime = this.context.runtime();
-        if (!runtime) return;
+        if (!runtime) {
+            return;
+        }
 
         const selection = runtime.select(editor);
         this.context.renderStructure(options);
@@ -63,7 +53,9 @@ export class ShellSelection {
 
     renderSettings(): void {
         const runtime = this.context.runtime();
-        if (!runtime) return;
+        if (!runtime) {
+            return;
+        }
 
         const selection = runtime.getSelection();
         if (!selection) {
@@ -71,21 +63,31 @@ export class ShellSelection {
             return;
         }
 
-        this.context.settings().setSettings(
-            resolveSettingsValues(
-                selection.editor,
-                settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings)),
-            ),
-            selection.textCapability,
-            selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "",
-            this.context.settingsMode(),
-            selection.states,
-            runtime.getSelectedDataScopes(),
-            this.context.dataSources(),
-        );
+        this.context
+            .settings()
+            .setSettings(
+                resolveSettingsValues(
+                    selection.editor,
+                    settingsWithPageState(
+                        selection.editor,
+                        settingsWithParamSync(selection.editor, selection.settings),
+                    ),
+                ),
+                selection.textCapability,
+                selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "",
+                this.context.settingsMode(),
+                selection.states,
+                runtime.getSelectedDataScopes(),
+                this.context.dataSources(),
+            );
     }
 
-    applySetting(editor: Editor, setting: SettingControl, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+    applySetting(
+        editor: Editor,
+        setting: SettingControl,
+        value: string | boolean,
+        attributes?: SettingsViewAttributeChanges,
+    ): void {
         if (attributes) {
             this.applyAttributes(editor, attributes);
             return;
@@ -130,7 +132,9 @@ export class ShellSelection {
 
     exitAllStateSessions(): void {
         const runtime = this.context.runtime();
-        if (!runtime) return;
+        if (!runtime) {
+            return;
+        }
         exitAllStateSessions(this.context.stateSessions(), runtime.getStructure());
     }
 }

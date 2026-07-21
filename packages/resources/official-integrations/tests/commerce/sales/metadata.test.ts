@@ -28,20 +28,31 @@ const publicDefinitions = [
 describe("commerce seller order metadata", () => {
     test("returns only enabled public fields on seller list and detail responses", async () => {
         let detailQueries = 0;
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rpc/list_order_read_model")) {
                 return jsonResponse({
-                    state: "ok", orders: [sale], operations: [],
-                    definitions: publicDefinitions, total: 1,
+                    state: "ok",
+                    orders: [sale],
+                    operations: [],
+                    definitions: publicDefinitions,
+                    total: 1,
                 });
             }
             if (url.pathname.endsWith("/rpc/get_order_detail_read_model")) {
                 detailQueries += 1;
                 return jsonResponse({
-                    state: "ok", order: sale, lines: [], events: [], seller: null,
-                    operation: null, financial_terms: null, fulfillment: null,
-                    settlement: null, claim: null, authorization: null,
+                    state: "ok",
+                    order: sale,
+                    lines: [],
+                    events: [],
+                    seller: null,
+                    operation: null,
+                    financial_terms: null,
+                    fulfillment: null,
+                    settlement: null,
+                    claim: null,
+                    authorization: null,
                     definitions: publicDefinitions,
                 });
             }
@@ -50,8 +61,8 @@ describe("commerce seller order metadata", () => {
 
         const listResponse = await requestCommerce("/me/sales", { userId: sellerId });
         const detailResponse = await requestCommerce("/me/sale?id=42", { userId: sellerId });
-        const list = await listResponse.json() as Record<string, any>;
-        const detail = await detailResponse.json() as Record<string, any>;
+        const list = (await listResponse.json()) as Record<string, any>;
+        const detail = (await detailResponse.json()) as Record<string, any>;
         const metadata = { publicNote: "Ring twice", insured: true };
         const entries = [
             { key: "insured", label: "Insured", type: "boolean", value: "true" },

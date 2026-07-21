@@ -23,17 +23,33 @@ export const parentRow = {
 
 export const categoryFieldRows = [
     {
-        category_id: 9, field_key: "grip", required: true, filterable: true, position: 1,
+        category_id: 9,
+        field_key: "grip",
+        required: true,
+        filterable: true,
+        position: 1,
         definition: {
-            label: "Grip", field_type: "enum", options: ["L1", "L2"], unit: null,
-            public_readable: true, enabled: false,
+            label: "Grip",
+            field_type: "enum",
+            options: ["L1", "L2"],
+            unit: null,
+            public_readable: true,
+            enabled: false,
         },
     },
     {
-        category_id: 9, field_key: "weight", required: false, filterable: false, position: 1,
+        category_id: 9,
+        field_key: "weight",
+        required: false,
+        filterable: false,
+        position: 1,
         definition: {
-            label: "Weight", field_type: "number", options: [], unit: "g",
-            public_readable: false, enabled: true,
+            label: "Weight",
+            field_type: "number",
+            options: [],
+            unit: "g",
+            public_readable: false,
+            enabled: true,
         },
     },
 ];
@@ -63,17 +79,33 @@ export const parent = {
 
 export const categoryFields = [
     {
-        categoryId: 9, fieldKey: "grip", required: true, filterable: true, position: 1,
+        categoryId: 9,
+        fieldKey: "grip",
+        required: true,
+        filterable: true,
+        position: 1,
         definition: {
-            label: "Grip", fieldType: "enum", options: ["L1", "L2"], unit: null,
-            publicReadable: true, enabled: false,
+            label: "Grip",
+            fieldType: "enum",
+            options: ["L1", "L2"],
+            unit: null,
+            publicReadable: true,
+            enabled: false,
         },
     },
     {
-        categoryId: 9, fieldKey: "weight", required: false, filterable: false, position: 1,
+        categoryId: 9,
+        fieldKey: "weight",
+        required: false,
+        filterable: false,
+        position: 1,
         definition: {
-            label: "Weight", fieldType: "number", options: [], unit: "g",
-            publicReadable: false, enabled: true,
+            label: "Weight",
+            fieldType: "number",
+            options: [],
+            unit: "g",
+            publicReadable: false,
+            enabled: true,
         },
     },
 ];
@@ -97,7 +129,7 @@ export const rootCategory = {
 export const adminSourceCategory = {
     ...category,
     parent,
-    categoryFields: categoryFields.map(field => ({
+    categoryFields: categoryFields.map((field) => ({
         fieldKey: field.fieldKey,
         required: field.required,
         filterable: field.filterable,
@@ -112,6 +144,15 @@ export const adminSourceCategory = {
 export const publicSourceCategory = { ...category, parent };
 
 export const newCategory = {
-    id: null, parentId: null, slug: "", fullSlug: "", label: "", description: "",
-    status: "active", position: 0, metadata: {}, categoryFields: [], version: 1,
+    id: null,
+    parentId: null,
+    slug: "",
+    fullSlug: "",
+    label: "",
+    description: "",
+    status: "active",
+    position: 0,
+    metadata: {},
+    categoryFields: [],
+    version: 1,
 };

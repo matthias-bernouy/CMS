@@ -1,5 +1,10 @@
-import type { DashboardField, DashboardFieldBase, DashboardReorderableListItemField,
-    DashboardTableColumn, DashboardTableDerive } from "@bernouy/cms-dashboards";
+import type {
+    DashboardField,
+    DashboardFieldBase,
+    DashboardReorderableListItemField,
+    DashboardTableColumn,
+    DashboardTableDerive,
+} from "@bernouy/cms-dashboards";
 import { DASHBOARD_MAX_NESTED_FIELDS } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord } from "../../values";
@@ -60,21 +65,25 @@ function parseTableColumns(value: unknown, name: string, tableEditable: boolean)
     const ids = new Set<string>();
     return value.map((entry, index) => {
         const path = `${name}.${index}`;
-        if (!isRecord(entry)) throw new IntegrationInputError(path, "must be an object");
+        if (!isRecord(entry)) {
+            throw new IntegrationInputError(path, "must be an object");
+        }
         const column = parseColumn(entry, path);
         rejectDuplicateId(column.id, ids, `${path}.id`);
         const editable = optionalBoolean(entry.editable, `${path}.editable`);
         if (Object.hasOwn(entry, "value")) {
             throw new IntegrationInputError(`${path}.value`, "is not supported; use type");
         }
-        const hasEditor = ["type", "options", "lookup"].some(key => Object.hasOwn(entry, key));
+        const hasEditor = ["type", "options", "lookup"].some((key) => Object.hasOwn(entry, key));
         if ((editable === true || hasEditor) && !tableEditable) {
             throw new IntegrationInputError(path, "cannot configure editing unless the table is editable");
         }
         if (hasEditor && editable !== true) {
             throw new IntegrationInputError(path, "cannot configure an editor unless the column is editable");
         }
-        if (editable !== true) return column as DashboardTableColumn;
+        if (editable !== true) {
+            return column as DashboardTableColumn;
+        }
         return {
             ...column,
             editable: true,
@@ -91,7 +100,9 @@ function parseReorderableFields(value: unknown, name: string): DashboardReordera
     const ids = new Set<string>();
     return value.map((entry, index) => {
         const path = `${name}.${index}`;
-        if (!isRecord(entry)) throw new IntegrationInputError(path, "must be an object");
+        if (!isRecord(entry)) {
+            throw new IntegrationInputError(path, "must be an object");
+        }
         const id = requiredText(entry.id, `${path}.id`);
         rejectDuplicateId(id, ids, `${path}.id`);
         const required = optionalBoolean(entry.required, `${path}.required`);
@@ -107,7 +118,11 @@ function parseReorderableFields(value: unknown, name: string): DashboardReordera
     });
 }
 
-function parseEditor(value: Record<string, unknown>, name: string, allowed: readonly string[]): Record<string, unknown> {
+function parseEditor(
+    value: Record<string, unknown>,
+    name: string,
+    allowed: readonly string[],
+): Record<string, unknown> {
     const explicitType = Object.hasOwn(value, "type");
     const type = explicitType ? value.type : "text";
     if (typeof type !== "string" || !allowed.includes(type)) {
@@ -125,8 +140,12 @@ function parseEditor(value: Record<string, unknown>, name: string, allowed: read
         throw new IntegrationInputError(`${name}.lookup`, "is only supported for combobox editors");
     }
     const options = hasOptions ? parseOptions(value.options, `${name}.options`) : undefined;
-    if (options?.length === 0) throw new IntegrationInputError(`${name}.options`, "must not be empty");
-    if (type === "select" && !options) throw new IntegrationInputError(`${name}.options`, "is required");
+    if (options?.length === 0) {
+        throw new IntegrationInputError(`${name}.options`, "must not be empty");
+    }
+    if (type === "select" && !options) {
+        throw new IntegrationInputError(`${name}.options`, "is required");
+    }
     const lookup = hasLookup ? parseEmbeddedLookup(value.lookup, `${name}.lookup`) : undefined;
     if (type === "combobox" && !options && !lookup) {
         throw new IntegrationInputError(name, "must declare options or lookup");
@@ -139,10 +158,18 @@ function parseEditor(value: Record<string, unknown>, name: string, allowed: read
 }
 
 function parseTableDerive(value: unknown, name: string): DashboardTableDerive {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    if (value.type !== "cartesian") throw new IntegrationInputError(`${name}.type`, "must be cartesian");
-    return { type: "cartesian", sourceField: requiredText(value.sourceField, `${name}.sourceField`),
-        labelPath: requiredText(value.labelPath, `${name}.labelPath`), valuesPath: requiredText(value.valuesPath, `${name}.valuesPath`) };
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
+    if (value.type !== "cartesian") {
+        throw new IntegrationInputError(`${name}.type`, "must be cartesian");
+    }
+    return {
+        type: "cartesian",
+        sourceField: requiredText(value.sourceField, `${name}.sourceField`),
+        labelPath: requiredText(value.labelPath, `${name}.labelPath`),
+        valuesPath: requiredText(value.valuesPath, `${name}.valuesPath`),
+    };
 }
 
 function parseItemCount(value: unknown, name: string, minimum: number): number | undefined {
@@ -160,6 +187,8 @@ function enforceNestedLimit(value: unknown[], name: string): void {
 }
 
 function rejectDuplicateId(id: string, ids: Set<string>, name: string): void {
-    if (ids.has(id)) throw new IntegrationInputError(name, "is duplicated");
+    if (ids.has(id)) {
+        throw new IntegrationInputError(name, "is duplicated");
+    }
     ids.add(id);
 }

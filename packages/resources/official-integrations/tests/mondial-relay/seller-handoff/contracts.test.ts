@@ -18,22 +18,24 @@ describe("Mondial Relay seller handoff contracts", () => {
             sellerHandoffDeclaredAt: expect.any(String),
         });
         expect(Object.keys(result)).toEqual([
-            "id", "externalOrderId", "expeditionNumber", "status",
-            "carrierAcceptedAt", "recipientHandoffAt",
+            "id",
+            "externalOrderId",
+            "expeditionNumber",
+            "status",
+            "carrierAcceptedAt",
+            "recipientHandoffAt",
             "sellerHandoffDeclaredAt",
         ]);
         expect(JSON.stringify(result)).not.toContain("Private Buyer");
         expect(JSON.stringify(result)).not.toContain("private-label");
-        expect(database.calls.map(call => [call.method, call.pathname])).toEqual([
+        expect(database.calls.map((call) => [call.method, call.pathname])).toEqual([
             ["POST", "/rest/v1/rpc/declare_seller_handoff"],
         ]);
         expect(database.calls[0]?.body).toEqual({
             p_external_order_id: "order-42",
             p_seller_cms_user_id: "seller-42",
         });
-        expect(database.storedRow()?.seller_handoff_declared_at).toBe(
-            result.sellerHandoffDeclaredAt,
-        );
+        expect(database.storedRow()?.seller_handoff_declared_at).toBe(result.sellerHandoffDeclaredAt);
     });
 
     test("replays a declaration before writing a second timestamp", async () => {
@@ -43,12 +45,8 @@ describe("Mondial Relay seller handoff contracts", () => {
         const replay = await declareSellerHandoff("order-42", "seller-42");
 
         expect(replay).toEqual(first);
-        expect(database.calls.map(call => call.method)).toEqual([
-            "POST", "POST",
-        ]);
-        expect(database.storedRow()?.seller_handoff_declared_at).toBe(
-            first.sellerHandoffDeclaredAt,
-        );
+        expect(database.calls.map((call) => call.method)).toEqual(["POST", "POST"]);
+        expect(database.storedRow()?.seller_handoff_declared_at).toBe(first.sellerHandoffDeclaredAt);
     });
 
     test("replays the first timestamp after carrier state progresses", async () => {
@@ -73,7 +71,7 @@ describe("Mondial Relay seller handoff contracts", () => {
             recipientHandoffAt: null,
             sellerHandoffDeclaredAt: timestamp,
         });
-        expect(database.calls.map(call => call.method)).toEqual(["POST"]);
+        expect(database.calls.map((call) => call.method)).toEqual(["POST"]);
         expect(database.storedRow()?.seller_handoff_declared_at).toBe(timestamp);
     });
 });

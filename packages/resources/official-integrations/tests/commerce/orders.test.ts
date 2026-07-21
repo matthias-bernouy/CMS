@@ -1,18 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectRpc,
-    installCommerceTestEnvironment,
-    jsonResponse,
-    requestCommerce,
-    setRestResponder,
-} from "./harness";
+import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "./harness";
 
 installCommerceTestEnvironment();
 
 describe("commerce order requests", () => {
     test("resolves protected-checkout seller identities without creating or mutating an order", async () => {
         const requestedPaths: string[] = [];
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             requestedPaths.push(`${url.pathname}?${url.searchParams.toString()}`);
             if (url.pathname.endsWith("/offers")) {
@@ -48,12 +42,12 @@ describe("commerce order requests", () => {
             sellerCmsUserId: "seller-user-123",
             buyerCmsUserId: "buyer-user-456",
         });
-        expect(requestedPaths.filter(path => path.startsWith("/rest/v1/sellers?"))).toHaveLength(2);
-        expect(requestedPaths.every(path => !path.includes("rpc/create_order_from_offers"))).toBeTrue();
+        expect(requestedPaths.filter((path) => path.startsWith("/rest/v1/sellers?"))).toHaveLength(2);
+        expect(requestedPaths.every((path) => !path.includes("rpc/create_order_from_offers"))).toBeTrue();
     });
 
     test("does not disclose an order seller context to another buyer", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/orders")) {
                 return jsonResponse([{ id: 42, seller_id: 7, buyer_cms_user_id: "actual-buyer" }]);
@@ -72,25 +66,31 @@ describe("commerce order requests", () => {
 
     test("enriches order lists with one bounded read-model query", async () => {
         const requestedPaths: string[] = [];
-        setRestResponder(async request => {
+        setRestResponder(async (request) => {
             const url = new URL(request.url);
             requestedPaths.push(`${url.pathname}?${url.searchParams.toString()}`);
             if (url.pathname.endsWith("/rpc/list_order_read_model")) {
                 return jsonResponse({
                     state: "ok",
                     orders: [
-                    { id: 12, status: "active", order_number: "ORDER-12", total_amount: 2500, currency: "eur" },
-                    { id: 18, status: "awaiting_payment", order_number: "ORDER-18", total_amount: 3100, currency: "eur" },
+                        { id: 12, status: "active", order_number: "ORDER-12", total_amount: 2500, currency: "eur" },
+                        {
+                            id: 18,
+                            status: "awaiting_payment",
+                            order_number: "ORDER-18",
+                            total_amount: 3100,
+                            currency: "eur",
+                        },
                     ],
                     operations: [
-                    {
-                        order_id: 12,
-                        payment_status: "succeeded",
-                        fulfillment_status: "awaiting_shipment",
-                        settlement_status: "manual_review",
-                        claim_status: null,
-                        total_refund_requested_amount: 0,
-                    },
+                        {
+                            order_id: 12,
+                            payment_status: "succeeded",
+                            fulfillment_status: "awaiting_shipment",
+                            settlement_status: "manual_review",
+                            claim_status: null,
+                            total_refund_requested_amount: 0,
+                        },
                     ],
                     definitions: [],
                     total: 2,
@@ -134,13 +134,20 @@ describe("commerce order requests", () => {
     });
 
     test("uses server-trusted offers instead of client pricing and snapshots", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/custom_field_definitions")) {
-                return jsonResponse([{
-                    key: "checkout", label: "Checkout channel", field_type: "string",
-                    unit: null, enabled: true, public_readable: true, position: 0,
-                }]);
+                return jsonResponse([
+                    {
+                        key: "checkout",
+                        label: "Checkout channel",
+                        field_type: "string",
+                        unit: null,
+                        enabled: true,
+                        public_readable: true,
+                        position: 0,
+                    },
+                ]);
             }
             return jsonResponse({ id: 1, metadata: { checkout: "web" } });
         });
@@ -150,16 +157,18 @@ describe("commerce order requests", () => {
             body: {
                 buyerCmsUserId: "spoofed-buyer",
                 idempotencyKey: "checkout-123",
-                items: [{
-                    offerId: 91,
-                    quantity: 2,
-                    sellerId: "spoofed-seller",
-                    unitAmount: 1,
-                    totalAmount: 2,
-                    currency: "usd",
-                    offerSnapshot: { acceptedPriceAmount: 1 },
-                    sellerSnapshot: { id: "spoofed-seller" },
-                }],
+                items: [
+                    {
+                        offerId: 91,
+                        quantity: 2,
+                        sellerId: "spoofed-seller",
+                        unitAmount: 1,
+                        totalAmount: 2,
+                        currency: "usd",
+                        offerSnapshot: { acceptedPriceAmount: 1 },
+                        sellerSnapshot: { id: "spoofed-seller" },
+                    },
+                ],
                 shippingAddress: { city: "Paris" },
                 billingAddress: { city: "Lyon" },
                 metadata: { checkout: "web" },

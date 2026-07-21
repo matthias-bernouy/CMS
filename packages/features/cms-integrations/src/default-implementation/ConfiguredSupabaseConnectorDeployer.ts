@@ -10,10 +10,7 @@ import {
     SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
     type IntegrationConnectorProviderRepository,
 } from "../interfaces/IntegrationConnectorProvider";
-import {
-    SupabaseConnectorDeployer,
-    type SupabaseConnectorFunctionSecrets,
-} from "./SupabaseConnectorDeployer";
+import { SupabaseConnectorDeployer, type SupabaseConnectorFunctionSecrets } from "./SupabaseConnectorDeployer";
 
 export type ConfiguredSupabaseConnectorDeployerConfig = {
     integrationsRoot: string;
@@ -89,7 +86,9 @@ export class ConfiguredSupabaseConnectorDeployer implements IntegrationConnector
 
 function redactAccessToken(error: unknown, accessToken: string): unknown {
     if (error instanceof Error) {
-        if (!error.message.includes(accessToken)) return error;
+        if (!error.message.includes(accessToken)) {
+            return error;
+        }
         const message = error.message.replaceAll(accessToken, "[redacted]");
         const status = error instanceof IntegrationRuntimeError ? error.status : 500;
         return new IntegrationRuntimeError(message, status);

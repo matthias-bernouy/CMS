@@ -31,7 +31,7 @@ describe("InMemoryAnalyticsStore", () => {
     test("unique visitors dedup within a day, recount on a new day", async () => {
         const s = new InMemoryAnalyticsStore();
         await s.record(ev({ visitorId: "v1" }));
-        await s.record(ev({ visitorId: "v1" }));                                          // same day → not recounted
+        await s.record(ev({ visitorId: "v1" })); // same day → not recounted
         await s.record(ev({ visitorId: "v2" }));
         await s.record(ev({ visitorId: "v1", ts: new Date("2026-06-02T19:00:00.000Z") })); // still same day
         await s.record(ev({ visitorId: "v1", ts: new Date("2026-06-01T09:00:00.000Z") })); // new day → +1
@@ -50,7 +50,9 @@ describe("InMemoryAnalyticsStore", () => {
 
     test("topPaths sorts by count and respects limit", async () => {
         const s = new InMemoryAnalyticsStore();
-        for (let i = 0; i < 3; i++) await s.record(ev({ path: "/a", visitorId: `va${i}` }));
+        for (let i = 0; i < 3; i++) {
+            await s.record(ev({ path: "/a", visitorId: `va${i}` }));
+        }
         await s.record(ev({ path: "/b", visitorId: "vb" }));
         expect(await s.topPaths(FROM, TO, 1)).toEqual([{ key: "/a", count: 3 }]);
     });
@@ -60,7 +62,10 @@ describe("InMemoryAnalyticsStore", () => {
         await s.record(ev({ device: "desktop", visitorId: "v1" }));
         await s.record(ev({ device: "mobile", visitorId: "v2" }));
         await s.record(ev({ device: "mobile", visitorId: "v3" }));
-        expect(await s.breakdown("device", FROM, TO)).toEqual([{ key: "mobile", count: 2 }, { key: "desktop", count: 1 }]);
+        expect(await s.breakdown("device", FROM, TO)).toEqual([
+            { key: "mobile", count: 2 },
+            { key: "desktop", count: 1 },
+        ]);
     });
 
     test("timeseries groups by hour", async () => {

@@ -37,7 +37,9 @@ export class BindingRuntime {
     }
 
     private activate(): void {
-        if (this.stopped) return;
+        if (this.stopped) {
+            return;
+        }
         revealInertSources(this.root);
         this.registerWithin(this.root);
         const MutationObserverCtor = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
@@ -75,11 +77,10 @@ export class BindingRuntime {
         });
     }
 
-    private teardown(hooks?: {
-        beforeSourceDispose?: (src: Source) => void;
-        afterDispose?: () => void;
-    }): void {
-        if (this.stopped) return;
+    private teardown(hooks?: { beforeSourceDispose?: (src: Source) => void; afterDispose?: () => void }): void {
+        if (this.stopped) {
+            return;
+        }
         this.stopped = true;
         this.observer?.disconnect();
         this.observer = null;
@@ -87,8 +88,12 @@ export class BindingRuntime {
             hooks?.beforeSourceDispose?.(src);
             src.dispose();
         }
-        for (const ps of this.paramSyncs.values()) ps.dispose();
-        for (const ps of this.pageStateSyncs.values()) ps.dispose();
+        for (const ps of this.paramSyncs.values()) {
+            ps.dispose();
+        }
+        for (const ps of this.pageStateSyncs.values()) {
+            ps.dispose();
+        }
         this.sources.clear();
         this.sourceStatuses.clear();
         this.paramSyncs.clear();
@@ -133,9 +138,13 @@ export class BindingRuntime {
     }
 
     private reconcileAttribute(target: Node, attr: string | null): void {
-        if (target.nodeType !== Node.ELEMENT_NODE || !attr) return;
+        if (target.nodeType !== Node.ELEMENT_NODE || !attr) {
+            return;
+        }
         const el = target as Element;
-        if (!this.isInScope(el)) return;
+        if (!this.isInScope(el)) {
+            return;
+        }
 
         if (attr === SOURCE_ATTR) {
             if (!el.hasAttribute(SOURCE_ATTR) || !this.hasSourceUrl(el)) {
@@ -143,33 +152,48 @@ export class BindingRuntime {
                 return;
             }
             const existing = this.sources.get(el);
-            if (existing) void existing.run({ onlyIfUrlChanged: true });
-            else this.registerSource(el);
+            if (existing) {
+                void existing.run({ onlyIfUrlChanged: true });
+            } else {
+                this.registerSource(el);
+            }
             return;
         }
 
         if (attr === PARAM_SYNC_ATTR) {
-            if (el.hasAttribute(PARAM_SYNC_ATTR)) this.registerParamSync(el);
-            else this.unregisterParamSync(el);
+            if (el.hasAttribute(PARAM_SYNC_ATTR)) {
+                this.registerParamSync(el);
+            } else {
+                this.unregisterParamSync(el);
+            }
             return;
         }
 
         if (attr === PAGE_STATE_ATTR) {
-            if (el.hasAttribute(PAGE_STATE_ATTR)) this.registerPageStateSync(el);
-            else this.unregisterPageStateSync(el);
+            if (el.hasAttribute(PAGE_STATE_ATTR)) {
+                this.registerPageStateSync(el);
+            } else {
+                this.unregisterPageStateSync(el);
+            }
         }
     }
 
     private registerSource(el: Element): void {
-        if (!el.isConnected || this.sources.has(el) || !this.hasSourceUrl(el)) return;
+        if (!el.isConnected || this.sources.has(el) || !this.hasSourceUrl(el)) {
+            return;
+        }
         const src = new Source(el, this.filters, {
             ...this.options,
-            setSourceStatus:  (source, status) => this.sourceStatuses.set(source, status),
+            setSourceStatus: (source, status) => this.sourceStatuses.set(source, status),
             sourceStatusesFor: (source, current) => sourceStatusScope(this.root, this.sourceStatuses, source, current),
             afterSourceRender: (source) => {
-                if (this.stopped) return;
+                if (this.stopped) {
+                    return;
+                }
                 this.pruneDetachedBindings();
-                if (source.isConnected) this.registerWithin(source);
+                if (source.isConnected) {
+                    this.registerWithin(source);
+                }
             },
         });
         this.sources.set(el, src);
@@ -178,7 +202,9 @@ export class BindingRuntime {
 
     private unregisterSource(el: Element): void {
         const src = this.sources.get(el);
-        if (!src) return;
+        if (!src) {
+            return;
+        }
         src.dispose();
         this.sources.delete(el);
         this.sourceStatuses.delete(el);
@@ -186,18 +212,26 @@ export class BindingRuntime {
 
     private pruneDetachedBindings(): void {
         for (const source of this.sources.keys()) {
-            if (!source.isConnected) this.unregisterSource(source);
+            if (!source.isConnected) {
+                this.unregisterSource(source);
+            }
         }
         for (const sync of this.paramSyncs.keys()) {
-            if (!sync.isConnected) this.unregisterParamSync(sync);
+            if (!sync.isConnected) {
+                this.unregisterParamSync(sync);
+            }
         }
         for (const sync of this.pageStateSyncs.keys()) {
-            if (!sync.isConnected) this.unregisterPageStateSync(sync);
+            if (!sync.isConnected) {
+                this.unregisterPageStateSync(sync);
+            }
         }
     }
 
     private registerParamSync(el: Element): void {
-        if (!el.isConnected || this.paramSyncs.has(el)) return;
+        if (!el.isConnected || this.paramSyncs.has(el)) {
+            return;
+        }
         const ps = new ParamSync(el);
         this.paramSyncs.set(el, ps);
         ps.start();
@@ -205,13 +239,17 @@ export class BindingRuntime {
 
     private unregisterParamSync(el: Element): void {
         const ps = this.paramSyncs.get(el);
-        if (!ps) return;
+        if (!ps) {
+            return;
+        }
         ps.dispose();
         this.paramSyncs.delete(el);
     }
 
     private registerPageStateSync(el: Element): void {
-        if (!el.isConnected || this.pageStateSyncs.has(el)) return;
+        if (!el.isConnected || this.pageStateSyncs.has(el)) {
+            return;
+        }
         const ps = new PageStateSync(el);
         this.pageStateSyncs.set(el, ps);
         ps.start();
@@ -219,7 +257,9 @@ export class BindingRuntime {
 
     private unregisterPageStateSync(el: Element): void {
         const ps = this.pageStateSyncs.get(el);
-        if (!ps) return;
+        if (!ps) {
+            return;
+        }
         ps.dispose();
         this.pageStateSyncs.delete(el);
     }
@@ -229,11 +269,14 @@ export class BindingRuntime {
     }
 
     private isInScope(el: Element): boolean {
-        if (el !== this.root && !this.root.contains(el)) return false;
+        if (el !== this.root && !this.root.contains(el)) {
+            return false;
+        }
         for (let p = el.parentElement; p && p !== this.root; p = p.parentElement) {
-            if (p.localName === BINDING_CORE_TAG || p.hasAttribute(BIND_STOP_ATTR)) return false;
+            if (p.localName === BINDING_CORE_TAG || p.hasAttribute(BIND_STOP_ATTR)) {
+                return false;
+            }
         }
         return true;
     }
-
 }

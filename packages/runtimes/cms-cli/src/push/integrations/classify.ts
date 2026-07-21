@@ -7,7 +7,7 @@ export type RemoteIntegrationItem = { id: string; label?: string };
 
 export type ClassifiedIntegration = {
     integration: LocalIntegration;
-    status:      PageStatus;
+    status: PageStatus;
 };
 
 /**
@@ -19,13 +19,15 @@ export type ClassifiedIntegration = {
  * everything regardless of state).
  */
 export function classifyIntegrations(
-    local:     LocalIntegration[],
+    local: LocalIntegration[],
     remoteIds: Set<string>,
-    state:     PushState,
-    force:     boolean,
+    state: PushState,
+    force: boolean,
 ): ClassifiedIntegration[] {
-    return local.map(integration => {
-        if (!remoteIds.has(integration.id)) return { integration, status: "new" };
+    return local.map((integration) => {
+        if (!remoteIds.has(integration.id)) {
+            return { integration, status: "new" };
+        }
         const stateHash = state.entities[`integration:${integration.id}`]?.hash;
         const unchanged = !force && stateHash === integration.hash;
         return { integration, status: unchanged ? "unchanged" : "update" };

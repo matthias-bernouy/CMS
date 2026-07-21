@@ -5,7 +5,7 @@ import { updateSettings } from "cms-control/core/settings/updateSettings";
 
 export default async function postSettings(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
-    const dto  = parseSettingsUpdateDto(body);
+    const dto = parseSettingsUpdateDto(body);
     await updateSettings(cms, dto);
     return new Response();
 }

@@ -8,12 +8,12 @@ const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 export type PullPagesResult = { pulled: string[]; failed: { path: string; error: string }[] };
 
 type RemotePage = {
-    path:        string;
-    title:       string;
+    path: string;
+    title: string;
     description: string;
-    content:     string;
-    visible:     string | boolean;
-    tags:        string | string[];
+    content: string;
+    visible: string | boolean;
+    tags: string | string[];
 };
 
 /**
@@ -40,16 +40,20 @@ export async function pullPages(adminBase: URL, token: string, siteDir: string):
 async function fetchList(adminBase: URL, token: string): Promise<{ id: string; path: string }[]> {
     const url = new URL("api/page/list", adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    const data = await res.json() as { id: string; path: string }[];
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    const data = (await res.json()) as { id: string; path: string }[];
     return data;
 }
 
 async function fetchOne(adminBase: URL, token: string, id: string): Promise<RemotePage> {
     const url = new URL(`api/page?id=${encodeURIComponent(id)}`, adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    return await res.json() as RemotePage;
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    return (await res.json()) as RemotePage;
 }
 
 async function writePage(siteDir: string, urlPath: string, page: RemotePage): Promise<void> {
@@ -57,10 +61,10 @@ async function writePage(siteDir: string, urlPath: string, page: RemotePage): Pr
     await mkdir(dirname(file), { recursive: true });
 
     const visible = page.visible === true || page.visible === "on";
-    const tags    = Array.isArray(page.tags) ? page.tags : (page.tags ? page.tags.split(",").filter(Boolean) : []);
+    const tags = Array.isArray(page.tags) ? page.tags : page.tags ? page.tags.split(",").filter(Boolean) : [];
 
     const fm = serializeFrontmatter({
-        title:       page.title       ?? "",
+        title: page.title ?? "",
         description: page.description ?? "",
         visible,
         tags,
@@ -70,6 +74,8 @@ async function writePage(siteDir: string, urlPath: string, page: RemotePage): Pr
 }
 
 function urlPathToFile(p: string): string {
-    if (p === "/") return "index.html";
+    if (p === "/") {
+        return "index.html";
+    }
     return p.replace(/^\//, "") + ".html";
 }

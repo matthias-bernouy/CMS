@@ -25,7 +25,9 @@ export function methodNotAllowed(...methods: string[]): Response {
 }
 
 export function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+        return json({ error: error.message }, error.status);
+    }
     console.error(error);
     return json({ error: "internal error" }, 500);
 }

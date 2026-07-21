@@ -26,23 +26,21 @@ export type ServeStaticFolderOptions = {
  * actually inflate them slightly.
  */
 const COMPRESSIBLE_TYPES: Record<string, string> = {
-    ".js":   "text/javascript; charset=utf-8",
-    ".mjs":  "text/javascript; charset=utf-8",
-    ".css":  "text/css; charset=utf-8",
-    ".svg":  "image/svg+xml; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".mjs": "text/javascript; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".svg": "image/svg+xml; charset=utf-8",
     ".json": "application/json; charset=utf-8",
-    ".txt":  "text/plain; charset=utf-8",
-    ".xml":  "application/xml; charset=utf-8",
-    ".map":  "application/json; charset=utf-8",
+    ".txt": "text/plain; charset=utf-8",
+    ".xml": "application/xml; charset=utf-8",
+    ".map": "application/json; charset=utf-8",
 };
 
 export default async function serveStaticFolder(runner: Runner, options: ServeStaticFolderOptions) {
-
     const files = await scanStaticFolder();
     const cache = options.cache;
 
     for (const file of files) {
-
         if (file.relativePath.endsWith(".html")) {
             let routePath = file.relativePath.replace(/\.html$/, "");
             if (routePath === "index") {
@@ -69,10 +67,17 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
                 }
                 const extras = options.cspExtras ? await options.cspExtras() : undefined;
                 const cacheKey = versionedStaticCacheKey(cachePrefix, file.absolutePath);
-                return cachedResponseAsync(req, cacheKey, cache, async () => {
-                    const html = await prepareHtml(file.absolutePath, runner);
-                    return compress(html, "text/html; charset=utf-8");
-                }, publicAssetCacheControl(req), { cspExtras: extras });
+                return cachedResponseAsync(
+                    req,
+                    cacheKey,
+                    cache,
+                    async () => {
+                        const html = await prepareHtml(file.absolutePath, runner);
+                        return compress(html, "text/html; charset=utf-8");
+                    },
+                    publicAssetCacheControl(req),
+                    { cspExtras: extras },
+                );
             });
 
             continue;
@@ -86,10 +91,16 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
             runner.get(file.relativePath, async (req: Request) => {
                 const source = Bun.file(file.absolutePath);
                 const cacheKey = `${cachePrefix}:${source.lastModified}`;
-                return cachedResponseAsync(req, cacheKey, cache, async () => {
-                    const bytes = new Uint8Array(await source.arrayBuffer());
-                    return compress(bytes, compressType);
-                }, publicAssetCacheControl(req));
+                return cachedResponseAsync(
+                    req,
+                    cacheKey,
+                    cache,
+                    async () => {
+                        const bytes = new Uint8Array(await source.arrayBuffer());
+                        return compress(bytes, compressType);
+                    },
+                    publicAssetCacheControl(req),
+                );
             });
             continue;
         }

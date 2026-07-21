@@ -13,20 +13,30 @@ describe("dashboard detail request coordinator", () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls += 1;
-            return new Promise<Response>(resolve => responses.push(resolve));
+            return new Promise<Response>((resolve) => responses.push(resolve));
         }) as unknown as typeof fetch;
         const requests = new DetailRequestCoordinator();
         const first = requests.createConsumer();
         const second = requests.createConsumer();
 
-        const firstResult = requests.load(first, "commerce", {
-            endpoint: "products",
-            params: { limit: "20", q: "racket" },
-        }, {});
-        const secondResult = requests.load(second, "commerce", {
-            endpoint: "products",
-            params: { q: "racket", limit: "20" },
-        }, {});
+        const firstResult = requests.load(
+            first,
+            "commerce",
+            {
+                endpoint: "products",
+                params: { limit: "20", q: "racket" },
+            },
+            {},
+        );
+        const secondResult = requests.load(
+            second,
+            "commerce",
+            {
+                endpoint: "products",
+                params: { q: "racket", limit: "20" },
+            },
+            {},
+        );
 
         expect(calls).toBe(1);
         responses[0]!(Response.json({ items: [{ id: "product-1" }] }));
@@ -62,9 +72,7 @@ describe("dashboard detail request coordinator", () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls += 1;
-            return calls === 1
-                ? new Response("temporary failure", { status: 503 })
-                : Response.json({ items: [] });
+            return calls === 1 ? new Response("temporary failure", { status: 503 }) : Response.json({ items: [] });
         }) as unknown as typeof fetch;
         const requests = new DetailRequestCoordinator();
         const consumer = requests.createConsumer();

@@ -2,12 +2,18 @@ import { describe, test, expect, beforeAll, afterEach } from "bun:test";
 import { BindingCore, BINDING_CORE_TAG, SOURCE_STATE_FORCE_ATTR } from "../../../src/binding/bindingCore";
 import { text, waitFor, settle, respond, resetDom } from "../testUtils";
 
-beforeAll(() => { if (!customElements.get(BINDING_CORE_TAG)) customElements.define(BINDING_CORE_TAG, BindingCore); });
+beforeAll(() => {
+    if (!customElements.get(BINDING_CORE_TAG)) {
+        customElements.define(BINDING_CORE_TAG, BindingCore);
+    }
+});
 afterEach(resetDom);
 
 function commentCount(node: Node): number {
     let count = node.nodeType === Node.COMMENT_NODE ? 1 : 0;
-    for (const child of Array.from(node.childNodes)) count += commentCount(child);
+    for (const child of Array.from(node.childNodes)) {
+        count += commentCount(child);
+    }
     return count;
 }
 
@@ -17,7 +23,11 @@ describe("<cms-binding-core> — forced source state", () => {
             let calls = 0;
             globalThis.fetch = (async () => {
                 calls++;
-                return { ok: true, status: 200, text: async () => JSON.stringify({ name: "Ada" }) } as unknown as Response;
+                return {
+                    ok: true,
+                    status: 200,
+                    text: async () => JSON.stringify({ name: "Ada" }),
+                } as unknown as Response;
             }) as unknown as typeof fetch;
 
             document.body.innerHTML = `

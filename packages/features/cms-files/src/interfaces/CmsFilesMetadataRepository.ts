@@ -20,9 +20,9 @@
 export type FilesItemType = "folder" | "file";
 
 type BaseItem = {
-    id:        string;            // opaque, stable; also the blob key for files
-    name:      string;
-    parentId:  string | null;     // null = tree root
+    id: string; // opaque, stable; also the blob key for files
+    name: string;
+    parentId: string | null; // null = tree root
     createdAt: Date;
     updatedAt: Date;
 };
@@ -30,9 +30,9 @@ type BaseItem = {
 export type FolderItem = BaseItem & { type: "folder" };
 
 export type FileItem = BaseItem & {
-    type:        "file";
-    size:        number;          // bytes
-    mimeType:    string;
+    type: "file";
+    size: number; // bytes
+    mimeType: string;
     /** sha256-hex of the bytes. Changes on every content edit → the cache token
      *  (`?v=<contentHash>`) the renderer appends to a `by-id` URL so an in-place
      *  update busts the immutable cache. Optional for files whose content hash
@@ -44,26 +44,29 @@ export type FilesItem = FolderItem | FileItem;
 
 export type FilesListOptions = {
     /** Restrict to folders and/or files. Default: both. */
-    accept?:     FilesItemType[];
+    accept?: FilesItemType[];
     /** Case-insensitive substring match on `name`. */
-    search?:     string;
-    sortBy?:     "name" | "createdAt" | "updatedAt" | "size";
-    sortOrder?:  "asc" | "desc";
+    search?: string;
+    sortBy?: "name" | "createdAt" | "updatedAt" | "size";
+    sortOrder?: "asc" | "desc";
     /** 1-based. Omit for the full (unbounded) listing. */
     pagination?: { page: number; limit: number };
 };
 
 export type FilesPage = {
-    items:   FilesItem[];
-    total:   number;
-    page:    number;
-    limit:   number;
+    items: FilesItem[];
+    total: number;
+    page: number;
+    limit: number;
     hasMore: boolean;
 };
 
 export type NewFolder = { name: string; parentId: string | null };
-export type NewFile   = {
-    name: string; parentId: string | null; size: number; mimeType: string;
+export type NewFile = {
+    name: string;
+    parentId: string | null;
+    size: number;
+    mimeType: string;
     /** Optional caller-supplied id, used VERBATIM as the item's id. The CLI push
      *  passes the dev registry uuid here so dev and remote agree on every file's
      *  id (immutable `by-id` URLs survive the push). When supplied, `createFile`
@@ -77,7 +80,6 @@ export type NewFile   = {
 export type ItemPatch = { name?: string; parentId?: string | null };
 
 export interface CmsFilesMetadataRepository {
-
     // READ
     /** Direct children of a folder (`null` = root), filtered / sorted / paged. */
     listChildren(parentId: string | null, opts?: FilesListOptions): Promise<FilesPage>;
@@ -98,9 +100,11 @@ export interface CmsFilesMetadataRepository {
     /** After a file's bytes change IN PLACE (same id), refresh the
      *  content-derived fields (`size`, `mimeType`, `contentHash`) + `updatedAt`,
      *  keeping `name`/`parentId`. Returns `null` if `id` is unknown or a folder. */
-    updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }): Promise<FileItem | null>;
+    updateFileContent(
+        id: string,
+        fields: { size: number; mimeType: string; contentHash: string },
+    ): Promise<FileItem | null>;
     /** Delete an item. `recursive` is required to delete a non-empty folder.
      *  Returns the ids of the deleted FILES so the caller can purge their bytes. */
     deleteItem(id: string, opts?: { recursive?: boolean }): Promise<{ deletedFileIds: string[] }>;
-
 }

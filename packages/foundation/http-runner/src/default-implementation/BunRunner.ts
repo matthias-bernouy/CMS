@@ -10,12 +10,13 @@ function normalizePath(p: string): string {
 }
 
 function pathUnderPrefix(pathname: string, prefix: string): boolean {
-    if (prefix === "/") return true;
+    if (prefix === "/") {
+        return true;
+    }
     return pathname === prefix || pathname.startsWith(prefix + "/");
 }
 
 export class BunRunner implements Runner {
-
     basePath: string = "/";
 
     private routes: Array<{
@@ -31,7 +32,9 @@ export class BunRunner implements Runner {
 
     /** The bound TCP port once `start()` has run (the OS-assigned one when
      *  started with `0`), or `undefined` before start / after stop. */
-    get port(): number | undefined { return this.server?.port; }
+    get port(): number | undefined {
+        return this.server?.port;
+    }
 
     private defaultEndpoints: Array<{
         method: string;
@@ -54,7 +57,6 @@ export class BunRunner implements Runner {
     }
 
     group(prefix: string, callback: (runner: Runner) => void, middlewares: Middleware[] = []) {
-
         // normalize: strip trailing "/" so nested groups (e.g. parent="/cms"
         // + child="/" → "/cms/") don't leak the slash into basePath, which
         // would propagate into `{{BASE_PATH}}` substitutions and produce
@@ -68,11 +70,11 @@ export class BunRunner implements Runner {
             addEndpoint: (method, path, handler, middleware = []) => {
                 this.addEndpoint(method, urlJoin(currentPrefix, path), handler, [...currentMiddlewares, ...middleware]);
             },
-            get: (p, h, m) => scopedRunner.addEndpoint('GET', p, h, m),
-            post: (p, h, m) => scopedRunner.addEndpoint('POST', p, h, m),
-            put: (p, h, m) => scopedRunner.addEndpoint('PUT', p, h, m),
-            delete: (p, h, m) => scopedRunner.addEndpoint('DELETE', p, h, m),
-            patch: (p, h, m) => scopedRunner.addEndpoint('PATCH', p, h, m),
+            get: (p, h, m) => scopedRunner.addEndpoint("GET", p, h, m),
+            post: (p, h, m) => scopedRunner.addEndpoint("POST", p, h, m),
+            put: (p, h, m) => scopedRunner.addEndpoint("PUT", p, h, m),
+            delete: (p, h, m) => scopedRunner.addEndpoint("DELETE", p, h, m),
+            patch: (p, h, m) => scopedRunner.addEndpoint("PATCH", p, h, m),
 
             // `{ ...this }` copies instance fields but NOT prototype methods, so
             // `use` would be missing from the scoped runner even though it's on
@@ -100,13 +102,27 @@ export class BunRunner implements Runner {
         callback(scopedRunner);
     }
 
-    get(path: string, handler: RouteHandler, middlewares: Middleware[] = []) { this.addEndpoint('GET', path, handler, middlewares); }
-    post(path: string, handler: RouteHandler, middlewares: Middleware[] = []) { this.addEndpoint('POST', path, handler, middlewares); }
-    patch(path: string, handler: RouteHandler, middlewares: Middleware[] = []) { this.addEndpoint('PATCH', path, handler, middlewares); }
-    delete(path: string, handler: RouteHandler, middlewares: Middleware[] = []) { this.addEndpoint('DELETE', path, handler, middlewares); }
-    put(path: string, handler: RouteHandler, middlewares: Middleware[] = []) { this.addEndpoint('PUT', path, handler, middlewares); }
+    get(path: string, handler: RouteHandler, middlewares: Middleware[] = []) {
+        this.addEndpoint("GET", path, handler, middlewares);
+    }
+    post(path: string, handler: RouteHandler, middlewares: Middleware[] = []) {
+        this.addEndpoint("POST", path, handler, middlewares);
+    }
+    patch(path: string, handler: RouteHandler, middlewares: Middleware[] = []) {
+        this.addEndpoint("PATCH", path, handler, middlewares);
+    }
+    delete(path: string, handler: RouteHandler, middlewares: Middleware[] = []) {
+        this.addEndpoint("DELETE", path, handler, middlewares);
+    }
+    put(path: string, handler: RouteHandler, middlewares: Middleware[] = []) {
+        this.addEndpoint("PUT", path, handler, middlewares);
+    }
 
-    setDefaultEndpoint(method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS', handler: RouteHandler, middlewares: Middleware[] = []): void {
+    setDefaultEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        handler: RouteHandler,
+        middlewares: Middleware[] = [],
+    ): void {
         this._registerDefaultEndpoint(method, "/", handler, middlewares);
     }
 
@@ -116,14 +132,18 @@ export class BunRunner implements Runner {
 
     removeRoutesByPathPrefix(prefix: string): void {
         const norm = normalizePath(prefix);
-        const matches = (path: string): boolean =>
-            path === norm || path.startsWith(norm + "/");
-        this.routes = this.routes.filter(r => !matches(r.path));
-        this.defaultEndpoints = this.defaultEndpoints.filter(d => !matches(d.prefix));
+        const matches = (path: string): boolean => path === norm || path.startsWith(norm + "/");
+        this.routes = this.routes.filter((r) => !matches(r.path));
+        this.defaultEndpoints = this.defaultEndpoints.filter((d) => !matches(d.prefix));
     }
 
-    private _registerDefaultEndpoint(method: string, prefix: string, handler: RouteHandler, middlewares: Middleware[]): void {
-        this.defaultEndpoints = this.defaultEndpoints.filter(d => !(d.method === method && d.prefix === prefix));
+    private _registerDefaultEndpoint(
+        method: string,
+        prefix: string,
+        handler: RouteHandler,
+        middlewares: Middleware[],
+    ): void {
+        this.defaultEndpoints = this.defaultEndpoints.filter((d) => !(d.method === method && d.prefix === prefix));
         this.defaultEndpoints.push({ method, prefix, handler, middlewares });
     }
 
@@ -134,20 +154,21 @@ export class BunRunner implements Runner {
             port,
             async fetch(request, server) {
                 const peer = server.requestIP(request);
-                if (peer) setRequestIP(request, peer.address);
+                if (peer) {
+                    setRequestIP(request, peer.address);
+                }
 
                 const url = new URL(request.url);
                 const method = request.method;
                 const pathname = normalizePath(url.pathname);
 
-                const route = self.routes.find(r =>
-                    r.method === method && self.matchPath(r.path, pathname)
-                );
+                const route = self.routes.find((r) => r.method === method && self.matchPath(r.path, pathname));
 
-                const fallback = route ? null : self.defaultEndpoints
-                    .filter(d => d.method === method && pathUnderPrefix(pathname, d.prefix))
-                    .sort((a, b) => b.prefix.length - a.prefix.length)[0]
-                    ?? null;
+                const fallback = route
+                    ? null
+                    : (self.defaultEndpoints
+                          .filter((d) => d.method === method && pathUnderPrefix(pathname, d.prefix))
+                          .sort((a, b) => b.prefix.length - a.prefix.length)[0] ?? null);
 
                 const effective = route ?? fallback;
 
@@ -198,13 +219,17 @@ export class BunRunner implements Runner {
 
     private matchPath(routePath: string, requestPath: string): boolean {
         const route = normalizePath(routePath);
-        if (route === requestPath) return true;
+        if (route === requestPath) {
+            return true;
+        }
 
-        const routeParts = route.split('/');
-        const requestParts = requestPath.split('/');
+        const routeParts = route.split("/");
+        const requestParts = requestPath.split("/");
 
-        if (routeParts.length !== requestParts.length) return false;
+        if (routeParts.length !== requestParts.length) {
+            return false;
+        }
 
-        return routeParts.every((part, i) => part.startsWith(':') || part === requestParts[i]);
+        return routeParts.every((part, i) => part.startsWith(":") || part === requestParts[i]);
     }
 }

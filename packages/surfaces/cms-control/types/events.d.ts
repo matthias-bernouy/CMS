@@ -6,34 +6,30 @@ export interface SwitchModeEvent extends CustomEvent {
 
 export interface BlocSelected extends CustomEvent {
     readonly detail: {
-        tag: string
+        tag: string;
     };
 }
 
-
 export interface ImageSelected extends CustomEvent {
     readonly detail: {
-        src: string,
-        alt: string
+        src: string;
+        alt: string;
     };
 }
 
 export interface CMSEvent<Data = string> extends CustomEvent {
-    readonly detail: Data
+    readonly detail: Data;
 }
 
 declare global {
-
     interface HTMLElementEventMap {
-        "p9r-bloc-selected": BlocSelected,
-        "p9r-image-selected": ImageSelected
-	}
-
-
-	interface DocumentEventMap {
-        "switch-mode": SwitchModeEvent;
+        "p9r-bloc-selected": BlocSelected;
+        "p9r-image-selected": ImageSelected;
     }
 
+    interface DocumentEventMap {
+        "switch-mode": SwitchModeEvent;
+    }
 }
 
-export {}
+export {};

@@ -18,7 +18,11 @@ describe("eventToWrites", () => {
     test("a pageview yields 5 rollups (all|path|status|device|browser)", () => {
         const w = eventToWrites(ev());
         expect(w.map((x) => `${x.dim}:${x.key}`)).toEqual([
-            "all:_", "path:/about", "status:200", "device:desktop", "browser:chrome",
+            "all:_",
+            "path:/about",
+            "status:200",
+            "device:desktop",
+            "browser:chrome",
         ]);
     });
 
@@ -36,7 +40,9 @@ describe("eventToWrites", () => {
         const all = w.find((x) => x.dim === "all")!;
         expect(all.msSum).toBe(30);
         expect(all.msMax).toBe(30);
-        expect(w.filter((x) => x.dim !== "all").every((x) => x.msSum === undefined && x.msMax === undefined)).toBe(true);
+        expect(w.filter((x) => x.dim !== "all").every((x) => x.msSum === undefined && x.msMax === undefined)).toBe(
+            true,
+        );
     });
 
     test("bots produce no writes and are not counted", () => {

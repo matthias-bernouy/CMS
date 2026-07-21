@@ -2,11 +2,11 @@ import type { DataShape } from "./DataShape";
 
 /** The HTTP methods an endpoint may declare. Runtime list (single source of truth)
  *  so callers can validate an incoming string against it; `HTTPMethod` is derived. */
-export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const;
-export type HTTPMethod = typeof HTTP_METHODS[number];
+export const HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"] as const;
+export type HTTPMethod = (typeof HTTP_METHODS)[number];
 
-export const RESPONSE_KINDS = ['json', 'file'] as const;
-export type ResponseKind = typeof RESPONSE_KINDS[number];
+export const RESPONSE_KINDS = ["json", "file"] as const;
+export type ResponseKind = (typeof RESPONSE_KINDS)[number];
 
 /** Default and upper bound for one proxied upstream request. Endpoint-specific
  * overrides remain bounded so a declarative source cannot hold CMS workers
@@ -14,8 +14,8 @@ export type ResponseKind = typeof RESPONSE_KINDS[number];
 export const DEFAULT_SOURCE_ENDPOINT_TIMEOUT_MS = 15_000;
 export const MAX_SOURCE_ENDPOINT_TIMEOUT_MS = 120_000;
 
-export const SOURCE_ENDPOINT_ACCESS_MODES = ['public', 'auth', 'admin', 'system'] as const;
-export type SourceEndpointAccessMode = typeof SOURCE_ENDPOINT_ACCESS_MODES[number];
+export const SOURCE_ENDPOINT_ACCESS_MODES = ["public", "auth", "admin", "system"] as const;
+export type SourceEndpointAccessMode = (typeof SOURCE_ENDPOINT_ACCESS_MODES)[number];
 
 export type SourceEndpointAccess = {
     mode: SourceEndpointAccessMode;
@@ -40,9 +40,9 @@ export type SourceEndpointEffects = {
  *    applied until the secret store is wired (the executor returns 500 for it).
  *  - `computed`: a source context value resolved server-side for this request. */
 export type HeaderSource =
-    | { from: 'static'; value: string }
-    | { from: 'secret'; ref: string; prefix?: string }
-    | { from: 'computed'; ref: ComputedParamRef };
+    | { from: "static"; value: string }
+    | { from: "secret"; ref: string; prefix?: string }
+    | { from: "computed"; ref: ComputedParamRef };
 
 /** A request header injected into the upstream call. `name` is an RFC 7230 token. */
 export type EndpointHeader = {
@@ -53,15 +53,13 @@ export type EndpointHeader = {
 /** Where an input param goes in the upstream request. Runtime list (single source
  *  of truth) so callers can validate an incoming string against it; `ParamIn` is
  *  derived. `'path'` → templated into `targetUrl` as `{name}`. */
-export const PARAM_INS = ['path', 'query', 'header'] as const;
-export type ParamIn = typeof PARAM_INS[number];
+export const PARAM_INS = ["path", "query", "header"] as const;
+export type ParamIn = (typeof PARAM_INS)[number];
 
-export const COMPUTED_PARAM_REFS = ['userID', 'userRole'] as const;
-export type ComputedParamRef = typeof COMPUTED_PARAM_REFS[number];
+export const COMPUTED_PARAM_REFS = ["userID", "userRole"] as const;
+export type ComputedParamRef = (typeof COMPUTED_PARAM_REFS)[number];
 
-export type ParamValueSource =
-    | { from: 'request' }
-    | { from: 'computed'; ref: ComputedParamRef };
+export type ParamValueSource = { from: "request" } | { from: "computed"; ref: ComputedParamRef };
 
 /** An input parameter and its location in the upstream request. */
 export type EndpointParam = {
@@ -93,10 +91,10 @@ export type EndpointResponse = {
 };
 
 export type SourceEndpoint = {
-    urn: string;            // e.g. "urn:source-id:getUser" (method NOT in the urn)
+    urn: string; // e.g. "urn:source-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
-    targetUrl: string;      // e.g. "https://api.example.com/v1/users/{id}"
-    timeoutMs?: number;     // bounded upstream timeout; defaults to 15 seconds
+    targetUrl: string; // e.g. "https://api.example.com/v1/users/{id}"
+    timeoutMs?: number; // bounded upstream timeout; defaults to 15 seconds
     access?: SourceEndpointAccess;
     effects?: SourceEndpointEffects;
     responseKind?: ResponseKind;
@@ -122,7 +120,7 @@ export type SourceEndpoint = {
 };
 
 export type Source = {
-    urn: string;            // e.g. "urn:source-id"
+    urn: string; // e.g. "urn:source-id"
     identityAuthority?: string;
     meta?: SourceMeta;
     endpoints: SourceEndpoint[];

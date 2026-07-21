@@ -19,9 +19,15 @@ function extensionOf(path: string): string {
 export function isPackageSourceFile(path: string, packagePath: string): boolean {
     const normalizedPath = normalizePath(path);
     const normalizedPackagePath = normalizePath(packagePath);
-    if (!normalizedPath.startsWith(`${normalizedPackagePath}/`)) return false;
-    if (normalizedPath.endsWith(".d.ts")) return false;
-    if (!SOURCE_EXTENSIONS.has(extensionOf(normalizedPath))) return false;
+    if (!normalizedPath.startsWith(`${normalizedPackagePath}/`)) {
+        return false;
+    }
+    if (normalizedPath.endsWith(".d.ts")) {
+        return false;
+    }
+    if (!SOURCE_EXTENSIONS.has(extensionOf(normalizedPath))) {
+        return false;
+    }
     const relativePath = normalizedPath.slice(normalizedPackagePath.length + 1);
     return !relativePath.split("/").some((segment) => SKIPPED_DIRECTORIES.has(segment));
 }

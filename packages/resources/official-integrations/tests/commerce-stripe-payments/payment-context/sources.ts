@@ -18,37 +18,46 @@ const stripeUserHeader = {
 
 export async function paymentSources(): Promise<InMemorySourceRepository> {
     const sources = new InMemorySourceRepository();
-    await sources.createSource(source("commerce", [
-        get("commerce", "myOrder", "https://commerce.test/me/order", [
-            { name: "id", type: "number", required: false },
-        ], { mode: "auth" }, [cmsUserHeader]),
-        get(
-            "commerce",
-            "getPaymentOrderContext",
-            "https://commerce.test/system/order/payment-context",
-            [{ name: "orderId", type: "number", required: true }],
-            { mode: "system" },
-            [cmsUserHeader],
-        ),
-        {
-            urn: makeEndpointUrn("commerce", "recordOrderPayment"),
-            method: "POST",
-            access: { mode: "system" },
-            targetUrl: "https://commerce.test/system/order/payment",
-            input: { body: openObject },
-            output: [{ status: "200", body: openObject }],
-        },
-    ]));
-    await sources.createSource(source("stripe-connect", [
-        get(
-            "stripe-connect",
-            "getProtectedPaymentByClientReference",
-            "https://stripe.test/payments/reference",
-            [{ name: "clientReferenceId", type: "string", required: true }],
-            { mode: "system" },
-            [stripeUserHeader],
-        ),
-    ]));
+    await sources.createSource(
+        source("commerce", [
+            get(
+                "commerce",
+                "myOrder",
+                "https://commerce.test/me/order",
+                [{ name: "id", type: "number", required: false }],
+                { mode: "auth" },
+                [cmsUserHeader],
+            ),
+            get(
+                "commerce",
+                "getPaymentOrderContext",
+                "https://commerce.test/system/order/payment-context",
+                [{ name: "orderId", type: "number", required: true }],
+                { mode: "system" },
+                [cmsUserHeader],
+            ),
+            {
+                urn: makeEndpointUrn("commerce", "recordOrderPayment"),
+                method: "POST",
+                access: { mode: "system" },
+                targetUrl: "https://commerce.test/system/order/payment",
+                input: { body: openObject },
+                output: [{ status: "200", body: openObject }],
+            },
+        ]),
+    );
+    await sources.createSource(
+        source("stripe-connect", [
+            get(
+                "stripe-connect",
+                "getProtectedPaymentByClientReference",
+                "https://stripe.test/payments/reference",
+                [{ name: "clientReferenceId", type: "string", required: true }],
+                { mode: "system" },
+                [stripeUserHeader],
+            ),
+        ]),
+    );
     return sources;
 }
 
@@ -81,7 +90,7 @@ function get(
         targetUrl,
         headers,
         input: {
-            params: params.map(param => ({
+            params: params.map((param) => ({
                 name: param.name,
                 in: "query",
                 required: param.required,

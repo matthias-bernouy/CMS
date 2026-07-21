@@ -2,7 +2,7 @@ import type { SourceEndpoint, EndpointParam } from "../interfaces/Source";
 import { hasUrlCredentials, URL_CREDENTIALS_ERROR } from "./sourceTargetUrl";
 
 export type BuildUpstream =
-    | { ok: true;  url: string; headers: Record<string, string> }
+    | { ok: true; url: string; headers: Record<string, string> }
     | { ok: false; status: 400 | 401 | 500 | 502; message: string };
 
 export type SourceComputedContext = {
@@ -21,7 +21,9 @@ export function extractPathParamNames(targetUrl: string): string[] {
     const seen = new Set<string>();
     for (const m of targetUrl.matchAll(PATH_PLACEHOLDER)) {
         const name = m[1]!;
-        if (seen.has(name)) continue;
+        if (seen.has(name)) {
+            continue;
+        }
         seen.add(name);
         out.push(name);
     }
@@ -53,16 +55,24 @@ export function buildUpstreamUrl(
     for (const p of endpoint.input?.params ?? []) {
         const value = paramValue(p, incoming, computed);
         if (value === null) {
-            if (p.required) return { ok: false, status: 400, message: `missing required param: "${p.name}"` };
+            if (p.required) {
+                return { ok: false, status: 400, message: `missing required param: "${p.name}"` };
+            }
             continue;
         }
         if (value === undefined) {
-            if (p.required) return { ok: false, status: 401, message: `computed param unavailable: "${p.name}"` };
+            if (p.required) {
+                return { ok: false, status: 401, message: `computed param unavailable: "${p.name}"` };
+            }
             continue;
         }
-        if (p.in === "path")       pathValues.set(p.name, value);
-        else if (p.in === "query") queryParams.push([p.name, value]);
-        else                       headers[p.name] = value;   // in: "header"
+        if (p.in === "path") {
+            pathValues.set(p.name, value);
+        } else if (p.in === "query") {
+            queryParams.push([p.name, value]);
+        } else {
+            headers[p.name] = value; // in: "header"
+        }
     }
 
     let declaredTarget: URL;
@@ -93,7 +103,9 @@ export function buildUpstreamUrl(
         return { ok: false, status: 500, message: URL_CREDENTIALS_ERROR };
     }
 
-    for (const [name, value] of queryParams) target.searchParams.append(name, value);
+    for (const [name, value] of queryParams) {
+        target.searchParams.append(name, value);
+    }
 
     if (target.origin !== declaredTarget.origin) {
         return { ok: false, status: 502, message: `target escaped declared origin (${declaredTarget.origin})` };
@@ -107,8 +119,14 @@ function paramValue(
     incoming: URLSearchParams,
     computed: SourceComputedContext,
 ): string | null | undefined {
-    if (!param.source || param.source.from === "request") return incoming.get(param.name);
-    if (param.source.ref === "userID") return computed.userID || undefined;
-    if (param.source.ref === "userRole") return computed.userRole || undefined;
+    if (!param.source || param.source.from === "request") {
+        return incoming.get(param.name);
+    }
+    if (param.source.ref === "userID") {
+        return computed.userID || undefined;
+    }
+    if (param.source.ref === "userRole") {
+        return computed.userRole || undefined;
+    }
     return undefined;
 }

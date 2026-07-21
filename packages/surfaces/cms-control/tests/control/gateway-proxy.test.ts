@@ -9,26 +9,30 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 // wired `resolveSecret` (delivery leaves it unwired, so it can't cover this).
 const SECURED: Source = {
     urn: "urn:secured",
-    endpoints: [{
-        urn: "urn:secured:get", method: "GET", targetUrl: "https://api.example.com/data",
-        headers: [{ name: "authorization", source: { from: "secret", ref: "API_KEY" } }],
-        output: [{ status: "200" }],
-    }],
+    endpoints: [
+        {
+            urn: "urn:secured:get",
+            method: "GET",
+            targetUrl: "https://api.example.com/data",
+            headers: [{ name: "authorization", source: { from: "secret", ref: "API_KEY" } }],
+            output: [{ status: "200" }],
+        },
+    ],
 };
 
 const PUBLIC_SEARCH: Source = {
     urn: "urn:public-search",
-    endpoints: [{
-        urn: "urn:public-search:search",
-        method: "GET",
-        targetUrl: "https://api.example.com/search",
-        input: {
-            params: [
-                { name: "q", in: "query", required: true, schema: { type: "string" } },
-            ],
+    endpoints: [
+        {
+            urn: "urn:public-search:search",
+            method: "GET",
+            targetUrl: "https://api.example.com/search",
+            input: {
+                params: [{ name: "q", in: "query", required: true, schema: { type: "string" } }],
+            },
+            output: [{ status: "200", body: { type: "object" } }],
         },
-        output: [{ status: "200", body: { type: "object" } }],
-    }],
+    ],
 };
 
 /**
@@ -40,10 +44,12 @@ function mountGateway(gateway: InMemorySourceRepository | null, secrets: InMemor
     const handlers = new Map<string, RouteHandler>();
     const prefix = "/cms/.cms/sources/";
     for (const method of SOURCE_PROXY_METHODS) {
-        handlers.set(method, (req) => handleSourceRequest(gateway, req, {
-            prefix,
-            deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) },
-        }));
+        handlers.set(method, (req) =>
+            handleSourceRequest(gateway, req, {
+                prefix,
+                deps: { resolveSecret: (r) => secrets.get(r).then((v) => v ?? undefined) },
+            }),
+        );
     }
     return handlers;
 }
@@ -67,7 +73,10 @@ describe("gateway preview proxy", () => {
     test("resolves a provider/endpoint and proxies to the built upstream URL", async () => {
         const { handlers } = await mountPublicSearch();
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(
-            new Response('{"type":"FeatureCollection"}', { status: 200, headers: { "content-type": "application/json" } }),
+            new Response('{"type":"FeatureCollection"}', {
+                status: 200,
+                headers: { "content-type": "application/json" },
+            }),
         );
         try {
             const res = await handlers.get("GET")!(new Request(`${URL_BASE}/public-search/search?q=8+bd+du+port`));

@@ -10,9 +10,12 @@ const DAY_MS = 86_400_000;
 export function parseRange(range: string | null, now: Date): RangeQuery {
     const to = now;
     switch (range) {
-        case "24h": return { from: new Date(now.getTime() - 24 * HOUR_MS), to, interval: "hour" };
-        case "30d": return { from: new Date(now.getTime() - 30 * DAY_MS), to, interval: "day" };
+        case "24h":
+            return { from: new Date(now.getTime() - 24 * HOUR_MS), to, interval: "hour" };
+        case "30d":
+            return { from: new Date(now.getTime() - 30 * DAY_MS), to, interval: "day" };
         case "7d":
-        default:    return { from: new Date(now.getTime() - 7 * DAY_MS), to, interval: "day" };
+        default:
+            return { from: new Date(now.getTime() - 7 * DAY_MS), to, interval: "day" };
     }
 }

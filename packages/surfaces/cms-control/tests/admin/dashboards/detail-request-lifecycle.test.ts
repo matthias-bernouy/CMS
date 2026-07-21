@@ -29,12 +29,15 @@ describe("dashboard detail request lifecycle", () => {
         expect(requests).toHaveLength(0);
 
         detail.setAttribute("data-row-key", "product-1");
-        detail.setAttribute("data-source-json", JSON.stringify({
-            id: "product-1",
-            categoryId: "category-1",
-            brandId: "brand-1",
-            secondaryBrandId: "brand-1",
-        }));
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({
+                id: "product-1",
+                categoryId: "category-1",
+                brandId: "brand-1",
+                secondaryBrandId: "brand-1",
+            }),
+        );
         await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("option[value='brand-1']")));
         await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='material']")));
 
@@ -46,7 +49,7 @@ describe("dashboard detail request lifecycle", () => {
         const responses = new Map<string, (response: Response) => void>();
         globalThis.fetch = (async (input: RequestInfo | URL) => {
             const ownerId = new URL(String(input)).searchParams.get("ownerId") ?? "";
-            return new Promise<Response>(resolve => responses.set(ownerId, resolve));
+            return new Promise<Response>((resolve) => responses.set(ownerId, resolve));
         }) as unknown as typeof fetch;
         const detail = detailElement(singleLookupWidget());
         detail.setAttribute("data-source-id", "catalog");
@@ -61,7 +64,7 @@ describe("dashboard detail request lifecycle", () => {
         await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("option[value='b']")));
 
         responses.get("product-a")!(Response.json({ items: [{ id: "a", title: "Product A" }] }));
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 20));
         expect(detail.shadowRoot?.querySelector("option[value='a']")).toBeNull();
         expect(detail.shadowRoot?.querySelector("option[value='b']")?.textContent).toBe("Product B");
     });
@@ -77,7 +80,10 @@ describe("dashboard detail request lifecycle", () => {
         const detail = detailElement(singleLookupWidget());
         detail.setAttribute("data-source-id", "catalog");
         detail.setAttribute("data-row-key", "product-a");
-        detail.setAttribute("data-source-json", JSON.stringify({ id: "product-a", title: "Private A", productId: "a" }));
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({ id: "product-a", title: "Private A", productId: "a" }),
+        );
         document.body.append(detail);
         await waitForDetail(() => signal !== undefined);
         expect(detail.shadowRoot?.textContent).toContain("Private A");
@@ -149,21 +155,37 @@ function sharedLookupWidget(): unknown {
         { id: "categoryId", label: "Category", path: "categoryId", type: "text" },
         { id: "brandId", label: "Brand", path: "brandId", type: "combobox", lookup },
         { id: "secondaryBrandId", label: "Secondary brand", path: "secondaryBrandId", type: "combobox", lookup },
-        { id: "metadata", label: "Metadata", path: "metadata", type: "schema", schema: {
-            endpoint: "brands", params: { categoryId: "$field.categoryId" }, itemsPath: "fields",
-        } },
+        {
+            id: "metadata",
+            label: "Metadata",
+            path: "metadata",
+            type: "schema",
+            schema: {
+                endpoint: "brands",
+                params: { categoryId: "$field.categoryId" },
+                itemsPath: "fields",
+            },
+        },
     ]);
 }
 
 function singleLookupWidget(): unknown {
     return {
-        ...widget([{ id: "productId", label: "Product", path: "productId", type: "combobox", lookup: {
-            endpoint: "products",
-            params: { ownerId: "$resource.id" },
-            itemsPath: "items",
-            valuePath: "id",
-            labelPath: "title",
-        } }]),
+        ...widget([
+            {
+                id: "productId",
+                label: "Product",
+                path: "productId",
+                type: "combobox",
+                lookup: {
+                    endpoint: "products",
+                    params: { ownerId: "$resource.id" },
+                    itemsPath: "items",
+                    valuePath: "id",
+                    labelPath: "title",
+                },
+            },
+        ]),
         title: { path: "title", fallback: "Product" },
     };
 }

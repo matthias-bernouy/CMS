@@ -26,13 +26,13 @@ export function createEditorCatalogEntry(
 
     return {
         tag,
-        label:       entry.label ?? defaults.label,
+        label: entry.label ?? defaults.label,
         description: entry.description ?? defaults.description,
-        icon:        entry.icon,
-        category:    entry.category ?? defaults.category,
+        icon: entry.icon,
+        category: entry.category ?? defaults.category,
         subCategory: entry.subCategory,
         defaultContent: entry.defaultContent ?? defaults.defaultContent,
-        bloc:        entry.bloc ?? defaults.bloc ?? globalThis.customElements?.get(tag) ?? fallbackElementConstructor(),
+        bloc: entry.bloc ?? defaults.bloc ?? globalThis.customElements?.get(tag) ?? fallbackElementConstructor(),
         editor,
     };
 }

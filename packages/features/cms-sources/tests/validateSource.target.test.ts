@@ -4,21 +4,29 @@ import { ep, source } from "./helpers/sourceValidationFixtures";
 
 describe("validateSource target URLs", () => {
     test("rejects unparseable and non-http target URLs", () => {
-        expect(validateSource(source({ endpoints: [ep("urn:shop:x", "not a url")] })).some(e => e.includes("targetUrl"))).toBe(true);
-        expect(validateSource(source({ endpoints: [ep("urn:shop:x", "ftp://api.shop.com/x")] })).some(e => e.includes("http or https"))).toBe(true);
+        expect(
+            validateSource(source({ endpoints: [ep("urn:shop:x", "not a url")] })).some((e) => e.includes("targetUrl")),
+        ).toBe(true);
+        expect(
+            validateSource(source({ endpoints: [ep("urn:shop:x", "ftp://api.shop.com/x")] })).some((e) =>
+                e.includes("http or https"),
+            ),
+        ).toBe(true);
     });
 
     test("rejects URL credentials without echoing them", () => {
-        const errors = validateSource(source({ endpoints: [
-            ep("urn:shop:x", "https://user:super-secret@api.shop.com/x"),
-        ] }));
+        const errors = validateSource(
+            source({ endpoints: [ep("urn:shop:x", "https://user:super-secret@api.shop.com/x")] }),
+        );
         expect(errors).toHaveLength(1);
         expect(errors[0]).toContain("must not contain credentials");
         expect(errors[0]).not.toContain("user");
         expect(errors[0]).not.toContain("super-secret");
-        expect(validateSourceTargetUrl("https://user@127.0.0.1/x", {
-            allowBlockedTargetHosts: ["127.0.0.1"],
-        }).ok).toBe(false);
+        expect(
+            validateSourceTargetUrl("https://user@127.0.0.1/x", {
+                allowBlockedTargetHosts: ["127.0.0.1"],
+            }).ok,
+        ).toBe(false);
     });
 
     test("rejects local/private IP ranges and metadata hosts", () => {
@@ -36,7 +44,11 @@ describe("validateSource target URLs", () => {
             "http://[::ffff:127.0.0.1]/x",
         ];
         for (const targetUrl of blocked) {
-            expect(validateSource(source({ endpoints: [ep("urn:shop:x", targetUrl)] })).some(e => e.includes("targetUrl"))).toBe(true);
+            expect(
+                validateSource(source({ endpoints: [ep("urn:shop:x", targetUrl)] })).some((e) =>
+                    e.includes("targetUrl"),
+                ),
+            ).toBe(true);
         }
     });
 

@@ -30,7 +30,9 @@ template.innerHTML = `
 `;
 
 export class DashboardWNavigationItem extends HTMLElement {
-    static get observedAttributes(): string[] { return ["title", "subtitle", "icon", "badge", "collection", "reorderable"]; }
+    static get observedAttributes(): string[] {
+        return ["title", "subtitle", "icon", "badge", "collection", "reorderable"];
+    }
 
     constructor() {
         super();
@@ -48,10 +50,18 @@ export class DashboardWNavigationItem extends HTMLElement {
         this.shadowRoot?.querySelector(".item")?.removeEventListener("keydown", this.onKeydown);
     }
 
-    attributeChangedCallback(): void { if (this.isConnected) this.render(); }
+    attributeChangedCallback(): void {
+        if (this.isConnected) {
+            this.render();
+        }
+    }
 
-    get rowKey(): string { return this.getAttribute("row-key") ?? ""; }
-    get collection(): string { return this.getAttribute("collection") ?? ""; }
+    get rowKey(): string {
+        return this.getAttribute("row-key") ?? "";
+    }
+    get collection(): string {
+        return this.getAttribute("collection") ?? "";
+    }
 
     private render(): void {
         const root = this.shadowRoot!;
@@ -65,31 +75,43 @@ export class DashboardWNavigationItem extends HTMLElement {
         const icon = this.getAttribute("icon");
         const iconRoot = root.querySelector<HTMLElement>("[data-icon]")!;
         iconRoot.hidden = !icon;
-        if (icon) renderIcon(iconRoot, undefined, icon, "tag");
+        if (icon) {
+            renderIcon(iconRoot, undefined, icon, "tag");
+        }
         root.querySelector<HTMLElement>("[data-handle]")!.hidden = !this.hasAttribute("reorderable");
         root.querySelector<HTMLElement>("[data-handle]")!.draggable = this.hasAttribute("reorderable");
         root.querySelector<HTMLElement>("[data-chevron]")!.hidden = !this.collection;
     }
 
     private onClick = (event: Event): void => {
-        if ((event.target as Element | null)?.closest("[data-handle]")) return;
+        if ((event.target as Element | null)?.closest("[data-handle]")) {
+            return;
+        }
         this.select();
     };
 
     private onKeydown = (event: Event): void => {
-        if (!(event instanceof KeyboardEvent) || (event.key !== "Enter" && event.key !== " ")) return;
+        if (!(event instanceof KeyboardEvent) || (event.key !== "Enter" && event.key !== " ")) {
+            return;
+        }
         event.preventDefault();
         this.select();
     };
 
     private select(): void {
-        if (this.collection && this.rowKey) emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
+        if (this.collection && this.rowKey) {
+            emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
+        }
     }
 }
 
-if (!customElements.get("cms-dashboard-w-navigation-item")) customElements.define("cms-dashboard-w-navigation-item", DashboardWNavigationItem);
+if (!customElements.get("cms-dashboard-w-navigation-item")) {
+    customElements.define("cms-dashboard-w-navigation-item", DashboardWNavigationItem);
+}
 
 function setText(root: ParentNode, selector: string, value: string): void {
     const element = root.querySelector<HTMLElement>(selector);
-    if (element) element.textContent = value;
+    if (element) {
+        element.textContent = value;
+    }
 }

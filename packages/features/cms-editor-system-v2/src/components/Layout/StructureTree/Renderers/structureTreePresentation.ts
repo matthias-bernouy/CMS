@@ -1,11 +1,5 @@
-import {
-    CMS_BINDING_ATTRIBUTES,
-    CMS_SOURCE_STATES,
-} from "@bernouy/cms-content/editor";
-import type {
-    EditorStructureNode,
-    StructureNode,
-} from "../../../../runtime";
+import { CMS_BINDING_ATTRIBUTES, CMS_SOURCE_STATES } from "@bernouy/cms-content/editor";
+import type { EditorStructureNode, StructureNode } from "../../../../runtime";
 
 export function renderStructureBadge(value: string): HTMLElement {
     const badge = document.createElement("span");
@@ -26,18 +20,26 @@ export function renderStructureBadge(value: string): HTMLElement {
 }
 
 export function structureBadgeClass(value: string): string {
-    if ((CMS_SOURCE_STATES as readonly string[]).includes(value)) return `badge source-status ${value}`;
+    if ((CMS_SOURCE_STATES as readonly string[]).includes(value)) {
+        return `badge source-status ${value}`;
+    }
     return value === "Source" || value === "Repeat" ? "badge data" : "badge";
 }
 
 export function structureBadgeIcon(value: string): string | null {
-    if (value === "Source") return "▦";
-    if (value === "Repeat") return "↻";
+    if (value === "Source") {
+        return "▦";
+    }
+    if (value === "Repeat") {
+        return "↻";
+    }
     return null;
 }
 
 export function structureIconText(node: StructureNode): string {
-    if (node.icon) return node.icon.slice(0, 1).toUpperCase();
+    if (node.icon) {
+        return node.icon.slice(0, 1).toUpperCase();
+    }
     return node.label.slice(0, 1).toUpperCase();
 }
 

@@ -1,11 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { executeFunction, type CmsFunction } from "@bernouy/cms-functions";
-import {
-    InMemorySourceRepository,
-    makeEndpointUrn,
-    makeSourceUrn,
-    type Source,
-} from "@bernouy/cms-sources";
+import { InMemorySourceRepository, makeEndpointUrn, makeSourceUrn, type Source } from "@bernouy/cms-sources";
 import { FunctionExecutionProbe } from "../helpers/functionExecutionProbe";
 
 describe("function execution isolation", () => {
@@ -15,10 +10,8 @@ describe("function execution isolation", () => {
         const probe = new FunctionExecutionProbe(inner);
         let secret = "secret-a";
         const requests: Array<Record<string, unknown>> = [];
-        const execute = (user: { id: string; role: string }) => executeFunction(
-            versionedFunction(),
-            functionRequest(),
-            {
+        const execute = (user: { id: string; role: string }) =>
+            executeFunction(versionedFunction(), functionRequest(), {
                 sources: probe.sources,
                 user,
                 deps: probe.deps({
@@ -30,7 +23,7 @@ describe("function execution isolation", () => {
                             provider: new URL(request.url).host,
                             userId: request.headers.get("x-user-id"),
                             userRole: request.headers.get("x-user-role"),
-                            value: (await request.json() as { value: string }).value,
+                            value: ((await request.json()) as { value: string }).value,
                         };
                         requests.push({
                             ...observed,
@@ -39,8 +32,7 @@ describe("function execution isolation", () => {
                         return Response.json(observed);
                     },
                 }),
-            },
-        );
+            });
 
         const firstMark = probe.mark();
         const first = await execute({ id: "buyer-a", role: "user" });
@@ -113,7 +105,7 @@ describe("function execution isolation", () => {
                 if (new URL(request.url).host === "commerce.test") {
                     return Response.json({ sellerId: 184, amount: 2500 });
                 }
-                const body = await request.json() as {
+                const body = (await request.json()) as {
                     sellerId: string;
                     reviewerSellerId: string;
                     amount: number;
@@ -162,10 +154,12 @@ function versionedFunction(): CmsFunction {
     return {
         id: "resolveVersionedProvider",
         method: "POST",
-        steps: [{
-            id: "resolved",
-            call: { source: "versioned", endpoint: "resolve", body: { value: "payload" } },
-        }],
+        steps: [
+            {
+                id: "resolved",
+                call: { source: "versioned", endpoint: "resolve", body: { value: "payload" } },
+            },
+        ],
         return: { body: "$steps.resolved" },
     };
 }
@@ -173,24 +167,26 @@ function versionedFunction(): CmsFunction {
 function versionedSource(host: string): Source {
     return {
         urn: makeSourceUrn("versioned"),
-        endpoints: [{
-            urn: makeEndpointUrn("versioned", "resolve"),
-            method: "POST",
-            targetUrl: `https://${host}/resolve`,
-            headers: [
-                { name: "authorization", source: { from: "secret", ref: "PROVIDER_KEY", prefix: "Bearer " } },
-                { name: "x-user-id", source: { from: "computed", ref: "userID" } },
-                { name: "x-user-role", source: { from: "computed", ref: "userRole" } },
-            ],
-            input: {
-                body: {
-                    type: "object",
-                    properties: { value: { type: "string" } },
-                    required: ["value"],
+        endpoints: [
+            {
+                urn: makeEndpointUrn("versioned", "resolve"),
+                method: "POST",
+                targetUrl: `https://${host}/resolve`,
+                headers: [
+                    { name: "authorization", source: { from: "secret", ref: "PROVIDER_KEY", prefix: "Bearer " } },
+                    { name: "x-user-id", source: { from: "computed", ref: "userID" } },
+                    { name: "x-user-role", source: { from: "computed", ref: "userRole" } },
+                ],
+                input: {
+                    body: {
+                        type: "object",
+                        properties: { value: { type: "string" } },
+                        required: ["value"],
+                    },
                 },
+                output: [{ status: "200", body: observedProviderShape() }],
             },
-            output: [{ status: "200", body: observedProviderShape() }],
-        }],
+        ],
     };
 }
 
@@ -234,25 +230,29 @@ function commerceSource(): Source {
     return {
         urn: makeSourceUrn("commerce"),
         identityAuthority: "commerce",
-        endpoints: [{
-            urn: makeEndpointUrn("commerce", "getOrder"),
-            method: "GET",
-            targetUrl: "https://commerce.test/order",
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: {
-                        sellerId: {
-                            type: "number",
-                            semantic: { kind: "user-id", authority: "commerce" },
+        endpoints: [
+            {
+                urn: makeEndpointUrn("commerce", "getOrder"),
+                method: "GET",
+                targetUrl: "https://commerce.test/order",
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: {
+                                sellerId: {
+                                    type: "number",
+                                    semantic: { kind: "user-id", authority: "commerce" },
+                                },
+                                amount: { type: "number" },
+                            },
+                            required: ["sellerId", "amount"],
                         },
-                        amount: { type: "number" },
                     },
-                    required: ["sellerId", "amount"],
-                },
-            }],
-        }],
+                ],
+            },
+        ],
     };
 }
 
@@ -260,39 +260,43 @@ function stripeSource(): Source {
     return {
         urn: makeSourceUrn("stripe-connect"),
         identityAuthority: "stripe-connect",
-        endpoints: [{
-            urn: makeEndpointUrn("stripe-connect", "createPayment"),
-            method: "POST",
-            targetUrl: "https://stripe.test/payment",
-            input: {
-                body: {
-                    type: "object",
-                    properties: {
-                        sellerId: {
-                            type: "string",
-                            semantic: { kind: "user-id", authority: "stripe-connect" },
+        endpoints: [
+            {
+                urn: makeEndpointUrn("stripe-connect", "createPayment"),
+                method: "POST",
+                targetUrl: "https://stripe.test/payment",
+                input: {
+                    body: {
+                        type: "object",
+                        properties: {
+                            sellerId: {
+                                type: "string",
+                                semantic: { kind: "user-id", authority: "stripe-connect" },
+                            },
+                            reviewerSellerId: {
+                                type: "string",
+                                semantic: { kind: "user-id", authority: "stripe-connect" },
+                            },
+                            amount: { type: "number" },
                         },
-                        reviewerSellerId: {
-                            type: "string",
-                            semantic: { kind: "user-id", authority: "stripe-connect" },
-                        },
-                        amount: { type: "number" },
+                        required: ["sellerId", "reviewerSellerId", "amount"],
                     },
-                    required: ["sellerId", "reviewerSellerId", "amount"],
                 },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: {
+                                paymentId: { type: "string" },
+                                status: { type: "string" },
+                            },
+                            required: ["paymentId", "status"],
+                        },
+                    },
+                ],
             },
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: {
-                        paymentId: { type: "string" },
-                        status: { type: "string" },
-                    },
-                    required: ["paymentId", "status"],
-                },
-            }],
-        }],
+        ],
     };
 }
 

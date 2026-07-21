@@ -8,6 +8,8 @@ import { markUserEmailVerified } from "cms-control/core/users/authActions";
 export default async function markEmailVerified(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
     const sub = typeof body.sub === "string" ? body.sub : "";
-    if (!sub) throw new MissingParam("sub");
+    if (!sub) {
+        throw new MissingParam("sub");
+    }
     return Response.json(await markUserEmailVerified(cms, sub));
 }

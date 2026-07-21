@@ -27,16 +27,30 @@ const subscriptionSelect = "email,subscribed,created_at,updated_at";
 
 Deno.serve(async (request) => {
     try {
-        if (request.method === "OPTIONS") return optionsResponse();
+        if (request.method === "OPTIONS") {
+            return optionsResponse();
+        }
 
         const route = routePath(request);
-        if (route === "/health") return await withMethod(request, "GET", () => health(request));
-        if (route === "/subscriptions") return await withMethod(request, "GET", () => listSubscriptions(request));
-        if (route === "/subscriptions/export") return await withMethod(request, "GET", () => exportSubscriptions(request));
-        if (route === "/subscription") return await subscriptionRoute(request);
+        if (route === "/health") {
+            return await withMethod(request, "GET", () => health(request));
+        }
+        if (route === "/subscriptions") {
+            return await withMethod(request, "GET", () => listSubscriptions(request));
+        }
+        if (route === "/subscriptions/export") {
+            return await withMethod(request, "GET", () => exportSubscriptions(request));
+        }
+        if (route === "/subscription") {
+            return await subscriptionRoute(request);
+        }
 
-        if (route === "/set-subscription") return await withMethod(request, "POST", () => setSubscription(request));
-        if (route === "/subscription-status") return await withMethod(request, "GET", () => getSubscriptionStatus(request));
+        if (route === "/set-subscription") {
+            return await withMethod(request, "POST", () => setSubscription(request));
+        }
+        if (route === "/subscription-status") {
+            return await withMethod(request, "GET", () => getSubscriptionStatus(request));
+        }
 
         return json({ error: "not found" }, 404);
     } catch (error) {
@@ -45,9 +59,15 @@ Deno.serve(async (request) => {
 });
 
 async function subscriptionRoute(request: Request): Promise<Response> {
-    if (request.method === "GET") return getSubscriptionStatus(request);
-    if (request.method === "POST") return setSubscription(request);
-    if (request.method === "DELETE") return deleteSubscription(request);
+    if (request.method === "GET") {
+        return getSubscriptionStatus(request);
+    }
+    if (request.method === "POST") {
+        return setSubscription(request);
+    }
+    if (request.method === "DELETE") {
+        return deleteSubscription(request);
+    }
     return new Response("Method Not Allowed", {
         status: 405,
         headers: { ...corsHeaders, allow: "GET, POST, DELETE, OPTIONS" },
@@ -73,16 +93,22 @@ async function listSubscriptions(request: Request): Promise<Response> {
     query.set("order", "updated_at.desc");
     query.set("limit", String(limit));
     query.set("offset", String(offset));
-    if (q) query.set("email", `ilike.*${q}*`);
-    if (subscribed !== null) query.set("subscribed", `eq.${subscribed}`);
+    if (q) {
+        query.set("email", `ilike.*${q}*`);
+    }
+    if (subscribed !== null) {
+        query.set("subscribed", `eq.${subscribed}`);
+    }
 
     const response = await rest(`subscriptions?${query.toString()}`, {
         method: "GET",
         headers: { prefer: "count=exact" },
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
 
-    const rows = await response.json() as NewsletterSubscriptionRow[];
+    const rows = (await response.json()) as NewsletterSubscriptionRow[];
     return json({
         subscriptions: rows.map(publicSubscription),
         total: countFromContentRange(response.headers.get("content-range")) ?? rows.length,
@@ -100,13 +126,19 @@ async function exportSubscriptions(request: Request): Promise<Response> {
     query.set("select", subscriptionSelect);
     query.set("order", "updated_at.desc");
     query.set("limit", "10000");
-    if (q) query.set("email", `ilike.*${q}*`);
-    if (subscribed !== null) query.set("subscribed", `eq.${subscribed}`);
+    if (q) {
+        query.set("email", `ilike.*${q}*`);
+    }
+    if (subscribed !== null) {
+        query.set("subscribed", `eq.${subscribed}`);
+    }
 
     const response = await rest(`subscriptions?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
 
-    const rows = await response.json() as NewsletterSubscriptionRow[];
+    const rows = (await response.json()) as NewsletterSubscriptionRow[];
     return csv(subscriptionsCsv(rows), "newsletter-subscriptions.csv");
 }
 
@@ -157,7 +189,9 @@ function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
     const marker = "/cms-newsletter";
     const index = pathname.indexOf(marker);
-    if (index === -1) return pathname || "/";
+    if (index === -1) {
+        return pathname || "/";
+    }
     return pathname.slice(index + marker.length) || "/";
 }
 
@@ -175,7 +209,9 @@ function requireCmsRequest(request: Request): void {
     const expected = requiredEnv("CMS_NEWSLETTER_API_KEY");
     const authorization = request.headers.get("authorization") ?? "";
     const token = authorization.startsWith("Bearer ") ? authorization.slice("Bearer ".length).trim() : "";
-    if (!token || !safeEqual(token, expected)) throw new HttpError(401, "invalid CMS API key");
+    if (!token || !safeEqual(token, expected)) {
+        throw new HttpError(401, "invalid CMS API key");
+    }
 }
 
 async function upsertSubscription(values: JsonRecord): Promise<NewsletterSubscriptionRow> {
@@ -191,7 +227,9 @@ async function upsertSubscription(values: JsonRecord): Promise<NewsletterSubscri
         },
         body: JSON.stringify(stripUndefined(values)),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return firstRow<NewsletterSubscriptionRow>(await response.json());
 }
 
@@ -202,8 +240,10 @@ async function getSubscription(email: string): Promise<NewsletterSubscriptionRow
     query.set("limit", "1");
 
     const response = await rest(`subscriptions?${query.toString()}`, { method: "GET" });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as NewsletterSubscriptionRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as NewsletterSubscriptionRow[];
     return rows[0] ?? null;
 }
 
@@ -216,8 +256,10 @@ async function deleteSubscriptionRow(email: string): Promise<NewsletterSubscript
         method: "DELETE",
         headers: { prefer: "return=representation" },
     });
-    if (!response.ok) throw await restError(response);
-    const rows = await response.json() as NewsletterSubscriptionRow[];
+    if (!response.ok) {
+        throw await restError(response);
+    }
+    const rows = (await response.json()) as NewsletterSubscriptionRow[];
     return rows[0] ?? null;
 }
 
@@ -228,21 +270,26 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
     headers.set("apikey", key);
     headers.set("authorization", `Bearer ${key}`);
     headers.set("accept-profile", newsletterSchema);
-    if (init.method && init.method !== "GET") headers.set("content-profile", newsletterSchema);
+    if (init.method && init.method !== "GET") {
+        headers.set("content-profile", newsletterSchema);
+    }
 
     return fetch(`${base}/rest/v1/${path}`, { ...init, headers });
 }
 
 async function restError(response: Response): Promise<HttpError> {
     const data = await response.json().catch(() => null);
-    const message = isRecord(data) && typeof data.message === "string"
-        ? data.message
-        : `Supabase request failed (${response.status})`;
+    const message =
+        isRecord(data) && typeof data.message === "string"
+            ? data.message
+            : `Supabase request failed (${response.status})`;
     return new HttpError(502, message);
 }
 
 function firstRow<T>(value: unknown): T {
-    if (!Array.isArray(value) || !value[0]) throw new HttpError(502, "Supabase returned no rows");
+    if (!Array.isArray(value) || !value[0]) {
+        throw new HttpError(502, "Supabase returned no rows");
+    }
     return value[0] as T;
 }
 
@@ -284,22 +331,25 @@ function csv(data: string, fileName: string): Response {
 
 function subscriptionsCsv(rows: NewsletterSubscriptionRow[]): string {
     const header = ["email", "subscribed", "createdAt", "updatedAt"];
-    const lines = rows.map(row => [
-        row.email,
-        row.subscribed ? "true" : "false",
-        row.created_at ?? "",
-        row.updated_at ?? "",
-    ].map(csvCell).join(","));
+    const lines = rows.map((row) =>
+        [row.email, row.subscribed ? "true" : "false", row.created_at ?? "", row.updated_at ?? ""]
+            .map(csvCell)
+            .join(","),
+    );
     return [header.join(","), ...lines].join("\n") + "\n";
 }
 
 function csvCell(value: string): string {
-    if (!/[",\r\n]/.test(value)) return value;
-    return `"${value.replace(/"/g, "\"\"")}"`;
+    if (!/[",\r\n]/.test(value)) {
+        return value;
+    }
+    return `"${value.replace(/"/g, '""')}"`;
 }
 
 function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+        return json({ error: error.message }, error.status);
+    }
     console.error(error);
     return json({ error: "internal error" }, 500);
 }
@@ -311,68 +361,106 @@ async function readJsonObject(request: Request): Promise<JsonRecord> {
     } catch {
         throw new HttpError(400, "invalid JSON body");
     }
-    if (!isRecord(value)) throw new HttpError(400, "body must be an object");
+    if (!isRecord(value)) {
+        throw new HttpError(400, "body must be an object");
+    }
     return value;
 }
 
 function stringField(body: JsonRecord, name: string, required = true): string | undefined {
     const value = body[name];
     if (value === undefined || value === null || value === "") {
-        if (required) throw new HttpError(400, `${name} is required`);
+        if (required) {
+            throw new HttpError(400, `${name} is required`);
+        }
         return undefined;
     }
-    if (typeof value !== "string") throw new HttpError(400, `${name} must be a string`);
+    if (typeof value !== "string") {
+        throw new HttpError(400, `${name} must be a string`);
+    }
     return value;
 }
 
 function booleanField(body: JsonRecord, name: string): boolean {
     const value = body[name];
-    if (value === "true") return true;
-    if (value === "false") return false;
-    if (typeof value !== "boolean") throw new HttpError(400, `${name} must be a boolean`);
+    if (value === "true") {
+        return true;
+    }
+    if (value === "false") {
+        return false;
+    }
+    if (typeof value !== "boolean") {
+        throw new HttpError(400, `${name} must be a boolean`);
+    }
     return value;
 }
 
 function normalizeEmail(value: string): string {
     const email = value.trim().toLowerCase();
-    if (!email) throw new HttpError(400, "email is required");
-    if (email.length > 320) throw new HttpError(400, "email is too long");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, "email is invalid");
+    if (!email) {
+        throw new HttpError(400, "email is required");
+    }
+    if (email.length > 320) {
+        throw new HttpError(400, "email is too long");
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new HttpError(400, "email is invalid");
+    }
     return email;
 }
 
 function optionalSearch(value: string | null): string | null {
     const search = (value ?? "").trim().toLowerCase();
-    if (!search) return null;
+    if (!search) {
+        return null;
+    }
     return search.slice(0, 120).replace(/[*,()%_]/g, "");
 }
 
 function optionalBoolean(value: string | null, name: string): boolean | null {
     const text = (value ?? "").trim().toLowerCase();
-    if (!text) return null;
-    if (text === "true") return true;
-    if (text === "false") return false;
+    if (!text) {
+        return null;
+    }
+    if (text === "true") {
+        return true;
+    }
+    if (text === "false") {
+        return false;
+    }
     throw new HttpError(400, `${name} must be true or false`);
 }
 
 function boundedLimit(value: string | null): number {
-    if (!value) return 100;
+    if (!value) {
+        return 100;
+    }
     const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed < 1) throw new HttpError(400, "limit must be a positive integer");
+    if (!Number.isInteger(parsed) || parsed < 1) {
+        throw new HttpError(400, "limit must be a positive integer");
+    }
     return Math.min(parsed, 200);
 }
 
 function boundedOffset(value: string | null): number {
-    if (!value) return 0;
+    if (!value) {
+        return 0;
+    }
     const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed < 0) throw new HttpError(400, "offset must be a non-negative integer");
+    if (!Number.isInteger(parsed) || parsed < 0) {
+        throw new HttpError(400, "offset must be a non-negative integer");
+    }
     return Math.min(parsed, 1000000);
 }
 
 function countFromContentRange(value: string | null): number | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     const total = value.split("/")[1];
-    if (!total || total === "*") return null;
+    if (!total || total === "*") {
+        return null;
+    }
     const parsed = Number(total);
     return Number.isFinite(parsed) ? parsed : null;
 }
@@ -383,9 +471,13 @@ function serviceRoleKey(): string {
         try {
             const parsed = JSON.parse(secretKeys);
             if (isRecord(parsed)) {
-                if (typeof parsed.default === "string" && parsed.default) return parsed.default;
-                const firstKey = Object.values(parsed).find(value => typeof value === "string" && value);
-                if (typeof firstKey === "string") return firstKey;
+                if (typeof parsed.default === "string" && parsed.default) {
+                    return parsed.default;
+                }
+                const firstKey = Object.values(parsed).find((value) => typeof value === "string" && value);
+                if (typeof firstKey === "string") {
+                    return firstKey;
+                }
             }
         } catch {
             throw new HttpError(500, "SUPABASE_SECRET_KEYS must be valid JSON");
@@ -397,12 +489,16 @@ function serviceRoleKey(): string {
 
 function requiredEnv(name: string): string {
     const value = Deno.env.get(name);
-    if (!value) throw new HttpError(500, `missing ${name}`);
+    if (!value) {
+        throw new HttpError(500, `missing ${name}`);
+    }
     return value;
 }
 
 function safeEqual(left: string, right: string): boolean {
-    if (left.length !== right.length) return false;
+    if (left.length !== right.length) {
+        return false;
+    }
     let result = 0;
     for (let i = 0; i < left.length; i++) {
         result |= left.charCodeAt(i) ^ right.charCodeAt(i);

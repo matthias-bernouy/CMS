@@ -40,8 +40,12 @@ export async function reorderOfferImages(request: Request, scope: OfferMediaScop
 
 export async function getOfferImageFile(request: Request, scope: OfferMediaScope): Promise<Response> {
     const mediaId = requiredQueryId(request, "id", "mediaId");
-    if (scope === "self") await requireOwnedOfferMedia(request, mediaId);
-    if (scope === "public") await requirePublicOfferMedia(mediaId);
+    if (scope === "self") {
+        await requireOwnedOfferMedia(request, mediaId);
+    }
+    if (scope === "public") {
+        await requirePublicOfferMedia(mediaId);
+    }
     const media = await one("media", { id: mediaId }, "id,storage_bucket,storage_path,mime_type");
     if (!media || media.storage_bucket !== productMediaBucket || typeof media.storage_path !== "string") {
         throw new HttpError(404, "offer image not found");
@@ -58,11 +62,17 @@ export async function getOfferImageFile(request: Request, scope: OfferMediaScope
 async function requirePublicOfferMedia(mediaId: number): Promise<void> {
     const link = await one("offer_media", { media_id: mediaId }, "offer_id");
     const offer = link ? await one("offers", { id: String(link.offer_id) }, "publication_status,seller_id") : null;
-    if (!offer || offer.publication_status !== "active") throw new HttpError(404, "offer image not found");
+    if (!offer || offer.publication_status !== "active") {
+        throw new HttpError(404, "offer image not found");
+    }
     await requirePublicSeller(String(offer.seller_id));
 }
 
-async function attachUploadedImage(request: Request, scope: OfferMediaScope, replacedMediaId: number | null): Promise<Response> {
+async function attachUploadedImage(
+    request: Request,
+    scope: OfferMediaScope,
+    replacedMediaId: number | null,
+): Promise<Response> {
     const offerId = requiredQueryId(request, "offerId");
     const file = await readCommerceImage(request);
     const storagePath = offerImagePath(offerId, file);
@@ -70,9 +80,13 @@ async function attachUploadedImage(request: Request, scope: OfferMediaScope, rep
     let result: JsonRecord;
     try {
         result = await rpcRecord("attach_offer_media", {
-            p_offer_id: offerId, p_storage_bucket: productMediaBucket, p_storage_path: storagePath,
-            p_mime_type: file.type.toLowerCase(), p_file_size: file.size,
-            p_original_filename: file.name || null, p_replace_media_id: replacedMediaId,
+            p_offer_id: offerId,
+            p_storage_bucket: productMediaBucket,
+            p_storage_path: storagePath,
+            p_mime_type: file.type.toLowerCase(),
+            p_file_size: file.size,
+            p_original_filename: file.name || null,
+            p_replace_media_id: replacedMediaId,
             p_cms_user_id: scope === "self" ? cmsUserId(request) : null,
         });
     } catch (error) {
@@ -87,24 +101,36 @@ async function requireOwnedOfferMedia(request: Request, mediaId: number): Promis
     const link = await one("offer_media", { media_id: mediaId }, "offer_id");
     const offer = link ? await one("offers", { id: String(link.offer_id) }, "seller_id") : null;
     const seller = offer ? await one("sellers", { id: String(offer.seller_id) }, "cms_user_id") : null;
-    if (!seller || seller.cms_user_id !== cmsUserId(request)) throw new HttpError(404, "offer image not found");
+    if (!seller || seller.cms_user_id !== cmsUserId(request)) {
+        throw new HttpError(404, "offer image not found");
+    }
 }
 
 async function rpcRecord(name: string, body: JsonRecord): Promise<JsonRecord> {
     const result = await rpc(name, body);
-    if (!isRecord(result)) throw new HttpError(502, `${name} returned an invalid response`);
+    if (!isRecord(result)) {
+        throw new HttpError(502, `${name} returned an invalid response`);
+    }
     return result;
 }
 
 async function removeReturnedObject(result: JsonRecord, bucketKey: string, pathKey: string): Promise<void> {
     const bucket = result[bucketKey] ?? result[camelKey(bucketKey)];
     const path = result[pathKey] ?? result[camelKey(pathKey)];
-    if (bucket === productMediaBucket && typeof path === "string" && path) await deleteStorageImageBestEffort(bucket, path);
+    if (bucket === productMediaBucket && typeof path === "string" && path) {
+        await deleteStorageImageBestEffort(bucket, path);
+    }
 }
 
-function resultResponse(result: JsonRecord): Response { return json({ ok: true, ...(camelize(result) as JsonRecord) }); }
+function resultResponse(result: JsonRecord): Response {
+    return json({ ok: true, ...(camelize(result) as JsonRecord) });
+}
 function copyHeader(source: Response, target: Headers, name: string, fallback?: string): void {
     const value = source.headers.get(name) ?? fallback;
-    if (value) target.set(name, value);
+    if (value) {
+        target.set(name, value);
+    }
 }
-function camelKey(value: string): string { return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase()); }
+function camelKey(value: string): string {
+    return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+}

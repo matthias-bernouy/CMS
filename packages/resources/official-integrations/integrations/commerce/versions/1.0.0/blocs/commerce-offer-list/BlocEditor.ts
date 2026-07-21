@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class CommerceOfferListEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -17,14 +12,14 @@ export class CommerceOfferListEditor extends Editor {
                         label: "Minimum card width",
                         attribute: "grid-min",
                         defaultValue: "md",
-                        options: ["sm", "md", "lg", "xl"].map(value => ({ label: value, value })),
+                        options: ["sm", "md", "lg", "xl"].map((value) => ({ label: value, value })),
                     },
                     {
                         type: "select",
                         label: "Maximum card width",
                         attribute: "grid-max",
                         defaultValue: "xl",
-                        options: ["none", "sm", "md", "lg", "xl"].map(value => ({ label: value, value })),
+                        options: ["none", "sm", "md", "lg", "xl"].map((value) => ({ label: value, value })),
                     },
                     {
                         type: "segmented",
@@ -41,7 +36,7 @@ export class CommerceOfferListEditor extends Editor {
                         label: "Grid gap",
                         attribute: "grid-gap",
                         defaultValue: "md",
-                        options: ["none", "xs", "sm", "md", "lg", "xl"].map(value => ({ label: value, value })),
+                        options: ["none", "xs", "sm", "md", "lg", "xl"].map((value) => ({ label: value, value })),
                     },
                     {
                         type: "segmented",

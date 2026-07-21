@@ -33,10 +33,7 @@ export const mongoBootstrapSource = readFileSync(
     resolve(cmsDirectory, "infra/mongo/01-bootstrap-shared-users.js"),
     "utf8",
 );
-export const mongoPreflightSource = readFileSync(
-    resolve(cmsDirectory, "infra/mongo/validate-env.sh"),
-    "utf8",
-);
+export const mongoPreflightSource = readFileSync(resolve(cmsDirectory, "infra/mongo/validate-env.sh"), "utf8");
 
 const dockerEnvironment = minimalDockerEnvironment();
 const dockerComposeAvailable = commandSucceeds(["docker", "compose", "version"], dockerEnvironment);
@@ -51,17 +48,7 @@ export const requiredCmsEnvironment = {
 
 export function renderCompose(composeFile: string, environment: Record<string, string>): ComposeConfig {
     const result = Bun.spawnSync({
-        cmd: [
-            "docker",
-            "compose",
-            "--env-file",
-            "/dev/null",
-            "-f",
-            composeFile,
-            "config",
-            "--format",
-            "json",
-        ],
+        cmd: ["docker", "compose", "--env-file", "/dev/null", "-f", composeFile, "config", "--format", "json"],
         cwd: cmsDirectory,
         env: { ...dockerEnvironment, ...environment },
         stdout: "pipe",
@@ -77,11 +64,11 @@ export function renderCompose(composeFile: string, environment: Record<string, s
 
 export function externalDockerfileBaseImages(): string[] {
     const stageAliases = new Set(extractMatches(dockerfileSource, /^FROM\s+\S+\s+AS\s+(\S+)/gim));
-    return extractMatches(dockerfileSource, /^FROM\s+(\S+)/gim).filter(image => !stageAliases.has(image));
+    return extractMatches(dockerfileSource, /^FROM\s+(\S+)/gim).filter((image) => !stageAliases.has(image));
 }
 
 export function extractMatches(source: string, expression: RegExp): string[] {
-    return Array.from(source.matchAll(expression), match => match[1]);
+    return Array.from(source.matchAll(expression), (match) => match[1]);
 }
 
 function minimalDockerEnvironment(): Record<string, string> {
@@ -92,7 +79,9 @@ function minimalDockerEnvironment(): Record<string, string> {
 
     for (const key of ["DOCKER_HOST", "DOCKER_CONTEXT", "XDG_RUNTIME_DIR"] as const) {
         const value = process.env[key];
-        if (value) environment[key] = value;
+        if (value) {
+            environment[key] = value;
+        }
     }
 
     return environment;
@@ -100,12 +89,14 @@ function minimalDockerEnvironment(): Record<string, string> {
 
 function commandSucceeds(command: string[], environment: Record<string, string>): boolean {
     try {
-        return Bun.spawnSync({
-            cmd: command,
-            env: environment,
-            stdout: "ignore",
-            stderr: "ignore",
-        }).exitCode === 0;
+        return (
+            Bun.spawnSync({
+                cmd: command,
+                env: environment,
+                stdout: "ignore",
+                stderr: "ignore",
+            }).exitCode === 0
+        );
     } catch {
         return false;
     }

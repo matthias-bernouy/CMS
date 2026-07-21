@@ -3,10 +3,7 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-    LocalFsGeneratedSourceRepository,
-    loadGeneratedSources,
-} from "cms-cli/dev-server/integrations";
+import { LocalFsGeneratedSourceRepository, loadGeneratedSources } from "cms-cli/dev-server/integrations";
 import type { Source } from "@bernouy/cms-sources";
 
 const source = (id: string, targetUrl = "https://api.example.com/x"): Source => ({

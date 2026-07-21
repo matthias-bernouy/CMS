@@ -27,10 +27,13 @@ describe("source overlay schema cache", () => {
 
         const isolated = await cacheHarness(async () => fieldsResponse("Other installation"));
         const isolatedRepository = new SourceOverlaySourceRepository(
-            isolated.inner, isolated.overlays, isolated.options,
+            isolated.inner,
+            isolated.overlays,
+            isolated.options,
         );
-        expect(await isolatedRepository.getEndpoint("urn:accounts:getAccount"))
-            .toEqual(enrichedEndpoint("Other installation"));
+        expect(await isolatedRepository.getEndpoint("urn:accounts:getAccount")).toEqual(
+            enrichedEndpoint("Other installation"),
+        );
         expect(isolated.probe.count("/fields")).toBe(1);
     });
 
@@ -56,9 +59,7 @@ describe("source overlay schema cache", () => {
         let attempt = 0;
         const harness = await cacheHarness(async () => {
             attempt += 1;
-            return attempt === 1
-                ? new Response("unavailable", { status: 503 })
-                : fieldsResponse("Recovered company");
+            return attempt === 1 ? new Response("unavailable", { status: 503 }) : fieldsResponse("Recovered company");
         });
         const repository = new SourceOverlaySourceRepository(harness.inner, harness.overlays, harness.options);
 
@@ -86,7 +87,7 @@ describe("source overlay schema cache", () => {
 
     test("keeps the cached schema after a non-2xx invalidating response", async () => {
         let label = "Cached company";
-        const harness = await cacheHarness(async request => {
+        const harness = await cacheHarness(async (request) => {
             if (new URL(request.url).pathname === "/refresh-schema") {
                 label = "Unpublished company";
                 return Response.json({ error: "unavailable" }, { status: 503 });
@@ -99,10 +100,11 @@ describe("source overlay schema cache", () => {
         const repository = new SourceOverlaySourceRepository(harness.inner, harness.overlays, harness.options);
 
         expect(await repository.getEndpoint(baseEndpoint.urn)).toEqual(enrichedEndpoint("Cached company"));
-        const response = await handleSourceRequest(repository, new Request(
-            "http://cms.local/.cms/sources/accounts/refreshSchema",
-            { method: "POST" },
-        ), { prefix: "/.cms/sources/", deps: { fetchImpl: harness.probe.fetchImpl } });
+        const response = await handleSourceRequest(
+            repository,
+            new Request("http://cms.local/.cms/sources/accounts/refreshSchema", { method: "POST" }),
+            { prefix: "/.cms/sources/", deps: { fetchImpl: harness.probe.fetchImpl } },
+        );
         expect(response.status).toBe(503);
         expect(await repository.getEndpoint(baseEndpoint.urn)).toEqual(enrichedEndpoint("Cached company"));
         expect(harness.probe.count("/refresh-schema")).toBe(1);
@@ -111,7 +113,7 @@ describe("source overlay schema cache", () => {
 
     test("invalidates after dispatch and before response interceptors continue", async () => {
         let label = "Legacy company";
-        const harness = await cacheHarness(async request => {
+        const harness = await cacheHarness(async (request) => {
             if (new URL(request.url).pathname === "/refresh-schema") {
                 label = "Fresh company";
                 return Response.json({ ok: true });
@@ -125,16 +127,21 @@ describe("source overlay schema cache", () => {
         expect(await repository.getEndpoint(baseEndpoint.urn)).toEqual(enrichedEndpoint("Legacy company"));
         let interceptedSchema: unknown;
 
-        await handleSourceRequest(repository, new Request(
-            "http://cms.local/.cms/sources/accounts/refreshSchema", { method: "POST" },
-        ), { prefix: "/.cms/sources/", deps: {
-            fetchImpl: harness.probe.fetchImpl,
-            interceptEndpoint: async (_endpoint, request, next) => {
-                const response = await next(request);
-                interceptedSchema = await repository.getEndpoint(baseEndpoint.urn);
-                return response;
+        await handleSourceRequest(
+            repository,
+            new Request("http://cms.local/.cms/sources/accounts/refreshSchema", { method: "POST" }),
+            {
+                prefix: "/.cms/sources/",
+                deps: {
+                    fetchImpl: harness.probe.fetchImpl,
+                    interceptEndpoint: async (_endpoint, request, next) => {
+                        const response = await next(request);
+                        interceptedSchema = await repository.getEndpoint(baseEndpoint.urn);
+                        return response;
+                    },
+                },
             },
-        } });
+        );
 
         expect(interceptedSchema).toEqual(enrichedEndpoint("Fresh company"));
         expect(harness.probe.count("/fields")).toBe(2);
@@ -152,21 +159,28 @@ describe("source overlay schema cache", () => {
         await harness.inner.updateSource(source);
         await repository.getEndpoint("urn:accounts:getAccount");
 
-        expect(harness.probe.observations.map(entry => new URL(entry.url).pathname)).toEqual([
-            "/fields", "/fields", "/fields-v2",
+        expect(harness.probe.observations.map((entry) => new URL(entry.url).pathname)).toEqual([
+            "/fields",
+            "/fields",
+            "/fields-v2",
         ]);
     });
 
     test("does not cache schemas produced from per-user computed context", async () => {
-        const harness = await cacheHarness(async request =>
-            fieldsResponse(new URL(request.url).searchParams.get("user") ?? "missing"));
+        const harness = await cacheHarness(async (request) =>
+            fieldsResponse(new URL(request.url).searchParams.get("user") ?? "missing"),
+        );
         const source = (await harness.inner.getSource("urn:accounts"))!;
-        source.endpoints[1]!.input = { params: [{
-            name: "user",
-            in: "query",
-            source: { from: "computed", ref: "userID" },
-            schema: { type: "string" },
-        }] };
+        source.endpoints[1]!.input = {
+            params: [
+                {
+                    name: "user",
+                    in: "query",
+                    source: { from: "computed", ref: "userID" },
+                    schema: { type: "string" },
+                },
+            ],
+        };
         await harness.inner.updateSource(source);
         let userID = "first-user";
         const repository = new SourceOverlaySourceRepository(harness.inner, harness.overlays, {

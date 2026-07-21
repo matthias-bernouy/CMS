@@ -42,14 +42,14 @@ export function buildShadow(host: HTMLElement, label: string | null) {
         </div>
     `;
     return {
-        trigger:        shadow.querySelector(".trigger")        as HTMLElement,
-        display:        shadow.querySelector(".value")          as HTMLElement,
-        clearBtn:       shadow.querySelector(".clear-btn")      as HTMLElement,
-        panel:          shadow.querySelector(".panel")          as HTMLElement,
-        list:           shadow.querySelector(".list")           as HTMLElement,
-        empty:          shadow.querySelector(".empty")          as HTMLElement,
-        search:         shadow.querySelector(".search")         as HTMLInputElement,
-        createBtn:      shadow.querySelector(".create-btn")     as HTMLElement,
+        trigger: shadow.querySelector(".trigger") as HTMLElement,
+        display: shadow.querySelector(".value") as HTMLElement,
+        clearBtn: shadow.querySelector(".clear-btn") as HTMLElement,
+        panel: shadow.querySelector(".panel") as HTMLElement,
+        list: shadow.querySelector(".list") as HTMLElement,
+        empty: shadow.querySelector(".empty") as HTMLElement,
+        search: shadow.querySelector(".search") as HTMLInputElement,
+        createBtn: shadow.querySelector(".create-btn") as HTMLElement,
     };
 }
 

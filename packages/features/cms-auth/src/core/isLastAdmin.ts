@@ -7,7 +7,9 @@ import type { UsersRepository } from "cms-auth/interfaces/UsersRepository";
  */
 export async function isLastAdmin(users: UsersRepository<string>, sub: string): Promise<boolean> {
     const user = await users.getBySub(sub);
-    if (user?.role !== "admin") return false;
+    if (user?.role !== "admin") {
+        return false;
+    }
     const admins = await users.list({ role: "admin" });
     return admins.total <= 1;
 }

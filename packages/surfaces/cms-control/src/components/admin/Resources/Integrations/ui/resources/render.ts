@@ -6,7 +6,9 @@ export function appendBadges(root: HTMLElement, labels: string[]): void {
     root.replaceChildren();
     const visible = labels.slice(0, 4);
     const remaining = labels.length - visible.length;
-    for (const label of visible) root.append(badge(label));
+    for (const label of visible) {
+        root.append(badge(label));
+    }
     if (remaining > 0) {
         const more = badge(`+${remaining} others`);
         more.classList.add("badge-muted");

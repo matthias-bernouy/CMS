@@ -8,14 +8,18 @@ describe("executeEndpoint secret headers", () => {
         const endpoint = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }] });
         const response = await executeEndpoint(endpoint, new Request("http://local/x"), { fetchImpl });
         expect(response.status).toBe(500);
-        expect(await response.text()).toBe("secret header requires a configured secret store (not wired yet): Authorization");
+        expect(await response.text()).toBe(
+            "secret header requires a configured secret store (not wired yet): Authorization",
+        );
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
     test("secret config header forwards resolved value and prefix", async () => {
         const fetchImpl = okFetch();
         const resolveSecret = mock(async (_ref: string) => "service-role-key");
-        const endpoint = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${KEY}", prefix: "Bearer " } }] });
+        const endpoint = ep({
+            headers: [{ name: "Authorization", source: { from: "secret", ref: "${KEY}", prefix: "Bearer " } }],
+        });
         await executeEndpoint(endpoint, new Request("http://local/x"), { fetchImpl, resolveSecret });
         expect(resolveSecret).toHaveBeenCalledWith("${KEY}");
         expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("authorization")).toBe("Bearer service-role-key");

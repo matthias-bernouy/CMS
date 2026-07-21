@@ -1,7 +1,4 @@
-import type {
-    CmsRelation,
-    DashboardRelationProjection,
-} from "@bernouy/cms-relations";
+import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
 import type { Source } from "@bernouy/cms-sources";
 
 export function productOffersRelation(): CmsRelation {
@@ -45,18 +42,20 @@ export function offersSource(): Source {
     return {
         urn: "urn:offers",
         meta: { name: "Offers" },
-        endpoints: [{
-            urn: "urn:offers:offers",
-            method: "GET",
-            access: { mode: "public" },
-            targetUrl: "https://api.example.com/offers",
-            input: {
-                params: [
-                    { name: "productId", in: "query", schema: { type: "string" } },
-                    { name: "limit", in: "query", schema: { type: "number" } },
-                    { name: "offset", in: "query", schema: { type: "number" } },
-                ],
+        endpoints: [
+            {
+                urn: "urn:offers:offers",
+                method: "GET",
+                access: { mode: "public" },
+                targetUrl: "https://api.example.com/offers",
+                input: {
+                    params: [
+                        { name: "productId", in: "query", schema: { type: "string" } },
+                        { name: "limit", in: "query", schema: { type: "number" } },
+                        { name: "offset", in: "query", schema: { type: "number" } },
+                    ],
+                },
             },
-        }],
+        ],
     };
 }

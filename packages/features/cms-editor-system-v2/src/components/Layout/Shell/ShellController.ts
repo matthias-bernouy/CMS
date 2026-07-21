@@ -8,18 +8,10 @@ import type { EditorCatalog, EditorDocument } from "@bernouy/cms-content/editor"
 import type { EditorDataSource } from "../../../runtime";
 import type { DefaultTemplateSelection } from "../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
-import {
-    createShellControllerParts,
-    type ShellControllerParts,
-} from "./Controller/Core/Services/shellControllerParts";
-import {
-    connectShellController,
-    disconnectShellController,
-} from "./Controller/Core/Lifecycle/shellLifecycleFlow";
+import { createShellControllerParts, type ShellControllerParts } from "./Controller/Core/Services/shellControllerParts";
+import { connectShellController, disconnectShellController } from "./Controller/Core/Lifecycle/shellLifecycleFlow";
 import { SHELL_OBSERVED_ATTRIBUTES } from "./Controller/Core/Lifecycle/shellAttributes";
-import type {
-    EditorV2PageConfig,
-} from "./Controller/shellTypes";
+import type { EditorV2PageConfig } from "./Controller/shellTypes";
 
 export const EDITOR_V2_SAVE_DOCUMENT_EVENT = "editor-v2:save-document";
 export const EDITOR_V2_DELETE_DOCUMENT_EVENT = "editor-v2:delete-document";

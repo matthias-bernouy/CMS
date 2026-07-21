@@ -53,10 +53,7 @@ const governedExtensions = new Set([
 ]);
 
 const exactExceptions = new Map([
-    [
-        "packages/surfaces/cms-control/src/static/assets/control-components.js",
-        "generated Control browser bundle",
-    ],
+    ["packages/surfaces/cms-control/src/static/assets/control-components.js", "generated Control browser bundle"],
     ["quality/ci/coverage/baseline.json", "generated per-package coverage snapshot"],
 ]);
 
@@ -65,11 +62,21 @@ const generatedLockfiles = new Set(["npm-shrinkwrap.json", "package-lock.json", 
 
 function categorizedException(path: string): string | undefined {
     const name = path.split("/").at(-1) ?? path;
-    if (generatedLockfiles.has(name)) return "generated dependency lockfile";
-    if (/^packages\/resources\/official-integrations\/integrations\/[^/]+\/versions\/[^/]+\/definition\.json$/.test(path)) {
+    if (generatedLockfiles.has(name)) {
+        return "generated dependency lockfile";
+    }
+    if (
+        /^packages\/resources\/official-integrations\/integrations\/[^/]+\/versions\/[^/]+\/definition\.json$/.test(
+            path,
+        )
+    ) {
         return "atomic official-integration definition";
     }
-    if (/^packages\/resources\/official-integrations\/integrations\/[^/]+\/versions\/[^/]+\/connectors\/[^/]+\/schema\.sql$/.test(path)) {
+    if (
+        /^packages\/resources\/official-integrations\/integrations\/[^/]+\/versions\/[^/]+\/connectors\/[^/]+\/schema\.sql$/.test(
+            path,
+        )
+    ) {
         return "atomic official-integration database schema";
     }
     return undefined;
@@ -82,7 +89,9 @@ export type FileSizeFinding = {
 };
 
 export function countPhysicalLines(source: string): number {
-    if (source.length === 0) return 0;
+    if (source.length === 0) {
+        return 0;
+    }
     const lines = source.split(/\r\n|\n|\r/).length;
     return /(?:\r\n|\n|\r)$/.test(source) ? lines - 1 : lines;
 }
@@ -101,7 +110,9 @@ export function fileSizeException(path: string): string | undefined {
 export function findFileSizeFindings(currentLines: ReadonlyMap<string, number>): FileSizeFinding[] {
     const findings: FileSizeFinding[] = [];
     for (const [path, lines] of currentLines) {
-        if (!isGovernedFile(path) || lines <= TARGET_FILE_LINES) continue;
+        if (!isGovernedFile(path) || lines <= TARGET_FILE_LINES) {
+            continue;
+        }
         findings.push({
             path,
             currentLines: lines,

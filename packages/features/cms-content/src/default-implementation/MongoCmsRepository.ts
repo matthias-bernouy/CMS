@@ -1,6 +1,12 @@
 import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
-import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
+import type {
+    BlocListItemResponse,
+    CmsRepository,
+    PageLink,
+    PageMeta,
+    PagesQuery,
+} from "cms-content/interfaces/CmsRepository";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
@@ -42,7 +48,6 @@ export type MongoCmsRepositoryConfig = {
 };
 
 export class MongoCmsRepository implements CmsRepository {
-
     private readonly _prefix: string;
 
     constructor(
@@ -67,17 +72,25 @@ export class MongoCmsRepository implements CmsRepository {
             [{ $set: { identifier: "$_id" } }] as never,
         );
         await Promise.all([
-            this.pages.createIndex    ({ path: 1 },       { unique: true }),
+            this.pages.createIndex({ path: 1 }, { unique: true }),
             this.templates.createIndex({ identifier: 1 }, { unique: true }),
         ]);
     }
 
     // ── Collections ──
 
-    private get blocs():         Collection<BlocDoc>         { return this.db.collection<BlocDoc>         (this._prefix + "blocs"); }
-    private get pages():         Collection<PageDoc>         { return this.db.collection<PageDoc>         (this._prefix + "pages"); }
-    private get templates():     Collection<TemplateDoc>     { return this.db.collection<TemplateDoc>     (this._prefix + "templates"); }
-    private get system():        Collection<SystemDoc>       { return this.db.collection<SystemDoc>       (this._prefix + "system"); }
+    private get blocs(): Collection<BlocDoc> {
+        return this.db.collection<BlocDoc>(this._prefix + "blocs");
+    }
+    private get pages(): Collection<PageDoc> {
+        return this.db.collection<PageDoc>(this._prefix + "pages");
+    }
+    private get templates(): Collection<TemplateDoc> {
+        return this.db.collection<TemplateDoc>(this._prefix + "templates");
+    }
+    private get system(): Collection<SystemDoc> {
+        return this.db.collection<SystemDoc>(this._prefix + "system");
+    }
 
     // ── Blocs ──
 
@@ -85,55 +98,41 @@ export class MongoCmsRepository implements CmsRepository {
         try {
             await this.blocs.insertOne(toDoc(bloc) as OptionalUnlessRequiredId<BlocDoc>);
         } catch (e) {
-            if ((e as { code?: number }).code === 11000) throw new DuplicateBlocTagError(bloc.id);
+            if ((e as { code?: number }).code === 11000) {
+                throw new DuplicateBlocTagError(bloc.id);
+            }
             throw e;
         }
         return bloc;
     }
 
     async replaceBloc(bloc: TBloc): Promise<TBloc> {
-        await this.blocs.replaceOne(
-            { _id: bloc.id },
-            toDoc(bloc),
-            { upsert: true },
-        );
+        await this.blocs.replaceOne({ _id: bloc.id }, toDoc(bloc), { upsert: true });
         return bloc;
     }
 
     async getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
-        const docs = await this.blocs.find(
-            {},
-            { projection: { editorJS: 1, viewJS: 1 } },
-        ).toArray();
-        return docs.map(d => ({ id: d._id, editorJS: d.editorJS, viewJS: d.viewJS }));
+        const docs = await this.blocs.find({}, { projection: { editorJS: 1, viewJS: 1 } }).toArray();
+        return docs.map((d) => ({ id: d._id, editorJS: d.editorJS, viewJS: d.viewJS }));
     }
 
     async getBlocsList(): Promise<BlocListItemResponse[]> {
-        const docs = await this.blocs.find(
-            {},
-            { projection: { name: 1, group: 1, description: 1 } },
-        ).toArray();
-        return docs.map(d => ({
-            id:          d._id,
-            name:        d.name,
-            group:       d.group       || "",
+        const docs = await this.blocs.find({}, { projection: { name: 1, group: 1, description: 1 } }).toArray();
+        return docs.map((d) => ({
+            id: d._id,
+            name: d.name,
+            group: d.group || "",
             description: d.description || "",
         }));
     }
 
     async getBlocViewJS(htmlTag: string): Promise<string | null> {
-        const doc = await this.blocs.findOne(
-            { _id: htmlTag },
-            { projection: { viewJS: 1 } },
-        );
+        const doc = await this.blocs.findOne({ _id: htmlTag }, { projection: { viewJS: 1 } });
         return doc?.viewJS ?? null;
     }
 
     async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
-        const doc = await this.blocs.findOne(
-            { _id: htmlTag },
-            { projection: { source: 1 } },
-        );
+        const doc = await this.blocs.findOne({ _id: htmlTag }, { projection: { source: 1 } });
         return doc?.source ?? null;
     }
 
@@ -146,7 +145,7 @@ export class MongoCmsRepository implements CmsRepository {
 
     async getAllPages(): Promise<TPage[]> {
         const docs = await this.pages.find().toArray();
-        return docs.map(d => fromPageDoc(d)!);
+        return docs.map((d) => fromPageDoc(d)!);
     }
 
     async getPublishedPage(path: string): Promise<TPage | null> {
@@ -177,7 +176,9 @@ export class MongoCmsRepository implements CmsRepository {
     }
 
     async updatePage(page: Partial<TPage>): Promise<void> {
-        if (!page.id) throw new Error("updatePage requires `id` on the input.");
+        if (!page.id) {
+            throw new Error("updatePage requires `id` on the input.");
+        }
         const { id, ...rest } = page;
         await this.pages.updateOne({ _id: id }, { $set: rest });
     }
@@ -187,11 +188,8 @@ export class MongoCmsRepository implements CmsRepository {
     }
 
     async getLinks(): Promise<PageLink[]> {
-        const docs = await this.pages.find(
-            {},
-            { projection: { path: 1, title: 1 } },
-        ).toArray();
-        return docs.map(d => ({ path: d.path, title: d.title }));
+        const docs = await this.pages.find({}, { projection: { path: 1, title: 1 } }).toArray();
+        return docs.map((d) => ({ path: d.path, title: d.title }));
     }
 
     async getPagesMetadata(opts: PagesQuery = {}): Promise<PageMeta[]> {
@@ -203,50 +201,60 @@ export class MongoCmsRepository implements CmsRepository {
             const rx = { $regex: escapeRegex(search), $options: "i" };
             filter.$or = [{ title: rx }, { path: rx }];
         }
-        if (opts.tag)                     filter.tags = opts.tag;
-        if (opts.visible === "published") filter.visible = true;
-        else if (opts.visible === "draft") filter.visible = { $ne: true };
+        if (opts.tag) {
+            filter.tags = opts.tag;
+        }
+        if (opts.visible === "published") {
+            filter.visible = true;
+        } else if (opts.visible === "draft") {
+            filter.visible = { $ne: true };
+        }
 
         const sortField = opts.sortBy ?? "title";
         const sort = { [sortField]: opts.sortOrder === "desc" ? -1 : 1 } as Record<string, 1 | -1>;
 
         // Collation strength 1 → case- and accent-insensitive sort, matching
         // the in-memory impls' `localeCompare(sensitivity: "base")`.
-        const docs = await this.pages.find(filter, {
-            projection: { path: 1, title: 1, tags: 1, visible: 1 },
-        }).collation({ locale: "en", strength: 1 }).sort(sort).toArray();
+        const docs = await this.pages
+            .find(filter, {
+                projection: { path: 1, title: 1, tags: 1, visible: 1 },
+            })
+            .collation({ locale: "en", strength: 1 })
+            .sort(sort)
+            .toArray();
 
-        return docs.map(d => ({
-            id:      d._id,
-            path:    d.path,
-            title:   d.title,
-            tags:    d.tags,
+        return docs.map((d) => ({
+            id: d._id,
+            path: d.path,
+            title: d.title,
+            tags: d.tags,
             visible: d.visible === true,
         }));
     }
 
-    async getTemplatesMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; createdAt: string }[]> {
-        const docs = await this.templates.find(
-            {},
-            { projection: { identifier: 1, name: 1, category: 1, createdAt: 1 } },
-        ).toArray();
-        return docs.map(d => ({
-            id:         d._id,
+    async getTemplatesMetadata(): Promise<
+        { id: string; identifier: string; name: string; category: string; createdAt: string }[]
+    > {
+        const docs = await this.templates
+            .find({}, { projection: { identifier: 1, name: 1, category: 1, createdAt: 1 } })
+            .toArray();
+        return docs.map((d) => ({
+            id: d._id,
             identifier: d.identifier,
-            name:       d.name,
-            category:   d.category,
-            createdAt:  d.createdAt.toDateString(),
+            name: d.name,
+            category: d.category,
+            createdAt: d.createdAt.toDateString(),
         }));
     }
 
     async getTagCounts() {
         const docs = await this.pages.find({}, { projection: { tags: 1 } }).toArray();
-        return countValues(docs.flatMap(d => normalizeTags((d as { tags: unknown }).tags)));
+        return countValues(docs.flatMap((d) => normalizeTags((d as { tags: unknown }).tags)));
     }
 
     async getCategoryCounts(_resource: "templates") {
         const docs = await this.templates.find({}, { projection: { category: 1 } }).toArray();
-        return countValues(docs.map(d => d.category));
+        return countValues(docs.map((d) => d.category));
     }
 
     // ── System ──
@@ -256,8 +264,11 @@ export class MongoCmsRepository implements CmsRepository {
         if (doc) {
             const { _id, ...rest } = doc;
             const legacy = rest as Partial<TSystem>;
-            if (!legacy.theme) legacy.theme = themeSettingsFromCss(legacy.site?.theme ?? "");
-            else legacy.theme = organizeThemeSettings(legacy.theme);
+            if (!legacy.theme) {
+                legacy.theme = themeSettingsFromCss(legacy.site?.theme ?? "");
+            } else {
+                legacy.theme = organizeThemeSettings(legacy.theme);
+            }
             return mergeSystemUpdate(defaultSystem(), rest);
         }
         // Lazy creation on first access — keeps the contract synchronous-feeling
@@ -270,11 +281,7 @@ export class MongoCmsRepository implements CmsRepository {
     async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
         const current = await this.getSystem();
         const merged = mergeSystemUpdate(current, update);
-        await this.system.replaceOne(
-            { _id: SYSTEM_ID },
-            merged,
-            { upsert: true },
-        );
+        await this.system.replaceOne({ _id: SYSTEM_ID }, merged, { upsert: true });
         return merged;
     }
 
@@ -298,41 +305,34 @@ export class MongoCmsRepository implements CmsRepository {
 
     async getAllTemplates(): Promise<TTemplate[]> {
         const docs = await this.templates.find().toArray();
-        return docs.map(d => fromTemplateDoc(d)!);
+        return docs.map((d) => fromTemplateDoc(d)!);
     }
 
     async getTemplateCategories(): Promise<string[]> {
         const raw = await this.templates.distinct("category");
-        return (raw as string[])
-            .filter(c => typeof c === "string" && c.length > 0)
-            .sort();
+        return (raw as string[]).filter((c) => typeof c === "string" && c.length > 0).sort();
     }
 
     async updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
         // Strip immutable fields so callers can't rewrite them.
         const { id: _id, identifier: _ident, createdAt: _ca, ...rest } = data;
-        const doc = await this.templates.findOneAndUpdate(
-            { _id: id },
-            { $set: rest },
-            { returnDocument: "after" },
-        );
+        const doc = await this.templates.findOneAndUpdate({ _id: id }, { $set: rest }, { returnDocument: "after" });
         return fromTemplateDoc(doc);
     }
 
     async deleteTemplate(id: string): Promise<void> {
         await this.templates.deleteOne({ _id: id });
     }
-
 }
 
 // ── Document shapes (collection generics) ──
 
 type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
 
-type BlocDoc         = WithMongoId<TBloc>;
-type PageDoc         = WithMongoId<TPage>;
-type TemplateDoc     = WithMongoId<TTemplate>;
-type SystemDoc       = TSystem & { _id: typeof SYSTEM_ID };
+type BlocDoc = WithMongoId<TBloc>;
+type PageDoc = WithMongoId<TPage>;
+type TemplateDoc = WithMongoId<TTemplate>;
+type SystemDoc = TSystem & { _id: typeof SYSTEM_ID };
 
 const SYSTEM_ID = "singleton" as const;
 
@@ -346,12 +346,16 @@ function toDoc<T extends { id: string }>(model: T): WithMongoId<T> {
 // its constraint default (`{ id: string }`) and complains. Four 1-line
 // helpers are clearer than 11 explicit type arguments at call sites.
 function fromPageDoc(d: PageDoc | null): TPage | null {
-    if (!d) return null;
+    if (!d) {
+        return null;
+    }
     const { _id, ...rest } = d;
     return { id: _id, ...rest, visible: d.visible === true };
 }
 function fromTemplateDoc(d: TemplateDoc | null): TTemplate | null {
-    if (!d) return null;
+    if (!d) {
+        return null;
+    }
     const { _id, ...rest } = d;
     return { id: _id, ...rest };
 }

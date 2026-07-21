@@ -8,26 +8,31 @@ import { showToast, type ToastType } from "@bernouy/components";
  * Stateless and inert otherwise — no DOM rendered, no slot.
  */
 export class CmsEventToast extends HTMLElement {
-
     private _attached: string | null = null;
     private _onEvent = () => {
-        const message = this.getAttribute('message') ?? '';
-        const type    = (this.getAttribute('type') as ToastType | null) ?? 'success';
-        if (message) showToast(message, { type });
+        const message = this.getAttribute("message") ?? "";
+        const type = (this.getAttribute("type") as ToastType | null) ?? "success";
+        if (message) {
+            showToast(message, { type });
+        }
     };
 
     connectedCallback(): void {
-        this.style.display = 'none';
-        const evt = this.getAttribute('event');
-        if (!evt) return;
+        this.style.display = "none";
+        const evt = this.getAttribute("event");
+        if (!evt) {
+            return;
+        }
         document.addEventListener(evt, this._onEvent);
         this._attached = evt;
     }
 
     disconnectedCallback(): void {
-        if (this._attached) document.removeEventListener(this._attached, this._onEvent);
+        if (this._attached) {
+            document.removeEventListener(this._attached, this._onEvent);
+        }
         this._attached = null;
     }
 }
 
-customElements.define('cms-event-toast', CmsEventToast);
+customElements.define("cms-event-toast", CmsEventToast);

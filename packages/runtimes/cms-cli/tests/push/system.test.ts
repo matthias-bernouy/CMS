@@ -23,7 +23,7 @@ describe("scanSystem", () => {
     test("inlines theme.css into site.theme", async () => {
         const dir = tmpSite({
             "system.json": JSON.stringify({ site: { name: "Foo" } }),
-            "theme.css":   ":root { --x: red; }",
+            "theme.css": ":root { --x: red; }",
         });
         const local = await scanSystem(dir);
         expect(local?.payload.site.name).toBe("Foo");
@@ -40,10 +40,10 @@ describe("scanSystem", () => {
         const dir = tmpSite({
             "system.json": JSON.stringify({
                 site: {
-                    notFound:    { path: "/404" },
-                    forbidden:   { path: "/forbidden" },
+                    notFound: { path: "/404" },
+                    forbidden: { path: "/forbidden" },
                     serverError: null,
-                    login:       { path: "/login" },
+                    login: { path: "/login" },
                 },
             }),
         });
@@ -64,22 +64,22 @@ describe("flatten", () => {
     test("emits dotted keys, page refs as path strings", () => {
         const body = flatten({
             site: {
-                name:        "Foo",
-                language:    "fr",
-                notFound:    { path: "/404" },
-                forbidden:   { path: "/forbidden" },
+                name: "Foo",
+                language: "fr",
+                notFound: { path: "/404" },
+                forbidden: { path: "/forbidden" },
                 serverError: null,
-                login:       { path: "/login" },
+                login: { path: "/login" },
             },
             editor: { layoutCategory: "Layouts" },
         });
         expect(body).toEqual({
-            "site.name":            "Foo",
-            "site.language":        "fr",
-            "site.notFound":        "/404",
-            "site.forbidden":       "/forbidden",
-            "site.serverError":     "",
-            "site.login":           "/login",
+            "site.name": "Foo",
+            "site.language": "fr",
+            "site.notFound": "/404",
+            "site.forbidden": "/forbidden",
+            "site.serverError": "",
+            "site.login": "/login",
             "editor.layoutCategory": "Layouts",
         });
     });
@@ -87,7 +87,7 @@ describe("flatten", () => {
 
 describe("projectRemote", () => {
     test("only keeps keys present in the local payload", () => {
-        const local  = { site: { name: "" }, editor: {} };
+        const local = { site: { name: "" }, editor: {} };
         const remote = { site: { name: "Foo", host: "bar" }, editor: { layoutCategory: "x" } };
         const out = projectRemote(local, remote);
         expect(out).toEqual({ site: { name: "Foo" }, editor: {} });

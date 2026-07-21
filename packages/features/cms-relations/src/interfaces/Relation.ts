@@ -1,8 +1,8 @@
 export const RELATION_CARDINALITIES = ["one", "many"] as const;
-export type RelationCardinality = typeof RELATION_CARDINALITIES[number];
+export type RelationCardinality = (typeof RELATION_CARDINALITIES)[number];
 
 export const RELATION_BINDING_KINDS = ["reference", "linkTable"] as const;
-export type RelationBindingKind = typeof RELATION_BINDING_KINDS[number];
+export type RelationBindingKind = (typeof RELATION_BINDING_KINDS)[number];
 
 export type RelationSide = {
     sourceId: string;
@@ -45,9 +45,7 @@ export type LinkTableRelationBinding = {
     };
 };
 
-export type RelationBinding =
-    | ReferenceRelationBinding
-    | LinkTableRelationBinding;
+export type RelationBinding = ReferenceRelationBinding | LinkTableRelationBinding;
 
 export type RelationPageContract = {
     itemsPath: string;

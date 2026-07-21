@@ -10,8 +10,12 @@ export function parseBlocTemplate(
     const blocName = text(value.name);
     const viewJS = executableSource(value.viewJS);
     const editorJS = executableSource(value.editorJS);
-    if (!tag) throw new MissingIntegrationParam(`${name}.tag`);
-    if (!blocName) throw new MissingIntegrationParam(`${name}.name`);
+    if (!tag) {
+        throw new MissingIntegrationParam(`${name}.tag`);
+    }
+    if (!blocName) {
+        throw new MissingIntegrationParam(`${name}.name`);
+    }
     return {
         tag,
         name: blocName,
@@ -31,10 +35,14 @@ function executableSource(value: unknown): string | undefined {
 }
 
 function parseSourceBundle(value: unknown, name: string): Record<string, string> {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     const out: Record<string, string> = {};
     for (const [path, content] of Object.entries(value)) {
-        if (typeof content !== "string") throw new IntegrationInputError(`${name}.${path}`, "must be a string");
+        if (typeof content !== "string") {
+            throw new IntegrationInputError(`${name}.${path}`, "must be a string");
+        }
         out[path] = content;
     }
     return out;

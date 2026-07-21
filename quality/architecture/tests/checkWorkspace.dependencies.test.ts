@@ -52,11 +52,13 @@ describe("workspace dependency rules", () => {
     test("reports workspace dependency cycles", async () => {
         const root = await createWorkspace({
             "packages/features/a/package.json": manifest("@fixture/a", {
-                dependencies: { "@fixture/b": "workspace:*" }, exports: { ".": "./src/index.ts" },
+                dependencies: { "@fixture/b": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
             }),
             "packages/features/a/src/index.ts": "export const a = true;\n",
             "packages/features/b/package.json": manifest("@fixture/b", {
-                dependencies: { "@fixture/a": "workspace:*" }, exports: { ".": "./src/index.ts" },
+                dependencies: { "@fixture/a": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
             }),
             "packages/features/b/src/index.ts": "export const b = true;\n",
         });

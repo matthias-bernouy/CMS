@@ -8,21 +8,33 @@ import { parseDataRef } from "./refs";
 import { parseSections } from "./fields";
 
 export function parseWidget(value: unknown, name: string): DashboardWidget {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     const widget = text(value.widget);
-    if (widget === "w-section") return {
-        widget,
-        id: requiredText(value.id, `${name}.id`),
-        title: requiredText(value.title, `${name}.title`),
-        ...(text(value.description) ? { description: text(value.description)! } : {}),
-        children: parseWidgetArray(value.children, `${name}.children`),
-    };
+    if (widget === "w-section") {
+        return {
+            widget,
+            id: requiredText(value.id, `${name}.id`),
+            title: requiredText(value.title, `${name}.title`),
+            ...(text(value.description) ? { description: text(value.description)! } : {}),
+            children: parseWidgetArray(value.children, `${name}.children`),
+        };
+    }
     if (widget === "w-tabs") {
-        if (!Array.isArray(value.tabs)) throw new IntegrationInputError(`${name}.tabs`, "must be an array");
-        return { widget, id: requiredText(value.id, `${name}.id`), tabs: value.tabs.map((tab, index) => parseTab(tab, `${name}.tabs.${index}`)) };
+        if (!Array.isArray(value.tabs)) {
+            throw new IntegrationInputError(`${name}.tabs`, "must be an array");
+        }
+        return {
+            widget,
+            id: requiredText(value.id, `${name}.id`),
+            tabs: value.tabs.map((tab, index) => parseTab(tab, `${name}.tabs.${index}`)),
+        };
     }
     if (widget === "w-table") {
-        if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
+        if (!isRecord(value.source)) {
+            throw new IntegrationInputError(`${name}.source`, "must be an object");
+        }
         return {
             widget,
             id: requiredText(value.id, `${name}.id`),
@@ -37,7 +49,9 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
         };
     }
     if (widget === "w-detail") {
-        if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
+        if (!isRecord(value.source)) {
+            throw new IntegrationInputError(`${name}.source`, "must be an object");
+        }
         return {
             widget,
             id: requiredText(value.id, `${name}.id`),
@@ -50,8 +64,12 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
         };
     }
     if (widget === "w-navigation-list") {
-        if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
-        if (!isRecord(value.item)) throw new IntegrationInputError(`${name}.item`, "must be an object");
+        if (!isRecord(value.source)) {
+            throw new IntegrationInputError(`${name}.source`, "must be an object");
+        }
+        if (!isRecord(value.item)) {
+            throw new IntegrationInputError(`${name}.item`, "must be an object");
+        }
         return {
             widget,
             id: requiredText(value.id, `${name}.id`),
@@ -60,7 +78,9 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             rowKey: requiredText(value.rowKey, `${name}.rowKey`),
             item: parseNavigationItem(value.item, `${name}.item`),
             ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
-            ...(isRecord(value.reorderable) ? { reorderable: { action: requiredText(value.reorderable.action, `${name}.reorderable.action`) } } : {}),
+            ...(isRecord(value.reorderable)
+                ? { reorderable: { action: requiredText(value.reorderable.action, `${name}.reorderable.action`) } }
+                : {}),
             ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
         };
     }
@@ -68,12 +88,16 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
 }
 
 function parseWidgetArray(value: unknown, name: string): DashboardWidget[] {
-    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    if (!Array.isArray(value)) {
+        throw new IntegrationInputError(name, "must be an array");
+    }
     return value.map((entry, index) => parseWidget(entry, `${name}.${index}`));
 }
 
 function parseTab(value: unknown, name: string): { id: string; label: string; children: DashboardWidget[] } {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     return {
         id: requiredText(value.id, `${name}.id`),
         label: requiredText(value.label, `${name}.label`),
@@ -89,7 +113,9 @@ function parseBinding(value: Record<string, unknown>, name: string) {
 }
 
 function parseNavigationItem(value: Record<string, unknown>, name: string) {
-    if (!isRecord(value.title)) throw new IntegrationInputError(`${name}.title`, "must be an object");
+    if (!isRecord(value.title)) {
+        throw new IntegrationInputError(`${name}.title`, "must be an object");
+    }
     return {
         title: parseBinding(value.title, `${name}.title`),
         ...(isRecord(value.subtitle) ? { subtitle: parseBinding(value.subtitle, `${name}.subtitle`) } : {}),

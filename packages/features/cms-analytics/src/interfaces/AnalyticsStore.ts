@@ -25,14 +25,14 @@ export type AnalyticsSummary = {
     views: number;
     uniqueVisitors: number;
     avgMs: number;
-    errorRate: number;      // (4xx + 5xx) / total
+    errorRate: number; // (4xx + 5xx) / total
 };
 
 /** A time-range query plus the bucketing granularity for the series. */
 export type RangeQuery = {
     from: Date;
     to: Date;
-    interval: 'hour' | 'day';
+    interval: "hour" | "day";
 };
 
 export interface AnalyticsStore {
@@ -47,5 +47,5 @@ export interface AnalyticsStore {
     /** Most-viewed paths over [from, to), capped at `limit`. */
     topPaths(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Counts grouped by a dimension over [from, to). */
-    breakdown(dim: 'status' | 'device' | 'browser', from: Date, to: Date): Promise<KeyCount[]>;
+    breakdown(dim: "status" | "device" | "browser", from: Date, to: Date): Promise<KeyCount[]>;
 }

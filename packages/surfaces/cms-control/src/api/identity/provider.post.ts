@@ -6,7 +6,6 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { slugify } from "cms-control/core/validation/slugify";
 
-
 /** POST /api/identity/provider — create a login provider (config ONLY; the
  *  clientSecret is stored separately in the SecretStore under `clientSecretRef`).
  *
@@ -15,20 +14,33 @@ import { slugify } from "cms-control/core/validation/slugify";
  *  from `kind` at read time (see `toLoginMethod`), never stored. */
 export default async function createProvider(req: Request, cms: ControlCms) {
     const b = await readJsonBody(req);
-    if (typeof b.displayName !== "string" || !b.displayName) throw new MissingParam("displayName");
+    if (typeof b.displayName !== "string" || !b.displayName) {
+        throw new MissingParam("displayName");
+    }
 
     const kind = validateProviderKind(typeof b.kind === "string" && b.kind ? b.kind : "oidc");
 
     const id = typeof b.id === "string" && b.id ? slugify(b.id) : slugify(b.displayName);
-    if (!id) throw new InvalidParam("displayName", "cannot derive an id");
+    if (!id) {
+        throw new InvalidParam("displayName", "cannot derive an id");
+    }
 
     const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
     const input: NewIdentityProvider = {
-        id, displayName: b.displayName, kind, enabled: true,
-        ...(str(b.issuer)          ? { issuer:          str(b.issuer)! }          : {}),
-        ...(str(b.clientId)        ? { clientId:        str(b.clientId)! }        : {}),
+        id,
+        displayName: b.displayName,
+        kind,
+        enabled: true,
+        ...(str(b.issuer) ? { issuer: str(b.issuer)! } : {}),
+        ...(str(b.clientId) ? { clientId: str(b.clientId)! } : {}),
         ...(str(b.clientSecretRef) ? { clientSecretRef: str(b.clientSecretRef)! } : {}),
-        ...(str(b.scopes)          ? { scopes:          str(b.scopes)!.split(/[,\s]+/).filter(Boolean) } : {}),
+        ...(str(b.scopes)
+            ? {
+                  scopes: str(b.scopes)!
+                      .split(/[,\s]+/)
+                      .filter(Boolean),
+              }
+            : {}),
     };
 
     return Response.json(await cms.identityProviders.create(input));

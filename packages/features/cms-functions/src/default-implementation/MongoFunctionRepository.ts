@@ -31,7 +31,9 @@ export class MongoFunctionRepository implements FunctionRepository {
         try {
             await this.functions.insertOne(toDoc(fn) as OptionalUnlessRequiredId<FunctionDoc>);
         } catch (error) {
-            if (isDuplicateKey(error)) throw new DuplicateFunctionError(fn.id);
+            if (isDuplicateKey(error)) {
+                throw new DuplicateFunctionError(fn.id);
+            }
             throw error;
         }
         return structuredClone(fn);
@@ -39,11 +41,7 @@ export class MongoFunctionRepository implements FunctionRepository {
 
     async updateFunction(fn: CmsFunction): Promise<CmsFunction | null> {
         const { id: _id, ...rest } = fn;
-        const doc = await this.functions.findOneAndReplace(
-            { _id },
-            rest,
-            { returnDocument: "after" },
-        );
+        const doc = await this.functions.findOneAndReplace({ _id }, rest, { returnDocument: "after" });
         return fromDoc(doc);
     }
 
@@ -58,7 +56,7 @@ export class MongoFunctionRepository implements FunctionRepository {
 
     async getAllFunctions(): Promise<CmsFunction[]> {
         const docs = await this.functions.find().toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        return docs.map((doc) => fromDoc(doc)!);
     }
 }
 
@@ -68,7 +66,9 @@ function toDoc(fn: CmsFunction): FunctionDoc {
 }
 
 function fromDoc(doc: FunctionDoc | null): CmsFunction | null {
-    if (!doc) return null;
+    if (!doc) {
+        return null;
+    }
     const { _id, ...rest } = doc;
     return { id: _id, ...rest };
 }

@@ -20,15 +20,24 @@ const idCacheControl = (): string =>
  * Anything outside this allow-list is sent as an opaque download.
  */
 const INLINE_SAFE_TYPES = new Set([
-    "image/png", "image/jpeg", "image/gif", "image/webp", "image/avif", "image/bmp",
-    "video/mp4", "video/webm", "video/ogg",
-    "audio/mpeg", "audio/ogg", "audio/wav",
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/avif",
+    "image/bmp",
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/wav",
     "application/pdf",
 ]);
 
 export type FilesServeDeps = {
     metadata: CmsFilesMetadataRepository;
-    blob:     CmsFilesBlobStore;
+    blob: CmsFilesBlobStore;
 };
 
 const notFound = () => new Response("Not found", { status: 404 });
@@ -56,7 +65,9 @@ export async function serveFilesRequest(
     opts: { prefix: string },
 ): Promise<Response> {
     const { pathname } = new URL(req.url);
-    if (!pathname.startsWith(opts.prefix)) return notFound();
+    if (!pathname.startsWith(opts.prefix)) {
+        return notFound();
+    }
 
     let segments: string[];
     try {
@@ -65,16 +76,24 @@ export async function serveFilesRequest(
         return notFound(); // malformed percent-encoding
     }
     segments = segments.map((s) => s.trim()).filter(Boolean);
-    if (segments.length === 0) return notFound();
+    if (segments.length === 0) {
+        return notFound();
+    }
 
     // ── id route: /.cms/files/by-id/<id> — opaque + immutable (prod) ──
     if (segments[0] === CMS_FILES_BY_ID_SEGMENT) {
         const id = segments[1];
-        if (segments.length !== 2 || !id) return notFound();
+        if (segments.length !== 2 || !id) {
+            return notFound();
+        }
         const item = await deps.metadata.getItem(id);
-        if (!item || item.type !== "file") return notFound(); // unknown id, or a folder id
+        if (!item || item.type !== "file") {
+            return notFound(); // unknown id, or a folder id
+        }
         const stream = await deps.blob.get(item.id);
-        if (!stream) return notFound();
+        if (!stream) {
+            return notFound();
+        }
         return fileResponse(item, stream, idCacheControl());
     }
 
@@ -83,9 +102,13 @@ export async function serveFilesRequest(
         return notFound();
     }
     const item = await deps.metadata.getItemByPath(segments.join("/"));
-    if (!item || item.type !== "file") return notFound();
+    if (!item || item.type !== "file") {
+        return notFound();
+    }
     const stream = await deps.blob.get(item.id);
-    if (!stream) return notFound();
+    if (!stream) {
+        return notFound();
+    }
     return fileResponse(item, stream, publicAssetCacheControl(req));
 }
 
@@ -95,13 +118,13 @@ function fileResponse(item: FileItem, stream: ReadableStream<Uint8Array>, cacheC
     const inlineSafe = INLINE_SAFE_TYPES.has(item.mimeType);
     return new Response(stream, {
         headers: {
-            "Content-Type":           inlineSafe ? item.mimeType : "application/octet-stream",
-            "Content-Length":         String(item.size),
+            "Content-Type": inlineSafe ? item.mimeType : "application/octet-stream",
+            "Content-Length": String(item.size),
             // Never let the browser sniff a type we didn't declare, and force a
             // download for anything off the inline allow-list (HTML/SVG/…).
-            "Content-Disposition":    inlineSafe ? "inline" : "attachment",
+            "Content-Disposition": inlineSafe ? "inline" : "attachment",
             "X-Content-Type-Options": "nosniff",
-            "Cache-Control":          cacheControl,
+            "Cache-Control": cacheControl,
         },
     });
 }

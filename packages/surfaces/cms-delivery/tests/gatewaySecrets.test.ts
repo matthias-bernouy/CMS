@@ -8,59 +8,81 @@ import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
 const SECURED: Source = {
     urn: "urn:secured",
-    endpoints: [{
-        urn: "urn:secured:get",
-        method: "GET",
-        access: { mode: "public" },
-        targetUrl: "https://api.example.com/data",
-        responseKind: "file",
-        headers: [{ name: "authorization", source: { from: "secret", ref: "${API_KEY}", prefix: "Bearer " } }],
-        output: [{ status: "200" }],
-    }],
+    endpoints: [
+        {
+            urn: "urn:secured:get",
+            method: "GET",
+            access: { mode: "public" },
+            targetUrl: "https://api.example.com/data",
+            responseKind: "file",
+            headers: [{ name: "authorization", source: { from: "secret", ref: "${API_KEY}", prefix: "Bearer " } }],
+            output: [{ status: "200" }],
+        },
+    ],
 };
 
 const COMPUTED: Source = {
     urn: "urn:computed",
-    endpoints: [{
-        urn:       "urn:computed:me",
-        method:    "GET",
-        access:    { mode: "auth" },
-        targetUrl: "https://api.example.com/me",
-        responseKind: "file",
-        input: {
-            params: [{
-                name:     "user_id",
-                in:       "query",
-                required: true,
-                source:   { from: "computed", ref: "userID" },
-                schema:   { type: "string" },
-            }, {
-                name:     "user_role",
-                in:       "query",
-                required: true,
-                source:   { from: "computed", ref: "userRole" },
-                schema:   { type: "string" },
-            }],
+    endpoints: [
+        {
+            urn: "urn:computed:me",
+            method: "GET",
+            access: { mode: "auth" },
+            targetUrl: "https://api.example.com/me",
+            responseKind: "file",
+            input: {
+                params: [
+                    {
+                        name: "user_id",
+                        in: "query",
+                        required: true,
+                        source: { from: "computed", ref: "userID" },
+                        schema: { type: "string" },
+                    },
+                    {
+                        name: "user_role",
+                        in: "query",
+                        required: true,
+                        source: { from: "computed", ref: "userRole" },
+                        schema: { type: "string" },
+                    },
+                ],
+            },
+            output: [{ status: "200" }],
         },
-        output: [{ status: "200" }],
-    }],
+    ],
 };
 
 class CaptureRunner implements Runner {
     private readonly defaults: Map<string, RouteHandler>;
 
-    constructor(readonly basePath: string = "/", sharedDefaults?: Map<string, RouteHandler>) {
+    constructor(
+        readonly basePath: string = "/",
+        sharedDefaults?: Map<string, RouteHandler>,
+    ) {
         this.defaults = sharedDefaults ?? new Map();
     }
 
     addEndpoint() {}
     use() {}
-    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("GET", path, handler, middlewares); }
-    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("POST", path, handler, middlewares); }
-    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PATCH", path, handler, middlewares); }
-    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("DELETE", path, handler, middlewares); }
-    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PUT", path, handler, middlewares); }
-    getRequestIP() { return undefined; }
+    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("GET", path, handler, middlewares);
+    }
+    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("POST", path, handler, middlewares);
+    }
+    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PATCH", path, handler, middlewares);
+    }
+    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("DELETE", path, handler, middlewares);
+    }
+    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PUT", path, handler, middlewares);
+    }
+    getRequestIP() {
+        return undefined;
+    }
     removeRoutesByPathPrefix() {}
     start() {}
     stop() {}
@@ -75,7 +97,9 @@ class CaptureRunner implements Runner {
 
     defaultHandler(method: string, prefix: string): RouteHandler {
         const handler = this.defaults.get(`${method} ${prefix}`);
-        if (!handler) throw new Error(`missing captured handler: ${method} ${prefix}`);
+        if (!handler) {
+            throw new Error(`missing captured handler: ${method} ${prefix}`);
+        }
         return handler;
     }
 }
@@ -98,16 +122,23 @@ async function publicGatewayRoles(permission = "urn:secured:get"): Promise<Roles
 
 async function gatewayRoles(role: string, permission: string): Promise<RolesRepository> {
     const roles = new InMemoryRolesRepository();
-    await roles.upsert({ id: role, label: role, builtin: role === PUBLIC_ROLE || role === USER_ROLE, grants: [{ permission }] });
+    await roles.upsert({
+        id: role,
+        label: role,
+        builtin: role === PUBLIC_ROLE || role === USER_ROLE,
+        grants: [{ permission }],
+    });
     return roles;
 }
 
-async function mountDeliveryGateway(opts: {
-    resolveSecret?: (ref: string) => Promise<string | undefined>;
-    roles?: RolesRepository;
-    providers?: Source[];
-    auth?: unknown;
-} = {}) {
+async function mountDeliveryGateway(
+    opts: {
+        resolveSecret?: (ref: string) => Promise<string | undefined>;
+        roles?: RolesRepository;
+        providers?: Source[];
+        auth?: unknown;
+    } = {},
+) {
     const gateway = new InMemorySourceRepository();
     await seedSources(gateway, opts.providers ?? [SECURED]);
     const runner = new CaptureRunner();
@@ -157,7 +188,9 @@ describe("Delivery gateway secrets", () => {
             const res = await handler(new Request("http://site/.cms/sources/secured/get"));
 
             expect(res.status).toBe(500);
-            expect(await res.text()).toBe("secret header requires a configured secret store (not wired yet): authorization");
+            expect(await res.text()).toBe(
+                "secret header requires a configured secret store (not wired yet): authorization",
+            );
             expect(fetchSpy).not.toHaveBeenCalled();
         } finally {
             fetchSpy.mockRestore();
@@ -166,7 +199,7 @@ describe("Delivery gateway secrets", () => {
 
     test("uses an explicitly wired resolver for dev gateway secrets", async () => {
         const handler = await mountDeliveryGateway({
-            resolveSecret: async ref => ref === "${API_KEY}" ? "dev-key" : undefined,
+            resolveSecret: async (ref) => (ref === "${API_KEY}" ? "dev-key" : undefined),
             roles: await publicGatewayRoles(),
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));

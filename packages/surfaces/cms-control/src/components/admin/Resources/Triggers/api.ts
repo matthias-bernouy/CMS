@@ -22,20 +22,29 @@ export function route(path: string): string {
 
 export async function fetchTriggers(): Promise<TriggerListItem[]> {
     const response = await fetch(route("/api/triggers"), { headers: { Accept: "application/json" } });
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
     return response.json() as Promise<TriggerListItem[]>;
 }
 
-export async function fetchTriggerCatalog(): Promise<{ sources: FunctionCatalogSource[]; functions: TriggerFunctionItem[] }> {
+export async function fetchTriggerCatalog(): Promise<{
+    sources: FunctionCatalogSource[];
+    functions: TriggerFunctionItem[];
+}> {
     const [sourcesResponse, functionsResponse] = await Promise.all([
         fetch(route("/api/functions/catalog"), { headers: { Accept: "application/json" } }),
         fetch(route("/api/functions"), { headers: { Accept: "application/json" } }),
     ]);
-    if (!sourcesResponse.ok) throw new Error(await sourcesResponse.text());
-    if (!functionsResponse.ok) throw new Error(await functionsResponse.text());
+    if (!sourcesResponse.ok) {
+        throw new Error(await sourcesResponse.text());
+    }
+    if (!functionsResponse.ok) {
+        throw new Error(await functionsResponse.text());
+    }
     return {
-        sources: await sourcesResponse.json() as FunctionCatalogSource[],
-        functions: await functionsResponse.json() as TriggerFunctionItem[],
+        sources: (await sourcesResponse.json()) as FunctionCatalogSource[],
+        functions: (await functionsResponse.json()) as TriggerFunctionItem[],
     };
 }
 
@@ -45,7 +54,9 @@ export async function createTriggerDefinition(definition: unknown, enabled: bool
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ definition, enabled }),
     });
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
     return response.json() as Promise<TriggerListItem>;
 }
 
@@ -55,6 +66,8 @@ export async function setTriggerEnabled(id: string, enabled: boolean): Promise<T
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, enabled }),
     });
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
     return response.json() as Promise<TriggerListItem>;
 }

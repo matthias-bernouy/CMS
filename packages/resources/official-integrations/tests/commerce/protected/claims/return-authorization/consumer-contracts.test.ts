@@ -15,10 +15,7 @@ const definitionPath = resolve(
 describe("claim return authorization consumer contracts", () => {
     test("keeps exact Commerce selectors and downstream call boundaries", async () => {
         const functions = await returnFunctions();
-        const actual = Object.fromEntries(functions.map(fn => [
-            fn.id,
-            allCalls(fn).map(callContract),
-        ]));
+        const actual = Object.fromEntries(functions.map((fn) => [fn.id, allCalls(fn).map(callContract)]));
 
         expect(actual).toEqual({
             getClaimReturnForMe: [
@@ -48,40 +45,44 @@ describe("claim return authorization consumer contracts", () => {
     });
 
     test("keeps each consumer limited to its current authorization fields", async () => {
-        const actual = Object.fromEntries((await returnFunctions()).map(fn => [
-            fn.id,
-            authorizationFields(fn),
-        ]));
+        const actual = Object.fromEntries((await returnFunctions()).map((fn) => [fn.id, authorizationFields(fn)]));
 
         expect(actual).toEqual({
             getClaimReturnForMe: [
-                "allowed", "buyerCmsUserId", "claimId", "claimStatus", "orderNumber",
-                "reason", "returnDeliveryStatus", "returnShipByAt", "sellerCmsUserId",
-            ],
-            setRelayPointForMyClaimReturn: [
-                "allowed", "claimId", "sellerCmsUserId",
-            ],
-            getRelayPointForMyClaimReturn: [
-                "buyerCmsUserId", "claimId", "sellerCmsUserId",
-            ],
-            createClaimReturnShipmentForMyPurchase: [
-                "allowed", "buyerCmsUserId", "claimId", "claimVersion", "currency",
-                "deliveryQuoteId", "merchandiseSubtotalMinorAmount", "orderPublicId",
+                "allowed",
+                "buyerCmsUserId",
+                "claimId",
+                "claimStatus",
+                "orderNumber",
+                "reason",
+                "returnDeliveryStatus",
+                "returnShipByAt",
                 "sellerCmsUserId",
             ],
-            requestClaimReturnLabelForMyPurchase: [
-                "allowed", "buyerCmsUserId", "claimId",
+            setRelayPointForMyClaimReturn: ["allowed", "claimId", "sellerCmsUserId"],
+            getRelayPointForMyClaimReturn: ["buyerCmsUserId", "claimId", "sellerCmsUserId"],
+            createClaimReturnShipmentForMyPurchase: [
+                "allowed",
+                "buyerCmsUserId",
+                "claimId",
+                "claimVersion",
+                "currency",
+                "deliveryQuoteId",
+                "merchandiseSubtotalMinorAmount",
+                "orderPublicId",
+                "sellerCmsUserId",
             ],
+            requestClaimReturnLabelForMyPurchase: ["allowed", "buyerCmsUserId", "claimId"],
         });
     });
 
     test("keeps the TOCTOU recheck after preparation and before shipment creation", async () => {
-        const fn = (await returnFunctions()).find(candidate => (
-            candidate.id === "createClaimReturnShipmentForMyPurchase"
-        ))!;
+        const fn = (await returnFunctions()).find(
+            (candidate) => candidate.id === "createClaimReturnShipmentForMyPurchase",
+        )!;
         const identifiedSteps = fn.steps
-            .filter(step => typeof step.id === "string")
-            .map(step => ({ id: step.id, endpoint: callEndpoint(step) }));
+            .filter((step) => typeof step.id === "string")
+            .map((step) => ({ id: step.id, endpoint: callEndpoint(step) }));
 
         expect(identifiedSteps).toEqual([
             { id: "authorization", endpoint: "getClaimReturnAuthorization" },
@@ -91,15 +92,25 @@ describe("claim return authorization consumer contracts", () => {
             { id: "shipment", endpoint: "createShipment" },
         ]);
 
-        const recheckIndex = fn.steps.findIndex(step => step.id === "authorizationRecheck");
+        const recheckIndex = fn.steps.findIndex((step) => step.id === "authorizationRecheck");
         expect(fn.steps[recheckIndex + 1]).toEqual({
             assert: {
                 condition: {
                     all: [
                         { equals: ["$steps.authorizationRecheck.allowed", true] },
                         { equals: ["$steps.authorizationRecheck.claimVersion", "$steps.authorization.claimVersion"] },
-                        { equals: ["$steps.authorizationRecheck.buyerCmsUserId", "$steps.authorization.buyerCmsUserId"] },
-                        { equals: ["$steps.authorizationRecheck.sellerCmsUserId", "$steps.authorization.sellerCmsUserId"] },
+                        {
+                            equals: [
+                                "$steps.authorizationRecheck.buyerCmsUserId",
+                                "$steps.authorization.buyerCmsUserId",
+                            ],
+                        },
+                        {
+                            equals: [
+                                "$steps.authorizationRecheck.sellerCmsUserId",
+                                "$steps.authorization.sellerCmsUserId",
+                            ],
+                        },
                         { equals: ["$steps.authorizationRecheck.orderPublicId", "$steps.authorization.orderPublicId"] },
                     ],
                 },
@@ -115,20 +126,27 @@ describe("claim return authorization consumer contracts", () => {
 async function returnFunctions(): Promise<FunctionDefinition[]> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));
     const expected = new Set([
-        "getClaimReturnForMe", "setRelayPointForMyClaimReturn",
-        "getRelayPointForMyClaimReturn", "createClaimReturnShipmentForMyPurchase",
+        "getClaimReturnForMe",
+        "setRelayPointForMyClaimReturn",
+        "getRelayPointForMyClaimReturn",
+        "createClaimReturnShipmentForMyPurchase",
         "requestClaimReturnLabelForMyPurchase",
     ]);
     return definition.artifacts
         .map((artifact: JsonRecord) => artifact.function)
-        .filter((value: unknown): value is FunctionDefinition => (
-            isRecord(value) && expected.has(String(value.id)) && Array.isArray(value.steps)
-        ));
+        .filter(
+            (value: unknown): value is FunctionDefinition =>
+                isRecord(value) && expected.has(String(value.id)) && Array.isArray(value.steps),
+        );
 }
 
 function allCalls(value: unknown): JsonRecord[] {
-    if (Array.isArray(value)) return value.flatMap(allCalls);
-    if (!isRecord(value)) return [];
+    if (Array.isArray(value)) {
+        return value.flatMap(allCalls);
+    }
+    if (!isRecord(value)) {
+        return [];
+    }
     const own = isRecord(value.call) ? [value.call] : [];
     return [...own, ...Object.values(value).flatMap(allCalls)];
 }
@@ -147,21 +165,24 @@ function call(source: string, endpoint: string, claimId?: string): JsonRecord {
 }
 
 function authorizationFields(value: unknown): string[] {
-    const prefixes = [
-        "$steps.authorization.",
-        "$steps.authorizationRecheck.",
-    ];
-    const fields = stringValues(value).flatMap(entry => {
-        const prefix = prefixes.find(candidate => entry.startsWith(candidate));
+    const prefixes = ["$steps.authorization.", "$steps.authorizationRecheck."];
+    const fields = stringValues(value).flatMap((entry) => {
+        const prefix = prefixes.find((candidate) => entry.startsWith(candidate));
         return prefix ? [entry.slice(prefix.length)] : [];
     });
     return [...new Set(fields)].sort();
 }
 
 function stringValues(value: unknown): string[] {
-    if (typeof value === "string") return [value];
-    if (Array.isArray(value)) return value.flatMap(stringValues);
-    if (!isRecord(value)) return [];
+    if (typeof value === "string") {
+        return [value];
+    }
+    if (Array.isArray(value)) {
+        return value.flatMap(stringValues);
+    }
+    if (!isRecord(value)) {
+        return [];
+    }
     return Object.values(value).flatMap(stringValues);
 }
 

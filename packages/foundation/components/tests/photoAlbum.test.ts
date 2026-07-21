@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 
 import { PhotoAlbum } from "../src/ui/Media/PhotoAlbum/PhotoAlbum";
 
-if (!customElements.get("p9r-photo-album-test")) customElements.define("p9r-photo-album-test", PhotoAlbum);
+if (!customElements.get("p9r-photo-album-test")) {
+    customElements.define("p9r-photo-album-test", PhotoAlbum);
+}
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -54,7 +56,9 @@ describe("PhotoAlbum", () => {
         album.shadowRoot!.querySelector<HTMLButtonElement>(".figure-trigger")!.click();
 
         expect(album.shadowRoot!.querySelector<HTMLElement>(".preview")!.hidden).toBe(false);
-        expect(album.shadowRoot!.querySelector<HTMLImageElement>(".preview-image")!.src.endsWith("/legend.jpg")).toBe(true);
+        expect(album.shadowRoot!.querySelector<HTMLImageElement>(".preview-image")!.src.endsWith("/legend.jpg")).toBe(
+            true,
+        );
         expect(album.shadowRoot!.querySelector<HTMLElement>(".preview-caption")!.hidden).toBe(false);
         expect(album.shadowRoot!.querySelector<HTMLElement>(".preview-caption")!.textContent).toBe("Legend");
     });

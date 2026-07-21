@@ -48,19 +48,25 @@ export type DashboardVisibilityValue = string | number | boolean | null;
 
 export type DashboardVisibilityCondition = {
     value: DashboardExpr;
-} & ({
-    equals: DashboardVisibilityValue;
-    notEquals?: never;
-} | {
-    equals?: never;
-    notEquals: DashboardVisibilityValue;
-});
+} & (
+    | {
+          equals: DashboardVisibilityValue;
+          notEquals?: never;
+      }
+    | {
+          equals?: never;
+          notEquals: DashboardVisibilityValue;
+      }
+);
 
-export type DashboardVisibilityRule = DashboardVisibilityCondition | {
-    all: DashboardVisibilityRule[];
-} | {
-    any: DashboardVisibilityRule[];
-};
+export type DashboardVisibilityRule =
+    | DashboardVisibilityCondition
+    | {
+          all: DashboardVisibilityRule[];
+      }
+    | {
+          any: DashboardVisibilityRule[];
+      };
 
 export type DashboardColumn = {
     id: string;
@@ -77,10 +83,11 @@ type DashboardTableColumnEditor =
     | { type: "combobox"; options?: DashboardOption[]; lookup?: DashboardEmbeddedLookupRef }
     | { type: "tokens"; options?: never; lookup?: never };
 
-export type DashboardTableColumn = DashboardColumn & (
-    | { editable?: false; type?: never; options?: never; lookup?: never }
-    | ({ editable: true } & DashboardTableColumnEditor)
-);
+export type DashboardTableColumn = DashboardColumn &
+    (
+        | { editable?: false; type?: never; options?: never; lookup?: never }
+        | ({ editable: true } & DashboardTableColumnEditor)
+    );
 
 export type DashboardTableDerive = {
     type: "cartesian";

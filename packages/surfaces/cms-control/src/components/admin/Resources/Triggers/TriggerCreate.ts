@@ -2,12 +2,7 @@ import type { FunctionCondition, FunctionValue } from "@bernouy/cms-functions";
 import type { TriggerDefinition } from "@bernouy/cms-triggers";
 import "cms-control/components/admin/ShellDetail/ShellDetail";
 import type { FunctionCatalogSource } from "../Functions/api";
-import {
-    createTriggerDefinition,
-    fetchTriggerCatalog,
-    route,
-    type TriggerFunctionItem,
-} from "./api";
+import { createTriggerDefinition, fetchTriggerCatalog, route, type TriggerFunctionItem } from "./api";
 import css from "./create.css" with { type: "text" };
 import template from "./create.template.html" with { type: "text" };
 import {
@@ -35,7 +30,9 @@ export class CmsTriggerCreate extends HTMLElement {
     private saveButton: HTMLButtonElement | null = null;
 
     connectedCallback(): void {
-        if (this.initialized) return;
+        if (this.initialized) {
+            return;
+        }
         this.initialized = true;
         void this.load();
     }
@@ -103,7 +100,9 @@ export class CmsTriggerCreate extends HTMLElement {
         });
         this.select("operator").addEventListener("change", () => this.syncCondition());
         this.checkbox("condition-enabled").addEventListener("change", () => this.syncCondition());
-        this.querySelector("[data-role='collapse']")?.addEventListener("click", event => this.togglePanels(event.currentTarget as HTMLButtonElement));
+        this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) =>
+            this.togglePanels(event.currentTarget as HTMLButtonElement),
+        );
         this.bindIdentifier();
         this.saveButton?.addEventListener("click", () => void this.save());
     }
@@ -112,39 +111,53 @@ export class CmsTriggerCreate extends HTMLElement {
         const label = this.input("label");
         const id = this.input("id");
         let idWasEdited = false;
-        id.addEventListener("input", () => idWasEdited = true);
+        id.addEventListener("input", () => (idWasEdited = true));
         label.addEventListener("input", () => {
-            if (!idWasEdited) id.value = identifier(label.value);
+            if (!idWasEdited) {
+                id.value = identifier(label.value);
+            }
         });
     }
 
     private togglePanels(button: HTMLButtonElement): void {
         const panels = Array.from(this.querySelectorAll<HTMLDetailsElement>("details.editor-panel"));
-        const shouldOpen = panels.some(panel => !panel.open);
-        for (const panel of panels) panel.open = shouldOpen;
+        const shouldOpen = panels.some((panel) => !panel.open);
+        for (const panel of panels) {
+            panel.open = shouldOpen;
+        }
         button.textContent = shouldOpen ? "Collapse all" : "Expand all";
     }
 
     private populateSources(): void {
         const select = this.select("source");
-        for (const source of this.sources) select.append(option(source.id, source.label));
+        for (const source of this.sources) {
+            select.append(option(source.id, source.label));
+        }
     }
 
     private syncEndpointOptions(): void {
         const select = this.select("endpoint");
-        const source = this.sources.find(item => item.id === this.select("source").value);
-        select.replaceChildren(...(source?.endpoints ?? []).map(endpoint => option(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+        const source = this.sources.find((item) => item.id === this.select("source").value);
+        select.replaceChildren(
+            ...(source?.endpoints ?? []).map((endpoint) =>
+                option(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`),
+            ),
+        );
     }
 
     private populateFunctions(): void {
         const select = this.select("function");
-        for (const fn of this.functions) select.append(option(fn.id, `${fn.label} (${fn.method})`));
+        for (const fn of this.functions) {
+            select.append(option(fn.id, `${fn.label} (${fn.method})`));
+        }
     }
 
     private syncFunctionContract(): void {
         const root = this.querySelector<HTMLElement>("[data-role='function-contract']");
-        const fn = this.functions.find(item => item.id === this.select("function").value);
-        if (!root) return;
+        const fn = this.functions.find((item) => item.id === this.select("function").value);
+        if (!root) {
+            return;
+        }
         if (!fn) {
             root.textContent = "Create a function before creating a trigger.";
             return;
@@ -157,8 +170,12 @@ export class CmsTriggerCreate extends HTMLElement {
         const enabled = this.checkbox("condition-enabled").checked;
         const root = this.querySelector<HTMLElement>("[data-role='condition']");
         const right = this.querySelector<HTMLElement>("[data-role='right-field']");
-        if (root) root.hidden = !enabled;
-        if (right) right.hidden = this.select("operator").value === "exists";
+        if (root) {
+            root.hidden = !enabled;
+        }
+        if (right) {
+            right.hidden = this.select("operator").value === "exists";
+        }
         this.renderConditionPickers();
     }
 
@@ -173,14 +190,16 @@ export class CmsTriggerCreate extends HTMLElement {
 
     private renderConditionPickers(): void {
         const references = this.eventReferences();
-        this.querySelector<HTMLElement>("[data-role='condition-left']")
-            ?.replaceChildren(valuePicker(this.conditionLeft, references, "Choose an event value"));
-        this.querySelector<HTMLElement>("[data-role='condition-right']")
-            ?.replaceChildren(valuePicker(this.conditionRight, references, "Choose a value"));
+        this.querySelector<HTMLElement>("[data-role='condition-left']")?.replaceChildren(
+            valuePicker(this.conditionLeft, references, "Choose an event value"),
+        );
+        this.querySelector<HTMLElement>("[data-role='condition-right']")?.replaceChildren(
+            valuePicker(this.conditionRight, references, "Choose a value"),
+        );
     }
 
     private renderFunctionMappings(): void {
-        const fn = this.functions.find(item => item.id === this.select("function").value);
+        const fn = this.functions.find((item) => item.id === this.select("function").value);
         const references = this.eventReferences();
         const params: MappingTarget[] = Object.entries(fn?.params ?? {}).map(([name, shape]) => ({
             path: name,
@@ -223,41 +242,50 @@ export class CmsTriggerCreate extends HTMLElement {
         references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
         if (this.select("phase").value === "response") {
             references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
-            const output = endpoint?.output?.find(entry => /^2\d\d$/.test(entry.status))
-                ?? endpoint?.output?.find(entry => entry.status === "default");
+            const output =
+                endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status)) ??
+                endpoint?.output?.find((entry) => entry.status === "default");
             references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
-            references.push(...referencesFromShape(
-                output?.triggerBody,
-                "$response.body",
-                "Response body / trigger-only",
-            ));
+            references.push(
+                ...referencesFromShape(output?.triggerBody, "$response.body", "Response body / trigger-only"),
+            );
         }
         return uniqueReferences(references);
     }
 
     private selectedEndpoint() {
-        return this.sources.find(item => item.id === this.select("source").value)?.endpoints
-            .find(endpoint => endpoint.endpointId === this.select("endpoint").value);
+        return this.sources
+            .find((item) => item.id === this.select("source").value)
+            ?.endpoints.find((endpoint) => endpoint.endpointId === this.select("endpoint").value);
     }
 
     private syncPhaseHelp(): void {
         const help = this.querySelector<HTMLElement>("[data-role='phase-help']");
-        if (!help) return;
-        help.textContent = this.select("phase").value === "request"
-            ? "Request triggers run before the endpoint and cannot inspect $response values."
-            : "Response triggers can inspect both the request and response.";
+        if (!help) {
+            return;
+        }
+        help.textContent =
+            this.select("phase").value === "request"
+                ? "Request triggers run before the endpoint and cannot inspect $response values."
+                : "Response triggers can inspect both the request and response.";
     }
 
     private syncExecutionOptions(): void {
         const failure = this.select("failure");
         const asyncMode = this.select("mode").value === "async";
         const block = failure.querySelector<HTMLOptionElement>('option[value="block"]');
-        if (block) block.disabled = asyncMode;
-        if (asyncMode && failure.value === "block") failure.value = "ignore";
+        if (block) {
+            block.disabled = asyncMode;
+        }
+        if (asyncMode && failure.value === "block") {
+            failure.value = "ignore";
+        }
     }
 
     private async save(): Promise<void> {
-        if (!this.saveButton) return;
+        if (!this.saveButton) {
+            return;
+        }
         this.saveButton.disabled = true;
         this.setMessage("Validating trigger...", "");
         try {
@@ -300,23 +328,37 @@ export class CmsTriggerCreate extends HTMLElement {
     private condition(): FunctionCondition {
         const operator = this.select("operator").value;
         const left = resolvedDraftValue(this.conditionLeft);
-        if (operator === "exists") return { exists: left };
+        if (operator === "exists") {
+            return { exists: left };
+        }
         return { [operator]: [left, resolvedDraftValue(this.conditionRight)] } as FunctionCondition;
     }
 
-    private input(name: string): HTMLInputElement { return this.querySelector(`[data-field="${name}"]`) as HTMLInputElement; }
-    private textarea(name: string): HTMLTextAreaElement { return this.querySelector(`[data-field="${name}"]`) as HTMLTextAreaElement; }
-    private select(name: string): HTMLSelectElement { return this.querySelector(`[data-field="${name}"]`) as HTMLSelectElement; }
-    private checkbox(name: string): HTMLInputElement { return this.input(name); }
+    private input(name: string): HTMLInputElement {
+        return this.querySelector(`[data-field="${name}"]`) as HTMLInputElement;
+    }
+    private textarea(name: string): HTMLTextAreaElement {
+        return this.querySelector(`[data-field="${name}"]`) as HTMLTextAreaElement;
+    }
+    private select(name: string): HTMLSelectElement {
+        return this.querySelector(`[data-field="${name}"]`) as HTMLSelectElement;
+    }
+    private checkbox(name: string): HTMLInputElement {
+        return this.input(name);
+    }
 
     private setMessage(text: string, kind: "" | "error"): void {
-        if (!this.message) return;
+        if (!this.message) {
+            return;
+        }
         this.message.className = `message ${kind}`.trim();
         this.message.textContent = text;
     }
 }
 
-if (!customElements.get("cms-trigger-create")) customElements.define("cms-trigger-create", CmsTriggerCreate);
+if (!customElements.get("cms-trigger-create")) {
+    customElements.define("cms-trigger-create", CmsTriggerCreate);
+}
 
 function option(value: string, label: string): HTMLOptionElement {
     const el = document.createElement("option");
@@ -326,10 +368,14 @@ function option(value: string, label: string): HTMLOptionElement {
 }
 
 function parseOptionalObject(raw: string, label: string): Record<string, FunctionValue> | undefined {
-    if (!raw.trim()) return undefined;
+    if (!raw.trim()) {
+        return undefined;
+    }
     try {
         const value = JSON.parse(raw) as unknown;
-        if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error();
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+            throw new Error();
+        }
         return value as Record<string, FunctionValue>;
     } catch {
         throw new Error(`${label} must be a JSON object.`);
@@ -338,7 +384,9 @@ function parseOptionalObject(raw: string, label: string): Record<string, Functio
 
 function mappedDraft(draft: Record<string, ValueDraft>): FunctionValue | undefined {
     const root = draft[""];
-    if (root?.value) return resolvedDraftValue(root);
+    if (root?.value) {
+        return resolvedDraftValue(root);
+    }
     const mapped = mappedObject(draft);
     return Object.keys(mapped).length ? mapped : undefined;
 }
@@ -349,7 +397,9 @@ function parseOptionalValue(raw: string): FunctionValue | undefined {
 
 function parseValue(raw: string): FunctionValue {
     const text = raw.trim();
-    if (text.startsWith("$")) return text;
+    if (text.startsWith("$")) {
+        return text;
+    }
     try {
         return JSON.parse(text) as FunctionValue;
     } catch {
@@ -358,8 +408,12 @@ function parseValue(raw: string): FunctionValue {
 }
 
 function identifier(value: string): string {
-    const words = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
-    return words.map(word => word.toLowerCase()).join("-");
+    const words =
+        value
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .match(/[A-Za-z0-9]+/g) ?? [];
+    return words.map((word) => word.toLowerCase()).join("-");
 }
 
 function dataShapeType(value: string | undefined): MappingShape["type"] {
@@ -368,8 +422,10 @@ function dataShapeType(value: string | undefined): MappingShape["type"] {
 
 function uniqueReferences(references: ReferenceOption[]): ReferenceOption[] {
     const seen = new Set<string>();
-    return references.filter(reference => {
-        if (seen.has(reference.value)) return false;
+    return references.filter((reference) => {
+        if (seen.has(reference.value)) {
+            return false;
+        }
         seen.add(reference.value);
         return true;
     });

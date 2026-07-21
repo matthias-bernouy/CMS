@@ -16,7 +16,7 @@ describe("structured themes", () => {
 
         expect(css).toContain("--primary-base: #16634d;");
         expect(css).toContain("@media (prefers-color-scheme: dark)");
-        expect(css).toContain(":root[data-theme-mode=\"dark\"]");
+        expect(css).toContain(':root[data-theme-mode="dark"]');
         expect(css).toContain("--primary-base: #000000;");
     });
 
@@ -55,7 +55,9 @@ describe("structured themes", () => {
 
         expect(theme.values.light["primary-base"]).toBe("rgb(206, 220, 80)");
         expect(theme.values.light["custom-gap"]).toBe("12px");
-        expect(settings.sources.find((source) => source.id === "other")?.categories[0]?.tokens[0]?.variable).toBe("custom-gap");
+        expect(settings.sources.find((source) => source.id === "other")?.categories[0]?.tokens[0]?.variable).toBe(
+            "custom-gap",
+        );
         expect(settings.sources.some((source) => source.id === "existing-css")).toBeFalse();
     });
 
@@ -65,25 +67,39 @@ describe("structured themes", () => {
             id: "existing-css",
             label: "Existing CSS",
             supportsModes: false,
-            categories: [{
-                id: "variables",
-                label: "Variables",
-                description: "Legacy",
-                tokens: [{ id: "info-muted", variable: "info-muted", label: "Info muted", description: "", type: "color" }],
-            }],
+            categories: [
+                {
+                    id: "variables",
+                    label: "Variables",
+                    description: "Legacy",
+                    tokens: [
+                        {
+                            id: "info-muted",
+                            variable: "info-muted",
+                            label: "Info muted",
+                            description: "",
+                            type: "color",
+                        },
+                    ],
+                },
+            ],
         });
 
         const organized = organizeThemeSettings(settings);
 
         expect(organized.sources.some((source) => source.id === "existing-css")).toBeFalse();
-        expect(organized.sources.find((source) => source.id === "colors")
-            ?.categories.find((category) => category.id === "feedback")
-            ?.tokens.some((token) => token.id === "info-muted")).toBeTrue();
+        expect(
+            organized.sources
+                .find((source) => source.id === "colors")
+                ?.categories.find((category) => category.id === "feedback")
+                ?.tokens.some((token) => token.id === "info-muted"),
+        ).toBeTrue();
     });
 
     test("repairs the former text-body type when its persisted value is a color", () => {
         const settings = defaultThemeSettings();
-        const body = settings.sources.find((source) => source.id === "typography")!
+        const body = settings.sources
+            .find((source) => source.id === "typography")!
             .categories.find((category) => category.id === "text-scale")!.tokens[0]!;
         body.id = "text-body";
         body.variable = "text-body";
@@ -92,9 +108,11 @@ describe("structured themes", () => {
 
         const organized = organizeThemeSettings(settings);
 
-        expect(organized.sources.find((source) => source.id === "colors")
-            ?.categories.find((category) => category.id === "text")
-            ?.tokens.find((token) => token.id === "text-body"))
-            .toMatchObject({ label: "Body text", type: "color" });
+        expect(
+            organized.sources
+                .find((source) => source.id === "colors")
+                ?.categories.find((category) => category.id === "text")
+                ?.tokens.find((token) => token.id === "text-body"),
+        ).toMatchObject({ label: "Body text", type: "color" });
     });
 });

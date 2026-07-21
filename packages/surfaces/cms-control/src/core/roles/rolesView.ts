@@ -14,17 +14,19 @@ export async function assignableRoles(cms: ControlCms): Promise<RoleSummary[]> {
     const definitions = await cms.roles.list();
     const out: RoleSummary[] = [{ id: ADMIN_ROLE, label: "Admin" }];
     for (const d of definitions) {
-        if (d.id === PUBLIC_ROLE || d.id === ADMIN_ROLE) continue;
+        if (d.id === PUBLIC_ROLE || d.id === ADMIN_ROLE) {
+            continue;
+        }
         out.push({ id: d.id, label: d.label });
     }
     return out;
 }
 
 export type RoleRow = {
-    id:    string;
+    id: string;
     label: string;
     /** "System" for built-in roles (admin/user/public), "Custom" otherwise. */
-    kind:  string;
+    kind: string;
     /** Display for the permissions column: "Full access" for the admin super-role
      *  (it bypasses every check), else the grant count as text. */
     permissions: string;
@@ -49,23 +51,29 @@ export async function manageableRoles(cms: ControlCms): Promise<RoleRow[]> {
         // The virtual super-role: shown read-only as full-access (not editable,
         // not deletable), never as a misleading "0 permissions".
         {
-            id: ADMIN_ROLE, label: "Admin", kind: "System", permissions: "Full access",
-            permissionsLabel: "Full access", canEdit: false, canDelete: false,
-            hideEdit: "display:none", hideDelete: "display:none",
+            id: ADMIN_ROLE,
+            label: "Admin",
+            kind: "System",
+            permissions: "Full access",
+            permissionsLabel: "Full access",
+            canEdit: false,
+            canDelete: false,
+            hideEdit: "display:none",
+            hideDelete: "display:none",
         },
     ];
     for (const d of definitions) {
         const permissionCount = String(d.grants.length);
         rows.push({
-            id:          d.id,
-            label:       d.label,
-            kind:        d.builtin ? "System" : "Custom",
+            id: d.id,
+            label: d.label,
+            kind: d.builtin ? "System" : "Custom",
             permissions: permissionCount,
             permissionsLabel: d.grants.length === 1 ? "1 permission" : `${permissionCount} permissions`,
-            canEdit:     true,
-            canDelete:   !d.builtin,
-            hideEdit:    "",                                  // user / public / custom are all editable
-            hideDelete:  d.builtin ? "display:none" : "",
+            canEdit: true,
+            canDelete: !d.builtin,
+            hideEdit: "", // user / public / custom are all editable
+            hideDelete: d.builtin ? "display:none" : "",
         });
     }
     return rows;

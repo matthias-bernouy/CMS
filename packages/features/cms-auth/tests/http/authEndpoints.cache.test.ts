@@ -23,25 +23,36 @@ describe("authentication endpoint cache policy", () => {
         const cfg = {
             local: {
                 getSubject: async () => subject,
-                loginJson: () => { throw new Error("not used"); },
-                logoutJson: () => { throw new Error("not used"); },
+                loginJson: () => {
+                    throw new Error("not used");
+                },
+                logoutJson: () => {
+                    throw new Error("not used");
+                },
             },
         } as unknown as PublicAuthRoutesConfig<Role>;
         const routes = new Map<string, RouteHandler>();
-        registerPublicAuthRoutes({
-            addEndpoint: (method: string, path: string, handler: RouteHandler) => {
-                routes.set(`${method} ${path}`, handler);
-            },
-        } as Runner, cfg);
+        registerPublicAuthRoutes(
+            {
+                addEndpoint: (method: string, path: string, handler: RouteHandler) => {
+                    routes.set(`${method} ${path}`, handler);
+                },
+            } as Runner,
+            cfg,
+        );
 
         const request = new Request("http://site/.cms/auth/me", {
             headers: { cookie: "cms-session=session-token" },
         });
         const direct = await routes.get("GET /me")!(request);
-        const system = await executeAuthSystemSourceEndpoint(cfg, {
-            urn: "urn:system-auth:me",
-            targetUrl: "cms-system://auth/me",
-        }, request);
+        const system = await executeAuthSystemSourceEndpoint(
+            cfg,
+            {
+                urn: "urn:system-auth:me",
+                targetUrl: "cms-system://auth/me",
+            },
+            request,
+        );
 
         expect(await direct.json()).toEqual({ subject });
         expect(await system.json()).toEqual({ subject });
@@ -51,10 +62,14 @@ describe("authentication endpoint cache policy", () => {
 
     test("protects disabled system signup without changing its response", async () => {
         const cfg = { allowSignup: false } as PublicAuthRoutesConfig<Role>;
-        const response = await executeAuthSystemSourceEndpoint(cfg, {
-            urn: "urn:system-auth:signup",
-            targetUrl: "cms-system://auth/signup",
-        }, new Request("http://site/.cms/sources/system-auth/signup", { method: "POST" }));
+        const response = await executeAuthSystemSourceEndpoint(
+            cfg,
+            {
+                urn: "urn:system-auth:signup",
+                targetUrl: "cms-system://auth/signup",
+            },
+            new Request("http://site/.cms/sources/system-auth/signup", { method: "POST" }),
+        );
 
         expect(response.status).toBe(404);
         expect(await response.text()).toBe("not_found");

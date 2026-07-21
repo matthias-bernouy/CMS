@@ -18,14 +18,9 @@ import {
     runtimeElements,
     type EditorRuntimeStructureContext,
 } from "./structure";
-import type {
-    EditorRuntimeSelection,
-    RuntimeManagedEditor,
-    StructureNode,
-} from "./types";
+import type { EditorRuntimeSelection, RuntimeManagedEditor, StructureNode } from "./types";
 
 export class EditorRuntime {
-
     readonly registry = new EditorRegistry();
 
     private readonly _catalogByTag = new Map<string, EditorCatalogEntry>();
@@ -50,7 +45,9 @@ export class EditorRuntime {
 
         for (const element of runtimeElements(document.root)) {
             const entry = this._catalogByTag.get(element.localName);
-            if (!entry) continue;
+            if (!entry) {
+                continue;
+            }
 
             const editor = createRuntimeEditor(entry, element, this.registry);
             this._editors.push(editor);
@@ -91,18 +88,16 @@ export class EditorRuntime {
             return null;
         }
 
-        const editor = targetOrEditor instanceof Editor
-            ? targetOrEditor
-            : this.registry.getEditor(targetOrEditor);
-        this._selectedEditor = editor
-            ? findRichTextOwner(this._structureContext(), editor.target) ?? editor
-            : null;
+        const editor = targetOrEditor instanceof Editor ? targetOrEditor : this.registry.getEditor(targetOrEditor);
+        this._selectedEditor = editor ? (findRichTextOwner(this._structureContext(), editor.target) ?? editor) : null;
 
         return this.getSelection();
     }
 
     getSelection(): EditorRuntimeSelection | null {
-        if (!this._selectedEditor) return null;
+        if (!this._selectedEditor) {
+            return null;
+        }
 
         return {
             editor: this._selectedEditor,
@@ -118,7 +113,9 @@ export class EditorRuntime {
     }
 
     getSelectedDataScopes(): DataScope[] {
-        if (!this._selectedEditor) return [];
+        if (!this._selectedEditor) {
+            return [];
+        }
 
         return this.registry.collectDataScopes(this._selectedEditor.target, {
             includeTarget: !this._selectedEditor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
@@ -147,5 +144,4 @@ export class EditorRuntime {
 
         return this._document;
     }
-
 }

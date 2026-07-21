@@ -1,8 +1,5 @@
 import type { Editor } from "@bernouy/cms-content/editor";
-import type {
-    EditorStructureNode,
-    StructureNode,
-} from "../../../../runtime";
+import type { EditorStructureNode, StructureNode } from "../../../../runtime";
 
 export type StructureTreeRowRenderContext = {
     selectedEditor: Editor | null;
@@ -41,7 +38,9 @@ export function renderStructureTreeRow(
     const item = document.createElement("button");
     item.className = context.itemClass(node);
     item.draggable = true;
-    if (node.editor === context.selectedEditor) item.classList.add("selected");
+    if (node.editor === context.selectedEditor) {
+        item.classList.add("selected");
+    }
     item.type = "button";
     item.addEventListener("click", () => {
         context.selectEditor(node.editor);
@@ -111,7 +110,9 @@ function appendBadges(badges: HTMLElement, node: StructureNode, context: Structu
             context.toggleBadges(node);
         });
         more.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter" && event.key !== " ") return;
+            if (event.key !== "Enter" && event.key !== " ") {
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
             context.toggleBadges(node);

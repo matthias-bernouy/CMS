@@ -2,7 +2,6 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { BlocImportError, importBlocArtifact, parseSourceMap } from "cms-control/core/bloc/importBlocArtifact";
 
 export default async function importBloc(req: Request, cms: ControlCms) {
-
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
@@ -17,7 +16,16 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const force = formData.get("force") === "true";
 
     try {
-        await importBlocArtifact(cms, { name, tag: tag ?? "", group, description, viewJS: viewFile, editorJS: editorFile, source, force });
+        await importBlocArtifact(cms, {
+            name,
+            tag: tag ?? "",
+            group,
+            description,
+            viewJS: viewFile,
+            editorJS: editorFile,
+            source,
+            force,
+        });
     } catch (error) {
         if (error instanceof BlocImportError) {
             return new Response(error.message, { status: error.status });

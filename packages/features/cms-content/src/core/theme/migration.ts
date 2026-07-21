@@ -34,7 +34,9 @@ export function organizeThemeSettings(input: ThemeSettings): ThemeSettings {
     const legacySources = settings.sources.filter((item) => item.id === "existing-css");
     settings.sources = settings.sources.filter((item) => item.id !== "existing-css");
     for (const token of legacySources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens))) {
-        if (allTokens(settings).some((item) => item.id === token.id || item.variable === token.variable)) continue;
+        if (allTokens(settings).some((item) => item.id === token.id || item.variable === token.variable)) {
+            continue;
+        }
         categoryForVariable(settings, token.variable).tokens.push(token);
     }
     migrateBodyTextColor(settings);
@@ -46,26 +48,40 @@ function capitalize(value: string): string {
 }
 
 function looksLikeColor(variable: string, value: string): boolean {
-    if (isColorValue(value)) return true;
-    return /(^|[-])(color|bg|background|text|border|primary|secondary|success|warning|danger|info|foreground|contrasted)([-]|$)/.test(variable);
+    if (isColorValue(value)) {
+        return true;
+    }
+    return /(^|[-])(color|bg|background|text|border|primary|secondary|success|warning|danger|info|foreground|contrasted)([-]|$)/.test(
+        variable,
+    );
 }
 
 function isColorValue(value: string): boolean {
-    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$|var\(--)/i.test(value);
+    return /^(#|rgb\(|rgba\(|hsl\(|hsla\(|oklch\(|oklab\(|lab\(|lch\(|color\(|transparent$|currentcolor$|var\(--)/i.test(
+        value,
+    );
 }
 
 function migrateBodyTextColor(settings: ThemeSettings): void {
     const source = settings.sources.find((item) => item.id === "typography");
     const category = source?.categories.find((item) => item.id === "text-scale");
     const index = category?.tokens.findIndex((item) => item.variable === "text-body") ?? -1;
-    if (!category || index < 0) return;
+    if (!category || index < 0) {
+        return;
+    }
     const token = category.tokens[index]!;
     const isColor = settings.themes.some((theme) => isColorValue(theme.values.light[token.id] ?? ""));
-    if (!isColor) return;
+    if (!isColor) {
+        return;
+    }
     category.tokens.splice(index, 1);
     token.type = "color";
-    if (token.label === "Body size") token.label = "Body text";
-    if (token.description === "Default text") token.description = "Default body copy color";
+    if (token.label === "Body size") {
+        token.label = "Body text";
+    }
+    if (token.description === "Default text") {
+        token.description = "Default body copy color";
+    }
     categoryForVariable(settings, "text-body").tokens.push(token);
 }
 
@@ -82,7 +98,12 @@ function categoryForVariable(settings: ThemeSettings, variable: string): ThemeSo
     const target = variableCategory(variable);
     let source = settings.sources.find((item) => item.id === target.sourceId);
     if (!source) {
-        source = { id: target.sourceId, label: target.sourceLabel, supportsModes: target.supportsModes, categories: [] };
+        source = {
+            id: target.sourceId,
+            label: target.sourceLabel,
+            supportsModes: target.supportsModes,
+            categories: [],
+        };
         settings.sources.push(source);
     }
     let result = source.categories.find((item) => item.id === target.categoryId);
@@ -98,7 +119,14 @@ function variableCategory(variable: string): CategoryTarget {
         return target("colors", "Colors", true, "feedback", "Feedback", "Colors used for semantic states.");
     }
     if (/^(primary|secondary|link)(-|$)/.test(variable)) {
-        return target("colors", "Colors", true, "brand", "Brand", "Primary choices for calls to action and highlights.");
+        return target(
+            "colors",
+            "Colors",
+            true,
+            "brand",
+            "Brand",
+            "Primary choices for calls to action and highlights.",
+        );
     }
     if (/^(text|ctx-fg)(-|$)/.test(variable)) {
         return target("colors", "Colors", true, "text", "Text", "Readable foreground colors.");
@@ -108,7 +136,14 @@ function variableCategory(variable: string): CategoryTarget {
     }
     if (/^(font|line-height|letter-spacing)(-|$)/.test(variable)) {
         const scale = /^(font-size|line-height|letter-spacing)(-|$)/.test(variable);
-        return target("typography", "Typography", false, scale ? "text-scale" : "font-families", scale ? "Text scale" : "Font families", scale ? "Shared type sizes and rhythm." : "Fonts applied to headings and body copy.");
+        return target(
+            "typography",
+            "Typography",
+            false,
+            scale ? "text-scale" : "font-families",
+            scale ? "Text scale" : "Font families",
+            scale ? "Shared type sizes and rhythm." : "Fonts applied to headings and body copy.",
+        );
     }
     if (/^(space|p9r-space|gap|padding|margin)(-|$)/.test(variable)) {
         return target("spacing", "Spacing", false, "spacing-scale", "Spacing scale", "Shared spacing steps.");
@@ -117,13 +152,34 @@ function variableCategory(variable: string): CategoryTarget {
         return target("spacing", "Spacing", false, "layout", "Layout", "Widths and page rhythm.");
     }
     if (/^(radius|p9r-radius)(-|$)/.test(variable)) {
-        return target("shape", "Shape & effects", false, "corners", "Corners", "Rounding applied to controls and cards.");
+        return target(
+            "shape",
+            "Shape & effects",
+            false,
+            "corners",
+            "Corners",
+            "Rounding applied to controls and cards.",
+        );
     }
     if (/^(shadow|ctx-shadow)(-|$)/.test(variable)) {
-        return target("shape", "Shape & effects", false, "elevation", "Elevation", "Shadows used to separate surfaces.");
+        return target(
+            "shape",
+            "Shape & effects",
+            false,
+            "elevation",
+            "Elevation",
+            "Shadows used to separate surfaces.",
+        );
     }
     if (/^(duration|transition|easing)(-|$)/.test(variable)) {
-        return target("shape", "Shape & effects", false, "motion", "Motion", "Shared transition durations and easing values.");
+        return target(
+            "shape",
+            "Shape & effects",
+            false,
+            "motion",
+            "Motion",
+            "Shared transition durations and easing values.",
+        );
     }
     return target("other", "Other", false, "general", "General", "Site-specific design tokens.");
 }

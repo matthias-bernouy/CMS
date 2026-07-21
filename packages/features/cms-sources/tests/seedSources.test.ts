@@ -14,10 +14,12 @@ const manifest: Source[] = [
                 urn: "urn:open-meteo:forecast",
                 method: "GET",
                 targetUrl: "https://api.open-meteo.com/v1/forecast",
-                input: { params: [
-                    { name: "latitude",  in: "query", required: true, schema: { type: "number" } },
-                    { name: "longitude", in: "query", required: true, schema: { type: "number" } },
-                ] },
+                input: {
+                    params: [
+                        { name: "latitude", in: "query", required: true, schema: { type: "number" } },
+                        { name: "longitude", in: "query", required: true, schema: { type: "number" } },
+                    ],
+                },
                 output: [{ status: "200", body: { type: "object" } }],
             },
         ],
@@ -43,8 +45,9 @@ describe("seedSources", () => {
         expect(res.created).toEqual(["urn:open-meteo", "urn:rest-countries"]);
         expect(res.skipped).toEqual([]);
         expect(await repo.getAllSources()).toHaveLength(2);
-        expect((await repo.getEndpoint("urn:open-meteo:forecast"))?.targetUrl)
-            .toBe("https://api.open-meteo.com/v1/forecast");
+        expect((await repo.getEndpoint("urn:open-meteo:forecast"))?.targetUrl).toBe(
+            "https://api.open-meteo.com/v1/forecast",
+        );
     });
 
     test("is idempotent — a second run skips everything", async () => {

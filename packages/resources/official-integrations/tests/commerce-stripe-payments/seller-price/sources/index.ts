@@ -1,9 +1,4 @@
-import {
-    InMemorySourceRepository,
-    makeSourceUrn,
-    type Source,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { InMemorySourceRepository, makeSourceUrn, type Source, type SourceEndpoint } from "@bernouy/cms-sources";
 import { commerceEndpoints } from "./commerce";
 import { stripeEndpoints } from "./stripe";
 

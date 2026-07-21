@@ -1,5 +1,9 @@
 import type { EditorDataSource, EditorDataSourceBodyField } from "../../../../runtime";
-import { paramsForBinding, type DataSourcePickerSourceBinding, type DataSourcePickerSourceParamValue } from "./dataSourceBinding";
+import {
+    paramsForBinding,
+    type DataSourcePickerSourceBinding,
+    type DataSourcePickerSourceParamValue,
+} from "./dataSourceBinding";
 import { initialAlias } from "../State/dataSourcePickerState";
 
 export function renderBindingConfig(
@@ -50,20 +54,27 @@ function renderRequestParams(
     initialBinding: DataSourcePickerSourceBinding | null,
 ): void {
     const params = source.params ?? [];
-    if (params.length === 0) return;
+    if (params.length === 0) {
+        return;
+    }
 
     section.append(renderHeading("Request params"));
 
     const initialParams = paramsForBinding(source, initialBinding);
     for (const param of params) {
-        section.append(renderBindingRow({
-            kind:        "param",
-            name:        param.name,
-            location:    param.in,
-            type:        param.type,
-            required:    param.required,
-            description: param.description,
-        }, initialParams[param.name]));
+        section.append(
+            renderBindingRow(
+                {
+                    kind: "param",
+                    name: param.name,
+                    location: param.in,
+                    type: param.type,
+                    required: param.required,
+                    description: param.description,
+                },
+                initialParams[param.name],
+            ),
+        );
     }
 }
 
@@ -73,17 +84,24 @@ function renderRequestBody(
     initialBinding: DataSourcePickerSourceBinding | null,
 ): void {
     const fields = bodyBindingFields(source.body?.fields ?? []);
-    if (fields.length === 0) return;
+    if (fields.length === 0) {
+        return;
+    }
 
     section.append(renderHeading("Request body"));
     for (const field of fields) {
-        section.append(renderBindingRow({
-            kind:     "body",
-            name:     field.name,
-            location: "body",
-            type:     field.type,
-            required: field.required,
-        }, initialBinding?.body?.[field.name]));
+        section.append(
+            renderBindingRow(
+                {
+                    kind: "body",
+                    name: field.name,
+                    location: "body",
+                    type: field.type,
+                    required: field.required,
+                },
+                initialBinding?.body?.[field.name],
+            ),
+        );
     }
 }
 
@@ -104,7 +122,11 @@ function renderBindingRow(
     row.className = "param-row";
     row.dataset.bindingKind = rowConfig.kind;
     row.dataset.paramName = rowConfig.name;
-    row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
+    row.append(
+        renderParamHeader(rowConfig),
+        renderParamDescription(rowConfig),
+        renderParamControls(rowConfig.name, initialValue),
+    );
     return row;
 }
 
@@ -135,10 +157,7 @@ function renderParamDescription(param: BindingRow): HTMLElement {
     return description;
 }
 
-function renderParamControls(
-    name: string,
-    initialValue: DataSourcePickerSourceParamValue | undefined,
-): HTMLElement {
+function renderParamControls(name: string, initialValue: DataSourcePickerSourceParamValue | undefined): HTMLElement {
     const controls = document.createElement("div");
     controls.className = "param-controls";
 
@@ -158,7 +177,9 @@ function renderParamControls(
     return controls;
 }
 
-function bodyBindingFields(fields: EditorDataSourceBodyField[]): Array<{ name: string; type?: string; required?: boolean }> {
+function bodyBindingFields(
+    fields: EditorDataSourceBodyField[],
+): Array<{ name: string; type?: string; required?: boolean }> {
     const rows: Array<{ name: string; type?: string; required?: boolean }> = [];
     for (const field of fields) {
         if (field.path !== "." && isBindableBodyType(field.type)) {
@@ -190,6 +211,8 @@ function selectMode(select: HTMLSelectElement, value: DataSourcePickerSourcePara
 }
 
 function selectOption(select: HTMLSelectElement, value: string): void {
-    const index = Array.from(select.options).findIndex(option => option.value === value);
-    if (index >= 0) select.selectedIndex = index;
+    const index = Array.from(select.options).findIndex((option) => option.value === value);
+    if (index >= 0) {
+        select.selectedIndex = index;
+    }
 }

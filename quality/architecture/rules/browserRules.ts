@@ -1,9 +1,5 @@
 import { resolve } from "node:path";
-import {
-    type ArchitectureViolation,
-    type SourceImport,
-    type WorkspacePackage,
-} from "../core/architectureTypes";
+import { type ArchitectureViolation, type SourceImport, type WorkspacePackage } from "../core/architectureTypes";
 import { resolveBrowserImport, resolveExportSourceTarget } from "../core/resolution/moduleResolution";
 import { declaredExportTargets, exportTargets } from "../core/resolution/packageExports";
 import { toRelativePath } from "../core/pathUtils";
@@ -27,17 +23,15 @@ export async function checkBrowserEntrypoints(
 
     while (pending.length > 0) {
         const file = pending.pop()!;
-        if (visited.has(file)) continue;
+        if (visited.has(file)) {
+            continue;
+        }
         visited.add(file);
         for (const imported of importsByFile.get(file) ?? []) {
-            if (imported.typeOnly) continue;
-            if (isRuntimeAdapter(
-                imported.specifier,
-                adapterSubpaths,
-                infrastructureModules,
-                true,
-                packageByName,
-            )) {
+            if (imported.typeOnly) {
+                continue;
+            }
+            if (isRuntimeAdapter(imported.specifier, adapterSubpaths, infrastructureModules, true, packageByName)) {
                 violations.push({
                     kind: "browser-runtime-adapter",
                     file: toRelativePath(rootDir, file),
@@ -45,13 +39,7 @@ export async function checkBrowserEntrypoints(
                     message: `browser entry imports server/runtime module ${imported.specifier}`,
                 });
             }
-            pending.push(...resolveBrowserImport(
-                file,
-                imported.specifier,
-                sourceFiles,
-                packageByName,
-                packageByRoot,
-            ));
+            pending.push(...resolveBrowserImport(file, imported.specifier, sourceFiles, packageByName, packageByRoot));
         }
     }
 }
@@ -63,10 +51,18 @@ function browserEntries(
 ): Set<string> {
     const entries = new Set<string>();
     for (const pkg of packages) {
-        for (const entry of inferredBrowserEntries(pkg)) entries.add(entry);
-        for (const file of pkg.sourceFiles) if (/\.client\.[cm]?[jt]sx?$/.test(file)) entries.add(file);
+        for (const entry of inferredBrowserEntries(pkg)) {
+            entries.add(entry);
+        }
+        for (const file of pkg.sourceFiles) {
+            if (/\.client\.[cm]?[jt]sx?$/.test(file)) {
+                entries.add(file);
+            }
+        }
     }
-    for (const entry of configuredEntries) entries.add(resolve(rootDir, entry));
+    for (const entry of configuredEntries) {
+        entries.add(resolve(rootDir, entry));
+    }
     return entries;
 }
 
@@ -74,15 +70,23 @@ function inferredBrowserEntries(pkg: WorkspacePackage): string[] {
     const entries: string[] = [];
     if (pkg.name.split("/").at(-1) === "components") {
         for (const target of declaredExportTargets(pkg.manifest.exports, ".")) {
-            if (!target.endsWith(".d.ts")) entries.push(resolveExportEntry(pkg, target));
+            if (!target.endsWith(".d.ts")) {
+                entries.push(resolveExportEntry(pkg, target));
+            }
         }
         entries.push(resolve(pkg.root, "src/index.ts"));
     }
-    if (!pkg.manifest.exports || typeof pkg.manifest.exports !== "object") return entries;
+    if (!pkg.manifest.exports || typeof pkg.manifest.exports !== "object") {
+        return entries;
+    }
     for (const [subpath, value] of Object.entries(pkg.manifest.exports as Record<string, unknown>)) {
-        if (!/(?:browser|client|component|editor)/i.test(subpath) && !hasObjectKey(value, "browser")) continue;
+        if (!/(?:browser|client|component|editor)/i.test(subpath) && !hasObjectKey(value, "browser")) {
+            continue;
+        }
         for (const target of exportTargets(value)) {
-            if (!target.endsWith(".d.ts")) entries.push(resolveExportEntry(pkg, target));
+            if (!target.endsWith(".d.ts")) {
+                entries.push(resolveExportEntry(pkg, target));
+            }
         }
     }
     return entries;
@@ -93,7 +97,9 @@ function resolveExportEntry(pkg: WorkspacePackage, target: string): string {
 }
 
 function hasObjectKey(value: unknown, key: string): boolean {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
     const object = value as Record<string, unknown>;
     return key in object || Object.values(object).some((nested) => hasObjectKey(nested, key));
 }

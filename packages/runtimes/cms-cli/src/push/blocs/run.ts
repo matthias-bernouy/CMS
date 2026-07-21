@@ -12,35 +12,35 @@ export type RunBlocsFlags = {
     only?: Set<string> | null;
 };
 
-export async function runBlocs(
-    adminBase: URL,
-    token:     string,
-    flags:     RunBlocsFlags,
-): Promise<number> {
+export async function runBlocs(adminBase: URL, token: string, flags: RunBlocsFlags): Promise<number> {
     const config = await loadPushConfig(process.cwd());
-    const force  = flags.force || config.forcePushDefault;
-    const root   = join(config.siteDir, "blocs");
+    const force = flags.force || config.forcePushDefault;
+    const root = join(config.siteDir, "blocs");
 
     console.log(`→ Site dir : ${config.siteDir}`);
-    if (flags.dryRun) console.log(`→ Mode     : dry-run (no upload)`);
-    if (force)        console.log(`→ Force    : existing blocs will be overwritten`);
-    if (flags.only)   console.log(`→ Filter   : --only=${[...flags.only].join(",")}`);
+    if (flags.dryRun) {
+        console.log(`→ Mode     : dry-run (no upload)`);
+    }
+    if (force) {
+        console.log(`→ Force    : existing blocs will be overwritten`);
+    }
+    if (flags.only) {
+        console.log(`→ Filter   : --only=${[...flags.only].join(",")}`);
+    }
 
-    const remoteTags = new Set((await fetchRemoteBlocList(adminBase, token)).map(b => b.id));
+    const remoteTags = new Set((await fetchRemoteBlocList(adminBase, token)).map((b) => b.id));
     const blocs = await scanDevBlocs(root);
     if (blocs.length === 0) {
         console.log("→ No blocs found under <siteDir>/blocs/. Skipping.");
         return 0;
     }
 
-    const candidates = flags.only
-        ? blocs.filter(b => flags.only!.has(b.tag))
-        : blocs;
+    const candidates = flags.only ? blocs.filter((b) => flags.only!.has(b.tag)) : blocs;
 
     if (flags.only && candidates.length === 0) {
         console.error("✖ --only matched no blocs.");
         console.error(`  Requested: ${[...flags.only].join(", ")}`);
-        console.error(`  Available: ${blocs.map(b => b.tag).join(", ")}`);
+        console.error(`  Available: ${blocs.map((b) => b.tag).join(", ")}`);
         return 1;
     }
 
@@ -49,8 +49,11 @@ export async function runBlocs(
     const fresh: DevBloc[] = [];
     const existing: DevBloc[] = [];
     for (const bloc of candidates) {
-        if (remoteTags.has(bloc.tag)) existing.push(bloc);
-        else                          fresh.push(bloc);
+        if (remoteTags.has(bloc.tag)) {
+            existing.push(bloc);
+        } else {
+            fresh.push(bloc);
+        }
     }
 
     if (existing.length > 0) {
@@ -60,7 +63,9 @@ export async function runBlocs(
         } else {
             console.warn(`⚠ ${existing.length} bloc(s) already exist on the remote and will be skipped:`);
         }
-        for (const bloc of existing) console.warn(`    • ${bloc.tag}  (${relative(config.siteDir, bloc.folder) || "."})`);
+        for (const bloc of existing) {
+            console.warn(`    • ${bloc.tag}  (${relative(config.siteDir, bloc.folder) || "."})`);
+        }
     }
 
     const toBuild = force ? candidates : fresh;
@@ -78,30 +83,38 @@ export async function runBlocs(
         console.error("✖ All bloc builds failed. See errors above.");
         return 1;
     }
-    if (buildFailures > 0) console.warn(`⚠ ${buildFailures} bloc(s) failed to build. See errors above.`);
+    if (buildFailures > 0) {
+        console.warn(`⚠ ${buildFailures} bloc(s) failed to build. See errors above.`);
+    }
 
     if (flags.dryRun) {
         console.log("");
         console.log(`→ Dry-run — would push ${built.size} bloc(s):`);
         for (const [tag, bloc] of built) {
-            const viewKb   = (bloc.viewJS.length / 1024).toFixed(1);
+            const viewKb = (bloc.viewJS.length / 1024).toFixed(1);
             const editorKb = bloc.editorJS ? `${(bloc.editorJS.length / 1024).toFixed(1)}kb` : "-";
             console.log(`    • ${tag.padEnd(28)} view=${viewKb}kb  editor=${editorKb}`);
         }
         return buildFailures > 0 ? 1 : 0;
     }
 
-    if (!await confirm(`\nPush ${built.size} bloc(s)?`, flags.yes)) {
+    if (!(await confirm(`\nPush ${built.size} bloc(s)?`, flags.yes))) {
         console.log("→ Aborted.");
         return 0;
     }
 
     const result = await applyPushBlocs(adminBase, token, built, force);
-    for (const { tag, error } of result.failed) console.error(`    ✗ ${tag}: ${error}`);
-    for (const { tag }        of result.pushed) console.log  (`    ✓ ${tag}`);
+    for (const { tag, error } of result.failed) {
+        console.error(`    ✗ ${tag}: ${error}`);
+    }
+    for (const { tag } of result.pushed) {
+        console.log(`    ✓ ${tag}`);
+    }
 
     const failed = result.failed.length + buildFailures;
-    console.log(`\n→ Done. ${result.pushed.length} pushed, ${existing.length - (force ? existing.length : 0)} skipped, ${failed} failed.`);
+    console.log(
+        `\n→ Done. ${result.pushed.length} pushed, ${existing.length - (force ? existing.length : 0)} skipped, ${failed} failed.`,
+    );
     return failed > 0 ? 1 : 0;
 }
 

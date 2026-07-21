@@ -90,7 +90,9 @@ class BasicTextarea extends HTMLElement {
         this.removeEventListener("invalid", this.onInvalid);
     }
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
     formResetCallback() {
         this.showValidation = false;
@@ -127,15 +129,15 @@ class BasicTextarea extends HTMLElement {
         this.hintElement.hidden = !this.hintElement.textContent;
         for (const name of ["maxlength", "minlength", "placeholder", "rows"]) {
             const value = this.getAttribute(name);
-            value === null
-                ? this.control.removeAttribute(name)
-                : this.control.setAttribute(name, value);
+            value === null ? this.control.removeAttribute(name) : this.control.setAttribute(name, value);
         }
-        for (const name of ["disabled", "readonly", "required"])
+        for (const name of ["disabled", "readonly", "required"]) {
             this.control.toggleAttribute(name, this.hasAttribute(name));
+        }
         const value = this.getAttribute("value");
-        if (value !== null && value !== this.control.value)
+        if (value !== null && value !== this.control.value) {
             this.control.value = value;
+        }
         this.updateFormValue();
     }
     syncColors() {
@@ -146,36 +148,30 @@ class BasicTextarea extends HTMLElement {
             ["text-color", "--cms-input-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.fieldElement.style.setProperty(property, value);
-            else this.fieldElement.style.removeProperty(property);
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
         }
     }
     updateFormValue() {
         this.internals.setFormValue(this.disabled ? null : this.control.value);
-        if (this.disabled || this.control.validity.valid)
+        if (this.disabled || this.control.validity.valid) {
             this.internals.setValidity({});
-        else
-            this.internals.setValidity(
-                this.control.validity,
-                this.control.validationMessage,
-                this.control,
-            );
-        this.errorElement.textContent = this.showValidation
-            ? this.control.validationMessage || ""
-            : "";
+        } else {
+            this.internals.setValidity(this.control.validity, this.control.validationMessage, this.control);
+        }
+        this.errorElement.textContent = this.showValidation ? this.control.validationMessage || "" : "";
         this.errorElement.hidden = !this.errorElement.textContent;
     }
     onInput = () => {
         this.updateFormValue();
-        this.dispatchEvent(
-            new Event("input", { bubbles: true, composed: true }),
-        );
+        this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     };
     onChange = () => {
         this.updateFormValue();
-        this.dispatchEvent(
-            new Event("change", { bubbles: true, composed: true }),
-        );
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     };
     onInvalid = () => {
         this.showValidation = true;

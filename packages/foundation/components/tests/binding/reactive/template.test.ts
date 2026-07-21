@@ -20,10 +20,13 @@ function mount(html: string, scope: unknown, filters = {}) {
 
 describe("CompiledTemplate — text and attributes", () => {
     test("mounts a fragment and binds text and attributes", () => {
-        const { host } = mount(`
+        const { host } = mount(
+            `
             <p>Hello {{ name }}</p>
             <a href="/users/{{ id }}" title="{{ name }}">Open</a>
-        `, { name: "Ada", id: 1 });
+        `,
+            { name: "Ada", id: 1 },
+        );
 
         expect(text(host.querySelector("p"))).toBe("Hello Ada");
         expect(host.querySelector("a")!.getAttribute("href")).toBe("/users/1");
@@ -31,11 +34,14 @@ describe("CompiledTemplate — text and attributes", () => {
     });
 
     test("updates live sites without replacing unrelated nodes", () => {
-        const { host, region } = mount(`
+        const { host, region } = mount(
+            `
             <label>{{ label }}</label>
             <input name="email">
             <a href="/users/{{ id }}">Open</a>
-        `, { label: "Email", id: 1 });
+        `,
+            { label: "Email", id: 1 },
+        );
         const input = host.querySelector("input")!;
         const link = host.querySelector("a")!;
 
@@ -60,13 +66,16 @@ describe("CompiledTemplate — text and attributes", () => {
 
 describe("CompiledTemplate — boundaries", () => {
     test("binds a nested source's own attributes but does not descend into its subtree", () => {
-        const { host, region } = mount(`
+        const { host, region } = mount(
+            `
             <div>
                 <div cms-source="/api/{{ id }}" data-id="{{ id }}">
                     <span>{{ id }}</span>
                 </div>
             </div>
-        `, { id: 7 });
+        `,
+            { id: 7 },
+        );
         const source = host.querySelector("[cms-source]")!;
 
         expect(source.getAttribute("cms-source")).toBe("/api/7");
@@ -80,7 +89,8 @@ describe("CompiledTemplate — boundaries", () => {
     });
 
     test("descends into submit sources for parent data while keeping submit result bindings inert", () => {
-        const { host, region } = mount(`
+        const { host, region } = mount(
+            `
             <form cms-source="/api/save as result" cms-source-trigger="submit" data-id="{{ id }}">
                 <input name="site.name" value="{{ site.name }}">
                 <select name="site.notFound">
@@ -90,12 +100,14 @@ describe("CompiledTemplate — boundaries", () => {
                 <input class="disabled" cms-condition="!email.enabled" name="email.enabled" value="true">
                 <p class="success" cms-condition="result.ok">Saved {{ result.body.id }}</p>
             </form>
-        `, {
-            id: "settings",
-            site: { name: "Demo" },
-            email: { enabled: true },
-            pages: [{ path: "/404", title: "Not found" }],
-        });
+        `,
+            {
+                id: "settings",
+                site: { name: "Demo" },
+                email: { enabled: true },
+                pages: [{ path: "/404", title: "Not found" }],
+            },
+        );
         const form = host.querySelector("form")!;
 
         expect(form.getAttribute("data-id")).toBe("settings");
@@ -128,13 +140,16 @@ describe("CompiledTemplate — boundaries", () => {
     });
 
     test("binds a nested binding core's own attributes but keeps its subtree inert", () => {
-        const { host } = mount(`
+        const { host } = mount(
+            `
             <section>
                 <cms-binding-core data-id="{{ id }}">
                     <span>{{ id }}</span>
                 </cms-binding-core>
             </section>
-        `, { id: "outer" });
+        `,
+            { id: "outer" },
+        );
         const core = host.querySelector("cms-binding-core")!;
 
         expect(core.getAttribute("data-id")).toBe("outer");

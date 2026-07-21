@@ -3,7 +3,7 @@ import type { SourceRepository } from "../interfaces/SourceRepository";
 import { makeEndpointUrn } from "./urn";
 
 export type ResolveResult =
-    | { ok: true;  endpoint: SourceEndpoint }
+    | { ok: true; endpoint: SourceEndpoint }
     | { ok: false; reason: "not_found" | "method_not_allowed" };
 
 export type ResolveEndpointOptions = {
@@ -31,10 +31,13 @@ export async function resolveEndpoint(
     }
 
     const urn = makeEndpointUrn(segments[0], segments[1]);
-    const endpoint = options.forAuthorization && repo.getEndpointForAuthorization
-        ? await repo.getEndpointForAuthorization(urn)
-        : await repo.getEndpoint(urn);
-    if (!endpoint) return { ok: false, reason: "not_found" };
+    const endpoint =
+        options.forAuthorization && repo.getEndpointForAuthorization
+            ? await repo.getEndpointForAuthorization(urn)
+            : await repo.getEndpoint(urn);
+    if (!endpoint) {
+        return { ok: false, reason: "not_found" };
+    }
 
     if (endpoint.method.toUpperCase() !== method.toUpperCase()) {
         return { ok: false, reason: "method_not_allowed" };

@@ -4,18 +4,22 @@ import { InMemorySourceRepository } from "@bernouy/cms-sources";
 
 describe("function output projection", () => {
     test("projects the final function response against its declared output", async () => {
-        const response = await executeFunction({
-            ...baseFunction(),
-            return: {
-                body: {
-                    id: "item-1",
-                    internalSecret: "secret",
-                    owner: { name: "Ada", email: "private@example.com" },
-                    items: [{ id: "child-1", costPrice: 12 }],
-                    providerData: { arbitrary: true },
+        const response = await executeFunction(
+            {
+                ...baseFunction(),
+                return: {
+                    body: {
+                        id: "item-1",
+                        internalSecret: "secret",
+                        owner: { name: "Ada", email: "private@example.com" },
+                        items: [{ id: "child-1", costPrice: 12 }],
+                        providerData: { arbitrary: true },
+                    },
                 },
             },
-        }, request(), { sources: new InMemorySourceRepository() });
+            request(),
+            { sources: new InMemorySourceRepository() },
+        );
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({
@@ -27,10 +31,14 @@ describe("function output projection", () => {
     });
 
     test("returns a generic error when the final response violates its contract", async () => {
-        const response = await executeFunction({
-            ...baseFunction(),
-            return: { body: { id: 42, internalSecret: "must-not-leak" } },
-        }, request(), { sources: new InMemorySourceRepository() });
+        const response = await executeFunction(
+            {
+                ...baseFunction(),
+                return: { body: { id: 42, internalSecret: "must-not-leak" } },
+            },
+            request(),
+            { sources: new InMemorySourceRepository() },
+        );
 
         expect(response.status).toBe(500);
         expect(await response.json()).toEqual({
@@ -40,10 +48,14 @@ describe("function output projection", () => {
     });
 
     test("rejects a return status absent from a declared output contract", async () => {
-        const response = await executeFunction({
-            ...baseFunction(),
-            return: { status: 201, body: { id: "item-1" } },
-        }, request(), { sources: new InMemorySourceRepository() });
+        const response = await executeFunction(
+            {
+                ...baseFunction(),
+                return: { status: 201, body: { id: "item-1" } },
+            },
+            request(),
+            { sources: new InMemorySourceRepository() },
+        );
 
         expect(response.status).toBe(500);
         expect(await response.json()).toEqual({
@@ -53,11 +65,15 @@ describe("function output projection", () => {
     });
 
     test("keeps functions without an output contract compatible", async () => {
-        const response = await executeFunction({
-            ...baseFunction(),
-            output: undefined,
-            return: { body: { id: "item-1", adminOnly: true } },
-        }, request(), { sources: new InMemorySourceRepository() });
+        const response = await executeFunction(
+            {
+                ...baseFunction(),
+                output: undefined,
+                return: { body: { id: "item-1", adminOnly: true } },
+            },
+            request(),
+            { sources: new InMemorySourceRepository() },
+        );
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ id: "item-1", adminOnly: true });
@@ -67,31 +83,41 @@ describe("function output projection", () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:provider",
-            endpoints: [{
-                urn: "urn:provider:load",
-                method: "GET",
-                targetUrl: "https://provider.test/load",
-                output: [{ status: "200", body: { type: "object" } }],
-            }],
+            endpoints: [
+                {
+                    urn: "urn:provider:load",
+                    method: "GET",
+                    targetUrl: "https://provider.test/load",
+                    output: [{ status: "200", body: { type: "object" } }],
+                },
+            ],
         });
         const failures: Array<{ correlationId: string }> = [];
-        const response = await executeFunction({
-            id: "correlatedFailure",
-            method: "GET",
-            output: [{ status: "200", body: { type: "object" } }],
-            steps: [{ id: "loaded", call: { source: "provider", endpoint: "load" } }],
-            return: { body: "$steps.loaded" },
-        }, request(), {
-            sources,
-            includeCallErrorDetails: true,
-            deps: {
-                fetchImpl: async () => Response.json({
-                    error: "provider failure",
-                    apiKey: "provider-secret",
-                }, { status: 500 }),
-                reportFailure: failure => failures.push(failure),
+        const response = await executeFunction(
+            {
+                id: "correlatedFailure",
+                method: "GET",
+                output: [{ status: "200", body: { type: "object" } }],
+                steps: [{ id: "loaded", call: { source: "provider", endpoint: "load" } }],
+                return: { body: "$steps.loaded" },
             },
-        });
+            request(),
+            {
+                sources,
+                includeCallErrorDetails: true,
+                deps: {
+                    fetchImpl: async () =>
+                        Response.json(
+                            {
+                                error: "provider failure",
+                                apiKey: "provider-secret",
+                            },
+                            { status: 500 },
+                        ),
+                    reportFailure: (failure) => failures.push(failure),
+                },
+            },
+        );
 
         expect(response.status).toBe(502);
         const correlationId = response.headers.get("x-correlation-id");
@@ -110,28 +136,30 @@ function baseFunction(): CmsFunction {
     return {
         id: "safeOutput",
         method: "POST",
-        output: [{
-            status: "200",
-            body: {
-                type: "object",
-                properties: {
-                    id: { type: "string" },
-                    owner: {
-                        type: "object",
-                        properties: { name: { type: "string" } },
-                    },
-                    items: {
-                        type: "array",
-                        items: {
+        output: [
+            {
+                status: "200",
+                body: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string" },
+                        owner: {
                             type: "object",
-                            properties: { id: { type: "string" } },
+                            properties: { name: { type: "string" } },
                         },
+                        items: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: { id: { type: "string" } },
+                            },
+                        },
+                        providerData: { type: "object" },
                     },
-                    providerData: { type: "object" },
+                    required: ["id"],
                 },
-                required: ["id"],
             },
-        }],
+        ],
         steps: [],
         return: { body: { id: "item-1" } },
     };

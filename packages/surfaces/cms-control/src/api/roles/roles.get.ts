@@ -6,8 +6,12 @@ import InvalidParam from "cms-control/errors/Http/InvalidParam";
 export default async function listRoles(req: Request, cms: ControlCms) {
     const id = new URL(req.url).searchParams.get("id");
     const rows = await manageableRoles(cms);
-    if (!id) return Response.json(rows);
+    if (!id) {
+        return Response.json(rows);
+    }
     const row = rows.find((role) => role.id === id);
-    if (!row) throw new InvalidParam("id", "unknown role");
+    if (!row) {
+        throw new InvalidParam("id", "unknown role");
+    }
     return Response.json(row);
 }

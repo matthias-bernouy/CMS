@@ -3,12 +3,7 @@ import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { expect } from "bun:test";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
-import {
-    sellerCmsUserId,
-    sellerTermsHash,
-    sellerTermsVersion,
-    successfulInput,
-} from "./fixtures";
+import { sellerCmsUserId, sellerTermsHash, sellerTermsVersion, successfulInput } from "./fixtures";
 import { sellerPriceSources } from "./sources/index";
 
 export type CapturedCall = {
@@ -36,42 +31,35 @@ export async function executeSellerPrice(
 }> {
     const calls: CapturedCall[] = [];
     const identities = options.identities ?? new InMemoryIdentityService();
-    const response = await executeFunction(
-        await loadSellerPriceFunction(),
-        options.request ?? sellerPriceRequest(),
-        {
-            sources: await sellerPriceSources(),
+    const response = await executeFunction(await loadSellerPriceFunction(), options.request ?? sellerPriceRequest(), {
+        sources: await sellerPriceSources(),
+        identities,
+        user: options.user === null ? undefined : (options.user ?? { id: sellerCmsUserId, role: "user" }),
+        deps: {
             identities,
-            user: options.user === null
-                ? undefined
-                : options.user ?? { id: sellerCmsUserId, role: "user" },
-            deps: {
-                identities,
-                resolveSecret: async () => "seller-price-cms-api-key",
-                fetchImpl: async (input, init) => {
-                    const request = new Request(input, init);
-                    calls.push({
-                        url: new URL(request.url),
-                        method: request.method,
-                        body: await requestBody(request),
-                        cmsUserId: request.headers.get("x-cms-user-id"),
-                        stripeUserId: request.headers.get("x-user-id"),
-                    });
-                    return await responder(request);
-                },
+            resolveSecret: async () => "seller-price-cms-api-key",
+            fetchImpl: async (input, init) => {
+                const request = new Request(input, init);
+                calls.push({
+                    url: new URL(request.url),
+                    method: request.method,
+                    body: await requestBody(request),
+                    cmsUserId: request.headers.get("x-cms-user-id"),
+                    stripeUserId: request.headers.get("x-user-id"),
+                });
+                return await responder(request);
             },
         },
-    );
+    });
     return { response, calls, identities };
 }
 
 export async function loadSellerPriceFunction() {
-    const definition = await new FsIntegrationDefinitionRepository(
-        OFFICIAL_INTEGRATIONS_ROOT,
-    ).get("commerce-stripe-payments");
-    const artifact = definition?.artifacts?.find(item =>
-        item.type === "function"
-        && item.function.id === "submitSellerOfferPrice"
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
+        "commerce-stripe-payments",
+    );
+    const artifact = definition?.artifacts?.find(
+        (item) => item.type === "function" && item.function.id === "submitSellerOfferPrice",
     );
     if (!artifact || artifact.type !== "function") {
         throw new Error("submitSellerOfferPrice function not found");
@@ -83,20 +71,14 @@ export async function loadSellerPriceFunction() {
 
 export function sellerPriceRequest(...args: [unknown?]): Request {
     const body = args.length === 0 ? successfulInput : args[0];
-    return new Request(
-        "https://cms.test/functions/submitSellerOfferPrice",
-        {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        },
-    );
+    return new Request("https://cms.test/functions/submitSellerOfferPrice", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
 }
 
-export async function expectGenericFailure(
-    response: Response,
-    status = 502,
-): Promise<void> {
+export async function expectGenericFailure(response: Response, status = 502): Promise<void> {
     expect(response.status).toBe(status);
     const body = await response.json();
     expect(body).toEqual({
@@ -108,7 +90,9 @@ export async function expectGenericFailure(
 }
 
 async function requestBody(request: Request): Promise<unknown> {
-    if (request.body === null) return undefined;
+    if (request.body === null) {
+        return undefined;
+    }
     return await request.clone().json();
 }
 
@@ -117,7 +101,9 @@ function resolveSources(value: unknown): void {
         value.forEach(resolveSources);
         return;
     }
-    if (!isRecord(value)) return;
+    if (!isRecord(value)) {
+        return;
+    }
     for (const [key, nested] of Object.entries(value)) {
         if (typeof nested === "string") {
             value[key] = nested
@@ -132,6 +118,5 @@ function resolveSources(value: unknown): void {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === "object"
-        && !Array.isArray(value);
+    return value !== null && typeof value === "object" && !Array.isArray(value);
 }

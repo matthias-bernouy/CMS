@@ -20,10 +20,10 @@ function mount(html: string, scope: unknown) {
 
 describe("CompiledTemplate — cms-condition", () => {
     test("can hide, show, update, hide, and show the same authored branch", () => {
-        const { host, region } = mount(
-            `<p cms-condition="visible">Hello {{ name }}</p>`,
-            { visible: false, name: "Hidden" },
-        );
+        const { host, region } = mount(`<p cms-condition="visible">Hello {{ name }}</p>`, {
+            visible: false,
+            name: "Hidden",
+        });
 
         expect(host.querySelector("p")).toBeNull();
 
@@ -46,10 +46,9 @@ describe("CompiledTemplate — cms-condition", () => {
 
 describe("CompiledTemplate — cms-repeat", () => {
     test("restamps arrays, empty arrays, and non-arrays", () => {
-        const { host, region } = mount(
-            `<ul><li cms-repeat="items as item">{{ item.name }}</li></ul>`,
-            { items: [{ name: "Ada" }, { name: "Grace" }] },
-        );
+        const { host, region } = mount(`<ul><li cms-repeat="items as item">{{ item.name }}</li></ul>`, {
+            items: [{ name: "Ada" }, { name: "Grace" }],
+        });
 
         expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Ada", "Grace"]);
         expect(Array.from(host.querySelectorAll("li")).some((li) => li.hasAttribute("cms-repeat"))).toBe(false);
@@ -62,7 +61,9 @@ describe("CompiledTemplate — cms-repeat", () => {
 
         const warn = console.warn;
         const warnings: unknown[][] = [];
-        console.warn = (...args: unknown[]) => { warnings.push(args); };
+        console.warn = (...args: unknown[]) => {
+            warnings.push(args);
+        };
         try {
             region.update({ value: { items: "not-an-array" } });
         } finally {
@@ -73,10 +74,10 @@ describe("CompiledTemplate — cms-repeat", () => {
     });
 
     test("named item scopes keep parent data reachable", () => {
-        const { host, region } = mount(
-            `<ol><li cms-repeat="items as item">{{ item.name }} / {{ title }}</li></ol>`,
-            { title: "People", items: [{ name: "Ada" }] },
-        );
+        const { host, region } = mount(`<ol><li cms-repeat="items as item">{{ item.name }} / {{ title }}</li></ol>`, {
+            title: "People",
+            items: [{ name: "Ada" }],
+        });
 
         expect(text(host.querySelector("li"))).toBe("Ada / People");
 
@@ -85,17 +86,20 @@ describe("CompiledTemplate — cms-repeat", () => {
     });
 
     test("nested repeats restamp from each item scope", () => {
-        const { host, region } = mount(`
+        const { host, region } = mount(
+            `
             <section cms-repeat="groups as group">
                 <h2>{{ group.title }}</h2>
                 <span cms-repeat="group.tags as tag">{{ tag }}</span>
             </section>
-        `, {
-            groups: [
-                { title: "A", tags: ["x", "y"] },
-                { title: "B", tags: ["z"] },
-            ],
-        });
+        `,
+            {
+                groups: [
+                    { title: "A", tags: ["x", "y"] },
+                    { title: "B", tags: ["z"] },
+                ],
+            },
+        );
 
         expect(Array.from(host.querySelectorAll("h2")).map(text)).toEqual(["A", "B"]);
         expect(Array.from(host.querySelectorAll("span")).map(text)).toEqual(["x", "y", "z"]);
@@ -108,43 +112,67 @@ describe("CompiledTemplate — cms-repeat", () => {
     test("root conditions on repeated items filter each clone", () => {
         const { host, region } = mount(
             `<li cms-repeat="items as item" cms-condition="item.visible">{{ item.name }}</li>`,
-            { items: [{ name: "Ada", visible: true }, { name: "Grace", visible: false }] },
+            {
+                items: [
+                    { name: "Ada", visible: true },
+                    { name: "Grace", visible: false },
+                ],
+            },
         );
 
         expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Ada"]);
 
-        region.update({ value: { items: [{ name: "Ada", visible: false }, { name: "Grace", visible: true }] } });
+        region.update({
+            value: {
+                items: [
+                    { name: "Ada", visible: false },
+                    { name: "Grace", visible: true },
+                ],
+            },
+        });
         expect(Array.from(host.querySelectorAll("li")).map(text)).toEqual(["Grace"]);
     });
 
     test("nested source attributes bind inside repeated clones while source content stays inert", () => {
-        const { host, region } = mount(`
+        const { host, region } = mount(
+            `
             <section cms-repeat="items as item">
                 <div cms-source="{{ item.endpoint }}" data-id="{{ item.id }}">
                     <p>{{ label }}</p>
                 </div>
             </section>
-        `, {
-            items: [{ id: "a", endpoint: "/a" }],
-        });
+        `,
+            {
+                items: [{ id: "a", endpoint: "/a" }],
+            },
+        );
 
         const source = host.querySelector("[cms-source]")!;
         expect(source.getAttribute("cms-source")).toBe("/a");
         expect(source.getAttribute("data-id")).toBe("a");
         expect(text(source.querySelector("p"))).toBe("{{ label }}");
 
-        region.update({ value: { items: [{ id: "b", endpoint: "/b" }, { id: "c", endpoint: "/c" }] } });
-        expect(Array.from(host.querySelectorAll("[cms-source]")).map((el) => el.getAttribute("cms-source"))).toEqual(["/b", "/c"]);
+        region.update({
+            value: {
+                items: [
+                    { id: "b", endpoint: "/b" },
+                    { id: "c", endpoint: "/c" },
+                ],
+            },
+        });
+        expect(Array.from(host.querySelectorAll("[cms-source]")).map((el) => el.getAttribute("cms-source"))).toEqual([
+            "/b",
+            "/c",
+        ]);
         expect(Array.from(host.querySelectorAll("[cms-source] p")).map(text)).toEqual(["{{ label }}", "{{ label }}"]);
     });
 });
 
 describe("CompiledTemplate — raw HTML", () => {
     test("replaces the placeholder element with parsed HTML on each update", () => {
-        const { host, region } = mount(
-            `<div class="html"><raw-html>{{ html | innerHTML }}</raw-html></div>`,
-            { html: "<b>First</b>" },
-        );
+        const { host, region } = mount(`<div class="html"><raw-html>{{ html | innerHTML }}</raw-html></div>`, {
+            html: "<b>First</b>",
+        });
 
         expect(host.querySelector("raw-html")).toBeNull();
         expect(text(host.querySelector("b"))).toBe("First");
@@ -159,10 +187,10 @@ describe("CompiledTemplate — raw HTML", () => {
     });
 
     test("raw HTML still works when the placeholder is the shown condition root", () => {
-        const { host, region } = mount(
-            `<raw-html cms-condition="visible">{{ html | innerHTML }}</raw-html>`,
-            { visible: false, html: "<b>Hidden</b>" },
-        );
+        const { host, region } = mount(`<raw-html cms-condition="visible">{{ html | innerHTML }}</raw-html>`, {
+            visible: false,
+            html: "<b>Hidden</b>",
+        });
 
         expect(host.querySelector("b")).toBeNull();
 
@@ -174,16 +202,19 @@ describe("CompiledTemplate — raw HTML", () => {
 
 describe("CompiledTemplate — structural cloneRaw", () => {
     test("cloneRaw() keeps authored structural directives after live updates", () => {
-        const { compiled, region } = mount(`
+        const { compiled, region } = mount(
+            `
             <p cms-condition="visible">{{ name }}</p>
             <li cms-repeat="items as item">{{ item.name }}</li>
             <raw-html>{{ html | innerHTML }}</raw-html>
-        `, {
-            visible: true,
-            name: "Ada",
-            items: [{ name: "Grace" }],
-            html: "<b>Trusted</b>",
-        });
+        `,
+            {
+                visible: true,
+                name: "Ada",
+                items: [{ name: "Grace" }],
+                html: "<b>Trusted</b>",
+            },
+        );
 
         region.update({ value: { visible: false, items: [], html: "" } });
         const raw = compiled.cloneRaw();

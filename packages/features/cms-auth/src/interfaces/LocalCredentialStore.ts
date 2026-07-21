@@ -12,16 +12,16 @@ import type { Identity } from "cms-auth/interfaces/UsersRepository";
  * into `UsersRepository`, exactly like any other auth backend.
  */
 export type LocalCredential = {
-    sub:             string;     // stable id, generated at creation
-    email:           string;     // unique; the login handle
+    sub: string; // stable id, generated at creation
+    email: string; // unique; the login handle
     emailVerifiedAt: Date | null;
-    createdAt:       Date;
-    updatedAt:       Date;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 export type NewCredential = {
-    email:          string;
-    password:       string;
+    email: string;
+    password: string;
     /** Defaults to true for existing admin/bootstrap flows. Public signup will
      *  pass false and complete verification through the auth token flow. */
     emailVerified?: boolean;

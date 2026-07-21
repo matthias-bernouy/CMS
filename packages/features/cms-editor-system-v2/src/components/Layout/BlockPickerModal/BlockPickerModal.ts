@@ -18,28 +18,28 @@ template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtm
 
 export type BlockPickerItem =
     | {
-        kind: "block";
-        entry: EditorCatalogEntry;
-    }
+          kind: "block";
+          entry: EditorCatalogEntry;
+      }
     | {
-        kind: "template";
-        id: string;
-        label: string;
-        description?: string;
-        category?: string;
-        subCategory?: string;
-        icon?: string;
-        content: string;
-    }
+          kind: "template";
+          id: string;
+          label: string;
+          description?: string;
+          category?: string;
+          subCategory?: string;
+          icon?: string;
+          content: string;
+      }
     | {
-        kind: "media";
-        label: string;
-        description?: string;
-        category?: string;
-        subCategory?: string;
-        icon?: string;
-        accept?: MediaAccept[];
-    };
+          kind: "media";
+          label: string;
+          description?: string;
+          category?: string;
+          subCategory?: string;
+          icon?: string;
+          accept?: MediaAccept[];
+      };
 
 export type BlockPickerOption = {
     kind?: BlockPickerItem["kind"];
@@ -89,15 +89,17 @@ export class BlockPickerModal extends HTMLElement {
     }
 
     open(groups: BlockPickerSlotGroup[], contextLabel?: string): void {
-        this._groups = groups.map(group => ({
+        this._groups = groups.map((group) => ({
             ...group,
-            options: group.options.map(option => normalizeBlockPickerOption(option)),
+            options: group.options.map((option) => normalizeBlockPickerOption(option)),
         }));
         this._activeSlotKey = this._firstEnabledGroup()?.slot ?? "";
         this._activeSource = "block";
         this._activeCategory = "";
         this._activeOption = null;
-        this.subtitle.textContent = contextLabel ? `Choose content to add inside ${contextLabel}.` : "Choose content to add.";
+        this.subtitle.textContent = contextLabel
+            ? `Choose content to add inside ${contextLabel}.`
+            : "Choose content to add.";
         this.search.value = "";
         this.backdrop.hidden = false;
         this._render();
@@ -122,7 +124,7 @@ export class BlockPickerModal extends HTMLElement {
     private _renderEntries(): void {
         const query = this.search.value.trim().toLowerCase();
         const group = this._activeGroup();
-        const options = group?.options.filter(option => this._isVisibleOption(option, query)) ?? [];
+        const options = group?.options.filter((option) => this._isVisibleOption(option, query)) ?? [];
         this.results.replaceChildren();
 
         if (group?.disabledReason) {
@@ -161,53 +163,94 @@ export class BlockPickerModal extends HTMLElement {
         this.categories.replaceChildren();
 
         this.sources.append(
-            this._filterButton("Blocks", this._activeSource === "block", () => {
-                this._activeSource = "block";
-                this._activeCategory = "";
-                this._renderSidebar();
-                this._renderEntries();
-            }, this._sourceCount("block")),
-            this._filterButton("Templates", this._activeSource === "template", () => {
-                this._activeSource = "template";
-                this._activeCategory = "";
-                this._activeOption = null;
-                this._renderSidebar();
-                this._renderEntries();
-            }, this._sourceCount("template"), this._sourceCount("template") === 0),
-            this._filterButton("Media", this._activeSource === "media", () => {
-                if (this._selectSingleSourceOption("media")) return;
-                this._activeSource = "media";
-                this._activeCategory = "";
-                this._activeOption = null;
-                this._renderSidebar();
-                this._renderEntries();
-            }, this._sourceCount("media"), this._sourceCount("media") === 0),
+            this._filterButton(
+                "Blocks",
+                this._activeSource === "block",
+                () => {
+                    this._activeSource = "block";
+                    this._activeCategory = "";
+                    this._renderSidebar();
+                    this._renderEntries();
+                },
+                this._sourceCount("block"),
+            ),
+            this._filterButton(
+                "Templates",
+                this._activeSource === "template",
+                () => {
+                    this._activeSource = "template";
+                    this._activeCategory = "";
+                    this._activeOption = null;
+                    this._renderSidebar();
+                    this._renderEntries();
+                },
+                this._sourceCount("template"),
+                this._sourceCount("template") === 0,
+            ),
+            this._filterButton(
+                "Media",
+                this._activeSource === "media",
+                () => {
+                    if (this._selectSingleSourceOption("media")) {
+                        return;
+                    }
+                    this._activeSource = "media";
+                    this._activeCategory = "";
+                    this._activeOption = null;
+                    this._renderSidebar();
+                    this._renderEntries();
+                },
+                this._sourceCount("media"),
+                this._sourceCount("media") === 0,
+            ),
         );
 
         const categories = this._categories();
-        this.categories.append(this._filterButton("All", this._activeCategory === "", () => {
-            this._activeCategory = "";
-            this._renderSidebar();
-            this._renderEntries();
-        }, this._sourceCount(this._activeSource)));
+        this.categories.append(
+            this._filterButton(
+                "All",
+                this._activeCategory === "",
+                () => {
+                    this._activeCategory = "";
+                    this._renderSidebar();
+                    this._renderEntries();
+                },
+                this._sourceCount(this._activeSource),
+            ),
+        );
 
         for (const category of categories) {
-            this.categories.append(this._filterButton(category, this._activeCategory === category, () => {
-                this._activeCategory = category;
-                this._renderSidebar();
-                this._renderEntries();
-            }, this._categoryCount(category)));
+            this.categories.append(
+                this._filterButton(
+                    category,
+                    this._activeCategory === category,
+                    () => {
+                        this._activeCategory = category;
+                        this._renderSidebar();
+                        this._renderEntries();
+                    },
+                    this._categoryCount(category),
+                ),
+            );
         }
     }
 
-    private _filterButton(label: string, active: boolean, onClick: () => void, count: number, disabled = false): HTMLButtonElement {
+    private _filterButton(
+        label: string,
+        active: boolean,
+        onClick: () => void,
+        count: number,
+        disabled = false,
+    ): HTMLButtonElement {
         const button = document.createElement("button");
         button.className = "filter";
         button.type = "button";
         button.disabled = disabled;
         button.ariaPressed = String(active);
         button.addEventListener("click", () => {
-            if (button.disabled) return;
+            if (button.disabled) {
+                return;
+            }
             onClick();
         });
 
@@ -292,9 +335,13 @@ export class BlockPickerModal extends HTMLElement {
             button.textContent = group.label;
             button.disabled = Boolean(group.disabledReason);
             button.ariaSelected = String(slotKey === this._activeSlotKey);
-            if (group.disabledReason) button.title = group.disabledReason;
+            if (group.disabledReason) {
+                button.title = group.disabledReason;
+            }
             button.addEventListener("click", () => {
-                if (button.disabled) return;
+                if (button.disabled) {
+                    return;
+                }
                 this._activeSlotKey = slotKey;
                 this._activeCategory = "";
                 this._activeOption = null;
@@ -341,41 +388,60 @@ export class BlockPickerModal extends HTMLElement {
     }
 
     private _selectOption(option: BlockPickerOption): void {
-        this.dispatchEvent(new CustomEvent<BlockPickerSelectDetail>(BLOCK_PICKER_SELECT_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: { option },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<BlockPickerSelectDetail>(BLOCK_PICKER_SELECT_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: { option },
+            }),
+        );
         this.close();
     }
 
     private _isVisibleOption(option: BlockPickerOption, query: string): boolean {
         const item = blockPickerOptionItem(option);
-        if (item.kind !== this._activeSource) return false;
-        if (this._activeCategory && blockPickerCategoryLabel(option) !== this._activeCategory) return false;
+        if (item.kind !== this._activeSource) {
+            return false;
+        }
+        if (this._activeCategory && blockPickerCategoryLabel(option) !== this._activeCategory) {
+            return false;
+        }
         return blockPickerOptionMatches(option, query);
     }
 
     private _sourceCount(source: BlockPickerItem["kind"]): number {
-        return this._activeGroup()?.options.filter(option => blockPickerOptionItem(option).kind === source).length ?? 0;
+        return (
+            this._activeGroup()?.options.filter((option) => blockPickerOptionItem(option).kind === source).length ?? 0
+        );
     }
 
     private _selectSingleSourceOption(source: BlockPickerItem["kind"]): boolean {
-        const options = this._activeGroup()?.options.filter(option => blockPickerOptionItem(option).kind === source) ?? [];
-        if (options.length !== 1) return false;
+        const options =
+            this._activeGroup()?.options.filter((option) => blockPickerOptionItem(option).kind === source) ?? [];
+        if (options.length !== 1) {
+            return false;
+        }
 
         this._selectOption(options[0]!);
         return true;
     }
 
     private _categoryCount(category: string): number {
-        return this._activeGroup()?.options.filter(option => blockPickerOptionItem(option).kind === this._activeSource && blockPickerCategoryLabel(option) === category).length ?? 0;
+        return (
+            this._activeGroup()?.options.filter(
+                (option) =>
+                    blockPickerOptionItem(option).kind === this._activeSource &&
+                    blockPickerCategoryLabel(option) === category,
+            ).length ?? 0
+        );
     }
 
     private _categories(): string[] {
         const categories = new Set<string>();
         for (const option of this._activeGroup()?.options ?? []) {
-            if (blockPickerOptionItem(option).kind !== this._activeSource) continue;
+            if (blockPickerOptionItem(option).kind !== this._activeSource) {
+                continue;
+            }
             categories.add(blockPickerCategoryLabel(option));
         }
 
@@ -383,19 +449,23 @@ export class BlockPickerModal extends HTMLElement {
     }
 
     private _activeGroup(): BlockPickerSlotGroup | undefined {
-        return this._groups.find(group => (group.slot ?? "") === this._activeSlotKey) ?? this._groups[0];
+        return this._groups.find((group) => (group.slot ?? "") === this._activeSlotKey) ?? this._groups[0];
     }
 
     private _firstEnabledGroup(): BlockPickerSlotGroup | undefined {
-        return this._groups.find(group => !group.disabledReason) ?? this._groups[0];
+        return this._groups.find((group) => !group.disabledReason) ?? this._groups[0];
     }
 
     private readonly _onBackdropClick = (event: MouseEvent): void => {
-        if (event.target === this.backdrop) this.close();
+        if (event.target === this.backdrop) {
+            this.close();
+        }
     };
 
     private readonly _onKeydown = (event: KeyboardEvent): void => {
-        if (event.key === "Escape") this.close();
+        if (event.key === "Escape") {
+            this.close();
+        }
     };
 
     private get backdrop(): HTMLElement {

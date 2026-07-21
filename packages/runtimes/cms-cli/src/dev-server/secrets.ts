@@ -24,7 +24,7 @@ export class LocalFsEnvSecretStore implements SecretStore {
     }
 
     async get(key: string): Promise<string | null> {
-        return this.readEntries().then(entries => entries.get(key) ?? null);
+        return this.readEntries().then((entries) => entries.get(key) ?? null);
     }
 
     async set(key: string, value: string): Promise<void> {
@@ -44,13 +44,15 @@ export class LocalFsEnvSecretStore implements SecretStore {
             next.push(line);
         }
 
-        if (!written) next.push(formatEnvLine(key, value));
+        if (!written) {
+            next.push(formatEnvLine(key, value));
+        }
         await this.writeLines(next);
     }
 
     async delete(key: string): Promise<void> {
         const lines = await this.readLines();
-        await this.writeLines(lines.filter(line => parseEnvLine(line)?.key !== key));
+        await this.writeLines(lines.filter((line) => parseEnvLine(line)?.key !== key));
     }
 
     async list(): Promise<Array<{ key: string; value: string }>> {
@@ -65,19 +67,27 @@ export class LocalFsEnvSecretStore implements SecretStore {
         const entries = new Map<string, string>();
         for (const line of await this.readLines()) {
             const entry = parseEnvLine(line);
-            if (entry && isValidSecretKey(entry.key)) entries.set(entry.key, entry.value);
+            if (entry && isValidSecretKey(entry.key)) {
+                entries.set(entry.key, entry.value);
+            }
         }
         return entries;
     }
 
     private async readLines(): Promise<string[]> {
         const raw = await readFile(this.envPath, "utf-8").catch((error: { code?: string }) => {
-            if (error.code === "ENOENT") return "";
+            if (error.code === "ENOENT") {
+                return "";
+            }
             throw error;
         });
-        if (!raw) return [];
+        if (!raw) {
+            return [];
+        }
         const lines = raw.split(/\r?\n/);
-        if (lines.at(-1) === "") lines.pop();
+        if (lines.at(-1) === "") {
+            lines.pop();
+        }
         return lines;
     }
 
@@ -90,14 +100,20 @@ export class LocalFsEnvSecretStore implements SecretStore {
 
 function parseEnvLine(line: string): EnvEntry | null {
     const match = line.match(ENV_LINE_RE);
-    if (!match) return null;
+    if (!match) {
+        return null;
+    }
     return { key: match[1]!, value: parseEnvValue(match[2] ?? "") };
 }
 
 function parseEnvValue(raw: string): string {
     const value = raw.trimStart();
-    if (value.startsWith('"')) return parseDoubleQuotedValue(value);
-    if (value.startsWith("'")) return parseSingleQuotedValue(value);
+    if (value.startsWith('"')) {
+        return parseDoubleQuotedValue(value);
+    }
+    if (value.startsWith("'")) {
+        return parseSingleQuotedValue(value);
+    }
     return parseUnquotedValue(value);
 }
 
@@ -105,13 +121,20 @@ function parseDoubleQuotedValue(value: string): string {
     let out = "";
     for (let i = 1; i < value.length; i++) {
         const ch = value[i];
-        if (ch === '"') return out;
+        if (ch === '"') {
+            return out;
+        }
         if (ch === "\\" && i + 1 < value.length) {
             const next = value[++i]!;
-            if (next === "n") out += "\n";
-            else if (next === "r") out += "\r";
-            else if (next === "t") out += "\t";
-            else out += next;
+            if (next === "n") {
+                out += "\n";
+            } else if (next === "r") {
+                out += "\r";
+            } else if (next === "t") {
+                out += "\t";
+            } else {
+                out += next;
+            }
             continue;
         }
         out += ch;

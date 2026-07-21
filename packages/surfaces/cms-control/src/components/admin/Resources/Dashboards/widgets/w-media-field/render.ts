@@ -26,13 +26,23 @@ function removeButton(index: number): HTMLButtonElement {
     return mediaButton("remove", index, "x", true, "Remove media");
 }
 
-function mediaButton(action: string, index: number | undefined, label: string, danger = false, ariaLabel = label): HTMLButtonElement {
+function mediaButton(
+    action: string,
+    index: number | undefined,
+    label: string,
+    danger = false,
+    ariaLabel = label,
+): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "tile-action";
     button.dataset.mediaAction = action;
-    if (index !== undefined) button.dataset.index = String(index);
-    if (danger) button.setAttribute("data-danger", "");
+    if (index !== undefined) {
+        button.dataset.index = String(index);
+    }
+    if (danger) {
+        button.setAttribute("data-danger", "");
+    }
     button.setAttribute("aria-label", ariaLabel);
     button.title = ariaLabel;
     button.textContent = label;

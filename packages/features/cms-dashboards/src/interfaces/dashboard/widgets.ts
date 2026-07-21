@@ -32,55 +32,55 @@ export type DashboardAction = {
 
 export type DashboardWidget =
     | {
-        widget: "w-table";
-        id: string;
-        title?: string;
-        source: DashboardDataRef;
-        rowKey: string;
-        columns: DashboardColumn[];
-        filters?: DashboardFilter[];
-        pageSize?: number;
-        selection?: { opens?: string };
-        actions?: DashboardAction[];
-    }
+          widget: "w-table";
+          id: string;
+          title?: string;
+          source: DashboardDataRef;
+          rowKey: string;
+          columns: DashboardColumn[];
+          filters?: DashboardFilter[];
+          pageSize?: number;
+          selection?: { opens?: string };
+          actions?: DashboardAction[];
+      }
     | {
-        widget: "w-detail";
-        id: string;
-        source: DashboardDataRef;
-        title?: DashboardBinding;
-        status?: DashboardBinding;
-        actions?: DashboardAction[];
-        main: DashboardSection[];
-        aside?: DashboardSection[];
-    }
+          widget: "w-detail";
+          id: string;
+          source: DashboardDataRef;
+          title?: DashboardBinding;
+          status?: DashboardBinding;
+          actions?: DashboardAction[];
+          main: DashboardSection[];
+          aside?: DashboardSection[];
+      }
     | {
-        widget: "w-navigation-list";
-        id: string;
-        title?: string;
-        source: DashboardDataRef;
-        rowKey: string;
-        item: {
-            title: DashboardBinding;
-            subtitle?: DashboardBinding;
-            icon?: string;
-            badge?: DashboardBinding;
-        };
-        selection?: { opens?: string };
-        reorderable?: { action: string };
-        actions?: DashboardAction[];
-    }
+          widget: "w-navigation-list";
+          id: string;
+          title?: string;
+          source: DashboardDataRef;
+          rowKey: string;
+          item: {
+              title: DashboardBinding;
+              subtitle?: DashboardBinding;
+              icon?: string;
+              badge?: DashboardBinding;
+          };
+          selection?: { opens?: string };
+          reorderable?: { action: string };
+          actions?: DashboardAction[];
+      }
     | {
-        widget: "w-section";
-        id: string;
-        title: string;
-        description?: string;
-        children: DashboardWidget[];
-    }
+          widget: "w-section";
+          id: string;
+          title: string;
+          description?: string;
+          children: DashboardWidget[];
+      }
     | {
-        widget: "w-tabs";
-        id: string;
-        tabs: Array<{ id: string; label: string; children: DashboardWidget[] }>;
-    };
+          widget: "w-tabs";
+          id: string;
+          tabs: Array<{ id: string; label: string; children: DashboardWidget[] }>;
+      };
 
 export type DashboardDefinition = {
     id: string;

@@ -21,8 +21,7 @@ export function identityServiceContract(name: string, createService: IdentitySer
 
             expect(await identities.resolve(userAlias("commerce", 184), "stripe-connect")).toBe(" acct_opaque ");
             expect(await identities.resolve(userAlias("commerce", 184), "cms")).toBe("subject-1");
-            expect(await identities.resolve(userAlias("cms", "subject-1"), "stripe-connect"))
-                .toBe(" acct_opaque ");
+            expect(await identities.resolve(userAlias("cms", "subject-1"), "stripe-connect")).toBe(" acct_opaque ");
         });
 
         test("treats repeated identical bindings as idempotent", async () => {
@@ -39,10 +38,12 @@ export function identityServiceContract(name: string, createService: IdentitySer
             const identities = await createService();
             await identities.bind("subject-1", userAlias("commerce", "private-alias-one"));
 
-            await expect(identities.bind("subject-2", userAlias("commerce", "private-alias-one")))
-                .rejects.toBeInstanceOf(IdentityAliasConflictError);
-            await expect(identities.bind("subject-1", userAlias("commerce", "private-alias-two")))
-                .rejects.toBeInstanceOf(IdentityAliasConflictError);
+            await expect(
+                identities.bind("subject-2", userAlias("commerce", "private-alias-one")),
+            ).rejects.toBeInstanceOf(IdentityAliasConflictError);
+            await expect(
+                identities.bind("subject-1", userAlias("commerce", "private-alias-two")),
+            ).rejects.toBeInstanceOf(IdentityAliasConflictError);
         });
 
         test("does not disclose aliases through conflict errors", async () => {
@@ -50,8 +51,10 @@ export function identityServiceContract(name: string, createService: IdentitySer
             const secretAlias = "customer-secret-reference";
             await identities.bind("subject-1", userAlias("private-provider", secretAlias));
 
-            const error = await identities.bind("subject-2", userAlias("private-provider", secretAlias))
-                .then(() => null, caught => caught);
+            const error = await identities.bind("subject-2", userAlias("private-provider", secretAlias)).then(
+                () => null,
+                (caught) => caught,
+            );
 
             expect(error).toBeInstanceOf(IdentityAliasConflictError);
             expect(error.message).toBe("Identity alias conflicts with an existing binding");
@@ -74,8 +77,9 @@ export function identityServiceContract(name: string, createService: IdentitySer
             const identities = await createService();
             await identities.bind("subject-1", userAlias(" commerce ", " external-id "));
 
-            expect(await identities.resolve(userAlias("commerce", " external-id "), " commerce "))
-                .toBe(" external-id ");
+            expect(await identities.resolve(userAlias("commerce", " external-id "), " commerce ")).toBe(
+                " external-id ",
+            );
             expect(await identities.resolve(userAlias("commerce", "external-id"), "cms")).toBeNull();
         });
 
@@ -108,10 +112,14 @@ export function identityServiceContract(name: string, createService: IdentitySer
 
             await expect(identities.bind("", alias)).rejects.toBeInstanceOf(InvalidIdentityError);
             await expect(identities.bind("   ", alias)).rejects.toBeInstanceOf(InvalidIdentityError);
-            await expect(identities.bind(null as unknown as string, alias)).rejects.toBeInstanceOf(InvalidIdentityError);
+            await expect(identities.bind(null as unknown as string, alias)).rejects.toBeInstanceOf(
+                InvalidIdentityError,
+            );
             await expect(identities.resolve(alias, "")).rejects.toBeInstanceOf(InvalidIdentityError);
             await expect(identities.resolve(alias, "   ")).rejects.toBeInstanceOf(InvalidIdentityError);
-            await expect(identities.resolve(alias, 42 as unknown as string)).rejects.toBeInstanceOf(InvalidIdentityError);
+            await expect(identities.resolve(alias, 42 as unknown as string)).rejects.toBeInstanceOf(
+                InvalidIdentityError,
+            );
         });
 
         test("rejects bindings for the reserved CMS authority without changing existing mappings", async () => {
@@ -119,8 +127,9 @@ export function identityServiceContract(name: string, createService: IdentitySer
             const commerceAlias = userAlias("commerce", 184);
             await identities.bind("subject-1", commerceAlias);
 
-            await expect(identities.bind("subject-1", userAlias("cms", "subject-2")))
-                .rejects.toBeInstanceOf(InvalidIdentityError);
+            await expect(identities.bind("subject-1", userAlias("cms", "subject-2"))).rejects.toBeInstanceOf(
+                InvalidIdentityError,
+            );
 
             expect(await identities.resolve(commerceAlias, "cms")).toBe("subject-1");
             expect(await identities.resolve(userAlias("cms", "subject-1"), "commerce")).toBe(184);
@@ -138,10 +147,8 @@ export function identityServiceContract(name: string, createService: IdentitySer
             const identities = await createService();
             const numericCmsAlias = userAlias("cms", 184);
 
-            await expect(identities.resolve(numericCmsAlias, "commerce"))
-                .rejects.toBeInstanceOf(InvalidIdentityError);
-            await expect(identities.resolve(numericCmsAlias, "cms"))
-                .rejects.toBeInstanceOf(InvalidIdentityError);
+            await expect(identities.resolve(numericCmsAlias, "commerce")).rejects.toBeInstanceOf(InvalidIdentityError);
+            await expect(identities.resolve(numericCmsAlias, "cms")).rejects.toBeInstanceOf(InvalidIdentityError);
         });
 
         test("uses one canonical key for positive and negative zero", async () => {

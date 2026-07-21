@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    lockedFinancialTerms,
-    orderPublicId,
-    savedQuote,
-} from "../fixtures";
+import { lockedFinancialTerms, orderPublicId, savedQuote } from "../fixtures";
 import { executeRelay } from "../harness";
 import { successfulResponder } from "../responders";
 

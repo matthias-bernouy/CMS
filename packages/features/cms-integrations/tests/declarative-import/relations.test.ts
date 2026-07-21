@@ -17,19 +17,21 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         await sources.createSource({
             urn: "urn:offers",
             meta: { name: "Offers" },
-            endpoints: [{
-                urn: "urn:offers:offers",
-                method: "GET",
-                access: { mode: "public" },
-                targetUrl: "https://api.example.com/offers",
-                input: {
-                    params: [
-                        { name: "productId", in: "query", schema: { type: "string" } },
-                        { name: "limit", in: "query", schema: { type: "number" } },
-                        { name: "offset", in: "query", schema: { type: "number" } },
-                    ],
+            endpoints: [
+                {
+                    urn: "urn:offers:offers",
+                    method: "GET",
+                    access: { mode: "public" },
+                    targetUrl: "https://api.example.com/offers",
+                    input: {
+                        params: [
+                            { name: "productId", in: "query", schema: { type: "string" } },
+                            { name: "limit", in: "query", schema: { type: "number" } },
+                            { name: "offset", in: "query", schema: { type: "number" } },
+                        ],
+                    },
                 },
-            }],
+            ],
         });
         await installations.create({
             id: "products",
@@ -61,32 +63,34 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                 { name: "offers", kind: "offers" },
             ],
             inputs: [],
-            artifacts: [{
-                type: "relation",
-                relation: {
-                    id: "product-offers",
-                    label: "Offers",
-                    from: { sourceId: "{{dependencies.products.sourceId}}", idPath: "id" },
-                    to: { sourceId: "{{dependencies.offers.sourceId}}", idPath: "id" },
-                    cardinality: "many",
-                    binding: {
-                        kind: "reference",
-                        endpoint: {
-                            sourceId: "{{dependencies.offers.sourceId}}",
-                            endpointId: "offers",
+            artifacts: [
+                {
+                    type: "relation",
+                    relation: {
+                        id: "product-offers",
+                        label: "Offers",
+                        from: { sourceId: "{{dependencies.products.sourceId}}", idPath: "id" },
+                        to: { sourceId: "{{dependencies.offers.sourceId}}", idPath: "id" },
+                        cardinality: "many",
+                        binding: {
+                            kind: "reference",
+                            endpoint: {
+                                sourceId: "{{dependencies.offers.sourceId}}",
+                                endpointId: "offers",
+                            },
+                            params: { productId: "$from.id" },
                         },
-                        params: { productId: "$from.id" },
-                    },
-                    page: {
-                        itemsPath: "items",
-                        totalPath: "total",
-                        limitParam: "limit",
-                        offsetParam: "offset",
-                        defaultLimit: 25,
-                        maxLimit: 100,
+                        page: {
+                            itemsPath: "items",
+                            totalPath: "total",
+                            limitParam: "limit",
+                            offsetParam: "offset",
+                            defaultLimit: 25,
+                            maxLimit: 100,
+                        },
                     },
                 },
-            }],
+            ],
         };
 
         const result = await importIntegration(

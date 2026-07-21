@@ -54,8 +54,7 @@ export const shipment = {
     ok: true,
     id: "shipment-42",
     expeditionNumber: "12345678",
-    trackingUrl:
-        "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=12345678&codePostal=75001",
+    trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=12345678&codePostal=75001",
     status: "label_ready",
     createdAt: "2026-07-21T08:01:00.000Z",
 };
@@ -70,8 +69,7 @@ export function expectedQuoteRequest() {
         quoteId: reservation.deliveryQuoteId,
         externalOrderId: orderPublicId,
         selectedForCmsUserId: buyerId,
-        merchandiseSubtotalMinorAmount:
-            reservation.merchandiseSubtotalMinorAmount,
+        merchandiseSubtotalMinorAmount: reservation.merchandiseSubtotalMinorAmount,
         currency: reservation.currency,
         purpose: "fulfillment",
     };
@@ -112,15 +110,13 @@ export function expectedShipmentRequest() {
         deliveryRelayLocation: quote.relayLocation,
         weightGrams: quote.weightGrams,
         packageCount: 1,
-        declaredValueMinorAmount:
-            reservation.merchandiseSubtotalMinorAmount,
+        declaredValueMinorAmount: reservation.merchandiseSubtotalMinorAmount,
         declaredCurrency: "EUR",
         metadata: {
             commerceOrderId: orderPublicId,
             financialTermsHash: reservation.financialTermsHash,
             deliveryQuoteId: reservation.deliveryQuoteId,
-            declaredValueMinorAmount:
-                reservation.merchandiseSubtotalMinorAmount,
+            declaredValueMinorAmount: reservation.merchandiseSubtotalMinorAmount,
             declaredCurrency: "EUR",
         },
     };

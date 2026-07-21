@@ -16,7 +16,6 @@ export type MongoRateLimiterConfig = { collectionPrefix?: string };
 type WindowDoc = { _id: string; count: number; expiresAt: Date };
 
 export class MongoRateLimiter implements RateLimiter {
-
     private readonly _prefix: string;
 
     constructor(
@@ -44,18 +43,10 @@ export class MongoRateLimiter implements RateLimiter {
                 {
                     $set: {
                         count: {
-                            $cond: [
-                                { $gt: ["$expiresAt", now] },
-                                { $add: [{ $ifNull: ["$count", 0] }, 1] },
-                                1,
-                            ],
+                            $cond: [{ $gt: ["$expiresAt", now] }, { $add: [{ $ifNull: ["$count", 0] }, 1] }, 1],
                         },
                         expiresAt: {
-                            $cond: [
-                                { $gt: ["$expiresAt", now] },
-                                "$expiresAt",
-                                expiresAt,
-                            ],
+                            $cond: [{ $gt: ["$expiresAt", now] }, "$expiresAt", expiresAt],
                         },
                     },
                 },
@@ -63,8 +54,12 @@ export class MongoRateLimiter implements RateLimiter {
             { upsert: true, returnDocument: "after" },
         );
 
-        if (!updated) return { allowed: true };
-        if (updated.count <= this.policy.limit) return { allowed: true };
+        if (!updated) {
+            return { allowed: true };
+        }
+        if (updated.count <= this.policy.limit) {
+            return { allowed: true };
+        }
         return {
             allowed: false,
             retryAfterSeconds: Math.ceil((updated.expiresAt.getTime() - now.getTime()) / 1000),

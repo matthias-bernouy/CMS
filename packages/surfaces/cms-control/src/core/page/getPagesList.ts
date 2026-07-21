@@ -23,12 +23,12 @@ export type PageListOptions = PagesQuery;
  */
 export async function getPagesList(cms: ControlCms, opts: PageListOptions = {}): Promise<PageListItem[]> {
     const pages = await cms.repository.getPagesMetadata(opts);
-    return pages.map(p => ({
-        id:           p.id,
-        path:         p.path,
-        title:        p.title,
-        tags:         p.tags,
+    return pages.map((p) => ({
+        id: p.id,
+        path: p.path,
+        title: p.title,
+        tags: p.tags,
         visibleLabel: p.visible ? "Published" : "Draft",
-        visibleColor: p.visible ? "success"   : "secondary",
+        visibleColor: p.visible ? "success" : "secondary",
     }));
 }

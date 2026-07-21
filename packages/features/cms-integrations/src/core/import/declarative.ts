@@ -7,10 +7,7 @@ import type {
     IntegrationImportResult,
 } from "../../interfaces/IntegrationImport";
 import { executeDeclarativeIntegration } from "./declarative/execute";
-import {
-    declarativeSecretBindingNames as secretBindingNames,
-    resolveSecretRefs,
-} from "./declarative/secrets";
+import { declarativeSecretBindingNames as secretBindingNames, resolveSecretRefs } from "./declarative/secrets";
 
 export async function importDeclarativeIntegration(
     deps: IntegrationImportDeps,
@@ -30,7 +27,9 @@ export async function importDeclarativeIntegrationWithCommit<T>(
     commit: (result: IntegrationImportResult) => Promise<T>,
 ): Promise<{ importResult: IntegrationImportResult; committed: T }> {
     const { result } = await executeDeclarativeIntegration(deps, definition, answers, options, commit);
-    if (!("committed" in result)) throw new IntegrationInputError("commit", "missing commit result");
+    if (!("committed" in result)) {
+        throw new IntegrationInputError("commit", "missing commit result");
+    }
     return result;
 }
 

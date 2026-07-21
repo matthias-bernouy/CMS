@@ -19,12 +19,14 @@ describe("GET /api/dashboards relation projections", () => {
         await dashboards.createDashboard({
             id: "products-products",
             source: "products",
-            views: [{
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product", params: { id: "$selection.id" } },
-                main: [{ id: "details", title: "Details", fields: [] }],
-            }],
+            views: [
+                {
+                    widget: "w-detail",
+                    id: "productDetail",
+                    source: { endpoint: "product", params: { id: "$selection.id" } },
+                    main: [{ id: "details", title: "Details", fields: [] }],
+                },
+            ],
         });
         await relations.createDashboardRelationProjection({
             type: "dashboardRelation",
@@ -38,14 +40,16 @@ describe("GET /api/dashboards relation projections", () => {
 
         const body = await (await listDashboards(list(), { sources, dashboards, relations } as any)).json();
 
-        expect(body[0].dashboardRelationProjections).toEqual([{
-            type: "dashboardRelation",
-            relationId: "product-offers",
-            dashboardId: "products-products",
-            viewId: "productDetail",
-            widget: "table",
-            title: "Offers",
-            columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
-        }]);
+        expect(body[0].dashboardRelationProjections).toEqual([
+            {
+                type: "dashboardRelation",
+                relationId: "product-offers",
+                dashboardId: "products-products",
+                viewId: "productDetail",
+                widget: "table",
+                title: "Offers",
+                columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
+            },
+        ]);
     });
 });

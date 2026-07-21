@@ -1,8 +1,4 @@
-export function wrapRangeContents(
-    range: Range,
-    tagName: string,
-    attributes: Record<string, string> = {},
-): Range {
+export function wrapRangeContents(range: Range, tagName: string, attributes: Record<string, string> = {}): Range {
     const wrapper = document.createElement(tagName);
     for (const [name, value] of Object.entries(attributes)) {
         wrapper.setAttribute(name, value);
@@ -22,7 +18,9 @@ export function findRangeWrapper(
     predicate: (element: HTMLElement) => boolean,
 ): HTMLElement | null {
     const start = closestWrapper(editor, range.startContainer, tagName, predicate);
-    if (!start) return null;
+    if (!start) {
+        return null;
+    }
 
     const end = closestWrapper(editor, range.endContainer, tagName, predicate);
     return start === end ? start : null;

@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 
-const definitionUrl = new URL(
-    "../../../integrations/mondial-relay/versions/1.0.0/definition.json",
-    import.meta.url,
-);
+const definitionUrl = new URL("../../../integrations/mondial-relay/versions/1.0.0/definition.json", import.meta.url);
 
 describe("Mondial Relay seller handoff Source contract", () => {
     test("forwards the authenticated seller through a computed header", async () => {
@@ -13,20 +10,21 @@ describe("Mondial Relay seller handoff Source contract", () => {
         expect(endpoint).toMatchObject({
             method: "POST",
             access: "system",
-            targetUrl: expect.stringContaining(
-                "/cms-delivery/system/shipments/handoff",
-            ),
-            headers: [{
-                name: "authorization",
-                source: {
-                    from: "secret",
-                    ref: "{{secrets.cmsApiKey}}",
-                    prefix: "Bearer ",
+            targetUrl: expect.stringContaining("/cms-delivery/system/shipments/handoff"),
+            headers: [
+                {
+                    name: "authorization",
+                    source: {
+                        from: "secret",
+                        ref: "{{secrets.cmsApiKey}}",
+                        prefix: "Bearer ",
+                    },
                 },
-            }, {
-                name: "x-cms-user-id",
-                source: { from: "computed", ref: "userID" },
-            }],
+                {
+                    name: "x-cms-user-id",
+                    source: { from: "computed", ref: "userID" },
+                },
+            ],
         });
         expect(endpoint.body).toEqual({
             type: "object",
@@ -40,12 +38,13 @@ describe("Mondial Relay seller handoff Source contract", () => {
         const body = endpoint.output?.[0]?.body;
 
         expect(Object.keys(body?.properties ?? {})).toEqual([
-            "id", "externalOrderId", "expeditionNumber", "status",
+            "id",
+            "externalOrderId",
+            "expeditionNumber",
+            "status",
             "sellerHandoffDeclaredAt",
         ]);
-        expect(body?.required).toEqual([
-            "id", "externalOrderId", "status", "sellerHandoffDeclaredAt",
-        ]);
+        expect(body?.required).toEqual(["id", "externalOrderId", "status", "sellerHandoffDeclaredAt"]);
         expect(body?.properties?.expeditionNumber).toEqual({
             type: "string",
             nullable: true,
@@ -73,10 +72,11 @@ async function handoffEndpoint(): Promise<Endpoint> {
             source?: { endpoints: Array<Endpoint & { endpointId?: string }> };
         }>;
     };
-    const endpoint = definition.artifacts.find(artifact => artifact.source)
-        ?.source?.endpoints.find(candidate =>
-            candidate.endpointId === "declareSellerHandoff"
-        );
-    if (!endpoint) throw new Error("declareSellerHandoff endpoint not found");
+    const endpoint = definition.artifacts
+        .find((artifact) => artifact.source)
+        ?.source?.endpoints.find((candidate) => candidate.endpointId === "declareSellerHandoff");
+    if (!endpoint) {
+        throw new Error("declareSellerHandoff endpoint not found");
+    }
     return endpoint;
 }

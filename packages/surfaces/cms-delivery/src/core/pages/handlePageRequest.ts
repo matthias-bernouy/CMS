@@ -31,10 +31,14 @@ export async function handlePageRequest(req: Request, delivery: DeliveryCms): Pr
     }
 
     const page = await delivery.repository.getPublishedPage(pathname);
-    if (!page) return renderRef(req, delivery, "notFound", 404, "Page not found");
+    if (!page) {
+        return renderRef(req, delivery, "notFound", 404, "Page not found");
+    }
 
     const sourceAccess = await preflightPageSourceAccess(req, page, delivery);
-    if (sourceAccess) return sourceAccess;
+    if (sourceAccess) {
+        return sourceAccess;
+    }
 
     return renderWithFallbacks(req, page, pathname, delivery);
 }

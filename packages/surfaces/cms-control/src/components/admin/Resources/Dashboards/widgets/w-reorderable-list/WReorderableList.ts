@@ -48,13 +48,19 @@ export class DashboardWReorderableList extends Component {
         this.shadowRoot?.removeEventListener("dragend", this.onDragEnd);
     }
 
-    get data(): ReorderableListData { return cloneData(this.value); }
+    get data(): ReorderableListData {
+        return cloneData(this.value);
+    }
     set data(value: ReorderableListData) {
         this.value = normalizeData(value);
-        if (this.isConnected) this.render();
+        if (this.isConnected) {
+            this.render();
+        }
     }
 
-    get items(): ReorderableListItem[] { return cloneItems(this.value); }
+    get items(): ReorderableListItem[] {
+        return cloneItems(this.value);
+    }
 
     private render(): void {
         renderList(this.shadowRoot!, this.value);
@@ -62,14 +68,20 @@ export class DashboardWReorderableList extends Component {
 
     private onClick = (event: Event): void => {
         const target = event.target as Element | null;
-        if (target?.closest("[data-add]")) return this.addItem();
+        if (target?.closest("[data-add]")) {
+            return this.addItem();
+        }
         const remove = target?.closest<HTMLButtonElement>("[data-remove]");
-        if (remove) return this.removeItem(Number(remove.dataset.remove));
+        if (remove) {
+            return this.removeItem(Number(remove.dataset.remove));
+        }
     };
 
     private onInput = (event: Event): void => {
         const input = (event.target as Element | null)?.closest<HTMLElement>("[data-item-index][data-item-path]");
-        if (!input) return;
+        if (!input) {
+            return;
+        }
         const index = Number(input.dataset.itemIndex);
         if (updateItem(this.value, index, input.dataset.itemPath ?? "", readItemControl(input))) {
             this.commit(false);
@@ -79,54 +91,74 @@ export class DashboardWReorderableList extends Component {
     private onDragStart = (event: DragEvent): void => {
         const handle = (event.target as Element | null)?.closest<HTMLElement>(".handle");
         const row = handle?.closest<HTMLElement>(".row[data-index]");
-        if (!row) return;
+        if (!row) {
+            return;
+        }
         this.draggingIndex = Number(row.dataset.index);
         row.dataset.dragging = "";
         event.dataTransfer?.setData("text/plain", String(this.draggingIndex));
-        if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+        }
     };
 
     private onDragOver = (event: DragEvent): void => {
         const row = (event.target as Element | null)?.closest<HTMLElement>(".row[data-index]");
-        if (!row || this.draggingIndex === null) return;
+        if (!row || this.draggingIndex === null) {
+            return;
+        }
         event.preventDefault();
-        this.rows().forEach(candidate => candidate.toggleAttribute("data-drop-target", candidate === row));
-        if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        this.rows().forEach((candidate) => candidate.toggleAttribute("data-drop-target", candidate === row));
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+        }
     };
 
     private onDrop = (event: DragEvent): void => {
         const row = (event.target as Element | null)?.closest<HTMLElement>(".row[data-index]");
-        if (!row || this.draggingIndex === null) return;
+        if (!row || this.draggingIndex === null) {
+            return;
+        }
         event.preventDefault();
-        if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index))) this.commit();
+        if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index))) {
+            this.commit();
+        }
         this.clearDragState();
     };
 
     private onDragEnd = (): void => this.clearDragState();
 
     private addItem(): void {
-        if (addItem(this.value)) this.commit();
+        if (addItem(this.value)) {
+            this.commit();
+        }
     }
 
     private removeItem(index: number): void {
-        if (removeItem(this.value, index)) this.commit();
+        if (removeItem(this.value, index)) {
+            this.commit();
+        }
     }
 
     private commit(render = true): void {
         persistPositions(this.value);
-        if (render) this.render();
+        if (render) {
+            this.render();
+        }
         this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     }
 
     private clearDragState(): void {
         this.draggingIndex = null;
-        this.rows().forEach(row => {
+        this.rows().forEach((row) => {
             row.removeAttribute("data-dragging");
             row.removeAttribute("data-drop-target");
         });
     }
 
-    private rows(): HTMLElement[] { return renderedRows(this.shadowRoot!); }
+    private rows(): HTMLElement[] {
+        return renderedRows(this.shadowRoot!);
+    }
 }
 
 if (!customElements.get("cms-dashboard-w-reorderable-list")) {

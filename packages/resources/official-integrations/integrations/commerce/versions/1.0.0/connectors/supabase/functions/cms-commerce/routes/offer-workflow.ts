@@ -17,7 +17,9 @@ export async function getOfferCondition(request: Request): Promise<Response> {
         return json({ code: "", label: "", description: "", position: 0, enabled: true });
     }
     const row = await one("offer_conditions", { code });
-    if (!row) throw new HttpError(404, "offer condition not found");
+    if (!row) {
+        throw new HttpError(404, "offer condition not found");
+    }
     return json(camelize(row));
 }
 
@@ -46,7 +48,9 @@ export async function getWorkflowState(request: Request): Promise<Response> {
         return json({ code: "", label: "", phase: "admin_review", position: 0, enabled: true, terminal: false });
     }
     const row = await one("offer_workflow_states", { code });
-    if (!row) throw new HttpError(404, "workflow state not found");
+    if (!row) {
+        throw new HttpError(404, "workflow state not found");
+    }
     return json(camelize(row));
 }
 
@@ -67,7 +71,7 @@ export async function listWorkflowTransitions(): Promise<Response> {
     const rows = await restJson<JsonRecord[]>(
         "offer_workflow_transitions?select=from_state,action,actor_kind,to_state,created_at&order=from_state.asc,action.asc,actor_kind.asc",
     );
-    const items = rows.map(row => ({
+    const items = rows.map((row) => ({
         ...(camelize(row) as JsonRecord),
         id: `${String(row.from_state)}:${String(row.action)}:${String(row.actor_kind)}`,
     }));
@@ -88,7 +92,9 @@ export async function getWorkflowTransition(request: Request): Promise<Response>
         action,
         actor_kind: actorKind,
     });
-    if (!row) throw new HttpError(404, "workflow transition not found");
+    if (!row) {
+        throw new HttpError(404, "workflow transition not found");
+    }
     return json(camelize(row));
 }
 

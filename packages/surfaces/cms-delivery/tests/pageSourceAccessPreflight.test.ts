@@ -1,9 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
-import {
-    InMemorySourceOverlayRepository,
-    SourceOverlaySourceRepository,
-} from "@bernouy/cms-sources";
+import { InMemorySourceOverlayRepository, SourceOverlaySourceRepository } from "@bernouy/cms-sources";
 import { authSubject, mountPage } from "./pageSourceAccessPreflight.fixture";
 
 describe("Delivery page source access preflight", () => {
@@ -125,15 +122,18 @@ describe("Delivery page source access preflight", () => {
             fieldSource: { endpointId: "listProducts" },
             fields: [],
         });
-        const fetchImpl = mock(async () => Response.json({
-            fields: [{ id: "internalCode", label: "Internal code", type: "string" }],
-        }));
+        const fetchImpl = mock(async () =>
+            Response.json({
+                fields: [{ id: "internalCode", label: "Internal code", type: "string" }],
+            }),
+        );
         const { handler } = await mountPage({
             content: `<section cms-source="/.cms/sources/shop/listProducts as products"><p>Products</p></section>`,
             auth: authSubject(null),
-            decorateSources: sources => new SourceOverlaySourceRepository(sources, overlays, {
-                deps: { fetchImpl },
-            }),
+            decorateSources: (sources) =>
+                new SourceOverlaySourceRepository(sources, overlays, {
+                    deps: { fetchImpl },
+                }),
         });
 
         const res = await handler(new Request("http://site/products"));

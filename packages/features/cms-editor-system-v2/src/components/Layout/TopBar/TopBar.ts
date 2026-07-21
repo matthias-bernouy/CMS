@@ -73,9 +73,11 @@ export class TopBar extends HTMLElement {
     }
 
     set saveStatus(label: string) {
-        const target = this.shadowRoot!.querySelector(".save-label")
-            ?? this.shadowRoot!.querySelector('[data-action="save"]');
-        if (target) target.textContent = label;
+        const target =
+            this.shadowRoot!.querySelector(".save-label") ?? this.shadowRoot!.querySelector('[data-action="save"]');
+        if (target) {
+            target.textContent = label;
+        }
     }
 
     setPageTitle(title: string, path: string): void {
@@ -92,7 +94,9 @@ export class TopBar extends HTMLElement {
 
     private readonly _onClick = (event: Event): void => {
         const button = (event.target as Element | null)?.closest<HTMLButtonElement>("button");
-        if (!button) return;
+        if (!button) {
+            return;
+        }
 
         const viewport = button.dataset.viewport as TopBarViewport | undefined;
         if (viewport) {
@@ -113,65 +117,89 @@ export class TopBar extends HTMLElement {
         }
 
         if (button.dataset.action === "save") {
-            this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
-                bubbles:  true,
-                composed: true,
-            }));
+            this.dispatchEvent(
+                new CustomEvent(TOPBAR_SAVE_EVENT, {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         } else if (button.dataset.action === "delete") {
-            this.dispatchEvent(new CustomEvent(TOPBAR_DELETE_EVENT, {
-                bubbles:  true,
-                composed: true,
-            }));
+            this.dispatchEvent(
+                new CustomEvent(TOPBAR_DELETE_EVENT, {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         } else if (button.dataset.action === "page-settings") {
-            this.dispatchEvent(new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
-                bubbles:  true,
-                composed: true,
-            }));
+            this.dispatchEvent(
+                new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         } else if (button.dataset.action === "view-reload") {
-            this.dispatchEvent(new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
-                bubbles:  true,
-                composed: true,
-            }));
+            this.dispatchEvent(
+                new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         }
     };
 
     private _setViewport(viewport: TopBarViewport, emit: boolean): void {
-        if (this._viewport === viewport) return;
+        if (this._viewport === viewport) {
+            return;
+        }
 
         this._viewport = viewport;
         this._syncButtons();
-        if (!emit) return;
+        if (!emit) {
+            return;
+        }
 
         this._emitViewportChange();
     }
 
     private _setMode(mode: TopBarEditorMode, emit: boolean): void {
-        if (this._mode === mode) return;
+        if (this._mode === mode) {
+            return;
+        }
 
         this._mode = mode;
         this._syncButtons();
         this._syncModeAttribute();
-        if (!emit) return;
+        if (!emit) {
+            return;
+        }
 
-        this.dispatchEvent(new CustomEvent<TopBarEditorModeChangeDetail>(TOPBAR_EDITOR_MODE_CHANGE_EVENT, {
-            bubbles:  true,
-            composed: true,
-            detail:   { mode },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<TopBarEditorModeChangeDetail>(TOPBAR_EDITOR_MODE_CHANGE_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: { mode },
+            }),
+        );
     }
 
     private _setSourceState(sourceState: CmsSourceStateForce, emit: boolean): void {
-        if (this._sourceState === sourceState) return;
+        if (this._sourceState === sourceState) {
+            return;
+        }
 
         this._sourceState = sourceState;
         this._syncButtons();
-        if (!emit) return;
+        if (!emit) {
+            return;
+        }
 
-        this.dispatchEvent(new CustomEvent<TopBarSourceStateChangeDetail>(TOPBAR_SOURCE_STATE_CHANGE_EVENT, {
-            bubbles:  true,
-            composed: true,
-            detail:   { sourceState },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<TopBarSourceStateChangeDetail>(TOPBAR_SOURCE_STATE_CHANGE_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: { sourceState },
+            }),
+        );
     }
 
     private _syncButtons(): void {
@@ -183,10 +211,16 @@ export class TopBar extends HTMLElement {
     private _syncModeAttribute(): void {
         this.setAttribute("mode", this._mode);
         const reload = this.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]');
-        if (reload) reload.disabled = this._mode !== "view";
+        if (reload) {
+            reload.disabled = this._mode !== "view";
+        }
     }
 
-    private _syncButtonGroup(selector: string, dataKey: "viewport" | "editorMode" | "sourceState", value: string): void {
+    private _syncButtonGroup(
+        selector: string,
+        dataKey: "viewport" | "editorMode" | "sourceState",
+        value: string,
+    ): void {
         for (const button of Array.from(this.shadowRoot!.querySelectorAll<HTMLButtonElement>(selector))) {
             const isActive = button.dataset[dataKey] === value;
             button.classList.toggle("active", isActive);
@@ -195,11 +229,13 @@ export class TopBar extends HTMLElement {
     }
 
     private _emitViewportChange(): void {
-        this.dispatchEvent(new CustomEvent<TopBarViewportChangeDetail>(TOPBAR_VIEWPORT_CHANGE_EVENT, {
-            bubbles:  true,
-            composed: true,
-            detail:   { viewport: this._viewport },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<TopBarViewportChangeDetail>(TOPBAR_VIEWPORT_CHANGE_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: { viewport: this._viewport },
+            }),
+        );
     }
 }
 

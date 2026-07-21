@@ -2,10 +2,9 @@ import { describe, expect, test } from "bun:test";
 
 describe("protected C2C claim window", () => {
     test("starts at first observation and serializes claim versus release", async () => {
-        const schema = await Bun.file(new URL(
-            "../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql",
-            import.meta.url,
-        )).text();
+        const schema = await Bun.file(
+            new URL("../../../integrations/commerce/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+        ).text();
         const projection = functionSql(
             schema,
             "record_order_fulfillment_projection",
@@ -13,11 +12,7 @@ describe("protected C2C claim window", () => {
         );
         const claim = functionSql(schema, "open_marketplace_claim", "respond_marketplace_claim");
         const release = functionSql(schema, "authorize_order_release", "authorize_order_reserve_release");
-        const returnProjection = functionSql(
-            schema,
-            "record_claim_return_delivery",
-            "resolve_marketplace_claim",
-        );
+        const returnProjection = functionSql(schema, "record_claim_return_delivery", "resolve_marketplace_claim");
 
         expect(schema).toContain("recipient_handoff_first_observed_at timestamptz");
         expect(schema).toContain("claim_window_started_at timestamptz");
@@ -25,15 +20,15 @@ describe("protected C2C claim window", () => {
         expect(projection).toContain("coalesce(recipient_handoff_at, p_recipient_handoff_at)");
         expect(projection).toContain("greatest(p_recipient_handoff_at, v_projection_observed_at)");
         expect(projection).toContain("recipient_handoff_timestamp_anomaly");
-        expect(claim.indexOf("select * into v_settlement")).toBeLessThan(
-            claim.indexOf("select * into v_fulfillment"),
-        );
+        expect(claim.indexOf("select * into v_settlement")).toBeLessThan(claim.indexOf("select * into v_fulfillment"));
         expect(release.indexOf("select * into v_settlement")).toBeLessThan(
             release.indexOf("select * into v_fulfillment"),
         );
         expect(claim).toContain("now() >= v_fulfillment.claim_by_at");
         expect(release).toContain("now() < v_fulfillment.release_eligible_at");
-        expect(returnProjection).toContain("when return_delivery_status = 'recipient_handoff' then return_delivery_status");
+        expect(returnProjection).toContain(
+            "when return_delivery_status = 'recipient_handoff' then return_delivery_status",
+        );
         expect(returnProjection).toContain("return_recipient_handoff_at = coalesce(");
         expect(returnProjection).not.toContain("create_refund_request");
     });

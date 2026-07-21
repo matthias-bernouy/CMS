@@ -1,10 +1,6 @@
-import type {
-    DataScope,
-    Editor,
-} from "@bernouy/cms-content/editor";
+import type { DataScope, Editor } from "@bernouy/cms-content/editor";
 
 export class EditorRegistry {
-
     private readonly _editorsByTarget = new Map<HTMLElement, Editor>();
 
     register(editor: Editor): void {
@@ -30,8 +26,12 @@ export class EditorRegistry {
 
         while (current) {
             const editor = this._editorsByTarget.get(current as HTMLElement);
-            if (editor) return editor;
-            if (stopAt && current === stopAt) return undefined;
+            if (editor) {
+                return editor;
+            }
+            if (stopAt && current === stopAt) {
+                return undefined;
+            }
             current = current.parentElement;
         }
 
@@ -43,7 +43,9 @@ export class EditorRegistry {
 
         while (current) {
             const editor = this._editorsByTarget.get(current);
-            if (editor && this._containsTargetInRichText(editor, target)) return editor;
+            if (editor && this._containsTargetInRichText(editor, target)) {
+                return editor;
+            }
             current = current.parentElement;
         }
 
@@ -54,10 +56,18 @@ export class EditorRegistry {
         const children: Editor[] = [];
 
         for (const editor of this._editorsByTarget.values()) {
-            if (editor.target === parent) continue;
-            if (this.getRichTextOwner(editor.target)) continue;
-            if (!parent.contains(editor.target)) continue;
-            if (this._getClosestRegisteredAncestor(editor.target) !== parent) continue;
+            if (editor.target === parent) {
+                continue;
+            }
+            if (this.getRichTextOwner(editor.target)) {
+                continue;
+            }
+            if (!parent.contains(editor.target)) {
+                continue;
+            }
+            if (this._getClosestRegisteredAncestor(editor.target) !== parent) {
+                continue;
+            }
 
             children.push(editor);
         }
@@ -71,7 +81,9 @@ export class EditorRegistry {
 
         while (current) {
             const editor = this._editorsByTarget.get(current);
-            if (editor) ancestors.unshift(editor);
+            if (editor) {
+                ancestors.unshift(editor);
+            }
             current = current.parentElement;
         }
 
@@ -84,7 +96,7 @@ export class EditorRegistry {
             options.includeTarget === false ? undefined : this.getEditor(target),
         ].filter((editor): editor is Editor => Boolean(editor));
 
-        return editors.flatMap(editor => editor.getDataScopes());
+        return editors.flatMap((editor) => editor.getDataScopes());
     }
 
     private _getClosestRegisteredAncestor(target: HTMLElement): HTMLElement | undefined {
@@ -92,7 +104,9 @@ export class EditorRegistry {
 
         while (current) {
             const editor = this._editorsByTarget.get(current);
-            if (editor && !this.getRichTextOwner(editor.target)) return current;
+            if (editor && !this.getRichTextOwner(editor.target)) {
+                return current;
+            }
             current = current.parentElement;
         }
 
@@ -100,26 +114,34 @@ export class EditorRegistry {
     }
 
     private _containsTargetInRichText(editor: Editor, target: HTMLElement): boolean {
-        return editor.getTextCapability()?.format === "richtext"
-            && editor.target !== target
-            && editor.target.contains(target)
-            && !this._isInsideNamedContentSlot(editor, target);
+        return (
+            editor.getTextCapability()?.format === "richtext" &&
+            editor.target !== target &&
+            editor.target.contains(target) &&
+            !this._isInsideNamedContentSlot(editor, target)
+        );
     }
 
     private _isInsideNamedContentSlot(editor: Editor, target: HTMLElement): boolean {
-        const namedSlots = new Set(editor.getContentSlots()
-            .map(slot => slot.slot)
-            .filter((slot): slot is string => Boolean(slot)));
-        if (namedSlots.size === 0) return false;
+        const namedSlots = new Set(
+            editor
+                .getContentSlots()
+                .map((slot) => slot.slot)
+                .filter((slot): slot is string => Boolean(slot)),
+        );
+        if (namedSlots.size === 0) {
+            return false;
+        }
 
         let current: HTMLElement | null = target;
         while (current && current !== editor.target) {
             const slot = current.getAttribute("slot");
-            if (slot && namedSlots.has(slot)) return true;
+            if (slot && namedSlots.has(slot)) {
+                return true;
+            }
             current = current.parentElement;
         }
 
         return false;
     }
-
 }

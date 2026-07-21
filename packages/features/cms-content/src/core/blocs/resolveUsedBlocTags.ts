@@ -17,10 +17,14 @@ export function createBlocUsageResolver(
 
     const viewFor = (tag: string): Promise<string | null> => {
         const cached = viewCache.get(tag);
-        if (cached) return cached;
+        if (cached) {
+            return cached;
+        }
 
         const pending = repository.getBlocViewJS(tag).catch((error: unknown) => {
-            if (viewCache.get(tag) === pending) viewCache.delete(tag);
+            if (viewCache.get(tag) === pending) {
+                viewCache.delete(tag);
+            }
             throw error;
         });
         viewCache.set(tag, pending);
@@ -35,13 +39,19 @@ export function createBlocUsageResolver(
             const views = await Promise.all(frontier.map(viewFor));
             const next = new Set<string>();
             for (const view of views) {
-                if (!view) continue;
+                if (!view) {
+                    continue;
+                }
                 for (const tag of findUsedBlocTags(view, blocList)) {
-                    if (!used.has(tag)) next.add(tag);
+                    if (!used.has(tag)) {
+                        next.add(tag);
+                    }
                 }
             }
             frontier = [...next];
-            for (const tag of frontier) used.add(tag);
+            for (const tag of frontier) {
+                used.add(tag);
+            }
         }
 
         return [...used].sort();

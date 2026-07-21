@@ -17,7 +17,12 @@ export class CommerceOfferPreviewEditor extends Editor {
                 label: "Offer",
                 settings: [
                     { type: "page-link", label: "Target page", attribute: "href" },
-                    { type: "text", label: "Accessible label", attribute: "accessible-label", defaultValue: "Voir l’annonce" },
+                    {
+                        type: "text",
+                        label: "Accessible label",
+                        attribute: "accessible-label",
+                        defaultValue: "Voir l’annonce",
+                    },
                     {
                         type: "select",
                         label: "Open in",

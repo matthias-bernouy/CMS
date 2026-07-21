@@ -1,8 +1,5 @@
 import { IntegrationInputError, MissingIntegrationParam } from "../errors";
-import {
-    assertPasswordInputsDeclareSecrets,
-    sensitiveInputNames,
-} from "../shared/inputSensitivity";
+import { assertPasswordInputsDeclareSecrets, sensitiveInputNames } from "../shared/inputSensitivity";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import { parseArtifactTemplates } from "./sourceTemplates";
 import { parseConnectorTemplates, validateConnectorDefinition } from "./connectorTemplates";
@@ -23,7 +20,9 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
     assertUniqueInputs(definition.inputs);
     assertPasswordInputsDeclareSecrets(definition);
     validateDependencies(definition);
-    for (const input of definition.inputs) validateInputDefinition(input);
+    for (const input of definition.inputs) {
+        validateInputDefinition(input);
+    }
     const secretInputs = new Set(sensitiveInputNames(definition));
     for (const secret of definition.secrets ?? []) {
         if (!secretInputs.has(secret.input)) {
@@ -31,28 +30,44 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
         }
     }
     assertUniqueSecretBindingNames(definition.secrets ?? [], definition.generatedSecrets ?? []);
-    for (const secret of definition.generatedSecrets ?? []) validateGeneratedSecretDefinition(secret);
-    for (const connector of definition.connectors ?? []) validateConnectorDefinition(connector);
-    if (definition.security) validateSecurityDefinition(definition.security);
+    for (const secret of definition.generatedSecrets ?? []) {
+        validateGeneratedSecretDefinition(secret);
+    }
+    for (const connector of definition.connectors ?? []) {
+        validateConnectorDefinition(connector);
+    }
+    if (definition.security) {
+        validateSecurityDefinition(definition.security);
+    }
 }
 
 export function parseOptionalDefinition(value: unknown): IntegrationDefinition | undefined {
-    if (value === undefined || value === null || value === "") return undefined;
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
     const parsed = parseJsonAnswer(value, "definition");
     return parseIntegrationDefinition(parsed);
 }
 
 export function parseIntegrationDefinition(value: unknown): IntegrationDefinition {
-    if (!isRecord(value)) throw new IntegrationInputError("definition", "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError("definition", "must be an object");
+    }
     return parseDefinition(value);
 }
 
 function parseDefinition(value: Record<string, unknown>): IntegrationDefinition {
     const kind = text(value.kind);
-    if (!kind) throw new MissingIntegrationParam("definition.kind");
+    if (!kind) {
+        throw new MissingIntegrationParam("definition.kind");
+    }
     const label = text(value.label);
-    if (!label) throw new MissingIntegrationParam("definition.label");
-    if (!Array.isArray(value.inputs)) throw new IntegrationInputError("definition.inputs", "must be an array");
+    if (!label) {
+        throw new MissingIntegrationParam("definition.label");
+    }
+    if (!Array.isArray(value.inputs)) {
+        throw new IntegrationInputError("definition.inputs", "must be an array");
+    }
 
     const inputs = value.inputs.map((input, index) => parseInput(input, `definition.inputs.${index}`));
     assertUniqueInputs(inputs);

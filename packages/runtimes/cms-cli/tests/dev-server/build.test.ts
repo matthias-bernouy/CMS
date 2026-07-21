@@ -76,7 +76,9 @@ describe("buildDevBloc", () => {
         const built = await buildDevBloc(bloc);
 
         expect(() => new Function(built.editorJS)).not.toThrow();
-        expect(built.editorJS).toContain(`description: props?.description ?? "Children can use bleed=\\"wide|full\\"."`);
+        expect(built.editorJS).toContain(
+            `description: props?.description ?? "Children can use bleed=\\"wide|full\\"."`,
+        );
     });
 
     test("builds native editor-only blocs without registering a custom element", async () => {

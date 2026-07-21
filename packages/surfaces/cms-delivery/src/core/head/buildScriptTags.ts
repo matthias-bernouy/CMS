@@ -6,15 +6,11 @@ import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
  * `assets.scriptUrls`) so every bloc IIFE can read `window.p9r.Component`
  * at execution time.
  */
-export function buildScriptTags(
-    document: Document,
-    head: HTMLElement,
-    assets: AssetsManifest,
-): void {
+export function buildScriptTags(document: Document, head: HTMLElement, assets: AssetsManifest): void {
     for (const src of assets.scriptUrls) {
         const script = document.createElement("script");
         script.setAttribute("defer", "");
-        script.setAttribute("src",   src);
+        script.setAttribute("src", src);
         head.appendChild(script);
     }
 }

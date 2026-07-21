@@ -1,14 +1,5 @@
 import { jsonResponse, setRestResponder } from "../../harness";
-import {
-    axes,
-    axisValues,
-    brand,
-    categories,
-    media,
-    productRow,
-    selections,
-    variants,
-} from "./expected";
+import { axes, axisValues, brand, categories, media, productRow, selections, variants } from "./expected";
 
 type ProductResponderOptions = {
     brandId?: number | null;
@@ -20,16 +11,16 @@ type ProductResponderOptions = {
 };
 
 export function useProductResponder(options: ProductResponderOptions = {}): void {
-    const row = options.product === undefined
-        ? { ...productRow, ...(options.brandId === null ? { brand_id: null } : {}) }
-        : options.product;
-    setRestResponder(async request => {
+    const row =
+        options.product === undefined
+            ? { ...productRow, ...(options.brandId === null ? { brand_id: null } : {}) }
+            : options.product;
+    setRestResponder(async (request) => {
         const url = new URL(request.url);
         const resource = url.pathname.split("/").at(-1);
         if (resource === "get_product_read_model" || resource === "upsert_product_read_model") {
-            const body = await request.clone().json() as Record<string, unknown>;
-            if (!row || (body.p_scope === "public"
-                && (row.status !== "active" || row.visibility !== "public"))) {
+            const body = (await request.clone().json()) as Record<string, unknown>;
+            if (!row || (body.p_scope === "public" && (row.status !== "active" || row.visibility !== "public"))) {
                 return jsonResponse({ state: "not_found" });
             }
             return jsonResponse(productReadModel(row, options, body.p_scope === "public"));
@@ -50,11 +41,9 @@ export function productReadModel(
         public_metadata_keys: publicScope ? ["publicSpec", "snake_key"] : [],
         axes: empty ? [] : axes,
         values: empty ? [] : axisValues,
-        variants: empty ? [] : options.variantRows ?? variants,
-        selections: empty ? [] : options.selectionRows ?? selections,
-        media: empty ? [] : options.mainMedia === false
-            ? media.map(item => ({ ...item, is_main: false }))
-            : media,
+        variants: empty ? [] : (options.variantRows ?? variants),
+        selections: empty ? [] : (options.selectionRows ?? selections),
+        media: empty ? [] : options.mainMedia === false ? media.map((item) => ({ ...item, is_main: false })) : media,
         brand: row.brand_id ? brand : null,
         categories: empty ? [] : categories,
     };

@@ -30,12 +30,12 @@ export abstract class Composition extends HTMLElement {
     connectedCallback(): void {
         ensureCompositionStyle(this);
         if (!this.rendered) {
-            const snapshotInput = this.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE)
-                ? compositionInput(this)
-                : null;
+            const snapshotInput = this.hasAttribute(COMPOSITION_RUNTIME_ATTRIBUTE) ? compositionInput(this) : null;
             this.input = snapshotInput ?? this.captureInput();
             this.setAttribute(COMPOSITION_RUNTIME_ATTRIBUTE, "");
-            if (!snapshotInput) this.renderTemplate();
+            if (!snapshotInput) {
+                this.renderTemplate();
+            }
             this.rendered = true;
         }
     }

@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { expectSingleRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
+import {
+    expectSingleRpc,
+    installCommerceTestEnvironment,
+    jsonResponse,
+    requestCommerce,
+    setRestResponder,
+} from "../harness";
 
 installCommerceTestEnvironment();
 
@@ -216,7 +222,7 @@ describe("commerce protected C2C claims and refunds", () => {
     });
 
     test("uploads buyer evidence privately and strips storage coordinates from the response", async () => {
-        setRestResponder(async request => {
+        setRestResponder(async (request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rest/v1/rpc/get_claim_evidence_upload_context")) {
                 return jsonResponse({
@@ -224,7 +230,9 @@ describe("commerce protected C2C claims and refunds", () => {
                     public_id: "3cc94e25-4398-4145-b353-841d81786c79",
                 });
             }
-            if (url.pathname.includes("/storage/v1/object/commerce-claim-evidence/")) return new Response(null, { status: 200 });
+            if (url.pathname.includes("/storage/v1/object/commerce-claim-evidence/")) {
+                return new Response(null, { status: 200 });
+            }
             if (url.pathname.endsWith("/rest/v1/rpc/attach_marketplace_claim_evidence")) {
                 return jsonResponse({
                     id: 33,
@@ -259,7 +267,7 @@ describe("commerce protected C2C claims and refunds", () => {
     });
 
     test("does not upload claim evidence for another buyer", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rest/v1/rpc/get_claim_evidence_upload_context")) {
                 return jsonResponse({ state: "not_found" });
@@ -276,7 +284,7 @@ describe("commerce protected C2C claims and refunds", () => {
     });
 
     test("does not upload claim evidence for another seller", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/rest/v1/rpc/get_claim_evidence_upload_context")) {
                 return jsonResponse({ state: "not_found" });

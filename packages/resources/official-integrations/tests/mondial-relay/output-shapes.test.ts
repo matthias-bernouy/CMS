@@ -6,27 +6,26 @@ type DefinitionEndpoint = Pick<SourceEndpoint, "method" | "targetUrl" | "output"
     endpointId: string;
 };
 
-const definitionUrl = new URL(
-    "../../integrations/mondial-relay/versions/1.0.0/definition.json",
-    import.meta.url,
-);
+const definitionUrl = new URL("../../integrations/mondial-relay/versions/1.0.0/definition.json", import.meta.url);
 
 describe("mondial-relay response contracts", () => {
     test("preserves nullable shipment list and detail fields", async () => {
         const list = {
-            items: [{
-                id: "shipment-1",
-                externalOrderId: null,
-                expeditionNumber: null,
-                status: "creating",
-                lastError: null,
-                recipientName: "Ada Lovelace",
-                recipientPostalCode: "75001",
-                recipientCity: "Paris",
-                trackingUrl: null,
-                latestEventLabel: null,
-                createdAt: "2026-07-16T06:00:00.000Z",
-            }],
+            items: [
+                {
+                    id: "shipment-1",
+                    externalOrderId: null,
+                    expeditionNumber: null,
+                    status: "creating",
+                    lastError: null,
+                    recipientName: "Ada Lovelace",
+                    recipientPostalCode: "75001",
+                    recipientCity: "Paris",
+                    trackingUrl: null,
+                    latestEventLabel: null,
+                    createdAt: "2026-07-16T06:00:00.000Z",
+                },
+            ],
             limit: 50,
             offset: 0,
         };
@@ -62,14 +61,16 @@ describe("mondial-relay response contracts", () => {
             incidentAt: null,
             lostAt: null,
             sellerHandoffDeclaredAt: null,
-            events: [{
-                eventLabel: "Shipment registered",
-                eventDate: null,
-                eventTime: null,
-                normalizedStatus: null,
-                occurredAt: null,
-                location: null,
-            }],
+            events: [
+                {
+                    eventLabel: "Shipment registered",
+                    eventDate: null,
+                    eventTime: null,
+                    normalizedStatus: null,
+                    occurredAt: null,
+                    location: null,
+                },
+            ],
         };
         expect(await projectedBody("shipment", detail)).toEqual(detail);
     });
@@ -81,38 +82,57 @@ describe("mondial-relay response contracts", () => {
             ["createShipment", { expeditionNumber: null, trackingUrl: null }],
             ["declareSellerHandoff", { expeditionNumber: null }],
             ["cancelShipmentReservation", { expeditionNumber: null }],
-            ["reconcileShipments", {
-                staleCreations: [{ externalOrderId: null }],
-                shipments: [{ externalOrderId: null }],
-                events: [{ providerEventId: null }],
-                claimReturnEvents: [{ providerEventId: null, occurredAt: null }],
-            }],
-            ["deliveryProjectionHealth", {
-                orders: [{ providerReference: null, trackingCheckedAt: null }],
-            }],
-            ["failShipmentEventProjection", {
-                projectionNextAttemptAt: null,
-                projectionLastError: null,
-                projectionManualReviewAt: null,
-            }],
-            ["shipmentProjectionExceptions", {
-                items: [{
-                    providerEventId: null,
-                    normalizedStatus: null,
-                    occurredAt: null,
+            [
+                "reconcileShipments",
+                {
+                    staleCreations: [{ externalOrderId: null }],
+                    shipments: [{ externalOrderId: null }],
+                    events: [{ providerEventId: null }],
+                    claimReturnEvents: [{ providerEventId: null, occurredAt: null }],
+                },
+            ],
+            [
+                "deliveryProjectionHealth",
+                {
+                    orders: [{ providerReference: null, trackingCheckedAt: null }],
+                },
+            ],
+            [
+                "failShipmentEventProjection",
+                {
+                    projectionNextAttemptAt: null,
                     projectionLastError: null,
                     projectionManualReviewAt: null,
-                }],
-            }],
-            ["tracking", {
-                events: [{
-                    eventDate: null,
-                    eventTime: null,
-                    normalizedStatus: null,
-                    occurredAt: null,
-                    location: null,
-                }],
-            }],
+                },
+            ],
+            [
+                "shipmentProjectionExceptions",
+                {
+                    items: [
+                        {
+                            providerEventId: null,
+                            normalizedStatus: null,
+                            occurredAt: null,
+                            projectionLastError: null,
+                            projectionManualReviewAt: null,
+                        },
+                    ],
+                },
+            ],
+            [
+                "tracking",
+                {
+                    events: [
+                        {
+                            eventDate: null,
+                            eventTime: null,
+                            normalizedStatus: null,
+                            occurredAt: null,
+                            location: null,
+                        },
+                    ],
+                },
+            ],
         ];
 
         for (const [endpointId, payload] of cases) {
@@ -136,8 +156,11 @@ async function definitionEndpoint(endpointId: string): Promise<SourceEndpoint> {
     const definition = JSON.parse(await readFile(definitionUrl, "utf8")) as {
         artifacts: Array<{ source?: { endpoints: DefinitionEndpoint[] } }>;
     };
-    const endpoint = definition.artifacts.find(artifact => artifact.source)
-        ?.source?.endpoints.find(candidate => candidate.endpointId === endpointId);
-    if (!endpoint) throw new Error(`Missing Mondial Relay endpoint ${endpointId}`);
+    const endpoint = definition.artifacts
+        .find((artifact) => artifact.source)
+        ?.source?.endpoints.find((candidate) => candidate.endpointId === endpointId);
+    if (!endpoint) {
+        throw new Error(`Missing Mondial Relay endpoint ${endpointId}`);
+    }
     return { ...endpoint, urn: `urn:delivery:${endpointId}` };
 }

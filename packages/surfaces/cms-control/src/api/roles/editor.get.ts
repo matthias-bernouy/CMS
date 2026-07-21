@@ -6,6 +6,8 @@ import { roleEditorData } from "cms-control/core/roles/editorData";
  *  permission vocabulary (CMS capabilities + gateway endpoints) for the editor. */
 export default async function getRoleEditor(req: Request, cms: ControlCms) {
     const id = new URL(req.url).searchParams.get("id");
-    if (!id) throw new MissingParam("id");
+    if (!id) {
+        throw new MissingParam("id");
+    }
     return Response.json(await roleEditorData(cms, id));
 }

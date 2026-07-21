@@ -1,7 +1,4 @@
-import {
-    type EditorCatalog,
-    type EditorDocument,
-} from "@bernouy/cms-content/editor";
+import { type EditorCatalog, type EditorDocument } from "@bernouy/cms-content/editor";
 
 import { EditorRuntime, type EditorDataSource } from "../../../../../runtime";
 import type { DefaultTemplateSelection } from "../../../StructureTree/StructureTree";
@@ -30,9 +27,11 @@ export class ShellApi {
     }
 
     setInsertItems(items: BlockPickerItem[]): void {
-        this.context.state.insertItems = items.map(item => ({ ...item }));
+        this.context.state.insertItems = items.map((item) => ({ ...item }));
         this.context.renderSync.syncStructureTreeInsertItems();
-        if (this.context.state.runtime) this.context.commands.renderStructure();
+        if (this.context.state.runtime) {
+            this.context.commands.renderStructure();
+        }
     }
 
     setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
@@ -41,14 +40,18 @@ export class ShellApi {
     }
 
     setDataSources(sources: EditorDataSource[]): void {
-        this.context.state.dataSources = sources.map(source => ({
+        this.context.state.dataSources = sources.map((source) => ({
             ...source,
             fields: [...source.fields],
             ...(source.params ? { params: [...source.params] } : {}),
-            ...(source.body ? { body: {
-                ...source.body,
-                fields: [...source.body.fields],
-            } } : {}),
+            ...(source.body
+                ? {
+                      body: {
+                          ...source.body,
+                          fields: [...source.body.fields],
+                      },
+                  }
+                : {}),
         }));
         this.context.renderSync.syncStructureTreeDataSources();
     }
@@ -73,8 +76,11 @@ export class ShellApi {
         this.context.state.runtime = runtime;
         runtime.load(document);
         this.context.commands.renderStructure();
-        this.context.commands.select(selectedTarget
-            ? runtime.getEditor(selectedTarget) ?? runtime.getClosestEditor(selectedTarget) ?? null
-            : null, { scrollStructureIntoView: true });
+        this.context.commands.select(
+            selectedTarget
+                ? (runtime.getEditor(selectedTarget) ?? runtime.getClosestEditor(selectedTarget) ?? null)
+                : null,
+            { scrollStructureIntoView: true },
+        );
     }
 }

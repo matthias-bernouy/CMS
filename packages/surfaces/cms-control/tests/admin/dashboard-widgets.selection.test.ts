@@ -6,19 +6,31 @@ import { relationDetailSectionElement } from "cms-control/components/admin/Resou
 describe("dashboard widget selection", () => {
     test("returns the selected detail widget without list wrappers", () => {
         const dashboard = {
-            id:     "products",
+            id: "products",
             source: "products",
-            views:  [
+            views: [
                 {
                     widget: "w-tabs",
-                    id:     "rootTabs",
-                    tabs:   [
+                    id: "rootTabs",
+                    tabs: [
                         {
-                            id:       "products",
-                            label:    "Products",
+                            id: "products",
+                            label: "Products",
                             children: [
-                                { widget: "w-table", id: "productsTable", source: { endpoint: "products" }, rowKey: "id", columns: [] },
-                                { widget: "w-detail", id: "productDetail", source: { endpoint: "product" }, title: { path: "title" }, main: [] },
+                                {
+                                    widget: "w-table",
+                                    id: "productsTable",
+                                    source: { endpoint: "products" },
+                                    rowKey: "id",
+                                    columns: [],
+                                },
+                                {
+                                    widget: "w-detail",
+                                    id: "productDetail",
+                                    source: { endpoint: "product" },
+                                    title: { path: "title" },
+                                    main: [],
+                                },
                             ],
                         },
                     ],
@@ -26,7 +38,7 @@ describe("dashboard widget selection", () => {
             ],
         } as DashboardDto;
 
-        expect(widgetsForSelection(dashboard, null).map(widget => widget.widget)).toEqual(["w-tabs"]);
+        expect(widgetsForSelection(dashboard, null).map((widget) => widget.widget)).toEqual(["w-tabs"]);
         const detailWidgets = widgetsForSelection(dashboard, { collection: "productDetail", row: "1" });
 
         expect(detailWidgets).toHaveLength(1);
@@ -36,19 +48,21 @@ describe("dashboard widget selection", () => {
 
     test("keeps unreferenced detail widgets visible without a row selection", () => {
         const dashboard = {
-            id:     "settings",
+            id: "settings",
             source: "emailer",
-            views:  [
+            views: [
                 {
                     widget: "w-detail",
-                    id:     "emailerSettings",
+                    id: "emailerSettings",
                     source: { endpoint: "getSettings" },
-                    title:  { path: "provider", fallback: "Settings" },
-                    main:   [{
-                        id: "provider",
-                        title: "Provider",
-                        fields: [{ id: "smtpHost", label: "SMTP host", path: "smtpHost", type: "readonly" }],
-                    }],
+                    title: { path: "provider", fallback: "Settings" },
+                    main: [
+                        {
+                            id: "provider",
+                            title: "Provider",
+                            fields: [{ id: "smtpHost", label: "SMTP host", path: "smtpHost", type: "readonly" }],
+                        },
+                    ],
                 },
             ],
         } as DashboardDto;
@@ -62,39 +76,45 @@ describe("dashboard widget selection", () => {
 
     test("attaches relation table widgets to selected details", () => {
         const dashboard = {
-            id:     "products",
+            id: "products",
             source: "products",
-            views:  [{
-                widget: "w-detail",
-                id:     "productDetail",
-                source: { endpoint: "product" },
-                main:   [],
-            }],
+            views: [
+                {
+                    widget: "w-detail",
+                    id: "productDetail",
+                    source: { endpoint: "product" },
+                    main: [],
+                },
+            ],
         } as DashboardDto;
 
-        const widgets = widgetsForSelection(dashboard, { collection: "productDetail", row: "product-1" }, [{
-            type:       "dashboardRelation",
-            relationId: "product-offers",
-            dashboardId: "products",
-            viewId:     "productDetail",
-            widget:     "table",
-            title:      "Offers",
-            placement:  "side",
-            rowKey:     "offerId",
-            pageSize:   10,
-            columns:    [{ id: "title", label: "Offer", path: "title", primary: true }],
-        }]);
+        const widgets = widgetsForSelection(dashboard, { collection: "productDetail", row: "product-1" }, [
+            {
+                type: "dashboardRelation",
+                relationId: "product-offers",
+                dashboardId: "products",
+                viewId: "productDetail",
+                widget: "table",
+                title: "Offers",
+                placement: "side",
+                rowKey: "offerId",
+                pageSize: 10,
+                columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
+            },
+        ]);
 
         expect(widgets[0]).toMatchObject({
             widget: "w-detail",
-            relationWidgets: [{
-                id: "product-offersRelation",
-                relationId: "product-offers",
-                fromId: "product-1",
-                placement: "aside",
-                rowKey: "offerId",
-                pageSize: 10,
-            }],
+            relationWidgets: [
+                {
+                    id: "product-offersRelation",
+                    relationId: "product-offers",
+                    fromId: "product-1",
+                    placement: "aside",
+                    rowKey: "offerId",
+                    pageSize: 10,
+                },
+            ],
         });
     });
 

@@ -4,16 +4,16 @@ import type { Emailer, OutboundEmail } from "cms-auth/interfaces/Emailer";
 import { SmtpEmailer, type SmtpTransportFactory } from "cms-auth/default-implementation/SmtpEmailer";
 
 export type RuntimeEmailSettings = {
-    enabled:   boolean;
+    enabled: boolean;
     fromEmail: string;
-    fromName:  string;
-    replyTo:   string;
+    fromName: string;
+    replyTo: string;
     transport: "smtp";
     smtp: {
-        host:              string;
-        port:              number;
-        secure:            boolean;
-        username:          string;
+        host: string;
+        port: number;
+        secure: boolean;
+        username: string;
         passwordSecretRef: string;
     };
 };
@@ -32,7 +32,10 @@ export type EmailConfigurationErrorCode =
     | "missing_secret";
 
 export class EmailConfigurationError extends Error {
-    constructor(message: string, readonly code: EmailConfigurationErrorCode = "invalid_configuration") {
+    constructor(
+        message: string,
+        readonly code: EmailConfigurationErrorCode = "invalid_configuration",
+    ) {
         super(message);
         this.name = "EmailConfigurationError";
     }
@@ -55,7 +58,10 @@ export class ConfiguredEmailer implements Emailer {
             throw new EmailConfigurationError("Email delivery is disabled.", "disabled");
         }
         if (settings.transport !== "smtp") {
-            throw new EmailConfigurationError(`Unsupported email transport: ${settings.transport}.`, "unsupported_transport");
+            throw new EmailConfigurationError(
+                `Unsupported email transport: ${settings.transport}.`,
+                "unsupported_transport",
+            );
         }
 
         const secretKey = secretRefToKey(settings.smtp.passwordSecretRef);
@@ -68,14 +74,14 @@ export class ConfiguredEmailer implements Emailer {
         }
 
         const emailer = new SmtpEmailer({
-            host:             settings.smtp.host,
-            port:             settings.smtp.port,
-            secure:           settings.smtp.secure,
-            username:         settings.smtp.username,
+            host: settings.smtp.host,
+            port: settings.smtp.port,
+            secure: settings.smtp.secure,
+            username: settings.smtp.username,
             password,
-            fromEmail:        settings.fromEmail,
-            fromName:         settings.fromName,
-            replyTo:          settings.replyTo,
+            fromEmail: settings.fromEmail,
+            fromName: settings.fromName,
+            replyTo: settings.replyTo,
             transportFactory: this.config.transportFactory,
         });
         await emailer.send(input);

@@ -15,11 +15,11 @@ export class PagesStore {
 
     async getAll(): Promise<TPage[]> {
         const local = await scanPages(this.siteDir);
-        return local.map(p => this._toTPage(p.path, p.frontmatter, p.content));
+        return local.map((p) => this._toTPage(p.path, p.frontmatter, p.content));
     }
 
     async getByPath(path: string): Promise<TPage | null> {
-        return (await this.getAll()).find(p => p.path === path) ?? null;
+        return (await this.getAll()).find((p) => p.path === path) ?? null;
     }
 
     async getById(id: string): Promise<TPage | null> {
@@ -28,34 +28,58 @@ export class PagesStore {
 
     async insert(path: string, title: string): Promise<void> {
         const file = this._fileForPath(path);
-        if (existsSync(file)) throw new Error(`Page already exists at ${path}`);
+        if (existsSync(file)) {
+            throw new Error(`Page already exists at ${path}`);
+        }
         await this._write(file, { title, description: "", visible: true, tags: [] }, "<p></p>");
     }
 
     async update(page: Partial<TPage>): Promise<void> {
-        if (!page.path) throw new Error("updatePage requires `path`");
+        if (!page.path) {
+            throw new Error("updatePage requires `path`");
+        }
         const file = this._fileForPath(page.path);
-        await this._write(file, {
-            title:       page.title       ?? "",
-            description: page.description ?? "",
-            visible:     page.visible     ?? true,
-            tags:        page.tags        ?? [],
-        }, page.content ?? "");
+        await this._write(
+            file,
+            {
+                title: page.title ?? "",
+                description: page.description ?? "",
+                visible: page.visible ?? true,
+                tags: page.tags ?? [],
+            },
+            page.content ?? "",
+        );
     }
 
     async links(): Promise<{ path: string; title: string }[]> {
-        return (await this.getAll()).map(p => ({ path: p.path, title: p.title }));
+        return (await this.getAll()).map((p) => ({ path: p.path, title: p.title }));
     }
 
     async metadata(opts: PagesQuery = {}): Promise<PageMeta[]> {
-        const all: PageMeta[] = (await this.getAll()).map(p => ({
-            id: p.id, path: p.path, title: p.title, tags: p.tags, visible: p.visible,
+        const all: PageMeta[] = (await this.getAll()).map((p) => ({
+            id: p.id,
+            path: p.path,
+            title: p.title,
+            tags: p.tags,
+            visible: p.visible,
         }));
         return filterAndSortPages(all, opts);
     }
 
-    private _toTPage(path: string, fm: { title: string; description: string; visible: boolean; tags: string[] }, content: string): TPage {
-        return { id: path, path, title: fm.title, description: fm.description, content, visible: fm.visible, tags: fm.tags };
+    private _toTPage(
+        path: string,
+        fm: { title: string; description: string; visible: boolean; tags: string[] },
+        content: string,
+    ): TPage {
+        return {
+            id: path,
+            path,
+            title: fm.title,
+            description: fm.description,
+            content,
+            visible: fm.visible,
+            tags: fm.tags,
+        };
     }
 
     private _fileForPath(urlPath: string): string {
@@ -63,14 +87,19 @@ export class PagesStore {
         return join(this.siteDir, "pages", ...rel.split("/"));
     }
 
-    private async _write(file: string, fm: { title: string; description: string; visible: boolean; tags: string[] }, content: string): Promise<void> {
+    private async _write(
+        file: string,
+        fm: { title: string; description: string; visible: boolean; tags: string[] },
+        content: string,
+    ): Promise<void> {
         await mkdir(dirname(file), { recursive: true });
         await writeFile(file, serializeFrontmatter(fm) + content, "utf-8");
     }
 
     async delete(path: string): Promise<void> {
         const file = this._fileForPath(path);
-        if (existsSync(file)) await unlink(file);
+        if (existsSync(file)) {
+            await unlink(file);
+        }
     }
 }
-

@@ -13,30 +13,26 @@ export function buildAssetPreloads(
     options: { includeBindingCore?: boolean } = {},
 ): void {
     const stylePreload = document.createElement("link");
-    stylePreload.setAttribute("rel",  "preload");
-    stylePreload.setAttribute("as",   "style");
+    stylePreload.setAttribute("rel", "preload");
+    stylePreload.setAttribute("as", "style");
     stylePreload.setAttribute("href", assets.styleUrl);
     head.appendChild(stylePreload);
 
-    const scriptUrls = options.includeBindingCore
-        ? [...assets.scriptUrls, assets.bindingCoreUrl]
-        : assets.scriptUrls;
+    const scriptUrls = options.includeBindingCore ? [...assets.scriptUrls, assets.bindingCoreUrl] : assets.scriptUrls;
     for (const src of new Set(scriptUrls)) {
         const preload = document.createElement("link");
-        preload.setAttribute("rel",  "preload");
-        preload.setAttribute("as",   "script");
+        preload.setAttribute("rel", "preload");
+        preload.setAttribute("as", "script");
         preload.setAttribute("href", src);
         head.appendChild(preload);
     }
 }
 
 /** Hide binding-owned source bodies before the deferred binding runtime starts. */
-export function buildBindingCloak(
-    document: Document,
-    head: HTMLElement,
-    enabled: boolean,
-): void {
-    if (!enabled) return;
+export function buildBindingCloak(document: Document, head: HTMLElement, enabled: boolean): void {
+    if (!enabled) {
+        return;
+    }
     const style = document.createElement("style");
     style.id = "cms-binding-cloak";
     style.textContent = "cms-binding-core{display:contents}[cms-source]:not([cms-ready]){visibility:hidden}";
@@ -51,15 +47,13 @@ export function buildBindingCloak(
  * — no partial-render jump. Scoped to the blocs actually present on this
  * page so unrelated custom elements don't freeze the paint.
  */
-export function buildFoucShell(
-    document: Document,
-    head: HTMLElement,
-    usedTags: string[],
-): void {
-    if (usedTags.length === 0) return;
+export function buildFoucShell(document: Document, head: HTMLElement, usedTags: string[]): void {
+    if (usedTags.length === 0) {
+        return;
+    }
 
-    const htmlSel = usedTags.map(tag => `html:has(${tag}:not(:defined))`).join(",");
-    const bodySel = usedTags.map(tag => `html:has(${tag}:not(:defined)) body`).join(",");
+    const htmlSel = usedTags.map((tag) => `html:has(${tag}:not(:defined))`).join(",");
+    const bodySel = usedTags.map((tag) => `html:has(${tag}:not(:defined)) body`).join(",");
     const style = document.createElement("style");
     style.textContent = `${htmlSel}{background:#fff}${bodySel}{visibility:hidden}`;
     head.appendChild(style);
@@ -70,13 +64,9 @@ export function buildFoucShell(
  * (after preloads + meta tags) because the browser has already started the
  * download from the preload hint by the time it reaches this tag.
  */
-export function buildStylesheetLink(
-    document: Document,
-    head: HTMLElement,
-    assets: AssetsManifest,
-): void {
+export function buildStylesheetLink(document: Document, head: HTMLElement, assets: AssetsManifest): void {
     const link = document.createElement("link");
-    link.setAttribute("rel",  "stylesheet");
+    link.setAttribute("rel", "stylesheet");
     link.setAttribute("href", assets.styleUrl);
     head.appendChild(link);
 }

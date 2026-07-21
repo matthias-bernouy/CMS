@@ -107,14 +107,15 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
         const current = definition("cleanup", "2.0.0", false);
 
         await install(previous, { sources, functions, secrets, installations });
-        await expect(rerun(current, { sources, functions, secrets, installations }))
-            .rejects.toThrow(/installation replace failed/);
+        await expect(rerun(current, { sources, functions, secrets, installations })).rejects.toThrow(
+            /installation replace failed/,
+        );
 
         expect(await sources.getSource("urn:legacy-source")).not.toBeNull();
         expect(await functions.getFunction("legacyFunction")).not.toBeNull();
         const installation = await installations.get("cleanup");
         expect(installation?.status).toBe("failed");
-        expect(installation?.artifacts.map(artifact => [artifact.type, artifact.id])).toEqual([
+        expect(installation?.artifacts.map((artifact) => [artifact.type, artifact.id])).toEqual([
             ["source", "urn:legacy-source"],
             ["function", "legacyFunction"],
         ]);
@@ -143,19 +144,19 @@ describe("@bernouy/cms-integrations obsolete artifact cleanup", () => {
             siteIntegrations: [previous],
             dto: { kind: previous.kind, answers: {}, options: {} },
         });
-        await expect(runIntegrationInstallation({
-            mode: "rerun",
-            deps,
-            installations,
-            integrationId: current.kind,
-            siteIntegrations: [current],
-        })).rejects.toThrow(/bloc deletion is not supported/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "rerun",
+                deps,
+                installations,
+                integrationId: current.kind,
+                siteIntegrations: [current],
+            }),
+        ).rejects.toThrow(/bloc deletion is not supported/);
 
         const installation = await installations.get("bloc-cleanup");
         expect(installation?.status).toBe("failed");
-        expect(installation?.artifacts).toEqual([
-            { type: "bloc", id: "legacy-card", action: "created" },
-        ]);
+        expect(installation?.artifacts).toEqual([{ type: "bloc", id: "legacy-card", action: "created" }]);
     });
 });
 
@@ -200,25 +201,29 @@ function definition(kind: string, version: string, includeArtifacts: boolean): I
         label: "Cleanup",
         version,
         inputs: [],
-        ...(includeArtifacts ? {
-            artifacts: [
-                {
-                    type: "source",
-                    source: {
-                        id: "legacy-source",
-                        meta: { name: "Legacy source" },
-                        endpoints: [{
-                            endpointId: "read",
-                            method: "GET",
-                            targetUrl: "https://example.com/legacy",
-                            params: [],
-                            output: [{ status: "200", body: { type: "object" } }],
-                        }],
-                    },
-                },
-                legacyFunctionArtifact(),
-            ],
-        } : {}),
+        ...(includeArtifacts
+            ? {
+                  artifacts: [
+                      {
+                          type: "source",
+                          source: {
+                              id: "legacy-source",
+                              meta: { name: "Legacy source" },
+                              endpoints: [
+                                  {
+                                      endpointId: "read",
+                                      method: "GET",
+                                      targetUrl: "https://example.com/legacy",
+                                      params: [],
+                                      output: [{ status: "200", body: { type: "object" } }],
+                                  },
+                              ],
+                          },
+                      },
+                      legacyFunctionArtifact(),
+                  ],
+              }
+            : {}),
     };
 }
 
@@ -261,28 +266,32 @@ function runtimeArtifacts(): NonNullable<IntegrationDefinition["artifacts"]> {
             source: {
                 id: "products",
                 meta: { name: "Products" },
-                endpoints: [{
-                    endpointId: "product",
-                    method: "GET",
-                    targetUrl: "https://api.example.com/products",
-                    params: [],
-                    output: [{
-                        status: "200",
-                        body: {
-                            type: "object",
-                            properties: {
-                                id: { type: "string" },
-                                item: {
+                endpoints: [
+                    {
+                        endpointId: "product",
+                        method: "GET",
+                        targetUrl: "https://api.example.com/products",
+                        params: [],
+                        output: [
+                            {
+                                status: "200",
+                                body: {
                                     type: "object",
                                     properties: {
                                         id: { type: "string" },
-                                        title: { type: "string" },
+                                        item: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                                title: { type: "string" },
+                                            },
+                                        },
                                     },
                                 },
                             },
-                        },
-                    }],
-                }],
+                        ],
+                    },
+                ],
             },
         },
         {
@@ -290,28 +299,32 @@ function runtimeArtifacts(): NonNullable<IntegrationDefinition["artifacts"]> {
             source: {
                 id: "offers",
                 meta: { name: "Offers" },
-                endpoints: [{
-                    endpointId: "offers",
-                    method: "GET",
-                    targetUrl: "https://api.example.com/offers",
-                    params: [
-                        { name: "productId", in: "query", type: "string" },
-                        { name: "limit", in: "query", type: "number" },
-                        { name: "offset", in: "query", type: "number" },
-                    ],
-                    output: [{
-                        status: "200",
-                        body: {
-                            type: "object",
-                            properties: {
-                                items: {
-                                    type: "array",
-                                    items: { type: "object", properties: { id: { type: "string" } } },
+                endpoints: [
+                    {
+                        endpointId: "offers",
+                        method: "GET",
+                        targetUrl: "https://api.example.com/offers",
+                        params: [
+                            { name: "productId", in: "query", type: "string" },
+                            { name: "limit", in: "query", type: "number" },
+                            { name: "offset", in: "query", type: "number" },
+                        ],
+                        output: [
+                            {
+                                status: "200",
+                                body: {
+                                    type: "object",
+                                    properties: {
+                                        items: {
+                                            type: "array",
+                                            items: { type: "object", properties: { id: { type: "string" } } },
+                                        },
+                                    },
                                 },
                             },
-                        },
-                    }],
-                }],
+                        ],
+                    },
+                ],
             },
         },
         {
@@ -345,16 +358,20 @@ function runtimeArtifacts(): NonNullable<IntegrationDefinition["artifacts"]> {
             dashboard: {
                 id: "products",
                 source: "products",
-                views: [{
-                    widget: "w-detail",
-                    id: "productDetail",
-                    source: { endpoint: "product", itemPath: "item" },
-                    main: [{
-                        id: "details",
-                        title: "Details",
-                        fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
-                    }],
-                }],
+                views: [
+                    {
+                        widget: "w-detail",
+                        id: "productDetail",
+                        source: { endpoint: "product", itemPath: "item" },
+                        main: [
+                            {
+                                id: "details",
+                                title: "Details",
+                                fields: [{ id: "title", label: "Title", type: "text", path: "title" }],
+                            },
+                        ],
+                    },
+                ],
             },
         },
         {
@@ -391,15 +408,19 @@ function blocDefinition(version: string, includeArtifact: boolean): IntegrationD
         label: "Bloc cleanup",
         version,
         inputs: [],
-        ...(includeArtifact ? {
-            artifacts: [{
-                type: "bloc",
-                bloc: {
-                    tag: "legacy-card",
-                    name: "Legacy card",
-                    viewJS: "customElements.define('legacy-card', class extends HTMLElement {});",
-                },
-            }],
-        } : {}),
+        ...(includeArtifact
+            ? {
+                  artifacts: [
+                      {
+                          type: "bloc",
+                          bloc: {
+                              tag: "legacy-card",
+                              name: "Legacy card",
+                              viewJS: "customElements.define('legacy-card', class extends HTMLElement {});",
+                          },
+                      },
+                  ],
+              }
+            : {}),
     };
 }

@@ -23,8 +23,8 @@ import type { SecretCrypto } from "envelope-crypto/interfaces/SecretCrypto";
  */
 export class FieldCrypto {
     constructor(
-        private readonly scopeId:  string,
-        private readonly crypto:   SecretCrypto,
+        private readonly scopeId: string,
+        private readonly crypto: SecretCrypto,
         private readonly indexKey: Buffer,
     ) {}
 
@@ -62,11 +62,14 @@ export async function createFieldCrypto(
 
     const existing = await col.findOne({ _id: FIELD_INDEX_KEY });
     if (existing) {
-        const hex = await crypto.decrypt(scopeId, { ciphertext: asBuffer(existing.ciphertext), iv: asBuffer(existing.iv) });
+        const hex = await crypto.decrypt(scopeId, {
+            ciphertext: asBuffer(existing.ciphertext),
+            iv: asBuffer(existing.iv),
+        });
         return new FieldCrypto(scopeId, crypto, Buffer.from(hex, "hex"));
     }
 
-    const hex  = randomBytes(32).toString("hex");
+    const hex = randomBytes(32).toString("hex");
     const blob = await crypto.encrypt(scopeId, hex);
     try {
         await col.insertOne({ _id: FIELD_INDEX_KEY, ciphertext: blob.ciphertext, iv: blob.iv });

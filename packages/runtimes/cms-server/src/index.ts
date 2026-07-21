@@ -15,7 +15,12 @@ import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secret
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { RepositoryCms } from "@bernouy/cms-repository";
-import { CompositeSourceRepository, SourceOverlaySourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository } from "@bernouy/cms-sources";
+import {
+    CompositeSourceRepository,
+    SourceOverlaySourceRepository,
+    SYSTEM_SOURCES,
+    ValidatingSourceRepository,
+} from "@bernouy/cms-sources";
 import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
 import { MongoTriggerRepository } from "@bernouy/cms-triggers/mongo";
@@ -100,40 +105,56 @@ const db = mongo.db();
 // KEK (env-provided 32-byte hex) wraps the per-scope DEK persisted in
 // the `cms_deks` collection. Rotating CMS_KEK_HEX requires re-wrapping
 // every DEK — don't change it casually.
-const kekProvider  = new LocalKekProvider(Buffer.from(CMS_KEK_HEX, "hex"));
-const dekRepo      = new MongoDekRepository(db.collection("cms_deks"));
+const kekProvider = new LocalKekProvider(Buffer.from(CMS_KEK_HEX, "hex"));
+const dekRepo = new MongoDekRepository(db.collection("cms_deks"));
 const secretCrypto = new EnvelopeSecretCrypto(kekProvider, dekRepo);
-const fieldCrypto    = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
+const fieldCrypto = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
-const innerRepo         = new MongoCmsRepository(db);                              await innerRepo.init();
-const repo              = new ValidatingCmsRepository(innerRepo);
-const mongoFilesMeta    = new MongoCmsFilesMetadata(db);                           await mongoFilesMeta.init();
-const filesMetadata     = new ValidatingCmsFilesMetadata(mongoFilesMeta);
-const filesBlob         = new LocalFsCmsFilesBlob(CMS_FILES_DIR);
+const innerRepo = new MongoCmsRepository(db);
+await innerRepo.init();
+const repo = new ValidatingCmsRepository(innerRepo);
+const mongoFilesMeta = new MongoCmsFilesMetadata(db);
+await mongoFilesMeta.init();
+const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMeta);
+const filesBlob = new LocalFsCmsFilesBlob(CMS_FILES_DIR);
 // Content-addressed store for the generated image variants (`<hash>-<w>.webp`).
 // Lives next to the originals; safe to wipe — variants regenerate on demand.
-const variantStore      = new LocalFsCmsFilesBlob(`${CMS_FILES_DIR}/.variants`);
-const users             = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
+const variantStore = new LocalFsCmsFilesBlob(`${CMS_FILES_DIR}/.variants`);
+const users = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
 const identityProviders = new MongoIdentityProviderRepository(db);
-const credentials       = new MongoLocalCredentialStore(db, fieldCrypto);            await credentials.init();
-const pats              = new MongoPatRepository(db);                              await pats.init();
-const authTokens        = new MongoAuthTokenStore(db);                             await authTokens.init();
-const mongoSources      = new MongoSourceRepository(db);                          await mongoSources.init();
-const sources           = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
-const sourceOverlays     = new MongoSourceOverlayRepository(db);                 await sourceOverlays.init();
-const functions         = new MongoFunctionRepository(db);                        await functions.init();
-const triggers          = new MongoTriggerRepository(db);                         await triggers.init();
-const identities        = new MongoIdentityService(db);                           await identities.init();
-const dashboards        = new MongoDashboardRepository(db);                       await dashboards.init();
-const relations         = new MongoRelationRepository(db);                        await relations.init();
-const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
-const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
-const integrationsStore = new MongoIntegrationInstallationRepository(db);              await integrationsStore.init();
+const credentials = new MongoLocalCredentialStore(db, fieldCrypto);
+await credentials.init();
+const pats = new MongoPatRepository(db);
+await pats.init();
+const authTokens = new MongoAuthTokenStore(db);
+await authTokens.init();
+const mongoSources = new MongoSourceRepository(db);
+await mongoSources.init();
+const sources = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
+const sourceOverlays = new MongoSourceOverlayRepository(db);
+await sourceOverlays.init();
+const functions = new MongoFunctionRepository(db);
+await functions.init();
+const triggers = new MongoTriggerRepository(db);
+await triggers.init();
+const identities = new MongoIdentityService(db);
+await identities.init();
+const dashboards = new MongoDashboardRepository(db);
+await dashboards.init();
+const relations = new MongoRelationRepository(db);
+await relations.init();
+const mongoAnalytics = new MongoAnalyticsStore(db);
+await mongoAnalytics.init();
+const analytics = new ValidatingAnalyticsStore(mongoAnalytics);
+const integrationsStore = new MongoIntegrationInstallationRepository(db);
+await integrationsStore.init();
 const integrationConnectorProviders = new MongoIntegrationConnectorProviderRepository(db);
 const integrationRepositoryCatalog = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
 const integrationCatalog = createIntegrationCatalog(process.env, `http://127.0.0.1:${CONTROL_PORT}/.cms/repository`);
-const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
-const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
+const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
+await rateLimit.init();
+const mongoRoles = new MongoRolesRepository(db.collection("cms_roles"));
+await mongoRoles.init();
 // Run against the storage adapter before validation in case an older release
 // persisted either removed role as a non-deletable builtin.
 const legacyRoleMigration = await migrateLegacyOperatorRoles(users, mongoRoles);
@@ -142,12 +163,14 @@ if (legacyRoleMigration.promotedUsers || legacyRoleMigration.removedRoleDefiniti
         `Migrated ${legacyRoleMigration.promotedUsers} legacy operators to admin; removed roles: ${legacyRoleMigration.removedRoleDefinitions.join(", ") || "none"}`,
     );
 }
-const roles             = new ValidatingRolesRepository(mongoRoles);
-const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStore({
-    scopeId:      SCOPE_ID,
-    collection:   db.collection("cms_secrets"),
-    secretCrypto,
-}));
+const roles = new ValidatingRolesRepository(mongoRoles);
+const secrets = new ValidatingSecretStore(
+    new EncryptedMongoSecretStore({
+        scopeId: SCOPE_ID,
+        collection: db.collection("cms_secrets"),
+        secretCrypto,
+    }),
+);
 const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
     new ConfiguredSupabaseConnectorDeployer({
         integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
@@ -156,14 +179,18 @@ const integrationConnectorDeployers: IntegrationConnectorDeployer[] = [
         functionSecrets: readSupabaseFunctionSecrets(process.env),
     }),
 ];
-const resolveSecret     = createSecretResolver(secrets);
-const deliverySources   = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { resolveSecret, identities } });
+const resolveSecret = createSecretResolver(secrets);
+const deliverySources = new SourceOverlaySourceRepository(sources, sourceOverlays, {
+    deps: { resolveSecret, identities },
+});
 const cache = new InMemoryCache();
 
 // Seed the builtin `local` identity provider (idempotent).
 if (!(await identityProviders.get("local"))) {
     await identityProviders.create({
-        id: "local", kind: "local", enabled: true,
+        id: "local",
+        kind: "local",
+        enabled: true,
         displayName: "Email & password",
     });
 }
@@ -174,11 +201,14 @@ if (!(await identityProviders.get("local"))) {
 const existingAdmin = await credentials.getByEmail(CMS_ADMIN_EMAIL);
 if (!existingAdmin) {
     try {
-        await createLocalUser({ credentials, users }, {
-            email:       CMS_ADMIN_EMAIL,
-            password:    CMS_ADMIN_PASSWORD,
-            role:        "admin",
-        });
+        await createLocalUser(
+            { credentials, users },
+            {
+                email: CMS_ADMIN_EMAIL,
+                password: CMS_ADMIN_PASSWORD,
+                role: "admin",
+            },
+        );
     } catch (err) {
         if (err instanceof AuthValidationError) {
             throw new Error(`Invalid CMS_ADMIN_PASSWORD for first admin bootstrap: ${err.message}`);
@@ -187,10 +217,10 @@ if (!existingAdmin) {
     }
 }
 
-const codec        = new SignedCookieCodec(new TextEncoder().encode(CMS_SESSION_SECRET));
-const resolver     = new SubjectResolver<CMS_ROLES>(users, "user");
+const codec = new SignedCookieCodec(new TextEncoder().encode(CMS_SESSION_SECRET));
+const resolver = new SubjectResolver<CMS_ROLES>(users, "user");
 const cookieSecure = CONTROL_PUBLIC_URL.startsWith("https");
-const authEmailer  = new ConfiguredEmailer({
+const authEmailer = new ConfiguredEmailer({
     readSettings: async () => (await repo.getSystem()).email,
     secrets,
 });
@@ -201,49 +231,69 @@ const authEmailComposer = new TemplatedAuthEmailComposer({
 // Control admin on its own runner/port — root-mounted (no `/cms` prefix;
 // the port already isolates the admin surface from Delivery).
 const controlRunner = new BunRunner();
-controlRunner.group("/.cms/repository", repositoryRunner => {
+controlRunner.group("/.cms/repository", (repositoryRunner) => {
     new RepositoryCms({ runner: repositoryRunner, integrationCatalog: integrationRepositoryCatalog });
 });
 const auth = new LocalAuthentication<CMS_ROLES>({
-    providerId:    "local",
+    providerId: "local",
     loginPagePath: "/login",
-    logoutPath:    "/auth/logout",
-    credentials, resolver, codec, pats,
+    logoutPath: "/auth/logout",
+    credentials,
+    resolver,
+    codec,
+    pats,
     rateLimit,
-    cookieName:    "cms-session",
+    cookieName: "cms-session",
     cookieSecure,
-    defaultHome:   "/admin/pages",
+    defaultHome: "/admin/pages",
 });
 const publicAuthBase = {
-    local:                    auth,
+    local: auth,
     credentials,
     users,
-    tokens:                   authTokens,
-    emailer:                  authEmailer,
-    emailComposer:            authEmailComposer,
-    defaultRole:              "user" as CMS_ROLES,
-    siteName:                 CMS_AUTH_SITE_NAME,
+    tokens: authTokens,
+    emailer: authEmailer,
+    emailComposer: authEmailComposer,
+    defaultRole: "user" as CMS_ROLES,
+    siteName: CMS_AUTH_SITE_NAME,
     authEmailCooldownSeconds: CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
 };
-const controlCms = new ControlCms(controlRunner, repo, auth, {
-    deliveryUrl: DELIVERY_PUBLIC_URL,
-    integrationCatalog,
-    integrationInstallations: integrationsStore,
-    integrationConnectorProviders,
-    integrationConnectorDeployers,
-    dashboards,
-    relations,
-    functions,
-    triggers,
-    identities,
-    sourceOverlays,
-    publicAuth: {
-        ...publicAuthBase,
-        emailVerificationUrl: CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
-        passwordResetUrl:     CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
-        allowSignup:          false,
+const controlCms = new ControlCms(
+    controlRunner,
+    repo,
+    auth,
+    {
+        deliveryUrl: DELIVERY_PUBLIC_URL,
+        integrationCatalog,
+        integrationInstallations: integrationsStore,
+        integrationConnectorProviders,
+        integrationConnectorDeployers,
+        dashboards,
+        relations,
+        functions,
+        triggers,
+        identities,
+        sourceOverlays,
+        publicAuth: {
+            ...publicAuthBase,
+            emailVerificationUrl: CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
+            passwordResetUrl: CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+            allowSignup: false,
+        },
     },
-}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, sources, analytics, roles, { local: auth });
+    cache,
+    secrets,
+    filesMetadata,
+    filesBlob,
+    users,
+    identityProviders,
+    pats,
+    credentials,
+    sources,
+    analytics,
+    roles,
+    { local: auth },
+);
 await controlCms.ready;
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME
@@ -251,18 +301,25 @@ await controlCms.ready;
 // are immediately usable by the `/.cms/sources/*` proxy.
 const deliveryRunner = new BunRunner();
 new DeliveryCms({
-    runner: deliveryRunner, repository: repo, cache, sources: deliverySources, analytics,
+    runner: deliveryRunner,
+    repository: repo,
+    cache,
+    sources: deliverySources,
+    analytics,
     functions,
     triggers,
     identities,
     integrationInstallations: integrationsStore,
     analyticsSalt: ANALYTICS_SALT_SECRET,
     sourceResolveSecret: resolveSecret,
-    roles, filesMetadata, filesBlob, variantStore,
+    roles,
+    filesMetadata,
+    filesBlob,
+    variantStore,
     auth: {
         ...publicAuthBase,
         emailVerificationUrl: CMS_AUTH_EMAIL_VERIFICATION_URL,
-        passwordResetUrl:     CMS_AUTH_PASSWORD_RESET_URL,
+        passwordResetUrl: CMS_AUTH_PASSWORD_RESET_URL,
     },
 });
 
@@ -290,19 +347,13 @@ function createIntegrationCatalog(
 }
 
 function readSupabaseFunctionSecrets(source: Record<string, string | undefined>): Record<string, string> {
-    const keys = [
-        "SMTP_HOST",
-        "SMTP_PORT",
-        "SMTP_SECURE",
-        "SMTP_USER",
-        "SMTP_PASSWORD",
-        "SMTP_FROM",
-        "SMTP_REPLY_TO",
-    ];
+    const keys = ["SMTP_HOST", "SMTP_PORT", "SMTP_SECURE", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM", "SMTP_REPLY_TO"];
     const secrets: Record<string, string> = {};
     for (const key of keys) {
         const value = source[key]?.trim();
-        if (value) secrets[key] = value;
+        if (value) {
+            secrets[key] = value;
+        }
     }
     return secrets;
 }

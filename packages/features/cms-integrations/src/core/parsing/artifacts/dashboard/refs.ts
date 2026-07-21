@@ -27,7 +27,9 @@ export function parseDataRef(value: Record<string, unknown>, name: string): Dash
 
 export function parseEndpointRef(value: Record<string, unknown>, name: string): DashboardEndpointRef {
     const endpoint = text(value.endpoint);
-    if (!endpoint) throw new MissingIntegrationParam(`${name}.endpoint`);
+    if (!endpoint) {
+        throw new MissingIntegrationParam(`${name}.endpoint`);
+    }
     const sourceId = optionalText(value.sourceId, `${name}.sourceId`);
     return {
         ...(sourceId ? { sourceId } : {}),
@@ -38,17 +40,25 @@ export function parseEndpointRef(value: Record<string, unknown>, name: string): 
 }
 
 export function parseLookup(value: unknown, name: string): DashboardLookupRef {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     return {
         ...parseEmbeddedLookupRecord(value, name),
-        ...(value.descriptionPaths !== undefined ? { descriptionPaths: parseStringList(value.descriptionPaths, `${name}.descriptionPaths`) } : {}),
+        ...(value.descriptionPaths !== undefined
+            ? { descriptionPaths: parseStringList(value.descriptionPaths, `${name}.descriptionPaths`) }
+            : {}),
         ...(value.create !== undefined ? { create: parseLookupCreate(value.create, `${name}.create`) } : {}),
     };
 }
 
 export function parseEmbeddedLookup(value: unknown, name: string): DashboardEmbeddedLookupRef {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    if (Object.hasOwn(value, "create")) throw new IntegrationInputError(`${name}.create`, "is not supported");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
+    if (Object.hasOwn(value, "create")) {
+        throw new IntegrationInputError(`${name}.create`, "is not supported");
+    }
     if (Object.hasOwn(value, "descriptionPaths")) {
         throw new IntegrationInputError(`${name}.descriptionPaths`, "is not supported");
     }
@@ -56,14 +66,18 @@ export function parseEmbeddedLookup(value: unknown, name: string): DashboardEmbe
 }
 
 export function parseOptions(value: unknown, name: string): DashboardOption[] {
-    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    if (!Array.isArray(value)) {
+        throw new IntegrationInputError(name, "must be an array");
+    }
     if (value.length > DASHBOARD_MAX_OPTIONS) {
         throw new IntegrationInputError(name, `must contain at most ${DASHBOARD_MAX_OPTIONS} options`);
     }
     const options = value.map((entry, index) => parseOption(entry, `${name}.${index}`));
     const values = new Set<string>();
     for (const [index, option] of options.entries()) {
-        if (values.has(option.value)) throw new IntegrationInputError(`${name}.${index}.value`, "is duplicated");
+        if (values.has(option.value)) {
+            throw new IntegrationInputError(`${name}.${index}.value`, "is duplicated");
+        }
         values.add(option.value);
     }
     return options;
@@ -84,22 +98,31 @@ function parseEmbeddedLookupRecord(value: Record<string, unknown>, name: string)
 
 function parseLookupSelected(value: unknown, name: string): DashboardResourceExpression {
     const expression = text(value);
-    if (!expression) throw new IntegrationInputError(name, "must be a non-empty string");
+    if (!expression) {
+        throw new IntegrationInputError(name, "must be a non-empty string");
+    }
     return expression as DashboardResourceExpression;
 }
 
 function parseLookupCreate(value: unknown, name: string): DashboardLookupCreate {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     const mode = requiredText(value.mode, `${name}.mode`);
     const base = {
         ...parseEndpointRef(value, name),
         valuePath: requiredText(value.valuePath, `${name}.valuePath`),
         labelPath: requiredText(value.labelPath, `${name}.labelPath`),
     };
-    if (mode === "inline") return { ...base, mode };
+    if (mode === "inline") {
+        return { ...base, mode };
+    }
     if (mode === "modal") {
         if (Array.isArray(value.fields) && value.fields.length > DASHBOARD_MAX_NESTED_FIELDS) {
-            throw new IntegrationInputError(`${name}.fields`, `must contain at most ${DASHBOARD_MAX_NESTED_FIELDS} fields`);
+            throw new IntegrationInputError(
+                `${name}.fields`,
+                `must contain at most ${DASHBOARD_MAX_NESTED_FIELDS} fields`,
+            );
         }
         return {
             ...base,
@@ -112,8 +135,12 @@ function parseLookupCreate(value: unknown, name: string): DashboardLookupCreate 
 }
 
 function parseOption(value: unknown, name: string): DashboardOption {
-    if (typeof value === "string") return { value, label: value };
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be a string or object");
+    if (typeof value === "string") {
+        return { value, label: value };
+    }
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be a string or object");
+    }
     return {
         value: requiredText(value.value, `${name}.value`),
         label: requiredText(value.label, `${name}.label`),

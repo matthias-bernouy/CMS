@@ -1,8 +1,5 @@
 import type { Source, SourceEndpoint } from "../interfaces/Source";
-import type {
-    SourceRepository,
-    SourceSchemaInvalidationScope,
-} from "../interfaces/SourceRepository";
+import type { SourceRepository, SourceSchemaInvalidationScope } from "../interfaces/SourceRepository";
 import { SourceValidationError } from "./errors";
 import { systemSourceUrnOf } from "./systemSources";
 
@@ -28,14 +25,14 @@ export class CompositeSourceRepository implements SourceRepository {
                 const systemUrn = systemSourceUrnOf(urn);
                 if (systemUrn) {
                     const system = this.systemSources.get(systemUrn);
-                    const endpoint = system?.endpoints.find(candidate => candidate.urn === urn);
+                    const endpoint = system?.endpoints.find((candidate) => candidate.urn === urn);
                     return endpoint ? structuredClone(endpoint) : null;
                 }
                 return inner.getEndpointForAuthorization!(urn);
             };
         }
         if (inner.invalidateSchema) {
-            this.invalidateSchema = scope => inner.invalidateSchema!(scope);
+            this.invalidateSchema = (scope) => inner.invalidateSchema!(scope);
         }
     }
 
@@ -56,15 +53,18 @@ export class CompositeSourceRepository implements SourceRepository {
 
     async getSource(urn: string): Promise<Source | null> {
         const system = this.systemSources.get(urn);
-        if (system) return structuredClone(system);
+        if (system) {
+            return structuredClone(system);
+        }
         return this.inner.getSource(urn);
     }
 
     async getAllSources(): Promise<Source[]> {
         const systemUrns = new Set(this.systemSources.keys());
-        const system = Array.from(this.systemSources.values(), source => structuredClone(source));
-        const user = (await this.inner.getAllSources())
-            .filter(source => !systemUrns.has(source.urn) && !systemSourceUrnOf(source.urn));
+        const system = Array.from(this.systemSources.values(), (source) => structuredClone(source));
+        const user = (await this.inner.getAllSources()).filter(
+            (source) => !systemUrns.has(source.urn) && !systemSourceUrnOf(source.urn),
+        );
         return [...system, ...user];
     }
 
@@ -72,13 +72,15 @@ export class CompositeSourceRepository implements SourceRepository {
         const systemUrn = systemSourceUrnOf(urn);
         if (systemUrn) {
             const system = this.systemSources.get(systemUrn);
-            const endpoint = system?.endpoints.find(candidate => candidate.urn === urn);
+            const endpoint = system?.endpoints.find((candidate) => candidate.urn === urn);
             return endpoint ? structuredClone(endpoint) : null;
         }
         return this.inner.getEndpoint(urn);
     }
 
     private assertUserSource(urn: string, message: string): void {
-        if (systemSourceUrnOf(urn)) throw new SourceValidationError("urn", message);
+        if (systemSourceUrnOf(urn)) {
+            throw new SourceValidationError("urn", message);
+        }
     }
 }

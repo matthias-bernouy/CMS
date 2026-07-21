@@ -45,7 +45,9 @@ export class DynamicDataPickerController {
     }
 
     private insertExpression(expression: string): void {
-        if (!expression) return;
+        if (!expression) {
+            return;
+        }
 
         this._actions.insertText(asInterpolation(expression));
         this.close({ restoreFocus: false });
@@ -54,7 +56,9 @@ export class DynamicDataPickerController {
 
     private close(options: { restoreFocus?: boolean } = {}): void {
         this._refs.picker().hidden = true;
-        if (options.restoreFocus === false) return;
+        if (options.restoreFocus === false) {
+            return;
+        }
 
         this._actions.focusControl();
         this._actions.restoreSelection();
@@ -64,7 +68,9 @@ export class DynamicDataPickerController {
         if (event.key === "Enter") {
             event.preventDefault();
             const first = this._refs.list().querySelector<HTMLButtonElement>(".data-option");
-            if (first) this.insertExpression(first.dataset.path ?? "");
+            if (first) {
+                this.insertExpression(first.dataset.path ?? "");
+            }
         } else if (event.key === "Escape") {
             event.preventDefault();
             this.close();

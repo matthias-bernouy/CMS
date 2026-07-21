@@ -20,8 +20,12 @@ export function onStructureDocumentKeydown(event: KeyboardEvent, context: Struct
         return;
     }
 
-    if (!event.ctrlKey && !event.metaKey) return;
-    if (isEditableKeyEvent(event)) return;
+    if (!event.ctrlKey && !event.metaKey) {
+        return;
+    }
+    if (isEditableKeyEvent(event)) {
+        return;
+    }
 
     const key = event.key.toLowerCase();
     if (key === "c" && context.selectedEditor) {
@@ -34,8 +38,10 @@ export function onStructureDocumentKeydown(event: KeyboardEvent, context: Struct
 }
 
 export function isEditableKeyEvent(event: Event): boolean {
-    return event.composedPath().some(target => {
-        if (!(target instanceof Element)) return false;
+    return event.composedPath().some((target) => {
+        if (!(target instanceof Element)) {
+            return false;
+        }
         return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
     });
 }

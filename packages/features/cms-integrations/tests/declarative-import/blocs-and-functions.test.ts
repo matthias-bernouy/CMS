@@ -14,18 +14,22 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             kind: "bloc-pack",
             label: "Bloc Pack",
             inputs: [],
-            artifacts: [{
-                type: "bloc",
-                bloc: {
-                    tag: "demo-card",
-                    name: "Demo card",
-                    group: "Content",
-                    viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
-                    source: {
-                        "Bloc.ts": Buffer.from(`customElements.define("demo-card", class extends HTMLElement {});`).toString("base64"),
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "demo-card",
+                        name: "Demo card",
+                        group: "Content",
+                        viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
+                        source: {
+                            "Bloc.ts": Buffer.from(
+                                `customElements.define("demo-card", class extends HTMLElement {});`,
+                            ).toString("base64"),
+                        },
                     },
                 },
-            }],
+            ],
         };
 
         const result = await importIntegration(
@@ -44,15 +48,19 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         );
 
         expect(result.artifacts).toEqual([{ type: "bloc", id: "demo-card", action: "created" }]);
-        expect(imported).toEqual([{
-            tag: "demo-card",
-            name: "Demo card",
-            group: "Content",
-            viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
-            source: {
-                "Bloc.ts": Buffer.from(`customElements.define("demo-card", class extends HTMLElement {});`).toString("base64"),
+        expect(imported).toEqual([
+            {
+                tag: "demo-card",
+                name: "Demo card",
+                group: "Content",
+                viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
+                source: {
+                    "Bloc.ts": Buffer.from(
+                        `customElements.define("demo-card", class extends HTMLElement {});`,
+                    ).toString("base64"),
+                },
             },
-        }]);
+        ]);
     });
 
     test("imports function artifacts after their source dependencies", async () => {
@@ -75,16 +83,18 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                                 method: "GET",
                                 targetUrl: "https://example.com/products",
                                 params: [{ name: "productId", in: "query", type: "string", required: true }],
-                                output: [{
-                                    status: "200",
-                                    body: {
-                                        type: "object",
-                                        properties: {
-                                            id: { type: "string" },
-                                            ownerUserId: { type: "string" },
+                                output: [
+                                    {
+                                        status: "200",
+                                        body: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                                ownerUserId: { type: "string" },
+                                            },
                                         },
                                     },
-                                }],
+                                ],
                             },
                         ],
                     },

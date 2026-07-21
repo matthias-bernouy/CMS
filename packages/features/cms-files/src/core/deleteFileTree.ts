@@ -13,6 +13,6 @@ export async function deleteFileTree(
     recursive: boolean,
 ): Promise<{ deletedFileIds: string[] }> {
     const res = await metadata.deleteItem(id, { recursive });
-    await Promise.all(res.deletedFileIds.map(fileId => blob.delete(fileId)));
+    await Promise.all(res.deletedFileIds.map((fileId) => blob.delete(fileId)));
     return res;
 }

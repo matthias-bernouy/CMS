@@ -14,7 +14,6 @@ import type { TSystem } from "cms-content/interfaces/settings";
  * entirely and read from a projection (file export, S3 snapshot, etc.).
  */
 export interface ContentReader {
-
     // PAGE
     getPage(path: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
@@ -27,5 +26,4 @@ export interface ContentReader {
 
     // SYSTEM (theme, favicon, host, language, system page refs)
     getSystem(): Promise<TSystem>;
-
 }

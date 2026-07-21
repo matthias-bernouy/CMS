@@ -11,19 +11,17 @@ export type InMemoryAuthConfig<Role extends string> = {
  * Dev-only implementation of `Authentication`. No login flow, no session —
  * every request is considered authenticated as a fixed subject.
  */
-export class InMemoryAuthentication<Role extends string = DefaultRole>
-    implements Authentication<Role>
-{
-    readonly loginUrl:   string = "/__dev/login";
-    readonly logoutUrl:  string = "/__dev/logout";
+export class InMemoryAuthentication<Role extends string = DefaultRole> implements Authentication<Role> {
+    readonly loginUrl: string = "/__dev/login";
+    readonly logoutUrl: string = "/__dev/logout";
     readonly profileUrl: string = "/__dev/profile";
 
     private readonly _subject: Subject<Role>;
 
     constructor(config: InMemoryAuthConfig<Role>) {
         this._subject = {
-            identifier:  config.identifier  ?? "dev-user",
-            role:        config.role,
+            identifier: config.identifier ?? "dev-user",
+            role: config.role,
             ...(config.email ? { email: config.email } : {}),
         };
     }

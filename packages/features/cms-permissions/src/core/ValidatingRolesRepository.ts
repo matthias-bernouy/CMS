@@ -29,19 +29,33 @@ export class ValidatingRolesRepository implements RolesRepository {
     }
 
     async delete(id: string): Promise<void> {
-        if (id === ADMIN_ROLE) throw new RoleValidationError("id", "the admin super-role cannot be deleted");
-        if (id === USER_ROLE || id === PUBLIC_ROLE) throw new RoleValidationError("id", "built-in roles cannot be deleted");
+        if (id === ADMIN_ROLE) {
+            throw new RoleValidationError("id", "the admin super-role cannot be deleted");
+        }
+        if (id === USER_ROLE || id === PUBLIC_ROLE) {
+            throw new RoleValidationError("id", "built-in roles cannot be deleted");
+        }
         const def = await this.inner.get(id);
-        if (def?.builtin) throw new RoleValidationError("id", "built-in roles cannot be deleted");
+        if (def?.builtin) {
+            throw new RoleValidationError("id", "built-in roles cannot be deleted");
+        }
         return this.inner.delete(id);
     }
 
-    list()           { return this.inner.list(); }
-    get(id: string)  { return this.inner.get(id); }
+    list() {
+        return this.inner.list();
+    }
+    get(id: string) {
+        return this.inner.get(id);
+    }
 }
 
 function normalizeBuiltIn(def: RoleDefinition): RoleDefinition {
-    if (def.id === USER_ROLE) return { ...def, label: "User", builtin: true };
-    if (def.id === PUBLIC_ROLE) return { ...def, label: "Public", builtin: true };
+    if (def.id === USER_ROLE) {
+        return { ...def, label: "User", builtin: true };
+    }
+    if (def.id === PUBLIC_ROLE) {
+        return { ...def, label: "Public", builtin: true };
+    }
     return def;
 }

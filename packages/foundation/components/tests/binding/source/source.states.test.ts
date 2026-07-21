@@ -4,8 +4,13 @@ import { el, text, respond, resetDom } from "../testUtils";
 
 function deferredFetch(status: number, body: string) {
     let release!: () => void;
-    const gate = new Promise<void>((r) => { release = r; });
-    globalThis.fetch = (async () => { await gate; return { ok: status >= 200 && status < 300, status, text: async () => body } as unknown as Response; }) as unknown as typeof fetch;
+    const gate = new Promise<void>((r) => {
+        release = r;
+    });
+    globalThis.fetch = (async () => {
+        await gate;
+        return { ok: status >= 200 && status < 300, status, text: async () => body } as unknown as Response;
+    }) as unknown as typeof fetch;
     return release;
 }
 
@@ -14,7 +19,11 @@ function responseSequence(payloads: { status: number; body: string }[]): void {
     globalThis.fetch = (async () => {
         const payload = payloads[Math.min(i, payloads.length - 1)]!;
         i++;
-        return { ok: payload.status >= 200 && payload.status < 300, status: payload.status, text: async () => payload.body } as unknown as Response;
+        return {
+            ok: payload.status >= 200 && payload.status < 300,
+            status: payload.status,
+            text: async () => payload.body,
+        } as unknown as Response;
     }) as unknown as typeof fetch;
 }
 

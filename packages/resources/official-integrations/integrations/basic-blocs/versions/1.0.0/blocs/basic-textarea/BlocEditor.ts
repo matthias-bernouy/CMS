@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
 const color = (label: string, attribute: string): ColorSetting => ({
     type: "color",
     label,

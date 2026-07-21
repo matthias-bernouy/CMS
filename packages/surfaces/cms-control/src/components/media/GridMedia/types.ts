@@ -28,9 +28,13 @@ export type BreadcrumbEntry = {
 };
 
 export function formatSize(bytes: number): string {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes < 1024) {
+        return bytes + " B";
+    }
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(1) + " KB";
+    }
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
 /**
@@ -45,6 +49,8 @@ export function formatSize(bytes: number): string {
  */
 export function variantUrl(item: MediaItem, _width?: number, _height?: number): string {
     const url = item.absoluteURL ?? "";
-    if (!url || !item.contentHash) return url;
+    if (!url || !item.contentHash) {
+        return url;
+    }
     return withFileVersion(url, item.contentHash);
 }

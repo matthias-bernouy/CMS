@@ -36,12 +36,14 @@ function testDashboard(id: string, source: string): Dashboard {
     return {
         id,
         source,
-        views: [{
-            widget: "w-table",
-            id: "itemsTable",
-            source: { endpoint: "list", itemsPath: "items" },
-            rowKey: "id",
-            columns: [{ id: "id", label: "ID", path: "id" }],
-        }],
+        views: [
+            {
+                widget: "w-table",
+                id: "itemsTable",
+                source: { endpoint: "list", itemsPath: "items" },
+                rowKey: "id",
+                columns: [{ id: "id", label: "ID", path: "id" }],
+            },
+        ],
     };
 }

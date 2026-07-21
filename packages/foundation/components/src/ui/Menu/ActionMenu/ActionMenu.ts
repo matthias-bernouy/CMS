@@ -12,11 +12,17 @@ export class ActionMenu extends Component {
         this._panel = this.shadowRoot?.querySelector("[data-panel]") ?? null;
     }
 
-    static get observedAttributes(): string[] { return ["label", "open", "disabled"]; }
+    static get observedAttributes(): string[] {
+        return ["label", "open", "disabled"];
+    }
 
     override connectedCallback(): void {
-        for (const prop of ["label", "open", "disabled"]) upgradeProperty(this, prop);
-        if (!this.hasAttribute("label")) this.setAttribute("label", "Actions");
+        for (const prop of ["label", "open", "disabled"]) {
+            upgradeProperty(this, prop);
+        }
+        if (!this.hasAttribute("label")) {
+            this.setAttribute("label", "Actions");
+        }
         this._trigger?.addEventListener("click", this._onTriggerClick);
         this.addEventListener("click", this._onMenuClick);
         document.addEventListener("click", this._onDocumentClick);
@@ -31,13 +37,23 @@ export class ActionMenu extends Component {
         document.removeEventListener("keydown", this._onDocumentKeydown);
     }
 
-    attributeChangedCallback(): void { this.sync(); }
+    attributeChangedCallback(): void {
+        this.sync();
+    }
 
-    get open(): boolean { return this.hasAttribute("open"); }
-    set open(value: boolean) { value ? this.setAttribute("open", "") : this.removeAttribute("open"); }
+    get open(): boolean {
+        return this.hasAttribute("open");
+    }
+    set open(value: boolean) {
+        value ? this.setAttribute("open", "") : this.removeAttribute("open");
+    }
 
-    get label(): string { return this.getAttribute("label") ?? "Actions"; }
-    set label(value: string) { this.setAttribute("label", value); }
+    get label(): string {
+        return this.getAttribute("label") ?? "Actions";
+    }
+    set label(value: string) {
+        this.setAttribute("label", value);
+    }
 
     private sync(): void {
         if (this._trigger) {
@@ -45,26 +61,36 @@ export class ActionMenu extends Component {
             this._trigger.setAttribute("aria-expanded", String(this.open));
             this._trigger.querySelector("[data-label]")!.textContent = this.label;
         }
-        if (this._panel) this._panel.hidden = !this.open;
+        if (this._panel) {
+            this._panel.hidden = !this.open;
+        }
     }
 
     private _onTriggerClick = (event: Event): void => {
         event.stopPropagation();
-        if (!this.hasAttribute("disabled")) this.open = !this.open;
+        if (!this.hasAttribute("disabled")) {
+            this.open = !this.open;
+        }
     };
 
     private _onMenuClick = (event: Event): void => {
         const item = event.composedPath().find(isActionMenuItem);
-        if (item && !item.hasAttribute("disabled")) this.open = false;
+        if (item && !item.hasAttribute("disabled")) {
+            this.open = false;
+        }
     };
 
     private _onDocumentClick = (event: MouseEvent): void => {
-        if (!this.open || event.composedPath().includes(this)) return;
+        if (!this.open || event.composedPath().includes(this)) {
+            return;
+        }
         this.open = false;
     };
 
     private _onDocumentKeydown = (event: KeyboardEvent): void => {
-        if (event.key !== "Escape" || !this.open) return;
+        if (event.key !== "Escape" || !this.open) {
+            return;
+        }
         this.open = false;
         this._trigger?.focus();
     };

@@ -26,7 +26,9 @@ export function collectCmsSourceBindings(html: string): CmsSourceBindingReferenc
 
     for (const element of Array.from(document.querySelectorAll(`[${CMS_BINDING_ATTRIBUTES.source}]`))) {
         const source = parseSource(element.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-        if (!source) continue;
+        if (!source) {
+            continue;
+        }
 
         const alias = source.alias?.trim();
         bindings.push({

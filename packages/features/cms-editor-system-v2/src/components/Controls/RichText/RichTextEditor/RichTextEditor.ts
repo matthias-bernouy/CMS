@@ -15,19 +15,22 @@ export class RichTextEditor extends HTMLElement {
         () => this.editor,
         () => this.getSelection(),
     );
-    private readonly _dataPicker = new DynamicDataPickerController({
-        picker:      () => this.dataPicker,
-        search:      () => this.dataSearch,
-        list:        () => this.dataList,
-        closeButton: () => this.closeDataButton,
-        rawScopes:   () => this.getAttribute("data-scopes"),
-    }, {
-        saveSelection:    this._range.saveSelection,
-        restoreSelection: () => this._range.restoreSelection(),
-        insertText:       (text) => this._range.insertText(text),
-        focusControl:     () => this.editor.focus(),
-        finish:           () => this.finishAction(),
-    });
+    private readonly _dataPicker = new DynamicDataPickerController(
+        {
+            picker: () => this.dataPicker,
+            search: () => this.dataSearch,
+            list: () => this.dataList,
+            closeButton: () => this.closeDataButton,
+            rawScopes: () => this.getAttribute("data-scopes"),
+        },
+        {
+            saveSelection: this._range.saveSelection,
+            restoreSelection: () => this._range.restoreSelection(),
+            insertText: (text) => this._range.insertText(text),
+            focusControl: () => this.editor.focus(),
+            finish: () => this.finishAction(),
+        },
+    );
 
     constructor() {
         super();
@@ -58,15 +61,19 @@ export class RichTextEditor extends HTMLElement {
 
     private renderToolbar(): void {
         renderRichTextToolbar(this.toolbar, this.capability, {
-            action:   (action) => this.runAction(action),
+            action: (action) => this.runAction(action),
             textSize: (direction) => {
-                if (this._range.stepTextSize(direction)) this.finishAction();
+                if (this._range.stepTextSize(direction)) {
+                    this.finishAction();
+                }
             },
         });
     }
 
     private runAction(action: RichTextAction): void {
-        if (action !== "dynamic" && !this._range.hasSelectedRange()) return;
+        if (action !== "dynamic" && !this._range.hasSelectedRange()) {
+            return;
+        }
 
         if (action === "bold") {
             this._range.toggleRange("strong");
@@ -82,7 +89,9 @@ export class RichTextEditor extends HTMLElement {
                 return;
             }
             const href = window.prompt("Link URL");
-            if (href) this._range.wrapRange("a", { href });
+            if (href) {
+                this._range.wrapRange("a", { href });
+            }
         } else {
             this._dataPicker.open();
             return;
@@ -97,16 +106,20 @@ export class RichTextEditor extends HTMLElement {
     }
 
     private getSelection(): Selection | null {
-        const shadowSelection = (this.shadowRoot as ShadowRoot & { getSelection?: () => Selection | null }).getSelection?.();
+        const shadowSelection = (
+            this.shadowRoot as ShadowRoot & { getSelection?: () => Selection | null }
+        ).getSelection?.();
         return shadowSelection ?? this.ownerDocument.getSelection?.() ?? null;
     }
 
     private readonly emitInput = (): void => {
-        this.dispatchEvent(new CustomEvent("input", {
-            bubbles: true,
-            composed: true,
-            detail: { value: this.editor.innerHTML },
-        }));
+        this.dispatchEvent(
+            new CustomEvent("input", {
+                bubbles: true,
+                composed: true,
+                detail: { value: this.editor.innerHTML },
+            }),
+        );
     };
 
     private get capability(): TextCapability {
@@ -117,21 +130,37 @@ export class RichTextEditor extends HTMLElement {
         return this.shadowRoot!.querySelector<T>(selector)!;
     }
 
-    private get label(): HTMLElement { return this.query(".label"); }
+    private get label(): HTMLElement {
+        return this.query(".label");
+    }
 
-    private get hint(): HTMLElement { return this.query(".hint"); }
+    private get hint(): HTMLElement {
+        return this.query(".hint");
+    }
 
-    private get toolbar(): HTMLElement { return this.query(".toolbar"); }
+    private get toolbar(): HTMLElement {
+        return this.query(".toolbar");
+    }
 
-    private get dataPicker(): HTMLElement { return this.query(".data-picker"); }
+    private get dataPicker(): HTMLElement {
+        return this.query(".data-picker");
+    }
 
-    private get dataSearch(): HTMLInputElement { return this.query(".data-search"); }
+    private get dataSearch(): HTMLInputElement {
+        return this.query(".data-search");
+    }
 
-    private get dataList(): HTMLElement { return this.query(".data-list"); }
+    private get dataList(): HTMLElement {
+        return this.query(".data-list");
+    }
 
-    private get closeDataButton(): HTMLButtonElement { return this.query(".close-data"); }
+    private get closeDataButton(): HTMLButtonElement {
+        return this.query(".close-data");
+    }
 
-    private get editor(): HTMLElement { return this.query(".editor"); }
+    private get editor(): HTMLElement {
+        return this.query(".editor");
+    }
 }
 
 if (!customElements.get("cms-editor-v2-rich-text-editor")) {

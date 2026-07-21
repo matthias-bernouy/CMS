@@ -42,14 +42,22 @@ export async function userView(user: TUser, credentials: LocalCredentialStore): 
 }
 
 function providerLabel(provider: string | undefined): string {
-    if (!provider) return "External";
-    if (provider === "local") return "Local";
+    if (!provider) {
+        return "External";
+    }
+    if (provider === "local") {
+        return "Local";
+    }
     return label(provider);
 }
 
 function emailStatusLabel(local: boolean, email: string, verifiedAt: Date | null): string {
-    if (!email) return "No email";
-    if (!local) return "Managed by provider";
+    if (!email) {
+        return "No email";
+    }
+    if (!local) {
+        return "Managed by provider";
+    }
     return verifiedAt ? "Verified" : "Not verified";
 }
 

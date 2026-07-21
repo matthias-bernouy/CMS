@@ -9,7 +9,9 @@ type SourceOverlayCms = ControlCms & {
 
 export default async function upsertSourceOverlay(req: Request, cms: ControlCms): Promise<Response> {
     const repository = (cms as SourceOverlayCms).sourceOverlays;
-    if (!repository) return new Response("source overlays not configured", { status: 501 });
+    if (!repository) {
+        return new Response("source overlays not configured", { status: 501 });
+    }
 
     const body = await readJsonBody(req);
     const overlay = parseSourceOverlayDto(body);

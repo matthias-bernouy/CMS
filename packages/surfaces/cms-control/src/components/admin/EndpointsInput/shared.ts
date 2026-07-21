@@ -1,4 +1,11 @@
-import type { DataShape, SourceMeta, EndpointResponse, EndpointHeader, ParamValueSource, SourceEndpointAccess } from "@bernouy/cms-sources";
+import type {
+    DataShape,
+    SourceMeta,
+    EndpointResponse,
+    EndpointHeader,
+    ParamValueSource,
+    SourceEndpointAccess,
+} from "@bernouy/cms-sources";
 
 /** Edit-mode prefill seeds, decoded from the `value` attribute JSON. */
 export type ParamSeed = {
@@ -40,7 +47,7 @@ export const SHAPE_TYPES = ["string", "number", "boolean", "object", "array"] as
  *  work both in the browser and under happy-dom tests (where p9r-* aren't upgraded). */
 export const readControl = (el: Element): string => {
     const live = (el as unknown as { value?: string }).value;
-    return typeof live === 'string' ? live : (el.getAttribute('value') ?? '');
+    return typeof live === "string" ? live : (el.getAttribute("value") ?? "");
 };
 
 /** A hidden form field carrying one structured value as a JSON blob — the single
@@ -49,19 +56,25 @@ export const readControl = (el: Element): string => {
  *  treats it as absent). Pass-through fields just `sync(() => seed)` once. */
 export type JsonField = HTMLInputElement & { sync(read: () => unknown): void };
 export function jsonField(name: string, role?: string): JsonField {
-    const f = document.createElement('input') as JsonField;
-    f.type = 'hidden';
+    const f = document.createElement("input") as JsonField;
+    f.type = "hidden";
     f.name = name;
-    if (role) f.dataset.role = role;
+    if (role) {
+        f.dataset.role = role;
+    }
     f.sync = (read) => {
         const v = read();
-        f.value = (v == null || (Array.isArray(v) && v.length === 0)) ? '' : JSON.stringify(v);
+        f.value = v == null || (Array.isArray(v) && v.length === 0) ? "" : JSON.stringify(v);
     };
     return f;
 }
 
 /** Colour the method tag like a REST client (GET green, DELETE red, …). */
 const METHOD_COLOR: Record<string, string> = {
-    GET: 'success', POST: 'info', PUT: 'warning', PATCH: 'warning', DELETE: 'danger',
+    GET: "success",
+    POST: "info",
+    PUT: "warning",
+    PATCH: "warning",
+    DELETE: "danger",
 };
-export const methodColor = (m: string): string => METHOD_COLOR[m] ?? 'primary';
+export const methodColor = (m: string): string => METHOD_COLOR[m] ?? "primary";

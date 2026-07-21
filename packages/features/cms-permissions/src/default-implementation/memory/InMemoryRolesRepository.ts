@@ -11,7 +11,9 @@ export class InMemoryRolesRepository implements RolesRepository {
     private readonly _defs = new Map<string, RoleDefinition>();
 
     constructor() {
-        for (const d of defaultRoleDefinitions()) this._defs.set(d.id, copy(d));
+        for (const d of defaultRoleDefinitions()) {
+            this._defs.set(d.id, copy(d));
+        }
     }
 
     async list(): Promise<RoleDefinition[]> {

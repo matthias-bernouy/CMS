@@ -33,7 +33,9 @@ describe("files core (metadata + blob)", () => {
     test("uploadFile rolls back the metadata when the blob write fails", async () => {
         const meta = new InMemoryCmsFilesMetadata();
         const blob = new InMemoryCmsFilesBlob();
-        blob.put = async () => { throw new Error("disk full"); };
+        blob.put = async () => {
+            throw new Error("disk full");
+        };
         await expect(uploadFile(meta, blob, file("x.png", "y"), null)).rejects.toThrow("disk full");
         expect((await meta.listChildren(null)).total).toBe(0); // rolled back
     });

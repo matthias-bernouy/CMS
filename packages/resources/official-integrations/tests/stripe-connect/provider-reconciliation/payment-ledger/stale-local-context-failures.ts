@@ -19,11 +19,9 @@ export function registerStalePaymentLocalContextFailureContracts(
             fixture.rest.patchProviderTransfer(transferId, { reconciliation_marker: "before-context" });
             fixture.rest.failNextPaymentReconciliationLocalContextRead();
 
-            const failed = await fixture.submit(
-                "system-stale-context",
-                "reconcileProviderPayment",
-                { paymentId: fixture.paymentId },
-            );
+            const failed = await fixture.submit("system-stale-context", "reconcileProviderPayment", {
+                paymentId: fixture.paymentId,
+            });
 
             expect(failed.status).toBe(502);
             expect(await failed.json()).toEqual({
@@ -32,15 +30,11 @@ export function registerStalePaymentLocalContextFailureContracts(
             expect(fixture.rest.rows("transfers")[0]?.provider_snapshot).toMatchObject({
                 reconciliation_marker: "before-context",
             });
-            const calls = fixture.rest.postgrestRequests.map(request => [request.method, request.table]);
-            const contextIndex = calls.findIndex(call => (
-                call[1] === "rpc/read_payment_reconciliation_local_context"
-            ));
-            expect(calls.slice(contextIndex)).toEqual([
-                ["POST", "rpc/read_payment_reconciliation_local_context"],
-            ]);
-            expect(calls.some(call => call[1] === "rpc/read_payment_reconciliation_ledger")).toBe(false);
-            expect(calls.some(call => call[0] === "PATCH" && call[1] === "payments")).toBe(false);
+            const calls = fixture.rest.postgrestRequests.map((request) => [request.method, request.table]);
+            const contextIndex = calls.findIndex((call) => call[1] === "rpc/read_payment_reconciliation_local_context");
+            expect(calls.slice(contextIndex)).toEqual([["POST", "rpc/read_payment_reconciliation_local_context"]]);
+            expect(calls.some((call) => call[1] === "rpc/read_payment_reconciliation_ledger")).toBe(false);
+            expect(calls.some((call) => call[0] === "PATCH" && call[1] === "payments")).toBe(false);
         });
 
         test("marks only the failed stale payment and continues with the next one", async () => {
@@ -50,18 +44,27 @@ export function registerStalePaymentLocalContextFailureContracts(
             );
             const firstTransferId = fixture.stripeTransferIds[0]!;
             fixture.rest.patchProviderTransfer(firstTransferId, { reconciliation_marker: "first-progress" });
-            await successfulJson(await fixture.submit("user-123", "createConnectOnboardingSessionForUser", {
-                email: "seller-next-stale-context@example.com",
-            }, { userId: "seller-next-stale-context" }));
-            const second = await successfulJson(await fixture.submit("user-123", "createProtectedPayment", {
-                sellerUserId: "seller-next-stale-context",
-                amountTotal: 1200,
-                sellerTransferAmount: 1080,
-                currency: "eur",
-                clientReferenceId: "stale-local-context-next-payment",
-                financialTermsHash: paymentLedgerFinancialTermsHash,
-                dualApprovalThresholdAmount: 1000,
-            }));
+            await successfulJson(
+                await fixture.submit(
+                    "user-123",
+                    "createConnectOnboardingSessionForUser",
+                    {
+                        email: "seller-next-stale-context@example.com",
+                    },
+                    { userId: "seller-next-stale-context" },
+                ),
+            );
+            const second = await successfulJson(
+                await fixture.submit("user-123", "createProtectedPayment", {
+                    sellerUserId: "seller-next-stale-context",
+                    amountTotal: 1200,
+                    sellerTransferAmount: 1080,
+                    currency: "eur",
+                    clientReferenceId: "stale-local-context-next-payment",
+                    financialTermsHash: paymentLedgerFinancialTermsHash,
+                    dualApprovalThresholdAmount: 1000,
+                }),
+            );
             const secondPaymentId = Number(second.paymentId);
             fixture.rest.setPaymentIntentSucceeded(String(second.stripePaymentIntentId));
             fixture.rest.clearPostgrestRequests();
@@ -74,20 +77,18 @@ export function registerStalePaymentLocalContextFailureContracts(
             expect(fixture.rest.rows("transfers")[0]?.provider_snapshot).toMatchObject({
                 reconciliation_marker: "first-progress",
             });
-            expect(fixture.rest.rows("payments").find(row => row.id === fixture.paymentId)).toMatchObject({
+            expect(fixture.rest.rows("payments").find((row) => row.id === fixture.paymentId)).toMatchObject({
                 settlement_status: "manual_review",
                 manual_review_reason: "stale provider payment reconciliation failed",
             });
-            expect(fixture.rest.rows("payments").find(row => row.id === secondPaymentId)).toMatchObject({
+            expect(fixture.rest.rows("payments").find((row) => row.id === secondPaymentId)).toMatchObject({
                 payment_status: "succeeded",
                 settlement_status: "held",
                 last_provider_sync_at: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
             });
-            const tables = fixture.rest.postgrestRequests.map(request => request.table);
-            expect(tables.filter(table => table === "rpc/read_payment_reconciliation_local_context"))
-                .toHaveLength(2);
-            expect(tables.filter(table => table === "rpc/read_payment_reconciliation_ledger"))
-                .toHaveLength(1);
+            const tables = fixture.rest.postgrestRequests.map((request) => request.table);
+            expect(tables.filter((table) => table === "rpc/read_payment_reconciliation_local_context")).toHaveLength(2);
+            expect(tables.filter((table) => table === "rpc/read_payment_reconciliation_ledger")).toHaveLength(1);
             expect(tables).toContain("rpc/mark_payment_manual_review");
         });
     });

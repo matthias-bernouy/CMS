@@ -14,22 +14,22 @@ export type LocalTypeFilter = ("folder" | "image" | "other")[];
  * server `FilesItem`, but `createdAt`/`updatedAt` arrive as JSON strings.
  */
 export type FilesItem = {
-    id:        string;
-    name:      string;
-    parentId:  string | null;
-    type:      "folder" | "file";
+    id: string;
+    name: string;
+    parentId: string | null;
+    type: "folder" | "file";
     createdAt: string;
     updatedAt: string;
-    size?:        number;
-    mimeType?:    string;
+    size?: number;
+    mimeType?: string;
     contentHash?: string;
 };
 
 export type FilesPage = {
-    items:   FilesItem[];
-    total:   number;
-    page:    number;
-    limit:   number;
+    items: FilesItem[];
+    total: number;
+    page: number;
+    limit: number;
     hasMore: boolean;
 };
 
@@ -51,14 +51,14 @@ export function cmsFilesIdUrl(id: string): string {
 export function toLocal(item: FilesItem): LocalMediaItem {
     const isImage = item.type === "file" && (item.mimeType?.startsWith("image/") ?? false);
     const local: LocalMediaItem = {
-        id:    item.id,
-        type:  item.type === "folder" ? "folder" : isImage ? "image" : "other",
+        id: item.id,
+        type: item.type === "folder" ? "folder" : isImage ? "image" : "other",
         label: item.name,
     };
     if (item.type === "file") {
-        local.mimetype    = item.mimeType;
-        local.size        = item.size;
-        local.contentHash = item.contentHash;   // display cache-bust (see variantUrl)
+        local.mimetype = item.mimeType;
+        local.size = item.size;
+        local.contentHash = item.contentHash; // display cache-bust (see variantUrl)
         // Address bytes by opaque id (immutable + rename-proof). `absoluteURL`
         // stays the clean id URL — copy-URL and what gets stored in content read
         // it as-is; only the display src (variantUrl) appends `?v=contentHash`.

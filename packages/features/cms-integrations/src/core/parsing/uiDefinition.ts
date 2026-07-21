@@ -12,8 +12,12 @@ export function sanitizeUiDefinition(value: unknown): IntegrationUiDefinition | 
 }
 
 function readUiDefinition(value: unknown, name: string, mode: UiReadMode): IntegrationUiDefinition | undefined {
-    if (value === undefined || value === null) return undefined;
-    if (!isRecord(value)) return invalid(mode, name, "must be an object");
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+    if (!isRecord(value)) {
+        return invalid(mode, name, "must be an object");
+    }
 
     return {
         ...(text(value.mark) ? { mark: text(value.mark)! } : {}),
@@ -35,9 +39,11 @@ function readStringField<K extends keyof IntegrationUiDefinition>(
     key: K,
     mode: UiReadMode,
 ): Pick<IntegrationUiDefinition, K> | {} {
-    if (value === undefined) return {};
+    if (value === undefined) {
+        return {};
+    }
     const list = stringList(value, name, mode);
-    return list ? { [key]: list } as Pick<IntegrationUiDefinition, K> : {};
+    return list ? ({ [key]: list } as Pick<IntegrationUiDefinition, K>) : {};
 }
 
 function readPairField<K extends keyof IntegrationUiDefinition>(
@@ -46,24 +52,32 @@ function readPairField<K extends keyof IntegrationUiDefinition>(
     key: K,
     mode: UiReadMode,
 ): Pick<IntegrationUiDefinition, K> | {} {
-    if (value === undefined) return {};
+    if (value === undefined) {
+        return {};
+    }
     const list = pairList(value, name, mode);
-    return list ? { [key]: list } as Pick<IntegrationUiDefinition, K> : {};
+    return list ? ({ [key]: list } as Pick<IntegrationUiDefinition, K>) : {};
 }
 
 function stringList(value: unknown, name: string, mode: UiReadMode): string[] | undefined {
-    if (!Array.isArray(value)) return invalid(mode, name, "must be an array");
+    if (!Array.isArray(value)) {
+        return invalid(mode, name, "must be an array");
+    }
     const out: string[] = [];
     for (const [index, entry] of value.entries()) {
         const item = text(entry);
-        if (!item) return invalid(mode, `${name}.${index}`, "must be a non-empty string");
+        if (!item) {
+            return invalid(mode, `${name}.${index}`, "must be a non-empty string");
+        }
         out.push(item);
     }
     return out;
 }
 
 function pairList(value: unknown, name: string, mode: UiReadMode): Array<[string, string]> | undefined {
-    if (!Array.isArray(value)) return invalid(mode, name, "must be an array");
+    if (!Array.isArray(value)) {
+        return invalid(mode, name, "must be an array");
+    }
     const out: Array<[string, string]> = [];
     for (const [index, entry] of value.entries()) {
         if (!Array.isArray(entry) || entry.length !== 2) {
@@ -80,7 +94,9 @@ function pairList(value: unknown, name: string, mode: UiReadMode): Array<[string
 }
 
 function invalid(mode: UiReadMode, name: string, message: string): undefined {
-    if (mode === "throw") throw new IntegrationInputError(name, message);
+    if (mode === "throw") {
+        throw new IntegrationInputError(name, message);
+    }
     return undefined;
 }
 

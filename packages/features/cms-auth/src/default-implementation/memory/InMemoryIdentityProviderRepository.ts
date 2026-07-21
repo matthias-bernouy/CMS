@@ -1,5 +1,8 @@
 import type {
-    IdentityProviderRepository, IdentityProvider, NewIdentityProvider, IdentityProviderPatch,
+    IdentityProviderRepository,
+    IdentityProvider,
+    NewIdentityProvider,
+    IdentityProviderPatch,
 } from "cms-auth/interfaces/IdentityProvider";
 
 /**
@@ -8,7 +11,6 @@ import type {
  * Reads return shallow copies. Secrets are NOT held here (see the interface).
  */
 export class InMemoryIdentityProviderRepository implements IdentityProviderRepository {
-
     private _byId = new Map<string, IdentityProvider>();
 
     async list(): Promise<IdentityProvider[]> {
@@ -21,7 +23,9 @@ export class InMemoryIdentityProviderRepository implements IdentityProviderRepos
     }
 
     async create(input: NewIdentityProvider): Promise<IdentityProvider> {
-        if (this._byId.has(input.id)) throw new Error(`identity provider "${input.id}" already exists`);
+        if (this._byId.has(input.id)) {
+            throw new Error(`identity provider "${input.id}" already exists`);
+        }
         const now = new Date();
         const provider: IdentityProvider = { ...input, createdAt: now, updatedAt: now };
         this._byId.set(provider.id, provider);
@@ -30,8 +34,16 @@ export class InMemoryIdentityProviderRepository implements IdentityProviderRepos
 
     async update(id: string, patch: IdentityProviderPatch): Promise<IdentityProvider | null> {
         const cur = this._byId.get(id);
-        if (!cur) return null;
-        const next: IdentityProvider = { ...cur, ...patch, id: cur.id, createdAt: cur.createdAt, updatedAt: new Date() };
+        if (!cur) {
+            return null;
+        }
+        const next: IdentityProvider = {
+            ...cur,
+            ...patch,
+            id: cur.id,
+            createdAt: cur.createdAt,
+            updatedAt: new Date(),
+        };
         this._byId.set(id, next);
         return clone(next);
     }

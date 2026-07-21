@@ -1,13 +1,7 @@
 import { cmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
-import {
-    camelize,
-    integer,
-    isRecord,
-    readJsonObject,
-    requiredText,
-} from "../../core/records.ts";
+import { camelize, integer, isRecord, readJsonObject, requiredText } from "../../core/records.ts";
 import { rpc } from "../../core/rest.ts";
 import { publicOrderMetadataDefinitions, withPublicCheckoutMetadata } from "../../core/order-metadata.ts";
 

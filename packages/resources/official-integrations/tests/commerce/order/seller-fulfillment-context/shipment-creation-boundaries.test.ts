@@ -1,14 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import {
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
-import {
-    ok,
-    scenarios,
-    sellerCmsUserId,
-    useRpcResult,
-} from "./fixtures";
+import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { ok, scenarios, sellerCmsUserId, useRpcResult } from "./fixtures";
 
 installCommerceTestEnvironment();
 

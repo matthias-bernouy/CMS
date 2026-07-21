@@ -5,9 +5,13 @@ import { ep, okFetch } from "./helpers/executeEndpointFixtures";
 describe("executeEndpoint headers", () => {
     test("forwards allowed request headers and strips credentials", async () => {
         const fetchImpl = okFetch();
-        await executeEndpoint(ep(), new Request("http://local/x", {
-            headers: { accept: "application/json", cookie: "secret", authorization: "Bearer x" },
-        }), { fetchImpl });
+        await executeEndpoint(
+            ep(),
+            new Request("http://local/x", {
+                headers: { accept: "application/json", cookie: "secret", authorization: "Bearer x" },
+            }),
+            { fetchImpl },
+        );
         const headers = fetchImpl.mock.calls[0]![1]!.headers as Headers;
         expect(headers.get("accept")).toBe("application/json");
         expect(headers.get("cookie")).toBeNull();
@@ -17,7 +21,9 @@ describe("executeEndpoint headers", () => {
     test("static config headers are injected and can override forwarded headers", async () => {
         const fetchImpl = okFetch();
         const endpoint = ep({ headers: [{ name: "Accept", source: { from: "static", value: "application/xml" } }] });
-        await executeEndpoint(endpoint, new Request("http://local/x", { headers: { accept: "application/json" } }), { fetchImpl });
+        await executeEndpoint(endpoint, new Request("http://local/x", { headers: { accept: "application/json" } }), {
+            fetchImpl,
+        });
         expect((fetchImpl.mock.calls[0]![1]!.headers as Headers).get("accept")).toBe("application/xml");
     });
 
@@ -53,7 +59,9 @@ describe("executeEndpoint headers", () => {
         const noResolver = okFetch();
         const missing = okFetch();
 
-        const noResolverResponse = await executeEndpoint(endpoint, new Request("http://local/x"), { fetchImpl: noResolver });
+        const noResolverResponse = await executeEndpoint(endpoint, new Request("http://local/x"), {
+            fetchImpl: noResolver,
+        });
         expect(noResolverResponse.status).toBe(500);
         expect(await noResolverResponse.text()).toBe("computed headers require a configured context resolver");
         expect(noResolver).not.toHaveBeenCalled();

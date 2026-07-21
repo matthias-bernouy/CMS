@@ -22,8 +22,7 @@ export class RepositoryCms {
     }
 
     private registerRoutes(): void {
-        this.runner.get("/api/integrations", async () =>
-            json(await this.integrationCatalog.list()));
+        this.runner.get("/api/integrations", async () => json(await this.integrationCatalog.list()));
 
         this.runner.get("/api/integrations/index", async (req) => {
             const kind = requiredSearchParam(req, "kind");
@@ -34,7 +33,9 @@ export class RepositoryCms {
         this.runner.get("/api/integrations/versions", async (req) => {
             const kind = requiredSearchParam(req, "kind");
             const index = await this.integrationCatalog.getIndex(kind);
-            if (!index) return notFound("integration not found");
+            if (!index) {
+                return notFound("integration not found");
+            }
             return json(index.versions);
         });
 
@@ -51,7 +52,9 @@ export class RepositoryCms {
             const path = requiredSearchParam(req, "path");
             const version = optionalText(url.searchParams.get("version"));
             const asset = await this.integrationCatalog.getAsset?.(kind, version, path);
-            if (!asset) return notFound("integration asset not found");
+            if (!asset) {
+                return notFound("integration asset not found");
+            }
             return new Response(arrayBuffer(asset.bytes), {
                 headers: {
                     "cache-control": "public, max-age=3600",

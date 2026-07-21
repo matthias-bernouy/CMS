@@ -44,22 +44,25 @@ export function setRestResponder(responder: typeof restResponder): void {
 }
 
 export function capturedFetches(): CapturedFetch[] {
-    return fetches.map(fetch => ({
+    return fetches.map((fetch) => ({
         ...fetch,
         headers: new Headers(fetch.headers),
         body: structuredClone(fetch.body),
     }));
 }
 
-export async function requestCommerce(path: string, options: {
-    method?: string;
-    authenticated?: boolean;
-    authorization?: string;
-    userId?: string;
-    userRole?: string | null;
-    body?: JsonRecord;
-    formData?: FormData;
-} = {}): Promise<Response> {
+export async function requestCommerce(
+    path: string,
+    options: {
+        method?: string;
+        authenticated?: boolean;
+        authorization?: string;
+        userId?: string;
+        userRole?: string | null;
+        body?: JsonRecord;
+        formData?: FormData;
+    } = {},
+): Promise<Response> {
     return handleCommerceRequest(commerceRequest(path, options));
 }
 
@@ -69,7 +72,7 @@ export function expectSingleRpc(name: string): CapturedFetch {
 }
 
 export function expectRpc(name: string): CapturedFetch {
-    const calls = fetches.filter(call => call.url === `${supabaseUrl}/rest/v1/rpc/${name}`);
+    const calls = fetches.filter((call) => call.url === `${supabaseUrl}/rest/v1/rpc/${name}`);
     expect(calls).toHaveLength(1);
     const call = calls[0]!;
     expect(call.url).toBe(`${supabaseUrl}/rest/v1/rpc/${name}`);
@@ -95,32 +98,40 @@ const captureFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
         url: request.url,
         method: request.method,
         headers: new Headers(request.headers),
-        body: text && request.headers.get("content-type")?.includes("application/json")
-            ? JSON.parse(text) as JsonRecord
-            : {},
+        body:
+            text && request.headers.get("content-type")?.includes("application/json")
+                ? (JSON.parse(text) as JsonRecord)
+                : {},
     });
     return restResponder(request);
 }) as typeof fetch;
 
-function commerceRequest(path: string, options: {
-    method?: string;
-    authenticated?: boolean;
-    authorization?: string;
-    userId?: string;
-    userRole?: string | null;
-    body?: JsonRecord;
-    formData?: FormData;
-}): Request {
+function commerceRequest(
+    path: string,
+    options: {
+        method?: string;
+        authenticated?: boolean;
+        authorization?: string;
+        userId?: string;
+        userRole?: string | null;
+        body?: JsonRecord;
+        formData?: FormData;
+    },
+): Request {
     const headers = new Headers();
     if (options.authenticated !== false) {
         headers.set("authorization", options.authorization ?? `Bearer ${commerceApiKey}`);
     }
-    if (options.userId) headers.set("x-cms-user-id", options.userId);
-    const userRole = options.userRole === undefined && path.startsWith("/admin/")
-        ? "admin"
-        : options.userRole;
-    if (userRole) headers.set("x-cms-user-role", userRole);
-    if (options.body) headers.set("content-type", "application/json");
+    if (options.userId) {
+        headers.set("x-cms-user-id", options.userId);
+    }
+    const userRole = options.userRole === undefined && path.startsWith("/admin/") ? "admin" : options.userRole;
+    if (userRole) {
+        headers.set("x-cms-user-role", userRole);
+    }
+    if (options.body) {
+        headers.set("content-type", "application/json");
+    }
     return new Request(`https://cms.example.test/functions/v1/cms-commerce${path}`, {
         method: options.method ?? (options.body || options.formData ? "POST" : "GET"),
         headers,

@@ -3,21 +3,23 @@ import { DashboardNav } from "cms-control/components/admin/Resources/Dashboards/
 import { DashboardView } from "cms-control/components/admin/Resources/Dashboards/DashboardView";
 
 const selectedDashboard = "commerce-configuration";
-const groups = [{
-    source: {
-        urn: "urn:commerce",
-        id: "commerce",
-        name: "Commerce",
-        endpointCount: 1,
-        dashboardCount: 2,
-        readonly: false,
+const groups = [
+    {
+        source: {
+            urn: "urn:commerce",
+            id: "commerce",
+            name: "Commerce",
+            endpointCount: 1,
+            dashboardCount: 2,
+            readonly: false,
+        },
+        endpoints: [],
+        dashboards: [
+            { id: "commerce-products", source: "commerce", meta: { name: "Products" }, views: [] },
+            { id: selectedDashboard, source: "commerce", meta: { name: "Settings" }, views: [] },
+        ],
     },
-    endpoints: [],
-    dashboards: [
-        { id: "commerce-products", source: "commerce", meta: { name: "Products" }, views: [] },
-        { id: selectedDashboard, source: "commerce", meta: { name: "Settings" }, views: [] },
-    ],
-}];
+];
 
 describe("dashboard deep links", () => {
     beforeEach(() => {
@@ -37,13 +39,12 @@ describe("dashboard deep links", () => {
                 ? "data-nav-groups-json"
                 : "data-dashboard-groups-json";
             target.setAttribute(attribute, JSON.stringify(groups));
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(selectionOf(component)).toBe(selectedDashboard);
             component.remove();
         }
     });
-
 });
 
 function selectionOf(component: HTMLElement): string {

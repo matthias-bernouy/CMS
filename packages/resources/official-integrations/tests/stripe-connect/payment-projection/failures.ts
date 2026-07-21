@@ -1,13 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import {
-    createPaymentProjectionFixture,
-    successfulJson,
-    type CreatePaymentProjectionHarness,
-} from "./harness";
+import { createPaymentProjectionFixture, successfulJson, type CreatePaymentProjectionHarness } from "./harness";
 
-export function registerPaymentProjectionFailureContracts(
-    createHarness: CreatePaymentProjectionHarness,
-): void {
+export function registerPaymentProjectionFailureContracts(createHarness: CreatePaymentProjectionHarness): void {
     describe("stripe-connect payment projection failure contracts", () => {
         test("leaves local state untouched when the provider refresh fails", async () => {
             const fixture = await createPaymentProjectionFixture(createHarness, "projection-provider-failure");
@@ -22,10 +16,10 @@ export function registerPaymentProjectionFailureContracts(
             expect(await failed.json()).toEqual({ error: "simulated Stripe provider outage" });
             expect(fixture.rest.rows("payments")).toEqual(paymentBefore);
             expect(fixture.rest.rows("commerce_projection_outbox")).toEqual(projectionsBefore);
-            expect(fixture.rest.postgrestRequests.map(request => [request.method, request.table])).toEqual([
+            expect(fixture.rest.postgrestRequests.map((request) => [request.method, request.table])).toEqual([
                 ["GET", "payments"],
             ]);
-            expect(fixture.rest.stripeRequests.map(request => [request.method, request.pathname])).toEqual([
+            expect(fixture.rest.stripeRequests.map((request) => [request.method, request.pathname])).toEqual([
                 ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
             ]);
         });
@@ -58,15 +52,14 @@ export function registerPaymentProjectionFailureContracts(
                 paymentStatus: "succeeded",
                 stripeChargeId: "ch_1",
             });
-            expect(fixture.rest.rows("commerce_projection_outbox"))
-                .toHaveLength(initialProjectionCount + 1);
+            expect(fixture.rest.rows("commerce_projection_outbox")).toHaveLength(initialProjectionCount + 1);
         });
 
         test("replays safely after the outbox committed but its response was lost", async () => {
             const fixture = await createPaymentProjectionFixture(createHarness, "projection-lost-response");
             fixture.rest.setPaymentIntentSucceeded(fixture.paymentIntentId);
             const initialProjections = fixture.rest.rows("commerce_projection_outbox");
-            const initialProjectionIds = new Set(initialProjections.map(row => row.id));
+            const initialProjectionIds = new Set(initialProjections.map((row) => row.id));
             fixture.rest.loseNextPaymentProjectionEnqueueResponse();
             fixture.resetRequests();
 
@@ -76,9 +69,7 @@ export function registerPaymentProjectionFailureContracts(
             expect(await lost.json()).toEqual({ error: "internal error" });
             const projectionsAfterLostResponse = fixture.rest.rows("commerce_projection_outbox");
             expect(projectionsAfterLostResponse).toHaveLength(initialProjections.length + 1);
-            const committedProjection = projectionsAfterLostResponse.find(
-                row => !initialProjectionIds.has(row.id),
-            );
+            const committedProjection = projectionsAfterLostResponse.find((row) => !initialProjectionIds.has(row.id));
             expect(committedProjection).toMatchObject({
                 payment_id: fixture.paymentId,
                 projection_kind: "payment",
@@ -94,7 +85,7 @@ export function registerPaymentProjectionFailureContracts(
             });
             const projectionsAfterRetry = fixture.rest.rows("commerce_projection_outbox");
             expect(projectionsAfterRetry).toHaveLength(initialProjections.length + 1);
-            expect(projectionsAfterRetry.find(row => row.id === committedProjection?.id)).toEqual(
+            expect(projectionsAfterRetry.find((row) => row.id === committedProjection?.id)).toEqual(
                 committedProjection,
             );
         });
@@ -123,7 +114,7 @@ export function registerPaymentProjectionFailureContracts(
                     settlement_status: "manual_review",
                 }),
             ]);
-            expect(fixture.rest.postgrestRequests.map(request => [request.method, request.table])).toEqual([
+            expect(fixture.rest.postgrestRequests.map((request) => [request.method, request.table])).toEqual([
                 ["GET", "payments"],
                 ["POST", "rpc/apply_payment_provider_projection"],
                 ["POST", "rpc/apply_payment_provider_projection"],

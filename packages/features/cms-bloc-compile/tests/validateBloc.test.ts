@@ -2,22 +2,16 @@ import { describe, test, expect } from "bun:test";
 import { validateBloc, validateBlocTag } from "@bernouy/cms-bloc-compile";
 
 describe("validateBlocTag", () => {
-    test.each([
-        ["my-card"],
-        ["a-b"],
-        ["app-v2"],
-        ["base-card"],
-        ["super-cool-bloc"],
-    ])("accepts %p", (tag) => {
+    test.each([["my-card"], ["a-b"], ["app-v2"], ["base-card"], ["super-cool-bloc"]])("accepts %p", (tag) => {
         expect(validateBlocTag(tag)).toBeNull();
     });
 
     test.each([
-        ["card"],         // no dash
-        ["My-Card"],      // uppercase
-        ["1-card"],       // leading digit
-        ["my--card"],     // double dash
-        ["my-card-"],     // trailing dash
+        ["card"], // no dash
+        ["My-Card"], // uppercase
+        ["1-card"], // leading digit
+        ["my--card"], // double dash
+        ["my-card-"], // trailing dash
     ])("rejects malformed %p", (tag) => {
         expect(validateBlocTag(tag)).not.toBeNull();
     });
@@ -75,9 +69,7 @@ describe("validateBloc — source patterns", () => {
             tag: "my-bloc",
             viewSource: `customElements.define("other-tag", X);`,
         });
-        expect(r.errors).toEqual([
-            expect.stringContaining(`Bloc: hardcoded \`customElements.define("other-tag"`),
-        ]);
+        expect(r.errors).toEqual([expect.stringContaining(`Bloc: hardcoded \`customElements.define("other-tag"`)]);
     });
 
     test("rejects hardcoded customElements.define in editor", () => {
@@ -85,9 +77,7 @@ describe("validateBloc — source patterns", () => {
             tag: "my-bloc",
             editorSource: `customElements.define('foo-bar', Y);`,
         });
-        expect(r.errors).toEqual([
-            expect.stringContaining("BlocEditor"),
-        ]);
+        expect(r.errors).toEqual([expect.stringContaining("BlocEditor")]);
     });
 });
 
@@ -116,8 +106,8 @@ describe("validateBloc — Location mutations (#6)", () => {
                 b() { location.replace("/b"); }
             });`,
         });
-        expect(r.errors.filter(e => e.includes("location.assign(…)"))).toHaveLength(1);
-        expect(r.errors.filter(e => e.includes("location.replace(…)"))).toHaveLength(1);
+        expect(r.errors.filter((e) => e.includes("location.assign(…)"))).toHaveLength(1);
+        expect(r.errors.filter((e) => e.includes("location.replace(…)"))).toHaveLength(1);
     });
 
     test("accepts `history.pushState` and `<a href>` patterns", () => {
@@ -160,7 +150,19 @@ describe("validateBloc — graceful degradation", () => {
     });
 
     test("accepts allowed native tags without manifest runtime metadata", () => {
-        const tags = ["form", "fieldset", "legend", "label", "input", "textarea", "select", "option", "button", "output", "img"];
+        const tags = [
+            "form",
+            "fieldset",
+            "legend",
+            "label",
+            "input",
+            "textarea",
+            "select",
+            "option",
+            "button",
+            "output",
+            "img",
+        ];
         for (const tag of tags) {
             expect(validateBloc({ tag }).errors).toEqual([]);
         }

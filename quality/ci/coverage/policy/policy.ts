@@ -15,7 +15,9 @@ export function assertBaselineUpdateAllowed(updateBaseline: boolean, ci: string 
 
 export function normalizeCoverageReference(reference: string | undefined): string | undefined {
     const normalized = reference?.trim();
-    if (!normalized || /^0+$/.test(normalized)) return undefined;
+    if (!normalized || /^0+$/.test(normalized)) {
+        return undefined;
+    }
     return normalized;
 }
 

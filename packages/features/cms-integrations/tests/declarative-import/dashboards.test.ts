@@ -24,8 +24,9 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             const dashboard = structuredClone(DELIVERY_DEFINITION) as any;
             dashboard.artifacts[1].dashboard.views[0].main[0].fields[1].lookup.selected = selected;
             expect(() => parseIntegrationDefinition(dashboard)).toThrow(/selected.*non-empty string/);
-            expect(() => parseIntegrationDefinition(overlayLookupDefinition(selected)))
-                .toThrow(/selected.*non-empty string/);
+            expect(() => parseIntegrationDefinition(overlayLookupDefinition(selected))).toThrow(
+                /selected.*non-empty string/,
+            );
         }
     });
 
@@ -39,11 +40,11 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             artifacts: [sourceArtifact("same"), sourceArtifact("same")],
         };
 
-        await expect(importIntegration(
-            { sources, secrets },
-            { kind: "duplicate-sources", answers: {}, options: {} },
-            [definition],
-        )).rejects.toThrow(/urn:same/);
+        await expect(
+            importIntegration({ sources, secrets }, { kind: "duplicate-sources", answers: {}, options: {} }, [
+                definition,
+            ]),
+        ).rejects.toThrow(/urn:same/);
 
         expect(await sources.getSource("urn:same")).toBeNull();
     });
@@ -56,10 +57,7 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             kind: "source-dashboard",
             label: "Source dashboard",
             inputs: [],
-            artifacts: [
-                sourceArtifact("items"),
-                dashboardArtifact("items-dashboard", "items"),
-            ],
+            artifacts: [sourceArtifact("items"), dashboardArtifact("items-dashboard", "items")],
         };
 
         const result = await importIntegration(
@@ -72,7 +70,9 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             { type: "source", id: "urn:items", action: "created" },
             { type: "dashboard", id: "items-dashboard", action: "created" },
         ]);
-        expect(await dashboards.getDashboard("items-dashboard")).toEqual(dashboardArtifact("items-dashboard", "items").dashboard);
+        expect(await dashboards.getDashboard("items-dashboard")).toEqual(
+            dashboardArtifact("items-dashboard", "items").dashboard,
+        );
     });
 
     test("rejects dashboards targeting sources not declared by the same integration", async () => {
@@ -83,17 +83,16 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             kind: "foreign-dashboard",
             label: "Foreign dashboard",
             inputs: [],
-            artifacts: [
-                sourceArtifact("owned"),
-                dashboardArtifact("bad-dashboard", "foreign"),
-            ],
+            artifacts: [sourceArtifact("owned"), dashboardArtifact("bad-dashboard", "foreign")],
         };
 
-        await expect(importIntegration(
-            { sources, secrets, dashboards },
-            { kind: "foreign-dashboard", answers: {}, options: {} },
-            [definition],
-        )).rejects.toThrow(/references source "foreign" not declared by this integration/);
+        await expect(
+            importIntegration(
+                { sources, secrets, dashboards },
+                { kind: "foreign-dashboard", answers: {}, options: {} },
+                [definition],
+            ),
+        ).rejects.toThrow(/references source "foreign" not declared by this integration/);
 
         expect(await sources.getSource("urn:owned")).toBeNull();
         expect(await dashboards.getDashboard("bad-dashboard")).toBeNull();
@@ -107,17 +106,14 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             kind: "dashboard-fails",
             label: "Dashboard fails",
             inputs: [],
-            artifacts: [
-                sourceArtifact("items"),
-                dashboardArtifact("items-dashboard", "items"),
-            ],
+            artifacts: [sourceArtifact("items"), dashboardArtifact("items-dashboard", "items")],
         };
 
-        await expect(importIntegration(
-            { sources, secrets, dashboards },
-            { kind: "dashboard-fails", answers: {}, options: {} },
-            [definition],
-        )).rejects.toThrow(/dashboard create failed/);
+        await expect(
+            importIntegration({ sources, secrets, dashboards }, { kind: "dashboard-fails", answers: {}, options: {} }, [
+                definition,
+            ]),
+        ).rejects.toThrow(/dashboard create failed/);
 
         expect(await sources.getSource("urn:items")).toBeNull();
         expect(await dashboards.getDashboard("items-dashboard")).toBeNull();
@@ -129,15 +125,26 @@ function overlayLookupDefinition(selected: unknown) {
         kind: "delivery-overlay",
         label: "Delivery overlay",
         inputs: [],
-        artifacts: [{ type: "sourceOverlay", overlay: {
-            id: "delivery-fields",
-            sourceId: "delivery",
-            fields: [],
-            dashboardFields: [{ viewId: "shipmentDetail", fieldId: "deliveryRelayNumber", field: {
-                type: "combobox",
-                lookup: { endpoint: "relayPoints", valuePath: "number", labelPath: "name", selected },
-            } }],
-        } }],
+        artifacts: [
+            {
+                type: "sourceOverlay",
+                overlay: {
+                    id: "delivery-fields",
+                    sourceId: "delivery",
+                    fields: [],
+                    dashboardFields: [
+                        {
+                            viewId: "shipmentDetail",
+                            fieldId: "deliveryRelayNumber",
+                            field: {
+                                type: "combobox",
+                                lookup: { endpoint: "relayPoints", valuePath: "number", labelPath: "name", selected },
+                            },
+                        },
+                    ],
+                },
+            },
+        ],
     };
 }
 
@@ -166,7 +173,9 @@ class FailingCreateDashboardRepository extends InMemoryDashboardRepository {
     }
 
     override createDashboard(dashboard: Dashboard): Promise<Dashboard> {
-        if (dashboard.id === this.failId) throw new Error(`dashboard create failed for ${dashboard.id}`);
+        if (dashboard.id === this.failId) {
+            throw new Error(`dashboard create failed for ${dashboard.id}`);
+        }
         return super.createDashboard(dashboard);
     }
 }

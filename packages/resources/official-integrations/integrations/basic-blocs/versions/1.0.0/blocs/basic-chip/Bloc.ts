@@ -54,7 +54,9 @@ class BasicChip extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     get value() {
@@ -87,12 +89,16 @@ class BasicChip extends HTMLElement {
     }
 
     onClick = () => {
-        if (this.disabled) return;
-        this.dispatchEvent(new CustomEvent("basic-chip:toggle", {
-            bubbles: true,
-            composed: true,
-            detail: { value: this.value },
-        }));
+        if (this.disabled) {
+            return;
+        }
+        this.dispatchEvent(
+            new CustomEvent("basic-chip:toggle", {
+                bubbles: true,
+                composed: true,
+                detail: { value: this.value },
+            }),
+        );
     };
 }
 

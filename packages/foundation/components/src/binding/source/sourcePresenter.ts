@@ -35,7 +35,9 @@ export class SourcePresenter {
     loading(alias: string | undefined): void {
         const loading = statusValue("loading", undefined);
         publishSourceStatus(this.el, loading, this.options);
-        if (this.renderedBody && !this.hasConditions("loading")) return;
+        if (this.renderedBody && !this.hasConditions("loading")) {
+            return;
+        }
         this.renderer.body(this.scope(alias, loading, undefined));
         this.renderedBody = true;
     }
@@ -46,7 +48,9 @@ export class SourcePresenter {
         publishSourceStatus(this.el, errorStatus, this.options);
         this.renderer.body(this.scope(alias, errorStatus, errorValue));
         this.renderedBody = true;
-        if (!this.hasConditions("error")) console.warn(`cms-source "${url}": ${message}`);
+        if (!this.hasConditions("error")) {
+            console.warn(`cms-source "${url}": ${message}`);
+        }
     }
 
     data(alias: string | undefined, data: unknown): void {

@@ -32,7 +32,9 @@ export default async function pageExists(req: Request, cms: ControlCms) {
     }
 
     const match = await cms.repository.getPage(path);
-    if (match !== null) return json({ exists: true, reason: "taken" });
+    if (match !== null) {
+        return json({ exists: true, reason: "taken" });
+    }
     return json({ exists: false });
 }
 

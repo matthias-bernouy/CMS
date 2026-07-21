@@ -47,12 +47,18 @@ class CommerceStripePayment extends HTMLElement {
             this.paymentRegion.hidden = true;
             this.preview.hidden = false;
             this.submitButton.disabled = true;
-            this.setStatus(this.getAttribute("preview-label") || "Le formulaire de paiement sécurisé Stripe apparaîtra sur la page publiée.", "idle");
+            this.setStatus(
+                this.getAttribute("preview-label") ||
+                    "Le formulaire de paiement sécurisé Stripe apparaîtra sur la page publiée.",
+                "idle",
+            );
             return;
         }
         this.paymentMount.hidden = false;
         this.paymentRegion.hidden = false;
-        if (this.readPaymentInput(false)) this.scheduleInitialize();
+        if (this.readPaymentInput(false)) {
+            this.scheduleInitialize();
+        }
     }
 
     disconnectedCallback() {
@@ -61,10 +67,19 @@ class CommerceStripePayment extends HTMLElement {
     }
 
     attributeChangedCallback(name) {
-        if (!this.isConnected || !this.form) return;
-        if (name === "order-id") this.paymentSubmissionLocked = false;
+        if (!this.isConnected || !this.form) {
+            return;
+        }
+        if (name === "order-id") {
+            this.paymentSubmissionLocked = false;
+        }
         this.syncPresentation();
-        if (name === "accent-color" || name === "background-color" || name === "border-color" || name === "text-color") {
+        if (
+            name === "accent-color" ||
+            name === "background-color" ||
+            name === "border-color" ||
+            name === "text-color"
+        ) {
             this.elements?.update({ appearance: this.stripeAppearance() });
             return;
         }
@@ -249,14 +264,16 @@ class CommerceStripePayment extends HTMLElement {
                 </form>
             </section>
         `;
-        this.form.addEventListener("submit", event => {
+        this.form.addEventListener("submit", (event) => {
             event.preventDefault();
-            this.confirm().catch(error => this.fail(error));
+            this.confirm().catch((error) => this.fail(error));
         });
     }
 
     ensurePaymentMount() {
-        if (this.paymentMountElement?.parentElement === this) return;
+        if (this.paymentMountElement?.parentElement === this) {
+            return;
+        }
         const mount = document.createElement("div");
         mount.slot = PAYMENT_ELEMENT_SLOT;
         mount.setAttribute("data-commerce-stripe-payment-mount", "");
@@ -267,12 +284,13 @@ class CommerceStripePayment extends HTMLElement {
     syncPresentation() {
         const amount = trustedPaymentAmount(this.payment);
         this.title.textContent = this.getAttribute("title") || "Paiement sécurisé";
-        this.copy.textContent = this.getAttribute("copy") || "Choisissez un moyen de paiement et confirmez la commande.";
+        this.copy.textContent =
+            this.getAttribute("copy") || "Choisissez un moyen de paiement et confirmez la commande.";
         this.descriptionElement.textContent = this.getAttribute("summary-label") || "Total de la commande";
         this.amountElement.textContent = amount ? formatAmount(amount.amountTotal, amount.currency) : "—";
-        this.submitButton.textContent = this.getAttribute("button-label") || (amount
-            ? `Payer ${formatAmount(amount.amountTotal, amount.currency)}`
-            : "Payer");
+        this.submitButton.textContent =
+            this.getAttribute("button-label") ||
+            (amount ? `Payer ${formatAmount(amount.amountTotal, amount.currency)}` : "Payer");
         for (const [attribute, property] of [
             ["accent-color", "--payment-accent"],
             ["background-color", "--payment-background"],
@@ -280,22 +298,27 @@ class CommerceStripePayment extends HTMLElement {
             ["text-color", "--payment-text"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
     }
 
     scheduleInitialize() {
         clearTimeout(this.initializeTimer);
         this.initializeTimer = setTimeout(() => {
-            this.initialize().catch(error => this.fail(error));
+            this.initialize().catch((error) => this.fail(error));
         }, 25);
     }
 
     async initialize() {
         const input = this.readPaymentInput(true);
         const signature = JSON.stringify(input);
-        if (signature === this.initializedSignature && this.elements) return;
+        if (signature === this.initializedSignature && this.elements) {
+            return;
+        }
 
         this.submitButton.disabled = true;
         this.setStatus("Préparation du paiement sécurisé…", "idle");
@@ -358,15 +381,21 @@ class CommerceStripePayment extends HTMLElement {
             confirmParams: { return_url: this.returnUrl(this.payment.paymentId) },
             redirect: "if_required",
         });
-        if (result.error) throw new Error(result.error.message || "Le paiement a été refusé.");
+        if (result.error) {
+            throw new Error(result.error.message || "Le paiement a été refusé.");
+        }
         await this.completePayment(result.paymentIntent);
     }
 
     async applyRedirectResult(clientSecret) {
         const returnedSecret = new URL(window.location.href).searchParams.get("payment_intent_client_secret");
-        if (!returnedSecret || returnedSecret !== clientSecret) return;
+        if (!returnedSecret || returnedSecret !== clientSecret) {
+            return;
+        }
         const result = await this.stripe.retrievePaymentIntent(clientSecret);
-        if (result.error) throw new Error(result.error.message || "Impossible de récupérer le paiement.");
+        if (result.error) {
+            throw new Error(result.error.message || "Impossible de récupérer le paiement.");
+        }
         await this.completePayment(result.paymentIntent);
     }
 
@@ -391,16 +420,24 @@ class CommerceStripePayment extends HTMLElement {
         const deadline = Date.now() + PAYMENT_RECONCILIATION_POLL_TIMEOUT_MS;
         for (const delay of [0, 250, 500, 1_000, 1_500, 2_500, 4_000, 6_000, 8_000, 10_000, 12_000, 14_000]) {
             const remaining = deadline - Date.now();
-            if (delay && remaining <= 0) break;
-            if (delay) await wait(Math.min(delay, remaining));
-            if (Date.now() >= deadline) break;
+            if (delay && remaining <= 0) {
+                break;
+            }
+            if (delay) {
+                await wait(Math.min(delay, remaining));
+            }
+            if (Date.now() >= deadline) {
+                break;
+            }
             const result = await this.requestFunction("refreshPaymentForOrder", {
                 method: "POST",
                 body: JSON.stringify(this.readPaymentInput(true)),
             });
             latest = result.payment && typeof result.payment === "object" ? result.payment : result;
             const state = protectedPaymentState(latest);
-            if (state !== "processing" && state !== "requires_action" && state !== "created") return latest;
+            if (state !== "processing" && state !== "requires_action" && state !== "created") {
+                return latest;
+            }
         }
         return latest || this.payment;
     }
@@ -436,12 +473,12 @@ class CommerceStripePayment extends HTMLElement {
 
     lockPaymentSubmission() {
         this.paymentSubmissionLocked = true;
-        this.form.querySelectorAll("button").forEach(button => button.disabled = true);
+        this.form.querySelectorAll("button").forEach((button) => (button.disabled = true));
     }
 
     async clientConfig() {
         if (!this.clientConfigPromise) {
-            this.clientConfigPromise = this.requestFunction("getStripePaymentClientConfig").then(config => {
+            this.clientConfigPromise = this.requestFunction("getStripePaymentClientConfig").then((config) => {
                 if (typeof config.publishableKey !== "string" || !config.publishableKey.startsWith("pk_")) {
                     throw new Error("La configuration du service de paiement est incomplète.");
                 }
@@ -472,9 +509,10 @@ class CommerceStripePayment extends HTMLElement {
         });
         const body = await response.json().catch(() => null);
         if (!response.ok) {
-            const message = body && typeof body === "object" && "error" in body
-                ? String(body.error)
-                : `${response.status} ${response.statusText}`;
+            const message =
+                body && typeof body === "object" && "error" in body
+                    ? String(body.error)
+                    : `${response.status} ${response.statusText}`;
             throw new Error(message);
         }
         if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -535,7 +573,9 @@ class CommerceStripePayment extends HTMLElement {
     returnUrl(paymentId) {
         const value = this.getAttribute("return-url")?.trim() || window.location.href;
         const url = new URL(value, window.location.href);
-        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("L’URL de retour du paiement est invalide.");
+        if (url.protocol !== "http:" && url.protocol !== "https:") {
+            throw new Error("L’URL de retour du paiement est invalide.");
+        }
         url.searchParams.set("cms_payment_id", String(paymentId));
         return url.toString();
     }
@@ -555,30 +595,54 @@ class CommerceStripePayment extends HTMLElement {
 
     fail(error) {
         const input = this.readPaymentInput(false);
-        const currentFormIsUsable = Boolean(input && this.elements && JSON.stringify(input) === this.initializedSignature);
+        const currentFormIsUsable = Boolean(
+            input && this.elements && JSON.stringify(input) === this.initializedSignature,
+        );
         this.submitButton.disabled = this.paymentSubmissionLocked || !currentFormIsUsable;
         this.setStatus(errorMessage(error), "error");
         this.dispatch("error", { message: errorMessage(error) });
     }
 
     dispatch(name, detail) {
-        this.dispatchEvent(new CustomEvent(`commerce-stripe-payment:${name}`, {
-            bubbles: true,
-            composed: true,
-            detail,
-        }));
+        this.dispatchEvent(
+            new CustomEvent(`commerce-stripe-payment:${name}`, {
+                bubbles: true,
+                composed: true,
+                detail,
+            }),
+        );
     }
 
-    get form() { return this.root.querySelector("[data-form]"); }
-    get title() { return this.root.querySelector("[data-title]"); }
-    get copy() { return this.root.querySelector("[data-copy]"); }
-    get descriptionElement() { return this.root.querySelector("[data-description]"); }
-    get amountElement() { return this.root.querySelector("[data-amount]"); }
-    get paymentMount() { return this.paymentMountElement; }
-    get paymentRegion() { return this.root.querySelector("[data-payment-region]"); }
-    get preview() { return this.root.querySelector("[data-preview]"); }
-    get submitButton() { return this.root.querySelector("[data-submit]"); }
-    get status() { return this.root.querySelector("[data-status]"); }
+    get form() {
+        return this.root.querySelector("[data-form]");
+    }
+    get title() {
+        return this.root.querySelector("[data-title]");
+    }
+    get copy() {
+        return this.root.querySelector("[data-copy]");
+    }
+    get descriptionElement() {
+        return this.root.querySelector("[data-description]");
+    }
+    get amountElement() {
+        return this.root.querySelector("[data-amount]");
+    }
+    get paymentMount() {
+        return this.paymentMountElement;
+    }
+    get paymentRegion() {
+        return this.root.querySelector("[data-payment-region]");
+    }
+    get preview() {
+        return this.root.querySelector("[data-preview]");
+    }
+    get submitButton() {
+        return this.root.querySelector("[data-submit]");
+    }
+    get status() {
+        return this.root.querySelector("[data-status]");
+    }
 }
 
 function paymentAttributes() {
@@ -597,20 +661,45 @@ function protectedPaymentState(payment) {
     const dispute = String(payment?.disputeStatus || "none").toLowerCase();
     const amountTotal = Number(payment?.amountTotal);
     const refundedAmount = Number(payment?.refundedAmount);
-    if (["open", "under_review", "lost"].includes(dispute)) return "disputed";
-    if (payment?.reconciliationPending === true && !["blocked", "reversed"].includes(settlement)) return "processing";
-    if (settlement === "manual_review") return "manual_review";
-    if (settlement === "refunded" || (Number.isSafeInteger(amountTotal) && amountTotal > 0 && refundedAmount >= amountTotal)) {
+    if (["open", "under_review", "lost"].includes(dispute)) {
+        return "disputed";
+    }
+    if (payment?.reconciliationPending === true && !["blocked", "reversed"].includes(settlement)) {
+        return "processing";
+    }
+    if (settlement === "manual_review") {
+        return "manual_review";
+    }
+    if (
+        settlement === "refunded" ||
+        (Number.isSafeInteger(amountTotal) && amountTotal > 0 && refundedAmount >= amountTotal)
+    ) {
         return "refunded";
     }
-    if (Number.isSafeInteger(refundedAmount) && refundedAmount > 0) return "partially_refunded";
-    if (["refund_pending", "reversal_pending", "release_pending"].includes(settlement)) return "processing";
-    if (["blocked", "reversed"].includes(settlement)) return "manual_review";
+    if (Number.isSafeInteger(refundedAmount) && refundedAmount > 0) {
+        return "partially_refunded";
+    }
+    if (["refund_pending", "reversal_pending", "release_pending"].includes(settlement)) {
+        return "processing";
+    }
+    if (["blocked", "reversed"].includes(settlement)) {
+        return "manual_review";
+    }
     const state = String(payment?.paymentStatus || payment?.status || "").toLowerCase();
-    if (["succeeded", "paid"].includes(state)) return "succeeded";
-    if (["processing", "payment_pending"].includes(state)) return "processing";
-    if (["requires_action", "requires_payment_method"].includes(state)) return "requires_action";
-    if (["partially_refunded", "refunded", "disputed", "manual_review", "failed", "cancelled", "canceled"].includes(state)) {
+    if (["succeeded", "paid"].includes(state)) {
+        return "succeeded";
+    }
+    if (["processing", "payment_pending"].includes(state)) {
+        return "processing";
+    }
+    if (["requires_action", "requires_payment_method"].includes(state)) {
+        return "requires_action";
+    }
+    if (
+        ["partially_refunded", "refunded", "disputed", "manual_review", "failed", "cancelled", "canceled"].includes(
+            state,
+        )
+    ) {
         return state === "canceled" ? "cancelled" : state;
     }
     return "created";
@@ -619,23 +708,38 @@ function protectedPaymentState(payment) {
 function formatAmount(amount, currency) {
     try {
         const locale = document.documentElement.lang || navigator.language || "fr-FR";
-        return new Intl.NumberFormat(locale, { style: "currency", currency: currency.toUpperCase() }).format(amount / 100);
+        return new Intl.NumberFormat(locale, { style: "currency", currency: currency.toUpperCase() }).format(
+            amount / 100,
+        );
     } catch {
         return `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`;
     }
 }
 
 function loadStripeJs() {
-    if (typeof window.Stripe === "function") return Promise.resolve(window.Stripe);
-    if (stripeJsLoader) return stripeJsLoader;
+    if (typeof window.Stripe === "function") {
+        return Promise.resolve(window.Stripe);
+    }
+    if (stripeJsLoader) {
+        return stripeJsLoader;
+    }
     stripeJsLoader = new Promise((resolve, reject) => {
         const existing = document.querySelector(`script[src="${STRIPE_JS_URL}"]`);
         const script = existing || document.createElement("script");
-        script.addEventListener("load", () => {
-            if (typeof window.Stripe === "function") resolve(window.Stripe);
-            else reject(new Error("Le service de paiement est indisponible."));
-        }, { once: true });
-        script.addEventListener("error", () => reject(new Error("Impossible de charger le service de paiement.")), { once: true });
+        script.addEventListener(
+            "load",
+            () => {
+                if (typeof window.Stripe === "function") {
+                    resolve(window.Stripe);
+                } else {
+                    reject(new Error("Le service de paiement est indisponible."));
+                }
+            },
+            { once: true },
+        );
+        script.addEventListener("error", () => reject(new Error("Impossible de charger le service de paiement.")), {
+            once: true,
+        });
         if (!existing) {
             script.src = STRIPE_JS_URL;
             script.async = true;
@@ -654,7 +758,9 @@ function waitUntilVisible(element) {
             finish(() => reject(new Error("Le formulaire de paiement ne peut pas être affiché.")));
         }, 10_000);
         const schedule = () => {
-            if (frame !== null) return;
+            if (frame !== null) {
+                return;
+            }
             frame = requestAnimationFrame(check);
         };
         const check = () => {
@@ -665,9 +771,7 @@ function waitUntilVisible(element) {
                 return;
             }
             const width = element.getBoundingClientRect().width;
-            stableFrames = lastWidth !== null && Math.abs(width - lastWidth) < .5
-                ? stableFrames + 1
-                : 0;
+            stableFrames = lastWidth !== null && Math.abs(width - lastWidth) < 0.5 ? stableFrames + 1 : 0;
             lastWidth = width;
             if (stableFrames >= 2) {
                 finish(resolve);
@@ -675,9 +779,11 @@ function waitUntilVisible(element) {
             }
             schedule();
         };
-        const finish = callback => {
+        const finish = (callback) => {
             clearTimeout(timeout);
-            if (frame !== null) cancelAnimationFrame(frame);
+            if (frame !== null) {
+                cancelAnimationFrame(frame);
+            }
             observer.disconnect();
             callback();
         };
@@ -693,14 +799,23 @@ function isVisible(element) {
 
 function paymentElementReady(element) {
     return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => finish(() => reject(new Error(
-            "Le formulaire de paiement met trop de temps à charger. Réessayez dans quelques instants.",
-        ))), 20_000);
+        const timeout = setTimeout(
+            () =>
+                finish(() =>
+                    reject(
+                        new Error(
+                            "Le formulaire de paiement met trop de temps à charger. Réessayez dans quelques instants.",
+                        ),
+                    ),
+                ),
+            20_000,
+        );
         const onReady = () => finish(resolve);
-        const onLoadError = event => finish(() => reject(new Error(
-            event?.error?.message || "Impossible de charger le formulaire de paiement.",
-        )));
-        const finish = callback => {
+        const onLoadError = (event) =>
+            finish(() =>
+                reject(new Error(event?.error?.message || "Impossible de charger le formulaire de paiement.")),
+            );
+        const finish = (callback) => {
             clearTimeout(timeout);
             element.off("ready", onReady);
             element.off("loaderror", onLoadError);
@@ -720,25 +835,42 @@ function errorMessage(error) {
     if (message === "SELLER_PROTECTED_PAYMENT_NOT_READY") {
         return "Cette annonce n’est pas disponible à l’achat pour le moment. Le vendeur doit finaliser l’activation de ses paiements.";
     }
-    if (/insufficient funds/i.test(message)) return "Le solde de la carte est insuffisant. Essaie un autre moyen de paiement.";
-    if (/card.*(?:declined|refused)|(?:declined|refused).*card/i.test(message)) return "La carte a été refusée. Essaie un autre moyen de paiement.";
-    if (/expired card|card.*expired/i.test(message)) return "La carte est expirée. Utilise une autre carte.";
-    if (/authentication|3d secure/i.test(message)) return "L’authentification du paiement a échoué. Réessaie ou utilise une autre carte.";
+    if (/insufficient funds/i.test(message)) {
+        return "Le solde de la carte est insuffisant. Essaie un autre moyen de paiement.";
+    }
+    if (/card.*(?:declined|refused)|(?:declined|refused).*card/i.test(message)) {
+        return "La carte a été refusée. Essaie un autre moyen de paiement.";
+    }
+    if (/expired card|card.*expired/i.test(message)) {
+        return "La carte est expirée. Utilise une autre carte.";
+    }
+    if (/authentication|3d secure/i.test(message)) {
+        return "L’authentification du paiement a échoué. Réessaie ou utilise une autre carte.";
+    }
     return isFrenchUserMessage(message)
         ? message
         : "Le paiement n’a pas pu être traité. Réessaie ou utilise un autre moyen de paiement.";
 }
 
 function isFrenchUserMessage(value) {
-    return Boolean(value) && /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|votre|vos|paiement|carte|commande|formulaire|réponse)\b/i.test(value);
+    return (
+        Boolean(value) &&
+        /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|votre|vos|paiement|carte|commande|formulaire|réponse)\b/i.test(
+            value,
+        )
+    );
 }
 
 function wait(duration) {
-    return new Promise(resolve => setTimeout(resolve, duration));
+    return new Promise((resolve) => setTimeout(resolve, duration));
 }
 
 function isFramed() {
-    try { return window.self !== window.top; } catch { return true; }
+    try {
+        return window.self !== window.top;
+    } catch {
+        return true;
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceStripePayment);

@@ -29,7 +29,9 @@ export abstract class Component extends HTMLElement {
     }
 
     registerCSSVariables(items: Record<string, string>) {
-        if (!this._styles) return;
+        if (!this._styles) {
+            return;
+        }
 
         let src = this._rawStyles;
         Object.entries(items).forEach(([key, value]) => {
@@ -41,7 +43,9 @@ export abstract class Component extends HTMLElement {
 
     /** Invoked by the browser once the element is appended to the DOM.
      *  Subclasses override this to wire DOM references and listeners. */
-    connectedCallback() { /* override in subclasses */ }
+    connectedCallback() {
+        /* override in subclasses */
+    }
 }
 
 /**

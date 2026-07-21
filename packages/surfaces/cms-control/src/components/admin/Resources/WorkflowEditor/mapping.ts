@@ -30,9 +30,13 @@ export type ValueDraft = {
 };
 
 export function referencesFromShape(shape: MappingShape | undefined, prefix: string, label: string): ReferenceOption[] {
-    if (!shape) return [];
+    if (!shape) {
+        return [];
+    }
     const options: ReferenceOption[] = [{ value: prefix, label, shape }];
-    if (shape.type !== "object") return options;
+    if (shape.type !== "object") {
+        return options;
+    }
     for (const [name, child] of Object.entries(shape.properties ?? {})) {
         options.push(...referencesFromShape(child, `${prefix}.${name}`, `${label} / ${name}`));
     }
@@ -40,7 +44,9 @@ export function referencesFromShape(shape: MappingShape | undefined, prefix: str
 }
 
 export function targetsFromShape(shape: MappingShape | undefined, prefix = ""): MappingTarget[] {
-    if (!shape) return [];
+    if (!shape) {
+        return [];
+    }
     if (shape.type !== "object" || !Object.keys(shape.properties ?? {}).length) {
         return [{ path: prefix, label: prefix || "Value", shape }];
     }
@@ -49,12 +55,14 @@ export function targetsFromShape(shape: MappingShape | undefined, prefix = ""): 
         if (child.type === "object" && Object.keys(child.properties ?? {}).length) {
             return targetsFromShape(child, path);
         }
-        return [{
-            path,
-            label: path,
-            required: shape.required?.includes(name),
-            shape: child,
-        }];
+        return [
+            {
+                path,
+                label: path,
+                required: shape.required?.includes(name),
+                shape: child,
+            },
+        ];
     });
 }
 
@@ -81,16 +89,14 @@ export function mappingEditor(
     return root;
 }
 
-export function valuePicker(
-    draft: ValueDraft,
-    references: ReferenceOption[],
-    label = "Choose a value",
-): HTMLElement {
+export function valuePicker(draft: ValueDraft, references: ReferenceOption[], label = "Choose a value"): HTMLElement {
     const wrap = document.createElement("div");
     wrap.className = "value-picker";
     const select = document.createElement("select");
     select.append(option("", label));
-    for (const reference of references) select.append(option(reference.value, reference.label));
+    for (const reference of references) {
+        select.append(option(reference.value, reference.label));
+    }
     select.append(option("__literal__", "Fixed value…"));
     select.value = draft.mode === "literal" ? "__literal__" : draft.value;
 
@@ -112,7 +118,7 @@ export function valuePicker(
         draft.value = select.value;
         literal.hidden = true;
     });
-    literal.addEventListener("input", () => draft.value = literal.value);
+    literal.addEventListener("input", () => (draft.value = literal.value));
     wrap.append(select, literal);
     return wrap;
 }
@@ -120,16 +126,22 @@ export function valuePicker(
 export function mappedObject(draft: Record<string, ValueDraft>): Record<string, FunctionValue> {
     const result: Record<string, FunctionValue> = {};
     for (const [path, value] of Object.entries(draft)) {
-        if (!value.value) continue;
+        if (!value.value) {
+            continue;
+        }
         setPath(result, path, resolvedDraftValue(value));
     }
     return result;
 }
 
 export function resolvedDraftValue(draft: ValueDraft): FunctionValue {
-    if (draft.mode === "reference") return draft.value;
+    if (draft.mode === "reference") {
+        return draft.value;
+    }
     const raw = draft.value.trim();
-    if (!raw) return "";
+    if (!raw) {
+        return "";
+    }
     try {
         return JSON.parse(raw) as FunctionValue;
     } catch {
@@ -153,10 +165,16 @@ function mappingRow(target: MappingTarget, references: ReferenceOption[], draft:
 }
 
 function compatibleReferences(references: ReferenceOption[], shape: MappingShape | undefined): ReferenceOption[] {
-    if (!shape) return references;
-    return references.filter(reference => {
-        if (!reference.shape) return true;
-        if (shape.semantic?.kind === "user-id") return reference.shape.semantic?.kind === "user-id";
+    if (!shape) {
+        return references;
+    }
+    return references.filter((reference) => {
+        if (!reference.shape) {
+            return true;
+        }
+        if (shape.semantic?.kind === "user-id") {
+            return reference.shape.semantic?.kind === "user-id";
+        }
         return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
     });
 }
@@ -174,7 +192,9 @@ function setPath(target: Record<string, FunctionValue>, path: string, value: Fun
             return;
         }
         const existing = current[part];
-        if (!existing || typeof existing !== "object" || Array.isArray(existing)) current[part] = {};
+        if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
+            current[part] = {};
+        }
         current = current[part] as Record<string, FunctionValue>;
     }
 }

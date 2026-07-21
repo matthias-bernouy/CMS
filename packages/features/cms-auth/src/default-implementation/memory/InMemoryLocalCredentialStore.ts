@@ -11,16 +11,20 @@ type Record = LocalCredential & { hash: string };
  * Mirrors `MongoLocalCredentialStore` semantics (email unique, sub-keyed).
  */
 export class InMemoryLocalCredentialStore implements LocalCredentialStore {
-
-    private _bySub   = new Map<string, Record>();
+    private _bySub = new Map<string, Record>();
     private _emailToSub = new Map<string, string>();
 
     async create(input: NewCredential): Promise<Identity> {
         const email = input.email.trim().toLowerCase();
-        if (this._emailToSub.has(email)) throw new Error("email already registered");
+        if (this._emailToSub.has(email)) {
+            throw new Error("email already registered");
+        }
         const now = new Date();
         const rec: Record = {
-            sub: randomUUIDv7(), email, createdAt: now, updatedAt: now,
+            sub: randomUUIDv7(),
+            email,
+            createdAt: now,
+            updatedAt: now,
             emailVerifiedAt: input.emailVerified === false ? null : now,
             hash: await Bun.password.hash(input.password),
         };
@@ -33,15 +37,24 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         const sub = this._emailToSub.get(email.trim().toLowerCase());
         const rec = sub ? this._bySub.get(sub) : undefined;
         // Spend a verify's worth of time on an unknown email (timing parity).
-        if (!rec) { await dummyPasswordVerify(password); return null; }
-        if (!(await Bun.password.verify(password, rec.hash))) return null;
-        if (rec.emailVerifiedAt === null) return null;
+        if (!rec) {
+            await dummyPasswordVerify(password);
+            return null;
+        }
+        if (!(await Bun.password.verify(password, rec.hash))) {
+            return null;
+        }
+        if (rec.emailVerifiedAt === null) {
+            return null;
+        }
         return { sub: rec.sub, email: rec.email };
     }
 
     async setPassword(sub: string, password: string): Promise<boolean> {
         const rec = this._bySub.get(sub);
-        if (!rec) return false;
+        if (!rec) {
+            return false;
+        }
         rec.hash = await Bun.password.hash(password);
         rec.updatedAt = new Date();
         return true;
@@ -49,7 +62,9 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
 
     async markEmailVerified(sub: string): Promise<boolean> {
         const rec = this._bySub.get(sub);
-        if (!rec) return false;
+        if (!rec) {
+            return false;
+        }
         const now = new Date();
         rec.emailVerifiedAt = now;
         rec.updatedAt = now;
@@ -64,7 +79,9 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
 
     async delete(sub: string): Promise<boolean> {
         const rec = this._bySub.get(sub);
-        if (!rec) return false;
+        if (!rec) {
+            return false;
+        }
         this._bySub.delete(sub);
         this._emailToSub.delete(rec.email);
         return true;
@@ -76,5 +93,9 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
 }
 
 const strip = (r: Record): LocalCredential => ({
-    sub: r.sub, email: r.email, emailVerifiedAt: r.emailVerifiedAt, createdAt: r.createdAt, updatedAt: r.updatedAt,
+    sub: r.sub,
+    email: r.email,
+    emailVerifiedAt: r.emailVerifiedAt,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
 });

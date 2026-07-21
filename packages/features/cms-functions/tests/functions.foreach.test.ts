@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    executeFunction,
-    validateFunction,
-    type CmsFunction,
-} from "@bernouy/cms-functions";
+import { executeFunction, validateFunction, type CmsFunction } from "@bernouy/cms-functions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { json, productsSource } from "./helpers/functionFixtures";
 
@@ -22,7 +18,9 @@ describe("cms functions foreach", () => {
                     const request = input instanceof Request ? input : new Request(input, init);
                     const url = new URL(request.url);
                     requests.push(`${request.method} ${url.pathname}${url.search}`);
-                    if (url.pathname === "/products/list") return json({ items: [{ id: "p1" }, { id: "p2" }] });
+                    if (url.pathname === "/products/list") {
+                        return json({ items: [{ id: "p1" }, { id: "p2" }] });
+                    }
                     return json({
                         id: url.searchParams.get("productId"),
                         ownerUserId: "user-1",
@@ -37,26 +35,26 @@ describe("cms functions foreach", () => {
             { index: 0, itemId: "p1", product: { id: "p1", ownerUserId: "user-1", title: "Product p1" } },
             { index: 1, itemId: "p2", product: { id: "p2", ownerUserId: "user-1", title: "Product p2" } },
         ]);
-        expect(requests).toEqual([
-            "GET /products/list",
-            "GET /products?productId=p1",
-            "GET /products?productId=p2",
-        ]);
+        expect(requests).toEqual(["GET /products/list", "GET /products?productId=p1", "GET /products?productId=p2"]);
     });
 
     test("validates scopes and static call budget", async () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource(productsSource());
 
-        expect(await validateFunction(itemOutsideLoop(), { sources }))
-            .toContain('function.steps.0.call has an invalid reference "$item.id"');
-        expect(await validateFunction(nestedLoop(), { sources }))
-            .toContain("function.steps.0.forEach.steps.0.forEach must not be nested");
-        expect(await validateFunction(tooManyCalls(), { sources }))
-            .toContain("function call budget exceeds max (51, max 50)");
+        expect(await validateFunction(itemOutsideLoop(), { sources })).toContain(
+            'function.steps.0.call has an invalid reference "$item.id"',
+        );
+        expect(await validateFunction(nestedLoop(), { sources })).toContain(
+            "function.steps.0.forEach.steps.0.forEach must not be nested",
+        );
+        expect(await validateFunction(tooManyCalls(), { sources })).toContain(
+            "function call budget exceeds max (51, max 50)",
+        );
         expect(await validateFunction(continuingLoop(16), { sources })).toEqual([]);
-        expect(await validateFunction(continuingLoop(17), { sources }))
-            .toContain("function call budget exceeds max (51, max 50)");
+        expect(await validateFunction(continuingLoop(17), { sources })).toContain(
+            "function call budget exceeds max (51, max 50)",
+        );
     });
 
     test("fails fast when runtime items exceed max", async () => {
@@ -77,30 +75,39 @@ describe("cms functions foreach", () => {
         const originalGetEndpoint = sources.getEndpoint.bind(sources);
         let endpointLookups = 0;
         let fetchCalls = 0;
-        sources.getEndpoint = async urn => {
+        sources.getEndpoint = async (urn) => {
             endpointLookups += 1;
-            if (endpointLookups === 1) throw new Error("repository programming bug");
+            if (endpointLookups === 1) {
+                throw new Error("repository programming bug");
+            }
             return await originalGetEndpoint(urn);
         };
         const fn: CmsFunction = {
             id: "strictLoopErrors",
             method: "GET",
-            steps: [{
-                id: "loop",
-                forEach: {
-                    items: [{ id: "p1" }],
-                    max: 1,
-                    continueOnError: true,
-                    steps: [{ id: "product", call: productCall() }],
-                    onError: [{ id: "markFailure", call: productCall() }],
+            steps: [
+                {
+                    id: "loop",
+                    forEach: {
+                        items: [{ id: "p1" }],
+                        max: 1,
+                        continueOnError: true,
+                        steps: [{ id: "product", call: productCall() }],
+                        onError: [{ id: "markFailure", call: productCall() }],
+                    },
                 },
-            }],
+            ],
             return: { body: "$steps.loop" },
         };
 
         const response = await executeFunction(fn, new Request("https://cms.test/function"), {
             sources,
-            deps: { fetchImpl: async () => { fetchCalls += 1; return json({}); } },
+            deps: {
+                fetchImpl: async () => {
+                    fetchCalls += 1;
+                    return json({});
+                },
+            },
         });
 
         expect(response.status).toBe(500);
@@ -130,21 +137,33 @@ function loadProductsFunction(): CmsFunction {
 }
 
 function itemOutsideLoop(): CmsFunction {
-    return { id: "badItem", method: "GET", steps: [{ id: "product", call: productCall() }], return: { body: "$steps.product" } };
+    return {
+        id: "badItem",
+        method: "GET",
+        steps: [{ id: "product", call: productCall() }],
+        return: { body: "$steps.product" },
+    };
 }
 
 function nestedLoop(): CmsFunction {
     return {
         id: "nested",
         method: "GET",
-        steps: [{
-            id: "outer",
-            forEach: {
-                items: [{ id: "p1" }],
-                max: 1,
-                steps: [{ id: "inner", forEach: { items: [{ id: "p2" }], max: 1, steps: [{ id: "product", call: productCall() }] } }],
+        steps: [
+            {
+                id: "outer",
+                forEach: {
+                    items: [{ id: "p1" }],
+                    max: 1,
+                    steps: [
+                        {
+                            id: "inner",
+                            forEach: { items: [{ id: "p2" }], max: 1, steps: [{ id: "product", call: productCall() }] },
+                        },
+                    ],
+                },
             },
-        }],
+        ],
         return: { body: "$steps.outer" },
     };
 }
@@ -155,7 +174,10 @@ function tooManyCalls(): CmsFunction {
         method: "GET",
         steps: [
             { id: "list", call: { source: "products", endpoint: "listProducts" } },
-            { id: "loop", forEach: { items: "$steps.list.items", max: 50, steps: [{ id: "product", call: productCall() }] } },
+            {
+                id: "loop",
+                forEach: { items: "$steps.list.items", max: 50, steps: [{ id: "product", call: productCall() }] },
+            },
         ],
         return: { body: "$steps.loop" },
     };
@@ -172,19 +194,21 @@ function continuingLoop(max: number): CmsFunction {
     return {
         id: `continuingLoop${max}`,
         method: "GET",
-        steps: [{
-            id: "loop",
-            forEach: {
-                items: [{ id: "p1" }],
-                max,
-                continueOnError: true,
-                steps: [
-                    { id: "firstCall", call: productCall() },
-                    { id: "lastCall", call: productCall() },
-                ],
-                onError: [{ id: "markFailure", call: productCall() }],
+        steps: [
+            {
+                id: "loop",
+                forEach: {
+                    items: [{ id: "p1" }],
+                    max,
+                    continueOnError: true,
+                    steps: [
+                        { id: "firstCall", call: productCall() },
+                        { id: "lastCall", call: productCall() },
+                    ],
+                    onError: [{ id: "markFailure", call: productCall() }],
+                },
             },
-        }],
+        ],
         return: { body: "$steps.loop" },
     };
 }

@@ -2,9 +2,10 @@ import type { IntegrationAsset } from "../interfaces/IntegrationDefinitionReposi
 
 export async function responseAsset(response: Response, maxBytes?: number): Promise<IntegrationAsset> {
     return {
-        bytes: maxBytes === undefined
-            ? new Uint8Array(await response.arrayBuffer())
-            : await readResponseBounded(response, maxBytes),
+        bytes:
+            maxBytes === undefined
+                ? new Uint8Array(await response.arrayBuffer())
+                : await readResponseBounded(response, maxBytes),
         contentType: response.headers.get("content-type") ?? "application/octet-stream",
     };
 }
@@ -16,7 +17,9 @@ async function readResponseBounded(response: Response, maxBytes: number): Promis
         await response.body?.cancel().catch(() => undefined);
         throw sizeError(maxBytes);
     }
-    if (!response.body) return new Uint8Array();
+    if (!response.body) {
+        return new Uint8Array();
+    }
 
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
@@ -24,7 +27,9 @@ async function readResponseBounded(response: Response, maxBytes: number): Promis
     try {
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+                break;
+            }
             length += value.byteLength;
             if (length > maxBytes) {
                 await reader.cancel().catch(() => undefined);

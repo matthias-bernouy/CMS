@@ -12,13 +12,13 @@
  * issuer-allowlist, the `_sdk` model) — not this store.
  */
 export type Pat = {
-    id:          string;           // opaque record id — for listing / revoking
-    sub:         string;           // the user this token authenticates as
-    name:        string;           // human label ("my laptop CLI")
-    scopes:      string[];         // empty = full user scope
-    createdAt:   Date;
+    id: string; // opaque record id — for listing / revoking
+    sub: string; // the user this token authenticates as
+    name: string; // human label ("my laptop CLI")
+    scopes: string[]; // empty = full user scope
+    createdAt: Date;
     lastUsedAt?: Date;
-    expiresAt?:  Date | null;      // null = never expires
+    expiresAt?: Date | null; // null = never expires
 };
 
 /** A successful verification — enough to resolve a `Subject` via `fromSub`. */

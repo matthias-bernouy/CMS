@@ -13,16 +13,8 @@ import { InMemoryIntegrationConnectorProviderRepository } from "@bernouy/cms-int
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
-import {
-    InMemoryRolesRepository,
-    type RolesRepository,
-    ValidatingRolesRepository,
-} from "@bernouy/cms-permissions";
-import {
-    InMemorySecretStore,
-    type SecretStore,
-    ValidatingSecretStore,
-} from "@bernouy/cms-secrets";
+import { InMemoryRolesRepository, type RolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
+import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/cms-secrets";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import type { CMS_ROLES } from "types/roles";
 import { EMPTY_INTEGRATION_CATALOG } from "cms-control/core/control/defaults";
@@ -67,8 +59,8 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         roles: input.roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository()),
         integrationCatalog: configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG,
         integrationInstallations: configuration.integrationInstallations ?? null,
-        integrationConnectorProviders: configuration.integrationConnectorProviders
-            ?? new InMemoryIntegrationConnectorProviderRepository(),
+        integrationConnectorProviders:
+            configuration.integrationConnectorProviders ?? new InMemoryIntegrationConnectorProviderRepository(),
         dashboards: configuration.dashboards ?? new InMemoryDashboardRepository(),
         relations: configuration.relations ?? new InMemoryRelationRepository(),
         functions: configuration.functions ?? null,

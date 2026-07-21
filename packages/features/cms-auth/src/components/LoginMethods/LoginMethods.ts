@@ -6,7 +6,6 @@
  * nothing when there is no redirect provider.
  */
 class CmsLoginMethods extends HTMLElement {
-
     async connectedCallback() {
         const base = this.getAttribute("base") ?? "";
         const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
@@ -29,9 +28,14 @@ class CmsLoginMethods extends HTMLElement {
             const res = await fetch(`${base}/auth/methods`);
             const methods: Array<{ displayName: string; loginUrl?: string }> = res.ok ? await res.json() : [];
             const redirect = methods.filter((m) => m.loginUrl);
-            if (!redirect.length) return;
-            wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) =>
-                `<a class="provider" href="${esc(m.loginUrl!)}${rt}">${esc(m.displayName)}</a>`).join("");
+            if (!redirect.length) {
+                return;
+            }
+            wrap.innerHTML =
+                `<div class="sep">or</div>` +
+                redirect
+                    .map((m) => `<a class="provider" href="${esc(m.loginUrl!)}${rt}">${esc(m.displayName)}</a>`)
+                    .join("");
         } catch {
             /* no providers shown on failure */
         }

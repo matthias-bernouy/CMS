@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
+import { expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../harness";
 import { rootCategoryRow, useCategoryResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
@@ -44,9 +40,7 @@ describe("commerce optimized category detail budgets", () => {
         },
     ] as const) {
         test(`loads the ${scenario.label} detail in one database call`, async () => {
-            useCategoryResponder(scenario.root
-                ? { category: rootCategoryRow(), parent: null, fields: [] }
-                : {});
+            useCategoryResponder(scenario.root ? { category: rootCategoryRow(), parent: null, fields: [] } : {});
 
             const response = await requestCommerce(scenario.path, { userRole: null });
 

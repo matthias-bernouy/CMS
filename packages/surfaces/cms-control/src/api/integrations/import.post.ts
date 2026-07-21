@@ -24,7 +24,8 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         ...(cms.triggers ? { triggers: cms.triggers } : {}),
         ...(cms.sourceOverlays ? { sourceOverlays: cms.sourceOverlays } : {}),
         blocs: {
-            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
+            importBloc: (artifact, options) =>
+                importBlocArtifact(cms, { ...artifact, force: options.force }, { repository: blocRepository }),
         },
         connectorDeployers: cms.integrationConnectorDeployers,
     };

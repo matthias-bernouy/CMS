@@ -38,7 +38,9 @@ export class ParamSync {
     // component's own slotchange has rebuilt its option list — otherwise
     // `set value` runs before the matching option exists and is a no-op.
     private readonly onChildren = () => {
-        if (this.reflectTimer) clearTimeout(this.reflectTimer);
+        if (this.reflectTimer) {
+            clearTimeout(this.reflectTimer);
+        }
         this.reflectTimer = setTimeout(() => this.reflect(), 0);
     };
 
@@ -68,8 +70,12 @@ export class ParamSync {
         window.removeEventListener("popstate", this.onParams);
         this.childObserver?.disconnect();
         this.childObserver = null;
-        if (this.timer) clearTimeout(this.timer);
-        if (this.reflectTimer) clearTimeout(this.reflectTimer);
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+        if (this.reflectTimer) {
+            clearTimeout(this.reflectTimer);
+        }
         this.timer = this.reflectTimer = null;
     }
 
@@ -85,41 +91,64 @@ export class ParamSync {
      * so recording the intended value would wrongly dedupe a later real pick.
      */
     private reflect(): void {
-        if (this.timer) return; // a debounced local edit is in flight — let it win
+        if (this.timer) {
+            return; // a debounced local edit is in flight — let it win
+        }
         const v = currentParams().get(this.key) ?? "";
         const el = this.el as HTMLInputElement;
         if (el.type === "checkbox") {
             const checked = v !== "" && v === (el.value || "true");
-            if (el.checked !== checked) this.set(() => { el.checked = checked; });
+            if (el.checked !== checked) {
+                this.set(() => {
+                    el.checked = checked;
+                });
+            }
         } else if (el.value !== v) {
-            this.set(() => { el.value = v; });
+            this.set(() => {
+                el.value = v;
+            });
         }
         this.last = this.currentValue();
     }
 
     private set(apply: () => void): void {
         this.reflecting = true;
-        try { apply(); } finally { this.reflecting = false; }
+        try {
+            apply();
+        } finally {
+            this.reflecting = false;
+        }
     }
 
     /** The value `write` would push to the param — the dedupe / seed reference. */
     private currentValue(): string {
         const el = this.el as HTMLInputElement;
-        return el.type === "checkbox" ? (el.checked ? el.value || "true" : "") : el.value ?? "";
+        return el.type === "checkbox" ? (el.checked ? el.value || "true" : "") : (el.value ?? "");
     }
 
     private schedule(): void {
-        if (this.reflecting) return;
-        if (this.timer) clearTimeout(this.timer);
+        if (this.reflecting) {
+            return;
+        }
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
         this.timer = setTimeout(() => this.write(), DEBOUNCE_MS);
     }
 
     /** value → param. */
     private write(): void {
-        if (this.reflecting) return;
-        if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+        if (this.reflecting) {
+            return;
+        }
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
         const value = this.currentValue();
-        if (value === this.last) return; // dedupe input+change and no-op changes
+        if (value === this.last) {
+            return; // dedupe input+change and no-op changes
+        }
         this.last = value;
         setParam(this.key, value);
     }

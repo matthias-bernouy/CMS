@@ -23,11 +23,13 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             artifacts: [sourceArtifact("link")],
         };
 
-        await expect(importIntegration(
-            { sources, secrets, installations },
-            { kind: "products-offers-link", answers: { apiKey: "secret" }, options: {} },
-            [definition],
-        )).rejects.toThrow(/requires integration "offers" to be installed/);
+        await expect(
+            importIntegration(
+                { sources, secrets, installations },
+                { kind: "products-offers-link", answers: { apiKey: "secret" }, options: {} },
+                [definition],
+            ),
+        ).rejects.toThrow(/requires integration "offers" to be installed/);
 
         expect(await secrets.listKeys()).toEqual([]);
         expect(await sources.getSource("urn:link")).toBeNull();
@@ -53,20 +55,25 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             label: "Link",
             dependencies: [{ name: "products", kind: "products" }],
             inputs: [],
-            artifacts: [{
-                type: "source",
-                source: {
-                    id: "{{dependencies.products.sourceId}}-link",
-                    meta: { name: "{{dependencies.products.answers.id}}" },
-                    endpoints: [{
-                        endpointId: "status",
-                        method: "GET",
-                        targetUrl: "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
-                        params: [],
-                        output: [{ status: "200", body: { type: "object" } }],
-                    }],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "{{dependencies.products.sourceId}}-link",
+                        meta: { name: "{{dependencies.products.answers.id}}" },
+                        endpoints: [
+                            {
+                                endpointId: "status",
+                                method: "GET",
+                                targetUrl:
+                                    "https://api.example.com/{{dependencies.products.id}}/{{dependencies.products.answers.public}}",
+                                params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
+                            },
+                        ],
+                    },
                 },
-            }],
+            ],
         };
 
         const result = await importIntegration(
@@ -82,17 +89,24 @@ describe("@bernouy/cms-integrations declarative imports", () => {
     });
 
     test("validates dependency declarations", () => {
-        expect(() => parseIntegrationDefinition({
-            kind: "link",
-            label: "Link",
-            inputs: [],
-            dependencies: [{ name: "products", kind: "products" }, { name: "products", kind: "offers" }],
-        })).toThrow(/duplicate dependency name/);
-        expect(() => parseIntegrationDefinition({
-            kind: "link",
-            label: "Link",
-            inputs: [],
-            dependencies: [{ name: "self", kind: "link" }],
-        })).toThrow(/must not reference the integration itself/);
+        expect(() =>
+            parseIntegrationDefinition({
+                kind: "link",
+                label: "Link",
+                inputs: [],
+                dependencies: [
+                    { name: "products", kind: "products" },
+                    { name: "products", kind: "offers" },
+                ],
+            }),
+        ).toThrow(/duplicate dependency name/);
+        expect(() =>
+            parseIntegrationDefinition({
+                kind: "link",
+                label: "Link",
+                inputs: [],
+                dependencies: [{ name: "self", kind: "link" }],
+            }),
+        ).toThrow(/must not reference the integration itself/);
     });
 });

@@ -12,11 +12,5 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 export default async function ComponentServer(req: Request, delivery: DeliveryCms) {
     const url = new URL(req.url);
     const cacheKey = P9R_CACHE.js(url.pathname);
-    return cachedResponseAsync(
-        req,
-        cacheKey,
-        delivery.cache,
-        generateComponentJsEntry,
-        publicAssetCacheControl(req),
-    );
+    return cachedResponseAsync(req, cacheKey, delivery.cache, generateComponentJsEntry, publicAssetCacheControl(req));
 }

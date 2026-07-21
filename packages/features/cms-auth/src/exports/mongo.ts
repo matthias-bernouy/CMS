@@ -4,8 +4,20 @@
  * consume the store contracts.
  */
 
-export { MongoUsersRepository, type MongoUsersConfig }                        from "cms-auth/default-implementation/mongo/MongoUsersRepository";
-export { MongoIdentityProviderRepository, type MongoIdentityProviderConfig } from "cms-auth/default-implementation/mongo/MongoIdentityProviderRepository";
-export { MongoLocalCredentialStore, type MongoLocalCredentialConfig }        from "cms-auth/default-implementation/mongo/MongoLocalCredentialStore";
-export { MongoPatRepository, type MongoPatConfig }                            from "cms-auth/default-implementation/mongo/MongoPatRepository";
-export { MongoAuthTokenStore, type MongoAuthTokenConfig }                     from "cms-auth/default-implementation/mongo/MongoAuthTokenStore";
+export {
+    MongoUsersRepository,
+    type MongoUsersConfig,
+} from "cms-auth/default-implementation/mongo/MongoUsersRepository";
+export {
+    MongoIdentityProviderRepository,
+    type MongoIdentityProviderConfig,
+} from "cms-auth/default-implementation/mongo/MongoIdentityProviderRepository";
+export {
+    MongoLocalCredentialStore,
+    type MongoLocalCredentialConfig,
+} from "cms-auth/default-implementation/mongo/MongoLocalCredentialStore";
+export { MongoPatRepository, type MongoPatConfig } from "cms-auth/default-implementation/mongo/MongoPatRepository";
+export {
+    MongoAuthTokenStore,
+    type MongoAuthTokenConfig,
+} from "cms-auth/default-implementation/mongo/MongoAuthTokenStore";

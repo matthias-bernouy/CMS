@@ -2,7 +2,16 @@ import { showToast } from "@bernouy/components";
 import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
-import { currentSelection, DASHBOARD_SELECTION_EVENT, defaultDashboardSource, fetchDashboards, pushSelectionUrl, replaceSelectionUrl, route, type DashboardSelection } from "./api";
+import {
+    currentSelection,
+    DASHBOARD_SELECTION_EVENT,
+    defaultDashboardSource,
+    fetchDashboards,
+    pushSelectionUrl,
+    replaceSelectionUrl,
+    route,
+    type DashboardSelection,
+} from "./api";
 import { runDashboardMediaAction, runDashboardWidgetAction } from "./DashboardViewActions";
 import { runDashboardLookupCreate } from "./DashboardViewLookups";
 import { detailKey, type DetailSelection } from "./domain";
@@ -12,7 +21,17 @@ import { configureDashboardBindingFilters } from "./runtime/bindingFilters";
 import { detailReloadEvent } from "./runtime/reload";
 import type { DashboardSourceGroup } from "./types";
 import { updateDashboardWidgetExampleField } from "./widgets/example";
-import { WIDGET_ACTION_EVENT, WIDGET_BACK_EVENT, WIDGET_FIELD_CHANGE_EVENT, WIDGET_MEDIA_ACTION_EVENT, WIDGET_ROW_SELECT_EVENT, type WidgetActionDetail, type WidgetFieldChangeDetail, type WidgetMediaActionDetail, type WidgetRowSelectDetail } from "./widgets/shared";
+import {
+    WIDGET_ACTION_EVENT,
+    WIDGET_BACK_EVENT,
+    WIDGET_FIELD_CHANGE_EVENT,
+    WIDGET_MEDIA_ACTION_EVENT,
+    WIDGET_ROW_SELECT_EVENT,
+    type WidgetActionDetail,
+    type WidgetFieldChangeDetail,
+    type WidgetMediaActionDetail,
+    type WidgetRowSelectDetail,
+} from "./widgets/shared";
 
 export class DashboardView extends Component {
     private groups: DashboardSourceGroup[] = [];
@@ -55,18 +74,24 @@ export class DashboardView extends Component {
     }
 
     private startBoundSource(): void {
-        if (this.isExampleMode()) return this.render();
+        if (this.isExampleMode()) {
+            return this.render();
+        }
         const source = this.shadowRoot!.querySelector<HTMLElement>("[data-dashboard-list-source]");
         source?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
         this.observer = new MutationObserver(() => this.readBoundGroups());
-        if (source) this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+        if (source) {
+            this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+        }
         this.readBoundGroups();
     }
 
     private readBoundGroups(): void {
         const target = this.shadowRoot!.querySelector<HTMLElement>("[data-dashboard-groups-json]");
         const next = parseGroups(target?.dataset.dashboardGroupsJson ?? "");
-        if (!next) return;
+        if (!next) {
+            return;
+        }
         this.groups = next;
         this.selectedSource ||= defaultDashboardSource(this.groups);
         this.ensureDashboardSelection();
@@ -80,7 +105,7 @@ export class DashboardView extends Component {
             this.detailSelection = null;
             return;
         }
-        if (!group.dashboards.some(dashboard => dashboard.id === this.selectedDashboard)) {
+        if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
             this.selectedDashboard = group.dashboards[0]?.id ?? "";
             this.detailSelection = null;
         }
@@ -91,23 +116,45 @@ export class DashboardView extends Component {
             renderExampleShell(this.shadowRoot!, this.detailSelection?.row ?? null);
             return;
         }
-        renderDashboardShell(this.shadowRoot!, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState, this.drafts);
+        renderDashboardShell(
+            this.shadowRoot!,
+            this.activeGroup(),
+            this.activeDashboard(),
+            this.detailSelection,
+            this.tabState,
+            this.drafts,
+        );
     }
 
-    private activeGroup(): DashboardSourceGroup | null { return this.groups.find(group => group.source.id === this.selectedSource) ?? null; }
-    private activeDashboard() { return this.activeGroup()?.dashboards.find(dashboard => dashboard.id === this.selectedDashboard) ?? null; }
-    private isExampleMode(): boolean { return isDashboardExampleMode(this); }
-    private selection(): DashboardSelection { return { source: this.selectedSource, dashboard: this.selectedDashboard, ...(this.detailSelection ? this.detailSelection : {}) }; }
+    private activeGroup(): DashboardSourceGroup | null {
+        return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
+    }
+    private activeDashboard() {
+        return this.activeGroup()?.dashboards.find((dashboard) => dashboard.id === this.selectedDashboard) ?? null;
+    }
+    private isExampleMode(): boolean {
+        return isDashboardExampleMode(this);
+    }
+    private selection(): DashboardSelection {
+        return {
+            source: this.selectedSource,
+            dashboard: this.selectedDashboard,
+            ...(this.detailSelection ? this.detailSelection : {}),
+        };
+    }
 
     private syncFromSelection(selection: DashboardSelection): void {
         this.selectedSource = selection.source;
         this.selectedDashboard = selection.dashboard;
-        this.detailSelection = selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
+        this.detailSelection =
+            selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
     }
 
     private onClick = (event: Event): void => {
         const tabButton = (event.target as Element | null)?.closest<HTMLElement>("[data-tab-key]");
-        if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) return;
+        if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
+            return;
+        }
         this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
         this.render();
     };
@@ -116,11 +163,19 @@ export class DashboardView extends Component {
     private onPopState = (): void => this.syncSelectionAndRender(currentSelection());
     private onWidgetRowSelect = (event: CustomEvent<WidgetRowSelectDetail>): void => {
         this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
-        if (!this.isExampleMode()) pushSelectionUrl(this.selection());
+        if (!this.isExampleMode()) {
+            pushSelectionUrl(this.selection());
+        }
         this.render();
     };
 
-    private onWidgetBack = (): void => { this.detailSelection = null; if (!this.isExampleMode()) replaceSelectionUrl(this.selection()); this.render(); };
+    private onWidgetBack = (): void => {
+        this.detailSelection = null;
+        if (!this.isExampleMode()) {
+            replaceSelectionUrl(this.selection());
+        }
+        this.render();
+    };
 
     private onWidgetAction = (event: CustomEvent<WidgetActionDetail>): void => {
         if (this.isExampleMode()) {
@@ -129,7 +184,9 @@ export class DashboardView extends Component {
         }
         if (event.detail.target) {
             this.detailSelection = { collection: event.detail.target, row: "__new__" };
-            if (!this.isExampleMode()) pushSelectionUrl(this.selection());
+            if (!this.isExampleMode()) {
+                pushSelectionUrl(this.selection());
+            }
             this.render();
             return;
         }
@@ -150,11 +207,15 @@ export class DashboardView extends Component {
             this.render();
             return;
         }
-        if (!this.detailSelection) return;
+        if (!this.detailSelection) {
+            return;
+        }
         const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
         const previousDraft = this.drafts.get(key) ?? {};
         this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
-        if (event.detail.created) void runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
+        if (event.detail.created) {
+            void runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
+        }
     };
 
     private syncSelectionAndRender(selection: DashboardSelection): void {
@@ -180,19 +241,25 @@ export class DashboardView extends Component {
 
     private openDetail(collection: string, row: string): void {
         this.detailSelection = { collection, row };
-        if (!this.isExampleMode()) replaceSelectionUrl(this.selection());
+        if (!this.isExampleMode()) {
+            replaceSelectionUrl(this.selection());
+        }
         this.render();
     }
 
     private clearDetail(): void {
         this.detailSelection = null;
-        if (!this.isExampleMode()) replaceSelectionUrl(this.selection());
+        if (!this.isExampleMode()) {
+            replaceSelectionUrl(this.selection());
+        }
         this.render();
     }
 
     private reloadDetail(collection: string, row: string): void {
         const dashboard = this.activeDashboard();
-        if (!dashboard) return;
+        if (!dashboard) {
+            return;
+        }
         document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
 
@@ -202,16 +269,19 @@ export class DashboardView extends Component {
         this.ensureDashboardSelection();
         this.render();
     }
-
 }
 
-if (!customElements.get("cms-dashboards-admin")) customElements.define("cms-dashboards-admin", DashboardView);
+if (!customElements.get("cms-dashboards-admin")) {
+    customElements.define("cms-dashboards-admin", DashboardView);
+}
 
 function parseGroups(value: string): DashboardSourceGroup[] | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : null;
+        return Array.isArray(parsed) ? (parsed as DashboardSourceGroup[]) : null;
     } catch {
         return null;
     }

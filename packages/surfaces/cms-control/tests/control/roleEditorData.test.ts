@@ -47,13 +47,15 @@ describe("roleEditorData", () => {
         await gateway.createSource({
             urn: "urn:stripe",
             meta: { name: "Stripe" },
-            endpoints: [{
-                urn: "urn:stripe:getInvoice",
-                method: "GET",
-                access: { mode: "auth" },
-                targetUrl: "https://api.stripe.com/{id}",
-                meta: { name: "Get invoice" },
-            }],
+            endpoints: [
+                {
+                    urn: "urn:stripe:getInvoice",
+                    method: "GET",
+                    access: { mode: "auth" },
+                    targetUrl: "https://api.stripe.com/{id}",
+                    meta: { name: "Get invoice" },
+                },
+            ],
         });
         const cms = { repository, users, roles, sources: gateway } as unknown as ControlCms;
         const groups = (await roleEditorData(cms, USER_ROLE)).catalog.gateway;

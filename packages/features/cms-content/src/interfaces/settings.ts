@@ -3,11 +3,10 @@ import type { ThemeSettings } from "cms-content/interfaces/theme";
 
 export type TEmailTemplate = {
     subject: string;
-    html:    string;
+    html: string;
 };
 
 export type TSystem = {
-
     initializationStep: number;
 
     site: {
@@ -36,7 +35,7 @@ export type TSystem = {
         serverError: TPageRef;
         /** Public page used to authenticate anonymous visitors before returning to their destination. */
         login: TPageRef;
-    },
+    };
 
     editor: {
         /**
@@ -45,7 +44,7 @@ export type TSystem = {
          * on the Templates tab, filtered to this category.
          */
         layoutCategory: string;
-    },
+    };
 
     /** Structured design tokens. `site.theme` remains the free-form CSS layer. */
     theme: ThemeSettings;
@@ -65,37 +64,36 @@ export type TSystem = {
         /** Extra origins for `connect-src` (fetch / xhr / websocket). */
         connectExtras: string[];
         /** Extra origins for `media-src` (`<video>` / `<audio>`). */
-        mediaExtras:   string[];
-    },
+        mediaExtras: string[];
+    };
 
     /**
      * Runtime outbound email configuration. The password is deliberately a
      * secret reference, never a raw value stored in the system settings.
      */
     email: {
-        enabled:   boolean;
+        enabled: boolean;
         fromEmail: string;
-        fromName:  string;
-        replyTo:   string;
+        fromName: string;
+        replyTo: string;
         transport: "smtp";
         smtp: {
-            host:              string;
-            port:              number;
-            secure:            boolean;
-            username:          string;
+            host: string;
+            port: number;
+            secure: boolean;
+            username: string;
             passwordSecretRef: string;
         };
         templates: {
             emailVerification: TEmailTemplate;
-            passwordReset:     TEmailTemplate;
+            passwordReset: TEmailTemplate;
         };
-    },
+    };
 
     // Roles are NOT stored here — they live in their own `RolesRepository`
     // (@bernouy/cms-permissions), a dedicated collection independent of the
     // content aggregate.
-
-}
+};
 
 export function wrapBindingCore(content: string): string {
     return `<cms-binding-core>${content}</cms-binding-core>`;

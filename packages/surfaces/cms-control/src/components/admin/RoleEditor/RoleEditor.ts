@@ -2,9 +2,9 @@ import { showToast } from "@bernouy/components";
 import { escapeHtml as esc } from "@bernouy/http-runner/html";
 
 type CmsGroup = { feature: string; label: string; permissions: { id: string; verb: string }[] };
-type GwGroup  = { provider: string; label: string; endpoints: { id: string; label: string }[] };
+type GwGroup = { provider: string; label: string; endpoints: { id: string; label: string }[] };
 type EditorData = {
-    role:    { id: string; label: string; builtin: boolean; grants: string[] };
+    role: { id: string; label: string; builtin: boolean; grants: string[] };
     catalog: { cms: CmsGroup[]; gateway: GwGroup[] };
 };
 
@@ -18,21 +18,35 @@ type EditorData = {
  * it POSTs the checked permissions to `${api}` and returns to `back`.
  */
 class CmsRoleEditor extends HTMLElement {
-
     private data: EditorData | null = null;
 
-    private get _api()  { return this.getAttribute("api")  ?? "/api/roles"; }
-    private get _back() { return this.getAttribute("back") ?? "/admin/roles"; }
-    private get _id()   { return new URLSearchParams(location.search).get("id") ?? ""; }
+    private get _api() {
+        return this.getAttribute("api") ?? "/api/roles";
+    }
+    private get _back() {
+        return this.getAttribute("back") ?? "/admin/roles";
+    }
+    private get _id() {
+        return new URLSearchParams(location.search).get("id") ?? "";
+    }
 
-    connectedCallback() { void this._load(); }
+    connectedCallback() {
+        void this._load();
+    }
 
     private async _load() {
         const id = this._id;
-        if (!id) { location.href = this._back; return; }
+        if (!id) {
+            location.href = this._back;
+            return;
+        }
         try {
-            const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id)}`, { headers: { Accept: "application/json" } });
-            if (!res.ok) throw new Error();
+            const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id)}`, {
+                headers: { Accept: "application/json" },
+            });
+            if (!res.ok) {
+                throw new Error();
+            }
             this.data = await res.json();
         } catch {
             const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
@@ -60,7 +74,12 @@ class CmsRoleEditor extends HTMLElement {
         };
 
         const cmsItems = d.catalog.cms
-            .map((g) => section(g.label, g.permissions.map((p) => ({ id: p.id, label: p.verb }))))
+            .map((g) =>
+                section(
+                    g.label,
+                    g.permissions.map((p) => ({ id: p.id, label: p.verb })),
+                ),
+            )
             .join("");
 
         const gwBlock = d.catalog.gateway.length
@@ -109,7 +128,9 @@ class CmsRoleEditor extends HTMLElement {
         this.shadowRoot!.querySelectorAll("p9r-accordion-item").forEach((item) => {
             const n = item.querySelectorAll("w13c-checkbox[checked]").length;
             const badge = item.querySelector<HTMLElement>(".badge");
-            if (!badge) return;
+            if (!badge) {
+                return;
+            }
             badge.textContent = String(n);
             badge.toggleAttribute("hidden", n === 0);
         });
@@ -121,7 +142,8 @@ class CmsRoleEditor extends HTMLElement {
             .map((el) => ({ permission: el.getAttribute("value")! }));
         try {
             const res = await fetch(this._api, {
-                method: "POST", headers: { "Content-Type": "application/json" },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: this.data!.role.id, label: this.data!.role.label, grants }),
             });
             if (res.ok) {

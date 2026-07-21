@@ -6,10 +6,8 @@ type Overrides = {
     empty?: boolean;
 };
 
-export function successfulResponder(
-    overrides: Overrides = {},
-): (request: Request) => Response {
-    return request => {
+export function successfulResponder(overrides: Overrides = {}): (request: Request) => Response {
+    return (request) => {
         const url = new URL(request.url);
         const path = url.pathname;
         const currentAuthorization = {
@@ -23,10 +21,7 @@ export function successfulResponder(
         if (path === "/system/claim/return-authorization") {
             const claimId = Number(url.searchParams.get("claimId"));
             if (!Number.isSafeInteger(claimId)) {
-                return Response.json(
-                    { error: "claimId must be an integer" },
-                    { status: 400 },
-                );
+                return Response.json({ error: "claimId must be an integer" }, { status: 400 });
             }
             return Response.json(currentAuthorization);
         }
@@ -39,26 +34,14 @@ export function successfulResponder(
     };
 }
 
-export function failingResponder(
-    point: "authorization" | "delivery" | "hydration",
-): (request: Request) => Response {
-    return request => {
+export function failingResponder(point: "authorization" | "delivery" | "hydration"): (request: Request) => Response {
+    return (request) => {
         const path = new URL(request.url).pathname;
-        if (
-            point === "authorization"
-            && path === "/system/claim/return-authorization"
-        ) {
+        if (point === "authorization" && path === "/system/claim/return-authorization") {
             return privateFailure("claim authorization failed");
         }
-        if (
-            (point === "delivery" || point === "hydration")
-            && path === "/system/shipment-for-external-order"
-        ) {
-            return privateFailure(
-                point === "delivery"
-                    ? "delivery lookup failed"
-                    : "delivery hydration failed",
-            );
+        if ((point === "delivery" || point === "hydration") && path === "/system/shipment-for-external-order") {
+            return privateFailure(point === "delivery" ? "delivery lookup failed" : "delivery hydration failed");
         }
         return successfulResponder()(request);
     };

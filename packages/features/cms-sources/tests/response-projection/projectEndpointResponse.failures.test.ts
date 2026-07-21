@@ -19,19 +19,18 @@ describe("projectEndpointResponse failures", () => {
             ["status", endpoint({ output: [{ status: "201", body: { type: "object" } }] }), jsonResponse({}, 200)],
             ["media", endpoint(), new Response("private payload", { headers: { "content-type": "text/plain" } })],
             ["json", endpoint(), new Response("{private payload", { headers: { "content-type": "application/json" } })],
-            ["type", endpoint({ output: [{ status: "200", body: { type: "array" } }] }), jsonResponse({ private: true })],
+            [
+                "type",
+                endpoint({ output: [{ status: "200", body: { type: "array" } }] }),
+                jsonResponse({ private: true }),
+            ],
         ];
 
         for (const [name, source, upstream] of cases) {
-            const response = await projectEndpointResponse(
-                source,
-                new Request("http://local.test/source"),
-                upstream,
-                {
-                    reportResponseProjectionEvent: () => undefined,
-                    ...(name === "status" ? { responseProjectionMode: "strict" as const } : {}),
-                },
-            );
+            const response = await projectEndpointResponse(source, new Request("http://local.test/source"), upstream, {
+                reportResponseProjectionEvent: () => undefined,
+                ...(name === "status" ? { responseProjectionMode: "strict" as const } : {}),
+            });
             await expectGenericFailure(response, name);
         }
     });

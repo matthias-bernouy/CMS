@@ -22,15 +22,19 @@ describe("function execution promise memoization", () => {
         const cache = new Map<string, Promise<string>>();
         let loads = 0;
 
-        await expect(memoizePromise(cache, "secret", () => {
-            loads += 1;
-            throw new Error("temporary resolver failure");
-        })).rejects.toThrow("temporary resolver failure");
+        await expect(
+            memoizePromise(cache, "secret", () => {
+                loads += 1;
+                throw new Error("temporary resolver failure");
+            }),
+        ).rejects.toThrow("temporary resolver failure");
 
-        expect(await memoizePromise(cache, "secret", () => {
-            loads += 1;
-            return "rotated-secret";
-        })).toBe("rotated-secret");
+        expect(
+            await memoizePromise(cache, "secret", () => {
+                loads += 1;
+                return "rotated-secret";
+            }),
+        ).toBe("rotated-secret");
         expect(loads).toBe(2);
     });
 });

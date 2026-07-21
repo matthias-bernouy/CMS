@@ -12,8 +12,7 @@ export type SettingSection = {
 };
 
 export class Editor {
-
-    constructor(public readonly target: HTMLElement) { }
+    constructor(public readonly target: HTMLElement) {}
 
     protected settings(): SettingSection[] {
         return [];
@@ -95,5 +94,4 @@ export class Editor {
     unmountEditor(): void {
         // Editor may override.
     }
-
 }

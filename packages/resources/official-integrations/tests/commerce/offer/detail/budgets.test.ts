@@ -55,7 +55,7 @@ describe("commerce optimized offer detail read budgets", () => {
 
             expect({ seller: seller.status, admin: admin.status }).toEqual({ seller: 200, admin: 200 });
             expect(calls).toHaveLength(2);
-            expect(calls.map(call => call.body.p_scope)).toEqual(["self", "admin"]);
+            expect(calls.map((call) => call.body.p_scope)).toEqual(["self", "admin"]);
         });
     }
 });

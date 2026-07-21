@@ -9,8 +9,8 @@ export const P9R_CACHE = {
      *  deduped+sorted tag set so any page using the same set shares the entry. */
     blocset: (tags: string[]) => `blocset:${[...new Set(tags)].sort().join(",")}`,
     page: (path: string) => `page:${path}`,
-    css:  (url: string) => `css:${url}`,
-    js:   (url: string) => `js:${url}`,
+    css: (url: string) => `css:${url}`,
+    js: (url: string) => `js:${url}`,
     html: (url: string) => `html:${url}`,
     font: (url: string) => `font:${url}`,
     /** The single theme CSS served at `/style`. */

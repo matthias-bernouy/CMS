@@ -4,23 +4,30 @@ import { actionIcon } from "../icons";
 type DetailAction = WDetailData["actions"][number];
 
 export function renderDetailActions(actions: WDetailData["actions"]): HTMLElement[] {
-    const visible = actions.filter(action => action.placement !== "more");
-    const overflow = [...visible.slice(3), ...actions.filter(action => action.placement === "more")];
+    const visible = actions.filter((action) => action.placement !== "more");
+    const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
     const result = visible.slice(0, 3).map(renderButton);
-    if (overflow.length) result.push(renderOverflowMenu(overflow));
+    if (overflow.length) {
+        result.push(renderOverflowMenu(overflow));
+    }
     return result;
 }
 
 function renderButton(action: DetailAction): HTMLElement {
     const button = document.createElement("p9r-button");
     button.setAttribute("type", "button");
-    if (action.tone === "primary") button.setAttribute("color", "primary");
-    else if (action.tone === "danger") {
+    if (action.tone === "primary") {
+        button.setAttribute("color", "primary");
+    } else if (action.tone === "danger") {
         button.setAttribute("color", "danger");
         button.setAttribute("variant", "ghost");
-    } else button.setAttribute("variant", "outlined");
+    } else {
+        button.setAttribute("variant", "outlined");
+    }
     button.dataset.action = action.action ?? action.label;
-    if (action.confirm) button.dataset.confirm = action.confirm;
+    if (action.confirm) {
+        button.dataset.confirm = action.confirm;
+    }
     button.textContent = action.label;
     return button;
 }
@@ -31,7 +38,9 @@ function renderOverflowMenu(actions: DetailAction[]): HTMLElement {
     for (const [label, sectionActions] of groupedSections(actions)) {
         const section = document.createElement("p9r-action-menu-section");
         section.setAttribute("label", label);
-        for (const action of sectionActions) section.append(renderMenuItem(action));
+        for (const action of sectionActions) {
+            section.append(renderMenuItem(action));
+        }
         menu.append(section);
     }
     return menu;
@@ -39,11 +48,17 @@ function renderOverflowMenu(actions: DetailAction[]): HTMLElement {
 
 function renderMenuItem(action: DetailAction): HTMLElement {
     const item = document.createElement("p9r-action-menu-item");
-    if (action.tone === "danger") item.setAttribute("color", "danger");
+    if (action.tone === "danger") {
+        item.setAttribute("color", "danger");
+    }
     item.dataset.action = action.action ?? action.label;
-    if (action.confirm) item.dataset.confirm = action.confirm;
+    if (action.confirm) {
+        item.dataset.confirm = action.confirm;
+    }
     const icon = actionIcon(action.icon);
-    if (icon) item.append(icon);
+    if (icon) {
+        item.append(icon);
+    }
     item.append(document.createTextNode(action.label));
     return item;
 }

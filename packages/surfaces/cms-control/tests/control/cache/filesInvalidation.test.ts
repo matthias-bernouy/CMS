@@ -3,8 +3,15 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import type { TPage } from "@bernouy/cms-content";
 import { invalidatePagesReferencingFile } from "cms-control/core/server/cache/invalidation";
 
-const page = (path: string, content: string): TPage =>
-    ({ id: path, path, title: "", description: "", content, visible: true, tags: [] });
+const page = (path: string, content: string): TPage => ({
+    id: path,
+    path,
+    title: "",
+    description: "",
+    content,
+    visible: true,
+    tags: [],
+});
 
 function makeCms(opts: { pages?: TPage[]; favicon?: string }) {
     const deleteSpy: string[] = [];
@@ -12,11 +19,13 @@ function makeCms(opts: { pages?: TPage[]; favicon?: string }) {
     const cms: any = {
         repository: {
             getAllPages: async () => opts.pages ?? [],
-            getSystem:   async () => ({ site: { favicon: opts.favicon ?? "" } }),
+            getSystem: async () => ({ site: { favicon: opts.favicon ?? "" } }),
         },
         cache: {
-            delete:         (k: string) => deleteSpy.push(k),
-            deleteMatching: () => { allInvalidated = true; },
+            delete: (k: string) => deleteSpy.push(k),
+            deleteMatching: () => {
+                allInvalidated = true;
+            },
         },
     };
     return { cms, deleteSpy, allInvalidated: () => allInvalidated };
@@ -39,7 +48,10 @@ describe("invalidatePagesReferencingFile", () => {
     });
 
     test("a favicon pointing at the file invalidates ALL pages", async () => {
-        const { cms, deleteSpy, allInvalidated } = makeCms({ pages: [page("/a", "<p>x</p>")], favicon: `/.cms/files/by-id/${FID}` });
+        const { cms, deleteSpy, allInvalidated } = makeCms({
+            pages: [page("/a", "<p>x</p>")],
+            favicon: `/.cms/files/by-id/${FID}`,
+        });
         await invalidatePagesReferencingFile(cms, FID);
         expect(allInvalidated()).toBe(true);
         expect(deleteSpy).toHaveLength(0);

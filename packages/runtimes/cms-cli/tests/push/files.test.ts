@@ -29,21 +29,21 @@ const emptyState = (): PushState => ({ tenant: "", lastPulled: "", entities: {} 
 describe("scanFiles", () => {
     test("walks the media tree, deriving path/name/dir and hashing bytes", async () => {
         const dir = makeSite({
-            "logo.png":         "A",
-            "images/hero.png":  "BB",
+            "logo.png": "A",
+            "images/hero.png": "BB",
             "images/icons/x.svg": "CCC",
         });
         const files = await scanFiles(dir);
 
-        expect(files.map(f => f.path)).toEqual(["images/hero.png", "images/icons/x.svg", "logo.png"]);
+        expect(files.map((f) => f.path)).toEqual(["images/hero.png", "images/icons/x.svg", "logo.png"]);
 
-        const hero = files.find(f => f.path === "images/hero.png")!;
+        const hero = files.find((f) => f.path === "images/hero.png")!;
         expect(hero.name).toBe("hero.png");
         expect(hero.dir).toBe("images");
         expect(hero.size).toBe(2);
         expect(hero.hash).toMatch(/^[0-9a-f]{64}$/);
 
-        const root = files.find(f => f.path === "logo.png")!;
+        const root = files.find((f) => f.path === "logo.png")!;
         expect(root.dir).toBe("");
     });
 
@@ -56,7 +56,7 @@ describe("scanFiles", () => {
     test("skips dotfiles", async () => {
         const dir = makeSite({ "keep.txt": "x", ".DS_Store": "junk" });
         const files = await scanFiles(dir);
-        expect(files.map(f => f.name)).toEqual(["keep.txt"]);
+        expect(files.map((f) => f.name)).toEqual(["keep.txt"]);
     });
 
     test("returns empty list when files/ is missing", async () => {
@@ -69,22 +69,27 @@ describe("scanFiles", () => {
         const files = await scanFiles(dir);
         expect(files[0]!.path).toBe("a/b.txt");
         // sanity: the joined fs path used the platform separator, the tree path did not
-        if (sep !== "/") expect(files[0]!.path).not.toContain(sep);
+        if (sep !== "/") {
+            expect(files[0]!.path).not.toContain(sep);
+        }
     });
 
     test("carries the registry uuid into each file's id", async () => {
         const dir = makeSite({ "logo.png": "A", "images/hero.png": "BB" });
-        writeFileSync(join(dir, ".cms-files-registry.json"), JSON.stringify({
-            version: 1,
-            byPath: { "logo.png": "uuid-logo", "images": "uuid-dir", "images/hero.png": "uuid-hero" },
-        }));
+        writeFileSync(
+            join(dir, ".cms-files-registry.json"),
+            JSON.stringify({
+                version: 1,
+                byPath: { "logo.png": "uuid-logo", "images": "uuid-dir", "images/hero.png": "uuid-hero" },
+            }),
+        );
         const files = await scanFiles(dir);
-        expect(files.find(f => f.path === "logo.png")!.id).toBe("uuid-logo");
-        expect(files.find(f => f.path === "images/hero.png")!.id).toBe("uuid-hero");
+        expect(files.find((f) => f.path === "logo.png")!.id).toBe("uuid-logo");
+        expect(files.find((f) => f.path === "images/hero.png")!.id).toBe("uuid-hero");
     });
 
     test("leaves id undefined when the registry is missing the path (no lazy-mint)", async () => {
-        const dir = makeSite({ "logo.png": "A" });   // no registry written
+        const dir = makeSite({ "logo.png": "A" }); // no registry written
         const files = await scanFiles(dir);
         expect(files[0]!.id).toBeUndefined();
     });
@@ -101,7 +106,8 @@ describe("classifyFiles", () => {
 
     test("flags `unchanged` when local hash matches last-pushed state", () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "file:a.png": { hash: "h", lastSeenRemote: "10" } },
         };
         const out = classifyFiles([local("a.png", "h", 10)], remote({ "a.png": { id: "r1", size: 10 } }), state, false);
@@ -111,30 +117,48 @@ describe("classifyFiles", () => {
 
     test("flags `update` when local content diverges", () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "file:a.png": { hash: "old", lastSeenRemote: "10" } },
         };
-        const out = classifyFiles([local("a.png", "new", 10)], remote({ "a.png": { id: "r1", size: 10 } }), state, false);
+        const out = classifyFiles(
+            [local("a.png", "new", 10)],
+            remote({ "a.png": { id: "r1", size: 10 } }),
+            state,
+            false,
+        );
         expect(out[0]!.status).toBe("update");
     });
 
     test("flags `update` for a remote file we never pushed (no prior state)", () => {
-        const out = classifyFiles([local("a.png", "h")], remote({ "a.png": { id: "r1", size: 5 } }), emptyState(), false);
+        const out = classifyFiles(
+            [local("a.png", "h")],
+            remote({ "a.png": { id: "r1", size: 5 } }),
+            emptyState(),
+            false,
+        );
         expect(out[0]!.status).toBe("update");
     });
 
     test("flags `conflict` when the remote size drifted from lastSeenRemote", () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "file:a.png": { hash: "h", lastSeenRemote: "10" } },
         };
-        const out = classifyFiles([local("a.png", "h", 10)], remote({ "a.png": { id: "r1", size: 999 } }), state, false);
+        const out = classifyFiles(
+            [local("a.png", "h", 10)],
+            remote({ "a.png": { id: "r1", size: 999 } }),
+            state,
+            false,
+        );
         expect(out[0]!.status).toBe("conflict");
     });
 
     test("--force bypasses the conflict check", () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "file:a.png": { hash: "h", lastSeenRemote: "10" } },
         };
         const out = classifyFiles([local("a.png", "h", 10)], remote({ "a.png": { id: "r1", size: 999 } }), state, true);

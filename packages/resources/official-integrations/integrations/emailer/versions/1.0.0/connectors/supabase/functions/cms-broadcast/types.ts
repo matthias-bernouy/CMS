@@ -1,7 +1,10 @@
 export type JsonRecord = Record<string, unknown>;
 
 export class HttpError extends Error {
-    constructor(readonly status: number, message: string) {
+    constructor(
+        readonly status: number,
+        message: string,
+    ) {
         super(message);
     }
 }

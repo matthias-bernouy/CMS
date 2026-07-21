@@ -22,10 +22,10 @@ export type SupabaseConnectorDeployerConfig = {
 export type SupabaseConnectorFunctionSecrets =
     | Record<string, string | undefined>
     | ((input: {
-        deployment: IntegrationConnectorDeployment;
-        fn: IntegrationConnectorFunctionDeployment;
-        context: IntegrationConnectorDeployContext;
-    }) => Record<string, string | undefined>);
+          deployment: IntegrationConnectorDeployment;
+          fn: IntegrationConnectorFunctionDeployment;
+          context: IntegrationConnectorDeployContext;
+      }) => Record<string, string | undefined>);
 
 type SupabaseFunctionConfig = {
     entrypoint_path?: string;
@@ -113,11 +113,15 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
                 .filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
                 .map(([name, value]) => ({ name, value }));
             if (secrets.length) {
-                await this.request(`/v1/projects/${this.projectRef}/secrets`, {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify(secrets),
-                }, { redactBody: true });
+                await this.request(
+                    `/v1/projects/${this.projectRef}/secrets`,
+                    {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify(secrets),
+                    },
+                    { redactBody: true },
+                );
                 for (const secret of secrets) {
                     resources.push({ type: "secret", id: secret.name, action: "set" });
                 }
@@ -144,8 +148,12 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         fn: IntegrationConnectorFunctionDeployment,
         context: IntegrationConnectorDeployContext,
     ): Record<string, string | undefined> {
-        if (!this.functionSecrets) return {};
-        if (typeof this.functionSecrets !== "function") return this.functionSecrets;
+        if (!this.functionSecrets) {
+            return {};
+        }
+        if (typeof this.functionSecrets !== "function") {
+            return this.functionSecrets;
+        }
         return this.functionSecrets({ deployment, fn, context });
     }
 
@@ -162,7 +170,9 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
     private async deployFunction(connectorRoot: string, fn: IntegrationConnectorFunctionDeployment): Promise<void> {
         const functionRoot = safeJoin(connectorRoot, fn.directory);
         const files = await listFiles(functionRoot);
-        if (!files.length) throw new IntegrationRuntimeError(`Supabase function "${fn.name}" has no files`);
+        if (!files.length) {
+            throw new IntegrationRuntimeError(`Supabase function "${fn.name}" has no files`);
+        }
 
         const config = fn.configPath
             ? parseFunctionConfig(await readFile(safeJoin(connectorRoot, fn.configPath), "utf-8"), fn.name)
@@ -189,10 +199,12 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
 
     private async ensureDataApiSchemas(requiredSchemas: string[]): Promise<DataApiSchemaSyncResult> {
         const response = await this.request(`/v1/projects/${this.projectRef}/postgrest`, { method: "GET" });
-        const current = await response.json() as { db_schema?: unknown };
+        const current = (await response.json()) as { db_schema?: unknown };
         const schemas = csvValues(typeof current.db_schema === "string" ? current.db_schema : "");
         const next = unique([...schemas, ...requiredSchemas]);
-        if (next.join(",") === schemas.join(",")) return { action: "skipped", schemas: next };
+        if (next.join(",") === schemas.join(",")) {
+            return { action: "skipped", schemas: next };
+        }
         await this.request(`/v1/projects/${this.projectRef}/postgrest`, {
             method: "PATCH",
             headers: { "content-type": "application/json" },
@@ -223,19 +235,20 @@ export class SupabaseConnectorDeployer implements IntegrationConnectorDeployer {
         });
     }
 
-    private async request(
-        path: string,
-        init: RequestInit,
-        options: { redactBody?: boolean } = {},
-    ): Promise<Response> {
+    private async request(path: string, init: RequestInit, options: { redactBody?: boolean } = {}): Promise<Response> {
         const headers = new Headers(init.headers);
         headers.set("authorization", `Bearer ${this.accessToken}`);
         const response = await this.fetchImpl(`${this.apiBaseUrl}${path}`, { ...init, headers });
-        if (response.ok) return response;
+        if (response.ok) {
+            return response;
+        }
 
         const detail = options.redactBody
             ? ""
-            : await response.text().then(text => text.trim().slice(0, 500)).catch(() => "");
+            : await response
+                  .text()
+                  .then((text) => text.trim().slice(0, 500))
+                  .catch(() => "");
         throw new IntegrationRuntimeError(
             `Supabase API request failed (${response.status})${detail ? `: ${detail}` : ""}`,
         );
@@ -247,40 +260,67 @@ function parseFunctionConfig(source: string, functionName: string): SupabaseFunc
     let active = false;
     for (const rawLine of source.split(/\r?\n/)) {
         const line = stripTomlComment(rawLine).trim();
-        if (!line) continue;
+        if (!line) {
+            continue;
+        }
         const section = line.match(/^\[(.+)]$/)?.[1]?.trim();
         if (section) {
             active = section === `functions.${functionName}` || section === `functions."${functionName}"`;
             continue;
         }
-        if (!active) continue;
+        if (!active) {
+            continue;
+        }
 
         const match = line.match(/^([A-Za-z0-9_]+)\s*=\s*(.+)$/);
-        if (!match) continue;
+        if (!match) {
+            continue;
+        }
         const key = match[1]!;
         const rawValue = match[2]!;
         const value = parseTomlValue(rawValue.trim());
-        if (key === "entrypoint_path" && typeof value === "string") config.entrypoint_path = value;
-        if (key === "import_map_path" && typeof value === "string") config.import_map_path = value;
-        if (key === "name" && typeof value === "string") config.name = value;
-        if (key === "verify_jwt" && typeof value === "boolean") config.verify_jwt = value;
-        if (key === "static_patterns" && isStringArray(value)) config.static_patterns = value;
+        if (key === "entrypoint_path" && typeof value === "string") {
+            config.entrypoint_path = value;
+        }
+        if (key === "import_map_path" && typeof value === "string") {
+            config.import_map_path = value;
+        }
+        if (key === "name" && typeof value === "string") {
+            config.name = value;
+        }
+        if (key === "verify_jwt" && typeof value === "boolean") {
+            config.verify_jwt = value;
+        }
+        if (key === "static_patterns" && isStringArray(value)) {
+            config.static_patterns = value;
+        }
     }
     return config;
 }
 
 function parseTomlValue(value: string): string | boolean | string[] | undefined {
-    if (value === "true") return true;
-    if (value === "false") return false;
+    if (value === "true") {
+        return true;
+    }
+    if (value === "false") {
+        return false;
+    }
     const quoted = value.match(/^"([^"]*)"$/);
-    if (quoted) return quoted[1] ?? "";
+    if (quoted) {
+        return quoted[1] ?? "";
+    }
     if (value.startsWith("[") && value.endsWith("]")) {
         const items = value.slice(1, -1).trim();
-        if (!items) return [];
-        return items.split(",").map(item => {
-            const quotedItem = item.trim().match(/^"([^"]*)"$/);
-            return quotedItem?.[1] ?? "";
-        }).filter(Boolean);
+        if (!items) {
+            return [];
+        }
+        return items
+            .split(",")
+            .map((item) => {
+                const quotedItem = item.trim().match(/^"([^"]*)"$/);
+                return quotedItem?.[1] ?? "";
+            })
+            .filter(Boolean);
     }
     return undefined;
 }
@@ -289,8 +329,12 @@ function stripTomlComment(line: string): string {
     let quoted = false;
     for (let index = 0; index < line.length; index++) {
         const char = line[index];
-        if (char === "\"" && line[index - 1] !== "\\") quoted = !quoted;
-        if (char === "#" && !quoted) return line.slice(0, index);
+        if (char === '"' && line[index - 1] !== "\\") {
+            quoted = !quoted;
+        }
+        if (char === "#" && !quoted) {
+            return line.slice(0, index);
+        }
     }
     return line;
 }
@@ -301,12 +345,18 @@ async function listFiles(root: string): Promise<FileEntry[]> {
 
 async function walkFiles(base: string, current: string): Promise<FileEntry[]> {
     const entries = await readdir(current, { withFileTypes: true });
-    const files = await Promise.all(entries.map(async entry => {
-        const absolutePath = safeJoin(current, entry.name);
-        if (entry.isDirectory()) return walkFiles(base, absolutePath);
-        if (!entry.isFile()) return [];
-        return [{ absolutePath, relativePath: relative(base, absolutePath).replaceAll(sep, "/") }];
-    }));
+    const files = await Promise.all(
+        entries.map(async (entry) => {
+            const absolutePath = safeJoin(current, entry.name);
+            if (entry.isDirectory()) {
+                return walkFiles(base, absolutePath);
+            }
+            if (!entry.isFile()) {
+                return [];
+            }
+            return [{ absolutePath, relativePath: relative(base, absolutePath).replaceAll(sep, "/") }];
+        }),
+    );
     return files.flat().sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 }
 
@@ -322,16 +372,21 @@ function safeJoin(root: string, ...parts: string[]): string {
 
 function requiredText(value: string, name: string): string {
     const text = value.trim();
-    if (!text) throw new IntegrationRuntimeError(`Supabase connector deployer ${name} is required`);
+    if (!text) {
+        throw new IntegrationRuntimeError(`Supabase connector deployer ${name} is required`);
+    }
     return text;
 }
 
 function isStringArray(value: unknown): value is string[] {
-    return Array.isArray(value) && value.every(item => typeof item === "string");
+    return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 function csvValues(value: string): string[] {
-    return value.split(",").map(item => item.trim()).filter(Boolean);
+    return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 }
 
 function unique(values: string[]): string[] {

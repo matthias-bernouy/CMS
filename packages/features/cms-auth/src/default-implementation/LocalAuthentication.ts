@@ -15,27 +15,27 @@ type LoginResult<Role extends string> =
 
 export type LocalAuthConfig<Role extends string> = {
     /** Identity-provider id this backend represents (provenance tag, e.g. "local"). */
-    providerId:        string;
+    providerId: string;
     /** Page to send unauthenticated users to (used by `buildLoginUrl`). Full path. */
-    loginPagePath:     string;
+    loginPagePath: string;
     /** Full path of the logout endpoint (used by `buildLogoutUrl`) — must match
      *  where the surface mounts `localLogoutHandler`. */
-    logoutPath:        string;
-    credentials:       LocalCredentialStore;
-    resolver:          SubjectResolver<Role>;
-    codec:             SignedCookieCodec;
-    cookieName:        string;
-    cookieSecure?:     boolean;
+    logoutPath: string;
+    credentials: LocalCredentialStore;
+    resolver: SubjectResolver<Role>;
+    codec: SignedCookieCodec;
+    cookieName: string;
+    cookieSecure?: boolean;
     sessionTtlSeconds?: number;
     /** Redirect target after login when no (safe) `returnTo` is given. */
-    defaultHome?:      string;
+    defaultHome?: string;
     /** Optional PAT store. When set, `getSubject` also accepts an
      *  `Authorization: Bearer <pat>` header — the CLI / server-to-server path. */
-    pats?:             PatRepository;
+    pats?: PatRepository;
     /** Optional brute-force throttle for the password login path, keyed by
      *  email and checked BEFORE argon2 runs; a successful login clears it.
      *  Omit to disable throttling (dev / single-tenant). */
-    rateLimit?:        RateLimiter;
+    rateLimit?: RateLimiter;
 };
 
 /**
@@ -50,16 +50,15 @@ export type LocalAuthConfig<Role extends string> = {
  * changes take effect without re-login.
  */
 export class LocalAuthentication<Role extends string = string> implements Authentication<Role> {
-
-    readonly loginUrl:   string;
-    readonly logoutUrl:  string;
+    readonly loginUrl: string;
+    readonly logoutUrl: string;
     readonly profileUrl = "";
 
     private readonly _ttl: number;
 
     constructor(private readonly cfg: LocalAuthConfig<Role>) {
-        this._ttl     = cfg.sessionTtlSeconds ?? 3600;
-        this.loginUrl  = cfg.loginPagePath;
+        this._ttl = cfg.sessionTtlSeconds ?? 3600;
+        this.loginUrl = cfg.loginPagePath;
         this.logoutUrl = cfg.logoutPath;
     }
 
@@ -77,15 +76,21 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         // fall through to whatever cookie the same request happens to carry.
         const bearer = readBearer(req);
         if (bearer) {
-            if (!this.cfg.pats) return null;
+            if (!this.cfg.pats) {
+                return null;
+            }
             const principal = await this.cfg.pats.verify(bearer);
             return principal ? this.cfg.resolver.fromSub(principal.sub) : null;
         }
 
         const raw = readCookie(req, this.cfg.cookieName);
-        if (!raw) return null;
+        if (!raw) {
+            return null;
+        }
         const payload = await this.cfg.codec.verify<SessionPayload>(raw);
-        if (!payload || payload.kind !== "session") return null;
+        if (!payload || payload.kind !== "session") {
+            return null;
+        }
         return this.cfg.resolver.fromSub(payload.sub);
     }
 
@@ -100,9 +105,9 @@ export class LocalAuthentication<Role extends string = string> implements Authen
                 headers: { Location: `${this.cfg.loginPagePath}?error=${error}${back}` },
             });
         }
-        const dest  = sanitizeReturnTo(result.returnTo, this.cfg.defaultHome ?? "/");
+        const dest = sanitizeReturnTo(result.returnTo, this.cfg.defaultHome ?? "/");
         return privateAuthResponse(null, {
-            status:  302,
+            status: 302,
             headers: { Location: dest, "Set-Cookie": this._sessionCookie(result.token) },
         });
     }
@@ -113,18 +118,16 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         if (!result.ok) {
             return privateAuthJsonResponse({ error: result.error }, result.error === "rate_limited" ? 429 : 401);
         }
-        return privateAuthJsonResponse(
-            { subject: result.subject },
-            200,
-            { "Set-Cookie": this._sessionCookie(result.token) },
-        );
+        return privateAuthJsonResponse({ subject: result.subject }, 200, {
+            "Set-Cookie": this._sessionCookie(result.token),
+        });
     }
 
     /** `GET <basePath>/logout` handler — mounted by the surface. */
     logout(req: Request): Response {
         const dest = sanitizeReturnTo(new URL(req.url).searchParams.get("returnTo"), this.cfg.defaultHome ?? "/");
         return privateAuthResponse(null, {
-            status:  302,
+            status: 302,
             headers: { Location: dest, "Set-Cookie": clearCookie(this.cfg.cookieName, this.cfg.cookieSecure ?? false) },
         });
     }
@@ -143,14 +146,20 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         const rlKey = email && this.cfg.rateLimit ? `login:email:${email.trim().toLowerCase()}` : null;
         if (rlKey && this.cfg.rateLimit) {
             const { allowed } = await this.cfg.rateLimit.hit(rlKey);
-            if (!allowed) return { ok: false, error: "rate_limited", returnTo };
+            if (!allowed) {
+                return { ok: false, error: "rate_limited", returnTo };
+            }
         }
 
         const identity = email && password ? await this.cfg.credentials.verify(email, password) : null;
-        if (!identity) return { ok: false, error: "invalid_credentials", returnTo };
+        if (!identity) {
+            return { ok: false, error: "invalid_credentials", returnTo };
+        }
 
         // A successful login clears the counter so earlier fumbles don't count.
-        if (rlKey && this.cfg.rateLimit) await this.cfg.rateLimit.reset(rlKey);
+        if (rlKey && this.cfg.rateLimit) {
+            await this.cfg.rateLimit.reset(rlKey);
+        }
 
         const subject = await this.cfg.resolver.fromIdentity({ ...identity, provider: this.cfg.providerId });
         const token = await this.cfg.codec.sign({ kind: "session", sub: subject.identifier }, this._ttl);
@@ -168,16 +177,18 @@ async function readCredentials(req: Request): Promise<{ email?: string; password
     const ct = req.headers.get("content-type") ?? "";
 
     if (ct.includes("application/json")) {
-        const b = await req.json().catch(() => ({})) as Record<string, unknown>;
+        const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
         return {
-            email:    typeof b.email === "string" ? b.email : undefined,
+            email: typeof b.email === "string" ? b.email : undefined,
             password: typeof b.password === "string" ? b.password : undefined,
             returnTo: typeof b.returnTo === "string" ? b.returnTo : returnTo,
         };
     }
     const form = await req.formData().catch(() => null);
     if (form) {
-        if (form.get("returnTo")) returnTo = String(form.get("returnTo"));
+        if (form.get("returnTo")) {
+            returnTo = String(form.get("returnTo"));
+        }
         return { email: str(form.get("email")), password: str(form.get("password")), returnTo };
     }
     return { returnTo };

@@ -41,10 +41,10 @@ export function renderDataSourcePicker(
     );
     renderDetailsPanel(state.details, activeSource);
     renderBindingPanel(state.binding, activeSource, {
-        canRemove:      state.canRemove,
+        canRemove: state.canRemove,
         initialBinding: state.initialBinding,
-        onSelect:       handlers.bindingSelect,
-        onRemove:       handlers.remove,
+        onSelect: handlers.bindingSelect,
+        onRemove: handlers.remove,
     });
 
     return activeSource;

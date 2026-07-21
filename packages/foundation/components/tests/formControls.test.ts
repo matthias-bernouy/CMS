@@ -11,13 +11,19 @@ import { Switch } from "../src/ui/Form/Switch/Switch";
 // indeterminate, aria), not the browser's form wiring.
 
 beforeAll(() => {
-    if (!customElements.get("w13c-checkbox")) customElements.define("w13c-checkbox", Checkbox);
-    if (!customElements.get("w13c-switch")) customElements.define("w13c-switch", Switch);
+    if (!customElements.get("w13c-checkbox")) {
+        customElements.define("w13c-checkbox", Checkbox);
+    }
+    if (!customElements.get("w13c-switch")) {
+        customElements.define("w13c-switch", Switch);
+    }
 });
 
 function mount(tag: string, attrs: Record<string, string> = {}): any {
     const el = document.createElement(tag);
-    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+    }
     document.body.appendChild(el);
     return el;
 }
@@ -26,11 +32,21 @@ const innerInput = (el: any): HTMLInputElement => el.shadowRoot!.querySelector("
 describe.each(["w13c-checkbox", "w13c-switch"])("%s — shared form-control skeleton", (tag) => {
     test("checked/disabled/name/value reflect between property and attribute", () => {
         const el = mount(tag);
-        el.checked = true;  expect(el.hasAttribute("checked")).toBe(true);  expect(el.checked).toBe(true);
-        el.checked = false; expect(el.hasAttribute("checked")).toBe(false); expect(el.checked).toBe(false);
-        el.disabled = true; expect(el.hasAttribute("disabled")).toBe(true); expect(el.disabled).toBe(true);
-        el.name = "agree";  expect(el.getAttribute("name")).toBe("agree");  expect(el.name).toBe("agree");
-        el.value = "yes";   expect(el.getAttribute("value")).toBe("yes");   expect(el.value).toBe("yes");
+        el.checked = true;
+        expect(el.hasAttribute("checked")).toBe(true);
+        expect(el.checked).toBe(true);
+        el.checked = false;
+        expect(el.hasAttribute("checked")).toBe(false);
+        expect(el.checked).toBe(false);
+        el.disabled = true;
+        expect(el.hasAttribute("disabled")).toBe(true);
+        expect(el.disabled).toBe(true);
+        el.name = "agree";
+        expect(el.getAttribute("name")).toBe("agree");
+        expect(el.name).toBe("agree");
+        el.value = "yes";
+        expect(el.getAttribute("value")).toBe("yes");
+        expect(el.value).toBe("yes");
     });
 
     test("value getter defaults to 'on'", () => {
@@ -45,8 +61,10 @@ describe.each(["w13c-checkbox", "w13c-switch"])("%s — shared form-control skel
     test("changing the checked attribute after connect updates the inner input", () => {
         const el = mount(tag);
         const input = innerInput(el);
-        el.setAttribute("checked", ""); expect(input.checked).toBe(true);
-        el.removeAttribute("checked");  expect(input.checked).toBe(false);
+        el.setAttribute("checked", "");
+        expect(input.checked).toBe(true);
+        el.removeAttribute("checked");
+        expect(input.checked).toBe(false);
     });
 
     test("an inner-input 'change' reflects to the host and re-dispatches 'change'", () => {
@@ -61,7 +79,7 @@ describe.each(["w13c-checkbox", "w13c-switch"])("%s — shared form-control skel
     });
 
     test("formResetCallback() restores the boot-time checked default", () => {
-        const el = mount(tag, { checked: "" });  // boot default = checked
+        const el = mount(tag, { checked: "" }); // boot default = checked
         el.checked = false;
         expect(el.hasAttribute("checked")).toBe(false);
         el.formResetCallback();

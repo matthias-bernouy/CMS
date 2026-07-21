@@ -11,11 +11,16 @@ export function setupContextMenu(s: ShadowRoot, callbacks: ContextMenuCallbacks)
 
     menu.addEventListener("click", (e) => {
         const btn = (e.target as HTMLElement).closest("[data-action]") as HTMLElement;
-        if (!btn || !activeItem) return;
+        if (!btn || !activeItem) {
+            return;
+        }
 
         const action = btn.dataset.action;
-        if (action === "rename") callbacks.onRename(activeItem);
-        else if (action === "delete") callbacks.onDelete(activeItem.id);
+        if (action === "rename") {
+            callbacks.onRename(activeItem);
+        } else if (action === "delete") {
+            callbacks.onDelete(activeItem.id);
+        }
 
         menu.classList.remove("visible");
     });
@@ -28,6 +33,6 @@ export function setupContextMenu(s: ShadowRoot, callbacks: ContextMenuCallbacks)
             menu.style.left = e.clientX + "px";
             menu.style.top = e.clientY + "px";
             menu.classList.add("visible");
-        }
+        },
     };
 }

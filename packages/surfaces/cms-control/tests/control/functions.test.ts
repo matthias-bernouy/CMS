@@ -11,11 +11,14 @@ describe("functions API", () => {
     test("creates a validated function from the admin authoring endpoint", async () => {
         const functions = new InMemoryFunctionRepository();
         const sources = new InMemorySourceRepository();
-        const response = await createFunction(new Request("http://localhost/cms/api/functions/create", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ definition: echoFunction() }),
-        }), { functions, sources } as any);
+        const response = await createFunction(
+            new Request("http://localhost/cms/api/functions/create", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ definition: echoFunction() }),
+            }),
+            { functions, sources } as any,
+        );
 
         expect(response.status).toBe(201);
         expect(await response.json()).toMatchObject({ id: "echoPayload", label: "Echo payload" });
@@ -26,14 +29,18 @@ describe("functions API", () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource(emailerSource());
 
-        const response = await getFunctionCatalog(new Request("http://localhost/cms/api/functions/catalog"), { sources } as any);
+        const response = await getFunctionCatalog(new Request("http://localhost/cms/api/functions/catalog"), {
+            sources,
+        } as any);
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual([expect.objectContaining({
-            id: "emailer",
-            label: "Emailer",
-            endpoints: [expect.objectContaining({ endpointId: "sendTemplateEmail", method: "POST" })],
-        })]);
+        expect(await response.json()).toEqual([
+            expect.objectContaining({
+                id: "emailer",
+                label: "Emailer",
+                endpoints: [expect.objectContaining({ endpointId: "sendTemplateEmail", method: "POST" })],
+            }),
+        ]);
     });
 
     test("lists functions as admin display rows", async () => {
@@ -75,26 +82,28 @@ describe("functions API", () => {
         const response = await listFunctions(new Request("http://localhost/cms/api/functions"), { functions } as any);
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual([{
-            id: "shipPaidOrder",
-            label: "Ship paid order",
-            description: "Creates a shipment after payment checks.",
-            method: "POST",
-            access: "auth",
-            paramsLabel: "Params: orderId",
-            bodyLabel: "Body: carrier",
-            inputLabel: "Params: orderId / Body: carrier",
-            stepsLabel: "4 steps",
-            outputLabel: "201, default",
-            returnLabel: "201 body",
-            params: { orderId: { type: "string" } },
-            body: {
-                type: "object",
-                properties: { carrier: { type: "string" } },
+        expect(await response.json()).toEqual([
+            {
+                id: "shipPaidOrder",
+                label: "Ship paid order",
+                description: "Creates a shipment after payment checks.",
+                method: "POST",
+                access: "auth",
+                paramsLabel: "Params: orderId",
+                bodyLabel: "Body: carrier",
+                inputLabel: "Params: orderId / Body: carrier",
+                stepsLabel: "4 steps",
+                outputLabel: "201, default",
+                returnLabel: "201 body",
+                params: { orderId: { type: "string" } },
+                body: {
+                    type: "object",
+                    properties: { carrier: { type: "string" } },
+                },
+                paramsSample: { orderId: "" },
+                bodySample: { carrier: "" },
             },
-            paramsSample: { orderId: "" },
-            bodySample: { carrier: "" },
-        }]);
+        ]);
     });
 
     test("returns one function detail for the admin detail page", async () => {
@@ -172,10 +181,11 @@ describe("functions API", () => {
                 functions,
                 sources,
                 sourceExecutorDeps: {
-                    fetchImpl: async () => new Response(JSON.stringify({ error: "missing required token: user.name" }), {
-                        status: 400,
-                        headers: { "content-type": "application/json" },
-                    }),
+                    fetchImpl: async () =>
+                        new Response(JSON.stringify({ error: "missing required token: user.name" }), {
+                            status: 400,
+                            headers: { "content-type": "application/json" },
+                        }),
                 },
             } as any,
         );
@@ -232,18 +242,20 @@ function sendEmailFunction() {
     return {
         id: "sendEmail",
         method: "POST" as const,
-        steps: [{
-            id: "message",
-            call: {
-                source: "emailer",
-                endpoint: "sendTemplateEmail",
-                body: {
-                    key: "newsletter",
-                    toEmails: ["ada@example.test"],
-                    data: {},
+        steps: [
+            {
+                id: "message",
+                call: {
+                    source: "emailer",
+                    endpoint: "sendTemplateEmail",
+                    body: {
+                        key: "newsletter",
+                        toEmails: ["ada@example.test"],
+                        data: {},
+                    },
                 },
             },
-        }],
+        ],
         return: { status: 200, body: "$steps.message" },
     };
 }
@@ -252,23 +264,25 @@ function emailerSource() {
     return {
         urn: makeSourceUrn("emailer"),
         meta: { name: "Emailer" },
-        endpoints: [{
-            urn: makeEndpointUrn("emailer", "sendTemplateEmail"),
-            method: "POST" as const,
-            targetUrl: "https://emailer.test/template/send",
-            input: {
-                params: [],
-                body: {
-                    type: "object" as const,
-                    properties: {
-                        key: { type: "string" as const },
-                        toEmails: { type: "array" as const, items: { type: "string" as const } },
-                        data: { type: "object" as const },
+        endpoints: [
+            {
+                urn: makeEndpointUrn("emailer", "sendTemplateEmail"),
+                method: "POST" as const,
+                targetUrl: "https://emailer.test/template/send",
+                input: {
+                    params: [],
+                    body: {
+                        type: "object" as const,
+                        properties: {
+                            key: { type: "string" as const },
+                            toEmails: { type: "array" as const, items: { type: "string" as const } },
+                            data: { type: "object" as const },
+                        },
+                        required: ["key", "toEmails"],
                     },
-                    required: ["key", "toEmails"],
                 },
+                output: [{ status: "200", body: { type: "object" as const } }],
             },
-            output: [{ status: "200", body: { type: "object" as const } }],
-        }],
+        ],
     };
 }

@@ -1,16 +1,8 @@
 import type { SettingMetadata } from "./base";
 
-export const ENDPOINT_PICKER_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "HEAD",
-    "OPTIONS",
-] as const;
+export const ENDPOINT_PICKER_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] as const;
 
-export type EndpointPickerMethod = typeof ENDPOINT_PICKER_METHODS[number];
+export type EndpointPickerMethod = (typeof ENDPOINT_PICKER_METHODS)[number];
 
 export type EndpointPickerSetting = SettingMetadata<"endpoint-picker", string> & {
     methods?: EndpointPickerMethod[];

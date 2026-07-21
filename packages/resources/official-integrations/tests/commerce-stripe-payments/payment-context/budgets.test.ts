@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    executePaymentWorkflow,
-    getRequest,
-    refreshRequest,
-} from "./harness";
+import { executePaymentWorkflow, getRequest, refreshRequest } from "./harness";
 import { successfulResponder } from "./responders";
 
 describe("Commerce Stripe payment workflow call budgets", () => {
@@ -15,11 +11,11 @@ describe("Commerce Stripe payment workflow call budgets", () => {
         );
 
         expect(response.status).toBe(200);
-        expect(calls.map(call => call.url.pathname)).toEqual([
+        expect(calls.map((call) => call.url.pathname)).toEqual([
             "/system/order/payment-context",
             "/payments/reference",
         ]);
-        expect(calls.map(call => call.method)).toEqual(["GET", "GET"]);
+        expect(calls.map((call) => call.method)).toEqual(["GET", "GET"]);
     });
 
     test("refreshes provider truth before the Commerce projection", async () => {
@@ -30,15 +26,11 @@ describe("Commerce Stripe payment workflow call budgets", () => {
         );
 
         expect(response.status).toBe(200);
-        expect(calls.map(call => call.url.pathname)).toEqual([
+        expect(calls.map((call) => call.url.pathname)).toEqual([
             "/system/order/payment-context",
             "/payments/reference",
             "/system/order/payment",
         ]);
-        expect(calls.map(call => call.method)).toEqual([
-            "GET",
-            "GET",
-            "POST",
-        ]);
+        expect(calls.map((call) => call.method)).toEqual(["GET", "GET", "POST"]);
     });
 });

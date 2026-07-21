@@ -1,19 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import {
-    getRequest,
-    executePaymentWorkflow,
-    refreshRequest,
-} from "./harness";
-import {
-    order,
-    payment,
-    publicPayment,
-    recordPaymentBody,
-} from "./expected";
-import {
-    missingPaymentResponder,
-    successfulResponder,
-} from "./responders";
+import { getRequest, executePaymentWorkflow, refreshRequest } from "./harness";
+import { order, payment, publicPayment, recordPaymentBody } from "./expected";
+import { missingPaymentResponder, successfulResponder } from "./responders";
 
 describe("Commerce Stripe payment workflow contracts", () => {
     test("returns the exact protected payment without leaking internal fields", async () => {
@@ -30,8 +18,7 @@ describe("Commerce Stripe payment workflow contracts", () => {
             paymentExists: true,
             payment: publicPayment,
         });
-        expect(JSON.stringify(await response.clone().text()))
-            .not.toContain("sellerUserId");
+        expect(JSON.stringify(await response.clone().text())).not.toContain("sellerUserId");
         expect(calls[0]?.headers.get("x-cms-user-id")).toBe("buyer-user");
         expect(calls[1]?.headers.get("x-user-id")).toBe("buyer-user");
         expect(Object.fromEntries(calls[1]!.url.searchParams)).toEqual({

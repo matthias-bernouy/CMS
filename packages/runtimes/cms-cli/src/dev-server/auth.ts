@@ -13,11 +13,14 @@ export const DEV_PASSWORD = "password";
 export async function createDevAuth() {
     const users = new InMemoryUsersRepository<CMS_ROLES>();
     const credentials = new InMemoryLocalCredentialStore();
-    const devAdmin = await createLocalUser({ credentials, users }, {
-        email: "dev@example.com",
-        password: DEV_PASSWORD,
-        role: "admin",
-    });
+    const devAdmin = await createLocalUser(
+        { credentials, users },
+        {
+            email: "dev@example.com",
+            password: DEV_PASSWORD,
+            role: "admin",
+        },
+    );
 
     await users.upsert({ sub: "demo-user", email: "demo@example.com" }, "user");
 

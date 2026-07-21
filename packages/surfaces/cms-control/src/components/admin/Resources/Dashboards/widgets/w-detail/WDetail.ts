@@ -34,19 +34,31 @@ export class DashboardWDetail extends Component {
         this.view = new DetailView(root);
         this.requests = new DetailRequestCoordinator();
         this.lookups = new DetailLookups(this.dataset, this.fields, this.requests, {
-            setData: value => { this.value = value; },
+            setData: (value) => {
+                this.value = value;
+            },
             render: () => this.render(),
             isConnected: () => this.isConnected,
             schemas: () => this.schemas.values,
         });
         this.schemas = new DetailSchemasState(this.dataset, this.fields, this.requests, {
-            setData: value => { this.value = value; },
+            setData: (value) => {
+                this.value = value;
+            },
             render: () => this.render(),
             isConnected: () => this.isConnected,
             options: () => this.lookups.options,
         });
-        this.events = new DetailEvents(this, root, this.fields, this.lookups, this.schemas,
-            () => this.mode === "bound", () => this.value, () => this.refreshConditionalFields());
+        this.events = new DetailEvents(
+            this,
+            root,
+            this.fields,
+            this.lookups,
+            this.schemas,
+            () => this.mode === "bound",
+            () => this.value,
+            () => this.refreshConditionalFields(),
+        );
     }
 
     set data(value: WDetailData) {
@@ -55,13 +67,17 @@ export class DashboardWDetail extends Component {
         this.syncScheduled = false;
         this.clearRuntimeState();
         this.value = value;
-        if (this.isConnected) this.render();
+        if (this.isConnected) {
+            this.render();
+        }
     }
 
     applyLookupCreate(fieldId: string, value: unknown, option: { value: string; label: string }): void {
         const control = this.fields.control(fieldId);
         const field = control ? this.fields.find(fieldId) : undefined;
-        if (control && field) applyLookupOption(control, value, option);
+        if (control && field) {
+            applyLookupOption(control, value, option);
+        }
     }
 
     static get observedAttributes(): string[] {
@@ -78,8 +94,11 @@ export class DashboardWDetail extends Component {
         this.lifecycleRevision += 1;
         this.syncScheduled = false;
         this.events.bind();
-        if (this.mode === "manual") this.render();
-        else this.syncBoundData();
+        if (this.mode === "manual") {
+            this.render();
+        } else {
+            this.syncBoundData();
+        }
     }
 
     disconnectedCallback(): void {
@@ -94,9 +113,13 @@ export class DashboardWDetail extends Component {
     }
 
     private refreshConditionalFields(): void {
-        if (this.mode !== "bound") return;
+        if (this.mode !== "bound") {
+            return;
+        }
         const binding = readDetailBinding(this.dataset);
-        if (!binding) return;
+        if (!binding) {
+            return;
+        }
         const previous = this.value;
         const next = this.mapData(binding.widget, binding.resource, this.value.rowKey, this.fields.currentFields());
         this.value = next;
@@ -116,29 +139,52 @@ export class DashboardWDetail extends Component {
         this.lookups.syncScope(scopeKey);
         this.schemas.syncScope(scopeKey);
         this.value = this.mapData(widget, resource, rowKey, this.fields.draft);
-        if (this.isConnected) this.render();
-        if (!sourceId) return;
+        if (this.isConnected) {
+            this.render();
+        }
+        if (!sourceId) {
+            return;
+        }
         const fields = fieldValues(widget, resource);
         void this.lookups.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
         void this.schemas.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
     }
 
-    private mapData(widget: DetailWidget, resource: unknown, rowKey: string,
-        fields: Record<string, unknown>): WDetailData {
-        return detailData(widget, resource, rowKey, fields, this.lookups.options,
-            this.dataset.sourceId ?? "", this.schemas.values);
+    private mapData(
+        widget: DetailWidget,
+        resource: unknown,
+        rowKey: string,
+        fields: Record<string, unknown>,
+    ): WDetailData {
+        return detailData(
+            widget,
+            resource,
+            rowKey,
+            fields,
+            this.lookups.options,
+            this.dataset.sourceId ?? "",
+            this.schemas.values,
+        );
     }
 
     private scheduleBoundDataSync(): void {
-        if (!this.isConnected) return;
+        if (!this.isConnected) {
+            return;
+        }
         this.invalidateRequests();
-        if (this.syncScheduled) return;
+        if (this.syncScheduled) {
+            return;
+        }
         this.syncScheduled = true;
         const lifecycleRevision = this.lifecycleRevision;
         queueMicrotask(() => {
-            if (this.lifecycleRevision !== lifecycleRevision || this.mode !== "bound") return;
+            if (this.lifecycleRevision !== lifecycleRevision || this.mode !== "bound") {
+                return;
+            }
             this.syncScheduled = false;
-            if (this.isConnected) this.syncBoundData();
+            if (this.isConnected) {
+                this.syncBoundData();
+            }
         });
     }
 
@@ -156,11 +202,15 @@ export class DashboardWDetail extends Component {
     private resetState(forceRender = false): void {
         this.clearRuntimeState();
         this.value = emptyDetailData();
-        if (forceRender || this.isConnected) this.render();
+        if (forceRender || this.isConnected) {
+            this.render();
+        }
     }
 }
 
-if (!customElements.get("cms-dashboard-w-detail")) customElements.define("cms-dashboard-w-detail", DashboardWDetail);
+if (!customElements.get("cms-dashboard-w-detail")) {
+    customElements.define("cms-dashboard-w-detail", DashboardWDetail);
+}
 
 export type { WDetailData, WDetailField, WDetailSection };
 

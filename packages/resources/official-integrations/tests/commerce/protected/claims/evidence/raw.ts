@@ -44,18 +44,16 @@ export const attachedEvidence = {
 
 export const evidenceContents = "%PDF-1.4 private evidence contents";
 
-export function evidenceForm(options: {
-    contents?: string | Uint8Array;
-    description?: string | null;
-    filename?: string;
-    type?: string;
-} = {}): FormData {
+export function evidenceForm(
+    options: { contents?: string | Uint8Array; description?: string | null; filename?: string; type?: string } = {},
+): FormData {
     const form = new FormData();
-    form.set("file", new File(
-        [options.contents ?? evidenceContents],
-        options.filename ?? "proof.pdf",
-        { type: options.type ?? "application/pdf" },
-    ));
+    form.set(
+        "file",
+        new File([options.contents ?? evidenceContents], options.filename ?? "proof.pdf", {
+            type: options.type ?? "application/pdf",
+        }),
+    );
     if (options.description !== null) {
         form.set("description", options.description ?? "Opening proof");
     }

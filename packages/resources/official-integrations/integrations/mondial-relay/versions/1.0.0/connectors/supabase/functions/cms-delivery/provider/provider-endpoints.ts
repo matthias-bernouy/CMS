@@ -5,13 +5,8 @@ export const mondialRelayConnectProductionEndpoint = "https://connect-api.mondia
 export const mondialRelayConnectSandboxEndpoint = "https://connect-api-sandbox.mondialrelay.com/api/shipment";
 export const mondialRelayTrackingProductionEndpoint = "https://api.mondialrelay.com/WebService.asmx";
 
-const connectEndpoints = new Set([
-    mondialRelayConnectProductionEndpoint,
-    mondialRelayConnectSandboxEndpoint,
-]);
-const trackingEndpoints = new Set([
-    mondialRelayTrackingProductionEndpoint,
-]);
+const connectEndpoints = new Set([mondialRelayConnectProductionEndpoint, mondialRelayConnectSandboxEndpoint]);
+const trackingEndpoints = new Set([mondialRelayTrackingProductionEndpoint]);
 
 export function mondialRelayConnectEndpoint(): string {
     return validatedProviderEndpoint(
@@ -40,15 +35,15 @@ function validatedProviderEndpoint(value: string, allowed: Set<string>, provider
     const authority = value.match(/^https:\/\/([^/?#]*)/)?.[1] ?? "";
     const authorityWithoutCredentials = authority.slice(authority.lastIndexOf("@") + 1);
     if (
-        url.protocol !== "https:"
-        || url.username !== ""
-        || url.password !== ""
-        || url.port !== ""
-        || authorityWithoutCredentials.includes(":")
-        || url.search !== ""
-        || url.hash !== ""
-        || url.toString() !== value
-        || !allowed.has(value)
+        url.protocol !== "https:" ||
+        url.username !== "" ||
+        url.password !== "" ||
+        url.port !== "" ||
+        authorityWithoutCredentials.includes(":") ||
+        url.search !== "" ||
+        url.hash !== "" ||
+        url.toString() !== value ||
+        !allowed.has(value)
     ) {
         throw invalidProviderEndpoint(provider);
     }
@@ -56,9 +51,8 @@ function validatedProviderEndpoint(value: string, allowed: Set<string>, provider
 }
 
 function invalidProviderEndpoint(provider: string): ProviderStatusError {
-    return new ProviderStatusError(
-        500,
-        `Mondial Relay ${provider} endpoint is not an allowed official endpoint`,
-        { operation: "provider_endpoint_validation", provider },
-    );
+    return new ProviderStatusError(500, `Mondial Relay ${provider} endpoint is not an allowed official endpoint`, {
+        operation: "provider_endpoint_validation",
+        provider,
+    });
 }

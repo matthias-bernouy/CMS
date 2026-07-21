@@ -12,10 +12,14 @@ export class ActionMenuItem extends Component {
         this._iconSlot = this.shadowRoot?.querySelector('slot[name="icon"]') ?? null;
     }
 
-    static get observedAttributes(): string[] { return ["disabled", "color"]; }
+    static get observedAttributes(): string[] {
+        return ["disabled", "color"];
+    }
 
     override connectedCallback(): void {
-        for (const prop of ["disabled", "color"]) upgradeProperty(this, prop);
+        for (const prop of ["disabled", "color"]) {
+            upgradeProperty(this, prop);
+        }
         this._iconSlot?.addEventListener("slotchange", this._syncIcon);
         this.sync();
     }
@@ -24,13 +28,21 @@ export class ActionMenuItem extends Component {
         this._iconSlot?.removeEventListener("slotchange", this._syncIcon);
     }
 
-    attributeChangedCallback(): void { this.sync(); }
+    attributeChangedCallback(): void {
+        this.sync();
+    }
 
-    get disabled(): boolean { return this.hasAttribute("disabled"); }
-    set disabled(value: boolean) { value ? this.setAttribute("disabled", "") : this.removeAttribute("disabled"); }
+    get disabled(): boolean {
+        return this.hasAttribute("disabled");
+    }
+    set disabled(value: boolean) {
+        value ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
 
     private sync(): void {
-        if (this._button) this._button.disabled = this.disabled;
+        if (this._button) {
+            this._button.disabled = this.disabled;
+        }
         this._syncIcon();
     }
 

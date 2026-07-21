@@ -8,7 +8,7 @@ export function renderAdvancedMode(expression: string, onInput: (value: string) 
     const textarea = document.createElement("textarea");
     textarea.className = "advanced-expression";
     textarea.value = expression;
-    textarea.placeholder = "plan.status == \"active\" && $source.loaded";
+    textarea.placeholder = 'plan.status == "active" && $source.loaded';
     textarea.addEventListener("input", () => onInput(textarea.value));
     label.append(text, textarea);
     root.append(label);

@@ -42,7 +42,7 @@ export function md5(value: string): string {
                 word = (7 * index) % 16;
             }
             const sum = (a + f + constants[index]! + view.getUint32(offset + word * 4, true)) >>> 0;
-            const shift = shifts[Math.floor(index / 16) * 4 + index % 4]!;
+            const shift = shifts[Math.floor(index / 16) * 4 + (index % 4)]!;
             const next = (b + ((sum << shift) | (sum >>> (32 - shift)))) >>> 0;
             a = d;
             d = c;
@@ -56,6 +56,10 @@ export function md5(value: string): string {
     }
 
     return [a0, b0, c0, d0]
-        .map(part => Array.from({ length: 4 }, (_, index) => ((part >>> (index * 8)) & 0xff).toString(16).padStart(2, "0")).join(""))
+        .map((part) =>
+            Array.from({ length: 4 }, (_, index) => ((part >>> (index * 8)) & 0xff).toString(16).padStart(2, "0")).join(
+                "",
+            ),
+        )
         .join("");
 }

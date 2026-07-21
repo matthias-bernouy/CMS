@@ -3,8 +3,5 @@ import { creationCommerceEndpoints } from "./commerce";
 import { creationDeliveryEndpoints } from "./delivery";
 
 export async function shipmentCreationSources() {
-    return await createFulfillmentSources(
-        creationCommerceEndpoints(),
-        creationDeliveryEndpoints(),
-    );
+    return await createFulfillmentSources(creationCommerceEndpoints(), creationDeliveryEndpoints());
 }

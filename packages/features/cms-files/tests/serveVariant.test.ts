@@ -11,7 +11,13 @@ async function setup(opts: { contentHash?: string; withVariant?: boolean; mimeTy
     const metadata = new InMemoryCmsFilesMetadata();
     const sourceBlob = new InMemoryCmsFilesBlob();
     const variantStore = new InMemoryCmsFilesBlob();
-    const file = await metadata.createFile({ name: "hero.png", parentId: null, size: 8, mimeType: opts.mimeType ?? "image/png", contentHash: opts.contentHash });
+    const file = await metadata.createFile({
+        name: "hero.png",
+        parentId: null,
+        size: 8,
+        mimeType: opts.mimeType ?? "image/png",
+        contentHash: opts.contentHash,
+    });
     await sourceBlob.put(file.id, enc.encode("ORIGINAL"));
     if (opts.withVariant && opts.contentHash) {
         await variantStore.put(variantKey(opts.contentHash, { width: 200, format: "webp" }), enc.encode("WEBP200"));
@@ -20,7 +26,13 @@ async function setup(opts: { contentHash?: string; withVariant?: boolean; mimeTy
 }
 
 const savedMode = process.env.MODE;
-afterEach(() => { if (savedMode === undefined) delete process.env.MODE; else process.env.MODE = savedMode; });
+afterEach(() => {
+    if (savedMode === undefined) {
+        delete process.env.MODE;
+    } else {
+        process.env.MODE = savedMode;
+    }
+});
 
 describe("serveVariantRequest", () => {
     test("serves a ready variant immutable (prod), as image/webp", async () => {
@@ -45,7 +57,7 @@ describe("serveVariantRequest", () => {
         const { deps, id } = await setup({ contentHash: "h1", withVariant: false });
         const res = await serveVariantRequest(deps, req(`${PREFIX}${id}/200.webp`), { prefix: PREFIX });
         expect(res.status).toBe(200);
-        expect(res.headers.get("Content-Type")).toBe("image/png");          // the original
+        expect(res.headers.get("Content-Type")).toBe("image/png"); // the original
         expect(res.headers.get("Cache-Control")).toBe("no-cache, must-revalidate");
         expect(await res.text()).toBe("ORIGINAL");
     });
@@ -73,7 +85,9 @@ describe("serveVariantRequest", () => {
         const { deps, id } = await setup({ contentHash: "h1" });
         expect((await serveVariantRequest(deps, req(`${PREFIX}${id}/200.png`), { prefix: PREFIX })).status).toBe(404); // wrong format
         expect((await serveVariantRequest(deps, req(`${PREFIX}${id}/abc.webp`), { prefix: PREFIX })).status).toBe(404); // non-numeric
-        expect((await serveVariantRequest(deps, req(`${PREFIX}${id}/99999.webp`), { prefix: PREFIX })).status).toBe(404); // > MAX_WIDTH
+        expect((await serveVariantRequest(deps, req(`${PREFIX}${id}/99999.webp`), { prefix: PREFIX })).status).toBe(
+            404,
+        ); // > MAX_WIDTH
         expect((await serveVariantRequest(deps, req(`${PREFIX}${id}/0.webp`), { prefix: PREFIX })).status).toBe(404); // zero
     });
 });

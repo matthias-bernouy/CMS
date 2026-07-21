@@ -31,23 +31,31 @@ export async function upsertCategoryField(request: Request): Promise<Response> {
         p_unit: null,
         p_operators: [],
     });
-    if (!isRecord(result)) throw new HttpError(502, "upsert_category_custom_field returned an invalid response");
+    if (!isRecord(result)) {
+        throw new HttpError(502, "upsert_category_custom_field returned an invalid response");
+    }
     return json(camelize(result));
 }
 
 export async function getOfferFilterSchema(request: Request): Promise<Response> {
     const category = text(new URL(request.url).searchParams.get("category"));
-    if (!category) throw new HttpError(400, "category is required");
+    if (!category) {
+        throw new HttpError(400, "category is required");
+    }
     const result = await rpc("get_offer_filter_schema_read_model", {
         p_category_full_slug: category,
     });
-    if (!isRecord(result)) throw new HttpError(404, "category not found");
+    if (!isRecord(result)) {
+        throw new HttpError(404, "category not found");
+    }
     return json(result);
 }
 
 export async function getCategoryProductFieldSchema(request: Request): Promise<Response> {
     const categoryId = integer(new URL(request.url).searchParams.get("categoryId"), "categoryId", true)!;
     const result = await rpc("category_custom_field_schema", { p_category_id: categoryId });
-    if (!isRecord(result) || !Array.isArray(result.fields)) throw new HttpError(404, "category schema not found");
+    if (!isRecord(result) || !Array.isArray(result.fields)) {
+        throw new HttpError(404, "category schema not found");
+    }
     return json(camelize(result));
 }

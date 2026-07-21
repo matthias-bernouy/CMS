@@ -2,11 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { isNativeBlocTag, prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryDashboardRepository, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
-import {
-    functionEndpointUrn,
-    InMemoryFunctionRepository,
-    validateFunction,
-} from "@bernouy/cms-functions";
+import { functionEndpointUrn, InMemoryFunctionRepository, validateFunction } from "@bernouy/cms-functions";
 import {
     InMemoryIntegrationInstallationRepository,
     runIntegrationInstallation,
@@ -34,12 +30,7 @@ import {
 } from "@bernouy/cms-sources";
 import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-triggers";
 
-const INTEGRATION_KINDS = [
-    "basic-blocs",
-    "commerce",
-    "stripe-connect",
-    "commerce-stripe-payments",
-] as const;
+const INTEGRATION_KINDS = ["basic-blocs", "commerce", "stripe-connect", "commerce-stripe-payments"] as const;
 
 const SELLER_TERMS_VERSION = "seller-terms-2026-07-13";
 const SELLER_TERMS_HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -84,17 +75,23 @@ describe("Commerce protected Stripe combined installation", () => {
 
         await install("basic-blocs", {}, definitions, deps, installations);
         await install("commerce", { id: "commerce" }, definitions, deps, installations);
-        await install("stripe-connect", {
-            id: "stripe-connect",
-            stripeSecretKey: "sk_test_combined_install",
-            stripePublishableKey: "pk_test_combined_install",
-            stripeWebhookSecret: "whsec_test_combined_install",
-            stripeConnectWebhookSecret: "whsec_connect_test_combined_install",
-            stripeConnectV2WebhookSecret: "whsec_connect_v2_test_combined_install",
-            defaultCountry: "FR",
-            defaultCurrency: "eur",
-            sellerActivityDescription: "Second-hand marketplace test activity.",
-        }, definitions, deps, installations);
+        await install(
+            "stripe-connect",
+            {
+                id: "stripe-connect",
+                stripeSecretKey: "sk_test_combined_install",
+                stripePublishableKey: "pk_test_combined_install",
+                stripeWebhookSecret: "whsec_test_combined_install",
+                stripeConnectWebhookSecret: "whsec_connect_test_combined_install",
+                stripeConnectV2WebhookSecret: "whsec_connect_v2_test_combined_install",
+                defaultCountry: "FR",
+                defaultCurrency: "eur",
+                sellerActivityDescription: "Second-hand marketplace test activity.",
+            },
+            definitions,
+            deps,
+            installations,
+        );
         const linkingResult = await install(
             "commerce-stripe-payments",
             {
@@ -106,12 +103,14 @@ describe("Commerce protected Stripe combined installation", () => {
             installations,
         );
 
-        expect(deployments.map(deployment => ({
-            integrationKind: deployment.integrationKind,
-            dataApiSchemas: deployment.dataApiSchemas,
-            schemas: deployment.schemas.map(schema => schema.path),
-            functions: deployment.functions.map(fn => fn.name),
-        }))).toEqual([
+        expect(
+            deployments.map((deployment) => ({
+                integrationKind: deployment.integrationKind,
+                dataApiSchemas: deployment.dataApiSchemas,
+                schemas: deployment.schemas.map((schema) => schema.path),
+                functions: deployment.functions.map((fn) => fn.name),
+            })),
+        ).toEqual([
             {
                 integrationKind: "commerce",
                 dataApiSchemas: ["commerce"],
@@ -126,7 +125,7 @@ describe("Commerce protected Stripe combined installation", () => {
             },
         ]);
         expect(linkingResult.installation.status).toBe("success");
-        expect(linkingResult.artifacts.map(artifact => artifact.type)).toEqual([
+        expect(linkingResult.artifacts.map((artifact) => artifact.type)).toEqual([
             ...Array(16).fill("function"),
             ...Array(10).fill("trigger"),
             "dashboard",
@@ -137,30 +136,37 @@ describe("Commerce protected Stripe combined installation", () => {
         }
 
         const installedSources = await sources.getAllSources();
-        expect(installedSources.map(source => source.urn).sort()).toEqual([
-            "urn:commerce",
-            "urn:stripe-connect",
-        ]);
-        for (const source of installedSources) expect(validateSource(source)).toEqual([]);
-        expect(sourceEndpointAccessMode((await sources.getEndpoint(
-            makeEndpointUrn("stripe-connect", "createProtectedPayment"),
-        ))!)).toBe("system");
-        expect(sourceEndpointAccessMode((await sources.getEndpoint(
-            makeEndpointUrn("stripe-connect", "getProtectedPayment"),
-        ))!)).toBe("system");
-        expect(sourceEndpointAccessMode((await sources.getEndpoint(
-            makeEndpointUrn("stripe-connect", "getProtectedPaymentByClientReference"),
-        ))!)).toBe("system");
+        expect(installedSources.map((source) => source.urn).sort()).toEqual(["urn:commerce", "urn:stripe-connect"]);
+        for (const source of installedSources) {
+            expect(validateSource(source)).toEqual([]);
+        }
+        expect(
+            sourceEndpointAccessMode(
+                (await sources.getEndpoint(makeEndpointUrn("stripe-connect", "createProtectedPayment")))!,
+            ),
+        ).toBe("system");
+        expect(
+            sourceEndpointAccessMode(
+                (await sources.getEndpoint(makeEndpointUrn("stripe-connect", "getProtectedPayment")))!,
+            ),
+        ).toBe("system");
+        expect(
+            sourceEndpointAccessMode(
+                (await sources.getEndpoint(makeEndpointUrn("stripe-connect", "getProtectedPaymentByClientReference")))!,
+            ),
+        ).toBe("system");
         const preparedPayment = await sources.getEndpoint(makeEndpointUrn("commerce", "prepareProtectedPayment"));
         const createdPayment = await sources.getEndpoint(makeEndpointUrn("stripe-connect", "createProtectedPayment"));
-        const sellerPayout = await sources.getEndpoint(makeEndpointUrn("stripe-connect", "configureSellerPayoutSchedule"));
+        const sellerPayout = await sources.getEndpoint(
+            makeEndpointUrn("stripe-connect", "configureSellerPayoutSchedule"),
+        );
         expect(preparedPayment?.access).toEqual({ mode: "system" });
         expect(preparedPayment?.output?.[0]?.body?.properties?.sellerId?.semantic?.authority).toBe("cms");
         expect(createdPayment?.input?.body?.properties?.sellerUserId?.semantic?.authority).toBe("cms");
         expect(sellerPayout?.input?.body?.properties?.userId?.semantic?.authority).toBe("cms");
 
         const installedFunctions = await functions.getAllFunctions();
-        expect(installedFunctions.map(fn => fn.id).sort()).toEqual([
+        expect(installedFunctions.map((fn) => fn.id).sort()).toEqual([
             "applyPlatformPayoutLiabilityDecrease",
             "createPaymentForOrder",
             "createProtectedOrder",
@@ -178,11 +184,13 @@ describe("Commerce protected Stripe combined installation", () => {
             "refreshPaymentForOrder",
             "submitSellerOfferPrice",
         ]);
-        for (const fn of installedFunctions) expect(await validateFunction(fn, { sources })).toEqual([]);
+        for (const fn of installedFunctions) {
+            expect(await validateFunction(fn, { sources })).toEqual([]);
+        }
         expect(JSON.stringify(installedFunctions)).not.toContain("debitNegativeBalances");
 
         const installedTriggers = await triggers.getAllTriggers();
-        expect(installedTriggers.map(trigger => trigger.id).sort()).toEqual([
+        expect(installedTriggers.map((trigger) => trigger.id).sort()).toEqual([
             "execute-authorized-settlement-release",
             "execute-buyer-cancellation-refund",
             "execute-buyer-payment-cancellation",
@@ -197,14 +205,13 @@ describe("Commerce protected Stripe combined installation", () => {
         for (const trigger of installedTriggers) {
             expect(validateTrigger(trigger)).toEqual([]);
             expect(await functions.getFunction(trigger.function.id)).not.toBeNull();
-            expect(await sources.getEndpoint(makeEndpointUrn(
-                trigger.event.source ?? "",
-                trigger.event.endpoint ?? "",
-            ))).not.toBeNull();
+            expect(
+                await sources.getEndpoint(makeEndpointUrn(trigger.event.source ?? "", trigger.event.endpoint ?? "")),
+            ).not.toBeNull();
         }
 
         const installedDashboards = await dashboards.getAllDashboards();
-        expect(installedDashboards.map(dashboard => dashboard.id).sort()).toEqual([
+        expect(installedDashboards.map((dashboard) => dashboard.id).sort()).toEqual([
             "commerce-configuration",
             "commerce-metadata",
             "commerce-offers",
@@ -225,40 +232,57 @@ describe("Commerce protected Stripe combined installation", () => {
         expect(await dashboards.getDashboardsForSource("stripe-connect")).toEqual([]);
 
         const operationsDashboard = await dashboards.getDashboard("commerce-stripe-payments-operations");
-        if (!operationsDashboard) throw new Error("protected operations dashboard not installed");
-        const operationRefs = collectEndpointRefs(operationsDashboard)
-            .map(ref => `${ref.sourceId ?? operationsDashboard.source}:${ref.endpoint}`);
+        if (!operationsDashboard) {
+            throw new Error("protected operations dashboard not installed");
+        }
+        const operationRefs = collectEndpointRefs(operationsDashboard).map(
+            (ref) => `${ref.sourceId ?? operationsDashboard.source}:${ref.endpoint}`,
+        );
         expect(operationRefs).not.toContain("stripe-connect:createProtectedPayment");
         expect(operationRefs).not.toContain("stripe-connect:requestSettlementRelease");
         expect(operationRefs).not.toContain("stripe-connect:requestProtectedRefund");
-        expect(operationRefs).toEqual(expect.arrayContaining([
-            "commerce:protectedPayments",
-            "commerce:claims",
-            "commerce:refundRequests",
-            "stripe-connect:listProviderPayments",
-            "stripe-connect:listStripeDisputes",
-            "stripe-connect:listProviderExceptions",
-        ]));
+        expect(operationRefs).toEqual(
+            expect.arrayContaining([
+                "commerce:protectedPayments",
+                "commerce:claims",
+                "commerce:refundRequests",
+                "stripe-connect:listProviderPayments",
+                "stripe-connect:listStripeDisputes",
+                "stripe-connect:listProviderExceptions",
+            ]),
+        );
 
         await assertImportedAccessGrants(sources, functions, roles);
-        expect((await roles.get(USER_ROLE))?.grants.some(
-            grant => grant.permission === makeEndpointUrn("commerce", "prepareProtectedPayment"),
-        )).toBe(false);
-        expect((await sources.getEndpoint(makeEndpointUrn("commerce", "reviewOrderRefund")))?.access)
-            .toEqual({ mode: "admin" });
-        expect((await sources.getEndpoint(makeEndpointUrn("commerce", "resolveOrderClaim")))?.access)
-            .toEqual({ mode: "admin" });
-        expect((await sources.getEndpoint(makeEndpointUrn("stripe-connect", "submitStripeDisputeEvidence")))?.access)
-            .toEqual({ mode: "admin" });
+        expect(
+            (await roles.get(USER_ROLE))?.grants.some(
+                (grant) => grant.permission === makeEndpointUrn("commerce", "prepareProtectedPayment"),
+            ),
+        ).toBe(false);
+        expect((await sources.getEndpoint(makeEndpointUrn("commerce", "reviewOrderRefund")))?.access).toEqual({
+            mode: "admin",
+        });
+        expect((await sources.getEndpoint(makeEndpointUrn("commerce", "resolveOrderClaim")))?.access).toEqual({
+            mode: "admin",
+        });
+        expect(
+            (await sources.getEndpoint(makeEndpointUrn("stripe-connect", "submitStripeDisputeEvidence")))?.access,
+        ).toEqual({ mode: "admin" });
 
-        const expectedBlocIds = definitions.flatMap(definition => (definition.artifacts ?? [])
-            .filter((artifact): artifact is Extract<typeof artifact, { type: "bloc" }> => artifact.type === "bloc")
-            .map(artifact => artifact.bloc.tag))
+        const expectedBlocIds = definitions
+            .flatMap((definition) =>
+                (definition.artifacts ?? [])
+                    .filter(
+                        (artifact): artifact is Extract<typeof artifact, { type: "bloc" }> => artifact.type === "bloc",
+                    )
+                    .map((artifact) => artifact.bloc.tag),
+            )
             .sort();
-        expect((await blocs.getBlocsList()).map(bloc => bloc.id).sort()).toEqual(expectedBlocIds);
-        for (const blocId of expectedBlocIds) expect(await blocs.getBlocViewJS(blocId)).not.toBeNull();
+        expect((await blocs.getBlocsList()).map((bloc) => bloc.id).sort()).toEqual(expectedBlocIds);
+        for (const blocId of expectedBlocIds) {
+            expect(await blocs.getBlocViewJS(blocId)).not.toBeNull();
+        }
 
-        const persistedInstallations = await Promise.all(INTEGRATION_KINDS.map(kind => installations.get(kind)));
+        const persistedInstallations = await Promise.all(INTEGRATION_KINDS.map((kind) => installations.get(kind)));
         const persistedJson = JSON.stringify(persistedInstallations);
         expect(persistedJson).not.toContain("sk_test_combined_install");
         expect(persistedJson).not.toContain("whsec_test_combined_install");
@@ -267,15 +291,19 @@ describe("Commerce protected Stripe combined installation", () => {
 
 async function loadDefinitions(): Promise<IntegrationDefinition[]> {
     const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-    return await Promise.all(INTEGRATION_KINDS.map(async kind => {
-        const definition = await repository.get(kind);
-        if (!definition) throw new Error(`${kind} definition not found`);
-        return definition;
-    }));
+    return await Promise.all(
+        INTEGRATION_KINDS.map(async (kind) => {
+            const definition = await repository.get(kind);
+            if (!definition) {
+                throw new Error(`${kind} definition not found`);
+            }
+            return definition;
+        }),
+    );
 }
 
 async function install(
-    kind: typeof INTEGRATION_KINDS[number],
+    kind: (typeof INTEGRATION_KINDS)[number],
     answers: Record<string, IntegrationAnswerValue>,
     definitions: IntegrationDefinition[],
     deps: IntegrationImportDeps,
@@ -307,9 +335,12 @@ function repositoryBackedBlocImporter(repository: InMemoryCmsRepository) {
                 undefined,
                 { native: isNativeBlocTag(artifact.tag) },
             );
-            if (previous !== null && options.force) await repository.replaceBloc(bloc);
-            else await repository.createBloc(bloc);
-            return { id: bloc.id, action: previous === null ? "created" as const : "updated" as const };
+            if (previous !== null && options.force) {
+                await repository.replaceBloc(bloc);
+            } else {
+                await repository.createBloc(bloc);
+            }
+            return { id: bloc.id, action: previous === null ? ("created" as const) : ("updated" as const) };
         },
     };
 }
@@ -325,21 +356,29 @@ async function assertImportedAccessGrants(
     for (const source of await sources.getAllSources()) {
         for (const endpoint of source.endpoints) {
             const mode = sourceEndpointAccessMode(endpoint);
-            if (mode === "public") publicExpected.add(endpoint.urn);
-            else if (mode === "auth") userExpected.add(endpoint.urn);
-            else deniedToBuiltIns.add(endpoint.urn);
+            if (mode === "public") {
+                publicExpected.add(endpoint.urn);
+            } else if (mode === "auth") {
+                userExpected.add(endpoint.urn);
+            } else {
+                deniedToBuiltIns.add(endpoint.urn);
+            }
         }
     }
     for (const fn of await functions.getAllFunctions()) {
         const permission = functionEndpointUrn(fn.id);
         const mode = fn.access?.mode ?? "admin";
-        if (mode === "public") publicExpected.add(permission);
-        else if (mode === "auth") userExpected.add(permission);
-        else deniedToBuiltIns.add(permission);
+        if (mode === "public") {
+            publicExpected.add(permission);
+        } else if (mode === "auth") {
+            userExpected.add(permission);
+        } else {
+            deniedToBuiltIns.add(permission);
+        }
     }
 
-    const publicActual = new Set((await roles.get(PUBLIC_ROLE))?.grants.map(grant => grant.permission) ?? []);
-    const userActual = new Set((await roles.get(USER_ROLE))?.grants.map(grant => grant.permission) ?? []);
+    const publicActual = new Set((await roles.get(PUBLIC_ROLE))?.grants.map((grant) => grant.permission) ?? []);
+    const userActual = new Set((await roles.get(USER_ROLE))?.grants.map((grant) => grant.permission) ?? []);
     expect([...publicActual].sort()).toEqual([...publicExpected].sort());
     expect([...userActual].sort()).toEqual([...userExpected].sort());
     for (const permission of deniedToBuiltIns) {
@@ -357,24 +396,31 @@ type DashboardEndpointRefLike = {
 
 function collectEndpointRefs(value: unknown, refs: DashboardEndpointRefLike[] = []): DashboardEndpointRefLike[] {
     if (Array.isArray(value)) {
-        for (const item of value) collectEndpointRefs(item, refs);
+        for (const item of value) {
+            collectEndpointRefs(item, refs);
+        }
         return refs;
     }
-    if (!value || typeof value !== "object") return refs;
+    if (!value || typeof value !== "object") {
+        return refs;
+    }
     const record = value as Record<string, unknown>;
-    if (typeof record.endpoint === "string") refs.push(record as DashboardEndpointRefLike);
-    for (const child of Object.values(record)) collectEndpointRefs(child, refs);
+    if (typeof record.endpoint === "string") {
+        refs.push(record as DashboardEndpointRefLike);
+    }
+    for (const child of Object.values(record)) {
+        collectEndpointRefs(child, refs);
+    }
     return refs;
 }
 
-async function assertDashboardEndpointRefs(
-    dashboard: Dashboard,
-    sources: InMemorySourceRepository,
-): Promise<void> {
+async function assertDashboardEndpointRefs(dashboard: Dashboard, sources: InMemorySourceRepository): Promise<void> {
     for (const ref of collectEndpointRefs(dashboard)) {
         const sourceId = ref.sourceId ?? dashboard.source;
         const endpoint = await sources.getEndpoint(makeEndpointUrn(sourceId, ref.endpoint));
-        if (!endpoint) throw new Error(`${dashboard.id} references missing endpoint ${sourceId}:${ref.endpoint}`);
+        if (!endpoint) {
+            throw new Error(`${dashboard.id} references missing endpoint ${sourceId}:${ref.endpoint}`);
+        }
         assertDashboardEndpointParams(dashboard.id, endpoint, ref.params);
         assertDashboardEndpointBody(dashboard.id, endpoint, ref.body);
     }
@@ -385,10 +431,14 @@ function assertDashboardEndpointParams(
     endpoint: SourceEndpoint,
     params: Record<string, unknown> | undefined,
 ): void {
-    if (!params) return;
-    const declared = new Set((endpoint.input?.params ?? []).map(param => param.name));
+    if (!params) {
+        return;
+    }
+    const declared = new Set((endpoint.input?.params ?? []).map((param) => param.name));
     for (const name of Object.keys(params)) {
-        if (!declared.has(name)) throw new Error(`${dashboardId} passes undeclared ${endpoint.urn} param ${name}`);
+        if (!declared.has(name)) {
+            throw new Error(`${dashboardId} passes undeclared ${endpoint.urn} param ${name}`);
+        }
     }
 }
 
@@ -397,18 +447,26 @@ function assertDashboardEndpointBody(
     endpoint: SourceEndpoint,
     body: Record<string, unknown> | undefined,
 ): void {
-    if (!body) return;
+    if (!body) {
+        return;
+    }
     const shape = endpoint.input?.body;
-    if (!shape) throw new Error(`${dashboardId} passes a body to ${endpoint.urn} without a body contract`);
+    if (!shape) {
+        throw new Error(`${dashboardId} passes a body to ${endpoint.urn} without a body contract`);
+    }
     for (const path of Object.keys(body)) {
-        if (!shapeHasPath(shape, path)) throw new Error(`${dashboardId} passes undeclared ${endpoint.urn} body path ${path}`);
+        if (!shapeHasPath(shape, path)) {
+            throw new Error(`${dashboardId} passes undeclared ${endpoint.urn} body path ${path}`);
+        }
     }
 }
 
 function shapeHasPath(shape: DataShape, path: string): boolean {
     let current: DataShape | undefined = shape;
     for (const part of path.split(".").filter(Boolean)) {
-        if (current?.type !== "object") return false;
+        if (current?.type !== "object") {
+            return false;
+        }
         current = current.properties?.[part];
     }
     return current !== undefined;

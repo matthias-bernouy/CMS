@@ -13,10 +13,7 @@ const TEMPLATE_FILE = "_template.html";
  * needs around CSS isolation, for example) without every page having to
  * declare which template it expects.
  */
-export default async function prepareHtml(
-    path: string,
-    runner: Runner,
-){
+export default async function prepareHtml(path: string, runner: Runner) {
     const templatePath = findTemplateFor(path);
     if (!templatePath) {
         throw new Error(`No _template.html found for ${path} (looked from its directory up to ${STATIC_ROOT_DIR}).`);
@@ -33,12 +30,18 @@ export default async function prepareHtml(
 
 function findTemplateFor(filePath: string): string | null {
     const rel = relative(STATIC_ROOT_DIR, filePath);
-    if (rel.startsWith("..")) return null;          // outside static/
+    if (rel.startsWith("..")) {
+        return null; // outside static/
+    }
     let dir = dirname(filePath);
     while (dir.startsWith(STATIC_ROOT_DIR)) {
         const candidate = join(dir, TEMPLATE_FILE);
-        if (existsSync(candidate)) return candidate;
-        if (dir === STATIC_ROOT_DIR) break;
+        if (existsSync(candidate)) {
+            return candidate;
+        }
+        if (dir === STATIC_ROOT_DIR) {
+            break;
+        }
         dir = dirname(dir);
     }
     return null;

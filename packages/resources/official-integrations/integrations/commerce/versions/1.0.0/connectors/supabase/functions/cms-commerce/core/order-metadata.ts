@@ -19,20 +19,22 @@ export async function publicOrderMetadataDefinitions(): Promise<PublicOrderMetad
     return parsePublicOrderMetadataDefinitions(rows);
 }
 
-export function parsePublicOrderMetadataDefinitions(
-    rows: readonly JsonRecord[],
-): PublicOrderMetadataDefinition[] {
-    return rows.flatMap(row => {
+export function parsePublicOrderMetadataDefinitions(rows: readonly JsonRecord[]): PublicOrderMetadataDefinition[] {
+    return rows.flatMap((row) => {
         const key = stringValue(row.key);
         const type = stringValue(row.field_type);
-        if (!key || !type || !metadataTypes.has(type)) return [];
+        if (!key || !type || !metadataTypes.has(type)) {
+            return [];
+        }
         const unit = stringValue(row.unit);
-        return [{
-            key,
-            label: stringValue(row.label) || key,
-            type,
-            ...(unit ? { unit } : {}),
-        }];
+        return [
+            {
+                key,
+                label: stringValue(row.label) || key,
+                type,
+                ...(unit ? { unit } : {}),
+            },
+        ];
     });
 }
 
@@ -40,27 +42,32 @@ export function withPublicOrderMetadata(
     row: JsonRecord,
     definitions: readonly PublicOrderMetadataDefinition[],
 ): JsonRecord {
-    const metadata = publicMetadata(row.metadata, new Set(definitions.map(definition => definition.key)));
-    const metadataEntries = definitions.flatMap(definition => {
-        if (!Object.hasOwn(metadata, definition.key)) return [];
+    const metadata = publicMetadata(row.metadata, new Set(definitions.map((definition) => definition.key)));
+    const metadataEntries = definitions.flatMap((definition) => {
+        if (!Object.hasOwn(metadata, definition.key)) {
+            return [];
+        }
         const value = displayValue(metadata[definition.key]);
-        if (value === undefined) return [];
-        return [{
-            key: definition.key,
-            label: definition.label,
-            type: definition.type,
-            value,
-            ...(definition.unit ? { unit: definition.unit } : {}),
-        }];
+        if (value === undefined) {
+            return [];
+        }
+        return [
+            {
+                key: definition.key,
+                label: definition.label,
+                type: definition.type,
+                value,
+                ...(definition.unit ? { unit: definition.unit } : {}),
+            },
+        ];
     });
     return { ...row, metadata, metadataEntries };
 }
 
-export function withPublicOrderResult(
-    value: unknown,
-    definitions: readonly PublicOrderMetadataDefinition[],
-): unknown {
-    if (!isRecord(value)) throw new HttpError(502, "invalid order response");
+export function withPublicOrderResult(value: unknown, definitions: readonly PublicOrderMetadataDefinition[]): unknown {
+    if (!isRecord(value)) {
+        throw new HttpError(502, "invalid order response");
+    }
     return withPublicOrderMetadata(value, definitions);
 }
 
@@ -68,18 +75,22 @@ export function withPublicCheckoutMetadata(
     value: unknown,
     definitions: readonly PublicOrderMetadataDefinition[],
 ): unknown {
-    if (!isRecord(value) || !Array.isArray(value.orders) || value.orders.some(order => !isRecord(order))) {
+    if (!isRecord(value) || !Array.isArray(value.orders) || value.orders.some((order) => !isRecord(order))) {
         throw new HttpError(502, "invalid checkout response");
     }
     return {
         ...value,
-        orders: value.orders.map(order => withPublicOrderMetadata(order as JsonRecord, definitions)),
+        orders: value.orders.map((order) => withPublicOrderMetadata(order as JsonRecord, definitions)),
     };
 }
 
 function displayValue(value: unknown): string | undefined {
-    if (typeof value === "string" || typeof value === "boolean") return String(value);
-    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    if (typeof value === "string" || typeof value === "boolean") {
+        return String(value);
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return String(value);
+    }
     return undefined;
 }
 

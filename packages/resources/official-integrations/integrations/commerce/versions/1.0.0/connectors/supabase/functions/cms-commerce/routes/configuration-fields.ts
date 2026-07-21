@@ -16,28 +16,32 @@ export function dynamicField(row: JsonRecord): JsonRecord {
         showInDashboardTable: row.show_in_dashboard_table === true,
         exposeToEditorSources: row.public_readable === true,
         ...(row.field_type === "enum"
-            ? { options: rawOptions.map(value => ({ value: String(value), label: String(value) })) }
+            ? { options: rawOptions.map((value) => ({ value: String(value), label: String(value) })) }
             : {}),
     };
 }
 
 export function normalizeOptions(value: unknown): string[] {
-    if (value === undefined || value === null || value === "") return [];
-    const values = Array.isArray(value)
-        ? value
-        : typeof value === "string"
-            ? value.split(",")
-            : null;
-    if (!values) throw new HttpError(422, "options must be an array or comma-separated text");
-    return [...new Set(values.map(entry => String(entry).trim()).filter(Boolean))].slice(0, 64);
+    if (value === undefined || value === null || value === "") {
+        return [];
+    }
+    const values = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : null;
+    if (!values) {
+        throw new HttpError(422, "options must be an array or comma-separated text");
+    }
+    return [...new Set(values.map((entry) => String(entry).trim()).filter(Boolean))].slice(0, 64);
 }
 
 export function setText(target: JsonRecord, key: string, value: unknown, lowercase = false): void {
     const result = text(value);
-    if (result !== undefined) target[key] = lowercase ? result.toLowerCase() : result;
+    if (result !== undefined) {
+        target[key] = lowercase ? result.toLowerCase() : result;
+    }
 }
 
 export function setBoolean(target: JsonRecord, key: string, value: unknown): void {
     const result = booleanValue(value, key);
-    if (result !== undefined) target[key] = result;
+    if (result !== undefined) {
+        target[key] = result;
+    }
 }

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    privateAuthJsonResponse,
-    privateAuthResponse,
-} from "cms-auth/http/authResponse";
+import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
 
 describe("private auth responses", () => {
     test("forces private no-store headers and merges Vary case-insensitively", async () => {

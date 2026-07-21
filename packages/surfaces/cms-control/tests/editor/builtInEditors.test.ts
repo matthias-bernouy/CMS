@@ -7,9 +7,7 @@ describe("editor built-in editors", () => {
     test("control catalog only exposes runtime-owned editor entries", () => {
         const catalog = createControlEditorCatalog();
 
-        expect(catalog.map(entry => entry.tag)).toEqual([
-            CMS_BINDING_CORE_TAG,
-        ]);
+        expect(catalog.map((entry) => entry.tag)).toEqual([CMS_BINDING_CORE_TAG]);
         expect(catalog[0]?.editor).toBe(BindingCoreEditor);
         expect(catalog[0]?.category).toBe("Runtime");
     });

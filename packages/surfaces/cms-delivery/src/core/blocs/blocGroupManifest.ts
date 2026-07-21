@@ -28,25 +28,28 @@ type Memo = { promise: Promise<BlocGroups>; computedAt: number };
 const memo = new WeakMap<DeliveryCms, Memo>();
 
 export function getBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGroups> {
-    const now    = Date.now();
+    const now = Date.now();
     const cached = memo.get(delivery);
-    if (cached && now - cached.computedAt < TTL_MS) return cached.promise;
+    if (cached && now - cached.computedAt < TTL_MS) {
+        return cached.promise;
+    }
 
     const promise = computeBlocGroupManifest(delivery);
     memo.set(delivery, { promise, computedAt: now });
-    promise.catch(() => { if (memo.get(delivery)?.promise === promise) memo.delete(delivery); });
+    promise.catch(() => {
+        if (memo.get(delivery)?.promise === promise) {
+            memo.delete(delivery);
+        }
+    });
     return promise;
 }
 
 async function computeBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGroups> {
     const repository = delivery.repository;
-    const [pages, blocList] = await Promise.all([
-        repository.getAllPages(),
-        repository.getBlocsList(),
-    ]);
+    const [pages, blocList] = await Promise.all([repository.getAllPages(), repository.getBlocsList()]);
 
     const resolveUsage = createBlocUsageResolver(blocList, repository);
-    const pageBlocSets = await Promise.all(pages.map(page => resolveUsage(page.content)));
+    const pageBlocSets = await Promise.all(pages.map((page) => resolveUsage(page.content)));
 
     return groupBlocsBySignature(pageBlocSets);
 }

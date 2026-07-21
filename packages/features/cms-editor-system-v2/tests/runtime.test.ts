@@ -1,11 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import type {
-    ContentSlot,
-    DataScope,
-    EditableState,
-    SettingSection,
-} from "@bernouy/cms-content/editor";
+import type { ContentSlot, DataScope, EditableState, SettingSection } from "@bernouy/cms-content/editor";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
@@ -228,11 +223,7 @@ describe("RuntimeEditor", () => {
         nestedChild.declareDataScope(nestedScope);
 
         expect(registry.getAncestors(nestedChild.target)).toEqual([parent, directChild]);
-        expect(registry.collectDataScopes(nestedChild.target)).toEqual([
-            parentScope,
-            childScope,
-            nestedScope,
-        ]);
+        expect(registry.collectDataScopes(nestedChild.target)).toEqual([parentScope, childScope, nestedScope]);
     });
 
     test("unregisters disposed editors", () => {

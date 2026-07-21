@@ -1,13 +1,13 @@
 export type AuthEmailRecipient = {
-    email:        string;
+    email: string;
     displayName?: string;
 };
 
 export type OutboundEmail = {
-    to:       AuthEmailRecipient;
-    subject:  string;
-    text:     string;
-    html?:    string;
+    to: AuthEmailRecipient;
+    subject: string;
+    text: string;
+    html?: string;
 };
 
 /**

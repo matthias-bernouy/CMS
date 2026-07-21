@@ -12,7 +12,7 @@ installCommerceTestEnvironment();
 
 describe("commerce public offer listing", () => {
     test("enriches cards and applies public price and sort filters", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
                 return jsonResponse(publicOfferListReadModel());
             }
@@ -88,10 +88,14 @@ describe("commerce public offer listing", () => {
     });
 
     test("does not expose media belonging to an unpublished offer", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const table = new URL(request.url).pathname.split("/").at(-1);
-            if (table === "offer_media") return jsonResponse([{ offer_id: 91 }]);
-            if (table === "offers") return jsonResponse([{ publication_status: "draft" }]);
+            if (table === "offer_media") {
+                return jsonResponse([{ offer_id: 91 }]);
+            }
+            if (table === "offers") {
+                return jsonResponse([{ publication_status: "draft" }]);
+            }
             return jsonResponse([]);
         });
 
@@ -101,7 +105,7 @@ describe("commerce public offer listing", () => {
     });
 
     test("allows pending sellers in public listings when verification is optional", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
                 return jsonResponse({ settings_available: true, items: [], total: 0 });
             }
@@ -119,7 +123,7 @@ describe("commerce public offer listing", () => {
     });
 
     test("preserves an unrecognized padded sort as the default ordering", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/rpc/list_public_offers_read_model")) {
                 return jsonResponse({ settings_available: true, items: [], total: 0 });
             }

@@ -19,10 +19,7 @@ describe("Control admin access", () => {
 });
 
 async function status(role: CMS_ROLES, method: string, path: string): Promise<number> {
-    const guard = createControlAccessGuard(
-        "/cms",
-        new InMemoryAuthentication<CMS_ROLES>({ role }),
-    );
+    const guard = createControlAccessGuard("/cms", new InMemoryAuthentication<CMS_ROLES>({ role }));
     const response = await guard(new Request(`http://localhost${path}`, { method }), async () => new Response("ok"));
     return response.status;
 }

@@ -4,19 +4,25 @@ import { firstRow, qs, rest, restError, restJson } from "./rest.ts";
 import { patchCampaign } from "./campaigns.ts";
 import type { CampaignRow, JsonRecord, RecipientRow } from "./types.ts";
 
-const campaignSelect = "id,status,template_key,shared_data,rate_per_minute,total_count,sent_count,failed_count,skipped_count";
+const campaignSelect =
+    "id,status,template_key,shared_data,rate_per_minute,total_count,sent_count,failed_count,skipped_count";
 const recipientSelect = "id,campaign_id,email,data,status,attempts,next_attempt_at,last_error,message_id";
 
 export async function tick(): Promise<Response> {
     await activateScheduledCampaigns();
-    const campaigns = await restJson<CampaignRow[]>(`campaigns?${qs({
-        select: campaignSelect,
-        status: "eq.running",
-        order: "created_at.asc",
-        limit: optionalIntEnv("BROADCAST_TICK_CAMPAIGNS", 3),
-    })}`, { method: "GET" });
+    const campaigns = await restJson<CampaignRow[]>(
+        `campaigns?${qs({
+            select: campaignSelect,
+            status: "eq.running",
+            order: "created_at.asc",
+            limit: optionalIntEnv("BROADCAST_TICK_CAMPAIGNS", 3),
+        })}`,
+        { method: "GET" },
+    );
     const results = [];
-    for (const campaign of campaigns) results.push(await tickCampaign(campaign));
+    for (const campaign of campaigns) {
+        results.push(await tickCampaign(campaign));
+    }
     return json({ campaigns: results });
 }
 
@@ -27,7 +33,9 @@ async function activateScheduledCampaigns(): Promise<void> {
         headers: { "content-type": "application/json", prefer: "return=minimal" },
         body: JSON.stringify({ status: "running", started_at: now }),
     });
-    if (!response.ok) throw await restError(response);
+    if (!response.ok) {
+        throw await restError(response);
+    }
 }
 
 async function tickCampaign(campaign: CampaignRow): Promise<JsonRecord> {
@@ -37,10 +45,16 @@ async function tickCampaign(campaign: CampaignRow): Promise<JsonRecord> {
     let failed = 0;
     for (const recipient of recipients) {
         const claimed = await claimRecipient(recipient);
-        if (!claimed) continue;
+        if (!claimed) {
+            continue;
+        }
         const result = await sendRecipient(campaign, claimed);
-        if (result === "sent") sent++;
-        if (result === "failed") failed++;
+        if (result === "sent") {
+            sent++;
+        }
+        if (result === "failed") {
+            failed++;
+        }
     }
     const next = await patchCampaign(campaign.id, {
         sent_count: campaign.sent_count + sent,
@@ -54,23 +68,31 @@ async function tickCampaign(campaign: CampaignRow): Promise<JsonRecord> {
 }
 
 async function pendingRecipients(campaignId: string, limit: number): Promise<RecipientRow[]> {
-    return restJson<RecipientRow[]>(`campaign_recipients?${qs({
-        select: recipientSelect,
-        campaign_id: `eq.${campaignId}`,
-        status: "eq.pending",
-        next_attempt_at: `lte.${new Date().toISOString()}`,
-        order: "next_attempt_at.asc",
-        limit,
-    })}`, { method: "GET" });
+    return restJson<RecipientRow[]>(
+        `campaign_recipients?${qs({
+            select: recipientSelect,
+            campaign_id: `eq.${campaignId}`,
+            status: "eq.pending",
+            next_attempt_at: `lte.${new Date().toISOString()}`,
+            order: "next_attempt_at.asc",
+            limit,
+        })}`,
+        { method: "GET" },
+    );
 }
 
 async function claimRecipient(row: RecipientRow): Promise<RecipientRow | null> {
-    const response = await rest(`campaign_recipients?${qs({ id: `eq.${row.id}`, status: "eq.pending", select: recipientSelect })}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json", prefer: "return=representation" },
-        body: JSON.stringify({ status: "sending" }),
-    });
-    if (!response.ok) throw await restError(response);
+    const response = await rest(
+        `campaign_recipients?${qs({ id: `eq.${row.id}`, status: "eq.pending", select: recipientSelect })}`,
+        {
+            method: "PATCH",
+            headers: { "content-type": "application/json", prefer: "return=representation" },
+            body: JSON.stringify({ status: "sending" }),
+        },
+    );
+    if (!response.ok) {
+        throw await restError(response);
+    }
     return ((await response.json()) as RecipientRow[])[0] ?? null;
 }
 
@@ -90,7 +112,12 @@ async function sendRecipient(campaign: CampaignRow, recipient: RecipientRow): Pr
     });
     if (response.ok) {
         const body = await response.json().catch(() => ({}));
-        await updateRecipient(recipient.id, { status: "sent", sent_at: new Date().toISOString(), message_id: messageId(body), last_error: null });
+        await updateRecipient(recipient.id, {
+            status: "sent",
+            sent_at: new Date().toISOString(),
+            message_id: messageId(body),
+            last_error: null,
+        });
         return "sent";
     }
     return await handleSendFailure(recipient, response);
@@ -122,12 +149,15 @@ async function updateRecipient(id: string, values: JsonRecord): Promise<Recipien
 }
 
 async function hasPendingRecipients(campaignId: string): Promise<boolean> {
-    const rows = await restJson<RecipientRow[]>(`campaign_recipients?${qs({
-        select: "id",
-        campaign_id: `eq.${campaignId}`,
-        status: "in.(pending,sending)",
-        limit: 1,
-    })}`, { method: "GET" });
+    const rows = await restJson<RecipientRow[]>(
+        `campaign_recipients?${qs({
+            select: "id",
+            campaign_id: `eq.${campaignId}`,
+            status: "in.(pending,sending)",
+            limit: 1,
+        })}`,
+        { method: "GET" },
+    );
     return rows.length > 0;
 }
 
@@ -138,7 +168,9 @@ function mergeData(shared: JsonRecord, recipientData: JsonRecord, email: string)
 }
 
 function messageId(value: unknown): string | null {
-    if (!isRecord(value)) return null;
+    if (!isRecord(value)) {
+        return null;
+    }
     const id = value.id ?? value.messageId ?? value.providerMessageId;
     return typeof id === "string" ? id : null;
 }

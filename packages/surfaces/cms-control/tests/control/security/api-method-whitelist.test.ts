@@ -11,8 +11,7 @@ describe("API routing guards HTTP methods", () => {
 
         // Either a whitelist literal appears, or the code throws on unknown.
         const hasWhitelist =
-            /["']GET["']\s*,\s*["']POST["']/i.test(src) ||
-            /ALLOWED_METHODS|VALID_METHODS|METHOD_WHITELIST/i.test(src);
+            /["']GET["']\s*,\s*["']POST["']/i.test(src) || /ALLOWED_METHODS|VALID_METHODS|METHOD_WHITELIST/i.test(src);
         const throwsOnUnknown = /throw new Error\([^)]*method/i.test(src);
         expect(hasWhitelist || throwsOnUnknown).toBe(true);
     });

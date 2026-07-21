@@ -32,7 +32,7 @@ if (!customElements.get("bound-composition")) {
     customElements.define("bound-composition", BoundComposition);
 }
 
-const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const realFetch = globalThis.fetch;
 
 afterEach(() => {
@@ -116,7 +116,9 @@ function inputOf(composition: Element): HTMLTemplateElement {
 
 async function waitFor(predicate: () => boolean): Promise<void> {
     for (let attempt = 0; attempt < 30; attempt += 1) {
-        if (predicate()) return;
+        if (predicate()) {
+            return;
+        }
         await flush();
     }
     throw new Error("Timed out waiting for composition binding");

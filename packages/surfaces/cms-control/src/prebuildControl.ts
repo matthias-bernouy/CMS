@@ -1,28 +1,27 @@
-import { rmSync } from "node:fs"
+import { rmSync } from "node:fs";
 
 const controlComponentTargetDir = "src/static/assets/";
 const controlComponentTargetNaming = "control-components.js";
-const controlComponentTargetFile = controlComponentTargetDir+controlComponentTargetNaming;
+const controlComponentTargetFile = controlComponentTargetDir + controlComponentTargetNaming;
 const controlComponentOrigin = "src/components/index.ts";
 
-export default async function prebuildControl(){
-
-
-    if ( await Bun.file(controlComponentTargetFile).exists() ) {
-        rmSync(controlComponentTargetFile)
+export default async function prebuildControl() {
+    if (await Bun.file(controlComponentTargetFile).exists()) {
+        rmSync(controlComponentTargetFile);
     }
 
     const result = await Bun.build({
-        "entrypoints": [ controlComponentOrigin ],
+        "entrypoints": [controlComponentOrigin],
         "outdir": controlComponentTargetDir,
         "naming": controlComponentTargetNaming,
         "format": "iife",
-        "target": "browser"
-    })
+        "target": "browser",
+    });
 
-    if ( !result.success ) {
-        for ( const log of result.logs ) console.error(log);
+    if (!result.success) {
+        for (const log of result.logs) {
+            console.error(log);
+        }
         throw new Error("prebuildControl: Bun.build failed");
     }
-
 }

@@ -1,11 +1,7 @@
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 
 import type { SettingsView } from "../../../Settings/SettingsView/SettingsView";
-import {
-    injectBindingPreviewStyle,
-    syncBindingPreviewCore,
-    syncViewFrameContent,
-} from "../Domain/shellBindingPreview";
+import { injectBindingPreviewStyle, syncBindingPreviewCore, syncViewFrameContent } from "../Domain/shellBindingPreview";
 import { contentHtml } from "../Domain/Structure/structureDocument";
 import type { CmsSourceStateForce } from "@bernouy/cms-content/editor";
 import type { EditorDocument } from "@bernouy/cms-content/editor";
@@ -67,8 +63,9 @@ export class ShellFrames {
         }
 
         callbacks.bindFrameDocument(document);
-        const root = document.querySelector<HTMLElement>("[data-cms-editor-root]")
-            ?? document.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG);
+        const root =
+            document.querySelector<HTMLElement>("[data-cms-editor-root]") ??
+            document.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG);
         const contentRoot = document.querySelector<HTMLElement>("[data-cms-content]");
         if (!root || !contentRoot) {
             callbacks.clearDocument();
@@ -89,7 +86,11 @@ export class ShellFrames {
 
 export function eventElement(event: Event): Element | null {
     const target = event.target;
-    if (!target || !("nodeType" in target)) return null;
-    if (target.nodeType === Node.ELEMENT_NODE) return target as Element;
+    if (!target || !("nodeType" in target)) {
+        return null;
+    }
+    if (target.nodeType === Node.ELEMENT_NODE) {
+        return target as Element;
+    }
     return (target as Node).parentElement;
 }

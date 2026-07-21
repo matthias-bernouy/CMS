@@ -2,4 +2,6 @@ import { CmsDetailSection } from "cms-control/components/admin/ShellDetail/Detai
 
 export class DashboardWSection extends CmsDetailSection {}
 
-if (!customElements.get("cms-dashboard-w-section")) customElements.define("cms-dashboard-w-section", DashboardWSection);
+if (!customElements.get("cms-dashboard-w-section")) {
+    customElements.define("cms-dashboard-w-section", DashboardWSection);
+}

@@ -10,10 +10,16 @@ export function wireTextControl(
     emitValue: EmitTextValue,
 ): void {
     whenDefined(control, () => {
-        const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(selector);
-        if (!input) return;
+        const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+            selector,
+        );
+        if (!input) {
+            return;
+        }
         input.disabled = setting.disabled === true;
-        if (setting.disabled) return;
+        if (setting.disabled) {
+            return;
+        }
         input.addEventListener("input", () => emitValue(input.value));
         input.addEventListener("change", () => emitValue(input.value));
     });
@@ -26,7 +32,9 @@ export function wireContentControl(
 ): void {
     whenDefined(control, () => {
         const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
-        if (!input) return;
+        if (!input) {
+            return;
+        }
         input.addEventListener("input", () => emitValue(input.value));
         input.addEventListener("change", () => emitValue(input.value));
     });
@@ -36,35 +44,37 @@ export function wireRichTextControl(control: HTMLElement, emitValue: EmitTextVal
     whenDefined(control, () => {
         control.addEventListener("input", (event) => {
             const value = (event as CustomEvent<{ value: string }>).detail?.value;
-            if (typeof value === "string") emitValue(value);
+            if (typeof value === "string") {
+                emitValue(value);
+            }
         });
     });
 }
 
-export function wirePageLinkControl(
-    control: HTMLElement,
-    setting: SettingControl,
-    emitValue: EmitTextValue,
-): void {
+export function wirePageLinkControl(control: HTMLElement, setting: SettingControl, emitValue: EmitTextValue): void {
     whenDefined(control, () => {
-        if (setting.disabled) return;
+        if (setting.disabled) {
+            return;
+        }
         control.addEventListener("input", (event) => {
             const value = (event as CustomEvent<{ value: string }>).detail?.value;
-            if (typeof value === "string") emitValue(value);
+            if (typeof value === "string") {
+                emitValue(value);
+            }
         });
     });
 }
 
-export function wireToggleControl(
-    control: HTMLElement,
-    setting: SettingControl,
-    emitValue: EmitToggleValue,
-): void {
+export function wireToggleControl(control: HTMLElement, setting: SettingControl, emitValue: EmitToggleValue): void {
     whenDefined(control, () => {
         const button = control.shadowRoot?.querySelector<HTMLButtonElement>("button");
-        if (!button) return;
+        if (!button) {
+            return;
+        }
         button.disabled = setting.disabled === true;
-        if (setting.disabled) return;
+        if (setting.disabled) {
+            return;
+        }
         button.addEventListener("click", () => {
             const checked = button.ariaPressed !== "true";
             button.ariaPressed = String(checked);
@@ -76,8 +86,11 @@ export function wireToggleControl(
 
 export function applyDisabled(control: HTMLElement, setting: SettingControl): void {
     control.toggleAttribute("disabled", setting.disabled === true);
-    if (setting.disabled) control.setAttribute("aria-disabled", "true");
-    else control.removeAttribute("aria-disabled");
+    if (setting.disabled) {
+        control.setAttribute("aria-disabled", "true");
+    } else {
+        control.removeAttribute("aria-disabled");
+    }
 }
 
 export function setDataScopes(control: HTMLElement, dataScopes: DataScope[]): void {
@@ -85,6 +98,9 @@ export function setDataScopes(control: HTMLElement, dataScopes: DataScope[]): vo
 }
 
 function whenDefined(control: HTMLElement, callback: () => void): void {
-    if (customElements.get(control.localName)) callback();
-    else customElements.whenDefined(control.localName).then(callback);
+    if (customElements.get(control.localName)) {
+        callback();
+    } else {
+        customElements.whenDefined(control.localName).then(callback);
+    }
 }

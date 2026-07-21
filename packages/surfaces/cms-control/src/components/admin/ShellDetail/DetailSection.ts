@@ -34,19 +34,29 @@ export class CmsDetailSection extends Component {
     private sync = (): void => {
         const heading = this.getAttribute("heading") ?? "";
         const description = this.getAttribute("description") ?? "";
-        if (this.heading) this.heading.textContent = heading;
-        if (this.description) this.description.textContent = description;
+        if (this.heading) {
+            this.heading.textContent = heading;
+        }
+        if (this.description) {
+            this.description.textContent = description;
+        }
         this.toggleAttribute("has-heading", heading.trim() !== "");
         this.toggleAttribute("has-description", description.trim() !== "");
         this.toggleAttribute("has-actions", hasAssignedContent(this.actionsSlot));
     };
 }
 
-if (!customElements.get("cms-detail-section")) customElements.define("cms-detail-section", CmsDetailSection);
+if (!customElements.get("cms-detail-section")) {
+    customElements.define("cms-detail-section", CmsDetailSection);
+}
 
 function hasAssignedContent(slot: HTMLSlotElement | null): boolean {
-    return Boolean(slot?.assignedNodes({ flatten: true }).some(node => {
-        if (node.nodeType !== Node.TEXT_NODE) return true;
-        return node.textContent?.trim() !== "";
-    }));
+    return Boolean(
+        slot?.assignedNodes({ flatten: true }).some((node) => {
+            if (node.nodeType !== Node.TEXT_NODE) {
+                return true;
+            }
+            return node.textContent?.trim() !== "";
+        }),
+    );
 }

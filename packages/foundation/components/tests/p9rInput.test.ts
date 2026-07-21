@@ -2,7 +2,9 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { P9rInput } from "../src/ui/Form/P9rInput/P9rInput";
 
 const tag = "p9r-input-constraints";
-if (!customElements.get(tag)) customElements.define(tag, P9rInput);
+if (!customElements.get(tag)) {
+    customElements.define(tag, P9rInput);
+}
 
 afterEach(() => document.body.replaceChildren());
 
@@ -16,8 +18,12 @@ describe("P9rInput", () => {
         document.body.append(control);
 
         const input = control.shadowRoot!.querySelector("input")!;
-        expect({ type: input.type, min: input.min, max: input.max, step: input.step })
-            .toEqual({ type: "number", min: "0", max: "10", step: "0.5" });
+        expect({ type: input.type, min: input.min, max: input.max, step: input.step }).toEqual({
+            type: "number",
+            min: "0",
+            max: "10",
+            step: "0.5",
+        });
 
         control.removeAttribute("max");
         control.setAttribute("step", "1");

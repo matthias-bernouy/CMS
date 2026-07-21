@@ -55,7 +55,9 @@ export async function claimShipmentsDueForTracking(workerId: string, limit: numb
 }
 
 export async function upsertShipmentEvents(rows: JsonRecord[]): Promise<void> {
-    if (!rows.length) return;
+    if (!rows.length) {
+        return;
+    }
     await restJson<JsonRecord[]>("shipment_events?on_conflict=shipment_id,provider_event_key", {
         method: "POST",
         headers: {
@@ -87,7 +89,11 @@ export async function acknowledgeShipmentEvent(eventId: number, claimToken: stri
     });
 }
 
-export async function failShipmentEventProjection(eventId: number, claimToken: string, error: string): Promise<JsonRecord> {
+export async function failShipmentEventProjection(
+    eventId: number,
+    claimToken: string,
+    error: string,
+): Promise<JsonRecord> {
     return await restJson<JsonRecord>("rpc/fail_shipment_event_projection", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -103,9 +109,9 @@ export async function failShipmentEventProjection(eventId: number, claimToken: s
 
 export async function shipmentProjectionExceptionRows(limit: number, offset: number): Promise<JsonRecord[]> {
     return await restJson<JsonRecord[]>(
-        `shipment_events?projection_status=in.(retry_wait,manual_review)`
-        + `&select=${encodeURIComponent(eventSelect())}&order=projection_manual_review_at.desc.nullslast,created_at.asc,id.asc`
-        + `&limit=${limit}&offset=${offset}`,
+        `shipment_events?projection_status=in.(retry_wait,manual_review)` +
+            `&select=${encodeURIComponent(eventSelect())}&order=projection_manual_review_at.desc.nullslast,created_at.asc,id.asc` +
+            `&limit=${limit}&offset=${offset}`,
         { method: "GET" },
     );
 }
@@ -128,10 +134,7 @@ export async function issueLabelAccessToken(
     });
 }
 
-export async function declareSellerHandoffRow(
-    externalOrderId: string,
-    sellerCmsUserId: string,
-): Promise<JsonRecord> {
+export async function declareSellerHandoffRow(externalOrderId: string, sellerCmsUserId: string): Promise<JsonRecord> {
     return await restJson<JsonRecord>("rpc/declare_seller_handoff", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -151,10 +154,14 @@ export async function insertShipmentRecoveryEvent(row: JsonRecord): Promise<void
 }
 
 export async function labelAccessTokenRow(tokenHash: string, sellerCmsUserId: string): Promise<JsonRecord | null> {
-    return await getOne("label_access_tokens", {
-        token_hash: tokenHash,
-        seller_cms_user_id: sellerCmsUserId,
-    }, "token_hash,shipment_id,seller_cms_user_id,expires_at,revoked_at,created_at");
+    return await getOne(
+        "label_access_tokens",
+        {
+            token_hash: tokenHash,
+            seller_cms_user_id: sellerCmsUserId,
+        },
+        "token_hash,shipment_id,seller_cms_user_id,expires_at,revoked_at,created_at",
+    );
 }
 
 export async function relaySelectionRow(externalOrderId: string): Promise<JsonRecord | null> {
@@ -170,9 +177,9 @@ export async function latestDeliveryQuoteRow(
     selectedForCmsUserId: string,
 ): Promise<JsonRecord | null> {
     const rows = await restJson<JsonRecord[]>(
-        `delivery_quotes?external_order_id=eq.${encodeURIComponent(externalOrderId)}`
-        + `&selected_for_cms_user_id=eq.${encodeURIComponent(selectedForCmsUserId)}`
-        + `&select=${encodeURIComponent(deliveryQuoteSelect(false))}&order=revision.desc&limit=1`,
+        `delivery_quotes?external_order_id=eq.${encodeURIComponent(externalOrderId)}` +
+            `&selected_for_cms_user_id=eq.${encodeURIComponent(selectedForCmsUserId)}` +
+            `&select=${encodeURIComponent(deliveryQuoteSelect(false))}&order=revision.desc&limit=1`,
         { method: "GET" },
     );
     return rows[0] ?? null;
@@ -291,15 +298,20 @@ export async function updateShipment(
     expectedStatus?: string,
 ): Promise<JsonRecord | null> {
     const filters = [`id=eq.${encodeURIComponent(id)}`];
-    if (expectedStatus) filters.push(`status=eq.${encodeURIComponent(expectedStatus)}`);
-    const rows = await restJson<JsonRecord[]>(`shipments?${filters.join("&")}&select=${encodeURIComponent(shipmentSelect())}`, {
-        method: "PATCH",
-        headers: {
-            "content-type": "application/json",
-            prefer: "return=representation",
+    if (expectedStatus) {
+        filters.push(`status=eq.${encodeURIComponent(expectedStatus)}`);
+    }
+    const rows = await restJson<JsonRecord[]>(
+        `shipments?${filters.join("&")}&select=${encodeURIComponent(shipmentSelect())}`,
+        {
+            method: "PATCH",
+            headers: {
+                "content-type": "application/json",
+                prefer: "return=representation",
+            },
+            body: JSON.stringify(patch),
         },
-        body: JSON.stringify(patch),
-    });
+    );
     return rows[0] ?? null;
 }
 
@@ -412,11 +424,29 @@ export function privateShipmentSelect(): string {
 
 function eventSelect(): string {
     return [
-        "id", "shipment_id", "order_public_id", "expedition_number", "provider_event_key",
-        "normalized_status", "occurred_at", "commerce_projected_at", "projection_status",
-        "projection_attempts", "projection_next_attempt_at", "projection_claimed_at", "projection_claimed_by",
-        "projection_claim_token", "projection_last_error", "projection_manual_review_at", "event_label", "event_date",
-        "event_time", "location", "relay_number", "relay_country", "created_at",
+        "id",
+        "shipment_id",
+        "order_public_id",
+        "expedition_number",
+        "provider_event_key",
+        "normalized_status",
+        "occurred_at",
+        "commerce_projected_at",
+        "projection_status",
+        "projection_attempts",
+        "projection_next_attempt_at",
+        "projection_claimed_at",
+        "projection_claimed_by",
+        "projection_claim_token",
+        "projection_last_error",
+        "projection_manual_review_at",
+        "event_label",
+        "event_date",
+        "event_time",
+        "location",
+        "relay_number",
+        "relay_country",
+        "created_at",
     ].join(",");
 }
 
@@ -424,13 +454,16 @@ async function shipmentWithEventsRow(
     filters: Record<string, string>,
     options: { newestFirst?: boolean; shipmentFields?: string } = {},
 ): Promise<JsonRecord | null> {
-    const select = `${options.shipmentFields ?? shipmentSelect()},`
-        + `events:shipment_events!shipment_events_shipment_id_fkey(${shipmentDetailEventSelect()})`;
+    const select =
+        `${options.shipmentFields ?? shipmentSelect()},` +
+        `events:shipment_events!shipment_events_shipment_id_fkey(${shipmentDetailEventSelect()})`;
     const params = [`select=${encodeURIComponent(select)}`, "limit=1"];
     for (const [key, value] of Object.entries(filters)) {
         params.push(`${encodeURIComponent(key)}=eq.${encodeURIComponent(value)}`);
     }
-    if (options.newestFirst) params.push(`order=${encodeURIComponent("created_at.desc")}`);
+    if (options.newestFirst) {
+        params.push(`order=${encodeURIComponent("created_at.desc")}`);
+    }
     params.push(`events.order=${encodeURIComponent("occurred_at.desc.nullslast,created_at.desc")}`);
     const rows = await restJson<JsonRecord[]>(`shipments?${params.join("&")}`, { method: "GET" });
     return rows[0] ?? null;
@@ -438,9 +471,17 @@ async function shipmentWithEventsRow(
 
 function shipmentTrackingSelect(): string {
     return [
-        "id", "expedition_number", "status", "tracking_url", "delivery_relay_number",
-        "latest_event_label", "latest_event_at", "carrier_accepted_at",
-        "seller_handoff_declared_at", "recipient_handoff_at", "created_at",
+        "id",
+        "expedition_number",
+        "status",
+        "tracking_url",
+        "delivery_relay_number",
+        "latest_event_label",
+        "latest_event_at",
+        "carrier_accepted_at",
+        "seller_handoff_declared_at",
+        "recipient_handoff_at",
+        "created_at",
     ].join(",");
 }
 
@@ -473,13 +514,32 @@ export function relaySelectionSelect(): string {
 
 export function deliveryQuoteSelect(includePrivateSnapshots: boolean): string {
     return [
-        "quote_id", "request_key", "external_order_id", "order_version", "revision",
-        "selected_by", "selected_for_cms_user_id", "relay_location", "relay_country",
-        "relay_number", "relay_name", "relay_address_line1", "relay_address_line2",
-        "relay_postal_code", "relay_city", "relay_latitude", "relay_longitude",
-        "weight_grams", "shipping_amount", "currency", "merchandise_subtotal_minor_amount",
+        "quote_id",
+        "request_key",
+        "external_order_id",
+        "order_version",
+        "revision",
+        "selected_by",
+        "selected_for_cms_user_id",
+        "relay_location",
+        "relay_country",
+        "relay_number",
+        "relay_name",
+        "relay_address_line1",
+        "relay_address_line2",
+        "relay_postal_code",
+        "relay_city",
+        "relay_latitude",
+        "relay_longitude",
+        "weight_grams",
+        "shipping_amount",
+        "currency",
+        "merchandise_subtotal_minor_amount",
         ...(includePrivateSnapshots ? ["recipient_snapshot", "seller_fulfillment_snapshot"] : []),
-        "relay_snapshot", "quoted_at", "expires_at", "created_at",
+        "relay_snapshot",
+        "quoted_at",
+        "expires_at",
+        "created_at",
     ].join(",");
 }
 
@@ -495,35 +555,52 @@ async function getOne(table: string, filters: Record<string, string>, select: st
 async function restJson<T>(path: string, init: RequestInit): Promise<T> {
     const response = await rest(path, init);
     const text = await response.text();
-    return text ? JSON.parse(text) as T : undefined as T;
+    return text ? (JSON.parse(text) as T) : (undefined as T);
 }
 
 async function rest(path: string, init: RequestInit): Promise<Response> {
     const base = envText("SUPABASE_URL");
     const key = supabaseDataApiKey();
-    if (!base || !key) throw new HttpError(500, "Supabase service credentials are not configured");
+    if (!base || !key) {
+        throw new HttpError(500, "Supabase service credentials are not configured");
+    }
     const headers = new Headers(init.headers);
     headers.set("apikey", key);
-    if (key.startsWith("sb_")) headers.delete("authorization");
-    else headers.set("authorization", `Bearer ${key}`);
+    if (key.startsWith("sb_")) {
+        headers.delete("authorization");
+    } else {
+        headers.set("authorization", `Bearer ${key}`);
+    }
     headers.set("accept-profile", deliverySchema);
-    if (init.method && init.method !== "GET") headers.set("content-profile", deliverySchema);
+    if (init.method && init.method !== "GET") {
+        headers.set("content-profile", deliverySchema);
+    }
     const response = await fetch(`${base}/rest/v1/${path}`, { ...init, headers });
-    if (response.ok) return response;
+    if (response.ok) {
+        return response;
+    }
     const detail = await response.text().catch(() => "");
     throw dataApiError(response.status, detail);
 }
 
 export function dataApiError(status: number, detail: string): HttpError {
     const message = postgresMessage(detail);
-    if (message.startsWith("not_found: ")) return new HttpError(404, message.slice("not_found: ".length));
-    if (message.startsWith("conflict: ")) return new HttpError(409, message.slice("conflict: ".length));
-    if (message.startsWith("validation: ")) return new HttpError(400, message.slice("validation: ".length));
+    if (message.startsWith("not_found: ")) {
+        return new HttpError(404, message.slice("not_found: ".length));
+    }
+    if (message.startsWith("conflict: ")) {
+        return new HttpError(409, message.slice("conflict: ".length));
+    }
+    if (message.startsWith("validation: ")) {
+        return new HttpError(400, message.slice("validation: ".length));
+    }
     return new HttpError(502, `Supabase Data API request failed (${status})`);
 }
 
 function postgresMessage(detail: string): string {
-    if (!detail) return "";
+    if (!detail) {
+        return "";
+    }
     try {
         const parsed = JSON.parse(detail) as JsonRecord;
         return typeof parsed.message === "string" ? parsed.message : "";
@@ -541,14 +618,23 @@ function supabaseSecretKeys(): string[] {
     const secretKeys = envText("SUPABASE_SECRET_KEYS");
     if (secretKeys) {
         if (!secretKeys.startsWith("{")) {
-            keys.push(...secretKeys.split(",").map(value => value.trim()).filter(Boolean));
+            keys.push(
+                ...secretKeys
+                    .split(",")
+                    .map((value) => value.trim())
+                    .filter(Boolean),
+            );
         } else {
             try {
                 const parsed = JSON.parse(secretKeys);
                 if (isRecord(parsed)) {
-                    if (typeof parsed.default === "string" && parsed.default) keys.push(parsed.default);
+                    if (typeof parsed.default === "string" && parsed.default) {
+                        keys.push(parsed.default);
+                    }
                     for (const value of Object.values(parsed)) {
-                        if (typeof value === "string" && value && value !== parsed.default) keys.push(value);
+                        if (typeof value === "string" && value && value !== parsed.default) {
+                            keys.push(value);
+                        }
                     }
                 }
             } catch {
@@ -558,9 +644,13 @@ function supabaseSecretKeys(): string[] {
     }
 
     const modernSecretKey = envText("SUPABASE_SECRET_KEY");
-    if (modernSecretKey) keys.push(modernSecretKey);
+    if (modernSecretKey) {
+        keys.push(modernSecretKey);
+    }
     const legacyServiceRoleKey = envText("SUPABASE_SERVICE_ROLE_KEY");
-    if (legacyServiceRoleKey) keys.push(legacyServiceRoleKey);
+    if (legacyServiceRoleKey) {
+        keys.push(legacyServiceRoleKey);
+    }
 
     return [...new Set(keys)];
 }

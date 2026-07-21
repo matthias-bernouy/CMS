@@ -3,10 +3,7 @@ import type { Middleware } from "@bernouy/http-runner";
 import { renderForbiddenPage } from "cms-control/core/auth/authPages";
 import type { CMS_ROLES } from "types/roles";
 
-export function createControlAccessGuard(
-    basePath: string,
-    auth: Authentication<CMS_ROLES>,
-): Middleware {
+export function createControlAccessGuard(basePath: string, auth: Authentication<CMS_ROLES>): Middleware {
     return createAuthGuard({
         basePath,
         auth,

@@ -13,37 +13,46 @@ describe("response projection diagnostics", () => {
         endpoint.targetUrl = "https://api.example.test/orders?credential=url-secret";
         endpoint.headers = [{ name: "Authorization", source: { from: "static", value: "header-secret" } }];
         endpoint.input = {
-            params: [{
-                name: "customerEmail",
-                in: "query",
-                schema: { type: "string" },
-            }],
+            params: [
+                {
+                    name: "customerEmail",
+                    in: "query",
+                    schema: { type: "string" },
+                },
+            ],
         };
         const response = await executeEndpoint(
             endpoint,
             new Request("http://local.test/source?customerEmail=person@example.test"),
             {
-                fetchImpl: mock(async () => Response.json({
-                    orders: [{ total: 10 }, { total: null }],
-                    providerBodySecret: "body-secret",
-                }, { headers: { "x-provider-secret": "response-header-secret" } })),
-                reportResponseProjectionEvent: event => events.push(event),
+                fetchImpl: mock(async () =>
+                    Response.json(
+                        {
+                            orders: [{ total: 10 }, { total: null }],
+                            providerBodySecret: "body-secret",
+                        },
+                        { headers: { "x-provider-secret": "response-header-secret" } },
+                    ),
+                ),
+                reportResponseProjectionEvent: (event) => events.push(event),
             },
         );
 
         const correlationId = response.headers.get("x-correlation-id");
         expect(response.status).toBe(502);
         expect(await response.json()).toEqual({ error: "Upstream request failed", correlationId });
-        expect(events).toEqual([{
-            kind: "response_projection_failure",
-            endpointUrn: "urn:orders:list",
-            upstreamStatus: 200,
-            reason: "type_mismatch",
-            correlationId,
-            path: "$.orders[].total",
-            expectedType: "number",
-            actualType: "null",
-        }]);
+        expect(events).toEqual([
+            {
+                kind: "response_projection_failure",
+                endpointUrn: "urn:orders:list",
+                upstreamStatus: 200,
+                reason: "type_mismatch",
+                correlationId,
+                path: "$.orders[].total",
+                expectedType: "number",
+                actualType: "null",
+            },
+        ]);
         expect(Object.keys(events[0]!).sort()).toEqual([
             "actualType",
             "correlationId",
@@ -73,7 +82,7 @@ describe("response projection diagnostics", () => {
         endpoint.output![0]!.body!.properties!.orders.items!.properties!.total.nullable = true;
         const response = await executeEndpoint(endpoint, new Request("http://local.test/source"), {
             fetchImpl: mock(async () => Response.json({ orders: [{ total: null, private: "drop" }] })),
-            reportResponseProjectionEvent: event => events.push(event),
+            reportResponseProjectionEvent: (event) => events.push(event),
         });
 
         expect(response.status).toBe(200);
@@ -86,19 +95,24 @@ describe("response projection diagnostics", () => {
         try {
             const source = nestedEndpoint();
             source.targetUrl = "https://api.example.test/orders?credential=default-url-secret";
-            source.headers = [{
-                name: "X-Private-Header",
-                source: { from: "static", value: "default-config-secret" },
-            }];
+            source.headers = [
+                {
+                    name: "X-Private-Header",
+                    source: { from: "static", value: "default-config-secret" },
+                },
+            ];
             const failed = await projectEndpointResponse(
                 source,
                 new Request("http://local.test/source?email=default-person@example.test", {
                     headers: { "x-request-secret": "default-request-header-secret" },
                 }),
-                Response.json({
-                    orders: [{ total: "default-body-secret" }],
-                    privateValue: "default-extra-body-secret",
-                }, { headers: { "x-response-secret": "default-response-header-secret" } }),
+                Response.json(
+                    {
+                        orders: [{ total: "default-body-secret" }],
+                        privateValue: "default-extra-body-secret",
+                    },
+                    { headers: { "x-response-secret": "default-response-header-secret" } },
+                ),
             );
             const correlationId = failed.headers.get("x-correlation-id");
             expect(error).toHaveBeenCalledTimes(1);
@@ -139,8 +153,18 @@ describe("response projection diagnostics", () => {
     });
 
     test.each([
-        ["throwing", () => { throw new Error("logger contains private-value"); }],
-        ["rejecting", async () => { throw new Error("logger contains private-value"); }],
+        [
+            "throwing",
+            () => {
+                throw new Error("logger contains private-value");
+            },
+        ],
+        [
+            "rejecting",
+            async () => {
+                throw new Error("logger contains private-value");
+            },
+        ],
     ])("keeps the generic response when the %s projection reporter fails", async (_name, reporter) => {
         const response = await projectEndpointResponse(
             nestedEndpoint(),
@@ -161,20 +185,22 @@ function nestedEndpoint(): SourceEndpoint {
         urn: "urn:orders:list",
         method: "GET",
         targetUrl: "https://api.example.test/orders",
-        output: [{
-            status: "200",
-            body: {
-                type: "object",
-                properties: {
-                    orders: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            properties: { total: { type: "number" } },
+        output: [
+            {
+                status: "200",
+                body: {
+                    type: "object",
+                    properties: {
+                        orders: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: { total: { type: "number" } },
+                            },
                         },
                     },
                 },
             },
-        }],
+        ],
     };
 }

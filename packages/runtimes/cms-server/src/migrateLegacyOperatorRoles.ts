@@ -21,8 +21,12 @@ export async function migrateLegacyOperatorRoles(
                 role,
                 pagination: { page: 1, limit: MIGRATION_BATCH_SIZE },
             });
-            if (page.total === 0) break;
-            if (page.users.length === 0) throw new Error(`Unable to migrate legacy role ${role}`);
+            if (page.total === 0) {
+                break;
+            }
+            if (page.users.length === 0) {
+                throw new Error(`Unable to migrate legacy role ${role}`);
+            }
 
             for (const user of page.users) {
                 const updated = await users.setRole(user.sub, ADMIN_ROLE);
@@ -36,7 +40,9 @@ export async function migrateLegacyOperatorRoles(
 
     const removedRoleDefinitions: string[] = [];
     for (const role of LEGACY_OPERATOR_ROLES) {
-        if (!await roles.get(role)) continue;
+        if (!(await roles.get(role))) {
+            continue;
+        }
         await roles.delete(role);
         removedRoleDefinitions.push(role);
     }

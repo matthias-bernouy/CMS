@@ -10,11 +10,7 @@ import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
 const pendingGenerations = new WeakMap<Cache, Map<string, Promise<CacheEntry>>>();
 
 /** Return a cached entry or generate it synchronously on a miss. */
-export function getOrGenerateEntry(
-    key: string,
-    cache: Cache,
-    generate: () => CacheEntry,
-): CacheEntry {
+export function getOrGenerateEntry(key: string, cache: Cache, generate: () => CacheEntry): CacheEntry {
     let entry = cache.get(key);
     if (!entry) {
         entry = generate();
@@ -35,11 +31,15 @@ export function getOrGenerateEntryAsync(
     generate: () => Promise<CacheEntry>,
 ): Promise<CacheEntry> {
     const cached = cache.get(key);
-    if (cached) return Promise.resolve(cached);
+    if (cached) {
+        return Promise.resolve(cached);
+    }
 
     let byKey = pendingGenerations.get(cache);
     const existing = byKey?.get(key);
-    if (existing) return existing;
+    if (existing) {
+        return existing;
+    }
 
     if (!byKey) {
         byKey = new Map();
@@ -56,9 +56,13 @@ export function getOrGenerateEntryAsync(
             return entry;
         })
         .finally(() => {
-            if (generations.get(key) !== pending) return;
+            if (generations.get(key) !== pending) {
+                return;
+            }
             generations.delete(key);
-            if (generations.size === 0) pendingGenerations.delete(cache);
+            if (generations.size === 0) {
+                pendingGenerations.delete(cache);
+            }
         });
 
     generations.set(key, pending);

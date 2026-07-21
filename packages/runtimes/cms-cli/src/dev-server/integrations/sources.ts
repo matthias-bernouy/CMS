@@ -19,15 +19,22 @@ import { GENERATED_SOURCES_DIR } from "./paths";
  */
 export async function loadGeneratedSources(siteDir: string): Promise<Source[]> {
     const dir = join(siteDir, GENERATED_SOURCES_DIR);
-    if (!existsSync(dir)) return [];
+    if (!existsSync(dir)) {
+        return [];
+    }
 
     let entries: string[];
-    try { entries = await readdir(dir); }
-    catch { return []; }
+    try {
+        entries = await readdir(dir);
+    } catch {
+        return [];
+    }
 
     const sources: Source[] = [];
     for (const entry of entries.sort()) {
-        if (!entry.endsWith(".json")) continue;
+        if (!entry.endsWith(".json")) {
+            continue;
+        }
         try {
             sources.push(JSON.parse(await readFile(join(dir, entry), "utf-8")) as Source);
         } catch (error) {
@@ -46,7 +53,9 @@ export async function createDevSources(siteDir: string): Promise<SourceRepositor
     if (generated.length > 0) {
         const { created, skipped } = await seedSources(sources, generated);
         const suffix = skipped.length ? `, ${skipped.length} skipped` : "";
-        console.log(`-> Sources : ${created.length} generated loaded${suffix} (${generated.map(s => s.urn).join(", ")})`);
+        console.log(
+            `-> Sources : ${created.length} generated loaded${suffix} (${generated.map((s) => s.urn).join(", ")})`,
+        );
     }
     return sources;
 }
@@ -73,11 +82,15 @@ export class LocalFsGeneratedSourceRepository implements SourceRepository {
     async updateSource(source: Source): Promise<Source | null> {
         const previous = await this.inner.getSource(source.urn);
         const updated = await this.inner.updateSource(source);
-        if (!updated) return null;
+        if (!updated) {
+            return null;
+        }
         try {
             await this.writeSource(updated);
         } catch (error) {
-            if (previous) await this.inner.updateSource(previous);
+            if (previous) {
+                await this.inner.updateSource(previous);
+            }
             throw error;
         }
         return updated;
@@ -85,9 +98,13 @@ export class LocalFsGeneratedSourceRepository implements SourceRepository {
 
     async deleteSource(urn: string): Promise<boolean> {
         const deleted = await this.inner.deleteSource(urn);
-        if (!deleted) return false;
+        if (!deleted) {
+            return false;
+        }
         await unlink(this.fileFor(urn)).catch((error: { code?: string }) => {
-            if (error.code !== "ENOENT") throw error;
+            if (error.code !== "ENOENT") {
+                throw error;
+            }
         });
         return true;
     }

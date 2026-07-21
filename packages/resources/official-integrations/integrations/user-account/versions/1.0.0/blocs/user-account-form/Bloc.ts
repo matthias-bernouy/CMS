@@ -51,7 +51,7 @@ export class UserAccountForm extends Composition {
         "error-toast-text-color",
         "error-toast-background-color",
         "error-toast-border-color",
-        ...fields.map(field => `show-${field}`),
+        ...fields.map((field) => `show-${field}`),
     ];
 
     constructor() {
@@ -68,10 +68,12 @@ export class UserAccountForm extends Composition {
         super.connectedCallback();
 
         const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-        this.avatarObserver = new Observer(() => queueMicrotask(() => {
-            this.syncColors();
-            this.syncAvatarPreview();
-        }));
+        this.avatarObserver = new Observer(() =>
+            queueMicrotask(() => {
+                this.syncColors();
+                this.syncAvatarPreview();
+            }),
+        );
         this.avatarObserver.observe(this, { childList: true, characterData: true, subtree: true });
         this.sync();
     }
@@ -85,7 +87,9 @@ export class UserAccountForm extends Composition {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) queueMicrotask(() => this.sync());
+        if (this.isConnected) {
+            queueMicrotask(() => this.sync());
+        }
     }
 
     sync() {
@@ -94,9 +98,21 @@ export class UserAccountForm extends Composition {
         this.sourceBase = `${prefix}/${sourceId}`;
 
         this.setAttributeIfChanged(this.querySelector("[data-auth-load]"), "cms-source", `${prefix}/system-auth/me`);
-        this.setAttributeIfChanged(this.querySelector("[data-account-load]"), "cms-source", `${this.sourceBase}/getAccount`);
-        this.setAttributeIfChanged(this.querySelector("[data-account-form]"), "cms-source", `${this.sourceBase}/updateAccount as save`);
-        this.setAttributeIfChanged(this.querySelector("[data-avatar-form]"), "cms-source", `${this.sourceBase}/uploadAccountAvatar as avatar`);
+        this.setAttributeIfChanged(
+            this.querySelector("[data-account-load]"),
+            "cms-source",
+            `${this.sourceBase}/getAccount`,
+        );
+        this.setAttributeIfChanged(
+            this.querySelector("[data-account-form]"),
+            "cms-source",
+            `${this.sourceBase}/updateAccount as save`,
+        );
+        this.setAttributeIfChanged(
+            this.querySelector("[data-avatar-form]"),
+            "cms-source",
+            `${this.sourceBase}/uploadAccountAvatar as avatar`,
+        );
         this.setAttributeIfChanged(this.querySelector('[data-account-field="birth-date"]'), "max", currentLocalDate());
 
         this.setText("[data-account-button]", this.getAttribute("button-label") || "Enregistrer");
@@ -104,14 +120,18 @@ export class UserAccountForm extends Composition {
 
         for (const field of fields) {
             const element = this.querySelector(`[data-account-field="${field}"]`);
-            if (!element) continue;
+            if (!element) {
+                continue;
+            }
             const visible = this.getAttribute(`show-${field}`) !== "false";
             element.hidden = !visible;
             const control = element.matches?.("[name]") ? element : element.querySelector?.("[name]");
             control?.toggleAttribute("disabled", !visible);
         }
         const loginEmail = this.querySelector('[data-account-field="login-email"]');
-        if (loginEmail) loginEmail.hidden = this.getAttribute("show-login-email") === "false";
+        if (loginEmail) {
+            loginEmail.hidden = this.getAttribute("show-login-email") === "false";
+        }
         this.syncAvatarPreview();
     }
 
@@ -151,7 +171,11 @@ export class UserAccountForm extends Composition {
             this.setAttributeIfChanged(toast, "density", this.getAttribute("toast-density") || "regular");
             this.setAttributeIfChanged(toast, "radius", this.getAttribute("toast-radius") || "md");
             this.setAttributeIfChanged(toast, "shadow", this.getAttribute("toast-shadow") || "none");
-            this.setAttributeIfChanged(toast, "duration", this.getAttribute(`${kind}-toast-duration`) || (kind === "success" ? "4500" : "6000"));
+            this.setAttributeIfChanged(
+                toast,
+                "duration",
+                this.getAttribute(`${kind}-toast-duration`) || (kind === "success" ? "4500" : "6000"),
+            );
             this.setOptionalAttribute(toast, "text-color", this.getAttribute(`${kind}-toast-text-color`));
             this.setOptionalAttribute(toast, "close-color", this.getAttribute(`${kind}-toast-text-color`));
             this.setOptionalAttribute(toast, "background-color", this.getAttribute(`${kind}-toast-background-color`));
@@ -160,11 +184,15 @@ export class UserAccountForm extends Composition {
     }
 
     setAttributeIfChanged(element, name, value) {
-        if (element && element.getAttribute(name) !== value) element.setAttribute(name, value);
+        if (element && element.getAttribute(name) !== value) {
+            element.setAttribute(name, value);
+        }
     }
 
     setOptionalAttribute(element, name, value) {
-        if (!element) return;
+        if (!element) {
+            return;
+        }
         const normalized = value?.trim() || "";
         if (!normalized) {
             element.removeAttribute(name);
@@ -175,15 +203,21 @@ export class UserAccountForm extends Composition {
 
     setText(selector, value) {
         const element = this.querySelector(selector);
-        if (element && element.textContent !== value) element.textContent = value;
+        if (element && element.textContent !== value) {
+            element.textContent = value;
+        }
     }
 
     syncAvatarPreview() {
         const avatar = this.querySelector("[data-avatar-input]");
-        if (!avatar || avatar.hasSelection) return;
+        if (!avatar || avatar.hasSelection) {
+            return;
+        }
 
         const fileId = this.querySelector("[data-avatar-file-id]")?.textContent?.trim() || "";
-        if (fileId.includes("{{") || fileId.includes("}}")) return;
+        if (fileId.includes("{{") || fileId.includes("}}")) {
+            return;
+        }
         if (!fileId) {
             avatar.removeAttribute("src");
             return;
@@ -196,13 +230,19 @@ export class UserAccountForm extends Composition {
         );
     }
 
-    onSubmitCapture = event => {
+    onSubmitCapture = (event) => {
         const mainForm = this.querySelector("[data-account-form]");
-        if (event.target !== mainForm || this.saveAfterAvatar) return;
+        if (event.target !== mainForm || this.saveAfterAvatar) {
+            return;
+        }
 
         const file = this.querySelector("[data-avatar-input]")?.files?.[0];
-        if (!file) return;
-        if (typeof mainForm.reportValidity === "function" && !mainForm.reportValidity()) return;
+        if (!file) {
+            return;
+        }
+        if (typeof mainForm.reportValidity === "function" && !mainForm.reportValidity()) {
+            return;
+        }
 
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -210,11 +250,13 @@ export class UserAccountForm extends Composition {
         this.querySelector("[data-avatar-form]")?.requestSubmit();
     };
 
-    onSourceSettled = event => {
+    onSourceSettled = (event) => {
         if (event.target?.matches?.("[data-avatar-form]")) {
             const fileId = event.detail?.body?.avatarFileId;
             const value = this.querySelector("[data-avatar-file-id]");
-            if (value && typeof fileId === "string" && fileId) value.textContent = fileId;
+            if (value && typeof fileId === "string" && fileId) {
+                value.textContent = fileId;
+            }
 
             if (this.saveAfterAvatar) {
                 this.saveAfterAvatar = false;
@@ -225,8 +267,10 @@ export class UserAccountForm extends Composition {
         queueMicrotask(() => this.sync());
     };
 
-    onSourceFailed = event => {
-        if (event.target?.matches?.("[data-avatar-form]")) this.saveAfterAvatar = false;
+    onSourceFailed = (event) => {
+        if (event.target?.matches?.("[data-avatar-form]")) {
+            this.saveAfterAvatar = false;
+        }
         queueMicrotask(() => this.syncColors());
     };
 }

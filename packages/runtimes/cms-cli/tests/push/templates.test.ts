@@ -17,7 +17,9 @@ function makeSite(files: Record<string, string>): string {
     mkdirSync(join(root, "templates"));
     for (const [rel, content] of Object.entries(files)) {
         const [category, name] = rel.split("/");
-        if (!category || !name) throw new Error(`fixture key "${rel}" must be "<category>/<file>"`);
+        if (!category || !name) {
+            throw new Error(`fixture key "${rel}" must be "<category>/<file>"`);
+        }
         const dir = join(root, "templates", category);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, name), content);
@@ -28,8 +30,8 @@ function makeSite(files: Record<string, string>): string {
 function template(identifier: string, hash: string): LocalTemplate {
     return {
         identifier,
-        file:    `templates${sep}_uncategorized${sep}${identifier}.html`,
-        meta:    { name: identifier, description: "", category: "" },
+        file: `templates${sep}_uncategorized${sep}${identifier}.html`,
+        meta: { name: identifier, description: "", category: "" },
         content: "",
         hash,
     };
@@ -76,7 +78,7 @@ describe("classifyTemplates", () => {
             [template("hero-v1", "loc")],
             [{ id: "uuid-123", identifier: "hero-v1" }],
             emptyState(),
-            async () => "loc",   // remote returns same hash
+            async () => "loc", // remote returns same hash
             false,
         );
         expect(out[0]?.status).toBe("unchanged");
@@ -85,7 +87,8 @@ describe("classifyTemplates", () => {
 
     test("--force overrides conflict", async () => {
         const state: PushState = {
-            tenant: "", lastPulled: "",
+            tenant: "",
+            lastPulled: "",
             entities: { "template:hero-v1": { hash: "old", lastSeenRemote: "old" } },
         };
         const out = await classifyTemplates(

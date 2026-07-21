@@ -17,10 +17,7 @@ export const array = (items: DataShape): DataShape => ({
     items,
 });
 
-export const object = (
-    properties?: Record<string, DataShape>,
-    nullable = false,
-): DataShape => ({
+export const object = (properties?: Record<string, DataShape>, nullable = false): DataShape => ({
     type: "object",
     ...(properties ? { properties } : {}),
     ...(nullable ? { nullable: true } : {}),
@@ -32,8 +29,10 @@ export const userId = (): DataShape => ({
 });
 
 export function computedUserHeader(name = "x-cms-user-id") {
-    return [{
-        name,
-        source: { from: "computed" as const, ref: "userID" as const },
-    }];
+    return [
+        {
+            name,
+            source: { from: "computed" as const, ref: "userID" as const },
+        },
+    ];
 }

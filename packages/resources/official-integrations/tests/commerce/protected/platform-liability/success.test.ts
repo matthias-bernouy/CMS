@@ -1,15 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-    setRestResponder,
-} from "../../harness";
-import {
-    authorizedControlResponse,
-    controlResponse,
-    preparedPaymentResponse,
-} from "./fixtures";
+import { expectSingleRpc, installCommerceTestEnvironment, requestCommerce, setRestResponder } from "../../harness";
+import { authorizedControlResponse, controlResponse, preparedPaymentResponse } from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -44,16 +35,20 @@ describe("platform liability route contracts", () => {
     });
 
     test("returns the exact nested pending authorization projection", async () => {
-        setRestResponder(() => Response.json({
-            runKey: "liability-run-7",
-            control: authorizedControlResponse,
-            authorizations: [{
-                liabilityRevision: 7,
-                requiredMinimumAmount: 1_800,
-                decreaseAuthorizationId: "11111111-1111-4111-8111-111111111111",
-                changeDirection: "decrease",
-            }],
-        }));
+        setRestResponder(() =>
+            Response.json({
+                runKey: "liability-run-7",
+                control: authorizedControlResponse,
+                authorizations: [
+                    {
+                        liabilityRevision: 7,
+                        requiredMinimumAmount: 1_800,
+                        decreaseAuthorizationId: "11111111-1111-4111-8111-111111111111",
+                        changeDirection: "decrease",
+                    },
+                ],
+            }),
+        );
 
         const response = await requestCommerce("/system/platform-payout-liability/pending", {
             body: { runKey: "  liability-run-7  " },
@@ -63,15 +58,18 @@ describe("platform liability route contracts", () => {
         expect(await response.json()).toEqual({
             runKey: "liability-run-7",
             control: authorizedControlResponse,
-            authorizations: [{
-                liabilityRevision: 7,
-                requiredMinimumAmount: 1_800,
-                decreaseAuthorizationId: "11111111-1111-4111-8111-111111111111",
-                changeDirection: "decrease",
-            }],
+            authorizations: [
+                {
+                    liabilityRevision: 7,
+                    requiredMinimumAmount: 1_800,
+                    decreaseAuthorizationId: "11111111-1111-4111-8111-111111111111",
+                    changeDirection: "decrease",
+                },
+            ],
         });
-        expect(expectSingleRpc("pending_platform_payout_liability_authorizations").body)
-            .toEqual({ p_run_key: "liability-run-7" });
+        expect(expectSingleRpc("pending_platform_payout_liability_authorizations").body).toEqual({
+            p_run_key: "liability-run-7",
+        });
     });
 
     test("authorizes a decrease with trusted admin identity and one RPC", async () => {
@@ -92,13 +90,15 @@ describe("platform liability route contracts", () => {
     });
 
     test("records the exact accepted provider receipt", async () => {
-        setRestResponder(() => Response.json({
-            accepted: true,
-            needsReapply: false,
-            liabilityRevision: 7,
-            requiredMinimumAmount: 1_800,
-            lastProviderAppliedAmount: 1_800,
-        }));
+        setRestResponder(() =>
+            Response.json({
+                accepted: true,
+                needsReapply: false,
+                liabilityRevision: 7,
+                requiredMinimumAmount: 1_800,
+                lastProviderAppliedAmount: 1_800,
+            }),
+        );
 
         const response = await requestCommerce("/system/platform-payout-liability/applied", {
             body: {
@@ -124,11 +124,13 @@ describe("platform liability route contracts", () => {
     });
 
     test("preserves the stale receipt shape with its nested current control", async () => {
-        setRestResponder(() => Response.json({
-            accepted: false,
-            needsReapply: true,
-            control: controlResponse,
-        }));
+        setRestResponder(() =>
+            Response.json({
+                accepted: false,
+                needsReapply: true,
+                control: controlResponse,
+            }),
+        );
 
         const response = await requestCommerce("/system/platform-payout-liability/applied", {
             body: { liabilityRevision: 6, appliedMinimumAmount: 2_000 },

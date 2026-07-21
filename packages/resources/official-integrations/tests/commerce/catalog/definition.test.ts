@@ -21,37 +21,28 @@ type Artifact = {
     dashboard?: { id: string; views: View[] };
 };
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
 
 describe("commerce product dashboard definition", () => {
     test("keeps variants, axes, and media inside Product without tabs", async () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8")) as { artifacts: Artifact[] };
-        const source = definition.artifacts.find(artifact => artifact.type === "source")?.source;
-        const dashboards = definition.artifacts.flatMap(artifact => artifact.dashboard ? [artifact.dashboard] : []);
-        const products = dashboards.find(dashboard => dashboard.id === "{{answers.id}}-products");
-        const views = dashboards.flatMap(dashboard => dashboard.views);
-        const productDetail = products?.views.find(view => view.id === "productDetail");
-        const fields = [
-            ...(productDetail?.main ?? []),
-            ...(productDetail?.aside ?? []),
-        ].flatMap(section => section.fields);
+        const source = definition.artifacts.find((artifact) => artifact.type === "source")?.source;
+        const dashboards = definition.artifacts.flatMap((artifact) => (artifact.dashboard ? [artifact.dashboard] : []));
+        const products = dashboards.find((dashboard) => dashboard.id === "{{answers.id}}-products");
+        const views = dashboards.flatMap((dashboard) => dashboard.views);
+        const productDetail = products?.views.find((view) => view.id === "productDetail");
+        const fields = [...(productDetail?.main ?? []), ...(productDetail?.aside ?? [])].flatMap(
+            (section) => section.fields,
+        );
 
-        expect(source?.endpoints.map(endpoint => endpoint.endpointId)).not.toEqual(expect.arrayContaining([
-            "variants",
-            "variant",
-            "upsertVariant",
-        ]));
-        expect(views.map(view => view.widget)).not.toContain("w-tabs");
-        expect(views.map(view => view.id)).not.toEqual(expect.arrayContaining([
-            "variantsTable",
-            "variantDetail",
-        ]));
-        expect(fields.find(field => field.id === "media")).toMatchObject({ type: "media" });
-        expect(fields.find(field => field.id === "variantAxes")).toMatchObject({ type: "table" });
-        const axes = fields.find(field => field.id === "variantAxes") as any;
+        expect(source?.endpoints.map((endpoint) => endpoint.endpointId)).not.toEqual(
+            expect.arrayContaining(["variants", "variant", "upsertVariant"]),
+        );
+        expect(views.map((view) => view.widget)).not.toContain("w-tabs");
+        expect(views.map((view) => view.id)).not.toEqual(expect.arrayContaining(["variantsTable", "variantDetail"]));
+        expect(fields.find((field) => field.id === "media")).toMatchObject({ type: "media" });
+        expect(fields.find((field) => field.id === "variantAxes")).toMatchObject({ type: "table" });
+        const axes = fields.find((field) => field.id === "variantAxes") as any;
         expect(axes.columns.map((column: any) => column.id)).toEqual(["fieldKey", "values"]);
         expect(axes.columns[0]).toMatchObject({
             type: "combobox",
@@ -67,7 +58,7 @@ describe("commerce product dashboard definition", () => {
         expect(axes).toMatchObject({ addLabel: "Add axis" });
         expect(axes.columns[1]).toMatchObject({ type: "tokens" });
         expect(axes.columns[1]).not.toHaveProperty("value");
-        expect(fields.find(field => field.id === "metadata")).toMatchObject({
+        expect(fields.find((field) => field.id === "metadata")).toMatchObject({
             type: "schema",
             exclude: { from: "$field.variantAxes", valuePath: "fieldKey" },
             schema: {
@@ -76,15 +67,18 @@ describe("commerce product dashboard definition", () => {
                 itemsPath: "fields",
             },
         });
-        expect(fields.find(field => field.id === "variantMatrix")).toMatchObject({
+        expect(fields.find((field) => field.id === "variantMatrix")).toMatchObject({
             type: "table",
             derive: { type: "cartesian", sourceField: "variantAxes" },
         });
-        expect(productDetail?.main.flatMap(section => section.fields).map(field => field.id)).not.toEqual(
+        expect(productDetail?.main.flatMap((section) => section.fields).map((field) => field.id)).not.toEqual(
             expect.arrayContaining(["brandId", "primaryCategoryId"]),
         );
-        expect(productDetail?.aside?.find(section => (section as any).id === "productClassification")?.fields.map(field => field.id))
-            .toEqual(["brandId", "primaryCategoryId"]);
+        expect(
+            productDetail?.aside
+                ?.find((section) => (section as any).id === "productClassification")
+                ?.fields.map((field) => field.id),
+        ).toEqual(["brandId", "primaryCategoryId"]);
     });
 });
 
@@ -93,7 +87,9 @@ describe("commerce taxonomy dashboard definition", () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "upsertCategory");
-        const dashboard = definition.artifacts.find((artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy").dashboard;
+        const dashboard = definition.artifacts.find(
+            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
+        ).dashboard;
         const detail = dashboard.views.find((view: any) => view.id === "categoryDetail");
 
         expect(endpoint.body.properties.parentId).toEqual({ type: "string" });
@@ -112,7 +108,9 @@ describe("commerce taxonomy dashboard definition", () => {
 
     test("uses reorderable navigation lists and keeps state in detail asides", async () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8"));
-        const taxonomy = definition.artifacts.find((artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy").dashboard;
+        const taxonomy = definition.artifacts.find(
+            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
+        ).dashboard;
         const brands = taxonomy.views.find((view: any) => view.id === "brandsTable");
         const categories = taxonomy.views.find((view: any) => view.id === "categoriesTable");
         const details = taxonomy.views.filter((view: any) => ["brandDetail", "categoryDetail"].includes(view.id));
@@ -122,28 +120,50 @@ describe("commerce taxonomy dashboard definition", () => {
         expect(categories.reorderable).toEqual({ action: "reorderCategories" });
         expect(details.every((detail: any) => detail.aside[0].fields[0].id === "status")).toBeTrue();
         expect(categories.actions[1].endpoint.body).toEqual({ ids: "$value" });
-        expect(details.find((detail: any) => detail.id === "categoryDetail").main[0].fields.map((field: any) => field.id)).not.toContain("position");
+        expect(
+            details.find((detail: any) => detail.id === "categoryDetail").main[0].fields.map((field: any) => field.id),
+        ).not.toContain("position");
     });
 
     test("exposes confirmed deletion actions for metadata and taxonomy details", async () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
-        const dashboards = definition.artifacts.flatMap((artifact: any) => artifact.dashboard ? [artifact.dashboard] : []);
+        const dashboards = definition.artifacts.flatMap((artifact: any) =>
+            artifact.dashboard ? [artifact.dashboard] : [],
+        );
         const taxonomy = dashboards.find((dashboard: any) => dashboard.id === "{{answers.id}}-taxonomy");
         const metadata = dashboards.find((dashboard: any) => dashboard.id === "{{answers.id}}-metadata");
         const brand = taxonomy.views.find((view: any) => view.id === "brandDetail");
         const category = taxonomy.views.find((view: any) => view.id === "categoryDetail");
         const customField = metadata.views.find((view: any) => view.id === "customFieldDetail");
 
-        expect(source.endpoints.filter((endpoint: any) => [
-            "deleteBrand", "deleteCategory", "deleteCustomField",
-        ].includes(endpoint.endpointId))).toEqual(expect.arrayContaining([
-            expect.objectContaining({ endpointId: "deleteBrand", method: "DELETE", effects: { invalidatesSchema: true } }),
-            expect.objectContaining({ endpointId: "deleteCategory", method: "DELETE", effects: { invalidatesSchema: true } }),
-            expect.objectContaining({ endpointId: "deleteCustomField", method: "DELETE", effects: { invalidatesSchema: true } }),
-        ]));
+        expect(
+            source.endpoints.filter((endpoint: any) =>
+                ["deleteBrand", "deleteCategory", "deleteCustomField"].includes(endpoint.endpointId),
+            ),
+        ).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    endpointId: "deleteBrand",
+                    method: "DELETE",
+                    effects: { invalidatesSchema: true },
+                }),
+                expect.objectContaining({
+                    endpointId: "deleteCategory",
+                    method: "DELETE",
+                    effects: { invalidatesSchema: true },
+                }),
+                expect.objectContaining({
+                    endpointId: "deleteCustomField",
+                    method: "DELETE",
+                    effects: { invalidatesSchema: true },
+                }),
+            ]),
+        );
         for (const [detail, actionId] of [
-            [brand, "deleteBrand"], [category, "deleteCategory"], [customField, "deleteCustomField"],
+            [brand, "deleteBrand"],
+            [category, "deleteCategory"],
+            [customField, "deleteCustomField"],
         ] as const) {
             expect(detail.actions.find((action: any) => action.id === actionId)).toMatchObject({
                 tone: "danger",
@@ -157,21 +177,22 @@ describe("commerce taxonomy dashboard definition", () => {
     test("lets categories select Product metadata policies", async () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8"));
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
-        const taxonomy = definition.artifacts.find((artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy").dashboard;
+        const taxonomy = definition.artifacts.find(
+            (artifact: any) => artifact.dashboard?.id === "{{answers.id}}-taxonomy",
+        ).dashboard;
         const detail = taxonomy.views.find((view: any) => view.id === "categoryDetail");
         const field = detail.main[0].fields.find((candidate: any) => candidate.id === "categoryFields");
         const save = detail.actions.find((action: any) => action.id === "saveCategory");
 
         expect(source.endpoints.map((endpoint: any) => endpoint.endpointId)).toContain("categoryProductFields");
         expect(field).toMatchObject({ type: "reorderable-list", itemKey: "fieldKey", positionPath: "position" });
-        expect(field.fields.map((item: any) => item.id)).toEqual([
-            "fieldKey", "required", "filterable",
-        ]);
-        expect(field.fields.filter((item: any) => ["required", "filterable"].includes(item.id)))
-            .toEqual(expect.arrayContaining([
+        expect(field.fields.map((item: any) => item.id)).toEqual(["fieldKey", "required", "filterable"]);
+        expect(field.fields.filter((item: any) => ["required", "filterable"].includes(item.id))).toEqual(
+            expect.arrayContaining([
                 expect.objectContaining({ id: "required", type: "checkbox" }),
                 expect.objectContaining({ id: "filterable", type: "checkbox" }),
-            ]));
+            ]),
+        );
         expect(field.fields.find((item: any) => item.id === "fieldKey")).toMatchObject({
             type: "combobox",
             lookup: {

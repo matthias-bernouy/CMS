@@ -25,7 +25,9 @@ export interface TestServer {
 export function serveForTest(runner: BunRunner): TestServer {
     runner.start(0);
     const port = runner.port;
-    if (port === undefined) throw new Error("serveForTest: runner did not bind a port");
+    if (port === undefined) {
+        throw new Error("serveForTest: runner did not bind a port");
+    }
     const url = `http://localhost:${port}`;
     return {
         url,

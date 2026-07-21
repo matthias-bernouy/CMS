@@ -23,16 +23,10 @@ export type RuntimeEditorLifecycle = Editor & {
     dispose(): void;
 };
 
-type RuntimeEditorConstructor = new (
-    target: HTMLElement,
-    registry: EditorRegistry,
-) => RuntimeEditorLifecycle;
+type RuntimeEditorConstructor = new (target: HTMLElement, registry: EditorRegistry) => RuntimeEditorLifecycle;
 
-export function createRuntimeEditorClass(
-    EditorClass: EditorConstructor,
-): RuntimeEditorConstructor {
+export function createRuntimeEditorClass(EditorClass: EditorConstructor): RuntimeEditorConstructor {
     class RuntimeEditorClass extends EditorClass {
-
         private readonly _addedSettings: SettingSection[] = [];
         private readonly _declaredDataScopes: DataScope[] = [];
         private readonly _addedContentSlots: ContentSlot[] = [];
@@ -40,18 +34,25 @@ export function createRuntimeEditorClass(
         private _textCapabilityOverride: TextCapability | null | undefined;
         private _isMounted = false;
 
-        constructor(target: HTMLElement, private readonly _registry: EditorRegistry) {
+        constructor(
+            target: HTMLElement,
+            private readonly _registry: EditorRegistry,
+        ) {
             super(target);
         }
 
         mount(): void {
-            if (this._isMounted) return;
+            if (this._isMounted) {
+                return;
+            }
             this._isMounted = true;
             this.mountEditor();
         }
 
         unmount(): void {
-            if (!this._isMounted) return;
+            if (!this._isMounted) {
+                return;
+            }
             this._isMounted = false;
             this.unmountEditor();
         }
@@ -81,12 +82,16 @@ export function createRuntimeEditorClass(
         }
 
         override getContentSlots(): ContentSlot[] {
-            if (isCompositionRuntimeElement(this.target)) return [];
+            if (isCompositionRuntimeElement(this.target)) {
+                return [];
+            }
             return [...super.getContentSlots(), ...this._addedContentSlots];
         }
 
         override addContentSlots(slots: ContentSlot | ContentSlot[]): void {
-            if (isCompositionRuntimeElement(this.target)) return;
+            if (isCompositionRuntimeElement(this.target)) {
+                return;
+            }
             this._addedContentSlots.push(...toList(slots));
             this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
                 editor: this,
@@ -95,14 +100,18 @@ export function createRuntimeEditorClass(
         }
 
         override getTextCapability(): TextCapability | null {
-            if (isCompositionRuntimeElement(this.target)) return null;
+            if (isCompositionRuntimeElement(this.target)) {
+                return null;
+            }
             return this._textCapabilityOverride !== undefined
                 ? this._textCapabilityOverride
                 : super.getTextCapability();
         }
 
         override setTextCapability(capability: TextCapability | null): void {
-            if (isCompositionRuntimeElement(this.target)) return;
+            if (isCompositionRuntimeElement(this.target)) {
+                return;
+            }
             this._textCapabilityOverride = capability;
             this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
                 editor: this,
@@ -133,13 +142,14 @@ export function createRuntimeEditorClass(
 
         private _emit<T>(eventName: string, detail: T): void {
             const CustomEventConstructor = this.target.ownerDocument.defaultView?.CustomEvent ?? CustomEvent;
-            this.target.dispatchEvent(new CustomEventConstructor(eventName, {
-                bubbles: true,
-                composed: true,
-                detail,
-            }));
+            this.target.dispatchEvent(
+                new CustomEventConstructor(eventName, {
+                    bubbles: true,
+                    composed: true,
+                    detail,
+                }),
+            );
         }
-
     }
 
     return RuntimeEditorClass;

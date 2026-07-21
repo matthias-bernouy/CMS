@@ -39,7 +39,9 @@ export class MongoRelationRepository implements RelationRepository {
         try {
             await this.relations.insertOne(toDoc(relation) as OptionalUnlessRequiredId<RelationDoc>);
         } catch (error) {
-            if (isDuplicateKey(error)) throw new DuplicateRelationError(relation.id);
+            if (isDuplicateKey(error)) {
+                throw new DuplicateRelationError(relation.id);
+            }
             throw error;
         }
         return structuredClone(relation);
@@ -47,11 +49,7 @@ export class MongoRelationRepository implements RelationRepository {
 
     async updateRelation(relation: CmsRelation): Promise<CmsRelation | null> {
         const { id: _id, ...rest } = relation;
-        const doc = await this.relations.findOneAndReplace(
-            { _id },
-            rest,
-            { returnDocument: "after" },
-        );
+        const doc = await this.relations.findOneAndReplace({ _id }, rest, { returnDocument: "after" });
         return fromDoc(doc);
     }
 
@@ -65,38 +63,44 @@ export class MongoRelationRepository implements RelationRepository {
     }
 
     async getRelationsForSource(sourceId: string): Promise<CmsRelation[]> {
-        const docs = await this.relations.find({
-            $or: [
-                { "from.sourceId": sourceId },
-                { "to.sourceId": sourceId },
-            ],
-        }).toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        const docs = await this.relations
+            .find({
+                $or: [{ "from.sourceId": sourceId }, { "to.sourceId": sourceId }],
+            })
+            .toArray();
+        return docs.map((doc) => fromDoc(doc)!);
     }
 
     async getAllRelations(): Promise<CmsRelation[]> {
         const docs = await this.relations.find().toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        return docs.map((doc) => fromDoc(doc)!);
     }
 
-    async createDashboardRelationProjection(projection: DashboardRelationProjection): Promise<DashboardRelationProjection> {
+    async createDashboardRelationProjection(
+        projection: DashboardRelationProjection,
+    ): Promise<DashboardRelationProjection> {
         const id = dashboardRelationProjectionId(projection);
         try {
-            await this.dashboardRelationProjections.insertOne({ _id: id, ...projection } as OptionalUnlessRequiredId<DashboardRelationProjectionDoc>);
+            await this.dashboardRelationProjections.insertOne({
+                _id: id,
+                ...projection,
+            } as OptionalUnlessRequiredId<DashboardRelationProjectionDoc>);
         } catch (error) {
-            if (isDuplicateKey(error)) throw new DuplicateDashboardRelationProjectionError(id);
+            if (isDuplicateKey(error)) {
+                throw new DuplicateDashboardRelationProjectionError(id);
+            }
             throw error;
         }
         return structuredClone(projection);
     }
 
-    async updateDashboardRelationProjection(projection: DashboardRelationProjection): Promise<DashboardRelationProjection | null> {
+    async updateDashboardRelationProjection(
+        projection: DashboardRelationProjection,
+    ): Promise<DashboardRelationProjection | null> {
         const _id = dashboardRelationProjectionId(projection);
-        const doc = await this.dashboardRelationProjections.findOneAndReplace(
-            { _id },
-            projection,
-            { returnDocument: "after" },
-        );
+        const doc = await this.dashboardRelationProjections.findOneAndReplace({ _id }, projection, {
+            returnDocument: "after",
+        });
         return fromDashboardRelationProjectionDoc(doc);
     }
 
@@ -111,12 +115,12 @@ export class MongoRelationRepository implements RelationRepository {
 
     async getDashboardRelationProjectionsForDashboard(dashboardId: string): Promise<DashboardRelationProjection[]> {
         const docs = await this.dashboardRelationProjections.find({ dashboardId }).toArray();
-        return docs.map(doc => fromDashboardRelationProjectionDoc(doc)!);
+        return docs.map((doc) => fromDashboardRelationProjectionDoc(doc)!);
     }
 
     async getAllDashboardRelationProjections(): Promise<DashboardRelationProjection[]> {
         const docs = await this.dashboardRelationProjections.find().toArray();
-        return docs.map(doc => fromDashboardRelationProjectionDoc(doc)!);
+        return docs.map((doc) => fromDashboardRelationProjectionDoc(doc)!);
     }
 }
 
@@ -126,13 +130,19 @@ function toDoc(relation: CmsRelation): RelationDoc {
 }
 
 function fromDoc(doc: RelationDoc | null): CmsRelation | null {
-    if (!doc) return null;
+    if (!doc) {
+        return null;
+    }
     const { _id, ...rest } = doc;
     return { id: _id, ...rest };
 }
 
-function fromDashboardRelationProjectionDoc(doc: DashboardRelationProjectionDoc | null): DashboardRelationProjection | null {
-    if (!doc) return null;
+function fromDashboardRelationProjectionDoc(
+    doc: DashboardRelationProjectionDoc | null,
+): DashboardRelationProjection | null {
+    if (!doc) {
+        return null;
+    }
     const { _id: _ignored, ...projection } = doc;
     return projection;
 }

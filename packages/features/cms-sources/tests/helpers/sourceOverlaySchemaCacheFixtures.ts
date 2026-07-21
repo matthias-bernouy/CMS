@@ -35,35 +35,38 @@ export const invalidatingEndpoint = {
 export function enrichedEndpoint(label: string) {
     return {
         ...baseEndpoint,
-        output: [{
-            status: "200",
-            body: {
-                type: "object",
-                properties: {
-                    metadata: {
-                        type: "object",
-                        properties: { company: { type: "string", title: label } },
+        output: [
+            {
+                status: "200",
+                body: {
+                    type: "object",
+                    properties: {
+                        metadata: {
+                            type: "object",
+                            properties: { company: { type: "string", title: label } },
+                        },
                     },
                 },
             },
-        }],
+        ],
     };
 }
 
-export async function cacheHarness(
-    respond: Responder = async () => fieldsResponse("Company"),
-) {
+export async function cacheHarness(respond: Responder = async () => fieldsResponse("Company")) {
     const probe = createSourceOverlayFetchProbe(respond);
     const inner = new InMemorySourceRepository();
     const overlays = new InMemorySourceOverlayRepository();
     const source: Source = {
         urn: "urn:accounts",
-        endpoints: [baseEndpoint, {
-            urn: "urn:accounts:listFields",
-            method: "GET",
-            targetUrl: "https://api.example.com/fields",
-            output: [{ status: "200", body: { type: "object" } }],
-        }],
+        endpoints: [
+            baseEndpoint,
+            {
+                urn: "urn:accounts:listFields",
+                method: "GET",
+                targetUrl: "https://api.example.com/fields",
+                output: [{ status: "200", body: { type: "object" } }],
+            },
+        ],
     };
     await inner.createSource(source);
     await overlays.upsertOverlay(dynamicOverlay);

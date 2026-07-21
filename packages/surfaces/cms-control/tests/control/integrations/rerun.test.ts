@@ -7,10 +7,13 @@ describe("POST /api/integrations/installations/rerun", () => {
     test("reruns a tracked integration installation with stored secrets", async () => {
         const { cms, sources } = makeCms();
 
-        await postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "secret-source-main", apiKey: "sk_test" },
-        }), cms);
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
 
         const res = await postIntegrationInstallationRerun(postRerun("test-secret-source"), cms);
         const body = await res.json();
@@ -25,14 +28,20 @@ describe("POST /api/integrations/installations/rerun", () => {
     test("accepts rerun answer overrides", async () => {
         const { cms } = makeCms();
 
-        await postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "secret-source-main", apiKey: "sk_old" },
-        }), cms);
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_old" },
+            }),
+            cms,
+        );
 
-        const res = await postIntegrationInstallationRerun(postRerun("test-secret-source", {
-            answers: { apiKey: "sk_new" },
-        }), cms);
+        const res = await postIntegrationInstallationRerun(
+            postRerun("test-secret-source", {
+                answers: { apiKey: "sk_new" },
+            }),
+            cms,
+        );
         const body = await res.json();
 
         expect(body.installation.runCount).toBe(2);

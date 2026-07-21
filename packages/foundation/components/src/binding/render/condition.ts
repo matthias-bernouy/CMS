@@ -12,7 +12,9 @@ export function evaluateCondition(expression: string, scope: Scope): boolean {
 
 export function compileCondition(expression: string): CompiledCondition {
     const trimmed = expression.trim();
-    if (!trimmed) return validCondition(expression, { kind: "literal", value: true });
+    if (!trimmed) {
+        return validCondition(expression, { kind: "literal", value: true });
+    }
 
     try {
         return validCondition(expression, parseConditionExpression(trimmed));
@@ -36,7 +38,7 @@ function validCondition(expression: string, root: ConditionNode): CompiledCondit
     return {
         expression,
         valid: true,
-        evaluate: scope => Boolean(evaluateNode(root, scope)),
+        evaluate: (scope) => Boolean(evaluateNode(root, scope)),
     };
 }
 

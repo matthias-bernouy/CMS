@@ -3,10 +3,10 @@ import type { AuthEmailRecipient, OutboundEmail } from "cms-auth/interfaces/Emai
 export type AuthEmailKind = "email_verification" | "password_reset";
 
 export type AuthEmailComposeInput = {
-    kind:      AuthEmailKind;
-    to:        AuthEmailRecipient;
+    kind: AuthEmailKind;
+    to: AuthEmailRecipient;
     actionUrl: string;
-    token:     string;
+    token: string;
     expiresAt: Date;
     siteName?: string;
 };

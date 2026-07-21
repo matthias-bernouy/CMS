@@ -12,33 +12,45 @@ describe("commerce nullable response contracts", () => {
         const endpoints = await commerceEndpoints();
         const cases: Array<[string, unknown]> = [
             ["products", { items: [{ description: null }] }],
-            ["product", {
-                description: null,
-                media: [{ media: { alt: null } }],
-                mainImageMediaId: null,
-                variants: [{ sku: null }],
-                variantMatrix: [{ sku: null }],
-            }],
-            ["upsertProduct", {
-                description: null, brandId: null, brand: null,
-                primaryCategoryId: null, primaryCategory: null,
-                variantAxes: [{ fieldKey: null }],
-            }],
+            [
+                "product",
+                {
+                    description: null,
+                    media: [{ media: { alt: null } }],
+                    mainImageMediaId: null,
+                    variants: [{ sku: null }],
+                    variantMatrix: [{ sku: null }],
+                },
+            ],
+            [
+                "upsertProduct",
+                {
+                    description: null,
+                    brandId: null,
+                    brand: null,
+                    primaryCategoryId: null,
+                    primaryCategory: null,
+                    variantAxes: [{ fieldKey: null }],
+                },
+            ],
             ["categories", { items: [{ parentId: null, description: null }] }],
             ["category", { parentId: null, description: null, parent: null }],
-            ["manageProduct", {
-                id: null,
-                description: null,
-                brandId: null,
-                brand: null,
-                primaryCategoryId: null,
-                primaryCategory: null,
-                media: [{ media: { alt: null } }],
-                mainImageMediaId: null,
-                variantAxes: [{ fieldKey: null }],
-                variants: [{ sku: null }],
-                variantMatrix: [{ sku: null }],
-            }],
+            [
+                "manageProduct",
+                {
+                    id: null,
+                    description: null,
+                    brandId: null,
+                    brand: null,
+                    primaryCategoryId: null,
+                    primaryCategory: null,
+                    media: [{ media: { alt: null } }],
+                    mainImageMediaId: null,
+                    variantAxes: [{ fieldKey: null }],
+                    variants: [{ sku: null }],
+                    variantMatrix: [{ sku: null }],
+                },
+            ],
         ];
         expectProjections(endpoints, cases);
     });
@@ -62,24 +74,39 @@ describe("commerce nullable response contracts", () => {
             priceProposals: [{ decisionReason: null, decidedAt: null }],
         };
         const cases: Array<[string, unknown]> = [
-            ["offers", { items: [
-                { ...listItem, media: [{ media: { alt: null } }], variant: null },
-                { variant: { sku: null } },
-            ] }],
+            [
+                "offers",
+                {
+                    items: [
+                        { ...listItem, media: [{ media: { alt: null } }], variant: null },
+                        { variant: { sku: null } },
+                    ],
+                },
+            ],
             ["offer", { ...listItem, media: [{ media: { alt: null } }], variant: null }],
             ["listMyOffers", { items: [{ ...listItem, acceptedPriceAmount: null, sellerDisplayPriceAmount: null }] }],
             ["myOffer", detail],
-            ["manageOffers", { items: [{
-                variantId: null,
-                description: null,
-                acceptedPriceAmount: null,
-                quantityAvailable: null,
-            }] }],
+            [
+                "manageOffers",
+                {
+                    items: [
+                        {
+                            variantId: null,
+                            description: null,
+                            acceptedPriceAmount: null,
+                            quantityAvailable: null,
+                        },
+                    ],
+                },
+            ],
             ["manageOffer", detail],
-            ["submitMyOfferPrice", {
-                offer: { variantId: null, description: null, acceptedPriceAmount: null, quantityAvailable: null },
-                proposal: { decidedBy: null, decisionReason: null, decidedAt: null },
-            }],
+            [
+                "submitMyOfferPrice",
+                {
+                    offer: { variantId: null, description: null, acceptedPriceAmount: null, quantityAvailable: null },
+                    proposal: { decidedBy: null, decisionReason: null, decidedAt: null },
+                },
+            ],
         ];
         expectProjections(endpoints, cases);
     });
@@ -88,27 +115,27 @@ describe("commerce nullable response contracts", () => {
         const endpoints = await commerceEndpoints();
         const cart = {
             currency: null,
-            items: [
-                { currentUnitAmount: null, quantityAvailable: null, variant: null },
-                { variant: { sku: null } },
-            ],
+            items: [{ currentUnitAmount: null, quantityAvailable: null, variant: null }, { variant: { sku: null } }],
         };
         const order = {
             deliveryQuotedAt: null,
-            lines: [{
-                variantId: null,
-                acceptedProposalId: null,
-                sku: null,
-                variantSnapshot: null,
-            }],
+            lines: [
+                {
+                    variantId: null,
+                    acceptedProposalId: null,
+                    sku: null,
+                    variantSnapshot: null,
+                },
+            ],
             events: [{ previousStatus: null, nextStatus: null }],
             financialTerms: null,
         };
         const cases: Array<[string, unknown]> = [
             ["sellers", { items: [{ cmsUserId: null, verifiedAt: null, verifiedBy: null }] }],
             ["seller", { cmsUserId: null, verifiedAt: null, verifiedBy: null }],
-            ...["myCart", "removeMyCartItem", "clearMyCart"]
-                .map(endpointId => [endpointId, cart] as [string, unknown]),
+            ...["myCart", "removeMyCartItem", "clearMyCart"].map(
+                (endpointId) => [endpointId, cart] as [string, unknown],
+            ),
             ["upsertMyCartItem", { ...cart, currency: "eur" }],
             ["myOrders", { items: [{ operation: null }, { operation: { claimStatus: null } }] }],
             ["myOrder", order],
@@ -123,36 +150,49 @@ describe("commerce nullable response contracts", () => {
         const cases: Array<[string, unknown, string?]> = [
             ["cancelMyOrder", { refundAuthorization: null, paymentCancellationAuthorization: null }, "201"],
             ["recordOrderPayment", { providerPaymentIntentId: null, providerChargeId: null }],
-            ["recordOrderFulfillment", {
-                providerReference: null,
-                carrierAcceptedAt: null,
-                sellerHandoffDeclaredAt: null,
-                recipientHandoffAt: null,
-                recipientHandoffFirstObservedAt: null,
-                claimWindowStartedAt: null,
-                claimByAt: null,
-                releaseEligibleAt: null,
-                blockingReason: null,
-            }],
-            ["protectedPayments", { items: [{
-                claimStatus: null,
-                recipientHandoffAt: null,
-                recipientHandoffFirstObservedAt: null,
-                claimWindowStartedAt: null,
-                claimByAt: null,
-                releaseEligibleAt: null,
-            }] }],
-            ["claim", {
-                buyerRequestedAmount: null,
-                resolutionOutcome: null,
-                returnShipByAt: null,
-                returnDeliveryStatus: null,
-                returnProviderReference: null,
-                returnCarrierAcceptedAt: null,
-                returnRecipientHandoffAt: null,
-                events: [{ message: null }],
-                evidence: [{ description: null }],
-            }],
+            [
+                "recordOrderFulfillment",
+                {
+                    providerReference: null,
+                    carrierAcceptedAt: null,
+                    sellerHandoffDeclaredAt: null,
+                    recipientHandoffAt: null,
+                    recipientHandoffFirstObservedAt: null,
+                    claimWindowStartedAt: null,
+                    claimByAt: null,
+                    releaseEligibleAt: null,
+                    blockingReason: null,
+                },
+            ],
+            [
+                "protectedPayments",
+                {
+                    items: [
+                        {
+                            claimStatus: null,
+                            recipientHandoffAt: null,
+                            recipientHandoffFirstObservedAt: null,
+                            claimWindowStartedAt: null,
+                            claimByAt: null,
+                            releaseEligibleAt: null,
+                        },
+                    ],
+                },
+            ],
+            [
+                "claim",
+                {
+                    buyerRequestedAmount: null,
+                    resolutionOutcome: null,
+                    returnShipByAt: null,
+                    returnDeliveryStatus: null,
+                    returnProviderReference: null,
+                    returnCarrierAcceptedAt: null,
+                    returnRecipientHandoffAt: null,
+                    events: [{ message: null }],
+                    evidence: [{ description: null }],
+                },
+            ],
             ["refundRequests", { items: [{ claimId: null, firstApprovedBy: null }] }],
             ["getOrderFulfillmentAuthorization", { allowed: true, reason: null }],
         ];
@@ -161,18 +201,20 @@ describe("commerce nullable response contracts", () => {
 });
 let endpointsPromise: Promise<Endpoint[]> | undefined;
 function commerceEndpoints(): Promise<Endpoint[]> {
-    endpointsPromise ??= readFile(definitionPath, "utf8").then(content => {
+    endpointsPromise ??= readFile(definitionPath, "utf8").then((content) => {
         const definition = JSON.parse(content) as Definition;
-        return definition.artifacts.find(artifact => artifact.source)?.source?.endpoints ?? [];
+        return definition.artifacts.find((artifact) => artifact.source)?.source?.endpoints ?? [];
     });
     return endpointsPromise;
 }
 function expectProjections(endpoints: Endpoint[], cases: Array<[string, unknown, string?]>): void {
     for (const [endpointId, value, status = "200"] of cases) {
-        const endpoint = endpoints.find(candidate => candidate.endpointId === endpointId);
-        const response = endpoint?.output?.find(candidate => candidate.status === status);
+        const endpoint = endpoints.find((candidate) => candidate.endpointId === endpointId);
+        const response = endpoint?.output?.find((candidate) => candidate.status === status);
         const shape = response?.triggerBody ?? response?.body;
-        if (!shape) throw new Error(`Missing ${status} response body for ${endpointId}`);
+        if (!shape) {
+            throw new Error(`Missing ${status} response body for ${endpointId}`);
+        }
 
         expect(projectStrictDataShape(value, shape, "response", { enforceRequired: false })).toEqual(value);
     }

@@ -46,8 +46,12 @@ export class PageLink extends HTMLElement {
     }
 
     attributeChangedCallback(): void {
-        if (!this.shadowRoot) return;
-        if (this._isReflectingValue) return;
+        if (!this.shadowRoot) {
+            return;
+        }
+        if (this._isReflectingValue) {
+            return;
+        }
         this._syncFromAttributes();
         this._render();
     }
@@ -68,7 +72,9 @@ export class PageLink extends HTMLElement {
     }
 
     private _wire(): void {
-        if (this._wired) return;
+        if (this._wired) {
+            return;
+        }
         this._wired = true;
 
         this.searchInput.addEventListener("focus", () => this._openPicker());
@@ -78,31 +84,41 @@ export class PageLink extends HTMLElement {
             this._renderPages();
         });
         this.externalInput.addEventListener("input", () => {
-            if (this.disabled) return;
+            if (this.disabled) {
+                return;
+            }
             this._setValue(this.externalInput.value);
         });
         this.fileButton.addEventListener("click", () => this._openFilesCenter());
         this.pagePanel.addEventListener("focusout", () => {
             setTimeout(() => {
-                if (this.shadowRoot?.activeElement && this.pagePanel.contains(this.shadowRoot.activeElement)) return;
+                if (this.shadowRoot?.activeElement && this.pagePanel.contains(this.shadowRoot.activeElement)) {
+                    return;
+                }
                 this._closePicker();
             }, 0);
         });
         this.target.addEventListener("click", () => {
-            if (this.disabled || this._mode !== "page") return;
+            if (this.disabled || this._mode !== "page") {
+                return;
+            }
             this.searchInput.focus();
             this._openPicker();
         });
     }
 
     private async _loadPages(): Promise<void> {
-        if (this._loaded || !this._allowPage()) return;
+        if (this._loaded || !this._allowPage()) {
+            return;
+        }
         this._loaded = true;
 
         try {
             const response = await fetch(`${this._basePath()}/api/page/links`);
-            if (!response.ok) return;
-            this._pages = await response.json() as PageRef[];
+            if (!response.ok) {
+                return;
+            }
+            this._pages = (await response.json()) as PageRef[];
             this._renderPages();
             this._renderSummary();
         } catch {
@@ -150,10 +166,16 @@ export class PageLink extends HTMLElement {
         button.ariaSelected = String(this._mode === mode);
         button.disabled = this.disabled;
         button.addEventListener("click", () => {
-            if (this.disabled) return;
+            if (this.disabled) {
+                return;
+            }
             this._mode = mode;
-            if (mode !== "page") this._pickerOpen = false;
-            if (mode === "external") this.externalInput.value = this._value;
+            if (mode !== "page") {
+                this._pickerOpen = false;
+            }
+            if (mode === "external") {
+                this.externalInput.value = this._value;
+            }
             this._render();
         });
         return button;
@@ -167,7 +189,9 @@ export class PageLink extends HTMLElement {
         this.externalInput.disabled = this.disabled;
         this.fileButton.disabled = this.disabled;
         this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
-        if (this._mode === "external") this.externalInput.value = this._value;
+        if (this._mode === "external") {
+            this.externalInput.value = this._value;
+        }
         this._renderMediaFile();
     }
 
@@ -176,8 +200,10 @@ export class PageLink extends HTMLElement {
         this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
 
         const query = this.searchInput.value.trim().toLowerCase();
-        const pages = this._pages.filter(page => {
-            if (!query) return true;
+        const pages = this._pages.filter((page) => {
+            if (!query) {
+                return true;
+            }
             return page.title.toLowerCase().includes(query) || page.path.toLowerCase().includes(query);
         });
 
@@ -190,7 +216,9 @@ export class PageLink extends HTMLElement {
             button.ariaSelected = String(page.path === this._value);
             button.disabled = this.disabled;
             button.addEventListener("click", () => {
-                if (this.disabled) return;
+                if (this.disabled) {
+                    return;
+                }
                 this._setValue(page.path);
                 this.searchInput.value = "";
                 this._closePicker();
@@ -210,8 +238,9 @@ export class PageLink extends HTMLElement {
     }
 
     private _renderSummary(): void {
-        const page = this._pages.find(candidate => candidate.path === this._value);
-        this.summaryTitle.textContent = page?.title ?? (this._value ? linkSummaryFallback(this._mode) : "No link selected");
+        const page = this._pages.find((candidate) => candidate.path === this._value);
+        this.summaryTitle.textContent =
+            page?.title ?? (this._value ? linkSummaryFallback(this._mode) : "No link selected");
         this.summaryValue.textContent = this._value || "Choose a target";
         this.target.hidden = !this._value || this._mode === "media";
     }
@@ -222,15 +251,19 @@ export class PageLink extends HTMLElement {
         this._renderPages();
         this._renderSummary();
         this._renderMediaFile();
-        this.dispatchEvent(new CustomEvent<PageLinkInputDetail>("input", {
-            bubbles: true,
-            composed: true,
-            detail: { value },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<PageLinkInputDetail>("input", {
+                bubbles: true,
+                composed: true,
+                detail: { value },
+            }),
+        );
     }
 
     private _openPicker(): void {
-        if (this.disabled || this._mode !== "page") return;
+        if (this.disabled || this._mode !== "page") {
+            return;
+        }
         this._pickerOpen = true;
         this._renderPages();
     }
@@ -241,18 +274,26 @@ export class PageLink extends HTMLElement {
     }
 
     private _openFilesCenter(): void {
-        if (this.disabled) return;
+        if (this.disabled) {
+            return;
+        }
 
         const center = new FilesCenter();
         const cleanup = () => center.remove();
         center.addEventListener("close", cleanup, { once: true });
-        center.addEventListener("select-file", (event) => {
-            const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
-            if (!detail?.src) return;
-            this._mode = "media";
-            this._mediaLabel = detail.label;
-            this._setValue(detail.src);
-        }, { once: true });
+        center.addEventListener(
+            "select-file",
+            (event) => {
+                const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
+                if (!detail?.src) {
+                    return;
+                }
+                this._mode = "media";
+                this._mediaLabel = detail.label;
+                this._setValue(detail.src);
+            },
+            { once: true },
+        );
 
         document.body.append(center);
         center.show({ accept: ["folder", "file"] });
@@ -310,9 +351,9 @@ export class PageLink extends HTMLElement {
 
     private _modeOptions() {
         return {
-            allowPage:     this._allowPage(),
+            allowPage: this._allowPage(),
             allowExternal: this._allowExternal(),
-            allowMedia:    this._allowMedia(),
+            allowMedia: this._allowMedia(),
         };
     }
 

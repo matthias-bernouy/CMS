@@ -19,12 +19,14 @@ export async function pullSystem(adminBase: URL, token: string, siteDir: string)
     const editor = remote.editor ?? {};
     const themeSettings = remote.theme;
 
-    site.notFound    = coercePageRef(site.notFound);
-    site.forbidden   = coercePageRef(site.forbidden);
+    site.notFound = coercePageRef(site.notFound);
+    site.forbidden = coercePageRef(site.forbidden);
     site.serverError = coercePageRef(site.serverError);
-    site.login       = coercePageRef(site.login);
+    site.login = coercePageRef(site.login);
 
     const json = JSON.stringify({ site, editor, ...(themeSettings ? { theme: themeSettings } : {}) }, null, 4) + "\n";
     await writeFile(join(siteDir, "system.json"), json, "utf-8");
-    if (theme) await writeFile(join(siteDir, "theme.css"), theme, "utf-8");
+    if (theme) {
+        await writeFile(join(siteDir, "theme.css"), theme, "utf-8");
+    }
 }

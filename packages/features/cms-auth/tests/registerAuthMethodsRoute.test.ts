@@ -36,8 +36,6 @@ describe("authMethodsHandler", () => {
             supportedKinds: ["local"],
         });
 
-        expect(await res.json()).toEqual([
-            { id: "local", displayName: "Email", fields: ["email", "password"] },
-        ]);
+        expect(await res.json()).toEqual([{ id: "local", displayName: "Email", fields: ["email", "password"] }]);
     });
 });

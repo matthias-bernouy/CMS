@@ -6,12 +6,7 @@ describe("isValidPathFormat", () => {
         expect(isValidPathFormat("/")).toBe(true);
     });
 
-    test.each([
-        ["/about"],
-        ["/a/b/c"],
-        ["/docs/2024/post"],
-        ["/trailing-dash-ok"],
-    ])("accepts %s", (path) => {
+    test.each([["/about"], ["/a/b/c"], ["/docs/2024/post"], ["/trailing-dash-ok"]])("accepts %s", (path) => {
         expect(isValidPathFormat(path)).toBe(true);
     });
 
@@ -46,12 +41,12 @@ describe("isValidPathFormat", () => {
     });
 
     test("rejects characters outside [a-zA-Z0-9-/]", () => {
-        expect(isValidPathFormat("/my_page")).toBe(false);   // underscore
-        expect(isValidPathFormat("/my page")).toBe(false);   // space
+        expect(isValidPathFormat("/my_page")).toBe(false); // underscore
+        expect(isValidPathFormat("/my page")).toBe(false); // space
         expect(isValidPathFormat("/robots.txt")).toBe(false); // dot
-        expect(isValidPathFormat("/café")).toBe(false);      // non-ASCII
-        expect(isValidPathFormat("/a+b")).toBe(false);       // plus
-        expect(isValidPathFormat("/a%20b")).toBe(false);     // percent
+        expect(isValidPathFormat("/café")).toBe(false); // non-ASCII
+        expect(isValidPathFormat("/a+b")).toBe(false); // plus
+        expect(isValidPathFormat("/a%20b")).toBe(false); // percent
     });
 
     test("accepts dashes and mixed case", () => {
@@ -68,17 +63,12 @@ describe("isValidPathFormat", () => {
 });
 
 describe("isValidResourceIdentifier", () => {
-    test.each([
-        ["hero"],
-        ["hero-v1"],
-        ["a"],
-        ["a-b-c"],
-        ["1"],
-        ["hero-2"],
-        ["v1-card"],
-    ])("accepts valid kebab-case %p", (id) => {
-        expect(isValidResourceIdentifier(id)).toBe(true);
-    });
+    test.each([["hero"], ["hero-v1"], ["a"], ["a-b-c"], ["1"], ["hero-2"], ["v1-card"]])(
+        "accepts valid kebab-case %p",
+        (id) => {
+            expect(isValidResourceIdentifier(id)).toBe(true);
+        },
+    );
 
     test("rejects empty string", () => {
         expect(isValidResourceIdentifier("")).toBe(false);
@@ -90,44 +80,40 @@ describe("isValidResourceIdentifier", () => {
     });
 
     test.each([
-        ["Hero"],       // uppercase
-        ["HERO"],       // all caps
-        ["HeroV1"],     // camelCase
+        ["Hero"], // uppercase
+        ["HERO"], // all caps
+        ["HeroV1"], // camelCase
     ])("rejects non-lowercase %p", (id) => {
         expect(isValidResourceIdentifier(id)).toBe(false);
     });
 
     test.each([
-        ["-hero"],      // leading dash
-        ["hero-"],      // trailing dash
-        ["hero--v1"],   // double dash
-        ["--"],         // dashes only
+        ["-hero"], // leading dash
+        ["hero-"], // trailing dash
+        ["hero--v1"], // double dash
+        ["--"], // dashes only
     ])("rejects malformed dashes %p", (id) => {
         expect(isValidResourceIdentifier(id)).toBe(false);
     });
 
     test.each([
-        ["hero v1"],    // space
-        ["hero_v1"],    // underscore
-        ["hero.v1"],    // dot
-        ["hero/v1"],    // slash
-        ["héro"],       // non-ASCII
+        ["hero v1"], // space
+        ["hero_v1"], // underscore
+        ["hero.v1"], // dot
+        ["hero/v1"], // slash
+        ["héro"], // non-ASCII
     ])("rejects forbidden characters %p", (id) => {
         expect(isValidResourceIdentifier(id)).toBe(false);
     });
 });
 
 describe("isValidCustomElementTag", () => {
-    test.each([
-        ["my-card"],
-        ["w13c-button"],
-        ["p9r-input"],
-        ["a-b"],
-        ["a-b-c"],
-        ["app-v2"],
-    ])("accepts valid custom-element name %p", (tag) => {
-        expect(isValidCustomElementTag(tag)).toBe(true);
-    });
+    test.each([["my-card"], ["w13c-button"], ["p9r-input"], ["a-b"], ["a-b-c"], ["app-v2"]])(
+        "accepts valid custom-element name %p",
+        (tag) => {
+            expect(isValidCustomElementTag(tag)).toBe(true);
+        },
+    );
 
     test("rejects empty string and non-string", () => {
         expect(isValidCustomElementTag("")).toBe(false);
@@ -135,7 +121,7 @@ describe("isValidCustomElementTag", () => {
     });
 
     test.each([
-        ["card"],       // no dash — required by spec
+        ["card"], // no dash — required by spec
         ["button"],
         ["hero"],
     ])("rejects names without a dash %p", (tag) => {
@@ -143,12 +129,12 @@ describe("isValidCustomElementTag", () => {
     });
 
     test.each([
-        ["1-card"],     // leading digit
-        ["-card"],      // leading dash
-        ["My-Card"],    // uppercase
-        ["my_card"],    // underscore instead of dash
-        ["my-card-"],   // trailing dash
-        ["my--card"],   // double dash
+        ["1-card"], // leading digit
+        ["-card"], // leading dash
+        ["My-Card"], // uppercase
+        ["my_card"], // underscore instead of dash
+        ["my-card-"], // trailing dash
+        ["my--card"], // double dash
     ])("rejects malformed tags %p", (tag) => {
         expect(isValidCustomElementTag(tag)).toBe(false);
     });

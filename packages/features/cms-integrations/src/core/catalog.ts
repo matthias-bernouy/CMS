@@ -9,8 +9,10 @@ export function findIntegration(
     kind: string,
     siteIntegrations: IntegrationDefinition[] = [],
 ): IntegrationDefinition | null {
-    const site = siteIntegrations.find(definition => definition.kind === kind);
-    if (site) return sanitizeRegistryDefinition(site);
+    const site = siteIntegrations.find((definition) => definition.kind === kind);
+    if (site) {
+        return sanitizeRegistryDefinition(site);
+    }
     return null;
 }
 

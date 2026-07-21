@@ -14,21 +14,23 @@ installCommerceTestEnvironment();
 describe("commerce optimized claim evidence call budgets", () => {
     test("preserves buyer and seller upload call order", async () => {
         for (const [scope, userId, expected] of [
-            ["order", "buyer-evidence-17", [
-                "get_claim_evidence_upload_context", "storage:POST",
-                "attach_marketplace_claim_evidence",
-            ]],
-            ["sale", "seller-evidence-4", [
-                "get_claim_evidence_upload_context", "storage:POST",
-                "attach_marketplace_claim_evidence",
-            ]],
+            [
+                "order",
+                "buyer-evidence-17",
+                ["get_claim_evidence_upload_context", "storage:POST", "attach_marketplace_claim_evidence"],
+            ],
+            [
+                "sale",
+                "seller-evidence-4",
+                ["get_claim_evidence_upload_context", "storage:POST", "attach_marketplace_claim_evidence"],
+            ],
         ] as const) {
             useEvidenceResponder();
             const before = capturedFetches().length;
-            const response = await requestCommerce(
-                `/me/${scope}/claim/evidence?claimId=${activeClaimRow.id}`,
-                { userId, formData: evidenceForm() },
-            );
+            const response = await requestCommerce(`/me/${scope}/claim/evidence?claimId=${activeClaimRow.id}`, {
+                userId,
+                formData: evidenceForm(),
+            });
 
             expect(response.status).toBe(201);
             const calls = capturedFetches().slice(before);
@@ -43,33 +45,20 @@ describe("commerce optimized claim evidence call budgets", () => {
 
     test("preserves buyer, seller, and administrator download call order", async () => {
         for (const [route, userId, expected] of [
-            ["/me/order/claim/evidence", "buyer-evidence-17", [
-                "get_claim_evidence_download_context", "storage:GET",
-            ]],
-            ["/me/sale/claim/evidence", "seller-evidence-4", [
-                "get_claim_evidence_download_context", "storage:GET",
-            ]],
-            ["/admin/claim/evidence", undefined, [
-                "get_claim_evidence_download_context", "storage:GET",
-            ]],
+            ["/me/order/claim/evidence", "buyer-evidence-17", ["get_claim_evidence_download_context", "storage:GET"]],
+            ["/me/sale/claim/evidence", "seller-evidence-4", ["get_claim_evidence_download_context", "storage:GET"]],
+            ["/admin/claim/evidence", undefined, ["get_claim_evidence_download_context", "storage:GET"]],
         ] as const) {
             useEvidenceResponder();
             const before = capturedFetches().length;
-            const response = await requestCommerce(
-                `${route}?evidenceId=${evidenceRow.id}`,
-                { userId },
-            );
+            const response = await requestCommerce(`${route}?evidenceId=${evidenceRow.id}`, { userId });
 
             expect(response.status).toBe(200);
             const calls = capturedFetches().slice(before);
             expect(kinds(calls)).toEqual(expected);
             expect(contextBody(calls, "get_claim_evidence_download_context")).toEqual({
                 p_evidence_id: evidenceRow.id,
-                p_scope: route.includes("/order/")
-                    ? "buyer"
-                    : route.includes("/sale/")
-                    ? "seller"
-                    : "admin",
+                p_scope: route.includes("/order/") ? "buyer" : route.includes("/sale/") ? "seller" : "admin",
                 p_actor_id: userId ?? null,
             });
         }
@@ -79,23 +68,21 @@ describe("commerce optimized claim evidence call budgets", () => {
         useEvidenceResponder({
             claim: { ...activeClaimRow, buyer_cms_user_id: "another-buyer" },
         });
-        const buyer = await requestCommerce(
-            `/me/order/claim/evidence?claimId=${activeClaimRow.id}`,
-            { userId: "buyer-evidence-17", formData: evidenceForm() },
-        );
+        const buyer = await requestCommerce(`/me/order/claim/evidence?claimId=${activeClaimRow.id}`, {
+            userId: "buyer-evidence-17",
+            formData: evidenceForm(),
+        });
         expect(buyer.status).toBe(404);
         expect(kinds(capturedFetches())).toEqual(["get_claim_evidence_upload_context"]);
 
         useEvidenceResponder({ seller: { cms_user_id: "another-seller" } });
         const before = capturedFetches().length;
-        const seller = await requestCommerce(
-            `/me/sale/claim/evidence?claimId=${activeClaimRow.id}`,
-            { userId: "seller-evidence-4", formData: evidenceForm() },
-        );
+        const seller = await requestCommerce(`/me/sale/claim/evidence?claimId=${activeClaimRow.id}`, {
+            userId: "seller-evidence-4",
+            formData: evidenceForm(),
+        });
         expect(seller.status).toBe(404);
-        expect(kinds(capturedFetches().slice(before))).toEqual([
-            "get_claim_evidence_upload_context",
-        ]);
+        expect(kinds(capturedFetches().slice(before))).toEqual(["get_claim_evidence_upload_context"]);
     });
 
     test("fails closed on inconsistent private contexts before Storage", async () => {
@@ -149,16 +136,15 @@ describe("commerce optimized claim evidence call budgets", () => {
 });
 
 function kinds(calls: Array<{ url: string; method: string }>): string[] {
-    return calls.map(call => call.url.includes("/storage/v1/object/")
-        ? `storage:${call.method}`
-        : new URL(call.url).pathname.split("/").at(-1)!);
+    return calls.map((call) =>
+        call.url.includes("/storage/v1/object/")
+            ? `storage:${call.method}`
+            : new URL(call.url).pathname.split("/").at(-1)!,
+    );
 }
 
-function contextBody(
-    calls: ReturnType<typeof capturedFetches>,
-    name: string,
-): Record<string, unknown> {
-    const call = calls.find(candidate => new URL(candidate.url).pathname.endsWith(`/rpc/${name}`));
+function contextBody(calls: ReturnType<typeof capturedFetches>, name: string): Record<string, unknown> {
+    const call = calls.find((candidate) => new URL(candidate.url).pathname.endsWith(`/rpc/${name}`));
     expect(call?.method).toBe("POST");
     expect(call?.headers.get("apikey")).toBe("sb_secret_test");
     expect(call?.headers.get("authorization")).toBeNull();

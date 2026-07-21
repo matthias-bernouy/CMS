@@ -40,7 +40,9 @@ export class UserAccountAvatar extends Component {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     formResetCallback() {
@@ -84,15 +86,20 @@ export class UserAccountAvatar extends Component {
     sync() {
         this.syncColors();
         const accept = this.getAttribute("accept");
-        if (accept === null) this.input.removeAttribute("accept");
-        else this.input.setAttribute("accept", accept);
+        if (accept === null) {
+            this.input.removeAttribute("accept");
+        } else {
+            this.input.setAttribute("accept", accept);
+        }
         this.input.disabled = this.disabled;
 
         const hint = this.getAttribute("hint") || "JPEG, PNG, WebP ou GIF, 5 Mio maximum.";
         this.hintElement.textContent = hint;
         this.hintElement.hidden = !hint;
 
-        if (!this.hasSelection) this.showImage(this.getAttribute("src") || "");
+        if (!this.hasSelection) {
+            this.showImage(this.getAttribute("src") || "");
+        }
         this.updateFormValue();
     }
 
@@ -104,8 +111,11 @@ export class UserAccountAvatar extends Component {
             ["border-color", "--account-avatar-border"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
     }
 
@@ -139,7 +149,9 @@ export class UserAccountAvatar extends Component {
     }
 
     revokeObjectUrl() {
-        if (!this.objectUrl) return;
+        if (!this.objectUrl) {
+            return;
+        }
         URL.revokeObjectURL(this.objectUrl);
         this.objectUrl = null;
     }

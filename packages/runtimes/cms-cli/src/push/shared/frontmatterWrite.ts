@@ -28,7 +28,9 @@ function orderedEntries(fm: Frontmatter): [string, unknown][] {
     const KEY_ORDER = ["title", "name", "description", "visible", "tags"] as const;
     const out: [string, unknown][] = [];
     for (const k of KEY_ORDER) {
-        if (fm[k as keyof Frontmatter] !== undefined) out.push([k, fm[k as keyof Frontmatter]]);
+        if (fm[k as keyof Frontmatter] !== undefined) {
+            out.push([k, fm[k as keyof Frontmatter]]);
+        }
     }
     return out;
 }
@@ -37,7 +39,9 @@ function formatValue(key: string, value: unknown): string {
     if (key === "tags" && Array.isArray(value)) {
         return `[${value.map(quote).join(", ")}]`;
     }
-    if (typeof value === "boolean") return String(value);
+    if (typeof value === "boolean") {
+        return String(value);
+    }
     return quote(String(value ?? ""));
 }
 

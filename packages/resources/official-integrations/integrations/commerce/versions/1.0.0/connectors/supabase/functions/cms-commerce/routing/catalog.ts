@@ -1,11 +1,5 @@
 import { json, methodNotAllowed } from "../core/http.ts";
-import {
-    getProduct,
-    getProductVariant,
-    listProducts,
-    listProductVariants,
-    upsertProduct,
-} from "../routes/catalog.ts";
+import { getProduct, getProductVariant, listProducts, listProductVariants, upsertProduct } from "../routes/catalog.ts";
 import {
     getProductImageFile,
     removeProductImage,
@@ -14,7 +8,13 @@ import {
     uploadProductImage,
 } from "../routes/catalog/product-media.ts";
 import { deleteBrand, getBrand, listBrands, reorderBrands, upsertBrand } from "../routes/catalog/taxonomy/brands.ts";
-import { deleteCategory, getCategory, listCategories, reorderCategories, upsertCategory } from "../routes/catalog/taxonomy/categories.ts";
+import {
+    deleteCategory,
+    getCategory,
+    listCategories,
+    reorderCategories,
+    upsertCategory,
+} from "../routes/catalog/taxonomy/categories.ts";
 import {
     getOfferFilterSchema,
     getCategoryProductFieldSchema,
@@ -54,17 +54,27 @@ export async function handleCatalogRoute(route: string, request: Request): Promi
         return request.method === "GET" ? await listProducts(request, true) : methodNotAllowed("GET");
     }
     if (route === "/admin/product") {
-        if (request.method === "GET") return await getProduct(request, true);
-        if (request.method === "POST") return await upsertProduct(request);
+        if (request.method === "GET") {
+            return await getProduct(request, true);
+        }
+        if (request.method === "POST") {
+            return await upsertProduct(request);
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/admin/brands") {
         return request.method === "GET" ? await listBrands(request, true) : methodNotAllowed("GET");
     }
     if (route === "/admin/brand") {
-        if (request.method === "GET") return await getBrand(request, true);
-        if (request.method === "POST") return await upsertBrand(request);
-        if (request.method === "DELETE") return await deleteBrand(request);
+        if (request.method === "GET") {
+            return await getBrand(request, true);
+        }
+        if (request.method === "POST") {
+            return await upsertBrand(request);
+        }
+        if (request.method === "DELETE") {
+            return await deleteBrand(request);
+        }
         return methodNotAllowed("GET", "POST", "DELETE");
     }
     if (route === "/admin/brands/reorder") {
@@ -74,9 +84,15 @@ export async function handleCatalogRoute(route: string, request: Request): Promi
         return request.method === "GET" ? await listCategories(request, true) : methodNotAllowed("GET");
     }
     if (route === "/admin/category") {
-        if (request.method === "GET") return await getCategory(request, true);
-        if (request.method === "POST") return await upsertCategory(request);
-        if (request.method === "DELETE") return await deleteCategory(request);
+        if (request.method === "GET") {
+            return await getCategory(request, true);
+        }
+        if (request.method === "POST") {
+            return await upsertCategory(request);
+        }
+        if (request.method === "DELETE") {
+            return await deleteCategory(request);
+        }
         return methodNotAllowed("GET", "POST", "DELETE");
     }
     if (route === "/admin/categories/reorder") {
@@ -95,9 +111,15 @@ export async function handleCatalogRoute(route: string, request: Request): Promi
         return request.method === "GET" ? await getProductVariant(request) : methodNotAllowed("GET");
     }
     if (route === "/admin/product/image") {
-        if (request.method === "GET") return await getProductImageFile(request);
-        if (request.method === "POST") return await uploadProductImage(request);
-        if (request.method === "DELETE") return await removeProductImage(request);
+        if (request.method === "GET") {
+            return await getProductImageFile(request);
+        }
+        if (request.method === "POST") {
+            return await uploadProductImage(request);
+        }
+        if (request.method === "DELETE") {
+            return await removeProductImage(request);
+        }
         return methodNotAllowed("GET", "POST", "DELETE");
     }
     if (route === "/admin/product/image/replace") {

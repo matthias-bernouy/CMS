@@ -19,13 +19,27 @@ export class AnalyticsValidationError extends Error {
  * rollups/unique-visitor counters, so they are rejected instead.
  */
 export function validateAnalyticsEvent(event: AnalyticsEvent): void {
-    if (event.type !== "pageview") throw new AnalyticsValidationError("type", `unknown event type "${event.type}"`);
-    if (!(event.ts instanceof Date) || Number.isNaN(event.ts.getTime())) throw new AnalyticsValidationError("ts", "expected a valid Date");
-    if (!event.path.startsWith("/")) throw new AnalyticsValidationError("path", "expected a pathname starting with /");
-    if (event.path.includes("?")) throw new AnalyticsValidationError("path", "expected a normalized pathname (no query string)");
-    if (!Number.isInteger(event.status) || event.status < 100 || event.status > 599) throw new AnalyticsValidationError("status", "expected an HTTP status code");
-    if (!Number.isFinite(event.durationMs) || event.durationMs < 0) throw new AnalyticsValidationError("durationMs", "expected a non-negative duration");
-    if (!event.visitorId) throw new AnalyticsValidationError("visitorId", "required");
+    if (event.type !== "pageview") {
+        throw new AnalyticsValidationError("type", `unknown event type "${event.type}"`);
+    }
+    if (!(event.ts instanceof Date) || Number.isNaN(event.ts.getTime())) {
+        throw new AnalyticsValidationError("ts", "expected a valid Date");
+    }
+    if (!event.path.startsWith("/")) {
+        throw new AnalyticsValidationError("path", "expected a pathname starting with /");
+    }
+    if (event.path.includes("?")) {
+        throw new AnalyticsValidationError("path", "expected a normalized pathname (no query string)");
+    }
+    if (!Number.isInteger(event.status) || event.status < 100 || event.status > 599) {
+        throw new AnalyticsValidationError("status", "expected an HTTP status code");
+    }
+    if (!Number.isFinite(event.durationMs) || event.durationMs < 0) {
+        throw new AnalyticsValidationError("durationMs", "expected a non-negative duration");
+    }
+    if (!event.visitorId) {
+        throw new AnalyticsValidationError("visitorId", "required");
+    }
 }
 
 /**
@@ -43,9 +57,19 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
         return this.inner.record(event);
     }
 
-    init()                                                          { return this.inner.init(); }
-    summary(from: Date, to: Date)                                   { return this.inner.summary(from, to); }
-    timeseries(q: RangeQuery)                                       { return this.inner.timeseries(q); }
-    topPaths(from: Date, to: Date, limit: number)                   { return this.inner.topPaths(from, to, limit); }
-    breakdown(dim: "status" | "device" | "browser", from: Date, to: Date) { return this.inner.breakdown(dim, from, to); }
+    init() {
+        return this.inner.init();
+    }
+    summary(from: Date, to: Date) {
+        return this.inner.summary(from, to);
+    }
+    timeseries(q: RangeQuery) {
+        return this.inner.timeseries(q);
+    }
+    topPaths(from: Date, to: Date, limit: number) {
+        return this.inner.topPaths(from, to, limit);
+    }
+    breakdown(dim: "status" | "device" | "browser", from: Date, to: Date) {
+        return this.inner.breakdown(dim, from, to);
+    }
 }

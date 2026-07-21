@@ -1,8 +1,4 @@
-import {
-    fetchSourceEndpoint,
-    type FunctionDetail,
-    type FunctionExecuteField,
-} from "./api";
+import { fetchSourceEndpoint, type FunctionDetail, type FunctionExecuteField } from "./api";
 import {
     arrayAt,
     cssEscape,
@@ -22,31 +18,54 @@ type OnChange = (path?: string) => void;
 
 export function executeFields(detail: FunctionDetail, draft: FunctionDraft, onChange: OnChange): HTMLElement {
     const fields = detail.ui?.execute?.fields ?? [];
-    if (!fields.length) return fallbackJsonFields(detail);
-    return div("fields-stack", ...fields.map(field => executeField(field, draft, onChange)));
+    if (!fields.length) {
+        return fallbackJsonFields(detail);
+    }
+    return div("fields-stack", ...fields.map((field) => executeField(field, draft, onChange)));
 }
 
-export async function hydrateExecuteFields(root: ParentNode, detail: FunctionDetail, draft: FunctionDraft): Promise<void> {
+export async function hydrateExecuteFields(
+    root: ParentNode,
+    detail: FunctionDetail,
+    draft: FunctionDraft,
+): Promise<void> {
     for (const field of detail.ui?.execute?.fields ?? []) {
-        if (field.control === "source-select") await hydrateSourceSelect(root, field, draft);
+        if (field.control === "source-select") {
+            await hydrateSourceSelect(root, field, draft);
+        }
     }
 }
 
-export async function seedDependents(root: ParentNode, detail: FunctionDetail, path: string, draft: FunctionDraft): Promise<void> {
+export async function seedDependents(
+    root: ParentNode,
+    detail: FunctionDetail,
+    path: string,
+    draft: FunctionDraft,
+): Promise<void> {
     for (const field of detail.ui?.execute?.fields ?? []) {
-        if (field.control !== "json-object" || field.seed?.dependsOn !== path) continue;
+        if (field.control !== "json-object" || field.seed?.dependsOn !== path) {
+            continue;
+        }
         const input = root.querySelector<HTMLTextAreaElement>(`textarea[data-path="${cssEscape(field.path)}"]`);
-        if (!input || !field.seed) continue;
+        if (!input || !field.seed) {
+            continue;
+        }
         const seed = await seedObject(field.seed, draft).catch(() => null);
-        if (seed === null) continue;
+        if (seed === null) {
+            continue;
+        }
         setDraftValue(draft, field.path, seed);
         input.value = stringify(seed);
     }
 }
 
 function executeField(field: FunctionExecuteField, draft: FunctionDraft, onChange: OnChange): HTMLElement {
-    if (field.control === "source-select") return sourceSelectField(field, draft, onChange);
-    if (field.control === "json-object") return jsonObjectField(field, draft, onChange);
+    if (field.control === "source-select") {
+        return sourceSelectField(field, draft, onChange);
+    }
+    if (field.control === "json-object") {
+        return jsonObjectField(field, draft, onChange);
+    }
     return textField(field, draft, onChange);
 }
 
@@ -100,14 +119,18 @@ async function hydrateSourceSelect(
     draft: FunctionDraft,
 ): Promise<void> {
     const select = root.querySelector<HTMLSelectElement>(`select[data-path="${cssEscape(field.path)}"]`);
-    if (!select) return;
+    if (!select) {
+        return;
+    }
     try {
         const response = await fetchSourceEndpoint(field.source, field.endpoint, resolvedParams(field.params, draft));
         const items = arrayAt(response, field.itemsPath ?? "items");
         select.replaceChildren(option("", "Select..."));
         for (const item of items) {
             const value = stringValue(valueAt(item, field.valuePath ?? "id"));
-            if (!value) continue;
+            if (!value) {
+                continue;
+            }
             const label = stringValue(valueAt(item, field.labelPath ?? field.valuePath ?? "id")) || value;
             select.append(option(value, label));
         }
@@ -125,8 +148,10 @@ async function seedObject(
     const out: Record<string, unknown> = {};
     for (const token of arrayAt(response, seed.pathsPath)) {
         const path = typeof token === "string" ? token : stringValue(valueAt(token, seed.pathNamePath ?? "name"));
-        if (!path) continue;
-        const sample = typeof token === "string" ? "" : valueAt(token, seed.samplePath ?? "sample") ?? "";
+        if (!path) {
+            continue;
+        }
+        const sample = typeof token === "string" ? "" : (valueAt(token, seed.samplePath ?? "sample") ?? "");
         setPathValue(out, path, sample);
     }
     return out;
@@ -134,6 +159,8 @@ async function seedObject(
 
 function fallbackJsonFields(detail: FunctionDetail): HTMLElement {
     const fields = [fieldWrap("Params JSON", textarea("params", stringify(detail.paramsSample)))];
-    if (detail.body) fields.push(fieldWrap("Body JSON", textarea("body", stringify(detail.bodySample ?? {}))));
+    if (detail.body) {
+        fields.push(fieldWrap("Body JSON", textarea("body", stringify(detail.bodySample ?? {}))));
+    }
     return div("fields-stack", ...fields);
 }

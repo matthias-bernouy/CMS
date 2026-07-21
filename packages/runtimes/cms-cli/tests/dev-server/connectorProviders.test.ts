@@ -29,7 +29,7 @@ describe("LocalFsIntegrationConnectorProviderRepository", () => {
         const source = await readFile(join(settingsDir, "connector-providers.json"), "utf-8");
         expect(source).toContain('"projectRef": "courtside"');
         expect(source).not.toContain("accessToken");
-        expect((await readdir(settingsDir)).filter(name => name.endsWith(".tmp"))).toEqual([]);
+        expect((await readdir(settingsDir)).filter((name) => name.endsWith(".tmp"))).toEqual([]);
     });
 
     test("returns null before a provider is configured", async () => {

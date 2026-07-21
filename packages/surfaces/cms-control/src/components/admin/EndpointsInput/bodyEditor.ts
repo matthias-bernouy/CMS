@@ -9,12 +9,12 @@ import type { DataShape } from "@bernouy/cms-sources";
  * removable back to absent (empty field → the parser stores no body).
  */
 export function makeBodySection(ei: number, seedBody?: DataShape): HTMLElement {
-    const container = document.createElement('div');
-    container.dataset.role = 'body';
+    const container = document.createElement("div");
+    container.dataset.role = "body";
 
     const field = jsonField(`endpoints.${ei}.body`);
     const tree = makeDataShapeTree(seedBody, () => field.sync(() => tree.read()));
-    tree.element.dataset.role = 'body-slot';
+    tree.element.dataset.role = "body-slot";
 
     // Initial value = the seed verbatim: `read()` is unreliable until the tree is
     // connected (p9r-select `.value` not yet populated). Edits then sync via read().

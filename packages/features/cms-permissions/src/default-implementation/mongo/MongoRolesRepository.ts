@@ -4,14 +4,24 @@ import { defaultRoleDefinitions } from "cms-permissions/core/permissions";
 import type { RolesRepository } from "cms-permissions/interfaces/RolesRepository";
 
 type RoleDocument = {
-    _id:      string;   // role id
-    label:    string;
+    _id: string; // role id
+    label: string;
     builtin?: boolean;
-    grants:   RoleDefinition["grants"];
+    grants: RoleDefinition["grants"];
 };
 
-const toDef = (d: RoleDocument): RoleDefinition => ({ id: d._id, label: d.label, ...(d.builtin ? { builtin: true } : {}), grants: d.grants });
-const toDoc = (r: RoleDefinition): RoleDocument => ({ _id: r.id, label: r.label, ...(r.builtin ? { builtin: true } : {}), grants: r.grants });
+const toDef = (d: RoleDocument): RoleDefinition => ({
+    id: d._id,
+    label: d.label,
+    ...(d.builtin ? { builtin: true } : {}),
+    grants: d.grants,
+});
+const toDoc = (r: RoleDefinition): RoleDocument => ({
+    _id: r.id,
+    label: r.label,
+    ...(r.builtin ? { builtin: true } : {}),
+    grants: r.grants,
+});
 
 /**
  * Mongo-backed `RolesRepository`. `init()` seeds the editable built-ins

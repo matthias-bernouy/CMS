@@ -46,23 +46,34 @@ export class Source {
     private lastUrl: string | null = null;
     private readonly formOwned: boolean;
 
-    private readonly onReload = () => { if (this.el.isConnected) void this.run(); };
-    private readonly onReactiveUrlChange = () => { if (this.el.isConnected) void this.run({ onlyIfUrlChanged: true }); };
+    private readonly onReload = () => {
+        if (this.el.isConnected) {
+            void this.run();
+        }
+    };
+    private readonly onReactiveUrlChange = () => {
+        if (this.el.isConnected) {
+            void this.run({ onlyIfUrlChanged: true });
+        }
+    };
     private readonly onSubmit = (event: SubmitEvent) => {
-        const form = asOwnerForm(event.currentTarget, this.el.ownerDocument)
-            ?? this.el.closest("form");
+        const form = asOwnerForm(event.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
         const valid = typeof form?.reportValidity === "function" ? form.reportValidity() : true;
         if (!valid) {
             event.preventDefault();
             return;
         }
         event.preventDefault();
-        if (this.el.isConnected) void this.run();
+        if (this.el.isConnected) {
+            void this.run();
+        }
     };
     private readonly onChange = () => {
         const form = asOwnerForm(this.el, this.el.ownerDocument) ?? this.el.closest("form");
         const valid = typeof form?.reportValidity === "function" ? form.reportValidity() : true;
-        if (valid && this.el.isConnected) void this.run();
+        if (valid && this.el.isConnected) {
+            void this.run();
+        }
     };
 
     constructor(
@@ -83,8 +94,9 @@ export class Source {
             onSubmit: this.onSubmit,
             onChange: this.onChange,
         });
-        if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) void this.run();
-        else {
+        if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) {
+            void this.run();
+        } else {
             const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
             if (spec.url) {
                 this.presenter.initial(spec.alias);
@@ -116,13 +128,19 @@ export class Source {
         }
 
         const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
-        if (!spec.url) return;
+        if (!spec.url) {
+            return;
+        }
         const url = resolveReactiveUrl(spec.url, this.el.ownerDocument);
-        if (opts?.onlyIfUrlChanged && url === this.lastUrl) return;
+        if (opts?.onlyIfUrlChanged && url === this.lastUrl) {
+            return;
+        }
         this.lastUrl = url;
 
         const submission = this.formOwned ? this.captureSubmission() : null;
-        if (this.formOwned && !submission) return;
+        if (this.formOwned && !submission) {
+            return;
+        }
 
         this.presenter.loading(spec.alias);
         this.afterRender();
@@ -131,7 +149,9 @@ export class Source {
         this.abort = ac;
 
         if (this.formOwned) {
-            if (!submission) return;
+            if (!submission) {
+                return;
+            }
             const result = await submitForm(submission.form, {
                 url: this.submitUrl(url),
                 method: submission.method,
@@ -139,7 +159,9 @@ export class Source {
                 bodyFields: submission.bodyFields,
                 formData: submission.formData,
             });
-            if (ac.signal.aborted) return;
+            if (ac.signal.aborted) {
+                return;
+            }
             this.presenter.result(spec.alias, result);
             this.afterRender();
             this.dispatchSubmitEvent(result);
@@ -148,7 +170,9 @@ export class Source {
         }
 
         const outcome = await runFetch(url, ac.signal);
-        if (ac.signal.aborted || outcome.kind === "aborted") return;
+        if (ac.signal.aborted || outcome.kind === "aborted") {
+            return;
+        }
         if (outcome.kind === "error") {
             this.presenter.error(spec.alias, url, outcome.status, outcome.message);
             this.afterRender();
@@ -171,30 +195,41 @@ export class Source {
         bodyFields: ReturnType<typeof resolveSourceBodyFields>;
     } | null {
         const form = asOwnerForm(this.el, this.el.ownerDocument);
-        if (!form) return null;
+        if (!form) {
+            return null;
+        }
         const method = this.sourceMethod();
         return {
             form,
             method,
             formData: collectFormData(form),
-            bodyFields: method === "GET" || method === "HEAD"
-                ? undefined
-                : resolveSourceBodyFields(this.el.getAttribute(SOURCE_BODY_ATTR), this.el.ownerDocument),
+            bodyFields:
+                method === "GET" || method === "HEAD"
+                    ? undefined
+                    : resolveSourceBodyFields(this.el.getAttribute(SOURCE_BODY_ATTR), this.el.ownerDocument),
         };
     }
 
     private submitUrl(url: string): string {
         const next = new URL(url, location.href);
-        for (const [key, value] of new URLSearchParams(location.search)) next.searchParams.append(key, value);
+        for (const [key, value] of new URLSearchParams(location.search)) {
+            next.searchParams.append(key, value);
+        }
         return next.toString();
     }
 
     private afterSubmit(result: FormSubmitResult, alias: string | undefined): void {
-        if (!result.ok) return;
+        if (!result.ok) {
+            return;
+        }
         this.publish(result);
-        if (this.shouldReset()) result.form.reset();
+        if (this.shouldReset()) {
+            result.form.reset();
+        }
         const redirect = this.successRedirect(result, alias);
-        if (redirect) this.redirect(redirect);
+        if (redirect) {
+            this.redirect(redirect);
+        }
     }
 
     private dispatchSubmitEvent(result: FormSubmitResult): void {
@@ -212,25 +247,33 @@ export class Source {
     private publish(result: FormSubmitResult): void {
         const events = (this.el.getAttribute(SOURCE_PUBLISH_ATTR) ?? "").split(/\s+/).filter(Boolean);
         for (const eventName of events) {
-            this.el.ownerDocument.dispatchEvent(new CustomEvent(eventName, {
-                bubbles: true,
-                composed: true,
-                detail: result,
-            }));
+            this.el.ownerDocument.dispatchEvent(
+                new CustomEvent(eventName, {
+                    bubbles: true,
+                    composed: true,
+                    detail: result,
+                }),
+            );
         }
     }
 
     private shouldReset(): boolean {
         const value = this.el.getAttribute(SOURCE_SUCCESS_RESET_ATTR)?.trim().toLowerCase();
-        if (value === "false" || value === "0" || value === "no") return false;
-        if (value === "true" || value === "1" || value === "yes" || value === "") return true;
+        if (value === "false" || value === "0" || value === "no") {
+            return false;
+        }
+        if (value === "true" || value === "1" || value === "yes" || value === "") {
+            return true;
+        }
         const method = this.sourceMethod();
         return method !== "GET" && method !== "HEAD";
     }
 
     private successRedirect(result: FormSubmitResult, alias: string | undefined): string {
         const template = this.el.getAttribute(SOURCE_SUCCESS_REDIRECT_ATTR)?.trim();
-        if (!template) return "";
+        if (!template) {
+            return "";
+        }
         const scope: Scope = {
             value: result,
             vars: {
@@ -251,9 +294,14 @@ export class Source {
 
     private redirect(target: string): void {
         let url: URL;
-        try { url = new URL(target, location.href); }
-        catch { return; }
-        if (url.origin !== location.origin || (url.protocol !== "http:" && url.protocol !== "https:")) return;
+        try {
+            url = new URL(target, location.href);
+        } catch {
+            return;
+        }
+        if (url.origin !== location.origin || (url.protocol !== "http:" && url.protocol !== "https:")) {
+            return;
+        }
         location.href = `${url.pathname}${url.search}${url.hash}`;
     }
 
@@ -264,5 +312,5 @@ export class Source {
 
 function asOwnerForm(value: EventTarget | null, doc: Document): HTMLFormElement | null {
     const ctor = doc.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
-    return typeof ctor === "function" && value instanceof ctor ? value as HTMLFormElement : null;
+    return typeof ctor === "function" && value instanceof ctor ? (value as HTMLFormElement) : null;
 }

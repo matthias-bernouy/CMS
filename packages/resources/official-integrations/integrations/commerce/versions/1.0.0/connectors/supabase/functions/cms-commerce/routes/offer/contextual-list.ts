@@ -5,7 +5,7 @@ import { rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 
 export function hasContextualFilters(url: URL): boolean {
-    return ["category", "brand", "filters"].some(name => url.searchParams.has(name));
+    return ["category", "brand", "filters"].some((name) => url.searchParams.has(name));
 }
 
 export async function listContextualOffers(url: URL): Promise<Response> {
@@ -36,28 +36,51 @@ export async function listContextualOffers(url: URL): Promise<Response> {
 }
 
 function parseFilters(raw: string | null): JsonRecord {
-    if (!raw) return {};
-    if (raw.length > 16384) throw new HttpError(400, "filters are too large");
+    if (!raw) {
+        return {};
+    }
+    if (raw.length > 16384) {
+        throw new HttpError(400, "filters are too large");
+    }
     let parsed: unknown;
-    try { parsed = JSON.parse(raw); }
-    catch { throw new HttpError(400, "filters must be valid JSON"); }
-    if (!isRecord(parsed)) throw new HttpError(400, "filters must be an object");
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        throw new HttpError(400, "filters must be valid JSON");
+    }
+    if (!isRecord(parsed)) {
+        throw new HttpError(400, "filters must be an object");
+    }
     return compactFilters(parsed);
 }
 
 function compactFilters(filters: JsonRecord): JsonRecord {
-    return Object.fromEntries(Object.entries(filters).flatMap(([field, rawOperators]) => {
-        if (!isRecord(rawOperators)) return [[field, rawOperators]];
-        const operators = Object.fromEntries(Object.entries(rawOperators).filter(([, value]) => (
-            value !== "" && value !== null && value !== undefined && (!Array.isArray(value) || value.length > 0)
-        )));
-        return Object.keys(operators).length > 0 ? [[field, operators]] : [];
-    }));
+    return Object.fromEntries(
+        Object.entries(filters).flatMap(([field, rawOperators]) => {
+            if (!isRecord(rawOperators)) {
+                return [[field, rawOperators]];
+            }
+            const operators = Object.fromEntries(
+                Object.entries(rawOperators).filter(
+                    ([, value]) =>
+                        value !== "" &&
+                        value !== null &&
+                        value !== undefined &&
+                        (!Array.isArray(value) || value.length > 0),
+                ),
+            );
+            return Object.keys(operators).length > 0 ? [[field, operators]] : [];
+        }),
+    );
 }
 
 function amount(raw: string | null): number | null {
-    if (!raw) return null;
+    if (!raw) {
+        return null;
+    }
     const euros = Number(raw);
-    if (!Number.isFinite(euros) || euros < 0) throw new HttpError(400, "price filter is invalid");
+    if (!Number.isFinite(euros) || euros < 0) {
+        throw new HttpError(400, "price filter is invalid");
+    }
     return Math.round(euros * 100);
 }

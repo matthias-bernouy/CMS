@@ -40,12 +40,16 @@ export function validateEmbeddedLookupRef(
     errors: string[],
 ): void {
     validateDataRef(dashboard, ref, path, source, errors);
-    if (!isRecord(ref)) return;
+    if (!isRecord(ref)) {
+        return;
+    }
     validateRequiredPath("valuePath", ref.valuePath, path, errors);
     validateRequiredPath("labelPath", ref.labelPath, path, errors);
     validatePath("subtitlePath", ref.subtitlePath, path, errors);
     validatePath("mediaPath", ref.mediaPath, path, errors);
-    if (ref.selected !== undefined) validateResourceExpression(ref.selected, `${path}.selected`, errors);
+    if (ref.selected !== undefined) {
+        validateResourceExpression(ref.selected, `${path}.selected`, errors);
+    }
 }
 
 export function validateEndpointRef(
@@ -61,17 +65,24 @@ export function validateEndpointRef(
     }
     validateRequiredId(`${path}.endpoint`, ref.endpoint, errors);
     validateId(`${path}.sourceId`, ref.sourceId, errors);
-    const endpoint = source && (!ref.sourceId || ref.sourceId === dashboard.source)
-        ? endpointFor(ref.sourceId ?? dashboard.source, ref.endpoint, source)
-        : null;
+    const endpoint =
+        source && (!ref.sourceId || ref.sourceId === dashboard.source)
+            ? endpointFor(ref.sourceId ?? dashboard.source, ref.endpoint, source)
+            : null;
     if (source && (!ref.sourceId || ref.sourceId === dashboard.source) && !endpoint) {
         errors.push(`${path}.endpoint references unknown endpoint "${ref.endpoint}"`);
     }
     validateExpressionMap(ref.params, `${path}.params`, errors);
     validateExpressionMap(ref.body, `${path}.body`, errors);
-    for (const key of Object.keys(ref.body ?? {})) validatePath(key, key, `${path}.body`, errors);
-    if (endpoint && ref.params) validateEndpointParams(endpoint, ref.params, `${path}.params`, errors);
-    if (endpoint && ref.body && endpoint.input?.body) validateEndpointBody(endpoint, ref.body, `${path}.body`, errors);
+    for (const key of Object.keys(ref.body ?? {})) {
+        validatePath(key, key, `${path}.body`, errors);
+    }
+    if (endpoint && ref.params) {
+        validateEndpointParams(endpoint, ref.params, `${path}.params`, errors);
+    }
+    if (endpoint && ref.body && endpoint.input?.body) {
+        validateEndpointBody(endpoint, ref.body, `${path}.body`, errors);
+    }
 }
 
 function validateEndpointParams(
@@ -80,9 +91,11 @@ function validateEndpointParams(
     path: string,
     errors: string[],
 ): void {
-    const declared = new Set((endpoint.input?.params ?? []).map(param => param.name));
+    const declared = new Set((endpoint.input?.params ?? []).map((param) => param.name));
     for (const key of Object.keys(params)) {
-        if (!declared.has(key)) errors.push(`${path}.${key} is not declared by endpoint "${endpoint.urn}"`);
+        if (!declared.has(key)) {
+            errors.push(`${path}.${key} is not declared by endpoint "${endpoint.urn}"`);
+        }
     }
 }
 
@@ -93,16 +106,22 @@ function validateEndpointBody(
     errors: string[],
 ): void {
     const shape = endpoint.input?.body;
-    if (!shape) return;
+    if (!shape) {
+        return;
+    }
     for (const key of Object.keys(body)) {
-        if (!shapeHasPath(shape, key)) errors.push(`${path}.${key} is not declared by endpoint "${endpoint.urn}"`);
+        if (!shapeHasPath(shape, key)) {
+            errors.push(`${path}.${key} is not declared by endpoint "${endpoint.urn}"`);
+        }
     }
 }
 
 function shapeHasPath(shape: DataShape, path: string): boolean {
     let current: DataShape | undefined = shape;
     for (const part of path.split(".").filter(Boolean)) {
-        if (current?.type !== "object") return false;
+        if (current?.type !== "object") {
+            return false;
+        }
         current = current.properties?.[part];
     }
     return current !== undefined;
@@ -110,5 +129,5 @@ function shapeHasPath(shape: DataShape, path: string): boolean {
 
 function endpointFor(sourceId: string, endpointId: string, source: Source): SourceEndpoint | null {
     const urn = makeEndpointUrn(sourceId, endpointId);
-    return source.endpoints.find(endpoint => endpoint.urn === urn) ?? null;
+    return source.endpoints.find((endpoint) => endpoint.urn === urn) ?? null;
 }

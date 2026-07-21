@@ -50,7 +50,9 @@ export function renderBindingPanel(
 
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
-    if (options.canRemove) footer.append(removeButton(options.onRemove));
+    if (options.canRemove) {
+        footer.append(removeButton(options.onRemove));
+    }
     footer.append(insertButton(options.onSelect));
     container.append(scroll, footer);
 }

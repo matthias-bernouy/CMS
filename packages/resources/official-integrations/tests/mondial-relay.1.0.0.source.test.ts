@@ -50,7 +50,8 @@ const supabaseUrl = "https://project.supabase.co";
 const connectEndpoint = "https://connect-api-sandbox.mondialrelay.com/api/shipment";
 const trackingEndpoint = "https://api.mondialrelay.com/WebService.asmx";
 const definitionUrl = new URL("../integrations/mondial-relay/versions/1.0.0/definition.json", import.meta.url);
-const edgeFunctionUrl = "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts";
+const edgeFunctionUrl =
+    "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/functions/cms-delivery/index.ts";
 
 const realFetch = globalThis.fetch;
 const realDeno = (globalThis as { Deno?: unknown }).Deno;
@@ -58,11 +59,19 @@ let activeEnv: Record<string, string> = {};
 let activeFetch: typeof fetch = realFetch;
 let edgeHandler: EdgeHandler | undefined;
 
-(globalThis as { Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown } }).Deno = {
+(
+    globalThis as {
+        Deno?: { env: { get: (key: string) => string | undefined }; serve: (handler: EdgeHandler) => unknown };
+    }
+).Deno = {
     env: { get: (key) => activeEnv[key] },
     serve(handler) {
         edgeHandler = handler;
-        return { shutdown() { /* test stub */ } };
+        return {
+            shutdown() {
+                /* test stub */
+            },
+        };
     },
 };
 globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
@@ -75,16 +84,22 @@ afterAll(() => {
 
 describe("mondial-relay 1.0.0 source", () => {
     test("redacts internal and unexpected database error details", async () => {
-        const publicDatabaseError = dataApiError(400, JSON.stringify({
-            message: "validation: invalid projection claim settings",
-        }));
+        const publicDatabaseError = dataApiError(
+            400,
+            JSON.stringify({
+                message: "validation: invalid projection claim settings",
+            }),
+        );
         expect(publicDatabaseError.status).toBe(400);
         expect(publicDatabaseError.message).toBe("invalid projection claim settings");
 
-        const privateDatabaseError = dataApiError(500, JSON.stringify({
-            message: "duplicate key violates delivery_shipments_private_reference_key",
-            detail: "Key (private_reference)=(customer-secret) already exists",
-        }));
+        const privateDatabaseError = dataApiError(
+            500,
+            JSON.stringify({
+                message: "duplicate key violates delivery_shipments_private_reference_key",
+                detail: "Key (private_reference)=(customer-secret) already exists",
+            }),
+        );
         expect(privateDatabaseError.status).toBe(502);
         expect(privateDatabaseError.message).toBe("Supabase Data API request failed (500)");
         expect(privateDatabaseError.message).not.toContain("customer-secret");
@@ -135,36 +150,37 @@ describe("mondial-relay 1.0.0 source", () => {
         const list = await repo.list();
         const definition = await repo.get("mondial-relay");
 
-        expect(list.map(entry => entry.kind)).toContain("mondial-relay");
+        expect(list.map((entry) => entry.kind)).toContain("mondial-relay");
         expect(definition?.kind).toBe("mondial-relay");
         expect(definition?.version).toBe("1.0.0");
         const serialized = JSON.stringify(definition);
         expect(serialized).toContain("mondial-relay-picker");
         expect(serialized).toContain("reconcileShipments");
         expect(serialized).toContain("recipientHandoffAt");
-        expect(definition?.inputs.find(input => input.name === "mondialRelayConnectEndpoint")).toMatchObject({
+        expect(definition?.inputs.find((input) => input.name === "mondialRelayConnectEndpoint")).toMatchObject({
             type: "select",
             options: [
                 { label: "Sandbox", value: "https://connect-api-sandbox.mondialrelay.com/api/shipment" },
                 { label: "Production", value: "https://connect-api.mondialrelay.com/api/shipment" },
             ],
         });
-        expect(definition?.inputs.find(input => input.name === "mondialRelayTrackingEndpoint")).toMatchObject({
+        expect(definition?.inputs.find((input) => input.name === "mondialRelayTrackingEndpoint")).toMatchObject({
             type: "select",
             options: [{ label: "Production WebService", value: "https://api.mondialrelay.com/WebService.asmx" }],
         });
-        const sourceArtifact = definition?.artifacts.find(artifact => artifact.type === "source");
-        const createOutput = JSON.stringify(sourceArtifact?.type === "source"
-            ? sourceArtifact.source.endpoints.find(endpoint => endpoint.endpointId === "createShipment")?.output
-            : null);
+        const sourceArtifact = definition?.artifacts.find((artifact) => artifact.type === "source");
+        const createOutput = JSON.stringify(
+            sourceArtifact?.type === "source"
+                ? sourceArtifact.source.endpoints.find((endpoint) => endpoint.endpointId === "createShipment")?.output
+                : null,
+        );
         expect(createOutput).not.toContain("labelUrl");
     });
 
     test("claims due tracking rows with a stale lease and skip-locked concurrency", async () => {
-        const schema = await Bun.file(new URL(
-            "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
-            import.meta.url,
-        )).text();
+        const schema = await Bun.file(
+            new URL("../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+        ).text();
 
         expect(schema).toContain("create or replace function delivery.claim_due_shipments");
         expect(schema).toContain("for update skip locked");
@@ -173,10 +189,9 @@ describe("mondial-relay 1.0.0 source", () => {
     });
 
     test("declares durable projection leases, bounded retries, and manual review", async () => {
-        const schema = await Bun.file(new URL(
-            "../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql",
-            import.meta.url,
-        )).text();
+        const schema = await Bun.file(
+            new URL("../integrations/mondial-relay/versions/1.0.0/connectors/supabase/schema.sql", import.meta.url),
+        ).text();
 
         expect(schema).toContain("create or replace function delivery.claim_pending_shipment_events");
         expect(schema).toContain("projection_claim_token");
@@ -191,25 +206,27 @@ describe("mondial-relay 1.0.0 source", () => {
         const harness = await createHarness();
         const source = await harness.sources.getSource("urn:delivery");
         const dashboard = await harness.dashboards.getDashboard("delivery-delivery");
-        const createEndpoint = source?.endpoints.find(endpoint => endpoint.urn === "urn:delivery:createShipment");
+        const createEndpoint = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:createShipment");
         const createBody = createEndpoint?.input?.body;
-        const saveSelection = source?.endpoints.find(endpoint => endpoint.urn === "urn:delivery:saveRelaySelection");
-        const resolveQuote = source?.endpoints.find(endpoint => endpoint.urn === "urn:delivery:resolveDeliveryQuote");
-        const deliveryQuote = source?.endpoints.find(endpoint => endpoint.urn === "urn:delivery:deliveryQuote");
-        const issueLabelAccess = source?.endpoints.find(endpoint => endpoint.urn === "urn:delivery:issueLabelAccess");
+        const saveSelection = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:saveRelaySelection");
+        const resolveQuote = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:resolveDeliveryQuote");
+        const deliveryQuote = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:deliveryQuote");
+        const issueLabelAccess = source?.endpoints.find((endpoint) => endpoint.urn === "urn:delivery:issueLabelAccess");
 
         expect(source).toBeTruthy();
         expect(validateSource(source!)).toEqual([]);
-        expect(source?.endpoints.map(endpoint => endpoint.urn)).toContain("urn:delivery:relayPoints");
-        expect(source?.endpoints.map(endpoint => endpoint.urn)).toContain("urn:delivery:saveRelaySelection");
-        expect(source?.endpoints.map(endpoint => endpoint.urn)).toContain("urn:delivery:relaySelection");
+        expect(source?.endpoints.map((endpoint) => endpoint.urn)).toContain("urn:delivery:relayPoints");
+        expect(source?.endpoints.map((endpoint) => endpoint.urn)).toContain("urn:delivery:saveRelaySelection");
+        expect(source?.endpoints.map((endpoint) => endpoint.urn)).toContain("urn:delivery:relaySelection");
         expect(createBody?.properties?.deliveryRelayLocation).toEqual({ type: "string" });
         expect(createBody?.properties?.sellerCmsUserId?.semantic?.authority).toBe("cms");
         expect(createBody?.properties?.selectedForCmsUserId?.semantic?.authority).toBe("cms");
         expect(saveSelection?.input?.body?.properties?.selectedForCmsUserId?.semantic?.authority).toBe("cms");
         expect(resolveQuote?.input?.body?.properties?.selectedForCmsUserId?.semantic?.authority).toBe("cms");
-        expect(deliveryQuote?.input?.params?.find(param => param.name === "selectedForCmsUserId")
-            ?.schema?.semantic?.authority).toBe("cms");
+        expect(
+            deliveryQuote?.input?.params?.find((param) => param.name === "selectedForCmsUserId")?.schema?.semantic
+                ?.authority,
+        ).toBe("cms");
         expect(issueLabelAccess?.input?.body?.properties?.sellerCmsUserId?.semantic?.authority).toBe("cms");
         expect(createBody?.properties).not.toHaveProperty("deliveryRelayNumber");
         expect(createBody?.properties).not.toHaveProperty("sizeCode");
@@ -217,7 +234,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(dashboard).toBeTruthy();
         expect(validateDashboard(dashboard!, { source: source! })).toEqual([]);
         const views = dashboard?.views as JsonRecord[] | undefined;
-        expect(views?.map(view => `${view.widget}:${view.id}`)).toEqual([
+        expect(views?.map((view) => `${view.widget}:${view.id}`)).toEqual([
             "w-table:shipmentsTable",
             "w-table:projectionExceptionsTable",
             "w-detail:shipmentDetail",
@@ -225,18 +242,18 @@ describe("mondial-relay 1.0.0 source", () => {
         ]);
         const shipmentsTable = views?.[0];
         const tableActions = shipmentsTable?.actions as JsonRecord[] | undefined;
-        expect(tableActions?.map(action => action.id)).toEqual(["openSettings"]);
+        expect(tableActions?.map((action) => action.id)).toEqual(["openSettings"]);
         expect(tableActions?.[0]).toMatchObject({ selection: { opens: "settingsDetail" } });
         const dashboardJson = JSON.stringify(dashboard);
         expect(dashboardJson).toContain("recoverUnknownShipment");
         expect(dashboardJson).not.toContain("createShipmentForm");
-        expect(dashboardJson).not.toContain("\"widget\":\"w-tabs\"");
-        expect(dashboardJson).not.toContain("\"id\":\"pickupPoints\"");
-        expect(dashboardJson).not.toContain("\"id\":\"relayPointsTable\"");
+        expect(dashboardJson).not.toContain('"widget":"w-tabs"');
+        expect(dashboardJson).not.toContain('"id":"pickupPoints"');
+        expect(dashboardJson).not.toContain('"id":"relayPointsTable"');
         expect(dashboardJson).toContain("Edit settings");
         expect(dashboardJson).toContain("Sender address");
         expect(dashboardJson).toContain("Default weight grams");
-        expect(dashboardJson).not.toContain("\"path\":\"labelUrl\"");
+        expect(dashboardJson).not.toContain('"path":"labelUrl"');
         expect(harness.deployment?.dataApiSchemas).toEqual(["delivery"]);
         const functionSecrets = harness.deployment?.functions[0]?.secrets ?? {};
         expect(functionSecrets).toMatchObject({
@@ -260,7 +277,13 @@ describe("mondial-relay 1.0.0 source", () => {
 
     test("lists 24R relay points and excludes lockers through the installed CMS source", async () => {
         const harness = await createHarness();
-        const response = await relayPoints(harness, { country: "FR", postalCode: "75001", city: "Paris", weightGrams: "500", limit: "3" });
+        const response = await relayPoints(harness, {
+            country: "FR",
+            postalCode: "75001",
+            city: "Paris",
+            weightGrams: "500",
+            limit: "3",
+        });
         const body = await jsonBody(response);
 
         expect(response.status).toBe(200);
@@ -346,12 +369,12 @@ describe("mondial-relay 1.0.0 source", () => {
             modeSandbox: true,
             statuses: [{ code: "0", level: "Info", message: "Success" }],
         });
-        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/settings"],
             ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
             ["PATCH", "/rest/v1/shipments"],
         ]);
-        expect(harness.providerRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.providerRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["POST", "/api/shipment"],
         ]);
         expect(harness.fetchTimeline()).toEqual([
@@ -495,7 +518,7 @@ describe("mondial-relay 1.0.0 source", () => {
             for (const privateField of ["senderEmail", "metadata", "rawResponse", "labelUrl"]) {
                 expect(detail).not.toHaveProperty(privateField);
             }
-            expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
                 ["GET", "/rest/v1/shipments"],
             ]);
             const shipmentRequest = harness.postgrestRequests()[0]!;
@@ -521,22 +544,25 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(byExternalOrder.status).toBe(200);
         expect(await jsonBody(byExternalOrder)).toEqual({
-            items: [{
-                id: shipment.id,
-                expeditionNumber: "00435394",
-                status: "label_ready",
-                trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
-                deliveryRelayLocation: "FR-031270",
-                latestEventLabel: "Disponible au Point Relais",
-                latestEventAt: "2026-07-14T11:00:00.000Z",
-                carrierAcceptedAt: "2026-07-13T08:00:00.000Z",
-                sellerHandoffDeclaredAt: null,
-                recipientHandoffAt: null,
-                createdAt: "2026-07-02T10:00:00.000Z",
-                events: expected.events,
-            }],
+            items: [
+                {
+                    id: shipment.id,
+                    expeditionNumber: "00435394",
+                    status: "label_ready",
+                    trackingUrl:
+                        "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
+                    deliveryRelayLocation: "FR-031270",
+                    latestEventLabel: "Disponible au Point Relais",
+                    latestEventAt: "2026-07-14T11:00:00.000Z",
+                    carrierAcceptedAt: "2026-07-13T08:00:00.000Z",
+                    sellerHandoffDeclaredAt: null,
+                    recipientHandoffAt: null,
+                    createdAt: "2026-07-02T10:00:00.000Z",
+                    events: expected.events,
+                },
+            ],
         });
-        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
         ]);
         expect(harness.postgrestRequests()[0]?.searchParams).toMatchObject({
@@ -546,8 +572,15 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         const externalOrderSelect = harness.postgrestRequests()[0]?.searchParams.select ?? "";
         for (const privateField of [
-            "recipient_name", "recipient_email", "recipient_phone", "recipient_address",
-            "recipient_postal_code", "recipient_city", "recipient_country", "sender_", "raw_",
+            "recipient_name",
+            "recipient_email",
+            "recipient_phone",
+            "recipient_address",
+            "recipient_postal_code",
+            "recipient_city",
+            "recipient_country",
+            "sender_",
+            "raw_",
         ]) {
             expect(externalOrderSelect).not.toContain(privateField);
         }
@@ -595,7 +628,7 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(missing.status).toBe(404);
         expect(await jsonBody(missing)).toEqual({ error: "shipment not found" });
-        expect(missingHarness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(missingHarness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
         ]);
         expect(missingHarness.providerRequests()).toEqual([]);
@@ -610,7 +643,7 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(noShipmentForOrder.status).toBe(200);
         expect(await jsonBody(noShipmentForOrder)).toEqual({ items: [] });
-        expect(missingHarness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(missingHarness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
         ]);
         expect(missingHarness.providerRequests()).toEqual([]);
@@ -752,7 +785,7 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(harness.connectRequestCount()).toBe(1);
         expect(harness.insertedShipments).toHaveLength(1);
-        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/settings"],
             ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
         ]);
@@ -769,7 +802,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(response.status).toBe(409);
         expect(await jsonBody(response)).toEqual({ error: "shipment delivery quote binding is invalid" });
         expect(harness.insertedShipments).toEqual([]);
-        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/settings"],
             ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
         ]);
@@ -817,11 +850,13 @@ describe("mondial-relay 1.0.0 source", () => {
         const created = await jsonBody(await createShipment(harness, validShipmentBody()));
         expect(created).not.toHaveProperty("labelUrl");
 
-        const issued = await jsonBody(await sourceRequest(harness, "issueLabelAccess", {
-            method: "POST",
-            userId: "seller-42",
-            body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
-        }));
+        const issued = await jsonBody(
+            await sourceRequest(harness, "issueLabelAccess", {
+                method: "POST",
+                userId: "seller-42",
+                body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
+            }),
+        );
         expect(issued.token).toEqual(expect.any(String));
         expect(harness.labelAccessTokens[0]).toMatchObject({
             shipment_id: harness.insertedShipments[0]?.id,
@@ -837,13 +872,14 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(labelResponse.status).toBe(200);
         expect(labelResponse.headers.get("cache-control")).toBe("private, no-store");
         expect(await labelResponse.text()).toContain("%PDF-1.4");
-        const directLabelResponse = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-delivery/label?token=${encodeURIComponent(String(issued.token))}`,
-            { headers: {
-                authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}`,
-                "x-cms-user-id": "seller-42",
-            } },
-        ));
+        const directLabelResponse = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-delivery/label?token=${encodeURIComponent(String(issued.token))}`, {
+                headers: {
+                    authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}`,
+                    "x-cms-user-id": "seller-42",
+                },
+            }),
+        );
         expect(directLabelResponse.headers.get("content-disposition")).toStartWith("attachment;");
         expect(directLabelResponse.headers.get("x-content-type-options")).toBe("nosniff");
 
@@ -853,16 +889,16 @@ describe("mondial-relay 1.0.0 source", () => {
             params: { token: String(issued.token) },
         });
         expect(otherSeller.status).toBe(404);
-        const unrelatedMint = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-delivery/system/label-access`, {
+        const unrelatedMint = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-delivery/system/label-access`, {
                 method: "POST",
                 headers: {
                     authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}`,
                     "content-type": "application/json",
                 },
                 body: JSON.stringify({ externalOrderId: "order-1001", sellerCmsUserId: "seller-other" }),
-            },
-        ));
+            }),
+        );
         expect(unrelatedMint.status).toBe(404);
         expect(harness.labelAccessTokens).toHaveLength(1);
     });
@@ -898,11 +934,13 @@ describe("mondial-relay 1.0.0 source", () => {
     test("atomically revokes existing label capabilities when an unscanned shipment is cancelled", async () => {
         const harness = await createHarness();
         await createShipment(harness, validShipmentBody());
-        const capability = await jsonBody(await sourceRequest(harness, "issueLabelAccess", {
-            method: "POST",
-            userId: "seller-42",
-            body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
-        }));
+        const capability = await jsonBody(
+            await sourceRequest(harness, "issueLabelAccess", {
+                method: "POST",
+                userId: "seller-42",
+                body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
+            }),
+        );
 
         const cancellation = await sourceRequest(harness, "cancelShipmentReservation", {
             method: "POST",
@@ -911,9 +949,7 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(cancellation.status).toBe(200);
         expect(await jsonBody(cancellation)).toMatchObject({ status: "cancelled_unscanned" });
-        expect(harness.labelAccessTokens).toEqual([
-            expect.objectContaining({ revoked_at: expect.any(String) }),
-        ]);
+        expect(harness.labelAccessTokens).toEqual([expect.objectContaining({ revoked_at: expect.any(String) })]);
 
         const providerRequestCount = harness.upstreamRequestUrls.length;
         const revokedDownload = await sourceRequest(harness, "label", {
@@ -924,18 +960,18 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(revokedDownload.status).toBe(404);
         expect(harness.upstreamRequestUrls).toHaveLength(providerRequestCount);
 
-        const mintAfterCancellation = await harness.edgeRequest(new Request(
-            `${functionsBaseUrl}/cms-delivery/system/label-access`, {
+        const mintAfterCancellation = await harness.edgeRequest(
+            new Request(`${functionsBaseUrl}/cms-delivery/system/label-access`, {
                 method: "POST",
                 headers: {
                     authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}`,
                     "content-type": "application/json",
                 },
                 body: JSON.stringify({ externalOrderId: "order-1001", sellerCmsUserId: "seller-42" }),
-            },
-        ));
+            }),
+        );
         expect(mintAfterCancellation.status).toBe(409);
-        expect(harness.labelAccessTokens.filter(token => !token.revoked_at)).toHaveLength(0);
+        expect(harness.labelAccessTokens.filter((token) => !token.revoked_at)).toHaveLength(0);
     });
 
     test("replays the exact terminal cancellation after its tracking deadline has expired", async () => {
@@ -997,11 +1033,13 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(cancellation.status).toBe(200);
 
-        const batch = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST",
-            userId: "system",
-            body: { runKey: "cancelled-scan-worker", limit: 5 },
-        }));
+        const batch = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "cancelled-scan-worker", limit: 5 },
+            }),
+        );
         expect(batch.shipments).toEqual([
             expect.objectContaining({ externalOrderId: "order-1001", status: "manual_review" }),
         ]);
@@ -1027,11 +1065,13 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         harness.insertedShipments[0]!.cancellation_tracking_until = "2026-07-01T00:00:00.000Z";
 
-        const batch = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST",
-            userId: "system",
-            body: { runKey: "cancelled-stat83-worker", limit: 5 },
-        }));
+        const batch = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "cancelled-stat83-worker", limit: 5 },
+            }),
+        );
 
         expect(batch.shipments).toEqual([
             expect.objectContaining({ externalOrderId: "order-1001", status: "manual_review" }),
@@ -1060,11 +1100,13 @@ describe("mondial-relay 1.0.0 source", () => {
             });
             harness.insertedShipments[0]!.cancellation_tracking_until = "2026-07-01T00:00:00.000Z";
 
-            const batch = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-                method: "POST",
-                userId: "system",
-                body: { runKey: `cancelled-ambiguous-worker-${trackingEventLabel}`, limit: 5 },
-            }));
+            const batch = await jsonBody(
+                await sourceRequest(harness, "reconcileShipments", {
+                    method: "POST",
+                    userId: "system",
+                    body: { runKey: `cancelled-ambiguous-worker-${trackingEventLabel}`, limit: 5 },
+                }),
+            );
 
             expect(batch.shipments).toEqual([
                 expect.objectContaining({ externalOrderId: "order-1001", status: "manual_review" }),
@@ -1086,11 +1128,13 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         await createShipment(harness, validShipmentBody());
 
-        const batch = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST",
-            userId: "system",
-            body: { runKey: "cancelled-neutral-cas-worker", limit: 5 },
-        }));
+        const batch = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "cancelled-neutral-cas-worker", limit: 5 },
+            }),
+        );
 
         expect(batch.shipments).toEqual([
             expect.objectContaining({ externalOrderId: "order-1001", status: "cancelled_unscanned" }),
@@ -1111,11 +1155,13 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         await createShipment(harness, validShipmentBody());
 
-        const batch = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST",
-            userId: "system",
-            body: { runKey: "cancelled-incident-cas-worker", limit: 5 },
-        }));
+        const batch = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "cancelled-incident-cas-worker", limit: 5 },
+            }),
+        );
 
         expect(batch.shipments).toEqual([
             expect.objectContaining({ externalOrderId: "order-1001", status: "manual_review" }),
@@ -1222,11 +1268,13 @@ describe("mondial-relay 1.0.0 source", () => {
     test("keeps seller handoff separate from first scan and closes cancellation races", async () => {
         const harness = await createHarness();
         await createShipment(harness, validShipmentBody());
-        const handoff = await jsonBody(await sourceRequest(harness, "declareSellerHandoff", {
-            method: "POST",
-            userId: "seller-42",
-            body: { externalOrderId: "order-1001" },
-        }));
+        const handoff = await jsonBody(
+            await sourceRequest(harness, "declareSellerHandoff", {
+                method: "POST",
+                userId: "seller-42",
+                body: { externalOrderId: "order-1001" },
+            }),
+        );
         expect(handoff).toMatchObject({
             status: "label_ready",
             sellerHandoffDeclaredAt: expect.any(String),
@@ -1240,108 +1288,162 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(cancellation.status).toBe(409);
 
-        const batch = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST",
-            userId: "system",
-            body: { runKey: "delivery-worker-1", limit: 25 },
-        }));
+        const batch = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "delivery-worker-1", limit: 25 },
+            }),
+        );
         expect(batch.processed).toBe(1);
-        expect(batch.events).toEqual([expect.objectContaining({
-            orderPublicId: "order-1001",
-            normalizedStatus: "arrived_at_pickup_point",
-            providerReference: "00435394",
-        })]);
+        expect(batch.events).toEqual([
+            expect.objectContaining({
+                orderPublicId: "order-1001",
+                normalizedStatus: "arrived_at_pickup_point",
+                providerReference: "00435394",
+            }),
+        ]);
         const event = batch.events[0] as JsonRecord;
-        const acknowledged = await jsonBody(await sourceRequest(harness, "acknowledgeShipmentEvent", {
-            method: "POST",
-            userId: "system",
-            body: { eventId: event.eventId, claimToken: event.claimToken },
-        }));
+        const acknowledged = await jsonBody(
+            await sourceRequest(harness, "acknowledgeShipmentEvent", {
+                method: "POST",
+                userId: "system",
+                body: { eventId: event.eventId, claimToken: event.claimToken },
+            }),
+        );
         expect(acknowledged).toEqual({ acknowledged: true });
-        const replay = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST",
-            userId: "system",
-            body: { runKey: "delivery-worker-2", limit: 24 },
-        }));
+        const replay = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "delivery-worker-2", limit: 24 },
+            }),
+        );
         expect(replay.events).toEqual([]);
     });
 
     test("leases projection events, reclaims crashes, and dead-letters repeated failures", async () => {
         const harness = await createHarness();
         await createShipment(harness, validShipmentBody());
-        const first = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST", userId: "system", body: { runKey: "projection-worker-a", limit: 8 },
-        }));
+        const first = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "projection-worker-a", limit: 8 },
+            }),
+        );
         const claimed = first.events[0] as JsonRecord;
         expect(typeof claimed.eventId).toBe("number");
         expect(typeof claimed.claimToken).toBe("string");
         expect(claimed.projectionAttempts).toBe(1);
 
-        const concurrent = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST", userId: "system", body: { runKey: "projection-worker-b", limit: 8 },
-        }));
+        const concurrent = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "projection-worker-b", limit: 8 },
+            }),
+        );
         expect(concurrent.events).toEqual([]);
 
-        const stored = harness.shipmentEvents.find(event => Number(event.id) === Number(claimed.eventId))!;
-        if (!stored) throw new Error("claimed projection event is missing from the harness");
+        const stored = harness.shipmentEvents.find((event) => Number(event.id) === Number(claimed.eventId))!;
+        if (!stored) {
+            throw new Error("claimed projection event is missing from the harness");
+        }
         stored.projection_claimed_at = "stale";
-        const reclaimed = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST", userId: "system", body: { runKey: "projection-worker-c", limit: 8 },
-        }));
+        const reclaimed = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "projection-worker-c", limit: 8 },
+            }),
+        );
         expect(reclaimed.events[0]).toMatchObject({
-            eventId: claimed.eventId, projectionAttempts: 2,
+            eventId: claimed.eventId,
+            projectionAttempts: 2,
         });
         expect((reclaimed.events[0] as JsonRecord).claimToken).not.toBe(claimed.claimToken);
 
-        const retry = await jsonBody(await sourceRequest(harness, "failShipmentEventProjection", {
-            method: "POST", userId: "system", body: {
-                eventId: claimed.eventId,
-                claimToken: (reclaimed.events[0] as JsonRecord).claimToken,
-                error: "Commerce temporarily unavailable",
-            },
-        }));
+        const retry = await jsonBody(
+            await sourceRequest(harness, "failShipmentEventProjection", {
+                method: "POST",
+                userId: "system",
+                body: {
+                    eventId: claimed.eventId,
+                    claimToken: (reclaimed.events[0] as JsonRecord).claimToken,
+                    error: "Commerce temporarily unavailable",
+                },
+            }),
+        );
         expect(retry).toMatchObject({ projectionStatus: "retry_wait", projectionAttempts: 2 });
 
-        const finalClaim = await jsonBody(await sourceRequest(harness, "reconcileShipments", {
-            method: "POST", userId: "system", body: { runKey: "projection-worker-d", limit: 8 },
-        }));
+        const finalClaim = await jsonBody(
+            await sourceRequest(harness, "reconcileShipments", {
+                method: "POST",
+                userId: "system",
+                body: { runKey: "projection-worker-d", limit: 8 },
+            }),
+        );
         stored.projection_attempts = 5;
-        const manual = await jsonBody(await sourceRequest(harness, "failShipmentEventProjection", {
-            method: "POST", userId: "system", body: {
-                eventId: claimed.eventId,
-                claimToken: (finalClaim.events[0] as JsonRecord).claimToken,
-                error: "Commerce permanently rejected the projection",
-            },
-        }));
+        const manual = await jsonBody(
+            await sourceRequest(harness, "failShipmentEventProjection", {
+                method: "POST",
+                userId: "system",
+                body: {
+                    eventId: claimed.eventId,
+                    claimToken: (finalClaim.events[0] as JsonRecord).claimToken,
+                    error: "Commerce permanently rejected the projection",
+                },
+            }),
+        );
         expect(manual).toMatchObject({
-            projectionStatus: "manual_review", projectionAttempts: 5,
+            projectionStatus: "manual_review",
+            projectionAttempts: 5,
             projectionLastError: "Commerce permanently rejected the projection",
         });
 
-        const exceptions = await jsonBody(await sourceRequest(harness, "shipmentProjectionExceptions", {
-            method: "GET", userId: "admin", params: { limit: "50", offset: "0" },
-        }));
-        expect(exceptions.items).toEqual([expect.objectContaining({
-            id: claimed.eventId, projectionStatus: "manual_review", projectionAttempts: 5,
-        })]);
+        const exceptions = await jsonBody(
+            await sourceRequest(harness, "shipmentProjectionExceptions", {
+                method: "GET",
+                userId: "admin",
+                params: { limit: "50", offset: "0" },
+            }),
+        );
+        expect(exceptions.items).toEqual([
+            expect.objectContaining({
+                id: claimed.eventId,
+                projectionStatus: "manual_review",
+                projectionAttempts: 5,
+            }),
+        ]);
 
         const forbidden = await sourceRequest(harness, "reviewShipmentProjectionException", {
-            method: "POST", userId: "legacy-support-operator", userRole: "support", body: {
-                eventId: claimed.eventId, action: "requeue",
+            method: "POST",
+            userId: "legacy-support-operator",
+            userRole: "support",
+            body: {
+                eventId: claimed.eventId,
+                action: "requeue",
                 reason: "Commerce projection endpoint has recovered",
             },
         });
         expect(forbidden.status).toBe(403);
 
         const requeued = await sourceRequest(harness, "reviewShipmentProjectionException", {
-            method: "POST", userId: "admin-operator", userRole: "admin", body: {
-                eventId: claimed.eventId, action: "requeue",
+            method: "POST",
+            userId: "admin-operator",
+            userRole: "admin",
+            body: {
+                eventId: claimed.eventId,
+                action: "requeue",
                 reason: "Commerce projection endpoint has recovered",
             },
         });
         expect(requeued.status).toBe(200);
         expect(await jsonBody(requeued)).toMatchObject({
-            id: claimed.eventId, projectionStatus: "retry_wait", projectionAttempts: 0,
+            id: claimed.eventId,
+            projectionStatus: "retry_wait",
+            projectionAttempts: 0,
         });
         expect(stored.normalized_status).toBe("arrived_at_pickup_point");
     });
@@ -1384,12 +1486,12 @@ describe("mondial-relay 1.0.0 source", () => {
             quotedAt: "2026-07-13T10:00:00.000Z",
             expiresAt: "2099-07-13T10:15:00.000Z",
         });
-        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/shipments"],
             ["GET", "/rest/v1/settings"],
             ["POST", "/rest/v1/rpc/reserve_delivery_quote"],
         ]);
-        expect(harness.providerRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.providerRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/parcelshop-picker/v4_0/services/parcelshop-picker.svc/SearchPR"],
         ]);
         expect(harness.fetchTimeline()).toEqual([
@@ -1402,7 +1504,9 @@ describe("mondial-relay 1.0.0 source", () => {
             },
             { kind: "postgrest", method: "POST", pathname: "/rest/v1/rpc/reserve_delivery_quote" },
         ]);
-        expect(harness.postgrestRequests().filter(request => request.pathname === "/rest/v1/delivery_quotes")).toEqual([]);
+        expect(
+            harness.postgrestRequests().filter((request) => request.pathname === "/rest/v1/delivery_quotes"),
+        ).toEqual([]);
         expect(harness.postgrestRequests()[2]?.body).toMatchObject({
             p_quote_id: "mrq_12a24601fa17ea51f8af4b4a33a43c932d1c638945fda05f283ac297fa161054",
             p_request_key: "quote-request:order-public-42:1:FR-034439",
@@ -1430,20 +1534,22 @@ describe("mondial-relay 1.0.0 source", () => {
             shippingAmount: 450,
             currency: "eur",
         });
-        expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+        expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/relay_selections"],
             ["GET", "/rest/v1/delivery_quotes"],
         ]);
         expect(harness.relaySelections).toHaveLength(0);
-        expect(harness.deliveryQuotes).toContainEqual(expect.objectContaining({
-            external_order_id: "order-public-42",
-            relay_location: "FR-034439",
-            relay_name: "ARS INFORMATIQUE",
-            selected_by: "user-123",
-            weight_grams: 500,
-            shipping_amount: 450,
-            currency: "eur",
-        }));
+        expect(harness.deliveryQuotes).toContainEqual(
+            expect.objectContaining({
+                external_order_id: "order-public-42",
+                relay_location: "FR-034439",
+                relay_name: "ARS INFORMATIQUE",
+                selected_by: "user-123",
+                weight_grams: 500,
+                shipping_amount: 450,
+                currency: "eur",
+            }),
+        );
         expect(harness.relayLookupUrl()?.searchParams.get("NbResults")).toBe("8");
         expect(harness.insertedShipments).toHaveLength(0);
 
@@ -1458,7 +1564,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(await jsonBody(unavailable)).toEqual({
             error: "the selected pickup point is unavailable or does not match the search area",
         });
-        expect(harness.deliveryQuotes.filter(row => row.external_order_id === "order-public-43")).toHaveLength(0);
+        expect(harness.deliveryQuotes.filter((row) => row.external_order_id === "order-public-43")).toHaveLength(0);
 
         const locker = await saveRelaySelection(harness, {
             ...validDeliveryQuoteRequest("order-public-locker"),
@@ -1472,12 +1578,15 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(await jsonBody(locker)).toEqual({
             error: "the selected pickup point is unavailable or does not match the search area",
         });
-        expect(harness.deliveryQuotes.filter(row => row.external_order_id === "order-public-locker")).toHaveLength(0);
+        expect(harness.deliveryQuotes.filter((row) => row.external_order_id === "order-public-locker")).toHaveLength(0);
     });
 
     test("normalizes Commerce buyer names from given/surname and first/last fields", async () => {
         const cases = [
-            { input: { givenName: "Alice", surname: "Acheteuse" }, expected: ["Alice Acheteuse", "Alice", "Acheteuse"] },
+            {
+                input: { givenName: "Alice", surname: "Acheteuse" },
+                expected: ["Alice Acheteuse", "Alice", "Acheteuse"],
+            },
             { input: { firstName: "Benoit", lastName: "Client" }, expected: ["Benoit Client", "Benoit", "Client"] },
         ] as const;
 
@@ -1506,14 +1615,16 @@ describe("mondial-relay 1.0.0 source", () => {
             });
 
             expect(response.status).toBe(200);
-            expect(harness.deliveryQuotes).toContainEqual(expect.objectContaining({
-                external_order_id: externalOrderId,
-                recipient_snapshot: expect.objectContaining({
-                    name: testCase.expected[0],
-                    firstName: testCase.expected[1],
-                    lastName: testCase.expected[2],
+            expect(harness.deliveryQuotes).toContainEqual(
+                expect.objectContaining({
+                    external_order_id: externalOrderId,
+                    recipient_snapshot: expect.objectContaining({
+                        name: testCase.expected[0],
+                        firstName: testCase.expected[1],
+                        lastName: testCase.expected[2],
+                    }),
                 }),
-            }));
+            );
         }
     });
 
@@ -1521,8 +1632,11 @@ describe("mondial-relay 1.0.0 source", () => {
         const harness = await createHarness();
         const request = {
             ...validDeliveryQuoteRequest("order-public-42"),
-            externalOrderId: "order-public-42", relayLocation: "FR-034439",
-            country: "FR", postalCode: "75001", city: "Paris",
+            externalOrderId: "order-public-42",
+            relayLocation: "FR-034439",
+            country: "FR",
+            postalCode: "75001",
+            city: "Paris",
         };
 
         const first = await jsonBody(await saveRelaySelection(harness, request));
@@ -1537,15 +1651,38 @@ describe("mondial-relay 1.0.0 source", () => {
 
         expect(replay.quoteId).toBe(first.quoteId);
         expect(replay.revision).toBe(first.revision);
-        expect(harness.deliveryQuotes.filter(row => row.external_order_id === "order-public-42")).toHaveLength(1);
+        expect(harness.deliveryQuotes.filter((row) => row.external_order_id === "order-public-42")).toHaveLength(1);
         expect(changed.status).toBe(409);
-        expect(await jsonBody(changed)).toMatchObject({ error: expect.stringContaining("replay changed immutable input") });
+        expect(await jsonBody(changed)).toMatchObject({
+            error: expect.stringContaining("replay changed immutable input"),
+        });
     });
 
     test("rejects incomplete buyer or seller fulfillment data before creating any quote", async () => {
         const cases: Array<[string, JsonRecord]> = [
-            ["buyer", { recipient: "Buyer", phone: "", addressLine1: "1 rue", postalCode: "75001", city: "Paris", countryCode: "FR" }],
-            ["seller", { givenName: "Seller", surname: "Name", phone: "+33611111111", addressLine1: "", postalCode: "69001", city: "Lyon", countryCode: "FR" }],
+            [
+                "buyer",
+                {
+                    recipient: "Buyer",
+                    phone: "",
+                    addressLine1: "1 rue",
+                    postalCode: "75001",
+                    city: "Paris",
+                    countryCode: "FR",
+                },
+            ],
+            [
+                "seller",
+                {
+                    givenName: "Seller",
+                    surname: "Name",
+                    phone: "+33611111111",
+                    addressLine1: "",
+                    postalCode: "69001",
+                    city: "Lyon",
+                    countryCode: "FR",
+                },
+            ],
         ];
         for (const [kind, incomplete] of cases) {
             const harness = await createHarness();
@@ -1553,11 +1690,16 @@ describe("mondial-relay 1.0.0 source", () => {
             const response = await saveRelaySelection(harness, {
                 ...base,
                 externalOrderId: `order-incomplete-${kind}`,
-                relayLocation: "FR-034439", country: "FR", postalCode: "75001", city: "Paris",
+                relayLocation: "FR-034439",
+                country: "FR",
+                postalCode: "75001",
+                city: "Paris",
                 ...(kind === "buyer" ? { recipientSnapshot: incomplete } : { sellerFulfillmentSnapshot: incomplete }),
             });
             expect(response.status).toBe(409);
-            expect(harness.deliveryQuotes.filter(row => row.external_order_id === `order-incomplete-${kind}`)).toHaveLength(0);
+            expect(
+                harness.deliveryQuotes.filter((row) => row.external_order_id === `order-incomplete-${kind}`),
+            ).toHaveLength(0);
             expect(harness.connectRequestCount()).toBe(0);
         }
     });
@@ -1566,15 +1708,23 @@ describe("mondial-relay 1.0.0 source", () => {
         const harness = await createHarness();
         harness.deliveryQuotes[0]!.expires_at = "2020-01-01T00:00:00.000Z";
         const expired = await sourceRequest(harness, "resolveDeliveryQuote", {
-            method: "POST", userId: "system", body: {
+            method: "POST",
+            userId: "system",
+            body: {
                 quoteId: harness.deliveryQuotes[0]!.quote_id,
-                externalOrderId: "order-1001", selectedForCmsUserId: "user-123", purpose: "financial_lock",
+                externalOrderId: "order-1001",
+                selectedForCmsUserId: "user-123",
+                purpose: "financial_lock",
             },
         });
         const wrongBuyer = await sourceRequest(harness, "resolveDeliveryQuote", {
-            method: "POST", userId: "system", body: {
+            method: "POST",
+            userId: "system",
+            body: {
                 quoteId: harness.deliveryQuotes[0]!.quote_id,
-                externalOrderId: "order-1001", selectedForCmsUserId: "other-buyer", purpose: "fulfillment",
+                externalOrderId: "order-1001",
+                selectedForCmsUserId: "other-buyer",
+                purpose: "fulfillment",
             },
         });
 
@@ -1622,9 +1772,17 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(body).toEqual(fetched);
 
         harness.deliveryQuotes[0]!.seller_fulfillment_snapshot = {
-            name: "Updated Shop", firstName: "Updated", lastName: "Shop", phone: "+33608138404",
-            addressLine1: "2 Rue Test", addressLine2: "", addressLine3: "",
-            postalCode: "69001", city: "Lyon", country: "FR", email: "sender@example.test",
+            name: "Updated Shop",
+            firstName: "Updated",
+            lastName: "Shop",
+            phone: "+33608138404",
+            addressLine1: "2 Rue Test",
+            addressLine2: "",
+            addressLine3: "",
+            postalCode: "69001",
+            city: "Lyon",
+            country: "FR",
+            email: "sender@example.test",
         };
         (harness.deliveryQuotes[0]!.recipient_snapshot as JsonRecord).phone = "+33608138404";
 
@@ -1751,11 +1909,13 @@ describe("mondial-relay 1.0.0 source", () => {
             expeditionNumber: "87654321",
             status: "created",
         });
-        expect(harness.shipmentRecoveryEvents).toEqual([expect.objectContaining({
-            actor_cms_user_id: "admin-7",
-            previous_status: "unknown",
-            expedition_number: "87654321",
-        })]);
+        expect(harness.shipmentRecoveryEvents).toEqual([
+            expect.objectContaining({
+                actor_cms_user_id: "admin-7",
+                previous_status: "unknown",
+                expedition_number: "87654321",
+            }),
+        ]);
 
         const replay = await sourceRequest(harness, "recoverUnknownShipment", {
             method: "POST",
@@ -1802,30 +1962,26 @@ describe("mondial-relay 1.0.0 source", () => {
         setSystemTime(now);
         try {
             const live = await createHarness();
-            live.insertedShipments.push(inProgressShipment(
-                new Date(now.getTime() - 20 * 60_000 + 1).toISOString(),
-            ));
+            live.insertedShipments.push(inProgressShipment(new Date(now.getTime() - 20 * 60_000 + 1).toISOString()));
             const liveResponse = await createShipment(live, validShipmentBody());
             expect(liveResponse.status).toBe(409);
             expect(await jsonBody(liveResponse)).toEqual({
                 error: "shipment creation is already in progress",
             });
-            expect(live.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            expect(live.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
                 ["GET", "/rest/v1/settings"],
                 ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
             ]);
             expect(live.insertedShipments[0]?.status).toBe("creating");
 
             const stale = await createHarness();
-            stale.insertedShipments.push(inProgressShipment(
-                new Date(now.getTime() - 20 * 60_000).toISOString(),
-            ));
+            stale.insertedShipments.push(inProgressShipment(new Date(now.getTime() - 20 * 60_000).toISOString()));
             const staleResponse = await createShipment(stale, validShipmentBody());
             expect(staleResponse.status).toBe(409);
             expect(await jsonBody(staleResponse)).toEqual({
                 error: "shipment creation outcome is unknown and requires administrator recovery",
             });
-            expect(stale.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+            expect(stale.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
                 ["GET", "/rest/v1/settings"],
                 ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
                 ["PATCH", "/rest/v1/shipments"],
@@ -1838,19 +1994,17 @@ describe("mondial-relay 1.0.0 source", () => {
             expect(stale.providerRequests()).toEqual([]);
 
             for (const option of ["miss", "failure"] as const) {
-                const harness = await createHarness(option === "miss"
-                    ? { shipmentLeasePatchMiss: true }
-                    : { shipmentLeasePatchFailure: true });
-                harness.insertedShipments.push(inProgressShipment(
-                    new Date(now.getTime() - 20 * 60_000).toISOString(),
-                ));
+                const harness = await createHarness(
+                    option === "miss" ? { shipmentLeasePatchMiss: true } : { shipmentLeasePatchFailure: true },
+                );
+                harness.insertedShipments.push(inProgressShipment(new Date(now.getTime() - 20 * 60_000).toISOString()));
                 const response = await createShipment(harness, validShipmentBody());
                 expect(response.status).toBe(409);
                 expect(await jsonBody(response)).toEqual({
                     error: "shipment creation outcome is unknown and requires administrator recovery",
                 });
                 expect(harness.insertedShipments[0]?.status).toBe("creating");
-                expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+                expect(harness.postgrestRequests().map((request) => [request.method, request.pathname])).toEqual([
                     ["GET", "/rest/v1/settings"],
                     ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
                     ["PATCH", "/rest/v1/shipments"],
@@ -1864,31 +2018,51 @@ describe("mondial-relay 1.0.0 source", () => {
 
     test("moves stale creating reservations to visible manual review without retrying the provider", async () => {
         const harness = await createHarness();
-        harness.insertedShipments.push({
-            id: "shipment-stale", external_order_id: "order-stale", idempotency_key: "order-stale",
-            status: "creating", provider_call_started_at: "2020-01-01T00:00:00.000Z",
-            creation_manual_review_at: null, expedition_number: null,
-            created_at: "2020-01-01T00:00:00.000Z", updated_at: "2020-01-01T00:00:00.000Z",
-        }, {
-            id: "shipment-live", external_order_id: "order-live", idempotency_key: "order-live",
-            status: "creating", provider_call_started_at: new Date().toISOString(),
-            creation_manual_review_at: null, expedition_number: null,
-            created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-        });
+        harness.insertedShipments.push(
+            {
+                id: "shipment-stale",
+                external_order_id: "order-stale",
+                idempotency_key: "order-stale",
+                status: "creating",
+                provider_call_started_at: "2020-01-01T00:00:00.000Z",
+                creation_manual_review_at: null,
+                expedition_number: null,
+                created_at: "2020-01-01T00:00:00.000Z",
+                updated_at: "2020-01-01T00:00:00.000Z",
+            },
+            {
+                id: "shipment-live",
+                external_order_id: "order-live",
+                idempotency_key: "order-live",
+                status: "creating",
+                provider_call_started_at: new Date().toISOString(),
+                creation_manual_review_at: null,
+                expedition_number: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            },
+        );
 
         const response = await sourceRequest(harness, "reconcileShipments", {
-            method: "POST", userId: "system", body: { runKey: "creation-lease-audit", limit: 8 },
+            method: "POST",
+            userId: "system",
+            body: { runKey: "creation-lease-audit", limit: 8 },
         });
         const body = await jsonBody(response);
 
         expect(response.status).toBe(200);
-        expect(body.staleCreations).toEqual([expect.objectContaining({
-            id: "shipment-stale", externalOrderId: "order-stale", status: "unknown",
-        })]);
-        expect(harness.insertedShipments.find(row => row.id === "shipment-stale")).toMatchObject({
-            status: "unknown", creation_manual_review_at: expect.any(String),
+        expect(body.staleCreations).toEqual([
+            expect.objectContaining({
+                id: "shipment-stale",
+                externalOrderId: "order-stale",
+                status: "unknown",
+            }),
+        ]);
+        expect(harness.insertedShipments.find((row) => row.id === "shipment-stale")).toMatchObject({
+            status: "unknown",
+            creation_manual_review_at: expect.any(String),
         });
-        expect(harness.insertedShipments.find(row => row.id === "shipment-live")?.status).toBe("creating");
+        expect(harness.insertedShipments.find((row) => row.id === "shipment-live")?.status).toBe("creating");
         expect(harness.connectRequestCount()).toBe(0);
     });
 
@@ -1904,11 +2078,13 @@ describe("mondial-relay 1.0.0 source", () => {
 
         const htmlHarness = await createHarness({ labelContentType: "text/html" });
         await createShipment(htmlHarness, validShipmentBody());
-        const issued = await jsonBody(await sourceRequest(htmlHarness, "issueLabelAccess", {
-            method: "POST",
-            userId: "seller-42",
-            body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
-        }));
+        const issued = await jsonBody(
+            await sourceRequest(htmlHarness, "issueLabelAccess", {
+                method: "POST",
+                userId: "seller-42",
+                body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
+            }),
+        );
         const response = await sourceRequest(htmlHarness, "label", {
             method: "GET",
             userId: "seller-42",
@@ -1918,11 +2094,13 @@ describe("mondial-relay 1.0.0 source", () => {
 
         const redirectHarness = await createHarness({ labelRedirect: true });
         await createShipment(redirectHarness, validShipmentBody());
-        const redirectCapability = await jsonBody(await sourceRequest(redirectHarness, "issueLabelAccess", {
-            method: "POST",
-            userId: "seller-42",
-            body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
-        }));
+        const redirectCapability = await jsonBody(
+            await sourceRequest(redirectHarness, "issueLabelAccess", {
+                method: "POST",
+                userId: "seller-42",
+                body: { externalOrderId: "order-1001", sellerCmsUserId: "seller-42" },
+            }),
+        );
         const redirectResponse = await sourceRequest(redirectHarness, "label", {
             method: "GET",
             userId: "seller-42",
@@ -1932,23 +2110,25 @@ describe("mondial-relay 1.0.0 source", () => {
     });
 });
 
-async function createHarness(options: {
-    connectNetworkError?: boolean;
-    connectRedirect?: boolean;
-    connectStatusCode?: string;
-    connectStatusLevel?: string;
-    connectStatusMessage?: string;
-    connectResponses?: Array<{ code: string; level: string; message: string }>;
-    trackingEventLabel?: string;
-    trackingStatusCode?: string;
-    cancellationRaceOnReconciliation?: "cancelled_unscanned" | "cancelled";
-    trackingRedirect?: boolean;
-    labelUrl?: string;
-    labelContentType?: string;
-    labelRedirect?: boolean;
-    shipmentLeasePatchMiss?: boolean;
-    shipmentLeasePatchFailure?: boolean;
-} = {}) {
+async function createHarness(
+    options: {
+        connectNetworkError?: boolean;
+        connectRedirect?: boolean;
+        connectStatusCode?: string;
+        connectStatusLevel?: string;
+        connectStatusMessage?: string;
+        connectResponses?: Array<{ code: string; level: string; message: string }>;
+        trackingEventLabel?: string;
+        trackingStatusCode?: string;
+        cancellationRaceOnReconciliation?: "cancelled_unscanned" | "cancelled";
+        trackingRedirect?: boolean;
+        labelUrl?: string;
+        labelContentType?: string;
+        labelRedirect?: boolean;
+        shipmentLeasePatchMiss?: boolean;
+        shipmentLeasePatchFailure?: boolean;
+    } = {},
+) {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
     const roles = new InMemoryRolesRepository();
@@ -1970,8 +2150,12 @@ async function createHarness(options: {
         },
     };
 
-    const hydratedDefinition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mondial-relay");
-    if (!hydratedDefinition) throw new Error("mondial-relay definition not found");
+    const hydratedDefinition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
+        "mondial-relay",
+    );
+    if (!hydratedDefinition) {
+        throw new Error("mondial-relay definition not found");
+    }
     const result = await importIntegration(
         {
             sources,
@@ -1993,7 +2177,10 @@ async function createHarness(options: {
     activeEnv = {
         ...Object.fromEntries(Object.entries(functionSecrets).map(([key, value]) => [key, String(value)])),
         SUPABASE_URL: supabaseUrl,
-        SUPABASE_SECRET_KEYS: JSON.stringify({ default: "sb_secret_delivery_test", secondary: "sb_secret_delivery_secondary" }),
+        SUPABASE_SECRET_KEYS: JSON.stringify({
+            default: "sb_secret_delivery_test",
+            secondary: "sb_secret_delivery_secondary",
+        }),
         SUPABASE_SERVICE_ROLE_KEY: "legacy-service-role-key",
     };
 
@@ -2030,7 +2217,9 @@ async function createHarness(options: {
             providerRequests.push(observed);
             fetchTimeline.push({ kind: "provider", method, pathname: url.pathname });
         }
-        if (url.origin !== supabaseUrl) upstreamRequestUrls.push(request.url);
+        if (url.origin !== supabaseUrl) {
+            upstreamRequestUrls.push(request.url);
+        }
 
         if (url.origin === "https://widget.mondialrelay.com" && url.pathname.endsWith("/SearchPR")) {
             relayLookupUrl = url;
@@ -2040,16 +2229,24 @@ async function createHarness(options: {
             connectRequestXml = requestBody;
             connectRequestCount += 1;
             connectRequestRedirect = request.redirect;
-            if (options.connectNetworkError) throw new TypeError("network unavailable");
+            if (options.connectNetworkError) {
+                throw new TypeError("network unavailable");
+            }
             if (options.connectRedirect) {
                 return new Response(null, { status: 302, headers: { location: "http://127.0.0.1/private" } });
             }
             const configured = options.connectResponses?.[connectRequestCount - 1];
-            return xmlResponse(connectShipmentResponse(configured ? {
-                connectStatusCode: configured.code,
-                connectStatusLevel: configured.level,
-                connectStatusMessage: configured.message,
-            } : options));
+            return xmlResponse(
+                connectShipmentResponse(
+                    configured
+                        ? {
+                              connectStatusCode: configured.code,
+                              connectStatusLevel: configured.level,
+                              connectStatusMessage: configured.message,
+                          }
+                        : options,
+                ),
+            );
         }
         if (request.url === trackingEndpoint) {
             trackingRequestXml = requestBody;
@@ -2060,8 +2257,10 @@ async function createHarness(options: {
             }
             return xmlResponse(trackingResponse(options.trackingEventLabel, options.trackingStatusCode));
         }
-        if (url.origin === "https://connect-api-sandbox.mondialrelay.com"
-            || url.origin === "https://connect-sandbox.mondialrelay.com") {
+        if (
+            url.origin === "https://connect-api-sandbox.mondialrelay.com" ||
+            url.origin === "https://connect-sandbox.mondialrelay.com"
+        ) {
             if (options.labelRedirect) {
                 return new Response(null, { status: 302, headers: { location: "http://127.0.0.1/private" } });
             }
@@ -2078,19 +2277,26 @@ async function createHarness(options: {
                 expect(request.headers.get("content-profile")).toBe("delivery");
             }
         }
-        if (url.origin === supabaseUrl
-            && url.pathname === "/rest/v1/rpc/reserve_shipment_creation"
-            && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/reserve_shipment_creation" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
             const reservation = body.p_reservation as JsonRecord;
             const validationError = shipmentReservationError(body, deliveryQuotes, relaySelections);
-            if (validationError) return jsonResponse({ message: `conflict: ${validationError}` }, 409);
-            const existing = insertedShipments.find(row => row.idempotency_key === reservation.idempotency_key);
+            if (validationError) {
+                return jsonResponse({ message: `conflict: ${validationError}` }, 409);
+            }
+            const existing = insertedShipments.find((row) => row.idempotency_key === reservation.idempotency_key);
             if (existing) {
                 if (stableJson(existing.raw_request) !== stableJson(reservation.raw_request)) {
-                    return jsonResponse({
-                        message: "conflict: idempotency key was already used with a different shipment payload",
-                    }, 409);
+                    return jsonResponse(
+                        {
+                            message: "conflict: idempotency key was already used with a different shipment payload",
+                        },
+                        409,
+                    );
                 }
                 if (existing.status === "failed") {
                     const { id: _id, idempotency_key: _key, ...retryReservation } = reservation;
@@ -2119,7 +2325,7 @@ async function createHarness(options: {
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/shipments" && method === "POST") {
             const row = JSON.parse(requestBody) as JsonRecord;
-            const duplicate = insertedShipments.some(item => item.idempotency_key === row.idempotency_key);
+            const duplicate = insertedShipments.some((item) => item.idempotency_key === row.idempotency_key);
             if (duplicate && request.headers.get("prefer")?.includes("resolution=ignore-duplicates")) {
                 return jsonResponse([], 200);
             }
@@ -2135,18 +2341,23 @@ async function createHarness(options: {
             const patch = JSON.parse(requestBody) as JsonRecord;
             const id = url.searchParams.get("id")?.replace(/^eq\./, "");
             const status = url.searchParams.get("status")?.replace(/^eq\./, "");
-            const isShipmentLeaseExpiry = status === "creating"
-                && patch.status === "unknown"
-                && patch.last_error === "shipment creation lease expired before a provider outcome was attached";
+            const isShipmentLeaseExpiry =
+                status === "creating" &&
+                patch.status === "unknown" &&
+                patch.last_error === "shipment creation lease expired before a provider outcome was attached";
             if (isShipmentLeaseExpiry && options.shipmentLeasePatchFailure) {
                 return jsonResponse({ message: "private shipment lease update failure" }, 500);
             }
-            if (isShipmentLeaseExpiry && options.shipmentLeasePatchMiss) return jsonResponse([], 200);
-            if (!cancellationRaceInjected
-                && options.cancellationRaceOnReconciliation
-                && patch.tracking_checked_at
-                && id) {
-                const racingRow = insertedShipments.find(item => item.id === id && item.status === status);
+            if (isShipmentLeaseExpiry && options.shipmentLeasePatchMiss) {
+                return jsonResponse([], 200);
+            }
+            if (
+                !cancellationRaceInjected &&
+                options.cancellationRaceOnReconciliation &&
+                patch.tracking_checked_at &&
+                id
+            ) {
+                const racingRow = insertedShipments.find((item) => item.id === id && item.status === status);
                 if (racingRow) {
                     Object.assign(racingRow, {
                         status: options.cancellationRaceOnReconciliation,
@@ -2156,10 +2367,12 @@ async function createHarness(options: {
                     cancellationRaceInjected = true;
                 }
             }
-            const index = insertedShipments.findIndex(item =>
-                (!id || item.id === id) && (!status || item.status === status)
+            const index = insertedShipments.findIndex(
+                (item) => (!id || item.id === id) && (!status || item.status === status),
             );
-            if (index < 0) return jsonResponse([], 200);
+            if (index < 0) {
+                return jsonResponse([], 200);
+            }
             const stored = {
                 ...insertedShipments[index],
                 ...patch,
@@ -2170,41 +2383,59 @@ async function createHarness(options: {
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/relay_selections" && method === "POST") {
             const row = JSON.parse(requestBody) as JsonRecord;
-            const index = relaySelections.findIndex(item => item.external_order_id === row.external_order_id);
+            const index = relaySelections.findIndex((item) => item.external_order_id === row.external_order_id);
             const stored = {
                 ...(index >= 0 ? relaySelections[index] : {}),
                 ...row,
                 created_at: index >= 0 ? relaySelections[index]?.created_at : "2026-07-02T10:00:00.000Z",
                 updated_at: "2026-07-02T10:05:00.000Z",
             };
-            if (index >= 0) relaySelections[index] = stored;
-            else relaySelections.push(stored);
+            if (index >= 0) {
+                relaySelections[index] = stored;
+            } else {
+                relaySelections.push(stored);
+            }
             return jsonResponse(projectRows(url, [stored]), 201);
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/relay_selections" && method === "GET") {
             const externalOrderId = url.searchParams.get("external_order_id")?.replace(/^eq\./, "");
-            return jsonResponse(projectRows(
-                url,
-                relaySelections.filter(row => !externalOrderId || row.external_order_id === externalOrderId),
-            ), 200);
+            return jsonResponse(
+                projectRows(
+                    url,
+                    relaySelections.filter((row) => !externalOrderId || row.external_order_id === externalOrderId),
+                ),
+                200,
+            );
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/delivery_quotes" && method === "GET") {
             const quoteId = url.searchParams.get("quote_id")?.replace(/^eq\./, "");
             const externalOrderId = url.searchParams.get("external_order_id")?.replace(/^eq\./, "");
             const selectedFor = url.searchParams.get("selected_for_cms_user_id")?.replace(/^eq\./, "");
-            return jsonResponse(projectRows(url, deliveryQuotes.filter(row =>
-                (!quoteId || row.quote_id === quoteId)
-                && (!externalOrderId || row.external_order_id === externalOrderId)
-                && (!selectedFor || row.selected_for_cms_user_id === selectedFor)
-            )), 200);
+            return jsonResponse(
+                projectRows(
+                    url,
+                    deliveryQuotes.filter(
+                        (row) =>
+                            (!quoteId || row.quote_id === quoteId) &&
+                            (!externalOrderId || row.external_order_id === externalOrderId) &&
+                            (!selectedFor || row.selected_for_cms_user_id === selectedFor),
+                    ),
+                ),
+                200,
+            );
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/reserve_delivery_quote" && method === "POST") {
             const body = JSON.parse(requestBody) as JsonRecord;
-            const existing = deliveryQuotes.find(row => row.request_key === body.p_request_key);
+            const existing = deliveryQuotes.find((row) => row.request_key === body.p_request_key);
             if (existing) {
-                if (existing.request_snapshot !== undefined
-                    && JSON.stringify(existing.request_snapshot) !== JSON.stringify(body.p_request_snapshot)) {
-                    return jsonResponse({ message: "conflict: delivery quote request replay changed immutable input" }, 409);
+                if (
+                    existing.request_snapshot !== undefined &&
+                    JSON.stringify(existing.request_snapshot) !== JSON.stringify(body.p_request_snapshot)
+                ) {
+                    return jsonResponse(
+                        { message: "conflict: delivery quote request replay changed immutable input" },
+                        409,
+                    );
                 }
                 return jsonResponse(existing, 200);
             }
@@ -2214,7 +2445,7 @@ async function createHarness(options: {
                 request_key: body.p_request_key,
                 external_order_id: body.p_external_order_id,
                 order_version: body.p_order_version,
-                revision: deliveryQuotes.filter(row => row.external_order_id === body.p_external_order_id).length + 1,
+                revision: deliveryQuotes.filter((row) => row.external_order_id === body.p_external_order_id).length + 1,
                 selected_by: body.p_selected_by,
                 selected_for_cms_user_id: body.p_selected_for_cms_user_id,
                 relay_location: body.p_relay_location,
@@ -2262,10 +2493,11 @@ async function createHarness(options: {
             const id = url.searchParams.get("id")?.replace(/^eq\./, "");
             const externalOrderId = url.searchParams.get("external_order_id")?.replace(/^eq\./, "");
             const expeditionNumber = url.searchParams.get("expedition_number")?.replace(/^eq\./, "");
-            const rows = insertedShipments.filter(row =>
-                (!id || row.id === id)
-                && (!externalOrderId || row.external_order_id === externalOrderId)
-                && (!expeditionNumber || row.expedition_number === expeditionNumber)
+            const rows = insertedShipments.filter(
+                (row) =>
+                    (!id || row.id === id) &&
+                    (!externalOrderId || row.external_order_id === externalOrderId) &&
+                    (!expeditionNumber || row.expedition_number === expeditionNumber),
             );
             if (url.searchParams.get("order") === "created_at.desc") {
                 rows.sort((left, right) => timestamp(right.created_at) - timestamp(left.created_at));
@@ -2274,14 +2506,16 @@ async function createHarness(options: {
             const eventFields = embeddedFields(fields, "events:shipment_events");
             if (eventFields.length) {
                 for (const [index, row] of rows.entries()) {
-                    if (!projected[index]) break;
+                    if (!projected[index]) {
+                        break;
+                    }
                     projected[index]!.events = shipmentEvents
-                        .filter(event => event.shipment_id === row.id)
+                        .filter((event) => event.shipment_id === row.id)
                         .sort((left, right) => {
                             const occurred = nullableTimestampDescending(left.occurred_at, right.occurred_at);
                             return occurred || timestamp(right.created_at) - timestamp(left.created_at);
                         })
-                        .map(event => projectRecord(event, eventFields));
+                        .map((event) => projectRecord(event, eventFields));
                 }
             }
             return jsonResponse(projected, 200);
@@ -2292,85 +2526,130 @@ async function createHarness(options: {
             const limit = Number(body.p_limit ?? 24);
             expect(workerId.length).toBeGreaterThan(0);
             const due = insertedShipments
-                .filter(row => Boolean(row.expedition_number)
-                    && !row.tracking_claimed_at
-                    && !row.tracking_checked_at
-                    && !["collected_by_recipient", "lost", "returned_to_sender", "cancelled"].includes(String(row.status)))
+                .filter(
+                    (row) =>
+                        Boolean(row.expedition_number) &&
+                        !row.tracking_claimed_at &&
+                        !row.tracking_checked_at &&
+                        !["collected_by_recipient", "lost", "returned_to_sender", "cancelled"].includes(
+                            String(row.status),
+                        ),
+                )
                 .slice(0, limit);
-            for (const row of due) Object.assign(row, {
-                tracking_claimed_at: "2026-07-12T11:00:00.000Z",
-                tracking_claimed_by: workerId,
-            });
+            for (const row of due) {
+                Object.assign(row, {
+                    tracking_claimed_at: "2026-07-12T11:00:00.000Z",
+                    tracking_claimed_by: workerId,
+                });
+            }
             return jsonResponse(due, 200);
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/mark_stale_shipment_creations_unknown" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/mark_stale_shipment_creations_unknown" &&
+            method === "POST"
+        ) {
             const limit = Number((JSON.parse(requestBody) as JsonRecord).p_limit ?? 24);
-            const rows = insertedShipments.filter(row => row.status === "creating"
-                && Date.parse(String(row.provider_call_started_at ?? "")) <= Date.now() - 20 * 60_000).slice(0, limit);
-            for (const row of rows) Object.assign(row, {
-                status: "unknown",
-                creation_manual_review_at: "2026-07-13T12:00:00.000Z",
-                last_error: "shipment creation lease expired before a provider outcome was attached",
-            });
+            const rows = insertedShipments
+                .filter(
+                    (row) =>
+                        row.status === "creating" &&
+                        Date.parse(String(row.provider_call_started_at ?? "")) <= Date.now() - 20 * 60_000,
+                )
+                .slice(0, limit);
+            for (const row of rows) {
+                Object.assign(row, {
+                    status: "unknown",
+                    creation_manual_review_at: "2026-07-13T12:00:00.000Z",
+                    last_error: "shipment creation lease expired before a provider outcome was attached",
+                });
+            }
             return jsonResponse(rows, 200);
         }
-        if (url.origin === supabaseUrl
-            && url.pathname === "/rest/v1/rpc/declare_seller_handoff"
-            && method === "POST") {
+        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/declare_seller_handoff" && method === "POST") {
             const body = JSON.parse(requestBody) as JsonRecord;
             const actor = String(body.p_seller_cms_user_id ?? "").trim();
             if (!actor) {
-                return jsonResponse({
-                    message: "validation: seller CMS user id is required",
-                }, 400);
+                return jsonResponse(
+                    {
+                        message: "validation: seller CMS user id is required",
+                    },
+                    400,
+                );
             }
-            const row = insertedShipments.find(item =>
-                item.external_order_id === body.p_external_order_id
-                && item.seller_cms_user_id === actor
+            const row = insertedShipments.find(
+                (item) => item.external_order_id === body.p_external_order_id && item.seller_cms_user_id === actor,
             );
             if (!row) {
-                return jsonResponse({
-                    message: "not_found: shipment not found",
-                }, 404);
+                return jsonResponse(
+                    {
+                        message: "not_found: shipment not found",
+                    },
+                    404,
+                );
             }
             if (!row.seller_handoff_declared_at) {
                 if (row.carrier_accepted_at || row.status !== "label_ready") {
-                    return jsonResponse({
-                        message: "conflict: seller handoff cannot be declared for the current shipment state",
-                    }, 409);
+                    return jsonResponse(
+                        {
+                            message: "conflict: seller handoff cannot be declared for the current shipment state",
+                        },
+                        409,
+                    );
                 }
                 row.seller_handoff_declared_at = new Date().toISOString();
             }
-            return jsonResponse({
-                id: row.id,
-                external_order_id: row.external_order_id,
-                expedition_number: row.expedition_number,
-                status: row.status,
-                carrier_accepted_at: row.carrier_accepted_at,
-                recipient_handoff_at: row.recipient_handoff_at,
-                seller_handoff_declared_at: row.seller_handoff_declared_at,
-            }, 200);
+            return jsonResponse(
+                {
+                    id: row.id,
+                    external_order_id: row.external_order_id,
+                    expedition_number: row.expedition_number,
+                    status: row.status,
+                    carrier_accepted_at: row.carrier_accepted_at,
+                    recipient_handoff_at: row.recipient_handoff_at,
+                    seller_handoff_declared_at: row.seller_handoff_declared_at,
+                },
+                200,
+            );
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/cancel_shipment_unscanned" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/cancel_shipment_unscanned" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
-            const row = insertedShipments.find(item => item.external_order_id === body.p_external_order_id);
-            if (!row) return jsonResponse({ message: "not_found: shipment" }, 404);
+            const row = insertedShipments.find((item) => item.external_order_id === body.p_external_order_id);
+            if (!row) {
+                return jsonResponse({ message: "not_found: shipment" }, 404);
+            }
             if (["cancelled_unscanned", "cancelled"].includes(String(row.status))) {
                 if (String(body.p_tracking_until ?? "") !== String(row.cancellation_tracking_until ?? "")) {
-                    return jsonResponse({ message: "conflict: cancellation replay changed the tracking deadline" }, 409);
+                    return jsonResponse(
+                        { message: "conflict: cancellation replay changed the tracking deadline" },
+                        409,
+                    );
                 }
                 return jsonResponse({ ...row, idempotentReplay: true }, 200);
             }
             const trackingUntil = Date.parse(String(body.p_tracking_until ?? ""));
             if (!Number.isFinite(trackingUntil) || trackingUntil <= Date.now()) {
-                return jsonResponse({ message: "validation: cancellation tracking deadline must be in the future" }, 400);
+                return jsonResponse(
+                    { message: "validation: cancellation tracking deadline must be in the future" },
+                    400,
+                );
             }
             if (row.tracking_claimed_at && Date.parse(String(row.tracking_claimed_at)) > Date.now() - 20 * 60_000) {
                 return jsonResponse({ message: "conflict: active carrier reconciliation prevents cancellation" }, 409);
             }
-            if (row.seller_handoff_declared_at || row.carrier_accepted_at
-                || !["created", "label_ready", "failed", "cancelled_unscanned", "cancelled"].includes(String(row.status))) {
-                return jsonResponse({ message: "conflict: shipment can no longer be cancelled before carrier reconciliation" }, 409);
+            if (
+                row.seller_handoff_declared_at ||
+                row.carrier_accepted_at ||
+                !["created", "label_ready", "failed", "cancelled_unscanned", "cancelled"].includes(String(row.status))
+            ) {
+                return jsonResponse(
+                    { message: "conflict: shipment can no longer be cancelled before carrier reconciliation" },
+                    409,
+                );
             }
             Object.assign(row, {
                 status: "cancelled_unscanned",
@@ -2380,7 +2659,7 @@ async function createHarness(options: {
                 tracking_claimed_by: null,
                 last_error: null,
             });
-            for (const token of labelAccessTokens.filter(item => item.shipment_id === row.id && !item.revoked_at)) {
+            for (const token of labelAccessTokens.filter((item) => item.shipment_id === row.id && !item.revoked_at)) {
                 token.revoked_at = "2026-07-12T11:00:00.000Z";
             }
             return jsonResponse({ ...row, idempotentReplay: false }, 200);
@@ -2389,93 +2668,155 @@ async function createHarness(options: {
             const shipmentId = url.searchParams.get("shipment_id")?.replace(/^eq\./, "");
             const pendingOnly = url.searchParams.get("commerce_projected_at") === "is.null";
             const normalizedOnly = url.searchParams.get("normalized_status") === "not.is.null";
-            const projectionStatuses = /^in\.\((.+)\)$/.exec(url.searchParams.get("projection_status") ?? "")?.[1]?.split(",");
-            return jsonResponse(projectRows(url, shipmentEvents.filter(row =>
-                (!shipmentId || row.shipment_id === shipmentId)
-                && (!pendingOnly || !row.commerce_projected_at)
-                && (!normalizedOnly || Boolean(row.normalized_status))
-                && (!projectionStatuses || projectionStatuses.includes(String(row.projection_status)))
-            )), 200);
+            const projectionStatuses = /^in\.\((.+)\)$/
+                .exec(url.searchParams.get("projection_status") ?? "")?.[1]
+                ?.split(",");
+            return jsonResponse(
+                projectRows(
+                    url,
+                    shipmentEvents.filter(
+                        (row) =>
+                            (!shipmentId || row.shipment_id === shipmentId) &&
+                            (!pendingOnly || !row.commerce_projected_at) &&
+                            (!normalizedOnly || Boolean(row.normalized_status)) &&
+                            (!projectionStatuses || projectionStatuses.includes(String(row.projection_status))),
+                    ),
+                ),
+                200,
+            );
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/shipment_events" && method === "POST") {
             const rows = JSON.parse(requestBody) as JsonRecord[];
             for (const row of rows) {
-                const index = shipmentEvents.findIndex(item =>
-                    item.shipment_id === row.shipment_id && item.provider_event_key === row.provider_event_key
+                const index = shipmentEvents.findIndex(
+                    (item) =>
+                        item.shipment_id === row.shipment_id && item.provider_event_key === row.provider_event_key,
                 );
                 const stored = {
-                    projection_status: "pending", projection_attempts: 0,
+                    projection_status: "pending",
+                    projection_attempts: 0,
                     projection_next_attempt_at: "2026-07-12T11:31:00.000Z",
-                    projection_claimed_at: null, projection_claimed_by: null, projection_claim_token: null,
-                    projection_last_error: null, projection_manual_review_at: null,
-                    ...(index >= 0 ? shipmentEvents[index] : {}), ...row,
+                    projection_claimed_at: null,
+                    projection_claimed_by: null,
+                    projection_claim_token: null,
+                    projection_last_error: null,
+                    projection_manual_review_at: null,
+                    ...(index >= 0 ? shipmentEvents[index] : {}),
+                    ...row,
                     id: index >= 0 ? shipmentEvents[index]?.id : shipmentEvents.length + 1,
                     created_at: "2026-07-12T11:31:00.000Z",
                 };
-                if (index >= 0) shipmentEvents[index] = stored;
-                else shipmentEvents.push(stored);
+                if (index >= 0) {
+                    shipmentEvents[index] = stored;
+                } else {
+                    shipmentEvents.push(stored);
+                }
             }
             return new Response(null, { status: 204 });
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/claim_pending_shipment_events" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/claim_pending_shipment_events" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
             const workerId = String(body.p_worker_id ?? "");
             const limit = Number(body.p_limit ?? 12);
-            for (const row of shipmentEvents.filter(item => item.projection_status === "processing"
-                && item.projection_claimed_at === "stale")) {
+            for (const row of shipmentEvents.filter(
+                (item) => item.projection_status === "processing" && item.projection_claimed_at === "stale",
+            )) {
                 const manual = Number(row.projection_attempts ?? 0) >= Number(body.p_max_attempts ?? 5);
                 Object.assign(row, {
                     projection_status: manual ? "manual_review" : "retry_wait",
-                    projection_claimed_at: null, projection_claimed_by: null, projection_claim_token: null,
+                    projection_claimed_at: null,
+                    projection_claimed_by: null,
+                    projection_claim_token: null,
                     projection_last_error: "projection lease expired before acknowledgement",
                     projection_manual_review_at: manual ? "2026-07-12T11:32:00.000Z" : null,
                 });
             }
-            const claimed = shipmentEvents.filter(row => Boolean(row.normalized_status)
-                && !row.commerce_projected_at
-                && ["pending", "retry_wait"].includes(String(row.projection_status)))
+            const claimed = shipmentEvents
+                .filter(
+                    (row) =>
+                        Boolean(row.normalized_status) &&
+                        !row.commerce_projected_at &&
+                        ["pending", "retry_wait"].includes(String(row.projection_status)),
+                )
                 .slice(0, limit);
-            for (const row of claimed) Object.assign(row, {
-                projection_status: "processing",
-                projection_attempts: Number(row.projection_attempts ?? 0) + 1,
-                projection_claimed_at: "2026-07-12T11:32:00.000Z",
-                projection_claimed_by: workerId,
-                projection_claim_token: `00000000-0000-4000-8000-${String(row.id).padStart(6, "0")}${String(Number(row.projection_attempts ?? 0) + 1).padStart(6, "0")}`,
-                projection_last_error: null,
-            });
+            for (const row of claimed) {
+                Object.assign(row, {
+                    projection_status: "processing",
+                    projection_attempts: Number(row.projection_attempts ?? 0) + 1,
+                    projection_claimed_at: "2026-07-12T11:32:00.000Z",
+                    projection_claimed_by: workerId,
+                    projection_claim_token: `00000000-0000-4000-8000-${String(row.id).padStart(6, "0")}${String(Number(row.projection_attempts ?? 0) + 1).padStart(6, "0")}`,
+                    projection_last_error: null,
+                });
+            }
             return jsonResponse(claimed, 200);
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/complete_shipment_event_projection" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/complete_shipment_event_projection" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
-            const row = shipmentEvents.find(item => item.id === body.p_event_id
-                && item.projection_claim_token === body.p_claim_token && item.projection_status === "processing");
-            if (!row) return jsonResponse(false, 200);
+            const row = shipmentEvents.find(
+                (item) =>
+                    item.id === body.p_event_id &&
+                    item.projection_claim_token === body.p_claim_token &&
+                    item.projection_status === "processing",
+            );
+            if (!row) {
+                return jsonResponse(false, 200);
+            }
             Object.assign(row, {
-                commerce_projected_at: "2026-07-12T11:33:00.000Z", projection_status: "projected",
-                projection_claimed_at: null, projection_claimed_by: null, projection_claim_token: null,
+                commerce_projected_at: "2026-07-12T11:33:00.000Z",
+                projection_status: "projected",
+                projection_claimed_at: null,
+                projection_claimed_by: null,
+                projection_claim_token: null,
                 projection_last_error: null,
             });
             return jsonResponse(true, 200);
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/fail_shipment_event_projection" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/fail_shipment_event_projection" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
-            const row = shipmentEvents.find(item => item.id === body.p_event_id
-                && item.projection_claim_token === body.p_claim_token && item.projection_status === "processing");
-            if (!row) return jsonResponse({ message: "projection lease mismatch" }, 409);
+            const row = shipmentEvents.find(
+                (item) =>
+                    item.id === body.p_event_id &&
+                    item.projection_claim_token === body.p_claim_token &&
+                    item.projection_status === "processing",
+            );
+            if (!row) {
+                return jsonResponse({ message: "projection lease mismatch" }, 409);
+            }
             const manual = Number(row.projection_attempts) >= Number(body.p_max_attempts ?? 5);
             Object.assign(row, {
                 projection_status: manual ? "manual_review" : "retry_wait",
                 projection_next_attempt_at: "2026-07-12T11:34:00.000Z",
-                projection_claimed_at: null, projection_claimed_by: null, projection_claim_token: null,
+                projection_claimed_at: null,
+                projection_claimed_by: null,
+                projection_claim_token: null,
                 projection_last_error: body.p_error,
                 projection_manual_review_at: manual ? "2026-07-12T11:33:00.000Z" : null,
             });
             return jsonResponse(row, 200);
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/review_shipment_event_projection" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/review_shipment_event_projection" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
-            const row = shipmentEvents.find(item => item.id === body.p_event_id);
-            if (!row) return jsonResponse({ message: "not_found: shipment event" }, 404);
+            const row = shipmentEvents.find((item) => item.id === body.p_event_id);
+            if (!row) {
+                return jsonResponse({ message: "not_found: shipment event" }, 404);
+            }
             if (row.projection_status !== "manual_review") {
                 return jsonResponse({ message: "conflict: only a manual-review projection can be reviewed" }, 409);
             }
@@ -2498,16 +2839,27 @@ async function createHarness(options: {
             const patch = JSON.parse(requestBody) as JsonRecord;
             const orderPublicId = url.searchParams.get("order_public_id")?.replace(/^eq\./, "");
             const providerEventKey = url.searchParams.get("provider_event_key")?.replace(/^eq\./, "");
-            const rows = shipmentEvents.filter(row =>
-                row.order_public_id === orderPublicId && row.provider_event_key === providerEventKey && !row.commerce_projected_at
+            const rows = shipmentEvents.filter(
+                (row) =>
+                    row.order_public_id === orderPublicId &&
+                    row.provider_event_key === providerEventKey &&
+                    !row.commerce_projected_at,
             );
-            for (const row of rows) Object.assign(row, patch);
+            for (const row of rows) {
+                Object.assign(row, patch);
+            }
             return jsonResponse(projectRows(url, rows), 200);
         }
-        if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/issue_label_access_token" && method === "POST") {
+        if (
+            url.origin === supabaseUrl &&
+            url.pathname === "/rest/v1/rpc/issue_label_access_token" &&
+            method === "POST"
+        ) {
             const body = JSON.parse(requestBody) as JsonRecord;
-            const shipment = insertedShipments.find(item => item.external_order_id === body.p_external_order_id);
-            if (!shipment) return jsonResponse({ message: "not_found: shipment" }, 404);
+            const shipment = insertedShipments.find((item) => item.external_order_id === body.p_external_order_id);
+            if (!shipment) {
+                return jsonResponse({ message: "not_found: shipment" }, 404);
+            }
             if (shipment.seller_cms_user_id !== body.p_seller_cms_user_id) {
                 return jsonResponse({ message: "not_found: shipment" }, 404);
             }
@@ -2528,9 +2880,17 @@ async function createHarness(options: {
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/label_access_tokens" && method === "GET") {
             const tokenHash = url.searchParams.get("token_hash")?.replace(/^eq\./, "");
             const seller = url.searchParams.get("seller_cms_user_id")?.replace(/^eq\./, "");
-            return jsonResponse(projectRows(url, labelAccessTokens.filter(row =>
-                (!tokenHash || row.token_hash === tokenHash) && (!seller || row.seller_cms_user_id === seller)
-            )), 200);
+            return jsonResponse(
+                projectRows(
+                    url,
+                    labelAccessTokens.filter(
+                        (row) =>
+                            (!tokenHash || row.token_hash === tokenHash) &&
+                            (!seller || row.seller_cms_user_id === seller),
+                    ),
+                ),
+                200,
+            );
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/shipment_recovery_events" && method === "POST") {
             shipmentRecoveryEvents.push(JSON.parse(requestBody) as JsonRecord);
@@ -2560,9 +2920,9 @@ async function createHarness(options: {
         trackingRequestCount: () => trackingRequestCount,
         trackingRequestRedirect: () => trackingRequestRedirect,
         upstreamRequestUrls: () => [...upstreamRequestUrls],
-        postgrestRequests: () => postgrestRequests.map(request => ({ ...request })),
-        providerRequests: () => providerRequests.map(request => ({ ...request })),
-        fetchTimeline: () => fetchTimeline.map(step => ({ ...step })),
+        postgrestRequests: () => postgrestRequests.map((request) => ({ ...request })),
+        providerRequests: () => providerRequests.map((request) => ({ ...request })),
+        fetchTimeline: () => fetchTimeline.map((step) => ({ ...step })),
         resetRequestHistory() {
             postgrestRequests.length = 0;
             providerRequests.length = 0;
@@ -2581,18 +2941,22 @@ async function createHarness(options: {
                 }
                 return await handler(request);
             } catch (error) {
-                return new Response(error instanceof Error ? error.stack ?? error.message : String(error), { status: 599 });
+                return new Response(error instanceof Error ? (error.stack ?? error.message) : String(error), {
+                    status: 599,
+                });
             }
         },
         async resolveSecret(ref: string): Promise<string | undefined> {
             const key = secretRefToKey(ref) ?? ref;
-            return await secrets.get(key) ?? undefined;
+            return (await secrets.get(key)) ?? undefined;
         },
     };
 }
 
 function requestFromFetchInput(input: RequestInfo | URL, init?: RequestInit): Request {
-    if (input instanceof Request && !init) return input;
+    if (input instanceof Request && !init) {
+        return input;
+    }
     return new Request(input instanceof Request ? input.url : String(input), {
         method: init?.method ?? (input instanceof Request ? input.method : undefined),
         headers: init?.headers ?? (input instanceof Request ? input.headers : undefined),
@@ -2601,19 +2965,16 @@ function requestFromFetchInput(input: RequestInfo | URL, init?: RequestInit): Re
     });
 }
 
-function observeFetchRequest(
-    request: Request,
-    url: URL,
-    method: string,
-    requestBody: string,
-): ObservedFetchRequest {
+function observeFetchRequest(request: Request, url: URL, method: string, requestBody: string): ObservedFetchRequest {
     const observed: ObservedFetchRequest = {
         method,
         url: request.url,
         pathname: url.pathname,
         searchParams: Object.fromEntries(url.searchParams),
     };
-    if (!requestBody) return observed;
+    if (!requestBody) {
+        return observed;
+    }
     try {
         observed.body = JSON.parse(requestBody) as unknown;
     } catch {
@@ -2622,33 +2983,37 @@ function observeFetchRequest(
     return observed;
 }
 
-async function relayPoints(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, params: Record<string, string>): Promise<Response> {
+async function relayPoints(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    params: Record<string, string>,
+): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}delivery/relayPoints`);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-    return await handleSourceRequest(
-        harness.sources,
-        new Request(url),
-        {
-            prefix: sourcePrefix,
-            deps: {
-                fetchImpl: harness.sourceFetch,
-                resolveSecret: harness.resolveSecret,
-                resolveContext: async () => ({ userID: "user-123" }),
-                responseProjectionMode: "strict",
-            },
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
+    return await handleSourceRequest(harness.sources, new Request(url), {
+        prefix: sourcePrefix,
+        deps: {
+            fetchImpl: harness.sourceFetch,
+            resolveSecret: harness.resolveSecret,
+            resolveContext: async () => ({ userID: "user-123" }),
+            responseProjectionMode: "strict",
         },
-    );
+    });
 }
 
-async function createShipment(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, body: JsonRecord): Promise<Response> {
+async function createShipment(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    body: JsonRecord,
+): Promise<Response> {
     return await handleSourceRequest(
         harness.sources,
         new Request(`http://cms.local${sourcePrefix}delivery/createShipment`, {
@@ -2668,77 +3033,107 @@ async function createShipment(harness: {
     );
 }
 
-async function edgeCreateShipment(harness: {
-    edgeRequest(request: Request): Promise<Response>;
-}, body: JsonRecord): Promise<Response> {
-    return await harness.edgeRequest(new Request(`${functionsBaseUrl}/cms-delivery/shipments`, {
-        method: "POST",
-        headers: {
-            authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}`,
-            "content-type": "application/json",
-            "x-cms-user-id": "user-123",
-        },
-        body: JSON.stringify(body),
-    }));
+async function edgeCreateShipment(
+    harness: {
+        edgeRequest(request: Request): Promise<Response>;
+    },
+    body: JsonRecord,
+): Promise<Response> {
+    return await harness.edgeRequest(
+        new Request(`${functionsBaseUrl}/cms-delivery/shipments`, {
+            method: "POST",
+            headers: {
+                authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}`,
+                "content-type": "application/json",
+                "x-cms-user-id": "user-123",
+            },
+            body: JSON.stringify(body),
+        }),
+    );
 }
 
-async function edgeTracking(harness: {
-    edgeRequest(request: Request): Promise<Response>;
-}, expeditionNumber: string): Promise<Response> {
+async function edgeTracking(
+    harness: {
+        edgeRequest(request: Request): Promise<Response>;
+    },
+    expeditionNumber: string,
+): Promise<Response> {
     const url = new URL(`${functionsBaseUrl}/cms-delivery/tracking`);
     url.searchParams.set("expeditionNumber", expeditionNumber);
-    return await harness.edgeRequest(new Request(url, {
-        headers: { authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}` },
-    }));
+    return await harness.edgeRequest(
+        new Request(url, {
+            headers: { authorization: `Bearer ${activeEnv.CMS_DELIVERY_API_KEY}` },
+        }),
+    );
 }
 
-async function sourceRequest(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, endpoint: string, options: {
-    method: "GET" | "POST";
-    userId: string;
-    userRole?: string;
-    enforceAccess?: boolean;
-    responseProjectionMode?: "strict" | "compatibility";
-    params?: Record<string, string>;
-    body?: JsonRecord;
-}): Promise<Response> {
+async function sourceRequest(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    endpoint: string,
+    options: {
+        method: "GET" | "POST";
+        userId: string;
+        userRole?: string;
+        enforceAccess?: boolean;
+        responseProjectionMode?: "strict" | "compatibility";
+        params?: Record<string, string>;
+        body?: JsonRecord;
+    },
+): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}delivery/${endpoint}`);
-    for (const [key, value] of Object.entries(options.params ?? {})) url.searchParams.set(key, value);
-    return await handleSourceRequest(harness.sources, new Request(url, {
-        method: options.method,
-        headers: options.body ? { "content-type": "application/json" } : undefined,
-        body: options.body ? JSON.stringify(options.body) : undefined,
-    }), {
-        prefix: sourcePrefix,
-        deps: {
-            fetchImpl: harness.sourceFetch,
-            resolveSecret: harness.resolveSecret,
-            authorizeEndpoint: options.enforceAccess ? endpoint => {
-                if (!options.userId) return { authorized: false, status: 401 };
-                const callerMode = options.userRole === "system"
-                    ? "system"
-                    : options.userRole === "admin" ? "admin" : "auth";
-                return sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerMode)
-                    ? true
-                    : { authorized: false, status: 403 };
-            } : undefined,
-            resolveContext: async () => ({
-                userID: options.userId,
-                userRole: options.userRole ?? "admin",
-            }),
-            responseProjectionMode: options.responseProjectionMode ?? "strict",
+    for (const [key, value] of Object.entries(options.params ?? {})) {
+        url.searchParams.set(key, value);
+    }
+    return await handleSourceRequest(
+        harness.sources,
+        new Request(url, {
+            method: options.method,
+            headers: options.body ? { "content-type": "application/json" } : undefined,
+            body: options.body ? JSON.stringify(options.body) : undefined,
+        }),
+        {
+            prefix: sourcePrefix,
+            deps: {
+                fetchImpl: harness.sourceFetch,
+                resolveSecret: harness.resolveSecret,
+                authorizeEndpoint: options.enforceAccess
+                    ? (endpoint) => {
+                          if (!options.userId) {
+                              return { authorized: false, status: 401 };
+                          }
+                          const callerMode =
+                              options.userRole === "system"
+                                  ? "system"
+                                  : options.userRole === "admin"
+                                    ? "admin"
+                                    : "auth";
+                          return sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerMode)
+                              ? true
+                              : { authorized: false, status: 403 };
+                      }
+                    : undefined,
+                resolveContext: async () => ({
+                    userID: options.userId,
+                    userRole: options.userRole ?? "admin",
+                }),
+                responseProjectionMode: options.responseProjectionMode ?? "strict",
+            },
         },
-    });
+    );
 }
 
-async function tracking(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, expeditionNumber: string): Promise<Response> {
+async function tracking(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    expeditionNumber: string,
+): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}delivery/tracking`);
     url.searchParams.set("expeditionNumber", expeditionNumber);
     return await handleSourceRequest(harness.sources, new Request(url), {
@@ -2751,11 +3146,14 @@ async function tracking(harness: {
     });
 }
 
-async function saveRelaySelection(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, body: JsonRecord): Promise<Response> {
+async function saveRelaySelection(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    body: JsonRecord,
+): Promise<Response> {
     return await handleSourceRequest(
         harness.sources,
         new Request(`http://cms.local${sourcePrefix}delivery/saveRelaySelection`, {
@@ -2774,11 +3172,14 @@ async function saveRelaySelection(harness: {
     );
 }
 
-async function relaySelection(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, externalOrderId: string): Promise<Response> {
+async function relaySelection(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    externalOrderId: string,
+): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}delivery/relaySelection`);
     url.searchParams.set("externalOrderId", externalOrderId);
     return await handleSourceRequest(harness.sources, new Request(url), {
@@ -2791,11 +3192,14 @@ async function relaySelection(harness: {
     });
 }
 
-async function setSettings(harness: {
-    sources: SourceRepository;
-    sourceFetch: typeof fetch;
-    resolveSecret: (ref: string) => Promise<string | undefined>;
-}, body: JsonRecord): Promise<Response> {
+async function setSettings(
+    harness: {
+        sources: SourceRepository;
+        sourceFetch: typeof fetch;
+        resolveSecret: (ref: string) => Promise<string | undefined>;
+    },
+    body: JsonRecord,
+): Promise<Response> {
     return await handleSourceRequest(
         harness.sources,
         new Request(`http://cms.local${sourcePrefix}delivery/setSettings?id=default`, {
@@ -2815,8 +3219,12 @@ async function setSettings(harness: {
 }
 
 async function loadEdgeHandler(): Promise<EdgeHandler> {
-    if (!edgeHandler) await import(edgeFunctionUrl);
-    if (!edgeHandler) throw new Error("cms-delivery edge handler was not registered");
+    if (!edgeHandler) {
+        await import(edgeFunctionUrl);
+    }
+    if (!edgeHandler) {
+        throw new Error("cms-delivery edge handler was not registered");
+    }
     return edgeHandler;
 }
 
@@ -2826,7 +3234,8 @@ function definition(): IntegrationDefinition {
 
 function createShipmentField(createForm: JsonRecord | undefined, fieldId: string): JsonRecord | undefined {
     const sections = [...arrayValue(createForm?.main), ...arrayValue(createForm?.aside)];
-    return sections.flatMap(section => arrayValue((section as JsonRecord).fields))
+    return sections
+        .flatMap((section) => arrayValue((section as JsonRecord).fields))
         .find((field): field is JsonRecord => (field as JsonRecord).id === fieldId);
 }
 
@@ -2931,15 +3340,27 @@ function validDeliveryQuoteRequest(externalOrderId: string): JsonRecord {
         currency: "eur",
         merchandiseSubtotalMinorAmount: 12_345,
         recipientSnapshot: {
-            recipient: "Client Test", phone: "+33600000000",
-            addressLine1: "17B Chemin du Fond du Val", addressLine2: "", addressLine3: "",
-            postalCode: "76930", city: "Octeville-sur-Mer", countryCode: "FR",
+            recipient: "Client Test",
+            phone: "+33600000000",
+            addressLine1: "17B Chemin du Fond du Val",
+            addressLine2: "",
+            addressLine3: "",
+            postalCode: "76930",
+            city: "Octeville-sur-Mer",
+            countryCode: "FR",
             email: "recipient@example.test",
         },
         sellerFulfillmentSnapshot: {
-            givenName: "Sender", surname: "Shop", phone: "+33600000000",
-            addressLine1: "1 Rue Test", addressLine2: "", addressLine3: "",
-            postalCode: "75001", city: "Paris", countryCode: "FR", email: "sender@example.test",
+            givenName: "Sender",
+            surname: "Shop",
+            phone: "+33600000000",
+            addressLine1: "1 Rue Test",
+            addressLine2: "",
+            addressLine3: "",
+            postalCode: "75001",
+            city: "Paris",
+            countryCode: "FR",
+            email: "sender@example.test",
         },
     };
 }
@@ -2968,14 +3389,30 @@ function defaultDeliveryQuoteRow(): JsonRecord {
         currency: "eur",
         merchandise_subtotal_minor_amount: 12_345,
         recipient_snapshot: {
-            name: "Client Test", firstName: "Client", lastName: "Test", phone: "+33600000000",
-            addressLine1: "17B Chemin du Fond du Val", addressLine2: "", addressLine3: "",
-            postalCode: "76930", city: "Octeville-sur-Mer", country: "FR", email: "recipient@example.test",
+            name: "Client Test",
+            firstName: "Client",
+            lastName: "Test",
+            phone: "+33600000000",
+            addressLine1: "17B Chemin du Fond du Val",
+            addressLine2: "",
+            addressLine3: "",
+            postalCode: "76930",
+            city: "Octeville-sur-Mer",
+            country: "FR",
+            email: "recipient@example.test",
         },
         seller_fulfillment_snapshot: {
-            name: "Sender Shop", firstName: "Sender", lastName: "Shop", phone: "+33600000000",
-            addressLine1: "1 Rue Test", addressLine2: "", addressLine3: "",
-            postalCode: "75001", city: "Paris", country: "FR", email: "sender@example.test",
+            name: "Sender Shop",
+            firstName: "Sender",
+            lastName: "Shop",
+            phone: "+33600000000",
+            addressLine1: "1 Rue Test",
+            addressLine2: "",
+            addressLine3: "",
+            postalCode: "75001",
+            city: "Paris",
+            country: "FR",
+            email: "sender@example.test",
         },
         relay_snapshot: { nature: "1", pointType: "relay_point" },
         request_snapshot: {},
@@ -3092,14 +3529,14 @@ function jsonResponse(value: unknown, status = 200): Response {
 
 function projectRows(url: URL, rows: JsonRecord[]): JsonRecord[] {
     const fields = selectedFields(url);
-    if (!fields.length || fields.includes("*")) return rows;
-    return rows.map(row => projectRecord(row, fields));
+    if (!fields.length || fields.includes("*")) {
+        return rows;
+    }
+    return rows.map((row) => projectRecord(row, fields));
 }
 
 function projectRecord(row: JsonRecord, fields: string[]): JsonRecord {
-    return Object.fromEntries(fields
-        .filter(field => Object.hasOwn(row, field))
-        .map(field => [field, row[field]]));
+    return Object.fromEntries(fields.filter((field) => Object.hasOwn(row, field)).map((field) => [field, row[field]]));
 }
 
 function selectedFields(url: URL): string[] {
@@ -3111,9 +3548,11 @@ function splitSelectFields(select: string): string[] {
     let start = 0;
     let depth = 0;
     for (let index = 0; index < select.length; index += 1) {
-        if (select[index] === "(") depth += 1;
-        else if (select[index] === ")") depth -= 1;
-        else if (select[index] === "," && depth === 0) {
+        if (select[index] === "(") {
+            depth += 1;
+        } else if (select[index] === ")") {
+            depth -= 1;
+        } else if (select[index] === "," && depth === 0) {
             fields.push(select.slice(start, index).trim());
             start = index + 1;
         }
@@ -3123,14 +3562,18 @@ function splitSelectFields(select: string): string[] {
 }
 
 function embeddedFields(fields: string[], prefix: string): string[] {
-    const field = fields.find(candidate => candidate.startsWith(`${prefix}!`) || candidate.startsWith(`${prefix}(`));
-    if (!field) return [];
+    const field = fields.find((candidate) => candidate.startsWith(`${prefix}!`) || candidate.startsWith(`${prefix}(`));
+    if (!field) {
+        return [];
+    }
     const open = field.indexOf("(");
     return open < 0 ? [] : splitSelectFields(field.slice(open + 1, -1));
 }
 
 function stableJson(value: unknown): string {
-    if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+    if (Array.isArray(value)) {
+        return `[${value.map(stableJson).join(",")}]`;
+    }
     if (value && typeof value === "object") {
         const entries = Object.entries(value as JsonRecord).sort(([left], [right]) => left.localeCompare(right));
         return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
@@ -3150,13 +3593,14 @@ function shipmentReservationError(
     const quotePurpose = String(request.p_quote_purpose ?? "");
     const quoteExternalOrderId = String(request.p_quote_external_order_id ?? "");
     const selectedFor = String(request.p_selected_for_cms_user_id ?? "");
-    const quote = deliveryQuotes.find(row => row.quote_id === quoteId);
+    const quote = deliveryQuotes.find((row) => row.quote_id === quoteId);
     if (!externalOrderId.startsWith("claim-return:") && !quote) {
         return "an exact immutable delivery quote is required before shipment creation";
     }
-    if (quoteId && (!quote
-        || quote.external_order_id !== quoteExternalOrderId
-        || quote.selected_for_cms_user_id !== selectedFor)) {
+    if (
+        quoteId &&
+        (!quote || quote.external_order_id !== quoteExternalOrderId || quote.selected_for_cms_user_id !== selectedFor)
+    ) {
         return "shipment delivery quote binding is invalid";
     }
     if (quote) {
@@ -3164,22 +3608,24 @@ function shipmentReservationError(
         if (mainFulfillment && quoteExternalOrderId !== externalOrderId) {
             return "main shipment delivery quote belongs to another order";
         }
-        if (mainFulfillment && (quote.relay_location !== check.deliveryRelayLocation
-            || quote.weight_grams !== check.weightGrams
-            || quote.merchandise_subtotal_minor_amount !== check.declaredValueMinorAmount
-            || String(quote.currency).toUpperCase() !== check.declaredCurrency)) {
+        if (
+            mainFulfillment &&
+            (quote.relay_location !== check.deliveryRelayLocation ||
+                quote.weight_grams !== check.weightGrams ||
+                quote.merchandise_subtotal_minor_amount !== check.declaredValueMinorAmount ||
+                String(quote.currency).toUpperCase() !== check.declaredCurrency)
+        ) {
             return "shipment financial or relay input does not match the immutable quote";
         }
-        const expectedSender = quotePurpose === "claim_return"
-            ? quote.recipient_snapshot : quote.seller_fulfillment_snapshot;
-        const expectedRecipient = quotePurpose === "claim_return"
-            ? quote.seller_fulfillment_snapshot : quote.recipient_snapshot;
-        if (!sameTestAddress(check.sender, expectedSender)
-            || !sameTestAddress(check.recipient, expectedRecipient)) {
+        const expectedSender =
+            quotePurpose === "claim_return" ? quote.recipient_snapshot : quote.seller_fulfillment_snapshot;
+        const expectedRecipient =
+            quotePurpose === "claim_return" ? quote.seller_fulfillment_snapshot : quote.recipient_snapshot;
+        if (!sameTestAddress(check.sender, expectedSender) || !sameTestAddress(check.recipient, expectedRecipient)) {
             return "shipment address input does not match the immutable quote snapshot";
         }
     } else {
-        const selection = relaySelections.find(row => row.external_order_id === externalOrderId);
+        const selection = relaySelections.find((row) => row.external_order_id === externalOrderId);
         if (selection && String(selection.relay_location) !== check.deliveryRelayLocation) {
             return "shipment relay does not match the immutable server selection";
         }
@@ -3188,21 +3634,42 @@ function shipmentReservationError(
 }
 
 function sameTestAddress(actual: unknown, expected: unknown): boolean {
-    if (!actual || typeof actual !== "object" || Array.isArray(actual)
-        || !expected || typeof expected !== "object" || Array.isArray(expected)) return false;
+    if (
+        !actual ||
+        typeof actual !== "object" ||
+        Array.isArray(actual) ||
+        !expected ||
+        typeof expected !== "object" ||
+        Array.isArray(expected)
+    ) {
+        return false;
+    }
     const left = actual as JsonRecord;
     const right = expected as JsonRecord;
     return [
-        "name", "firstName", "lastName", "phone", "addressLine1", "addressLine2",
-        "addressLine3", "postalCode", "city", "country", "email",
-    ].every(field => String(left[field] ?? "").trim() === String(right[field] ?? "").trim());
+        "name",
+        "firstName",
+        "lastName",
+        "phone",
+        "addressLine1",
+        "addressLine2",
+        "addressLine3",
+        "postalCode",
+        "city",
+        "country",
+        "email",
+    ].every((field) => String(left[field] ?? "").trim() === String(right[field] ?? "").trim());
 }
 
 function nullableTimestampDescending(left: unknown, right: unknown): number {
     const leftMissing = left === null || left === undefined || left === "";
     const rightMissing = right === null || right === undefined || right === "";
-    if (leftMissing) return rightMissing ? 0 : 1;
-    if (rightMissing) return -1;
+    if (leftMissing) {
+        return rightMissing ? 0 : 1;
+    }
+    if (rightMissing) {
+        return -1;
+    }
     return timestamp(right) - timestamp(left);
 }
 

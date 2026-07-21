@@ -1,14 +1,35 @@
 import { methodNotAllowed } from "../core/http.ts";
 import { requireCmsAdmin } from "../core/auth.ts";
 import { getOffer, listOffers, reviewOffer, upsertOffer } from "../routes/offers.ts";
-import { getOfferImageFile, removeOfferImage, reorderOfferImages, replaceOfferImage, uploadOfferImage } from "../routes/offer/media.ts";
+import {
+    getOfferImageFile,
+    removeOfferImage,
+    reorderOfferImages,
+    replaceOfferImage,
+    uploadOfferImage,
+} from "../routes/offer/media.ts";
 import { getAdminOrder } from "../routes/order/read-model/details.ts";
 import { listAdminOrders } from "../routes/order/read-model/lists.ts";
 import { reviewOrderCancellation } from "../routes/order/cancellations.ts";
-import { getClaim, getClaimEvidenceMetadata, listClaimEvidence, listClaims, resolveOrderClaim } from "../routes/order/claims.ts";
+import {
+    getClaim,
+    getClaimEvidenceMetadata,
+    listClaimEvidence,
+    listClaims,
+    resolveOrderClaim,
+} from "../routes/order/claims.ts";
 import { getClaimEvidenceFile } from "../routes/order/claim-evidence.ts";
-import { getProtectedPayment, listCommerceExceptions, listProtectedPayments } from "../routes/order/read-model/operations.ts";
-import { getRefundRequest, listRefundRequests, requestOrderRefund, reviewOrderRefund } from "../routes/order/refunds.ts";
+import {
+    getProtectedPayment,
+    listCommerceExceptions,
+    listProtectedPayments,
+} from "../routes/order/read-model/operations.ts";
+import {
+    getRefundRequest,
+    listRefundRequests,
+    requestOrderRefund,
+    reviewOrderRefund,
+} from "../routes/order/refunds.ts";
 import { authorizeOrderRelease } from "../routes/order/settlements.ts";
 import { authorizePlatformPayoutLiabilityDecrease } from "../routes/order/financials.ts";
 import { recoverOrderShipmentCreation } from "../routes/order/fulfillment.ts";
@@ -28,17 +49,27 @@ export async function handleAdminMarketplaceRoute(route: string, request: Reques
         return request.method === "GET" ? await listOffers(request, "admin") : methodNotAllowed("GET");
     }
     if (route === "/admin/offer") {
-        if (request.method === "GET") return await getOffer(request, "admin");
-        if (request.method === "POST") return await upsertOffer(request);
+        if (request.method === "GET") {
+            return await getOffer(request, "admin");
+        }
+        if (request.method === "POST") {
+            return await upsertOffer(request);
+        }
         return methodNotAllowed("GET", "POST");
     }
     if (route === "/admin/offer/review") {
         return request.method === "POST" ? await reviewOffer(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/offer/image") {
-        if (request.method === "GET") return await getOfferImageFile(request, "admin");
-        if (request.method === "POST") return await uploadOfferImage(request, "admin");
-        if (request.method === "DELETE") return await removeOfferImage(request, "admin");
+        if (request.method === "GET") {
+            return await getOfferImageFile(request, "admin");
+        }
+        if (request.method === "POST") {
+            return await uploadOfferImage(request, "admin");
+        }
+        if (request.method === "DELETE") {
+            return await removeOfferImage(request, "admin");
+        }
         return methodNotAllowed("GET", "POST", "DELETE");
     }
     if (route === "/admin/offer/image/replace") {

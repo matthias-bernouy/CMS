@@ -23,7 +23,9 @@ export const saleStatusDefaults = {
 
 export function salePresentationStatus(order) {
     const orderStatus = String(order?.status || "unknown");
-    if (orderStatus !== "active") return orderStatus;
+    if (orderStatus !== "active") {
+        return orderStatus;
+    }
     const fulfillmentStatus = String(order?.fulfillment?.status || order?.fulfillmentStatus || "");
     return Object.hasOwn(saleStatusDefaults, fulfillmentStatus) && fulfillmentStatus !== "active"
         ? fulfillmentStatus
@@ -32,7 +34,9 @@ export function salePresentationStatus(order) {
 
 export function formatMoney(amount, currency, locale = "fr-FR", signDisplay = "auto") {
     const value = Number(amount);
-    if (!Number.isSafeInteger(value)) return "—";
+    if (!Number.isSafeInteger(value)) {
+        return "—";
+    }
     try {
         return new Intl.NumberFormat(locale, {
             style: "currency",
@@ -47,33 +51,48 @@ export function formatMoney(amount, currency, locale = "fr-FR", signDisplay = "a
 
 export function formatDate(value, locale = "fr-FR") {
     const date = new Date(String(value || ""));
-    if (Number.isNaN(date.getTime())) return "Date indisponible";
+    if (Number.isNaN(date.getTime())) {
+        return "Date indisponible";
+    }
     return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(date);
 }
 
 export function variantLabel(snapshot) {
     const options = Array.isArray(snapshot?.options) ? snapshot.options : [];
-    if (options.length) return options.map(option => {
-        const axis = option.axisLabel || option.axisKey;
-        const value = option.valueLabel || option.valueKey;
-        return [axis, value].filter(Boolean).join(" : ");
-    }).filter(Boolean).join(" · ");
+    if (options.length) {
+        return options
+            .map((option) => {
+                const axis = option.axisLabel || option.axisKey;
+                const value = option.valueLabel || option.valueKey;
+                return [axis, value].filter(Boolean).join(" : ");
+            })
+            .filter(Boolean)
+            .join(" · ");
+    }
     return String(snapshot?.title || "");
 }
 
 export function conditionLabel(code) {
     const labels = {
-        new: "Neuf", like_new: "Comme neuf", very_good: "Très bon état",
-        good: "Bon état", fair: "État correct", poor: "État usé",
+        new: "Neuf",
+        like_new: "Comme neuf",
+        very_good: "Très bon état",
+        good: "Bon état",
+        fair: "État correct",
+        poor: "État usé",
     };
     return labels[String(code || "")] || String(code || "").replaceAll("_", " ");
 }
 
 export function shippingAmount(order) {
     const snapshot = order?.financialTerms?.shippingAmount;
-    if (Number.isSafeInteger(snapshot) && snapshot >= 0) return snapshot;
+    if (Number.isSafeInteger(snapshot) && snapshot >= 0) {
+        return snapshot;
+    }
     const explicit = Number(order?.shippingAmount);
-    if (Number.isSafeInteger(explicit) && explicit >= 0) return explicit;
+    if (Number.isSafeInteger(explicit) && explicit >= 0) {
+        return explicit;
+    }
     return NaN;
 }
 
@@ -83,7 +102,9 @@ export function sellerProceedsAmount(order) {
 
 export function sellerMerchandiseAmount(order) {
     const amount = financialAmount(order, "merchandiseSubtotalAmount");
-    if (Number.isSafeInteger(amount)) return amount;
+    if (Number.isSafeInteger(amount)) {
+        return amount;
+    }
     const fallback = Number(order?.subtotalAmount);
     return Number.isSafeInteger(fallback) && fallback >= 0 ? fallback : NaN;
 }

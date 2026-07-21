@@ -16,7 +16,9 @@ describe("editor view script endpoint", () => {
             },
             cache: {
                 get: (key: string) => cache.get(key) ?? null,
-                set: (key: string, value: unknown) => { cache.set(key, value); },
+                set: (key: string, value: unknown) => {
+                    cache.set(key, value);
+                },
             },
         };
 
@@ -40,20 +42,22 @@ describe("editor view script endpoint", () => {
             repository: {
                 getBlocsJS: async () => [
                     {
-                        id:       unsafeId,
-                        viewJS:   "// Native behavior is provided by the browser.",
+                        id: unsafeId,
+                        viewJS: "// Native behavior is provided by the browser.",
                         editorJS: "",
                     },
                     {
-                        id:       "valid-view",
-                        viewJS:   "window.__validViewLoaded = true;",
+                        id: "valid-view",
+                        viewJS: "window.__validViewLoaded = true;",
                         editorJS: "",
                     },
                 ],
             },
             cache: {
                 get: (key: string) => cache.get(key) ?? null,
-                set: (key: string, value: unknown) => { cache.set(key, value); },
+                set: (key: string, value: unknown) => {
+                    cache.set(key, value);
+                },
             },
         };
 

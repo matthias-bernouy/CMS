@@ -9,8 +9,14 @@ import { supabaseUrl } from "../harness";
 export async function installedBasicBlocs(): Promise<InMemoryIntegrationInstallationRepository> {
     const installations = new InMemoryIntegrationInstallationRepository();
     await installations.create({
-        id: "basic-blocs", label: "Basic Blocs", definitionVersion: "1.0.0", status: "success",
-        answersSnapshot: {}, secretRefs: {}, secretInputs: [], runs: [],
+        id: "basic-blocs",
+        label: "Basic Blocs",
+        definitionVersion: "1.0.0",
+        status: "success",
+        answersSnapshot: {},
+        secretRefs: {},
+        secretInputs: [],
+        runs: [],
         artifacts: [{ type: "bloc", id: "basic-input", action: "created" }],
     });
     return installations;
@@ -25,7 +31,9 @@ export function blocImporter(imported: IntegrationBlocArtifact[]) {
     };
 }
 
-export function connectorDeployer(capture: (value: IntegrationConnectorDeployment) => void): IntegrationConnectorDeployer {
+export function connectorDeployer(
+    capture: (value: IntegrationConnectorDeployment) => void,
+): IntegrationConnectorDeployer {
     return {
         provider: "supabase",
         async deploy(next) {

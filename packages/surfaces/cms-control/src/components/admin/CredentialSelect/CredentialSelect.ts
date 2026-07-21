@@ -18,7 +18,6 @@ import { destroyCreateDialog, openCreateDialog } from "./dialog";
  *     editor's transformed subtree and centres on the viewport.
  */
 export class CredentialSelect extends HTMLElement {
-
     static formAssociated = true;
     static observedAttributes = ["value"];
 
@@ -29,7 +28,11 @@ export class CredentialSelect extends HTMLElement {
     _keys: string[] = [];
     _createModal?: HTMLElement;
 
-    private _onSecretSaved = () => { if (this._isOpen) void refreshList(this); };
+    private _onSecretSaved = () => {
+        if (this._isOpen) {
+            void refreshList(this);
+        }
+    };
 
     constructor() {
         super();
@@ -37,10 +40,15 @@ export class CredentialSelect extends HTMLElement {
     }
 
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
-        if (name !== "value" || oldValue === newValue) return;
+        if (name !== "value" || oldValue === newValue) {
+            return;
+        }
         const value = newValue ?? "";
-        if (this._refs) setValue(this, value);
-        else this._value = value;
+        if (this._refs) {
+            setValue(this, value);
+        } else {
+            this._value = value;
+        }
     }
 
     connectedCallback() {
@@ -65,10 +73,18 @@ export class CredentialSelect extends HTMLElement {
         destroyCreateDialog(this);
     }
 
-    get value() { return this._value; }
-    set value(v: string) { setValue(this, v); }
-    get name()  { return this.getAttribute("name"); }
-    get _api()  { return this.getAttribute("api") ?? "/api/secrets"; }
+    get value() {
+        return this._value;
+    }
+    set value(v: string) {
+        setValue(this, v);
+    }
+    get name() {
+        return this.getAttribute("name");
+    }
+    get _api() {
+        return this.getAttribute("api") ?? "/api/secrets";
+    }
 
     private _wire() {
         const r = this._refs;
@@ -84,16 +100,20 @@ export class CredentialSelect extends HTMLElement {
         // Sync internal state when the popover light-dismisses (click outside / ESC).
         r.panel.addEventListener("toggle", (e) => {
             const newState = (e as ToggleEvent).newState;
-            if (newState === "closed" && this._isOpen) closePanel(this);
+            if (newState === "closed" && this._isOpen) {
+                closePanel(this);
+            }
         });
         r.search.addEventListener("input", () => {
             const q = r.search.value.trim().toUpperCase();
-            const filtered = q ? this._keys.filter(k => k.includes(q)) : this._keys;
+            const filtered = q ? this._keys.filter((k) => k.includes(q)) : this._keys;
             renderList(this, filtered);
         });
         r.list.addEventListener("click", (e) => {
             const li = (e.target as HTMLElement).closest(".option") as HTMLElement | null;
-            if (!li || !li.dataset.key) return;
+            if (!li || !li.dataset.key) {
+                return;
+            }
             setValue(this, keyToRef(li.dataset.key));
             this.dispatchEvent(new Event("change", { bubbles: true }));
             closePanel(this);

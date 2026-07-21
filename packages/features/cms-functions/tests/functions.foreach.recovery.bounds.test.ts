@@ -18,7 +18,12 @@ describe("cms functions foreach recovery bounds", () => {
 
         const response = await executeFunction(fn, functionRequest(), {
             sources,
-            deps: { fetchImpl: async () => { calls += 1; return json({}); } },
+            deps: {
+                fetchImpl: async () => {
+                    calls += 1;
+                    return json({});
+                },
+            },
         });
 
         expect(response.status).toBe(400);
@@ -37,12 +42,16 @@ describe("cms functions foreach recovery bounds", () => {
             {
                 sources,
                 maxResponseBytes: 8,
-                deps: { fetchImpl: async input => {
-                    const id = requestProductId(input);
-                    requests.push(id);
-                    if (id === "p1") return json({ error: "failed" }, 503);
-                    return json({ id, title: "oversized recovery response" });
-                } },
+                deps: {
+                    fetchImpl: async (input) => {
+                        const id = requestProductId(input);
+                        requests.push(id);
+                        if (id === "p1") {
+                            return json({ error: "failed" }, 503);
+                        }
+                        return json({ id, title: "oversized recovery response" });
+                    },
+                },
             },
         );
 
@@ -59,11 +68,13 @@ describe("cms functions foreach recovery bounds", () => {
             {
                 sources,
                 maxResponseBytes: 6,
-                deps: { fetchImpl: async input => {
-                    const id = requestProductId(input);
-                    requests.push(id);
-                    return id === "p1" ? json({ error: "failed" }, 503) : json("ééé");
-                } },
+                deps: {
+                    fetchImpl: async (input) => {
+                        const id = requestProductId(input);
+                        requests.push(id);
+                        return id === "p1" ? json({ error: "failed" }, 503) : json("ééé");
+                    },
+                },
             },
         );
 
@@ -82,14 +93,20 @@ describe("cms functions foreach recovery bounds", () => {
             const response = await executeFunction(fn, functionRequest(), {
                 sources,
                 maxResponseBytes: 6,
-                deps: { fetchImpl: async () => new Response(new ReadableStream({
-                    start(controller) {
-                        controller.enqueue(new TextEncoder().encode("1234567"));
-                    },
-                    cancel() {
-                        cancelled.push(status);
-                    },
-                }), { status, headers: { "content-type": "application/json" } }) },
+                deps: {
+                    fetchImpl: async () =>
+                        new Response(
+                            new ReadableStream({
+                                start(controller) {
+                                    controller.enqueue(new TextEncoder().encode("1234567"));
+                                },
+                                cancel() {
+                                    cancelled.push(status);
+                                },
+                            }),
+                            { status, headers: { "content-type": "application/json" } },
+                        ),
+                },
             });
             expect(response.status).toBe(200);
         }
@@ -103,11 +120,13 @@ describe("cms functions foreach recovery bounds", () => {
         const response = await executeFunction(recoveringProductsFunction(), functionRequest(), {
             sources,
             maxResponseBytes: 70,
-            deps: { fetchImpl: async input => {
-                const id = requestProductId(input);
-                requests.push(id);
-                return id.startsWith("p") ? json({ error: "failed" }, 503) : json({ id });
-            } },
+            deps: {
+                fetchImpl: async (input) => {
+                    const id = requestProductId(input);
+                    requests.push(id);
+                    return id.startsWith("p") ? json({ error: "failed" }, 503) : json({ id });
+                },
+            },
         });
 
         await expectCorrelatedFunctionFailure(response);
@@ -119,18 +138,16 @@ describe("cms functions foreach recovery bounds", () => {
         const exactBytes = new TextEncoder().encode(JSON.stringify(expected)).byteLength;
         const execute = async (maxResponseBytes: number) => {
             const sources = await productSources();
-            return executeFunction(
-                recoveringProductsFunction([{ id: "p1", recoveryId: "r1" }]),
-                functionRequest(),
-                {
-                    sources,
-                    maxResponseBytes,
-                    deps: { fetchImpl: async input => {
+            return executeFunction(recoveringProductsFunction([{ id: "p1", recoveryId: "r1" }]), functionRequest(), {
+                sources,
+                maxResponseBytes,
+                deps: {
+                    fetchImpl: async (input) => {
                         const id = requestProductId(input);
                         return id === "p1" ? json({ error: "failed" }, 503) : json({ id });
-                    } },
+                    },
                 },
-            );
+            });
         };
 
         const accepted = await execute(exactBytes);

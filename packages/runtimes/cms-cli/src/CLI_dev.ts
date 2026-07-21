@@ -7,7 +7,12 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
-import { createDevSources, GENERATED_BLOCS_DIR, seedDevSourceAccess, warnMissingGeneratedIntegrationArtifacts } from "./dev-server/integrations";
+import {
+    createDevSources,
+    GENERATED_BLOCS_DIR,
+    seedDevSourceAccess,
+    warnMissingGeneratedIntegrationArtifacts,
+} from "./dev-server/integrations";
 import { LocalFsDashboardRepository } from "./dev-server/dashboards";
 import { LocalFsRelationRepository } from "./dev-server/relations";
 import { LocalFsFunctionRepository } from "./dev-server/functions";
@@ -42,17 +47,29 @@ import { LocalFsIntegrationConnectorProviderRepository } from "./dev-server/conn
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { startDevSystemFunctionWorkers } from "./dev-server/systemFunctionWorkers";
 
-export function parseDevFlags(args: string[]): { port: number; host: string; deliveryPort: number; publicHost: string; workers: boolean } {
+export function parseDevFlags(args: string[]): {
+    port: number;
+    host: string;
+    deliveryPort: number;
+    publicHost: string;
+    workers: boolean;
+} {
     let port = 5000;
     let host = "localhost";
     let workers = false;
     for (const arg of args) {
-        if      (arg.startsWith("--port=")) port = parsePortFlag(arg.slice("--port=".length));
-        else if (arg.startsWith("--host=")) host = arg.slice("--host=".length) || host;
-        else if (arg === "--workers") workers = true;
+        if (arg.startsWith("--port=")) {
+            port = parsePortFlag(arg.slice("--port=".length));
+        } else if (arg.startsWith("--host=")) {
+            host = arg.slice("--host=".length) || host;
+        } else if (arg === "--workers") {
+            workers = true;
+        }
     }
     const deliveryPort = port + 1;
-    if (deliveryPort > 65535) throw new Error("--port must be <= 65534 because Delivery uses port + 1");
+    if (deliveryPort > 65535) {
+        throw new Error("--port must be <= 65534 because Delivery uses port + 1");
+    }
     const publicHost = host === "0.0.0.0" ? "localhost" : host;
     return { port, host, deliveryPort, publicHost, workers };
 }
@@ -62,11 +79,21 @@ function sseHandler(reload: ReloadEmitter): (req: Request) => Response {
         const encoder = new TextEncoder();
         const stream = new ReadableStream({
             start(controller) {
-                const send = (chunk: string) => { try { controller.enqueue(encoder.encode(chunk)); } catch {} };
+                const send = (chunk: string) => {
+                    try {
+                        controller.enqueue(encoder.encode(chunk));
+                    } catch {}
+                };
                 send(": connected\n\n");
-                const unsub = reload.subscribe(tag => send(`event: reload\ndata: ${tag}\n\n`));
-                const ping  = setInterval(() => send(": ping\n\n"), 25_000);
-                const cleanup = () => { clearInterval(ping); unsub(); try { controller.close(); } catch {} };
+                const unsub = reload.subscribe((tag) => send(`event: reload\ndata: ${tag}\n\n`));
+                const ping = setInterval(() => send(": ping\n\n"), 25_000);
+                const cleanup = () => {
+                    clearInterval(ping);
+                    unsub();
+                    try {
+                        controller.close();
+                    } catch {}
+                };
                 req.signal.addEventListener("abort", cleanup, { once: true });
             },
         });
@@ -84,7 +111,7 @@ export interface LocalRuntimeOptions {
 }
 
 export const LOCAL_RUNTIME_PROFILES = {
-    dev:     { command: "dev",     mode: "DEV" },
+    dev: { command: "dev", mode: "DEV" },
     preview: { command: "preview", mode: "PROD" },
 } as const satisfies Record<LocalRuntimeOptions["command"], LocalRuntimeOptions>;
 
@@ -123,19 +150,29 @@ export async function runLocalCms(args: string[], options: LocalRuntimeOptions) 
         }
     }
     const built: Map<string, BuiltBloc> = blocs.length > 0 ? await buildAllDevBlocs(blocs) : new Map();
-    if (blocs.length > 0) console.log(`→ Built ${built.size}/${blocs.length} bloc(s).`);
+    if (blocs.length > 0) {
+        console.log(`→ Built ${built.size}/${blocs.length} bloc(s).`);
+    }
 
     const reload = createReloadEmitter();
-    const repo   = new ValidatingCmsRepository(new LocalFsCmsRepository(config.siteDir, built));
+    const repo = new ValidatingCmsRepository(new LocalFsCmsRepository(config.siteDir, built));
     const integrationBlocRepository = new ValidatingCmsRepository(
         new LocalFsCmsRepository(config.siteDir, built, { blocRootDir: GENERATED_BLOCS_DIR }),
     );
     const files = new LocalFsCmsFiles(`${config.siteDir}/files`);
     const recon = await files.reconcile();
-    if (recon.healed.length)  console.log(`→ Reconciled ${recon.healed.length} moved file(s).`);
-    if (recon.minted.length)  console.log(`→ Minted ids for ${recon.minted.length} new file(s)/folder(s).`);
-    if (recon.deleted.length) console.log(`→ Dropped ${recon.deleted.length} orphaned registry entry/entries.`);
-    for (const e of recon.errors) console.warn(`  ! ${e.path}: ${e.error}`);
+    if (recon.healed.length) {
+        console.log(`→ Reconciled ${recon.healed.length} moved file(s).`);
+    }
+    if (recon.minted.length) {
+        console.log(`→ Minted ids for ${recon.minted.length} new file(s)/folder(s).`);
+    }
+    if (recon.deleted.length) {
+        console.log(`→ Dropped ${recon.deleted.length} orphaned registry entry/entries.`);
+    }
+    for (const e of recon.errors) {
+        console.warn(`  ! ${e.path}: ${e.error}`);
+    }
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const sources = await createDevSources(config.siteDir);
@@ -159,72 +196,90 @@ export async function runLocalCms(args: string[], options: LocalRuntimeOptions) 
     const triggers = new LocalFsTriggerRepository(config.siteDir);
     const identities = new InMemoryIdentityService();
     const resolveSecret = createSecretResolver(secrets);
-    const deliverySources = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { resolveSecret, identities } });
+    const deliverySources = new SourceOverlaySourceRepository(sources, sourceOverlays, {
+        deps: { resolveSecret, identities },
+    });
     const roles = new ValidatingRolesRepository(new InMemoryRolesRepository());
     await seedDevSourceAccess(roles, sources);
     await seedDevSourceAccess(roles, new FunctionSourceRepository(functions));
     const publicAuth = {
         local: new LocalAuthentication<CMS_ROLES>({
-            providerId:    "local",
+            providerId: "local",
             loginPagePath: "/.cms/auth/login",
-            logoutPath:    "/.cms/auth/logout",
+            logoutPath: "/.cms/auth/logout",
             credentials,
-            resolver:      new SubjectResolver<CMS_ROLES>(users, "user"),
-            codec:         new SignedCookieCodec(new TextEncoder().encode("p9r-dev-public-auth-session")),
-            cookieName:    "p9r-dev-site-session",
-            defaultHome:   "/",
+            resolver: new SubjectResolver<CMS_ROLES>(users, "user"),
+            codec: new SignedCookieCodec(new TextEncoder().encode("p9r-dev-public-auth-session")),
+            cookieName: "p9r-dev-site-session",
+            defaultHome: "/",
             pats,
         }),
         credentials,
         users,
-        tokens:                   new InMemoryAuthTokenStore(),
-        emailer:                  new ConfiguredEmailer({
+        tokens: new InMemoryAuthTokenStore(),
+        emailer: new ConfiguredEmailer({
             readSettings: async () => (await repo.getSystem()).email,
             secrets,
         }),
-        emailComposer:            new TemplatedAuthEmailComposer({
+        emailComposer: new TemplatedAuthEmailComposer({
             readTemplates: async () => (await repo.getSystem()).email.templates,
         }),
-        defaultRole:              "user" as CMS_ROLES,
-        siteName:                 `p9r ${options.command}`,
+        defaultRole: "user" as CMS_ROLES,
+        siteName: `p9r ${options.command}`,
         authEmailCooldownSeconds: 0,
-        emailVerificationUrl:     `http://${publicHost}:${deliveryPort}/auth/confirm-email`,
-        passwordResetUrl:         `http://${publicHost}:${deliveryPort}/auth/reset-password`,
+        emailVerificationUrl: `http://${publicHost}:${deliveryPort}/auth/confirm-email`,
+        passwordResetUrl: `http://${publicHost}:${deliveryPort}/auth/reset-password`,
     };
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
-    runner.group("/.cms/repository", repositoryRunner => {
+    runner.group("/.cms/repository", (repositoryRunner) => {
         new RepositoryCms({ runner: repositoryRunner, integrationCatalog: integrationRepositoryCatalog });
     });
 
-    const cms = new ControlCms(runner, repo, auth, {
-        deliveryUrl: `http://${publicHost}:${deliveryPort}`,
-        publicAuth: { ...publicAuth, allowSignup: false },
-        integrationCatalog,
-        integrationInstallations,
-        integrationConnectorProviders,
-        integrationConnectorDeployers,
-        dashboards,
-        relations,
-        functions,
-        triggers,
-        identities,
-        sourceOverlays,
-        integrationBlocRepository,
-    }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
+    const cms = new ControlCms(
+        runner,
+        repo,
+        auth,
+        {
+            deliveryUrl: `http://${publicHost}:${deliveryPort}`,
+            publicAuth: { ...publicAuth, allowSignup: false },
+            integrationCatalog,
+            integrationInstallations,
+            integrationConnectorProviders,
+            integrationConnectorDeployers,
+            dashboards,
+            relations,
+            functions,
+            triggers,
+            identities,
+            sourceOverlays,
+            integrationBlocRepository,
+        },
+        undefined,
+        secrets,
+        filesMetadata,
+        files,
+        users,
+        identityProviders,
+        pats,
+        credentials,
+        sources,
+        undefined,
+        roles,
+    );
     await cms.ready;
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
     // still need to drop the editor-script (consolidated bundle) and the
     // per-bloc cached response so the next fetch sees fresh JS.
-    reload.subscribe(tag => {
+    reload.subscribe((tag) => {
         cms.cache.delete(P9R_CACHE.EDITOR_SCRIPT);
         cms.cache.delete(P9R_CACHE.EDITOR_VIEW_SCRIPT);
         cms.cache.delete(P9R_CACHE.bloc(tag));
-        cms.cache.deleteMatching(key => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
+        cms.cache.deleteMatching((key) => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
         console.log(`[watch] Rebuilt ${tag} — caches invalidated, browser reload signaled.`);
     });
     const registry = createBlocRegistry(`${config.siteDir}/blocs`, authoredBlocs, built, reload);
@@ -257,16 +312,18 @@ export async function runLocalCms(args: string[], options: LocalRuntimeOptions) 
     deliveryRunner.start(deliveryPort);
     const systemFunctionWorkers = workers
         ? startDevSystemFunctionWorkers({
-            functions,
-            sources: deliverySources,
-            deps: { resolveSecret, identities },
-        })
+              functions,
+              sources: deliverySources,
+              deps: { resolveSecret, identities },
+          })
         : undefined;
 
     console.log("");
-    console.log(options.mode === "PROD"
-        ? `✓ Production behavior preview ready on http://${host}:${port}`
-        : `✓ Dev server ready on http://${host}:${port}`);
+    console.log(
+        options.mode === "PROD"
+            ? `✓ Production behavior preview ready on http://${host}:${port}`
+            : `✓ Dev server ready on http://${host}:${port}`,
+    );
     console.log(`  Runtime  : ${options.mode}`);
     console.log(`  Editor   : http://${host}:${port}/editor/page?id=/`);
     console.log(`  Admin    : http://${host}:${port}/admin/pages`);
@@ -287,8 +344,12 @@ export async function runLocalCms(args: string[], options: LocalRuntimeOptions) 
         await systemFunctionWorkers?.stop();
         process.exit(0);
     };
-    process.on("SIGINT",  () => { void shutdown("SIGINT"); });
-    process.on("SIGTERM", () => { void shutdown("SIGTERM"); });
+    process.on("SIGINT", () => {
+        void shutdown("SIGINT");
+    });
+    process.on("SIGTERM", () => {
+        void shutdown("SIGTERM");
+    });
 }
 
 export default async function CLI_dev(args: string[]) {
@@ -301,25 +362,21 @@ function createIntegrationCatalog(localRepositoryUrl: string): IntegrationDefini
 }
 
 function readSupabaseFunctionSecrets(source: Record<string, string | undefined>): Record<string, string> {
-    const keys = [
-        "SMTP_HOST",
-        "SMTP_PORT",
-        "SMTP_SECURE",
-        "SMTP_USER",
-        "SMTP_PASSWORD",
-        "SMTP_FROM",
-        "SMTP_REPLY_TO",
-    ];
+    const keys = ["SMTP_HOST", "SMTP_PORT", "SMTP_SECURE", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM", "SMTP_REPLY_TO"];
     const secrets: Record<string, string> = {};
     for (const key of keys) {
         const value = source[key]?.trim();
-        if (value) secrets[key] = value;
+        if (value) {
+            secrets[key] = value;
+        }
     }
     return secrets;
 }
 
 function parsePortFlag(raw: string): number {
-    if (!/^\d+$/.test(raw)) throw new Error("--port must be an integer");
+    if (!/^\d+$/.test(raw)) {
+        throw new Error("--port must be an integer");
+    }
     const port = Number(raw);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new Error("--port must be between 1 and 65535");

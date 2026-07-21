@@ -12,10 +12,12 @@ type AuthTokenDoc = Omit<AuthToken, "id"> & { _id: string; hash: string };
  * hashes only; the plaintext is returned once from `create`.
  */
 export class MongoAuthTokenStore implements AuthTokenStore {
-
     private readonly _prefix: string;
 
-    constructor(private readonly db: Db, config: MongoAuthTokenConfig = {}) {
+    constructor(
+        private readonly db: Db,
+        config: MongoAuthTokenConfig = {},
+    ) {
         this._prefix = config.collectionPrefix ?? "";
     }
 
@@ -32,12 +34,12 @@ export class MongoAuthTokenStore implements AuthTokenStore {
     async create(input: NewAuthToken): Promise<{ token: string; authToken: AuthToken }> {
         const token = mintAuthToken();
         const doc: AuthTokenDoc = {
-            _id:        randomUUIDv7(),
-            hash:       hashAuthToken(token),
-            purpose:    input.purpose,
-            sub:        input.sub,
-            createdAt:  new Date(),
-            expiresAt:  input.expiresAt,
+            _id: randomUUIDv7(),
+            hash: hashAuthToken(token),
+            purpose: input.purpose,
+            sub: input.sub,
+            createdAt: new Date(),
+            expiresAt: input.expiresAt,
             consumedAt: null,
         };
         await this.col.insertOne(doc as OptionalUnlessRequiredId<AuthTokenDoc>);
@@ -64,7 +66,9 @@ export class MongoAuthTokenStore implements AuthTokenStore {
 
     async deleteForSub(sub: string, purpose?: AuthTokenPurpose): Promise<number> {
         const filter: { sub: string; purpose?: AuthTokenPurpose } = { sub };
-        if (purpose) filter.purpose = purpose;
+        if (purpose) {
+            filter.purpose = purpose;
+        }
         const r = await this.col.deleteMany(filter);
         return r.deletedCount;
     }

@@ -50,17 +50,21 @@ export class ShellDomRefs {
     }
 
     private upgrade<T extends Element>(element: T | null): T | null {
-        if (element) customElements.upgrade(element);
+        if (element) {
+            customElements.upgrade(element);
+        }
         return element;
     }
 
     private defineElement(tagName: string, constructor: CustomElementConstructor): void {
-        if (customElements.get(tagName)) return;
+        if (customElements.get(tagName)) {
+            return;
+        }
 
         try {
             customElements.define(tagName, constructor);
         } catch {
-            const ElementClass = class extends (constructor as { new(): HTMLElement }) {};
+            const ElementClass = class extends (constructor as { new (): HTMLElement }) {};
             customElements.define(tagName, ElementClass);
         }
     }

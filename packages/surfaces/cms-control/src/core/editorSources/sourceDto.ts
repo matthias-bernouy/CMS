@@ -1,17 +1,7 @@
 import type { DataField, DataFieldType } from "@bernouy/cms-content/editor";
-import {
-    parseUrn,
-    type DataShape,
-    type EndpointParam,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { parseUrn, type DataShape, type EndpointParam, type SourceEndpoint } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
-import type {
-    EditorSourceBodyDto,
-    EditorSourceBodyFieldDto,
-    EditorSourceDto,
-    EditorSourceParamDto,
-} from "./types";
+import type { EditorSourceBodyDto, EditorSourceBodyFieldDto, EditorSourceDto, EditorSourceParamDto } from "./types";
 
 export function editorSourceFromEndpoint(
     cms: ControlCms,
@@ -20,8 +10,9 @@ export function editorSourceFromEndpoint(
 ): EditorSourceDto {
     const parsed = parseUrn(endpoint.urn);
     const path = parsed ? `${parsed.source}/${parsed.endpoint}` : endpoint.urn;
-    const body = endpoint.output?.find(response => response.status === "200" && response.body)?.body
-        ?? endpoint.output?.find(response => response.body)?.body;
+    const body =
+        endpoint.output?.find((response) => response.status === "200" && response.body)?.body ??
+        endpoint.output?.find((response) => response.body)?.body;
 
     return {
         label: endpoint.meta?.name ?? parsed?.endpoint ?? endpoint.urn,
@@ -39,26 +30,31 @@ export function editorSourceFromEndpoint(
 }
 
 function sourceParams(params: EndpointParam[]): EditorSourceParamDto[] | undefined {
-    const mapped = params.filter(param => param.in === "query" || param.in === "path").map(param => ({
-        name: param.name,
-        in: param.in,
-        required: param.required,
-        type: param.schema.type,
-        description: param.description,
-    }));
+    const mapped = params
+        .filter((param) => param.in === "query" || param.in === "path")
+        .map((param) => ({
+            name: param.name,
+            in: param.in,
+            required: param.required,
+            type: param.schema.type,
+            description: param.description,
+        }));
     return mapped.length ? mapped : undefined;
 }
 
 function sourceBody(shape: DataShape | undefined): EditorSourceBodyDto | undefined {
-    if (!shape) return undefined;
+    if (!shape) {
+        return undefined;
+    }
     return { contentType: "application/json", fields: bodyFieldsFromShape(shape) };
 }
 
 function bodyFieldsFromShape(shape: DataShape): EditorSourceBodyFieldDto[] {
     if (shape.type === "object") {
         const required = new Set(shape.required ?? []);
-        return Object.entries(shape.properties ?? {})
-            .map(([path, child]) => bodyFieldFromShape(path, child, required.has(path)));
+        return Object.entries(shape.properties ?? {}).map(([path, child]) =>
+            bodyFieldFromShape(path, child, required.has(path)),
+        );
     }
     if (shape.type === "array" && shape.items) {
         return [{ path: ".", type: "array", children: bodyFieldsFromShape(shape.items) }];
@@ -78,11 +74,16 @@ function bodyFieldFromShape(path: string, shape: DataShape, required: boolean): 
 }
 
 function bodyChildren(shape: DataShape): EditorSourceBodyFieldDto[] {
-    if (shape.type === "array" && shape.items) return bodyFieldsFromShape(shape.items);
-    if (shape.type !== "object") return [];
+    if (shape.type === "array" && shape.items) {
+        return bodyFieldsFromShape(shape.items);
+    }
+    if (shape.type !== "object") {
+        return [];
+    }
     const required = new Set(shape.required ?? []);
-    return Object.entries(shape.properties ?? {})
-        .map(([path, child]) => bodyFieldFromShape(path, child, required.has(path)));
+    return Object.entries(shape.properties ?? {}).map(([path, child]) =>
+        bodyFieldFromShape(path, child, required.has(path)),
+    );
 }
 
 function fieldsFromShape(shape: DataShape): DataField[] {
@@ -105,13 +106,21 @@ function fieldFromShape(path: string, shape: DataShape): DataField {
 }
 
 function fieldChildren(shape: DataShape): DataField[] {
-    if (shape.type === "array" && shape.items) return fieldsFromShape(shape.items);
-    if (shape.type === "object") return fieldsFromShape(shape);
+    if (shape.type === "array" && shape.items) {
+        return fieldsFromShape(shape.items);
+    }
+    if (shape.type === "object") {
+        return fieldsFromShape(shape);
+    }
     return [];
 }
 
 function fieldType(shape: DataShape): DataFieldType {
-    if (shape.type === "array") return "array";
-    if (shape.type === "object") return "object";
+    if (shape.type === "array") {
+        return "array";
+    }
+    if (shape.type === "object") {
+        return "object";
+    }
     return shape.type;
 }

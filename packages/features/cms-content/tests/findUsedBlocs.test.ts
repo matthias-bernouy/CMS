@@ -1,9 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import {
-    createBlocUsageResolver,
-    findUsedBlocTags,
-    type ContentReader,
-} from "@bernouy/cms-content";
+import { createBlocUsageResolver, findUsedBlocTags, type ContentReader } from "@bernouy/cms-content";
 
 describe("findUsedBlocTags", () => {
     test("returns empty when the bloc list is empty", () => {
@@ -36,30 +32,18 @@ describe("findUsedBlocTags", () => {
     });
 
     test("returns every registered tag that appears", () => {
-        const used = findUsedBlocTags(
-            "<my-card></my-card><other-bloc></other-bloc>",
-            [
-                { id: "my-card" },
-                { id: "other-bloc" },
-                { id: "unused" },
-            ],
-        );
+        const used = findUsedBlocTags("<my-card></my-card><other-bloc></other-bloc>", [
+            { id: "my-card" },
+            { id: "other-bloc" },
+            { id: "unused" },
+        ]);
         expect(used.sort()).toEqual(["my-card", "other-bloc"]);
     });
 });
 
-const compositionBlocs = [
-    "root-card",
-    "child-card",
-    "side-card",
-    "leaf-badge",
-    "missing-card",
-].map(id => ({ id }));
+const compositionBlocs = ["root-card", "child-card", "side-card", "leaf-badge", "missing-card"].map((id) => ({ id }));
 
-function compositionResolver(
-    views: Record<string, string | null>,
-    onRead: (tag: string) => void = () => undefined,
-) {
+function compositionResolver(views: Record<string, string | null>, onRead: (tag: string) => void = () => undefined) {
     const repository = {
         getBlocViewJS: async (tag: string) => {
             onRead(tag);
@@ -77,11 +61,7 @@ describe("createBlocUsageResolver", () => {
             "leaf-badge": "LEAF();",
         });
 
-        expect(await resolve("<root-card></root-card>")).toEqual([
-            "child-card",
-            "leaf-badge",
-            "root-card",
-        ]);
+        expect(await resolve("<root-card></root-card>")).toEqual(["child-card", "leaf-badge", "root-card"]);
     });
 
     test("deduplicates shared dependencies and stops cycles", async () => {
@@ -105,18 +85,18 @@ describe("createBlocUsageResolver", () => {
             "root-card": "const t = `<missing-card/><unknown-card/>`;",
         });
 
-        expect(await resolve("<root-card/>")).toEqual([
-            "missing-card",
-            "root-card",
-        ]);
+        expect(await resolve("<root-card/>")).toEqual(["missing-card", "root-card"]);
     });
 
     test("reads each compiled view once while the resolver is reused", async () => {
         const reads: string[] = [];
-        const resolve = compositionResolver({
-            "root-card": "const t = `<child-card/>`;",
-            "child-card": "CHILD();",
-        }, tag => reads.push(tag));
+        const resolve = compositionResolver(
+            {
+                "root-card": "const t = `<child-card/>`;",
+                "child-card": "CHILD();",
+            },
+            (tag) => reads.push(tag),
+        );
 
         await resolve("<root-card/>");
         await resolve("<root-card/><child-card/>");

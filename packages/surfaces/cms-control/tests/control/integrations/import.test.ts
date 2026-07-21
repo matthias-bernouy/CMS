@@ -6,10 +6,13 @@ describe("POST /api/integrations/import", () => {
     test("creates a tracked Test secret source installation without exposing the secret value", async () => {
         const { cms, secrets, sources, integrationInstallations } = makeCms();
 
-        const res = await postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "secret-source-main", apiKey: "sk_test" },
-        }), cms);
+        const res = await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
         const body = await res.json();
         const secretKey = body.installation.secretRefs.apiKey;
 
@@ -30,26 +33,31 @@ describe("POST /api/integrations/import", () => {
     test("imports a manual declarative definition as a tracked installation", async () => {
         const { cms, sources, integrationInstallations } = makeCms();
 
-        const res = await postIntegrationImport(postImport({
-            definition: manualSourceDefinition(),
-            answers: { id: "manual", targetUrl: "https://api.example.com/items" },
-        }), cms);
+        const res = await postIntegrationImport(
+            postImport({
+                definition: manualSourceDefinition(),
+                answers: { id: "manual", targetUrl: "https://api.example.com/items" },
+            }),
+            cms,
+        );
         const body = await res.json();
 
         expect(body.installation.id).toBe("manual-source");
         expect(body.artifacts).toEqual([{ type: "source", id: "urn:manual", action: "created" }]);
-        expect((await sources.getSource("urn:manual"))?.endpoints[0]?.targetUrl)
-            .toBe("https://api.example.com/items");
+        expect((await sources.getSource("urn:manual"))?.endpoints[0]?.targetUrl).toBe("https://api.example.com/items");
         expect(await integrationInstallations.get("manual-source")).not.toBeNull();
     });
 
     test("imports function artifacts through the configured function repository", async () => {
         const { cms, functions } = makeCms();
 
-        const res = await postIntegrationImport(postImport({
-            definition: sourceWithFunctionDefinition(),
-            answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
-        }), cms);
+        const res = await postIntegrationImport(
+            postImport({
+                definition: sourceWithFunctionDefinition(),
+                answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
+            }),
+            cms,
+        );
         const body = await res.json();
 
         expect(res.status).toBe(200);
@@ -59,24 +67,29 @@ describe("POST /api/integrations/import", () => {
         ]);
         expect(await functions.getFunction("readOwnedItem")).toMatchObject({
             id: "readOwnedItem",
-            steps: [{
-                id: "item",
-                call: {
-                    source: "owned-items",
-                    endpoint: "read",
-                    params: { itemId: "$input.params.itemId" },
+            steps: [
+                {
+                    id: "item",
+                    call: {
+                        source: "owned-items",
+                        endpoint: "read",
+                        params: { itemId: "$input.params.itemId" },
+                    },
                 },
-            }],
+            ],
         });
     });
 
     test("uses the integration kind as the installation id", async () => {
         const { cms, integrationInstallations } = makeCms([{ kind: "no-id", label: "No ID", inputs: [] }]);
 
-        const res = await postIntegrationImport(postImport({
-            kind: "no-id",
-            answers: {},
-        }), cms);
+        const res = await postIntegrationImport(
+            postImport({
+                kind: "no-id",
+                answers: {},
+            }),
+            cms,
+        );
         const body = await res.json();
 
         expect(body.installation.id).toBe("no-id");
@@ -91,10 +104,15 @@ describe("POST /api/integrations/import", () => {
             },
         });
 
-        await expect(postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "secret-source-main", apiKey: "sk_test" },
-        }), cms)).rejects.toThrow(/integration installations repository not configured/);
+        await expect(
+            postIntegrationImport(
+                postImport({
+                    kind: "test-secret-source",
+                    answers: { id: "secret-source-main", apiKey: "sk_test" },
+                }),
+                cms,
+            ),
+        ).rejects.toThrow(/integration installations repository not configured/);
 
         expect(await sources.getSource("urn:secret-source-main")).toBeNull();
         expect(await secrets.listKeys()).toEqual([]);

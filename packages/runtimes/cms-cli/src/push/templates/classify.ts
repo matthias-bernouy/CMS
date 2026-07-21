@@ -6,20 +6,20 @@ import { detectConflict, type PushState } from "../shared/state";
 export type RemoteTemplateItem = { id: string; identifier: string };
 
 export type ClassifiedTemplate = {
-    template:   LocalTemplate;
-    remoteId:   string | null;
+    template: LocalTemplate;
+    remoteId: string | null;
     remoteHash: string | null;
-    status:     PageStatus;
+    status: PageStatus;
 };
 
 export async function classifyTemplates(
-    local:           LocalTemplate[],
-    remote:          RemoteTemplateItem[],
-    state:           PushState,
+    local: LocalTemplate[],
+    remote: RemoteTemplateItem[],
+    state: PushState,
     fetchRemoteHash: (id: string) => Promise<string>,
-    forceAll:        boolean,
+    forceAll: boolean,
 ): Promise<ClassifiedTemplate[]> {
-    const idByIdentifier = new Map(remote.map(r => [r.identifier, r.id]));
+    const idByIdentifier = new Map(remote.map((r) => [r.identifier, r.id]));
     const out: ClassifiedTemplate[] = [];
 
     for (const template of local) {
@@ -45,26 +45,24 @@ export async function classifyTemplates(
 }
 
 type RemoteTemplatePayload = {
-    name?:        string;
+    name?: string;
     description?: string;
-    category?:    string;
-    content?:     string;
+    category?: string;
+    content?: string;
 };
 
 /** Templates are fetched by db id (no by-identifier endpoint exposed yet). */
-export async function fetchRemoteTemplateHash(
-    adminBase: URL,
-    token:     string,
-    id:        string,
-): Promise<string> {
+export async function fetchRemoteTemplateHash(adminBase: URL, token: string, id: string): Promise<string> {
     const url = new URL(`api/template?id=${encodeURIComponent(id)}`, adminBase).href;
     const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    const raw = await res.json() as RemoteTemplatePayload;
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    const raw = (await res.json()) as RemoteTemplatePayload;
     return canonicalTemplateHash({
-        name:        raw.name        ?? "",
+        name: raw.name ?? "",
         description: raw.description ?? "",
-        category:    raw.category    ?? "",
-        content:     raw.content     ?? "",
+        category: raw.category ?? "",
+        content: raw.content ?? "",
     });
 }

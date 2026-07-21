@@ -28,7 +28,7 @@ describe("LocalFsIntegrationInstallationRepository", () => {
         expect(loaded?.id).toBe("test");
         expect(loaded?.createdAt).toBeInstanceOf(Date);
         expect(loaded?.runs[0]?.startedAt).toBeInstanceOf(Date);
-        expect((await second.list()).map(installation => installation.id)).toEqual(["test"]);
+        expect((await second.list()).map((installation) => installation.id)).toEqual(["test"]);
 
         const authoringImport = JSON.parse(await readFile(join(siteDir, "integrations", "test.json"), "utf-8"));
         expect(authoringImport).toMatchObject({

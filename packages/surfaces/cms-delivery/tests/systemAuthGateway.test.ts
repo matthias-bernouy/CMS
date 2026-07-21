@@ -10,11 +10,7 @@ import {
     SubjectResolver,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
-import {
-    CompositeSourceRepository,
-    InMemorySourceRepository,
-    SYSTEM_SOURCES,
-} from "@bernouy/cms-sources";
+import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
@@ -23,18 +19,33 @@ type Role = "user";
 class CaptureRunner implements Runner {
     private readonly defaults: Map<string, RouteHandler>;
 
-    constructor(readonly basePath: string = "/", sharedDefaults?: Map<string, RouteHandler>) {
+    constructor(
+        readonly basePath: string = "/",
+        sharedDefaults?: Map<string, RouteHandler>,
+    ) {
         this.defaults = sharedDefaults ?? new Map();
     }
 
     addEndpoint() {}
     use() {}
-    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("GET", path, handler, middlewares); }
-    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("POST", path, handler, middlewares); }
-    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PATCH", path, handler, middlewares); }
-    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("DELETE", path, handler, middlewares); }
-    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PUT", path, handler, middlewares); }
-    getRequestIP() { return undefined; }
+    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("GET", path, handler, middlewares);
+    }
+    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("POST", path, handler, middlewares);
+    }
+    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PATCH", path, handler, middlewares);
+    }
+    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("DELETE", path, handler, middlewares);
+    }
+    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PUT", path, handler, middlewares);
+    }
+    getRequestIP() {
+        return undefined;
+    }
     removeRoutesByPathPrefix() {}
     start() {}
     stop() {}
@@ -49,7 +60,9 @@ class CaptureRunner implements Runner {
 
     defaultHandler(method: string, prefix: string): RouteHandler {
         const handler = this.defaults.get(`${method} ${prefix}`);
-        if (!handler) throw new Error(`missing captured handler: ${method} ${prefix}`);
+        if (!handler) {
+            throw new Error(`missing captured handler: ${method} ${prefix}`);
+        }
         return handler;
     }
 }
@@ -85,7 +98,7 @@ async function setup() {
     return {
         emailer,
         credentials,
-        get:  runner.defaultHandler("GET", "/.cms/sources"),
+        get: runner.defaultHandler("GET", "/.cms/sources"),
         post: runner.defaultHandler("POST", "/.cms/sources"),
     };
 }
@@ -94,7 +107,9 @@ describe("Delivery system auth gateway", () => {
     test("signup, verification, login, me and logout run through system-auth", async () => {
         const { post, get, emailer } = await setup();
 
-        expect((await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1" }))).status).toBe(200);
+        expect((await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1" }))).status).toBe(
+            200,
+        );
         expect(emailer.sent).toHaveLength(1);
 
         const blocked = await post(jsonRequest("/login", { email: "ada@example.com", password: "password-1" }));
@@ -110,7 +125,7 @@ describe("Delivery system auth gateway", () => {
         expect(cookie).toContain("site-session=");
 
         const me = await get(new Request(url("/me"), { headers: { cookie } }));
-        expect((await me.json() as { subject: { email: string; role: string } | null }).subject).toMatchObject({
+        expect(((await me.json()) as { subject: { email: string; role: string } | null }).subject).toMatchObject({
             email: "ada@example.com",
             role: "user",
         });
@@ -128,10 +143,16 @@ describe("Delivery system auth gateway", () => {
         expect(emailer.sent.at(-1)?.text).toContain("http://site.test/auth/reset-password?token=");
 
         const token = tokenFrom(emailer.sent.at(-1)!.text);
-        expect((await post(jsonRequest("/confirmPasswordReset", { token, password: "new-password" }))).status).toBe(200);
+        expect((await post(jsonRequest("/confirmPasswordReset", { token, password: "new-password" }))).status).toBe(
+            200,
+        );
         expect((await credentials.getByEmail("reset@example.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
-        expect((await post(jsonRequest("/login", { email: "reset@example.com", password: "old-password" }))).status).toBe(401);
-        expect((await post(jsonRequest("/login", { email: "reset@example.com", password: "new-password" }))).status).toBe(200);
+        expect(
+            (await post(jsonRequest("/login", { email: "reset@example.com", password: "old-password" }))).status,
+        ).toBe(401);
+        expect(
+            (await post(jsonRequest("/login", { email: "reset@example.com", password: "new-password" }))).status,
+        ).toBe(200);
     });
 });
 
@@ -149,9 +170,13 @@ function url(endpoint: string): string {
 
 function tokenFrom(text: string): string {
     const match = /https?:\/\/\S+/.exec(text);
-    if (!match) throw new Error(`missing URL in ${text}`);
+    if (!match) {
+        throw new Error(`missing URL in ${text}`);
+    }
     const token = new URL(match[0]).searchParams.get("token");
-    if (!token) throw new Error(`missing token in ${match[0]}`);
+    if (!token) {
+        throw new Error(`missing token in ${match[0]}`);
+    }
     return token;
 }
 

@@ -2,12 +2,15 @@ import type { WDetailTableColumn } from "../types";
 import { isTokenControl, isValueControl, optionElement, type TokenControl, type ValueControl } from "./shared";
 
 export function createTableEditor(column: WDetailTableColumn, value: unknown): HTMLElement {
-    if (column.editable !== true) throw new Error("Cannot create an editor for a readonly column");
-    const control = column.type === "select"
-        ? selectEditor(column, value)
-        : column.type === "combobox"
-            ? comboboxEditor(column, value)
-            : column.type === "tokens"
+    if (column.editable !== true) {
+        throw new Error("Cannot create an editor for a readonly column");
+    }
+    const control =
+        column.type === "select"
+            ? selectEditor(column, value)
+            : column.type === "combobox"
+              ? comboboxEditor(column, value)
+              : column.type === "tokens"
                 ? tokensEditor(value)
                 : textEditor(value);
     control.dataset.tableColumn = column.key;
@@ -15,8 +18,12 @@ export function createTableEditor(column: WDetailTableColumn, value: unknown): H
 }
 
 export function readTableEditor(column: WDetailTableColumn, control: HTMLElement): unknown {
-    if (column.editable !== true) return undefined;
-    if (column.type === "tokens") return isTokenControl(control) ? [...control.values] : [];
+    if (column.editable !== true) {
+        return undefined;
+    }
+    if (column.type === "tokens") {
+        return isTokenControl(control) ? [...control.values] : [];
+    }
     return isValueControl(control) ? control.value : "";
 }
 
@@ -28,25 +35,19 @@ function textEditor(value: unknown): ValueControl {
     return input;
 }
 
-function selectEditor(
-    column: Extract<WDetailTableColumn, { type: "select" }>,
-    value: unknown,
-): ValueControl {
+function selectEditor(column: Extract<WDetailTableColumn, { type: "select" }>, value: unknown): ValueControl {
     const input = document.createElement("p9r-select") as ValueControl;
     const text = textValue(value);
     input.setAttribute("value", text);
-    input.replaceChildren(...column.options.map(option => optionElement(option, text)));
+    input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
     return input;
 }
 
-function comboboxEditor(
-    column: Extract<WDetailTableColumn, { type: "combobox" }>,
-    value: unknown,
-): ValueControl {
+function comboboxEditor(column: Extract<WDetailTableColumn, { type: "combobox" }>, value: unknown): ValueControl {
     const input = document.createElement("p9r-combobox") as ValueControl;
     const text = textValue(value);
     input.setAttribute("value", text);
-    input.replaceChildren(...column.options.map(option => optionElement(option, text)));
+    input.replaceChildren(...column.options.map((option) => optionElement(option, text)));
     input.value = text;
     return input;
 }

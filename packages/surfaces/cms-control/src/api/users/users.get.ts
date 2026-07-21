@@ -10,13 +10,17 @@ export default async function listUsers(req: Request, cms: ControlCms) {
     const sub = url.searchParams.get("sub");
     if (sub) {
         const user = await cms.users.getBySub(sub);
-        if (!user) throw new InvalidParam("sub", "unknown user");
+        if (!user) {
+            throw new InvalidParam("sub", "unknown user");
+        }
         return Response.json(await userView(user, cms.credentials));
     }
 
     const opts: UsersListOptions = {};
     const role = url.searchParams.get("role");
-    if (role) opts.role = role;
+    if (role) {
+        opts.role = role;
+    }
 
     const page = await cms.users.list(opts);
     const users = await Promise.all(page.users.map((user) => userView(user, cms.credentials)));

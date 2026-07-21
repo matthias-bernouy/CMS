@@ -13,7 +13,7 @@ describe("reserved connector provider secrets", () => {
         await secrets.set("PUBLIC_ADMIN_SECRET", "visible-value");
         const reads: string[] = [];
         const readSecret = secrets.get.bind(secrets);
-        secrets.get = async key => {
+        secrets.get = async (key) => {
             reads.push(key);
             return readSecret(key);
         };
@@ -34,10 +34,13 @@ describe("reserved connector provider secrets", () => {
         const { cms, secrets } = fixture();
         await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, "sbp_original");
 
-        const response = await postSecret(jsonRequest({
-            key: SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
-            value: "sbp_replacement",
-        }), cms);
+        const response = await postSecret(
+            jsonRequest({
+                key: SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY,
+                value: "sbp_replacement",
+            }),
+            cms,
+        );
 
         expect(response.status).toBe(400);
         expect(await secrets.get(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY)).toBe("sbp_original");
@@ -48,10 +51,12 @@ describe("reserved connector provider secrets", () => {
         const { cms, secrets } = fixture();
         await secrets.set(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY, "sbp_original");
 
-        const response = await deleteSecret(new Request(
-            `http://localhost/api/secrets?key=${SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY}`,
-            { method: "DELETE" },
-        ), cms);
+        const response = await deleteSecret(
+            new Request(`http://localhost/api/secrets?key=${SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY}`, {
+                method: "DELETE",
+            }),
+            cms,
+        );
 
         expect(response.status).toBe(400);
         expect(await secrets.get(SUPABASE_CONNECTOR_ACCESS_TOKEN_SECRET_KEY)).toBe("sbp_original");

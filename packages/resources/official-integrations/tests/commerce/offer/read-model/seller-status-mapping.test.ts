@@ -23,7 +23,7 @@ const cases: Array<{
 const sellerReadModelRpc = "list_seller_offers_read_model";
 
 describe("commerce seller offer status mapping", () => {
-    test.each(cases)("delegates $label to the seller read-model RPC", async scenario => {
+    test.each(cases)("delegates $label to the seller read-model RPC", async (scenario) => {
         useResponder();
 
         const response = await requestCommerce(`/me/offers?status=${scenario.status}`, {
@@ -43,17 +43,19 @@ describe("commerce seller offer status mapping", () => {
 });
 
 function useResponder(): void {
-    setRestResponder(request => {
+    setRestResponder((request) => {
         const resource = resourceName(request);
-        if (resource === sellerReadModelRpc) return jsonResponse({
-            seller_exists: true,
-            status_valid: true,
-            rows: [],
-            total: 0,
-            workflow_states: [],
-            media: [],
-            active_price_proposals: [],
-        });
+        if (resource === sellerReadModelRpc) {
+            return jsonResponse({
+                seller_exists: true,
+                status_valid: true,
+                rows: [],
+                total: 0,
+                workflow_states: [],
+                media: [],
+                active_price_proposals: [],
+            });
+        }
         throw new Error(`Unexpected seller offer request: ${request.url}`);
     });
 }
@@ -64,7 +66,7 @@ function rpcBody(): Record<string, unknown> {
 }
 
 function resources(): string[] {
-    return capturedFetches().map(call => resourceName(call));
+    return capturedFetches().map((call) => resourceName(call));
 }
 
 function resourceName(request: Request | { url: string }): string {

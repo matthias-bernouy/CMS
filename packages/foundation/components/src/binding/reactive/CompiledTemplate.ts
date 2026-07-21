@@ -88,14 +88,20 @@ export class CompiledTemplate {
         return this.template.cloneNode(true) as DocumentFragment;
     }
 
-    static fromTemplate(template: DocumentFragment, filters: FilterMap, options: CompileOptions = {}): CompiledTemplate {
+    static fromTemplate(
+        template: DocumentFragment,
+        filters: FilterMap,
+        options: CompileOptions = {},
+    ): CompiledTemplate {
         return new CompiledTemplate(template, compile(template, filters, options), filters);
     }
 
     static bindChildrenInPlace(parent: Element, scope: Scope, filters: FilterMap = {}): MountedInPlaceRegion {
         const doc = parent.ownerDocument ?? document;
         const template = doc.createDocumentFragment();
-        for (const child of Array.from(parent.childNodes)) template.appendChild(child.cloneNode(true));
+        for (const child of Array.from(parent.childNodes)) {
+            template.appendChild(child.cloneNode(true));
+        }
         const plan = compile(template, filters);
         const sites = instantiateSites(parent, plan, filters);
         const region = new MountedInPlaceRegion(sites);
@@ -151,7 +157,9 @@ class ConditionSite implements LiveBindingSite {
         }
 
         const parent = this.end.parentNode;
-        if (!parent) return;
+        if (!parent) {
+            return;
+        }
         this.child = this.template.mount(parent, scope, this.end);
     }
 
@@ -185,19 +193,25 @@ class RepeatSite implements LiveBindingSite {
         }
 
         const parent = this.end.parentNode;
-        if (!parent) return;
+        if (!parent) {
+            return;
+        }
 
         for (const item of res.value) {
             const childScope: Scope = this.spec.name
                 ? { vars: { [this.spec.name]: item }, parent: scope }
                 : { value: item, parent: scope };
-            if (this.rootCondition && !this.rootCondition.evaluate(childScope)) continue;
+            if (this.rootCondition && !this.rootCondition.evaluate(childScope)) {
+                continue;
+            }
             this.regions.push(this.template.mount(parent, childScope, this.end));
         }
     }
 
     unmount(): void {
-        for (const region of this.regions) region.unmount();
+        for (const region of this.regions) {
+            region.unmount();
+        }
         this.regions = [];
         clearBetween(this.start, this.end);
     }
@@ -214,7 +228,9 @@ class RawHtmlSite implements LiveBindingSite {
         clearBetween(this.start, this.end);
 
         const parent = this.end.parentNode;
-        if (!parent) return;
+        if (!parent) {
+            return;
+        }
 
         const res = lookup(scope, this.expression);
         const tpl = (this.end.ownerDocument ?? document).createElement("template");
@@ -230,11 +246,17 @@ class RawHtmlSite implements LiveBindingSite {
 function compile(fragment: DocumentFragment, filters: FilterMap, options: CompileOptions = {}): CompilePlan {
     const plan: CompilePlan = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
     Array.from(fragment.childNodes).forEach((child, index) => {
-        compileNode(child, [index], {
-            skipCondition: options.skipRootCondition === true,
-            skipRepeat: options.skipRootRepeat === true,
-            submitBoundary: options.submitBoundary ?? null,
-        }, plan, filters);
+        compileNode(
+            child,
+            [index],
+            {
+                skipCondition: options.skipRootCondition === true,
+                skipRepeat: options.skipRootRepeat === true,
+                submitBoundary: options.submitBoundary ?? null,
+            },
+            plan,
+            filters,
+        );
     });
     return plan;
 }
@@ -248,14 +270,22 @@ function compileNode(
 ): void {
     if (node.nodeType === Node.TEXT_NODE) {
         const template = node.nodeValue ?? "";
-        if (hasBinding(template) && !bindingOwnedBySubmitSource(template, options.submitBoundary)) plan.text.push({ path, template });
+        if (hasBinding(template) && !bindingOwnedBySubmitSource(template, options.submitBoundary)) {
+            plan.text.push({ path, template });
+        }
         return;
     }
 
-    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+        return;
+    }
     const el = node as Element;
 
-    if (!options.skipRepeat && el.hasAttribute(REPEAT_ATTR) && !pathOwnedBySubmitSource(el.getAttribute(REPEAT_ATTR) ?? "", options.submitBoundary)) {
+    if (
+        !options.skipRepeat &&
+        el.hasAttribute(REPEAT_ATTR) &&
+        !pathOwnedBySubmitSource(el.getAttribute(REPEAT_ATTR) ?? "", options.submitBoundary)
+    ) {
         const rootCondition = el.getAttribute(CONDITION_ATTR);
         const rootConditionOwnedBySubmit = rootCondition
             ? conditionOwnedBySubmitSource(rootCondition, options.submitBoundary)
@@ -273,7 +303,11 @@ function compileNode(
         return;
     }
 
-    if (!options.skipCondition && el.hasAttribute(CONDITION_ATTR) && !conditionOwnedBySubmitSource(el.getAttribute(CONDITION_ATTR) ?? "", options.submitBoundary)) {
+    if (
+        !options.skipCondition &&
+        el.hasAttribute(CONDITION_ATTR) &&
+        !conditionOwnedBySubmitSource(el.getAttribute(CONDITION_ATTR) ?? "", options.submitBoundary)
+    ) {
         plan.conditions.push({
             path,
             condition: compileCondition(el.getAttribute(CONDITION_ATTR) ?? ""),
@@ -288,10 +322,18 @@ function compileNode(
     if (el.hasAttribute(SOURCE_ATTR)) {
         compileAttributes(el, path, plan, options.submitBoundary);
         const sourceTrigger = el.getAttribute(SOURCE_TRIGGER_ATTR)?.trim().toLowerCase();
-        if (sourceTrigger !== "submit" && sourceTrigger !== "change") return;
+        if (sourceTrigger !== "submit" && sourceTrigger !== "change") {
+            return;
+        }
         const nextBoundary = submitBoundary(el);
         Array.from(el.childNodes).forEach((child, index) => {
-            compileNode(child, [...path, index], { skipCondition: false, skipRepeat: false, submitBoundary: nextBoundary }, plan, filters);
+            compileNode(
+                child,
+                [...path, index],
+                { skipCondition: false, skipRepeat: false, submitBoundary: nextBoundary },
+                plan,
+                filters,
+            );
         });
         return;
     }
@@ -303,14 +345,22 @@ function compileNode(
 
     const rawHtml = rawHtmlExpression(el);
     if (rawHtml) {
-        if (!pathOwnedBySubmitSource(rawHtml, options.submitBoundary)) plan.rawHtml.push({ path, expression: rawHtml });
+        if (!pathOwnedBySubmitSource(rawHtml, options.submitBoundary)) {
+            plan.rawHtml.push({ path, expression: rawHtml });
+        }
         return;
     }
 
     compileAttributes(el, path, plan, options.submitBoundary);
 
     Array.from(el.childNodes).forEach((child, index) => {
-        compileNode(child, [...path, index], { skipCondition: false, skipRepeat: false, submitBoundary: options.submitBoundary }, plan, filters);
+        compileNode(
+            child,
+            [...path, index],
+            { skipCondition: false, skipRepeat: false, submitBoundary: options.submitBoundary },
+            plan,
+            filters,
+        );
     });
 }
 
@@ -318,17 +368,24 @@ function instantiateSites(root: Node, plan: CompilePlan, filters: FilterMap): Li
     const sites: LiveBindingSite[] = [];
     const textTargets = plan.text.map((text) => ({ plan: text, node: nodeAtPath(root, text.path) }));
     const attrTargets = plan.attributes.map((attr) => ({ plan: attr, node: nodeAtPath(root, attr.path) }));
-    const conditionTargets = plan.conditions.map((condition) => ({ plan: condition, node: nodeAtPath(root, condition.path) }));
+    const conditionTargets = plan.conditions.map((condition) => ({
+        plan: condition,
+        node: nodeAtPath(root, condition.path),
+    }));
     const repeatTargets = plan.repeats.map((repeat) => ({ plan: repeat, node: nodeAtPath(root, repeat.path) }));
     const rawHtmlTargets = plan.rawHtml.map((rawHtml) => ({ plan: rawHtml, node: nodeAtPath(root, rawHtml.path) }));
 
     for (const { plan: text, node } of textTargets) {
-        if (node.nodeType !== Node.TEXT_NODE) throw new Error("Compiled text binding no longer points to a text node.");
+        if (node.nodeType !== Node.TEXT_NODE) {
+            throw new Error("Compiled text binding no longer points to a text node.");
+        }
         sites.push(new TextSite(node as Text, text.template, filters));
     }
 
     for (const { plan: attr, node } of attrTargets) {
-        if (node.nodeType !== Node.ELEMENT_NODE) throw new Error("Compiled attribute binding no longer points to an element.");
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            throw new Error("Compiled attribute binding no longer points to an element.");
+        }
         sites.push(new AttributeSite(node as Element, attr.name, attr.template, filters));
     }
 
@@ -354,7 +411,9 @@ function nodeAtPath(root: Node, path: NodePath): Node {
     let node: Node = root;
     for (const index of path) {
         const child = node.childNodes.item(index);
-        if (!child) throw new Error(`Compiled binding path is invalid: ${path.join(".")}`);
+        if (!child) {
+            throw new Error(`Compiled binding path is invalid: ${path.join(".")}`);
+        }
         node = child;
     }
     return node;
@@ -364,7 +423,12 @@ function hasBinding(value: string): boolean {
     return value.includes("{{");
 }
 
-function compileAttributes(el: Element, path: NodePath, plan: CompilePlan, boundary: SubmitSourceBoundary | null = null): void {
+function compileAttributes(
+    el: Element,
+    path: NodePath,
+    plan: CompilePlan,
+    boundary: SubmitSourceBoundary | null = null,
+): void {
     for (const attr of Array.from(el.attributes)) {
         if (hasBinding(attr.value) && !bindingOwnedBySubmitSource(attr.value, boundary)) {
             plan.attributes.push({ path, name: attr.name, template: attr.value });
@@ -379,8 +443,12 @@ function compileElementTemplate(
 ): CompiledTemplate {
     const fragment = (el.ownerDocument ?? document).createDocumentFragment();
     const clone = el.cloneNode(true) as Element;
-    if (options.removeRepeat) clone.removeAttribute(REPEAT_ATTR);
-    if (options.removeCondition) clone.removeAttribute(CONDITION_ATTR);
+    if (options.removeRepeat) {
+        clone.removeAttribute(REPEAT_ATTR);
+    }
+    if (options.removeCondition) {
+        clone.removeAttribute(CONDITION_ATTR);
+    }
     fragment.appendChild(clone);
     return CompiledTemplate.fromTemplate(fragment, filters, {
         skipRootCondition: true,
@@ -391,7 +459,9 @@ function compileElementTemplate(
 
 function replaceWithAnchors(node: Node, label: string): { start: Comment; end: Comment } {
     const parent = node.parentNode;
-    if (!parent) throw new Error(`Cannot mount ${label}: target node has no parent.`);
+    if (!parent) {
+        throw new Error(`Cannot mount ${label}: target node has no parent.`);
+    }
 
     const doc = node.ownerDocument ?? document;
     const start = doc.createComment(`${label} start`);
@@ -404,9 +474,13 @@ function replaceWithAnchors(node: Node, label: string): { start: Comment; end: C
 const RAW_HTML = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
 const BINDING_TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
 function rawHtmlExpression(el: Element): string | null {
-    if (el.childNodes.length !== 1) return null;
+    if (el.childNodes.length !== 1) {
+        return null;
+    }
     const only = el.firstChild;
-    if (!only || only.nodeType !== Node.TEXT_NODE) return null;
+    if (!only || only.nodeType !== Node.TEXT_NODE) {
+        return null;
+    }
     return (only.nodeValue ?? "").trim().match(RAW_HTML)?.[1] ?? null;
 }
 
@@ -415,24 +489,34 @@ function submitBoundary(el: Element): SubmitSourceBoundary {
 }
 
 function bindingOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundary | null): boolean {
-    if (!boundary) return false;
+    if (!boundary) {
+        return false;
+    }
     BINDING_TOKEN.lastIndex = 0;
     for (const match of value.matchAll(BINDING_TOKEN)) {
-        if (pathOwnedBySubmitSource(match[1] ?? "", boundary)) return true;
+        if (pathOwnedBySubmitSource(match[1] ?? "", boundary)) {
+            return true;
+        }
     }
     return false;
 }
 
 function conditionOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundary | null): boolean {
-    if (!boundary) return false;
+    if (!boundary) {
+        return false;
+    }
     for (const path of collectConditionReferences(value)) {
-        if (pathOwnedBySubmitSource(path, boundary)) return true;
+        if (pathOwnedBySubmitSource(path, boundary)) {
+            return true;
+        }
     }
     return false;
 }
 
 function pathOwnedBySubmitSource(path: string, boundary: SubmitSourceBoundary | null): boolean {
-    if (!boundary) return false;
+    if (!boundary) {
+        return false;
+    }
     const head = path.trim().split(".")[0] ?? "";
     return head === "$source" || (!!boundary.alias && head === boundary.alias);
 }

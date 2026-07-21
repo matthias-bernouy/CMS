@@ -19,12 +19,17 @@ export function createReloadEmitter(): ReloadEmitter {
     return {
         subscribe(fn) {
             listeners.add(fn);
-            return () => { listeners.delete(fn); };
+            return () => {
+                listeners.delete(fn);
+            };
         },
         emit(tag) {
             for (const fn of listeners) {
-                try { fn(tag); }
-                catch (e) { console.error(`[watch] listener error: ${e instanceof Error ? e.message : e}`); }
+                try {
+                    fn(tag);
+                } catch (e) {
+                    console.error(`[watch] listener error: ${e instanceof Error ? e.message : e}`);
+                }
             }
         },
     };
@@ -58,13 +63,20 @@ type Entry = {
 async function folderMaxMtimeMs(folder: string): Promise<number> {
     let max = 0;
     let entries: string[];
-    try { entries = await readdir(folder); }
-    catch { return 0; }
+    try {
+        entries = await readdir(folder);
+    } catch {
+        return 0;
+    }
     for (const name of entries) {
-        if (name.startsWith(".__p9r_dev_") || name.startsWith(".")) continue;
+        if (name.startsWith(".__p9r_dev_") || name.startsWith(".")) {
+            continue;
+        }
         try {
             const s = await stat(`${folder}/${name}`);
-            if (s.isFile() && s.mtimeMs > max) max = s.mtimeMs;
+            if (s.isFile() && s.mtimeMs > max) {
+                max = s.mtimeMs;
+            }
         } catch {}
     }
     return max;
@@ -102,15 +114,23 @@ export function createBlocRegistry(
 
     const removeEntry = (folder: string) => {
         const entry = entries.get(folder);
-        if (!entry) return;
-        try { entry.watcher.close(); } catch {}
-        if (entry.rebuildTimer) clearTimeout(entry.rebuildTimer);
+        if (!entry) {
+            return;
+        }
+        try {
+            entry.watcher.close();
+        } catch {}
+        if (entry.rebuildTimer) {
+            clearTimeout(entry.rebuildTimer);
+        }
         entries.delete(folder);
     };
 
     // Seed from the initial scan — only keep blocs whose first build succeeded.
     for (const bloc of initial) {
-        if (built.has(bloc.tag)) addEntry(bloc);
+        if (built.has(bloc.tag)) {
+            addEntry(bloc);
+        }
     }
 
     // ── Polling loop: diff `scanDevBlocs(cwd)` against `entries` ───────
@@ -119,16 +139,20 @@ export function createBlocRegistry(
     let rescanning = false;
 
     const rescan = async () => {
-        if (rescanning) return;
+        if (rescanning) {
+            return;
+        }
         rescanning = true;
         try {
             const fresh = await scanDevBlocs(cwd, { quiet: true });
-            const freshByFolder = new Map(fresh.map(b => [b.folder, b]));
+            const freshByFolder = new Map(fresh.map((b) => [b.folder, b]));
 
             // Removed: folder disappeared from the scan (deleted, renamed, or
             // manifest became invalid).
             for (const folder of [...entries.keys()]) {
-                if (freshByFolder.has(folder)) continue;
+                if (freshByFolder.has(folder)) {
+                    continue;
+                }
                 const entry = entries.get(folder)!;
                 const tag = entry.bloc.tag;
                 removeEntry(folder);
@@ -139,7 +163,9 @@ export function createBlocRegistry(
             // Also clear collision warnings for any folder that's no longer
             // around, so if the user re-creates it later we'll warn again.
             for (const folder of [...warnedCollisions]) {
-                if (!freshByFolder.has(folder)) warnedCollisions.delete(folder);
+                if (!freshByFolder.has(folder)) {
+                    warnedCollisions.delete(folder);
+                }
             }
 
             // Added or metadata-changed.
@@ -150,11 +176,13 @@ export function createBlocRegistry(
                     // New folder. Reject if its tag collides with an already-
                     // registered bloc (e.g. user copied a bloc folder without
                     // renaming the tag in manifest.json).
-                    const collision = [...entries.values()].find(e => e.bloc.tag === bloc.tag);
+                    const collision = [...entries.values()].find((e) => e.bloc.tag === bloc.tag);
                     if (collision) {
                         if (!warnedCollisions.has(folder)) {
                             warnedCollisions.add(folder);
-                            console.warn(`[rescan] Skipping ${folder}: tag "${bloc.tag}" is already used by ${collision.bloc.folder}`);
+                            console.warn(
+                                `[rescan] Skipping ${folder}: tag "${bloc.tag}" is already used by ${collision.bloc.folder}`,
+                            );
                         }
                         continue;
                     }
@@ -166,7 +194,9 @@ export function createBlocRegistry(
                         console.log(`[rescan] Added ${b.tag} (${folder})`);
                         emitter.emit(b.tag);
                     } catch (e) {
-                        console.error(`[rescan] Failed to build new bloc at ${folder}: ${e instanceof Error ? e.message : e}`);
+                        console.error(
+                            `[rescan] Failed to build new bloc at ${folder}: ${e instanceof Error ? e.message : e}`,
+                        );
                     }
                     continue;
                 }
@@ -186,12 +216,16 @@ export function createBlocRegistry(
                 }
                 try {
                     const b = await buildDevBloc(bloc);
-                    if (old.tag !== bloc.tag) built.delete(old.tag);
+                    if (old.tag !== bloc.tag) {
+                        built.delete(old.tag);
+                    }
                     built.set(b.tag, b);
                     existing.bloc = bloc;
                     const arrow = old.tag !== bloc.tag ? ` → ${bloc.tag}` : "";
                     console.log(`[rescan] Updated ${old.tag}${arrow}`);
-                    if (old.tag !== bloc.tag) emitter.emit(old.tag);
+                    if (old.tag !== bloc.tag) {
+                        emitter.emit(old.tag);
+                    }
                     emitter.emit(b.tag);
                 } catch (e) {
                     console.error(`[rescan] Failed to rebuild ${old.tag}: ${e instanceof Error ? e.message : e}`);
@@ -205,7 +239,9 @@ export function createBlocRegistry(
     };
 
     const schedulePoll = () => {
-        if (!polling) return;
+        if (!polling) {
+            return;
+        }
         pollTimer = setTimeout(async () => {
             await rescan();
             schedulePoll();
@@ -216,32 +252,39 @@ export function createBlocRegistry(
     return {
         stop() {
             polling = false;
-            if (pollTimer) clearTimeout(pollTimer);
-            for (const folder of [...entries.keys()]) removeEntry(folder);
+            if (pollTimer) {
+                clearTimeout(pollTimer);
+            }
+            for (const folder of [...entries.keys()]) {
+                removeEntry(folder);
+            }
         },
     };
 }
 
-async function triggerRebuild(
-    entry: Entry,
-    built: Map<string, BuiltBloc>,
-    emitter: ReloadEmitter,
-): Promise<void> {
-    if (entry.building) { entry.pending = true; return; }
+async function triggerRebuild(entry: Entry, built: Map<string, BuiltBloc>, emitter: ReloadEmitter): Promise<void> {
+    if (entry.building) {
+        entry.pending = true;
+        return;
+    }
     entry.building = true;
     try {
         const oldTag = entry.bloc.tag;
-        const freshBloc = await rescanBlocFolder(entry.bloc.folder) ?? entry.bloc;
+        const freshBloc = (await rescanBlocFolder(entry.bloc.folder)) ?? entry.bloc;
         const b = await buildDevBloc(freshBloc);
         // The manifest tag may have changed since this watcher was set up
         // (the polling loop usually catches it first, but a fast edit can
         // race). Drop the stale tag before setting the new one.
-        if (b.tag !== oldTag) built.delete(oldTag);
+        if (b.tag !== oldTag) {
+            built.delete(oldTag);
+        }
         built.set(b.tag, b);
         entry.bloc = freshBloc;
         entry.lastBuildMtimeMs = await folderMaxMtimeMs(entry.bloc.folder);
         console.log(`[watch] Rebuilt ${b.tag}`);
-        if (b.tag !== oldTag) emitter.emit(oldTag);
+        if (b.tag !== oldTag) {
+            emitter.emit(oldTag);
+        }
         emitter.emit(b.tag);
     } catch (e) {
         // Ignore the race where a rebuild fires just after the folder was
@@ -261,17 +304,17 @@ async function triggerRebuild(
 
 async function rescanBlocFolder(folder: string): Promise<DevBloc | null> {
     const blocs = await scanDevBlocs(folder, { quiet: true });
-    return blocs.find(bloc => bloc.folder === folder) ?? null;
+    return blocs.find((bloc) => bloc.folder === folder) ?? null;
 }
 
-function makeWatcher(
-    entry: Entry,
-    built: Map<string, BuiltBloc>,
-    emitter: ReloadEmitter,
-): FSWatcher {
+function makeWatcher(entry: Entry, built: Map<string, BuiltBloc>, emitter: ReloadEmitter): FSWatcher {
     const onChange = (_type: string, filename: string | null) => {
-        if (filename && IGNORED.test(filename)) return;
-        if (entry.rebuildTimer) clearTimeout(entry.rebuildTimer);
+        if (filename && IGNORED.test(filename)) {
+            return;
+        }
+        if (entry.rebuildTimer) {
+            clearTimeout(entry.rebuildTimer);
+        }
         entry.rebuildTimer = setTimeout(() => triggerRebuild(entry, built, emitter), 150);
     };
 

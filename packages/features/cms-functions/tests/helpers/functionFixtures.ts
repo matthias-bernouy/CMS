@@ -24,22 +24,27 @@ export async function proxyFunction(
 ): Promise<Response> {
     const proxiedSources = withFunctionsSource(sources, functions);
     const url = new URL(`${prefix}system-functions/updateMyProduct`, "https://cms.test");
-    return handleSourceRequest(proxiedSources, new Request(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ productId: "p1", title: "New title" }),
-    }), {
-        prefix,
-        deps: {
-            authorizeEndpoint: () => true,
-            executeSystemEndpoint: (endpoint, request) => executeFunctionSystemSourceEndpoint(endpoint, request, {
-                functions,
-                sources,
-                deps: { fetchImpl: options.fetchImpl },
-                resolveUser: async () => options.user,
-            }),
+    return handleSourceRequest(
+        proxiedSources,
+        new Request(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ productId: "p1", title: "New title" }),
+        }),
+        {
+            prefix,
+            deps: {
+                authorizeEndpoint: () => true,
+                executeSystemEndpoint: (endpoint, request) =>
+                    executeFunctionSystemSourceEndpoint(endpoint, request, {
+                        functions,
+                        sources,
+                        deps: { fetchImpl: options.fetchImpl },
+                        resolveUser: async () => options.user,
+                    }),
+            },
         },
-    });
+    );
 }
 
 export function updateMyProductFunction(): CmsFunction {
@@ -92,15 +97,20 @@ export function productsSource(): Source {
                 method: "GET",
                 targetUrl: "https://api.test/products/list",
                 input: { params: [] },
-                output: [{
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            items: { type: "array", items: { type: "object", properties: { id: { type: "string" } } } },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: {
+                                items: {
+                                    type: "array",
+                                    items: { type: "object", properties: { id: { type: "string" } } },
+                                },
+                            },
                         },
                     },
-                }],
+                ],
             },
             endpoint("getProduct", "GET", "https://api.test/products"),
             endpoint("updateProduct", "POST", "https://api.test/products/update", {
@@ -110,7 +120,12 @@ export function productsSource(): Source {
     };
 }
 
-function endpoint(id: string, method: "GET" | "POST", targetUrl: string, options: { body?: DataShape } = {}): SourceEndpoint {
+function endpoint(
+    id: string,
+    method: "GET" | "POST",
+    targetUrl: string,
+    options: { body?: DataShape } = {},
+): SourceEndpoint {
     return {
         urn: makeEndpointUrn("products", id),
         method,
@@ -119,23 +134,26 @@ function endpoint(id: string, method: "GET" | "POST", targetUrl: string, options
             params: [{ name: "productId", in: "query", required: true, schema: { type: "string" } }],
             ...(options.body ? { body: options.body } : {}),
         },
-        output: [{
-            status: "200",
-            body: {
-                type: "object",
-                properties: {
-                    id: { type: "string" },
-                    ownerUserId: { type: "string" },
-                    title: { type: "string" },
+        output: [
+            {
+                status: "200",
+                body: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string" },
+                        ownerUserId: { type: "string" },
+                        title: { type: "string" },
+                    },
                 },
             },
-        }, {
-            status: "default",
-            body: {
-                type: "object",
-                properties: { error: { type: "string" } },
+            {
+                status: "default",
+                body: {
+                    type: "object",
+                    properties: { error: { type: "string" } },
+                },
             },
-        }],
+        ],
     };
 }
 

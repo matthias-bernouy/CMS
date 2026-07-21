@@ -11,12 +11,23 @@
 
 // ── Vocabulary ─────────────────────────────────────────────────────────
 export {
-    CMS_PERMISSION_CATALOGUE, CMS_PERMISSIONS, cmsPermission,
-    ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE, defaultRoleDefinitions,
-    grantsFor, effectiveGrantsFor, can, canRole,
+    CMS_PERMISSION_CATALOGUE,
+    CMS_PERMISSIONS,
+    cmsPermission,
+    ADMIN_ROLE,
+    USER_ROLE,
+    PUBLIC_ROLE,
+    defaultRoleDefinitions,
+    grantsFor,
+    effectiveGrantsFor,
+    can,
+    canRole,
 } from "cms-permissions/core/permissions";
 export type {
-    CmsFeature, Grant, RoleDefinition, RolesConfig,
+    CmsFeature,
+    Grant,
+    RoleDefinition,
+    RolesConfig,
 } from "cms-permissions/core/permissions";
 export type { CMS_ROLES } from "cms-permissions/core/roles";
 

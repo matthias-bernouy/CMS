@@ -19,10 +19,7 @@ export const strings = (): DataShape => ({
     items: text(),
 });
 
-export function object(
-    properties: Record<string, DataShape>,
-    required?: string[],
-): DataShape {
+export function object(properties: Record<string, DataShape>, required?: string[]): DataShape {
     return {
         type: "object",
         properties,

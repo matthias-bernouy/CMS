@@ -15,13 +15,19 @@ export function createItemControl(
     input.dataset.itemIndex = String(index);
     input.dataset.itemPath = field.path;
     input.setAttribute("aria-label", field.label);
-    if (field.required) input.setAttribute("required", "");
-    if (field.placeholder) input.setAttribute("placeholder", field.placeholder);
+    if (field.required) {
+        input.setAttribute("required", "");
+    }
+    if (field.placeholder) {
+        input.setAttribute("placeholder", field.placeholder);
+    }
     return input;
 }
 
 export function readItemControl(control: HTMLElement): string | boolean {
-    if (control instanceof HTMLInputElement && control.type === "checkbox") return control.checked;
+    if (control instanceof HTMLInputElement && control.type === "checkbox") {
+        return control.checked;
+    }
     return "value" in control ? String((control as ValueControl).value ?? "") : "";
 }
 
@@ -30,13 +36,15 @@ function fieldControl(field: ReorderableListItemField, value: string): HTMLEleme
         const control = document.createElement(field.type === "select" ? "p9r-select" : "p9r-combobox") as ValueControl;
         control.setAttribute("aria-label", field.label);
         control.setAttribute("value", value);
-        control.replaceChildren(...(field.options ?? []).map(option => {
-            const element = document.createElement("option");
-            element.value = option.value;
-            element.textContent = option.label;
-            element.selected = option.value === value;
-            return element;
-        }));
+        control.replaceChildren(
+            ...(field.options ?? []).map((option) => {
+                const element = document.createElement("option");
+                element.value = option.value;
+                element.textContent = option.label;
+                element.selected = option.value === value;
+                return element;
+            }),
+        );
         control.value = value;
         return control;
     }

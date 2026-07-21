@@ -10,10 +10,7 @@ import type { ShellCommands } from "../shellCommands";
 import type { ShellRenderSyncCommands } from "../shellRenderSyncCommands";
 import { createShellControllerServices } from "./shellServices";
 import type { ShellControllerHost } from "./shellServiceTypes";
-import {
-    createShellState,
-    type ShellState,
-} from "./shellState";
+import { createShellState, type ShellState } from "./shellState";
 import { createShellTemplate } from "../../shellTemplate";
 import type { ShellLifecycleContext } from "../Lifecycle/shellLifecycleFlow";
 
@@ -41,20 +38,22 @@ export function createShellControllerParts(host: ShellControllerHost): ShellCont
         state,
         refs,
         frames,
-        mutations:  services.mutations,
-        sync:       services.sync,
-        commands:   services.commands,
+        mutations: services.mutations,
+        sync: services.sync,
+        commands: services.commands,
         renderSync: services.renderSync,
-        api:        services.api,
-        lifecycle:  {
-            root:       host.shadowRoot!,
+        api: services.api,
+        lifecycle: {
+            root: host.shadowRoot!,
             refs,
-            events:     services.events,
-            commands:   services.commands,
+            events: services.events,
+            commands: services.commands,
             renderSync: services.renderSync,
             highlight,
-            runtime:    () => state.runtime,
-            setRuntime: runtime => { state.runtime = runtime; },
+            runtime: () => state.runtime,
+            setRuntime: (runtime) => {
+                state.runtime = runtime;
+            },
         },
     };
 }

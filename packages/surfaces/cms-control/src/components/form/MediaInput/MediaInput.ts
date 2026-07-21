@@ -14,7 +14,6 @@ import type { MediaCenter } from "cms-control/components/media/MediaCenter/Media
  * px (default 64).
  */
 export class MediaInput extends HTMLElement {
-
     static formAssociated = true;
 
     private _internals: ElementInternals;
@@ -36,8 +35,12 @@ export class MediaInput extends HTMLElement {
         this.value = this._value || this.getAttribute("value") || "";
     }
 
-    get name()  { return this.getAttribute("name"); }
-    get value() { return this._value; }
+    get name() {
+        return this.getAttribute("name");
+    }
+    get value() {
+        return this._value;
+    }
     set value(v: string) {
         this._value = v;
         this._internals.setFormValue(v);
@@ -48,7 +51,13 @@ export class MediaInput extends HTMLElement {
 
     private get _types(): string[] {
         const raw = this.getAttribute("types") || "image";
-        return ["folder", ...raw.split(",").map(t => t.trim()).filter(Boolean)];
+        return [
+            "folder",
+            ...raw
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean),
+        ];
     }
 
     private _build(label: string | null) {
@@ -77,15 +86,15 @@ export class MediaInput extends HTMLElement {
                     </span>
                 </button>
             </div>`;
-        this._tile     = shadow.querySelector(".tile")    as HTMLElement;
-        this._preview  = shadow.querySelector(".preview") as HTMLImageElement;
-        this._clearBtn = shadow.querySelector(".clear")   as HTMLElement;
+        this._tile = shadow.querySelector(".tile") as HTMLElement;
+        this._preview = shadow.querySelector(".preview") as HTMLImageElement;
+        this._clearBtn = shadow.querySelector(".clear") as HTMLElement;
     }
 
     private _wire() {
         this._tile.addEventListener("click", () => this._openPicker());
         this._clearBtn.addEventListener("click", (e) => {
-            e.stopPropagation();                 // don't also open the picker
+            e.stopPropagation(); // don't also open the picker
             this.value = "";
             this.dispatchEvent(new Event("change", { bubbles: true }));
         });

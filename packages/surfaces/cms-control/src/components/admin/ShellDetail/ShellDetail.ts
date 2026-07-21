@@ -9,4 +9,6 @@ export class CmsShellDetail extends Component {
     }
 }
 
-if (!customElements.get("cms-shell-detail")) customElements.define("cms-shell-detail", CmsShellDetail);
+if (!customElements.get("cms-shell-detail")) {
+    customElements.define("cms-shell-detail", CmsShellDetail);
+}

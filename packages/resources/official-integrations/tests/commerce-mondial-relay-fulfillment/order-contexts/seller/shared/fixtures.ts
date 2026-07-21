@@ -1,7 +1,4 @@
-import {
-    orderPublicId,
-    shipment,
-} from "../../shared/fixtures";
+import { orderPublicId, shipment } from "../../shared/fixtures";
 
 export const sellerId = "seller-subject";
 export { orderPublicId };
@@ -23,27 +20,31 @@ export const sellerTrackingResponse = {
     orderId: sellerSale.id,
     orderPublicId,
     orderNumber: sellerSale.orderNumber,
-    shipments: [{
-        id: shipment.id,
-        expeditionNumber: shipment.expeditionNumber,
-        status: shipment.status,
-        trackingUrl: shipment.trackingUrl,
-        deliveryRelayLocation: shipment.deliveryRelayLocation,
-        latestEventLabel: shipment.latestEventLabel,
-        latestEventAt: shipment.latestEventAt,
-        carrierAcceptedAt: shipment.carrierAcceptedAt,
-        sellerHandoffDeclaredAt: shipment.sellerHandoffDeclaredAt,
-        recipientHandoffAt: shipment.recipientHandoffAt,
-        createdAt: shipment.createdAt,
-        events: [{
-            eventLabel: shipment.events[0]!.eventLabel,
-            eventDate: shipment.events[0]!.eventDate,
-            eventTime: shipment.events[0]!.eventTime,
-            normalizedStatus: shipment.events[0]!.normalizedStatus,
-            occurredAt: shipment.events[0]!.occurredAt,
-            location: shipment.events[0]!.location,
-        }],
-    }],
+    shipments: [
+        {
+            id: shipment.id,
+            expeditionNumber: shipment.expeditionNumber,
+            status: shipment.status,
+            trackingUrl: shipment.trackingUrl,
+            deliveryRelayLocation: shipment.deliveryRelayLocation,
+            latestEventLabel: shipment.latestEventLabel,
+            latestEventAt: shipment.latestEventAt,
+            carrierAcceptedAt: shipment.carrierAcceptedAt,
+            sellerHandoffDeclaredAt: shipment.sellerHandoffDeclaredAt,
+            recipientHandoffAt: shipment.recipientHandoffAt,
+            createdAt: shipment.createdAt,
+            events: [
+                {
+                    eventLabel: shipment.events[0]!.eventLabel,
+                    eventDate: shipment.events[0]!.eventDate,
+                    eventTime: shipment.events[0]!.eventTime,
+                    normalizedStatus: shipment.events[0]!.normalizedStatus,
+                    occurredAt: shipment.events[0]!.occurredAt,
+                    location: shipment.events[0]!.location,
+                },
+            ],
+        },
+    ],
 };
 
 export const labelAuthorization = {

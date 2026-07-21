@@ -18,7 +18,7 @@ export function functionsAsSource(functions: readonly CmsFunction[], sourceId = 
             name: "Functions",
             description: "Declarative CMS functions projected as system source endpoints.",
         },
-        endpoints: functions.map(fn => functionAsEndpoint(fn, sourceId)),
+        endpoints: functions.map((fn) => functionAsEndpoint(fn, sourceId)),
     };
 }
 
@@ -36,7 +36,13 @@ export function functionAsEndpoint(fn: CmsFunction, sourceId = SYSTEM_FUNCTIONS_
 
 function endpointInput(input: FunctionEndpointInput): SourceEndpoint["input"] {
     return {
-        ...(input.params ? { params: Object.entries(input.params).map(([name, schema]) => ({ name, in: "query", schema }) satisfies EndpointParam) } : {}),
+        ...(input.params
+            ? {
+                  params: Object.entries(input.params).map(
+                      ([name, schema]) => ({ name, in: "query", schema }) satisfies EndpointParam,
+                  ),
+              }
+            : {}),
         ...(input.body ? { body: input.body } : {}),
     };
 }

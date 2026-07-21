@@ -43,12 +43,14 @@ export class FilesCenter extends HTMLElement {
         this._wire();
     }
 
-    show(options: {
-        accept?: ("folder" | "file")[];
-        fileAccept?: FilesCenterFileAccept[];
-        multiple?: boolean;
-        maxSelection?: number;
-    } = {}): void {
+    show(
+        options: {
+            accept?: ("folder" | "file")[];
+            fileAccept?: FilesCenterFileAccept[];
+            multiple?: boolean;
+            maxSelection?: number;
+        } = {},
+    ): void {
         this._wire();
         this._accept = options.accept ?? ["folder", "file"];
         this._fileAccept = options.fileAccept ?? null;
@@ -64,13 +66,17 @@ export class FilesCenter extends HTMLElement {
     }
 
     private _wire(): void {
-        if (this._wired) return;
+        if (this._wired) {
+            return;
+        }
         this._wired = true;
 
         this.closeButton.addEventListener("click", () => this._close());
         this.cancelButton.addEventListener("click", () => this._close());
         this.backdrop.addEventListener("click", (event) => {
-            if (event.target === this.backdrop) this._close();
+            if (event.target === this.backdrop) {
+                this._close();
+            }
         });
         this.selectButton.addEventListener("click", () => this._confirm());
         this.searchInput.addEventListener("input", () => this._renderItems());
@@ -81,7 +87,9 @@ export class FilesCenter extends HTMLElement {
         this._updateSelection();
 
         const params = new URLSearchParams();
-        if (this._folder) params.set("parentId", this._folder);
+        if (this._folder) {
+            params.set("parentId", this._folder);
+        }
         params.set("accept", this._accept.join(","));
         params.set("sortBy", "name");
         params.set("limit", "10000");
@@ -90,7 +98,7 @@ export class FilesCenter extends HTMLElement {
         if (!response.ok) {
             this._items = [];
         } else {
-            const page = await response.json() as FilesPage;
+            const page = (await response.json()) as FilesPage;
             this._items = page.items;
         }
 
@@ -125,8 +133,12 @@ export class FilesCenter extends HTMLElement {
 
         const query = this.searchInput.value.trim().toLowerCase();
         const items = this._items.filter((item) => {
-            if (item.type === "file" && !matchesFileAccept(item, this._fileAccept)) return false;
-            if (!query) return true;
+            if (item.type === "file" && !matchesFileAccept(item, this._fileAccept)) {
+                return false;
+            }
+            if (!query) {
+                return true;
+            }
             return item.name.toLowerCase().includes(query);
         });
 
@@ -148,7 +160,9 @@ export class FilesCenter extends HTMLElement {
                 this._updateSelection();
             });
             button.addEventListener("dblclick", () => {
-                if (item.type === "file" && !this._multiple) this._confirm();
+                if (item.type === "file" && !this._multiple) {
+                    this._confirm();
+                }
             });
 
             const preview = this._preview(item);
@@ -195,24 +209,32 @@ export class FilesCenter extends HTMLElement {
 
     private _confirm(): void {
         if (this._multiple) {
-            if (this._selectedMany.length === 0) return;
-            this.dispatchEvent(new CustomEvent<FilesCenterSelectManyDetail>("select-files", {
-                bubbles: true,
-                composed: true,
-                detail: {
-                    files: this._selectedMany.map(file => fileDetail(this._basePath(), file)),
-                },
-            }));
+            if (this._selectedMany.length === 0) {
+                return;
+            }
+            this.dispatchEvent(
+                new CustomEvent<FilesCenterSelectManyDetail>("select-files", {
+                    bubbles: true,
+                    composed: true,
+                    detail: {
+                        files: this._selectedMany.map((file) => fileDetail(this._basePath(), file)),
+                    },
+                }),
+            );
             this._close();
             return;
         }
 
-        if (!this._selected) return;
-        this.dispatchEvent(new CustomEvent<FilesCenterSelectDetail>("select-file", {
-            bubbles: true,
-            composed: true,
-            detail: fileDetail(this._basePath(), this._selected),
-        }));
+        if (!this._selected) {
+            return;
+        }
+        this.dispatchEvent(
+            new CustomEvent<FilesCenterSelectDetail>("select-file", {
+                bubbles: true,
+                composed: true,
+                detail: fileDetail(this._basePath(), this._selected),
+            }),
+        );
         this._close();
     }
 
@@ -222,18 +244,22 @@ export class FilesCenter extends HTMLElement {
             return;
         }
 
-        const existingIndex = this._selectedMany.findIndex(selected => selected.id === item.id);
+        const existingIndex = this._selectedMany.findIndex((selected) => selected.id === item.id);
         if (existingIndex >= 0) {
             this._selectedMany.splice(existingIndex, 1);
             return;
         }
 
-        if (this._maxSelection && this._selectedMany.length >= this._maxSelection) return;
+        if (this._maxSelection && this._selectedMany.length >= this._maxSelection) {
+            return;
+        }
         this._selectedMany.push(item);
     }
 
     private _isSelected(item: FileItem): boolean {
-        if (this._multiple) return this._selectedMany.some(selected => selected.id === item.id);
+        if (this._multiple) {
+            return this._selectedMany.some((selected) => selected.id === item.id);
+        }
         return this._selected?.id === item.id;
     }
 
@@ -260,9 +286,10 @@ export class FilesCenter extends HTMLElement {
             return preview;
         }
 
-        preview.innerHTML = fileKind(item) === "pdf"
-            ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>`
-            : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
+        preview.innerHTML =
+            fileKind(item) === "pdf"
+                ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>`
+                : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
         return preview;
     }
 

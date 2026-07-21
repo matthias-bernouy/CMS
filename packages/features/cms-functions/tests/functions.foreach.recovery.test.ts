@@ -15,20 +15,20 @@ describe("cms functions foreach recovery", () => {
     test("recovers one item without exposing its provider failure", async () => {
         const sources = await productSources();
         const requests: string[] = [];
-        const response = await executeFunction(
-            recoveringProductsFunction(),
-            functionRequest(),
-            {
-                sources,
-                includeCallErrorDetails: true,
-                deps: { fetchImpl: async input => {
+        const response = await executeFunction(recoveringProductsFunction(), functionRequest(), {
+            sources,
+            includeCallErrorDetails: true,
+            deps: {
+                fetchImpl: async (input) => {
                     const id = requestProductId(input);
                     requests.push(id);
-                    if (id === "p1") return json({ error: "private provider failure", email: "private@example.test" }, 503);
+                    if (id === "p1") {
+                        return json({ error: "private provider failure", email: "private@example.test" }, 503);
+                    }
                     return json({ id, ownerUserId: "user-1", title: `Product ${id}` });
-                } },
+                },
             },
-        );
+        });
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual([
@@ -49,10 +49,12 @@ describe("cms functions foreach recovery", () => {
 
         const response = await executeFunction(fn, functionRequest(), {
             sources,
-            deps: { fetchImpl: async input => {
-                requests.push(requestProductId(input));
-                return json({ error: "failed" }, 503);
-            } },
+            deps: {
+                fetchImpl: async (input) => {
+                    requests.push(requestProductId(input));
+                    return json({ error: "failed" }, 503);
+                },
+            },
         });
 
         expect(response.status).toBe(502);
@@ -62,11 +64,15 @@ describe("cms functions foreach recovery", () => {
     test("returns an empty result without running either branch", async () => {
         const sources = await productSources();
         let calls = 0;
-        const response = await executeFunction(
-            recoveringProductsFunction([]),
-            functionRequest(),
-            { sources, deps: { fetchImpl: async () => { calls += 1; return json({}); } } },
-        );
+        const response = await executeFunction(recoveringProductsFunction([]), functionRequest(), {
+            sources,
+            deps: {
+                fetchImpl: async () => {
+                    calls += 1;
+                    return json({});
+                },
+            },
+        });
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual([]);
@@ -77,12 +83,14 @@ describe("cms functions foreach recovery", () => {
         const sources = await productSources();
         const fn = recoveringProductsFunction([{ id: "p1", recoveryId: "r1" }]);
         const loop = recoveryLoop(fn);
-        loop.steps = [{
-            assert: {
-                condition: { equals: ["$item.id", "allowed"] },
-                failure: { status: 409, error: "Item rejected" },
+        loop.steps = [
+            {
+                assert: {
+                    condition: { equals: ["$item.id", "allowed"] },
+                    failure: { status: 409, error: "Item rejected" },
+                },
             },
-        }];
+        ];
         loop.onError = [{ assert: { condition: { exists: "$item.id" } } }];
         loop.errorYield = { itemId: "$item.id", failed: true };
 
@@ -95,17 +103,15 @@ describe("cms functions foreach recovery", () => {
     test("stops globally when the recovery branch fails", async () => {
         const sources = await productSources();
         const requests: string[] = [];
-        const response = await executeFunction(
-            recoveringProductsFunction(),
-            functionRequest(),
-            {
-                sources,
-                deps: { fetchImpl: async input => {
+        const response = await executeFunction(recoveringProductsFunction(), functionRequest(), {
+            sources,
+            deps: {
+                fetchImpl: async (input) => {
                     requests.push(requestProductId(input));
                     return json({ error: "failed" }, 503);
-                } },
+                },
             },
-        );
+        });
 
         expect(response.status).toBe(502);
         expect(requests).toEqual(["p1", "r1"]);
@@ -122,7 +128,12 @@ describe("cms functions foreach recovery", () => {
 
         const response = await executeFunction(recoveringProductsFunction(), functionRequest(), {
             sources,
-            deps: { fetchImpl: async () => { calls += 1; return json({}); } },
+            deps: {
+                fetchImpl: async () => {
+                    calls += 1;
+                    return json({});
+                },
+            },
         });
 
         await expectCorrelatedFunctionFailure(response);
@@ -158,11 +169,13 @@ describe("cms functions foreach recovery", () => {
 
         const response = await executeFunction(fn, functionRequest(), {
             sources,
-            deps: { fetchImpl: async input => {
-                calls += 1;
-                const id = requestProductId(input);
-                return json({ id, ownerUserId: "user-1", title: `Product ${id}` });
-            } },
+            deps: {
+                fetchImpl: async (input) => {
+                    calls += 1;
+                    const id = requestProductId(input);
+                    return json({ id, ownerUserId: "user-1", title: `Product ${id}` });
+                },
+            },
         });
 
         await expectCorrelatedFunctionFailure(response);

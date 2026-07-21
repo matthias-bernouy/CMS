@@ -1,5 +1,5 @@
-import MissingParam from 'cms-control/errors/Http/MissingParam';
-import { DEFAULT_TEMPLATE_CONTENT } from '../contentDefaults';
+import MissingParam from "cms-control/errors/Http/MissingParam";
+import { DEFAULT_TEMPLATE_CONTENT } from "../contentDefaults";
 
 export type TemplateUpdateDto = {
     id: string;
@@ -15,14 +15,19 @@ export type TemplateUpdateDto = {
  */
 export function parseTemplateUpdateDto(body: Record<string, unknown>): TemplateUpdateDto {
     const { id, name } = body;
-    if (!id)   throw new MissingParam('id');
-    if (!name) throw new MissingParam('name');
-    const content = body.content == null || String(body.content).trim() === '' ? DEFAULT_TEMPLATE_CONTENT : String(body.content);
+    if (!id) {
+        throw new MissingParam("id");
+    }
+    if (!name) {
+        throw new MissingParam("name");
+    }
+    const content =
+        body.content == null || String(body.content).trim() === "" ? DEFAULT_TEMPLATE_CONTENT : String(body.content);
     return {
-        id:          String(id),
-        name:        String(name),
-        category:    body.category    == null ? '' : String(body.category),
-        description: body.description == null ? '' : String(body.description),
+        id: String(id),
+        name: String(name),
+        category: body.category == null ? "" : String(body.category),
+        description: body.description == null ? "" : String(body.description),
         content,
     };
 }

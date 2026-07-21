@@ -20,11 +20,13 @@ export async function executeFunctionSystemSourceEndpoint(
         return new Response("Not Found", { status: 404 });
     }
     const fn = await options.functions.getFunction(parsed.endpoint);
-    if (!fn) return new Response("Not Found", { status: 404 });
+    if (!fn) {
+        return new Response("Not Found", { status: 404 });
+    }
     return executeFunction(fn, request, {
         sources: options.sources,
         deps: options.deps,
         identities: options.deps?.identities,
-        user: await options.resolveUser?.(request) ?? {},
+        user: (await options.resolveUser?.(request)) ?? {},
     });
 }

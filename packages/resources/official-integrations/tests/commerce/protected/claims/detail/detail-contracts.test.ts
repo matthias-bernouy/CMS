@@ -1,9 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { installCommerceTestEnvironment, requestCommerce } from "../../../harness";
-import {
-    claimRow,
-    useClaimDetailResponder,
-} from "./fixtures";
+import { claimRow, useClaimDetailResponder } from "./fixtures";
 import { expectedClaimDetail } from "./expected";
 
 installCommerceTestEnvironment();
@@ -62,7 +59,7 @@ describe("commerce administrator claim detail contracts", () => {
 
         expect(serialized).not.toContain("storageBucket");
         expect(serialized).not.toContain("storagePath");
-        expect(serialized).not.toContain("buyer-17\",\"storage");
+        expect(serialized).not.toContain('buyer-17","storage');
         expect(serialized).not.toContain("providerEvidence");
         expect(body.evidence.map((item: { id: number }) => item.id)).toEqual([81, 82]);
         expect(body.returnEvents.map((item: { id: number }) => item.id)).toEqual([91, 92]);

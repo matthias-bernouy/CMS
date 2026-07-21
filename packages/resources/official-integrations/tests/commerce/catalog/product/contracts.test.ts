@@ -2,17 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import {
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
-import {
-    adminProduct,
-    adminSourceProduct,
-    publicProduct,
-    publicSourceProduct,
-    variants,
-} from "./expected";
+import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
+import { adminProduct, adminSourceProduct, publicProduct, publicSourceProduct, variants } from "./expected";
 import { useProductResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
@@ -46,7 +37,7 @@ describe("commerce product detail contracts", () => {
         });
 
         const response = await requestCommerce("/product?id=42");
-        const body = await response.json() as any;
+        const body = (await response.json()) as any;
 
         expect(response.status).toBe(200);
         expect(body.variants).toHaveLength(1);
@@ -61,12 +52,11 @@ describe("commerce product detail contracts", () => {
         useProductResponder({ mainMedia: false });
 
         const response = await requestCommerce("/product?id=42");
-        const body = await response.json() as Record<string, unknown>;
+        const body = (await response.json()) as Record<string, unknown>;
 
         expect(response.status).toBe(200);
         expect(body.mainImageMediaId).toBe("501");
-        expect((body.media as Array<Record<string, unknown>>).map(item => item.mediaId))
-            .toEqual([501, 502]);
+        expect((body.media as Array<Record<string, unknown>>).map((item) => item.mediaId)).toEqual([501, 502]);
     });
 
     test("preserves absent optional relations as null and empty collections", async () => {
@@ -74,9 +64,17 @@ describe("commerce product detail contracts", () => {
             brandId: null,
             emptyRelations: true,
             product: {
-                id: 43, slug: "empty-product", title: "Empty product", description: null,
-                brand_id: null, status: "active", visibility: "public", metadata: null,
-                version: 1, created_at: null, updated_at: null,
+                id: 43,
+                slug: "empty-product",
+                title: "Empty product",
+                description: null,
+                brand_id: null,
+                status: "active",
+                visibility: "public",
+                metadata: null,
+                version: 1,
+                created_at: null,
+                updated_at: null,
             },
         });
 
@@ -101,34 +99,30 @@ describe("commerce product detail contracts", () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8"));
         const endpoints = definition.artifacts.find((artifact: any) => artifact.source).source.endpoints;
 
-        expect(projectStrictDataShape(
-            publicProduct,
-            responseBody(endpoints, "product"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual(publicSourceProduct);
-        expect(projectStrictDataShape(
-            adminProduct,
-            responseBody(endpoints, "manageProduct"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual(adminSourceProduct);
-        expect(projectStrictDataShape(
-            adminProduct,
-            responseBody(endpoints, "upsertProduct"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual(adminSourceProduct);
+        expect(
+            projectStrictDataShape(publicProduct, responseBody(endpoints, "product"), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(publicSourceProduct);
+        expect(
+            projectStrictDataShape(adminProduct, responseBody(endpoints, "manageProduct"), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(adminSourceProduct);
+        expect(
+            projectStrictDataShape(adminProduct, responseBody(endpoints, "upsertProduct"), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(adminSourceProduct);
     });
 });
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../../integrations/commerce/versions/1.0.0/definition.json");
 
 function responseBody(endpoints: any[], endpointId: string): DataShape {
-    const body = endpoints.find(endpoint => endpoint.endpointId === endpointId)?.output?.[0]?.body;
-    if (!body) throw new Error(`Missing response contract for ${endpointId}`);
+    const body = endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.output?.[0]?.body;
+    if (!body) {
+        throw new Error(`Missing response contract for ${endpointId}`);
+    }
     return body;
 }

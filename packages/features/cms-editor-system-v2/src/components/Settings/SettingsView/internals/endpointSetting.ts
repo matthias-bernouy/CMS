@@ -1,8 +1,4 @@
-import type {
-    EndpointPickerSetting,
-    SettingControl,
-    SettingLabelDisplay,
-} from "@bernouy/cms-content/editor";
+import type { EndpointPickerSetting, SettingControl, SettingLabelDisplay } from "@bernouy/cms-content/editor";
 import type { EditorDataSource } from "../../../../runtime";
 import {
     DataSourcePicker,
@@ -52,9 +48,13 @@ export class EndpointSettingController {
         button.ariaLabel = setting.ariaLabel ?? setting.label;
         button.disabled = setting.disabled === true;
         this.syncButton(button, setting);
-        if (!setting.disabled) button.addEventListener("click", () => this.open(setting, button));
+        if (!setting.disabled) {
+            button.addEventListener("click", () => this.open(setting, button));
+        }
 
-        if (label) wrapper.append(label);
+        if (label) {
+            wrapper.append(label);
+        }
         wrapper.append(button);
         if (setting.help) {
             const help = document.createElement("div");
@@ -103,7 +103,9 @@ export class EndpointSettingController {
         const cleanup = (): void => {
             picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
             picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
-            if (this.disconnectPickerEvents === cleanup) this.disconnectPickerEvents = null;
+            if (this.disconnectPickerEvents === cleanup) {
+                this.disconnectPickerEvents = null;
+            }
         };
         this.disconnectPickerEvents = cleanup;
         picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
@@ -115,7 +117,9 @@ export class EndpointSettingController {
     }
 
     private ensurePicker(): DataSourcePicker {
-        if (this.picker) return this.picker;
+        if (this.picker) {
+            return this.picker;
+        }
         this.picker = new DataSourcePicker();
         this.root.append(this.picker);
         return this.picker;

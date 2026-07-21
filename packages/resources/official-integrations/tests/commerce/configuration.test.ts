@@ -1,33 +1,29 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectRpc,
-    installCommerceTestEnvironment,
-    jsonResponse,
-    requestCommerce,
-    setRestResponder,
-} from "./harness";
+import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "./harness";
 
 installCommerceTestEnvironment();
 
 describe("commerce workflow configuration requests", () => {
     test("returns enabled custom-field schemas for a requested entity", async () => {
         let customFieldsUrl = "";
-        setRestResponder(request => {
+        setRestResponder((request) => {
             if (new URL(request.url).pathname.endsWith("/custom_field_definitions")) {
                 customFieldsUrl = request.url;
-                return jsonResponse([{
-                    entity_type: "product",
-                    key: "brand",
-                    label: "Brand",
-                    field_type: "string",
-                    options: [],
-                    required: false,
-                    self_editable: false,
-                    admin_editable: true,
-                    public_readable: true,
-                    show_in_dashboard_table: true,
-                    enabled: true,
-                }]);
+                return jsonResponse([
+                    {
+                        entity_type: "product",
+                        key: "brand",
+                        label: "Brand",
+                        field_type: "string",
+                        options: [],
+                        required: false,
+                        self_editable: false,
+                        admin_editable: true,
+                        public_readable: true,
+                        show_in_dashboard_table: true,
+                        enabled: true,
+                    },
+                ]);
             }
             return jsonResponse([]);
         });
@@ -39,12 +35,14 @@ describe("commerce workflow configuration requests", () => {
         expect(response.status).toBe(200);
         expect(query.get("entity_type")).toBe("eq.product");
         expect(query.get("enabled")).toBe("eq.true");
-        expect(body.fields).toEqual([expect.objectContaining({
-            id: "brand",
-            path: "metadata.brand",
-            section: "productCustomFields",
-            exposeToEditorSources: true,
-        })]);
+        expect(body.fields).toEqual([
+            expect.objectContaining({
+                id: "brand",
+                path: "metadata.brand",
+                section: "productCustomFields",
+                exposeToEditorSources: true,
+            }),
+        ]);
     });
 
     test("rejects unsupported custom-field schema entities", async () => {
@@ -55,9 +53,15 @@ describe("commerce workflow configuration requests", () => {
     });
 
     test("stores a numeric unit on the canonical metadata definition", async () => {
-        setRestResponder(() => jsonResponse({
-            entity_type: "product", key: "weight", label: "Weight", field_type: "number", unit: "g",
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                entity_type: "product",
+                key: "weight",
+                label: "Weight",
+                field_type: "number",
+                unit: "g",
+            }),
+        );
 
         const response = await requestCommerce("/admin/custom-field", {
             body: {
@@ -121,24 +125,30 @@ describe("commerce workflow configuration requests", () => {
     });
 
     test("gives workflow transition rows a stable composite id", async () => {
-        setRestResponder(() => jsonResponse([{
-            from_state: "pending_review",
-            action: "request_price",
-            actor_kind: "admin",
-            to_state: "awaiting_seller_price",
-        }]));
+        setRestResponder(() =>
+            jsonResponse([
+                {
+                    from_state: "pending_review",
+                    action: "request_price",
+                    actor_kind: "admin",
+                    to_state: "awaiting_seller_price",
+                },
+            ]),
+        );
 
         const response = await requestCommerce("/admin/workflow-transitions", { method: "GET" });
 
         expect(response.status).toBe(200);
         expect(await response.json()).toMatchObject({
-            items: [{
-                id: "pending_review:request_price:admin",
-                fromState: "pending_review",
-                action: "request_price",
-                actorKind: "admin",
-                toState: "awaiting_seller_price",
-            }],
+            items: [
+                {
+                    id: "pending_review:request_price:admin",
+                    fromState: "pending_review",
+                    action: "request_price",
+                    actorKind: "admin",
+                    toState: "awaiting_seller_price",
+                },
+            ],
             total: 1,
         });
     });

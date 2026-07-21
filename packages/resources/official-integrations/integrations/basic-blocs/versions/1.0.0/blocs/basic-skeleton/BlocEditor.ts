@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({
     type: "color",
@@ -53,17 +48,12 @@ export class BasicSkeletonEditor extends Editor {
             {
                 kind: "self",
                 label: "Colors",
-                settings: [
-                    color("Base", "base-color"),
-                    color("Highlight", "highlight-color"),
-                ],
+                settings: [color("Base", "base-color"), color("Highlight", "highlight-color")],
             },
             {
                 kind: "self",
                 label: "Accessibility",
-                settings: [
-                    { type: "text", label: "Loading label", attribute: "label" },
-                ],
+                settings: [{ type: "text", label: "Loading label", attribute: "label" }],
             },
         ];
     }

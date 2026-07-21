@@ -20,9 +20,9 @@ import type { ContentReader } from "@bernouy/cms-content";
 import type { HeadInjector } from "./interfaces/HeadInjector";
 
 export type DeliveryCmsConfig = {
-    runner?:     Runner;
-    repository:  ContentReader;
-    cache?:      Cache;
+    runner?: Runner;
+    repository: ContentReader;
+    cache?: Cache;
     /**
      * Extension hook called by `renderPage` for each rendered document.
      * Each injector receives the linkedom document/head and the page's
@@ -93,12 +93,12 @@ export type DeliveryCmsConfig = {
      * wired, so wire both or neither.
      */
     filesMetadata?: CmsFilesMetadataRepository;
-    filesBlob?:     CmsFilesBlobStore;
+    filesBlob?: CmsFilesBlobStore;
     /** Shared store for derived image variants (S3 prefix in prod). When wired,
      *  the `<basePath>/.cms/img/<id>/<width>.webp` route is mounted; otherwise
      *  the renderer falls back to the originals everywhere. */
-    variantStore?:  CmsFilesBlobStore;
-}
+    variantStore?: CmsFilesBlobStore;
+};
 
 /**
  * Public-facing layer of the CMS. Serves rendered pages and their static
@@ -127,115 +127,116 @@ export type DeliveryCmsConfig = {
  * consumer can just pass a root runner (`basePath === "/"`).
  */
 export default class DeliveryCms {
-
-    private _runner:             Runner;
-    private _repository:         ContentReader;
-    private _cache:              Cache;
-    private _headInjectors:      readonly HeadInjector[];
-    private _sources?:           SourceRepository;
+    private _runner: Runner;
+    private _repository: ContentReader;
+    private _cache: Cache;
+    private _headInjectors: readonly HeadInjector[];
+    private _sources?: SourceRepository;
     private _sourceResolveSecret?: SourceSecretResolver;
-    private _functions?:         FunctionRepository;
-    private _triggers?:          TriggerRepository;
-    private _identities?:        IdentityService;
-    private _auth?:              PublicAuthRoutesConfig<string>;
-    private _roles?:             RolesRepository;
+    private _functions?: FunctionRepository;
+    private _triggers?: TriggerRepository;
+    private _identities?: IdentityService;
+    private _auth?: PublicAuthRoutesConfig<string>;
+    private _roles?: RolesRepository;
     private _integrationInstallations?: IntegrationInstallationRepository;
-    private _analytics?:         AnalyticsStore;
-    private _analyticsSalt?:     string;
-    private _filesMetadata:      CmsFilesMetadataRepository | null;
-    private _filesBlob:          CmsFilesBlobStore | null;
-    private _variantStore:       CmsFilesBlobStore | null;
+    private _analytics?: AnalyticsStore;
+    private _analyticsSalt?: string;
+    private _filesMetadata: CmsFilesMetadataRepository | null;
+    private _filesBlob: CmsFilesBlobStore | null;
+    private _variantStore: CmsFilesBlobStore | null;
     private readonly _optimizeQueue = new OptimizeQueue();
 
-    constructor(config: DeliveryCmsConfig){
-        this._runner             = config.runner || new BunRunner();
-        this._repository         = config.repository;
-        this._cache              = config.cache || new TtlCache({ bypass: process.env.MODE === "DEV" });
-        this._headInjectors      = config.headInjectors ?? [];
-        this._sources            = config.sources;
-        this._functions          = config.functions;
-        this._triggers           = config.triggers;
-        this._identities         = config.identities;
-        this._analytics          = config.analytics;
-        this._analyticsSalt      = config.analyticsSalt;
-        this._auth               = config.auth;
-        this._roles              = config.roles;
+    constructor(config: DeliveryCmsConfig) {
+        this._runner = config.runner || new BunRunner();
+        this._repository = config.repository;
+        this._cache = config.cache || new TtlCache({ bypass: process.env.MODE === "DEV" });
+        this._headInjectors = config.headInjectors ?? [];
+        this._sources = config.sources;
+        this._functions = config.functions;
+        this._triggers = config.triggers;
+        this._identities = config.identities;
+        this._analytics = config.analytics;
+        this._analyticsSalt = config.analyticsSalt;
+        this._auth = config.auth;
+        this._roles = config.roles;
         this._integrationInstallations = config.integrationInstallations;
-        this._filesMetadata      = config.filesMetadata ?? null;
-        this._filesBlob          = config.filesBlob ?? null;
-        this._variantStore       = config.variantStore ?? null;
+        this._filesMetadata = config.filesMetadata ?? null;
+        this._filesBlob = config.filesBlob ?? null;
+        this._variantStore = config.variantStore ?? null;
         this._sourceResolveSecret = config.sourceResolveSecret;
 
         registerDeliveryEndpoints(this);
     }
 
-    get runner(){
+    get runner() {
         return this._runner;
     }
 
-    get repository(){
+    get repository() {
         return this._repository;
     }
 
-    get cache(){
+    get cache() {
         return this._cache;
     }
 
-    get headInjectors(){
+    get headInjectors() {
         return this._headInjectors;
     }
 
     /** Data source store, or `undefined` when sources are not configured. */
-    get sources(){
+    get sources() {
         return this._sources;
     }
 
     /** Secret resolver for Delivery source headers, when explicitly wired. */
-    get sourceResolveSecret(){
+    get sourceResolveSecret() {
         return this._sourceResolveSecret;
     }
 
-    get functions(){
+    get functions() {
         return this._functions;
     }
 
-    get triggers(){
+    get triggers() {
         return this._triggers;
     }
 
-    get identities(){
+    get identities() {
         return this._identities;
     }
 
     /** Public auth API config, or `undefined` when not mounted. */
-    get auth(){
+    get auth() {
         return this._auth;
     }
 
     /** Role definitions for Delivery gateway authorization, when wired. */
-    get roles(){
+    get roles() {
         return this._roles;
     }
 
     /** Installed integration installations, when the runtime wires them. */
-    get integrationInstallations(){
+    get integrationInstallations() {
         return this._integrationInstallations;
     }
 
     /** Analytics store (writer), or `undefined` when analytics is not configured. */
-    get analytics(){
+    get analytics() {
         return this._analytics;
     }
 
     /** Secret for the visitor-id daily salt, or `undefined` when unset. */
-    get analyticsSalt(){
+    get analyticsSalt() {
         return this._analyticsSalt;
     }
 
     /** File-tree metadata (folders + file records) for the `.cms/files` route.
      *  Throws until a files backend is wired (media transition in progress). */
     get filesMetadata(): CmsFilesMetadataRepository {
-        if (!this._filesMetadata) throw new Error("files metadata backend not configured");
+        if (!this._filesMetadata) {
+            throw new Error("files metadata backend not configured");
+        }
         return this._filesMetadata;
     }
 
@@ -259,7 +260,9 @@ export default class DeliveryCms {
      * worker runs IN the Delivery process, so it clears the cache it serves from.
      */
     optimizePage(path: string, imageIds: string[]): void {
-        if (!this._filesMetadata || !this._filesBlob || !this._variantStore || imageIds.length === 0) return;
+        if (!this._filesMetadata || !this._filesBlob || !this._variantStore || imageIds.length === 0) {
+            return;
+        }
         const deps = { metadata: this._filesMetadata, sourceBlob: this._filesBlob, variantStore: this._variantStore };
         this._optimizeQueue.enqueue(path, async () => {
             await optimizePageImages(deps, imageIds);
@@ -269,7 +272,9 @@ export default class DeliveryCms {
 
     /** Opaque byte storage for files. Throws until wired (see `filesMetadata`). */
     get filesBlob(): CmsFilesBlobStore {
-        if (!this._filesBlob) throw new Error("files blob backend not configured");
+        if (!this._filesBlob) {
+            throw new Error("files blob backend not configured");
+        }
         return this._filesBlob;
     }
 
@@ -284,7 +289,7 @@ export default class DeliveryCms {
      * runner) becomes `""` so emitted URLs don't start with `//`. Anything
      * else (`"/tenant-1"`, …) is returned verbatim.
      */
-    get basePath(){
+    get basePath() {
         const base = this._runner.basePath;
         return base === "/" ? "" : base;
     }
@@ -295,8 +300,7 @@ export default class DeliveryCms {
      * what every rendered page references. Never empty — the `/.cms`
      * segment is always present.
      */
-    get cmsPathPrefix(){
+    get cmsPathPrefix() {
         return this.basePath + "/.cms";
     }
-
 }

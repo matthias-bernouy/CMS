@@ -21,13 +21,27 @@ export function integrationIcon(definition: IntegrationDefinition | undefined): 
 
 export function iconForResourceType(type: string): string {
     const normalized = type.toLowerCase();
-    if (normalized === "dashboard") return "table";
-    if (normalized === "source") return "receipt";
-    if (normalized === "bloc") return "grid";
-    if (normalized === "function") return "spark";
-    if (normalized === "trigger") return "share";
-    if (normalized === "secret") return "key";
-    if (normalized === "connector") return "truck";
+    if (normalized === "dashboard") {
+        return "table";
+    }
+    if (normalized === "source") {
+        return "receipt";
+    }
+    if (normalized === "bloc") {
+        return "grid";
+    }
+    if (normalized === "function") {
+        return "spark";
+    }
+    if (normalized === "trigger") {
+        return "share";
+    }
+    if (normalized === "secret") {
+        return "key";
+    }
+    if (normalized === "connector") {
+        return "truck";
+    }
     return "grid";
 }
 
@@ -37,6 +51,8 @@ function fallbackIcon(): Node {
 
 function integrationAssetUrl(definition: IntegrationDefinition, path: string): string {
     const params = new URLSearchParams({ kind: definition.kind, path });
-    if (definition.version) params.set("version", definition.version);
+    if (definition.version) {
+        params.set("version", definition.version);
+    }
     return route(`/api/integrations/asset?${params.toString()}`);
 }

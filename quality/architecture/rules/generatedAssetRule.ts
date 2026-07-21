@@ -13,7 +13,9 @@ export async function checkGeneratedAsset(
     try {
         tracked = await readFile(assetPath, "utf8");
     } catch (error) {
-        if (!isMissingPathError(error)) throw error;
+        if (!isMissingPathError(error)) {
+            throw error;
+        }
         violations.push({
             kind: "generated-asset-drift",
             file: normalizeRelativePath(check.path),
@@ -24,7 +26,9 @@ export async function checkGeneratedAsset(
 
     const generated = await check.generate();
     const normalizeContents = check.normalize ?? ((contents: string) => contents);
-    if (normalizeContents(tracked) === normalizeContents(generated)) return;
+    if (normalizeContents(tracked) === normalizeContents(generated)) {
+        return;
+    }
     violations.push({
         kind: "generated-asset-drift",
         file: normalizeRelativePath(check.path),

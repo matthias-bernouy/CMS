@@ -33,21 +33,33 @@ export class StructureTreeController {
         this.events = new StructureTreeEvents(this);
     }
 
-    connect(): void { this.events.connect(); }
-    disconnect(): void { this.events.disconnect(); }
+    connect(): void {
+        this.events.connect();
+    }
+    disconnect(): void {
+        this.events.disconnect();
+    }
 
-    setCatalog(catalog: EditorCatalog): void { this.catalog = catalog; }
-    setInsertItems(items: BlockPickerItem[]): void { this.state.insertItems = items.map(item => ({ ...item })); }
+    setCatalog(catalog: EditorCatalog): void {
+        this.catalog = catalog;
+    }
+    setInsertItems(items: BlockPickerItem[]): void {
+        this.state.insertItems = items.map((item) => ({ ...item }));
+    }
     setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
         this.state.defaultTemplateSelection = { ...selection };
         this.renderer.render();
     }
     setDataSources(sources: EditorDataSource[]): void {
-        this.state.dataSources = sources.map(source => ({ ...source, fields: [...source.fields] }));
+        this.state.dataSources = sources.map((source) => ({ ...source, fields: [...source.fields] }));
     }
 
-    get catalog(): EditorCatalog { return this.state.catalog; }
-    set catalog(catalog: EditorCatalog) { this.state.catalog = [...catalog]; }
+    get catalog(): EditorCatalog {
+        return this.state.catalog;
+    }
+    set catalog(catalog: EditorCatalog) {
+        this.state.catalog = [...catalog];
+    }
 
     setStructure(
         nodes: StructureNode[],
@@ -59,17 +71,33 @@ export class StructureTreeController {
         this.state.selectedEditor = selectedEditor;
         this.state.catalog = [...catalog];
         this.state.scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
-        if (this.state.scrollSelectedIntoViewOnRender) this.nodes.expandPathToSelected();
+        if (this.state.scrollSelectedIntoViewOnRender) {
+            this.nodes.expandPathToSelected();
+        }
         this.nodes.setRepeatableTargets(options.repeatableTargets ?? []);
         this.renderer.render();
     }
 
-    childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] { return this.pickers.childGroups(node); }
-    replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] { return this.pickers.replaceGroups(node); }
-    openPickerOrEmitSingleMedia(action: PendingPickerAction, groups: BlockPickerSlotGroup[], contextLabel: string): void {
+    childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
+        return this.pickers.childGroups(node);
+    }
+    replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
+        return this.pickers.replaceGroups(node);
+    }
+    openPickerOrEmitSingleMedia(
+        action: PendingPickerAction,
+        groups: BlockPickerSlotGroup[],
+        contextLabel: string,
+    ): void {
         this.pickers.openPickerOrEmitSingleMedia(action, groups, contextLabel);
     }
-    onDocumentKeydown(event: KeyboardEvent): void { this.events.onDocumentKeydown(event); }
-    openSourcePicker(node: EditorStructureNode): void { this.pickers.openSourcePicker(node); }
-    sourceActionLabel(node: EditorStructureNode): string { return this.menus.sourceActionLabel(node); }
+    onDocumentKeydown(event: KeyboardEvent): void {
+        this.events.onDocumentKeydown(event);
+    }
+    openSourcePicker(node: EditorStructureNode): void {
+        this.pickers.openSourcePicker(node);
+    }
+    sourceActionLabel(node: EditorStructureNode): string {
+        return this.menus.sourceActionLabel(node);
+    }
 }

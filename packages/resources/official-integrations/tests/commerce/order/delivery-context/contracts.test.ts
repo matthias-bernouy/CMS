@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
+import { expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../harness";
 import {
     expectedSelectionContext,
     expectedSetupContext,
@@ -34,14 +30,16 @@ describe("commerce delivery contexts", () => {
     });
 
     test("preserves an unavailable authorization on a non-awaiting order", async () => {
-        useRpcResult(ok({
-            order: {
-                ...setupContext.order,
-                status: "cancelled",
-            },
-            authorization: null,
-            private_context_value: "must not leak",
-        }));
+        useRpcResult(
+            ok({
+                order: {
+                    ...setupContext.order,
+                    status: "cancelled",
+                },
+                authorization: null,
+                private_context_value: "must not leak",
+            }),
+        );
 
         const response = await requestCommerce(setupRoute, { userId });
 
@@ -63,18 +61,19 @@ describe("commerce delivery contexts", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual(expectedSelectionContext);
-        expect(expectSingleRpc("get_order_delivery_selection_context").body)
-            .toEqual({
-                p_order_id: orderId,
-                p_buyer_cms_user_id: userId,
-            });
+        expect(expectSingleRpc("get_order_delivery_selection_context").body).toEqual({
+            p_order_id: orderId,
+            p_buyer_cms_user_id: userId,
+        });
     });
 
     test("preserves a nullable delivery quote without adding private terms", async () => {
-        useRpcResult(ok({
-            ...selectionContext,
-            delivery_quote_id: null,
-        }));
+        useRpcResult(
+            ok({
+                ...selectionContext,
+                delivery_quote_id: null,
+            }),
+        );
 
         const response = await requestCommerce(selectionRoute, { userId });
 

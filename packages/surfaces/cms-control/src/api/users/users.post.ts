@@ -5,7 +5,6 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { assignableRoles } from "cms-control/core/roles/rolesView";
 
-
 /** POST /api/users { email, password, role? } — create a local
  *  (email/password) user by hand. Writes BOTH the credential (authn secret) and
  *  the membership row (authz role) exactly like the login flow would, so the
@@ -14,18 +13,26 @@ import { assignableRoles } from "cms-control/core/roles/rolesView";
  *  `SubjectResolver` derives on a normal login — same identity either way. */
 export default async function createUser(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
-    const email    = typeof body.email === "string" ? body.email.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
     const role = typeof body.role === "string" ? body.role : "user";
 
-    if (!email)    throw new MissingParam("email");
-    if (!password) throw new MissingParam("password");
+    if (!email) {
+        throw new MissingParam("email");
+    }
+    if (!password) {
+        throw new MissingParam("password");
+    }
     const allowed = await assignableRoles(cms);
-    if (!allowed.some((r) => r.id === role)) throw new InvalidParam("role", "unknown or unassignable role");
+    if (!allowed.some((r) => r.id === role)) {
+        throw new InvalidParam("role", "unknown or unassignable role");
+    }
 
     // The store also rejects duplicates, but checking first lets us return a
     // clear validation error instead of a generic store failure.
-    if (await cms.credentials.getByEmail(email)) throw new InvalidParam("email", "already in use");
+    if (await cms.credentials.getByEmail(email)) {
+        throw new InvalidParam("email", "already in use");
+    }
 
     const user = await createLocalUser({ credentials: cms.credentials, users: cms.users }, { email, password, role });
     return Response.json(user);

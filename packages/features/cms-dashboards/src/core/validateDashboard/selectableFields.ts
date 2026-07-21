@@ -7,11 +7,7 @@ import type {
 } from "../../interfaces/Dashboard";
 import { DASHBOARD_MAX_NESTED_FIELDS as MAX_NESTED_FIELDS } from "../../interfaces/Dashboard";
 import { validateEmbeddedLookupRef, validateEndpointRef } from "./endpointRefs";
-import {
-    validateOptions,
-    validatePath,
-    validateRequiredPath,
-} from "./shared";
+import { validateOptions, validatePath, validateRequiredPath } from "./shared";
 
 export type FieldValidator = (
     field: DashboardField,
@@ -36,8 +32,12 @@ export function validateSelectableField(
     if (!hasOptions && !hasLookup && field.allowCustom !== true) {
         errors.push(`${path} must declare options, lookup, or allowCustom`);
     }
-    if (field.options !== undefined) validateOptions(field.options, `${path}.options`, errors);
-    if (field.lookup) validateLookup(field.lookup, `${path}.lookup`, dashboard, source, errors, validateNestedField);
+    if (field.options !== undefined) {
+        validateOptions(field.options, `${path}.options`, errors);
+    }
+    if (field.lookup) {
+        validateLookup(field.lookup, `${path}.lookup`, dashboard, source, errors, validateNestedField);
+    }
 }
 
 function validateLookup(
@@ -49,8 +49,12 @@ function validateLookup(
     validateNestedField: FieldValidator,
 ): void {
     validateEmbeddedLookupRef(dashboard, lookup, path, source, errors);
-    lookup.descriptionPaths?.forEach((entry, index) => validatePath(`${index}`, entry, `${path}.descriptionPaths`, errors));
-    if (lookup.create) validateLookupCreate(lookup.create, `${path}.create`, dashboard, source, errors, validateNestedField);
+    lookup.descriptionPaths?.forEach((entry, index) =>
+        validatePath(`${index}`, entry, `${path}.descriptionPaths`, errors),
+    );
+    if (lookup.create) {
+        validateLookupCreate(lookup.create, `${path}.create`, dashboard, source, errors, validateNestedField);
+    }
 }
 
 function validateLookupCreate(
@@ -64,7 +68,9 @@ function validateLookupCreate(
     validateEndpointRef(dashboard, create, path, source, errors);
     validateRequiredPath("valuePath", create.valuePath, path, errors);
     validateRequiredPath("labelPath", create.labelPath, path, errors);
-    if (create.mode === "inline") return;
+    if (create.mode === "inline") {
+        return;
+    }
     if (create.mode !== "modal") {
         errors.push(`${path}.mode is not supported`);
         return;
@@ -77,7 +83,18 @@ function validateLookupCreate(
         errors.push(`${path}.fields must contain at most ${MAX_NESTED_FIELDS} fields`);
     }
     const fieldIds = new Set<string>();
-    const visibilityFieldIds = new Set(create.fields.map(field => field.id).filter(Boolean));
-    create.fields.slice(0, MAX_NESTED_FIELDS).forEach((field, index) =>
-        validateNestedField(field, `${path}.fields.${index}`, dashboard, source, fieldIds, errors, visibilityFieldIds));
+    const visibilityFieldIds = new Set(create.fields.map((field) => field.id).filter(Boolean));
+    create.fields
+        .slice(0, MAX_NESTED_FIELDS)
+        .forEach((field, index) =>
+            validateNestedField(
+                field,
+                `${path}.fields.${index}`,
+                dashboard,
+                source,
+                fieldIds,
+                errors,
+                visibilityFieldIds,
+            ),
+        );
 }

@@ -36,7 +36,9 @@ describe("dashboard endpoint references", () => {
     test("allows explicit refs to another source", () => {
         const dashboard = baseDashboard();
         const field = dashboard.views[0]!.main[0]!.fields[0]!;
-        if (field.type !== "combobox") throw new Error("expected combobox fixture");
+        if (field.type !== "combobox") {
+            throw new Error("expected combobox fixture");
+        }
         field.lookup = {
             sourceId: "products",
             endpoint: "listProducts",
@@ -69,28 +71,40 @@ function baseDashboard(): Dashboard {
     return {
         id: "offers",
         source: "offers",
-        views: [{
-            widget: "w-detail",
-            id: "offerDetail",
-            source: { endpoint: "getOffer", params: { id: "$selection.id" } },
-            actions: [{
-                id: "save",
-                label: "Save",
-                endpoint: {
-                    endpoint: "updateOffer",
-                    params: { id: "$resource.id" },
-                    body: { title: "$field.title" },
-                },
-            }],
-            main: [{
-                id: "details",
-                title: "Details",
-                fields: [
-                    { id: "productId", label: "Product", path: "productId", type: "combobox", allowCustom: true },
-                    { id: "title", label: "Title", path: "title", type: "text" },
-                    { id: "company", label: "Company", path: "metadata.company", type: "text" },
+        views: [
+            {
+                widget: "w-detail",
+                id: "offerDetail",
+                source: { endpoint: "getOffer", params: { id: "$selection.id" } },
+                actions: [
+                    {
+                        id: "save",
+                        label: "Save",
+                        endpoint: {
+                            endpoint: "updateOffer",
+                            params: { id: "$resource.id" },
+                            body: { title: "$field.title" },
+                        },
+                    },
                 ],
-            }],
-        }],
+                main: [
+                    {
+                        id: "details",
+                        title: "Details",
+                        fields: [
+                            {
+                                id: "productId",
+                                label: "Product",
+                                path: "productId",
+                                type: "combobox",
+                                allowCustom: true,
+                            },
+                            { id: "title", label: "Title", path: "title", type: "text" },
+                            { id: "company", label: "Company", path: "metadata.company", type: "text" },
+                        ],
+                    },
+                ],
+            },
+        ],
     };
 }

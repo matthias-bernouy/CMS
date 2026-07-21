@@ -24,9 +24,7 @@ export async function executeClaimTracking(
         options.request ?? claimTrackingRequest(),
         {
             sources: await claimTrackingSources(),
-            user: options.user === null
-                ? undefined
-                : options.user ?? { id: "buyer-user", role: "user" },
+            user: options.user === null ? undefined : (options.user ?? { id: "buyer-user", role: "user" }),
             deps: {
                 fetchImpl: async (input, init) => {
                     const outgoing = new Request(input, init);
@@ -43,12 +41,11 @@ export async function executeClaimTracking(
 }
 
 export async function loadClaimTrackingFunction() {
-    const definition = await new FsIntegrationDefinitionRepository(
-        OFFICIAL_INTEGRATIONS_ROOT,
-    ).get("commerce-mondial-relay-fulfillment");
-    const artifact = definition?.artifacts?.find(item =>
-        item.type === "function"
-        && item.function.id === "getClaimReturnForMe"
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
+        "commerce-mondial-relay-fulfillment",
+    );
+    const artifact = definition?.artifacts?.find(
+        (item) => item.type === "function" && item.function.id === "getClaimReturnForMe",
     );
     if (!artifact || artifact.type !== "function") {
         throw new Error("getClaimReturnForMe function not found");
@@ -59,17 +56,19 @@ export async function loadClaimTrackingFunction() {
 }
 
 export function claimTrackingRequest(claimId: string | number = 7): Request {
-    return new Request(
-        `https://cms.test/functions/getClaimReturnForMe?claimId=${claimId}`,
-    );
+    return new Request(`https://cms.test/functions/getClaimReturnForMe?claimId=${claimId}`);
 }
 
 function resolveDependencySources(value: unknown): void {
     if (Array.isArray(value)) {
-        for (const item of value) resolveDependencySources(item);
+        for (const item of value) {
+            resolveDependencySources(item);
+        }
         return;
     }
-    if (!isRecord(value)) return;
+    if (!isRecord(value)) {
+        return;
+    }
     if (isRecord(value.call)) {
         if (value.call.source === "{{dependencies.commerce.sourceId}}") {
             value.call.source = "commerce";
@@ -77,7 +76,9 @@ function resolveDependencySources(value: unknown): void {
             value.call.source = "delivery";
         }
     }
-    for (const nested of Object.values(value)) resolveDependencySources(nested);
+    for (const nested of Object.values(value)) {
+        resolveDependencySources(nested);
+    }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

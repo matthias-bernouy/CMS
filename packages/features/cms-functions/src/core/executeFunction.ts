@@ -2,18 +2,11 @@ import type { ExecutorDeps, SourceRepository } from "@bernouy/cms-sources";
 import type { IdentityResolver } from "@bernouy/cms-identities";
 import type { CmsFunction } from "../interfaces/FunctionDefinition";
 import { readFunctionInput } from "./execution/readFunctionInput";
-import {
-    functionErrorResponse,
-    projectFunctionOutput,
-    serverFailureResponse,
-} from "./execution/functionResponses";
+import { functionErrorResponse, projectFunctionOutput, serverFailureResponse } from "./execution/functionResponses";
 import { json } from "./execution/response";
 import { runFunctionSteps } from "./execution/runFunctionSteps";
 import { withFunctionExecutionScope } from "./execution/functionExecutionScope";
-import {
-    FunctionExecutionError,
-    UnexpectedFunctionExecutionError,
-} from "./errors";
+import { FunctionExecutionError, UnexpectedFunctionExecutionError } from "./errors";
 import { resolveFunctionValue, type FunctionRuntimeVars } from "./expressions";
 
 export type FunctionUserContext = {
@@ -43,9 +36,7 @@ export type FunctionExecutionFailure = {
     callStatus?: number;
 };
 
-export type FunctionFailureReporter = (
-    failure: FunctionExecutionFailure,
-) => void | Promise<void>;
+export type FunctionFailureReporter = (failure: FunctionExecutionFailure) => void | Promise<void>;
 
 export async function executeFunction(
     fn: CmsFunction,
@@ -66,7 +57,9 @@ export async function executeFunction(
         }
 
         const status = fn.return.status ?? 200;
-        if (status >= 500) return await serverFailureResponse(fn, status, options);
+        if (status >= 500) {
+            return await serverFailureResponse(fn, status, options);
+        }
         const body = projectFunctionOutput(fn, status, resolveFunctionValue(fn.return.body, vars));
         return body === undefined ? new Response(null, { status }) : json(body, status);
     } catch (error) {
@@ -77,7 +70,9 @@ export async function executeFunction(
             const body: Record<string, unknown> = {
                 error: error.message,
             };
-            if (error.details !== undefined) body.details = error.details;
+            if (error.details !== undefined) {
+                body.details = error.details;
+            }
             try {
                 return functionErrorResponse(fn, error.status, body);
             } catch {

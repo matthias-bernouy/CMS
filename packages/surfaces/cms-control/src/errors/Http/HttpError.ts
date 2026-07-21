@@ -4,7 +4,10 @@
  * so the message is meant to be user-facing and explicit.
  */
 export default class HttpError extends Error {
-    constructor(public status: number, message: string) {
+    constructor(
+        public status: number,
+        message: string,
+    ) {
         super(message);
     }
 }

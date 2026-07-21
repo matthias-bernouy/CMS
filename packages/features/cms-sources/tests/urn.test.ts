@@ -1,7 +1,11 @@
 import { describe, test, expect } from "bun:test";
 import {
-    parseUrn, makeSourceUrn, makeEndpointUrn,
-    sourceUrnOf, isSourceUrn, isEndpointUrn,
+    parseUrn,
+    makeSourceUrn,
+    makeEndpointUrn,
+    sourceUrnOf,
+    isSourceUrn,
+    isEndpointUrn,
 } from "cms-sources/core/urn";
 
 describe("parseUrn", () => {

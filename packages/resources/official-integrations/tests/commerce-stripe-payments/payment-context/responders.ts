@@ -2,7 +2,9 @@ import { order, payment } from "./expected";
 
 export function successfulResponder(request: Request): Response {
     const path = new URL(request.url).pathname;
-    if (path === "/me/order") return Response.json(order);
+    if (path === "/me/order") {
+        return Response.json(order);
+    }
     if (path === "/system/order/payment-context") {
         return Response.json({
             id: order.id,
@@ -31,19 +33,11 @@ export function missingPaymentResponder(request: Request): Response {
     return successfulResponder(request);
 }
 
-export function failingResponder(
-    point: "order" | "payment" | "projection",
-) {
+export function failingResponder(point: "order" | "payment" | "projection") {
     return (request: Request): Response => {
         const path = new URL(request.url).pathname;
-        if (
-            point === "order"
-            && (path === "/me/order" || path === "/system/order/payment-context")
-        ) {
-            return Response.json(
-                { error: "order not found", privateRowId: 71 },
-                { status: 404 },
-            );
+        if (point === "order" && (path === "/me/order" || path === "/system/order/payment-context")) {
+            return Response.json({ error: "order not found", privateRowId: 71 }, { status: 404 });
         }
         if (point === "payment" && path === "/payments/reference") {
             return Response.json(
@@ -52,10 +46,7 @@ export function failingResponder(
             );
         }
         if (point === "projection" && path === "/system/order/payment") {
-            return Response.json(
-                { error: "financial projection refused", internalRevision: 17 },
-                { status: 409 },
-            );
+            return Response.json({ error: "financial projection refused", internalRevision: 17 }, { status: 409 });
         }
         return successfulResponder(request);
     };

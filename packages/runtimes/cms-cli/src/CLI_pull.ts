@@ -12,14 +12,18 @@ type Flags = { force: boolean; yes: boolean; type: string };
 
 const TYPES = ["*", "system", "integrations", "blocs", "templates", "pages"] as const;
 const ORDER = ["system", "integrations", "blocs", "templates", "pages"] as const;
-type Stage = typeof ORDER[number];
+type Stage = (typeof ORDER)[number];
 
 function parseFlags(args: string[]): Flags {
     const f: Flags = { force: false, yes: false, type: "*" };
     for (const arg of args) {
-        if      (arg === "--force" || arg === "-f") f.force = true;
-        else if (arg === "--yes"   || arg === "-y") f.yes = true;
-        else if (arg.startsWith("--type="))         f.type = arg.slice("--type=".length);
+        if (arg === "--force" || arg === "-f") {
+            f.force = true;
+        } else if (arg === "--yes" || arg === "-y") {
+            f.yes = true;
+        } else if (arg.startsWith("--type=")) {
+            f.type = arg.slice("--type=".length);
+        }
     }
     return f;
 }
@@ -32,44 +36,85 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
     }
     const token = await getAccessToken(rawUrl.replace(/\/+$/, ""));
     if (!token) {
-        console.error(`✖ No token for ${rawUrl}. Set P9R_TOKEN to a CMS Personal Access Token (admin → Profile), or add it to ~/.config/p9r/credentials.json.`);
+        console.error(
+            `✖ No token for ${rawUrl}. Set P9R_TOKEN to a CMS Personal Access Token (admin → Profile), or add it to ~/.config/p9r/credentials.json.`,
+        );
         process.exit(1);
     }
     return { adminBase: new URL(rawUrl.replace(/\/$/, "") + "/"), token };
 }
 
 async function runStage(stage: Stage, adminBase: URL, token: string, siteDir: string): Promise<void> {
-    if      (stage === "system")    await pullSystem(adminBase, token, siteDir);
-    else if (stage === "integrations") reportItems(await pullIntegrations(adminBase, token, siteDir), "integrations", "id");
-    else if (stage === "blocs")     reportBlocs   (await pullBlocs   (adminBase, token, siteDir));
-    else if (stage === "templates") reportTemplates(await pullTemplates(adminBase, token, siteDir));
-    else                            reportItems   (await pullPages   (adminBase, token, siteDir), "pages", "path");
-    if (stage === "system") console.log("→ system: pulled.");
+    if (stage === "system") {
+        await pullSystem(adminBase, token, siteDir);
+    } else if (stage === "integrations") {
+        reportItems(await pullIntegrations(adminBase, token, siteDir), "integrations", "id");
+    } else if (stage === "blocs") {
+        reportBlocs(await pullBlocs(adminBase, token, siteDir));
+    } else if (stage === "templates") {
+        reportTemplates(await pullTemplates(adminBase, token, siteDir));
+    } else {
+        reportItems(await pullPages(adminBase, token, siteDir), "pages", "path");
+    }
+    if (stage === "system") {
+        console.log("→ system: pulled.");
+    }
 }
 
-function reportItems(r: { pulled: string[]; failed: { error: string }[] & ({ path?: string; identifier?: string; urn?: string; id?: string }[]) }, label: string, key: "path" | "identifier" | "urn" | "id"): void {
-    for (const ok of r.pulled) console.log(`    ✓ ${ok}`);
-    for (const ko of r.failed as Array<Record<string, string>>) console.error(`    ✗ ${ko[key]}: ${ko.error}`);
+function reportItems(
+    r: {
+        pulled: string[];
+        failed: { error: string }[] & { path?: string; identifier?: string; urn?: string; id?: string }[];
+    },
+    label: string,
+    key: "path" | "identifier" | "urn" | "id",
+): void {
+    for (const ok of r.pulled) {
+        console.log(`    ✓ ${ok}`);
+    }
+    for (const ko of r.failed as Array<Record<string, string>>) {
+        console.error(`    ✗ ${ko[key]}: ${ko.error}`);
+    }
     console.log(`→ ${label}: ${r.pulled.length} pulled, ${r.failed.length} failed.`);
 }
 
-function reportBlocs(r: { pulled: string[]; skipped: { tag: string; reason: string }[]; failed: { tag: string; error: string }[] }): void {
-    for (const ok of r.pulled)  console.log  (`    ✓ ${ok}`);
-    for (const sk of r.skipped) console.warn (`    ⚠ ${sk.tag}: ${sk.reason}`);
-    for (const ko of r.failed)  console.error(`    ✗ ${ko.tag}: ${ko.error}`);
+function reportBlocs(r: {
+    pulled: string[];
+    skipped: { tag: string; reason: string }[];
+    failed: { tag: string; error: string }[];
+}): void {
+    for (const ok of r.pulled) {
+        console.log(`    ✓ ${ok}`);
+    }
+    for (const sk of r.skipped) {
+        console.warn(`    ⚠ ${sk.tag}: ${sk.reason}`);
+    }
+    for (const ko of r.failed) {
+        console.error(`    ✗ ${ko.tag}: ${ko.error}`);
+    }
     console.log(`→ blocs: ${r.pulled.length} pulled, ${r.skipped.length} skipped, ${r.failed.length} failed.`);
 }
 
-function reportTemplates(r: { pulled: string[]; skipped: { reason: string }[]; failed: { identifier: string; error: string }[] }): void {
-    for (const ok of r.pulled)  console.log  (`    ✓ ${ok}`);
-    for (const sk of r.skipped) console.warn (`    ⚠ ${sk.reason}`);
-    for (const ko of r.failed)  console.error(`    ✗ ${ko.identifier}: ${ko.error}`);
+function reportTemplates(r: {
+    pulled: string[];
+    skipped: { reason: string }[];
+    failed: { identifier: string; error: string }[];
+}): void {
+    for (const ok of r.pulled) {
+        console.log(`    ✓ ${ok}`);
+    }
+    for (const sk of r.skipped) {
+        console.warn(`    ⚠ ${sk.reason}`);
+    }
+    for (const ko of r.failed) {
+        console.error(`    ✗ ${ko.identifier}: ${ko.error}`);
+    }
     console.log(`→ templates: ${r.pulled.length} pulled, ${r.skipped.length} skipped, ${r.failed.length} failed.`);
 }
 
 export default async function CLI_pull(args: string[]) {
     const flags = parseFlags(args);
-    if (!TYPES.includes(flags.type as typeof TYPES[number])) {
+    if (!TYPES.includes(flags.type as (typeof TYPES)[number])) {
         console.error(`✖ --type=${flags.type} unknown. Available: ${TYPES.join(", ")}.`);
         process.exit(1);
     }
@@ -80,7 +125,7 @@ export default async function CLI_pull(args: string[]) {
     console.log(`→ Tenant   : ${adminBase.href.replace(/\/$/, "")}`);
     console.log(`→ Site dir : ${config.siteDir}`);
     if (existsSync(config.siteDir) && !flags.force) {
-        if (!await confirm(`⚠ ${config.siteDir} exists — pull will overwrite matching files. Continue?`, flags.yes)) {
+        if (!(await confirm(`⚠ ${config.siteDir} exists — pull will overwrite matching files. Continue?`, flags.yes))) {
             console.log("→ Aborted.");
             return;
         }
@@ -88,7 +133,9 @@ export default async function CLI_pull(args: string[]) {
 
     const targets: readonly Stage[] = flags.type === "*" ? ORDER : [flags.type as Stage];
     for (const stage of targets) {
-        if (targets.length > 1) console.log(`\n— ${stage} —`);
+        if (targets.length > 1) {
+            console.log(`\n— ${stage} —`);
+        }
         await runStage(stage, adminBase, token, config.siteDir);
     }
 }

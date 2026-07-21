@@ -10,11 +10,7 @@ export async function authorizeOrderRelease(request: Request): Promise<Response>
         p_actor_kind: "admin",
         p_actor_id: cmsUserId(request),
         p_reason: text(body.reason) ?? null,
-        p_expected_settlement_version: integer(
-            body.expectedSettlementVersion,
-            "expectedSettlementVersion",
-            true,
-        ),
+        p_expected_settlement_version: integer(body.expectedSettlementVersion, "expectedSettlementVersion", true),
     });
     return json(camelize(result));
 }

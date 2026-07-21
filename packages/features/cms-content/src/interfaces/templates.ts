@@ -7,4 +7,4 @@ export type TTemplate = {
     content: string;
     category: string;
     createdAt: Date;
-}
+};

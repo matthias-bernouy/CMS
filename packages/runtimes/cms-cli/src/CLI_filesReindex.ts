@@ -27,7 +27,11 @@ export default async function CLI_filesReindex(args: string[]): Promise<void> {
     const r = await files.reconcile({ force });
     console.log(`→ Reindexed ${config.siteDir}/files`);
     console.log(`    healed  ${r.healed.length}   minted ${r.minted.length}   dropped ${r.deleted.length}`);
-    for (const e of r.errors) console.warn(`  ! ${e.path}: ${e.error}`);
+    for (const e of r.errors) {
+        console.warn(`  ! ${e.path}: ${e.error}`);
+    }
     console.log("→ Commit .cms-files-registry.json — committed ids never change for a given path+content.");
-    if (r.errors.length) process.exit(1);
+    if (r.errors.length) {
+        process.exit(1);
+    }
 }

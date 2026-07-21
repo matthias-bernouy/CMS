@@ -1,26 +1,19 @@
 import { describe, expect, test } from "bun:test";
-import {
-    authorization,
-    publicEvents,
-    publicResponse,
-    publicShipment,
-} from "./fixtures";
+import { authorization, publicEvents, publicResponse, publicShipment } from "./fixtures";
 import { executeClaimTracking } from "./harness";
 import { successfulResponder } from "./responders";
 
 describe("Commerce Mondial Relay claim return tracking contracts", () => {
     for (const userId of ["buyer-user", "seller-user"]) {
         test(`returns the exact allowlisted tracking DTO to ${userId}`, async () => {
-            const { response, calls } = await executeClaimTracking(
-                successfulResponder(),
-                { user: { id: userId, role: "user" } },
-            );
+            const { response, calls } = await executeClaimTracking(successfulResponder(), {
+                user: { id: userId, role: "user" },
+            });
 
             expect(response.status).toBe(200);
             expect(await response.json()).toEqual(publicResponse);
             expect(calls[0]?.url.searchParams.get("claimId")).toBe("7");
-            expect(calls[1]?.url.searchParams.get("externalOrderId"))
-                .toBe("claim-return:7");
+            expect(calls[1]?.url.searchParams.get("externalOrderId")).toBe("claim-return:7");
         });
     }
 
@@ -72,11 +65,13 @@ describe("Commerce Mondial Relay claim return tracking contracts", () => {
         expect(await tracked.response.json()).toEqual({
             ...publicResponse,
             ...nullableAuthorization,
-            shipments: [{
-                ...publicShipment,
-                ...nullableShipment,
-                events: publicEvents,
-            }],
+            shipments: [
+                {
+                    ...publicShipment,
+                    ...nullableShipment,
+                    events: publicEvents,
+                },
+            ],
         });
         expect(await empty.response.json()).toEqual({
             claimId: authorization.claimId,

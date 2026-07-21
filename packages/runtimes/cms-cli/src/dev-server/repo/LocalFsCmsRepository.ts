@@ -21,30 +21,48 @@ export type LocalFsCmsRepositoryOptions = {
  * source of truth in dev.
  */
 export class LocalFsCmsRepository implements CmsRepository {
-    private readonly _pages:         PagesStore;
-    private readonly _templates:     TemplatesStore;
-    private readonly _system:        SystemStore;
-    private readonly _blocs:         BlocsStore;
+    private readonly _pages: PagesStore;
+    private readonly _templates: TemplatesStore;
+    private readonly _system: SystemStore;
+    private readonly _blocs: BlocsStore;
 
     constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>, options: LocalFsCmsRepositoryOptions = {}) {
-        this._pages         = new PagesStore(siteDir);
-        this._templates     = new TemplatesStore(siteDir);
-        this._system        = new SystemStore(siteDir);
-        this._blocs         = new BlocsStore(siteDir, builtBlocs, { rootDir: options.blocRootDir });
+        this._pages = new PagesStore(siteDir);
+        this._templates = new TemplatesStore(siteDir);
+        this._system = new SystemStore(siteDir);
+        this._blocs = new BlocsStore(siteDir, builtBlocs, { rootDir: options.blocRootDir });
     }
 
     // ── Bloc ──
-    createBloc(bloc: TBloc):  Promise<TBloc> { return this._blocs.create(bloc); }
-    replaceBloc(bloc: TBloc): Promise<TBloc> { return this._blocs.replace(bloc); }
-    getBlocsJS():            Promise<{ id: string; editorJS: string; viewJS: string }[]> { return this._blocs.getAllJS(); }
-    getBlocsList():          Promise<BlocListItemResponse[]>                              { return this._blocs.getList(); }
-    getBlocViewJS(tag: string):                Promise<string | null>                     { return this._blocs.getViewJS(tag); }
-    getBlocSource(tag: string):                Promise<Record<string, string> | null>     { return this._blocs.getSource(tag); }
+    createBloc(bloc: TBloc): Promise<TBloc> {
+        return this._blocs.create(bloc);
+    }
+    replaceBloc(bloc: TBloc): Promise<TBloc> {
+        return this._blocs.replace(bloc);
+    }
+    getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
+        return this._blocs.getAllJS();
+    }
+    getBlocsList(): Promise<BlocListItemResponse[]> {
+        return this._blocs.getList();
+    }
+    getBlocViewJS(tag: string): Promise<string | null> {
+        return this._blocs.getViewJS(tag);
+    }
+    getBlocSource(tag: string): Promise<Record<string, string> | null> {
+        return this._blocs.getSource(tag);
+    }
 
     // ── Page ──
-    getPage(path: string):                     Promise<TPage | null> { return this._pages.getByPath(path); }
-    getPageById(id: string):                   Promise<TPage | null> { return this._pages.getById(id); }
-    getAllPages():                             Promise<TPage[]>      { return this._pages.getAll(); }
+    getPage(path: string): Promise<TPage | null> {
+        return this._pages.getByPath(path);
+    }
+    getPageById(id: string): Promise<TPage | null> {
+        return this._pages.getById(id);
+    }
+    getAllPages(): Promise<TPage[]> {
+        return this._pages.getAll();
+    }
     async getPublishedPage(path: string): Promise<TPage | null> {
         const page = await this.getPage(path);
         return isPublishedPage(page) ? page : null;
@@ -52,29 +70,59 @@ export class LocalFsCmsRepository implements CmsRepository {
     async getPublishedPages(): Promise<TPage[]> {
         return (await this.getAllPages()).filter(isPublishedPage);
     }
-    insertPage(path: string, title: string):   Promise<void>         { return this._pages.insert(path, title); }
-    updatePage(page: Partial<TPage>):          Promise<void>         { return this._pages.update(page); }
-    deletePage(id: string):                    Promise<void>         { return this._pages.delete(id); }
-    getLinks():                                Promise<PageLink[]>   { return this._pages.links(); }
-    getPagesMetadata(opts?: PagesQuery) { return this._pages.metadata(opts); }
-    getTemplatesMetadata() { return this._templates.metadata(); }
+    insertPage(path: string, title: string): Promise<void> {
+        return this._pages.insert(path, title);
+    }
+    updatePage(page: Partial<TPage>): Promise<void> {
+        return this._pages.update(page);
+    }
+    deletePage(id: string): Promise<void> {
+        return this._pages.delete(id);
+    }
+    getLinks(): Promise<PageLink[]> {
+        return this._pages.links();
+    }
+    getPagesMetadata(opts?: PagesQuery) {
+        return this._pages.metadata(opts);
+    }
+    getTemplatesMetadata() {
+        return this._templates.metadata();
+    }
     async getTagCounts() {
-        return countValues((await this._pages.getAll()).flatMap(p => normalizeTags((p as { tags: unknown }).tags)));
+        return countValues((await this._pages.getAll()).flatMap((p) => normalizeTags((p as { tags: unknown }).tags)));
     }
     async getCategoryCounts(_resource: "templates") {
-        return countValues((await this._templates.getAll()).map(t => t.category));
+        return countValues((await this._templates.getAll()).map((t) => t.category));
     }
 
     // ── System ──
-    getSystem():                               Promise<TSystem> { return this._system.get(); }
-    updateSystem(patch: Partial<TSystem>):     Promise<TSystem> { return this._system.update(patch); }
+    getSystem(): Promise<TSystem> {
+        return this._system.get();
+    }
+    updateSystem(patch: Partial<TSystem>): Promise<TSystem> {
+        return this._system.update(patch);
+    }
 
     // ── Template ──
-    createTemplate(template: Omit<TTemplate, "id">):       Promise<TTemplate>          { return this._templates.create(template); }
-    getTemplateById(id: string):                           Promise<TTemplate | null>   { return this._templates.getById(id); }
-    getTemplateByIdentifier(identifier: string):           Promise<TTemplate | null>   { return this._templates.getByIdentifier(identifier); }
-    getAllTemplates():                                     Promise<TTemplate[]>        { return this._templates.getAll(); }
-    getTemplateCategories():                               Promise<string[]>           { return this._templates.categories(); }
-    updateTemplate(id: string, data: Partial<TTemplate>):  Promise<TTemplate | null>   { return this._templates.update(id, data); }
-    deleteTemplate(id: string):                            Promise<void>               { return this._templates.delete(id); }
+    createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
+        return this._templates.create(template);
+    }
+    getTemplateById(id: string): Promise<TTemplate | null> {
+        return this._templates.getById(id);
+    }
+    getTemplateByIdentifier(identifier: string): Promise<TTemplate | null> {
+        return this._templates.getByIdentifier(identifier);
+    }
+    getAllTemplates(): Promise<TTemplate[]> {
+        return this._templates.getAll();
+    }
+    getTemplateCategories(): Promise<string[]> {
+        return this._templates.categories();
+    }
+    updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
+        return this._templates.update(id, data);
+    }
+    deleteTemplate(id: string): Promise<void> {
+        return this._templates.delete(id);
+    }
 }

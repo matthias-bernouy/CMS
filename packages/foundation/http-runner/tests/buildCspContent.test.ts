@@ -23,7 +23,7 @@ describe("buildCspContent", () => {
     test("emits connect-src 'self' <urls> when connectExtras is non-empty", () => {
         const csp = buildCspContent({
             connectExtras: ["https://api.example.com", "https://x.supabase.co"],
-            mediaExtras:   [],
+            mediaExtras: [],
         });
         expect(csp).toContain("connect-src 'self' https://api.example.com https://x.supabase.co");
     });
@@ -31,7 +31,7 @@ describe("buildCspContent", () => {
     test("emits media-src 'self' <urls> when mediaExtras is non-empty", () => {
         const csp = buildCspContent({
             connectExtras: [],
-            mediaExtras:   ["https://cdn.example.com"],
+            mediaExtras: ["https://cdn.example.com"],
         });
         expect(csp).toContain("media-src 'self' https://cdn.example.com");
     });
@@ -39,8 +39,8 @@ describe("buildCspContent", () => {
     test("emits frame-src 'self' <urls> when frameExtras is non-empty", () => {
         const csp = buildCspContent({
             connectExtras: [],
-            mediaExtras:   [],
-            frameExtras:   ["https://connect-js.stripe.com"],
+            mediaExtras: [],
+            frameExtras: ["https://connect-js.stripe.com"],
         });
         expect(csp).toContain("frame-src 'self' https://connect-js.stripe.com");
     });
@@ -48,7 +48,7 @@ describe("buildCspContent", () => {
     test("emits both directives when both extras are non-empty", () => {
         const csp = buildCspContent({
             connectExtras: ["https://api.example.com"],
-            mediaExtras:   ["https://cdn.example.com"],
+            mediaExtras: ["https://cdn.example.com"],
         });
         expect(csp).toContain("connect-src 'self' https://api.example.com");
         expect(csp).toContain("media-src 'self' https://cdn.example.com");

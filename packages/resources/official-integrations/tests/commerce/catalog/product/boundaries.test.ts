@@ -98,18 +98,20 @@ describe("commerce product detail boundaries", () => {
     });
 
     test("fails closed when the private read model contains malformed relation rows", async () => {
-        setRestResponder(() => jsonResponse({
-            state: "ok",
-            product: productRow,
-            public_metadata_keys: [],
-            axes: [null],
-            values: [],
-            variants: [],
-            selections: [],
-            media: [],
-            brand: null,
-            categories: [],
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                state: "ok",
+                product: productRow,
+                public_metadata_keys: [],
+                axes: [null],
+                values: [],
+                variants: [],
+                selections: [],
+                media: [],
+                brand: null,
+                categories: [],
+            }),
+        );
 
         const response = await requestCommerce("/product?id=42");
 

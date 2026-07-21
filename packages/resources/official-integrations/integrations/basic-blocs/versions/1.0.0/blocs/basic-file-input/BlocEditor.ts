@@ -130,12 +130,14 @@ export class BasicFileInputEditor extends Editor {
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [{
-            label: "Preview",
-            slot: "preview",
-            accepts: [{ kind: "any-component" }],
-            max: 1,
-        }];
+        return [
+            {
+                label: "Preview",
+                slot: "preview",
+                accepts: [{ kind: "any-component" }],
+                max: 1,
+            },
+        ];
     }
 }
 

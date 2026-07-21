@@ -6,10 +6,14 @@ import { toFunctionDetailItem, type FunctionDetailItem } from "./functionViews";
 
 export async function createFunctionDefinition(cms: ControlCms, value: unknown): Promise<FunctionDetailItem> {
     const repository = cms.functions;
-    if (!repository) throw new HttpError(501, "functions not configured");
+    if (!repository) {
+        throw new HttpError(501, "functions not configured");
+    }
     const definition = parseDefinition(value);
     const errors = await validateDefinition(definition, cms);
-    if (errors.length) throw new InvalidParam("definition", errors.join("; "));
+    if (errors.length) {
+        throw new InvalidParam("definition", errors.join("; "));
+    }
 
     try {
         return toFunctionDetailItem(await repository.createFunction(definition));

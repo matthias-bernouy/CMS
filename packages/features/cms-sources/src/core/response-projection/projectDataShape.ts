@@ -3,12 +3,12 @@ import type { DataShape } from "../../interfaces/DataShape";
 export type DataShapeProjectionResult =
     | { ok: true; value: unknown }
     | {
-        ok: false;
-        reason: "type_mismatch";
-        path: string;
-        expectedType: DataShape["type"];
-        actualType: JsonValueType;
-    };
+          ok: false;
+          reason: "type_mismatch";
+          path: string;
+          expectedType: DataShape["type"];
+          actualType: JsonValueType;
+      };
 
 export type JsonValueType = DataShape["type"] | "null" | "unknown";
 
@@ -19,11 +19,7 @@ export type JsonValueType = DataShape["type"] | "null" | "unknown";
  * shapes as permissive. Required-property enforcement belongs to the later strict
  * contract pass.
  */
-export function projectDataShape(
-    value: unknown,
-    shape: DataShape,
-    path = "$",
-): DataShapeProjectionResult {
+export function projectDataShape(value: unknown, shape: DataShape, path = "$"): DataShapeProjectionResult {
     if (value === null) {
         return shape.nullable === true ? { ok: true, value } : mismatch(value, shape, path);
     }
@@ -42,41 +38,46 @@ export function projectDataShape(
     }
 }
 
-function scalar(
-    matches: boolean,
-    value: unknown,
-    shape: DataShape,
-    path: string,
-): DataShapeProjectionResult {
+function scalar(matches: boolean, value: unknown, shape: DataShape, path: string): DataShapeProjectionResult {
     return matches ? { ok: true, value } : mismatch(value, shape, path);
 }
 
 function projectArray(value: unknown, shape: DataShape, path: string): DataShapeProjectionResult {
-    if (!Array.isArray(value)) return mismatch(value, shape, path);
-    if (!shape.items) return { ok: true, value };
+    if (!Array.isArray(value)) {
+        return mismatch(value, shape, path);
+    }
+    if (!shape.items) {
+        return { ok: true, value };
+    }
 
     const projected: unknown[] = [];
     for (const item of value) {
         const result = projectDataShape(item, shape.items, `${path}[]`);
-        if (!result.ok) return result;
+        if (!result.ok) {
+            return result;
+        }
         projected.push(result.value);
     }
     return { ok: true, value: projected };
 }
 
-function projectObject(
-    value: unknown,
-    shape: DataShape,
-    path: string,
-): DataShapeProjectionResult {
-    if (!isObject(value)) return mismatch(value, shape, path);
-    if (!shape.properties || Object.keys(shape.properties).length === 0) return { ok: true, value };
+function projectObject(value: unknown, shape: DataShape, path: string): DataShapeProjectionResult {
+    if (!isObject(value)) {
+        return mismatch(value, shape, path);
+    }
+    if (!shape.properties || Object.keys(shape.properties).length === 0) {
+        return { ok: true, value };
+    }
 
     const projected: Record<string, unknown> = {};
     for (const [name, propertyShape] of Object.entries(shape.properties)) {
-        if (!Object.hasOwn(value, name)) continue;
+        if (!Object.hasOwn(value, name)) {
+            continue;
+        }
         const result = projectDataShape(value[name], propertyShape, childPath(path, name));
-        if (!result.ok) return result;
+        if (!result.ok) {
+            return result;
+        }
         // Defining the property avoids the special `__proto__` assignment setter if
         // an executor is handed a shape that bypassed normal source validation.
         Object.defineProperty(projected, name, {
@@ -104,16 +105,16 @@ function mismatch(value: unknown, shape: DataShape, path: string): DataShapeProj
 }
 
 function jsonValueType(value: unknown): JsonValueType {
-    if (value === null) return "null";
-    if (Array.isArray(value)) return "array";
+    if (value === null) {
+        return "null";
+    }
+    if (Array.isArray(value)) {
+        return "array";
+    }
     const type = typeof value;
-    return type === "string" || type === "number" || type === "boolean" || type === "object"
-        ? type
-        : "unknown";
+    return type === "string" || type === "number" || type === "boolean" || type === "object" ? type : "unknown";
 }
 
 function childPath(path: string, property: string): string {
-    return /^[A-Za-z_][A-Za-z0-9_]{0,63}$/.test(property)
-        ? `${path}.${property}`
-        : `${path}.*`;
+    return /^[A-Za-z_][A-Za-z0-9_]{0,63}$/.test(property) ? `${path}.${property}` : `${path}.*`;
 }

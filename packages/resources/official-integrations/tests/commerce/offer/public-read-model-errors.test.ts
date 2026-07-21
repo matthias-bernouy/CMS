@@ -11,11 +11,13 @@ installCommerceTestEnvironment();
 
 describe("commerce public offer read model failures", () => {
     test("keeps a missing offer hidden even when settings are unavailable", async () => {
-        setRestResponder(() => jsonResponse({
-            candidate_exists: false,
-            settings_available: false,
-            offer: null,
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                candidate_exists: false,
+                settings_available: false,
+                offer: null,
+            }),
+        );
 
         const response = await requestCommerce("/offer?id=404");
 
@@ -25,11 +27,13 @@ describe("commerce public offer read model failures", () => {
     });
 
     test("preserves the settings failure after finding an active offer", async () => {
-        setRestResponder(() => jsonResponse({
-            candidate_exists: true,
-            settings_available: false,
-            offer: null,
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                candidate_exists: true,
+                settings_available: false,
+                offer: null,
+            }),
+        );
 
         const response = await requestCommerce("/offer?id=91");
 
@@ -39,11 +43,13 @@ describe("commerce public offer read model failures", () => {
     });
 
     test("preserves the settings failure before returning a public list", async () => {
-        setRestResponder(() => jsonResponse({
-            settings_available: false,
-            items: [],
-            total: 0,
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                settings_available: false,
+                items: [],
+                total: 0,
+            }),
+        );
 
         const response = await requestCommerce("/offers");
 

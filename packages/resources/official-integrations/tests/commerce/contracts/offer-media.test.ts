@@ -4,10 +4,7 @@ import { resolve } from "node:path";
 
 type RecordValue = Record<string, any>;
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../integrations/commerce/versions/1.0.0/definition.json");
 
 describe("commerce offer media contract", () => {
     test("exposes admin and seller-owned image operations", async () => {
@@ -15,10 +12,20 @@ describe("commerce offer media contract", () => {
         const endpoints = definition.artifacts.find((artifact: RecordValue) => artifact.source).source.endpoints;
         const byId = Object.fromEntries(endpoints.map((endpoint: RecordValue) => [endpoint.endpointId, endpoint]));
 
-        expect(Object.keys(byId)).toEqual(expect.arrayContaining([
-            "offerImage", "uploadOfferImage", "replaceOfferImage", "removeOfferImage", "reorderOfferImages",
-            "myOfferImage", "uploadMyOfferImage", "replaceMyOfferImage", "removeMyOfferImage", "reorderMyOfferImages",
-        ]));
+        expect(Object.keys(byId)).toEqual(
+            expect.arrayContaining([
+                "offerImage",
+                "uploadOfferImage",
+                "replaceOfferImage",
+                "removeOfferImage",
+                "reorderOfferImages",
+                "myOfferImage",
+                "uploadMyOfferImage",
+                "replaceMyOfferImage",
+                "removeMyOfferImage",
+                "reorderMyOfferImages",
+            ]),
+        );
         expect(byId.offerImage).toMatchObject({ method: "GET", responseKind: "file", mediaType: "image/*" });
         expect(byId.myOfferImage).toMatchObject({ access: "auth", method: "GET", responseKind: "file" });
         expect(byId.uploadMyOfferImage).toMatchObject({ access: "auth", method: "POST" });
@@ -33,7 +40,9 @@ describe("commerce offer media contract", () => {
 
     test("wires the offer image editor to the admin operations", async () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8")) as RecordValue;
-        const dashboard = definition.artifacts.find((artifact: RecordValue) => artifact.dashboard?.id.endsWith("-offers")).dashboard;
+        const dashboard = definition.artifacts.find((artifact: RecordValue) =>
+            artifact.dashboard?.id.endsWith("-offers"),
+        ).dashboard;
         const detail = dashboard.views.find((view: RecordValue) => view.id === "offerDetail");
         const section = detail.main.find((candidate: RecordValue) => candidate.id === "offerMedia");
         const field = section.fields.find((candidate: RecordValue) => candidate.id === "media");

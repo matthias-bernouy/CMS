@@ -12,10 +12,14 @@ import { assignableRoles } from "cms-control/core/roles/rolesView";
  *  of assignable roles (admin + user + custom roles; `public` is not assignable). */
 export default async function setUserRole(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
-    const sub  = body.sub;
+    const sub = body.sub;
     const role = body.role;
-    if (typeof sub !== "string" || !sub)   throw new MissingParam("sub");
-    if (typeof role !== "string" || !role) throw new MissingParam("role");
+    if (typeof sub !== "string" || !sub) {
+        throw new MissingParam("sub");
+    }
+    if (typeof role !== "string" || !role) {
+        throw new MissingParam("role");
+    }
 
     const allowed = await assignableRoles(cms);
     if (!allowed.some((r) => r.id === role)) {
@@ -23,11 +27,13 @@ export default async function setUserRole(req: Request, cms: ControlCms) {
     }
 
     // Never strip the last admin — that would lock everyone out of the tenant.
-    if (role !== ADMIN_ROLE && await isLastAdmin(cms.users, sub)) {
+    if (role !== ADMIN_ROLE && (await isLastAdmin(cms.users, sub))) {
         throw new InvalidParam("role", "cannot demote the last admin");
     }
 
     const updated = await cms.users.setRole(sub, role);
-    if (!updated) throw new InvalidParam("sub", "unknown user");
+    if (!updated) {
+        throw new InvalidParam("sub", "unknown user");
+    }
     return Response.json(updated);
 }

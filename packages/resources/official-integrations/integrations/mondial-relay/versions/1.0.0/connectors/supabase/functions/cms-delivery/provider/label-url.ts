@@ -15,11 +15,11 @@ export function validatedMondialRelayLabelUrl(value: string): URL {
         throw new HttpError(400, "Mondial Relay label URL is invalid");
     }
     if (
-        url.protocol !== "https:"
-        || url.port
-        || url.username
-        || url.password
-        || !mondialRelayLabelHosts.has(url.hostname.toLowerCase())
+        url.protocol !== "https:" ||
+        url.port ||
+        url.username ||
+        url.password ||
+        !mondialRelayLabelHosts.has(url.hostname.toLowerCase())
     ) {
         throw new HttpError(400, "Mondial Relay label URL is not an allowed provider URL");
     }

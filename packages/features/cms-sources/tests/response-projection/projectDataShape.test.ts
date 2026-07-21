@@ -22,12 +22,20 @@ describe("projectDataShape", () => {
             },
         };
 
-        expect(projectDataShape({
-            id: "account-1",
-            token: "must-not-leak",
-            profile: { displayName: "Ada", privateEmail: "ada@example.test" },
-            rows: [{ value: 1, internal: true }, { value: 2, internal: false }],
-        }, shape)).toEqual({
+        expect(
+            projectDataShape(
+                {
+                    id: "account-1",
+                    token: "must-not-leak",
+                    profile: { displayName: "Ada", privateEmail: "ada@example.test" },
+                    rows: [
+                        { value: 1, internal: true },
+                        { value: 2, internal: false },
+                    ],
+                },
+                shape,
+            ),
+        ).toEqual({
             ok: true,
             value: {
                 id: "account-1",
@@ -60,18 +68,23 @@ describe("projectDataShape", () => {
             expectedType: "number",
             actualType: "string",
         });
-        expect(projectDataShape({ rows: [{ value: "1" }] }, {
-            type: "object",
-            properties: {
-                rows: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: { value: { type: "number" } },
+        expect(
+            projectDataShape(
+                { rows: [{ value: "1" }] },
+                {
+                    type: "object",
+                    properties: {
+                        rows: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: { value: { type: "number" } },
+                            },
+                        },
                     },
                 },
-            },
-        })).toEqual({
+            ),
+        ).toEqual({
             ok: false,
             reason: "type_mismatch",
             path: "$.rows[].value",
@@ -81,46 +94,55 @@ describe("projectDataShape", () => {
     });
 
     test("accepts JSON null only when the shape declares it nullable", () => {
-        expect(projectDataShape(null, { type: "string", nullable: true }))
-            .toEqual({ ok: true, value: null });
-        expect(projectDataShape(null, { type: "string" }))
-            .toEqual({
-                ok: false,
-                reason: "type_mismatch",
-                path: "$",
-                expectedType: "string",
-                actualType: "null",
-            });
-        expect(projectDataShape(null, { type: "string", nullable: false }))
-            .toEqual({
-                ok: false,
-                reason: "type_mismatch",
-                path: "$",
-                expectedType: "string",
-                actualType: "null",
-            });
-        expect(projectDataShape({ email: null }, {
-            type: "object",
-            properties: { email: { type: "string", nullable: true } },
-        })).toEqual({ ok: true, value: { email: null } });
+        expect(projectDataShape(null, { type: "string", nullable: true })).toEqual({ ok: true, value: null });
+        expect(projectDataShape(null, { type: "string" })).toEqual({
+            ok: false,
+            reason: "type_mismatch",
+            path: "$",
+            expectedType: "string",
+            actualType: "null",
+        });
+        expect(projectDataShape(null, { type: "string", nullable: false })).toEqual({
+            ok: false,
+            reason: "type_mismatch",
+            path: "$",
+            expectedType: "string",
+            actualType: "null",
+        });
+        expect(
+            projectDataShape(
+                { email: null },
+                {
+                    type: "object",
+                    properties: { email: { type: "string", nullable: true } },
+                },
+            ),
+        ).toEqual({ ok: true, value: { email: null } });
     });
 
     test("only projects own properties", () => {
         const value = Object.assign(Object.create({ inherited: "secret" }), { own: "visible" });
-        expect(projectDataShape(value, {
-            type: "object",
-            properties: {
-                inherited: { type: "string" },
-                own: { type: "string" },
-            },
-        })).toEqual({ ok: true, value: { own: "visible" } });
+        expect(
+            projectDataShape(value, {
+                type: "object",
+                properties: {
+                    inherited: { type: "string" },
+                    own: { type: "string" },
+                },
+            }),
+        ).toEqual({ ok: true, value: { own: "visible" } });
     });
 
     test("redacts non-identifier property names from diagnostic paths", () => {
-        expect(projectDataShape({ "private@example.test": 42 }, {
-            type: "object",
-            properties: { "private@example.test": { type: "string" } },
-        })).toEqual({
+        expect(
+            projectDataShape(
+                { "private@example.test": 42 },
+                {
+                    type: "object",
+                    properties: { "private@example.test": { type: "string" } },
+                },
+            ),
+        ).toEqual({
             ok: false,
             reason: "type_mismatch",
             path: "$.*",

@@ -23,39 +23,31 @@ export async function executeRelay(
     } = {},
 ): Promise<{ response: Response; calls: CapturedCall[] }> {
     const calls: CapturedCall[] = [];
-    const response = await executeFunction(
-        await loadRelayFunction(id),
-        options.request ?? relayRequest(id),
-        {
-            sources: await relaySources(),
-            user: options.user === null
-                ? undefined
-                : options.user ?? { id: buyerId, role: "user" },
-            deps: {
-                fetchImpl: async (input, init) => {
-                    const outgoing = new Request(input, init);
-                    calls.push({
-                        url: new URL(outgoing.url),
-                        method: outgoing.method,
-                        body: await requestBody(outgoing),
-                        userId: outgoing.headers.get("x-cms-user-id"),
-                        accountUserId: outgoing.headers.get("x-user-id"),
-                    });
-                    return await responder(outgoing);
-                },
+    const response = await executeFunction(await loadRelayFunction(id), options.request ?? relayRequest(id), {
+        sources: await relaySources(),
+        user: options.user === null ? undefined : (options.user ?? { id: buyerId, role: "user" }),
+        deps: {
+            fetchImpl: async (input, init) => {
+                const outgoing = new Request(input, init);
+                calls.push({
+                    url: new URL(outgoing.url),
+                    method: outgoing.method,
+                    body: await requestBody(outgoing),
+                    userId: outgoing.headers.get("x-cms-user-id"),
+                    accountUserId: outgoing.headers.get("x-user-id"),
+                });
+                return await responder(outgoing);
             },
         },
-    );
+    });
     return { response, calls };
 }
 
 export async function loadRelayFunction(id: RelayFunctionId) {
-    const definition = await new FsIntegrationDefinitionRepository(
-        OFFICIAL_INTEGRATIONS_ROOT,
-    ).get("commerce-mondial-relay-delivery");
-    const artifact = definition?.artifacts?.find(item =>
-        item.type === "function" && item.function.id === id
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
+        "commerce-mondial-relay-delivery",
     );
+    const artifact = definition?.artifacts?.find((item) => item.type === "function" && item.function.id === id);
     if (!artifact || artifact.type !== "function") {
         throw new Error(`${id} function not found`);
     }
@@ -66,24 +58,19 @@ export async function loadRelayFunction(id: RelayFunctionId) {
 
 export function relayRequest(id: RelayFunctionId): Request {
     if (id === "getRelayPointForOrder") {
-        return new Request(
-            "https://cms.test/functions/getRelayPointForOrder?orderId=42",
-        );
+        return new Request("https://cms.test/functions/getRelayPointForOrder?orderId=42");
     }
-    return new Request(
-        "https://cms.test/functions/setRelayPointForOrder",
-        {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-                orderId: "42",
-                relayLocation: "FR-024474",
-                country: "FR",
-                postalCode: "75001",
-                city: "Paris",
-            }),
-        },
-    );
+    return new Request("https://cms.test/functions/setRelayPointForOrder", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            orderId: "42",
+            relayLocation: "FR-024474",
+            country: "FR",
+            postalCode: "75001",
+            city: "Paris",
+        }),
+    });
 }
 
 export async function expectGenericFailure(response: Response): Promise<void> {
@@ -98,23 +85,31 @@ export async function expectGenericFailure(response: Response): Promise<void> {
 }
 
 async function requestBody(request: Request): Promise<unknown> {
-    if (request.body === null) return undefined;
+    if (request.body === null) {
+        return undefined;
+    }
     return await request.clone().json();
 }
 
 function resolveDependencySources(value: unknown): void {
     if (Array.isArray(value)) {
-        for (const item of value) resolveDependencySources(item);
+        for (const item of value) {
+            resolveDependencySources(item);
+        }
         return;
     }
-    if (!isRecord(value)) return;
-    if (isRecord(value.call) && typeof value.call.source === "string") {
-        const match = /^\{\{dependencies\.([^.]+)\.sourceId\}\}$/.exec(
-            value.call.source,
-        );
-        if (match) value.call.source = match[1]!;
+    if (!isRecord(value)) {
+        return;
     }
-    for (const nested of Object.values(value)) resolveDependencySources(nested);
+    if (isRecord(value.call) && typeof value.call.source === "string") {
+        const match = /^\{\{dependencies\.([^.]+)\.sourceId\}\}$/.exec(value.call.source);
+        if (match) {
+            value.call.source = match[1]!;
+        }
+    }
+    for (const nested of Object.values(value)) {
+        resolveDependencySources(nested);
+    }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

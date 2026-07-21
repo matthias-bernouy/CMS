@@ -8,24 +8,32 @@ describe("source overlays API", () => {
         const sourceOverlays = new InMemorySourceOverlayRepository();
         const cms = { sourceOverlays } as any;
 
-        const posted = await postOverlay(new Request("http://localhost/cms/api/source-overlays/overlays", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-                id: "user-account-extra-fields",
-                sourceId: "user-account",
-                input: [{ endpointId: "updateAccount", editable: "self" }],
-                output: [{ endpointId: "getAccount" }],
-                fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
-                fields: [{
-                    id: "company",
-                    label: "Company",
-                    type: "string",
-                    options: [{ value: "acme", label: "Acme" }],
-                }],
+        const posted = await postOverlay(
+            new Request("http://localhost/cms/api/source-overlays/overlays", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    id: "user-account-extra-fields",
+                    sourceId: "user-account",
+                    input: [{ endpointId: "updateAccount", editable: "self" }],
+                    output: [{ endpointId: "getAccount" }],
+                    fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
+                    fields: [
+                        {
+                            id: "company",
+                            label: "Company",
+                            type: "string",
+                            options: [{ value: "acme", label: "Acme" }],
+                        },
+                    ],
+                }),
             }),
-        }), cms);
-        const listed = await getOverlays(new Request("http://localhost/cms/api/source-overlays/overlays?sourceId=user-account"), cms);
+            cms,
+        );
+        const listed = await getOverlays(
+            new Request("http://localhost/cms/api/source-overlays/overlays?sourceId=user-account"),
+            cms,
+        );
 
         expect(posted.status).toBe(200);
         expect(await posted.json()).toMatchObject({ id: "user-account-extra-fields", sourceId: "user-account" });
@@ -33,11 +41,13 @@ describe("source overlays API", () => {
             expect.objectContaining({
                 id: "user-account-extra-fields",
                 fieldSource: { endpointId: "listExtraFields", map: { options: "choices" } },
-                fields: [expect.objectContaining({
-                    id: "company",
-                    label: "Company",
-                    options: [{ value: "acme", label: "Acme" }],
-                })],
+                fields: [
+                    expect.objectContaining({
+                        id: "company",
+                        label: "Company",
+                        options: [{ value: "acme", label: "Acme" }],
+                    }),
+                ],
             }),
         ]);
     });

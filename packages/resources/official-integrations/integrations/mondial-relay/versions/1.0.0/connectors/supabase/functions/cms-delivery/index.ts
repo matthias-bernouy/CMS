@@ -23,7 +23,11 @@ import { normalizePhone, shipmentPayload, stringValue } from "./shipment/payload
 import { mondialRelayConnectEndpoint } from "./provider/provider-endpoints.ts";
 import { reconcileDueShipments, reconcileShipment, trackingRefreshDue } from "./shipment/reconciliation.ts";
 import { relayPointsFromUrl } from "./provider/relay.ts";
-import { cancelShipmentReservation, declareSellerHandoff, recoverUnknownShipment } from "./shipment/shipment-operations.ts";
+import {
+    cancelShipmentReservation,
+    declareSellerHandoff,
+    recoverUnknownShipment,
+} from "./shipment/shipment-operations.ts";
 import {
     camelizeRecord,
     acknowledgeShipmentEvent,
@@ -54,37 +58,89 @@ import type { DeliverySettings, JsonRecord } from "./shipment/types.ts";
 
 Deno.serve(async (request) => {
     try {
-        if (request.method === "OPTIONS") return optionsResponse();
+        if (request.method === "OPTIONS") {
+            return optionsResponse();
+        }
 
         const route = routePath(request);
-        if (request.method === "GET" && route === "/health") return health(request);
-        if (request.method === "GET" && route === "/shipments") return await shipments(request);
-        if (request.method === "GET" && route === "/shipment") return await shipment(request);
+        if (request.method === "GET" && route === "/health") {
+            return health(request);
+        }
+        if (request.method === "GET" && route === "/shipments") {
+            return await shipments(request);
+        }
+        if (request.method === "GET" && route === "/shipment") {
+            return await shipment(request);
+        }
         if (request.method === "GET" && route === "/system/shipment-for-external-order") {
             return await shipmentForExternalOrder(request);
         }
-        if (request.method === "POST" && route === "/shipments") return await createShipment(request);
-        if (request.method === "GET" && route === "/settings") return await settings(request);
-        if (request.method === "POST" && route === "/settings") return await setSettings(request);
-        if (request.method === "GET" && route === "/relay-points") return await relayPoints(request);
-        if (request.method === "GET" && route === "/relay-selection") return await relaySelection(request);
-        if (request.method === "POST" && route === "/relay-selections") return await saveRelaySelection(request);
-        if (request.method === "POST" && route === "/system/claim-return-relay-selections") return await saveClaimReturnRelaySelection(request);
-        if (request.method === "POST" && route === "/system/delivery-quotes/resolve") return await resolveDeliveryQuote(request);
-        if (request.method === "GET" && route === "/system/delivery-quotes/public") return await publicDeliveryQuote(request);
-        if (request.method === "GET" && route === "/label") return await label(request);
-        if (request.method === "POST" && route === "/system/label-access") return await issueLabelAccess(request);
-        if (request.method === "POST" && route === "/system/shipments/handoff") return await sellerHandoff(request);
-        if (request.method === "POST" && route === "/system/shipments/cancel") return await cancelShipment(request);
-        if (request.method === "POST" && route === "/system/reconcile") return await reconcile(request);
-        if (request.method === "POST" && route === "/system/events/ack") return await acknowledgeEvent(request);
-        if (request.method === "POST" && route === "/system/events/fail") return await failProjectionEvent(request);
-        if (request.method === "GET" && route === "/system/projection-health") return await deliveryProjectionHealth(request);
-        if (request.method === "GET" && route === "/admin/projection-exceptions") return await projectionExceptions(request);
-        if (request.method === "POST" && route === "/admin/projection-exceptions/review") return await reviewProjectionException(request);
-        if (request.method === "POST" && route === "/admin/shipments/recover") return await recoverShipment(request);
-        if (request.method === "GET" && route === "/tracking") return await tracking(request);
-        if (request.method === "GET" && route === "/parse-tracking-link") return await parseTrackingLink(request);
+        if (request.method === "POST" && route === "/shipments") {
+            return await createShipment(request);
+        }
+        if (request.method === "GET" && route === "/settings") {
+            return await settings(request);
+        }
+        if (request.method === "POST" && route === "/settings") {
+            return await setSettings(request);
+        }
+        if (request.method === "GET" && route === "/relay-points") {
+            return await relayPoints(request);
+        }
+        if (request.method === "GET" && route === "/relay-selection") {
+            return await relaySelection(request);
+        }
+        if (request.method === "POST" && route === "/relay-selections") {
+            return await saveRelaySelection(request);
+        }
+        if (request.method === "POST" && route === "/system/claim-return-relay-selections") {
+            return await saveClaimReturnRelaySelection(request);
+        }
+        if (request.method === "POST" && route === "/system/delivery-quotes/resolve") {
+            return await resolveDeliveryQuote(request);
+        }
+        if (request.method === "GET" && route === "/system/delivery-quotes/public") {
+            return await publicDeliveryQuote(request);
+        }
+        if (request.method === "GET" && route === "/label") {
+            return await label(request);
+        }
+        if (request.method === "POST" && route === "/system/label-access") {
+            return await issueLabelAccess(request);
+        }
+        if (request.method === "POST" && route === "/system/shipments/handoff") {
+            return await sellerHandoff(request);
+        }
+        if (request.method === "POST" && route === "/system/shipments/cancel") {
+            return await cancelShipment(request);
+        }
+        if (request.method === "POST" && route === "/system/reconcile") {
+            return await reconcile(request);
+        }
+        if (request.method === "POST" && route === "/system/events/ack") {
+            return await acknowledgeEvent(request);
+        }
+        if (request.method === "POST" && route === "/system/events/fail") {
+            return await failProjectionEvent(request);
+        }
+        if (request.method === "GET" && route === "/system/projection-health") {
+            return await deliveryProjectionHealth(request);
+        }
+        if (request.method === "GET" && route === "/admin/projection-exceptions") {
+            return await projectionExceptions(request);
+        }
+        if (request.method === "POST" && route === "/admin/projection-exceptions/review") {
+            return await reviewProjectionException(request);
+        }
+        if (request.method === "POST" && route === "/admin/shipments/recover") {
+            return await recoverShipment(request);
+        }
+        if (request.method === "GET" && route === "/tracking") {
+            return await tracking(request);
+        }
+        if (request.method === "GET" && route === "/parse-tracking-link") {
+            return await parseTrackingLink(request);
+        }
 
         return json({ error: "not found" }, 404);
     } catch (error) {
@@ -129,12 +185,16 @@ async function shipments(request: Request): Promise<Response> {
     if (q) {
         const value = q.replace(/[,*()]/g, " ").trim();
         if (value) {
-            filters.push(`or=${encodeURIComponent([
-                `recipient_name.ilike.*${value}*`,
-                `recipient_city.ilike.*${value}*`,
-                `expedition_number.ilike.*${value}*`,
-                `external_order_id.ilike.*${value}*`,
-            ].join(","))}`);
+            filters.push(
+                `or=${encodeURIComponent(
+                    [
+                        `recipient_name.ilike.*${value}*`,
+                        `recipient_city.ilike.*${value}*`,
+                        `expedition_number.ilike.*${value}*`,
+                        `external_order_id.ilike.*${value}*`,
+                    ].join(","),
+                )}`,
+            );
         }
     }
     const rows = await shipmentsRows(filters.join("&"));
@@ -145,7 +205,9 @@ async function shipment(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const url = new URL(request.url);
     const row = await shipmentWithEventsByRequest(url);
-    if (!row) throw new HttpError(404, "shipment not found");
+    if (!row) {
+        throw new HttpError(404, "shipment not found");
+    }
     return json(shipmentDetailJson(row));
 }
 
@@ -162,7 +224,9 @@ async function createShipment(request: Request): Promise<Response> {
     const payload = shipmentPayload(body, settingsFromRow(await settingsRow()));
     const deliveryQuoteId = stringValue(body.deliveryQuoteId);
     const sellerCmsUserId = stringValue(body.sellerCmsUserId);
-    if (!sellerCmsUserId) throw new HttpError(400, "sellerCmsUserId is required");
+    if (!sellerCmsUserId) {
+        throw new HttpError(400, "sellerCmsUserId is required");
+    }
     const quotePurpose = stringValue(body.quotePurpose) || "fulfillment";
     const quoteExternalOrderId = stringValue(body.quoteExternalOrderId) || payload.externalOrderId;
     const selectedForCmsUserId = stringValue(body.selectedForCmsUserId);
@@ -228,9 +292,15 @@ async function createShipment(request: Request): Promise<Response> {
         observedAt,
     });
     const row = isRecord(result.shipment) ? result.shipment : null;
-    if (!row) throw new HttpError(409, "shipment creation reservation was not acquired");
-    if (result.outcome === "replay") return shipmentReplayResponse(row);
-    if (result.outcome === "creating") return await existingCreatingShipmentResponse(row);
+    if (!row) {
+        throw new HttpError(409, "shipment creation reservation was not acquired");
+    }
+    if (result.outcome === "replay") {
+        return shipmentReplayResponse(row);
+    }
+    if (result.outcome === "creating") {
+        return await existingCreatingShipmentResponse(row);
+    }
     if (result.outcome === "unknown") {
         throw new HttpError(409, "shipment creation outcome is unknown and requires reconciliation");
     }
@@ -240,31 +310,44 @@ async function createShipment(request: Request): Promise<Response> {
 
     try {
         const result = await createConnectShipment(payload);
-        const completed = await updateShipment(String(row.id), {
-            expedition_number: result.expeditionNumber,
-            tracking_number: result.expeditionNumber,
-            status: result.labelUrl ? "label_ready" : "created",
-            last_error: null,
-            label_url: result.labelUrl || null,
-            tracking_url: trackingUrl(result.expeditionNumber, payload.recipient.postalCode),
-            raw_response: result.raw,
-        }, "creating");
-        if (!completed) throw new HttpError(409, "shipment creation reservation is no longer active");
+        const completed = await updateShipment(
+            String(row.id),
+            {
+                expedition_number: result.expeditionNumber,
+                tracking_number: result.expeditionNumber,
+                status: result.labelUrl ? "label_ready" : "created",
+                last_error: null,
+                label_url: result.labelUrl || null,
+                tracking_url: trackingUrl(result.expeditionNumber, payload.recipient.postalCode),
+                raw_response: result.raw,
+            },
+            "creating",
+        );
+        if (!completed) {
+            throw new HttpError(409, "shipment creation reservation is no longer active");
+        }
 
-        return json({
-            ok: true,
-            id: completed.id,
-            expeditionNumber: result.expeditionNumber,
-            trackingUrl: completed.tracking_url,
-            status: completed.status,
-            createdAt: completed.created_at,
-        }, 201);
+        return json(
+            {
+                ok: true,
+                id: completed.id,
+                expeditionNumber: result.expeditionNumber,
+                trackingUrl: completed.tracking_url,
+                status: completed.status,
+                createdAt: completed.created_at,
+            },
+            201,
+        );
     } catch (error) {
         const retrySafe = error instanceof ProviderStatusError && error.provider.retrySafe === true;
-        await updateShipment(String(row.id), {
-            status: retrySafe ? "failed" : "unknown",
-            last_error: error instanceof Error ? error.message : "shipment creation failed",
-        }, "creating").catch(() => null);
+        await updateShipment(
+            String(row.id),
+            {
+                status: retrySafe ? "failed" : "unknown",
+                last_error: error instanceof Error ? error.message : "shipment creation failed",
+            },
+            "creating",
+        ).catch(() => null);
         throw error;
     }
 }
@@ -284,11 +367,15 @@ function shipmentReplayResponse(row: JsonRecord): Response {
 async function existingCreatingShipmentResponse(row: JsonRecord): Promise<Response> {
     const startedAt = Date.parse(String(row.provider_call_started_at ?? ""));
     if (Number.isFinite(startedAt) && Date.now() - startedAt >= 20 * 60_000) {
-        await updateShipment(String(row.id), {
-            status: "unknown",
-            creation_manual_review_at: new Date().toISOString(),
-            last_error: "shipment creation lease expired before a provider outcome was attached",
-        }, "creating").catch(() => null);
+        await updateShipment(
+            String(row.id),
+            {
+                status: "unknown",
+                creation_manual_review_at: new Date().toISOString(),
+                last_error: "shipment creation lease expired before a provider outcome was attached",
+            },
+            "creating",
+        ).catch(() => null);
         throw new HttpError(409, "shipment creation outcome is unknown and requires administrator recovery");
     }
     throw new HttpError(409, "shipment creation is already in progress");
@@ -300,7 +387,9 @@ async function settings(request: Request): Promise<Response> {
     const id = queryText(url, "id");
     const row = await settingsRow(id || "default");
     const settings = settingsJson(row);
-    if (id) return json(settings);
+    if (id) {
+        return json(settings);
+    }
     return json({ items: [settings] });
 }
 
@@ -308,7 +397,9 @@ async function setSettings(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const body = await readJsonObject(request);
     const patch = settingsRowFromBody(body);
-    if (!Object.keys(patch).length) throw new HttpError(400, "settings payload is empty");
+    if (!Object.keys(patch).length) {
+        throw new HttpError(400, "settings payload is empty");
+    }
     const row = await upsertSettingsRow(patch);
     return json(settingsJson(row));
 }
@@ -320,7 +411,7 @@ async function relayPoints(request: Request): Promise<Response> {
         settingsRow().then(settingsFromRow),
     ]);
     return json({
-        items: items.map(item => ({
+        items: items.map((item) => ({
             ...item,
             shippingAmount: deliverySettings.defaultShippingAmount,
             currency: deliverySettings.declaredCurrency.toLowerCase(),
@@ -332,18 +423,23 @@ async function relaySelection(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const externalOrderId = requiredQuery(new URL(request.url), "externalOrderId");
     const row = await relaySelectionRow(externalOrderId);
-    if (row) return json(relaySelectionJson(row));
+    if (row) {
+        return json(relaySelectionJson(row));
+    }
     const selectedForCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
-    const quote = selectedForCmsUserId
-        ? await latestDeliveryQuoteRow(externalOrderId, selectedForCmsUserId) : null;
-    if (!quote) throw new HttpError(404, "no pickup point is saved for this order");
+    const quote = selectedForCmsUserId ? await latestDeliveryQuoteRow(externalOrderId, selectedForCmsUserId) : null;
+    if (!quote) {
+        throw new HttpError(404, "no pickup point is saved for this order");
+    }
     return json(deliveryQuoteJson(quote));
 }
 
 async function saveRelaySelection(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const selectedBy = request.headers.get("x-cms-user-id")?.trim() || "";
-    if (!selectedBy) throw new HttpError(401, "CMS user is missing");
+    if (!selectedBy) {
+        throw new HttpError(401, "CMS user is missing");
+    }
     const body = await readJsonObject(request);
     const requestKey = requiredBodyText(body, "requestKey", 500);
     const externalOrderId = requiredBodyText(body, "externalOrderId", 200);
@@ -352,14 +448,18 @@ async function saveRelaySelection(request: Request): Promise<Response> {
     }
     const relayLocation = requiredBodyText(body, "relayLocation", 23).toUpperCase();
     const selectedForCmsUserId = requiredBodyText(body, "selectedForCmsUserId", 512);
-    if (selectedForCmsUserId !== selectedBy) throw new HttpError(403, "delivery quote belongs to another buyer");
+    if (selectedForCmsUserId !== selectedBy) {
+        throw new HttpError(403, "delivery quote belongs to another buyer");
+    }
     const orderVersion = requiredBodyInteger(body, "orderVersion");
     const merchandiseSubtotalMinorAmount = requiredMinorAmount(
         body.merchandiseSubtotalMinorAmount,
         "merchandiseSubtotalMinorAmount",
     );
     const orderCurrency = requiredBodyText(body, "currency", 3).toLowerCase();
-    if (orderCurrency !== "eur") throw new HttpError(400, "protected Mondial Relay quotes support EUR only");
+    if (orderCurrency !== "eur") {
+        throw new HttpError(400, "protected Mondial Relay quotes support EUR only");
+    }
     const recipientSnapshot = fulfillmentAddressSnapshot(body.recipientSnapshot, "recipient", false);
     const sellerFulfillmentSnapshot = fulfillmentAddressSnapshot(body.sellerFulfillmentSnapshot, "seller", true);
     const country = (stringValue(body.country) || "FR").toUpperCase();
@@ -367,19 +467,27 @@ async function saveRelaySelection(request: Request): Promise<Response> {
     const city = stringValue(body.city).slice(0, 120);
     const deliverySettings = settingsFromRow(await settingsRow());
     const weightGrams = deliverySettings.defaultWeightGrams;
-    if (!/^[A-Z]{2}-[A-Z0-9]{1,20}$/.test(relayLocation)) throw new HttpError(400, "pickup point identifier is invalid");
-    if (country !== "FR") throw new HttpError(400, "only French pickup points are supported");
+    if (!/^[A-Z]{2}-[A-Z0-9]{1,20}$/.test(relayLocation)) {
+        throw new HttpError(400, "pickup point identifier is invalid");
+    }
+    if (country !== "FR") {
+        throw new HttpError(400, "only French pickup points are supported");
+    }
 
     const lookupUrl = new URL("https://cms-delivery.local/relay-points");
     lookupUrl.searchParams.set("country", country);
     lookupUrl.searchParams.set("postalCode", postalCode);
-    if (city) lookupUrl.searchParams.set("city", city);
+    if (city) {
+        lookupUrl.searchParams.set("city", city);
+    }
     lookupUrl.searchParams.set("weightGrams", String(weightGrams));
     lookupUrl.searchParams.set("limit", "8");
-    const point = (await relayPointsFromUrl(lookupUrl)).find(item =>
-        item.location === relayLocation && item.pointType === "relay_point"
+    const point = (await relayPointsFromUrl(lookupUrl)).find(
+        (item) => item.location === relayLocation && item.pointType === "relay_point",
     );
-    if (!point) throw new HttpError(409, "the selected pickup point is unavailable or does not match the search area");
+    if (!point) {
+        throw new HttpError(409, "the selected pickup point is unavailable or does not match the search area");
+    }
 
     const requestSnapshot = {
         requestKey,
@@ -429,7 +537,9 @@ async function saveRelaySelection(request: Request): Promise<Response> {
 async function saveClaimReturnRelaySelection(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const selectedBy = request.headers.get("x-cms-user-id")?.trim() || "";
-    if (!selectedBy) throw new HttpError(401, "CMS user is missing");
+    if (!selectedBy) {
+        throw new HttpError(401, "CMS user is missing");
+    }
     const body = await readJsonObject(request);
     const externalOrderId = requiredBodyText(body, "externalOrderId", 200);
     if (!/^claim-return:[1-9][0-9]*$/.test(externalOrderId)) {
@@ -449,13 +559,17 @@ async function saveClaimReturnRelaySelection(request: Request): Promise<Response
     const lookupUrl = new URL("https://cms-delivery.local/relay-points");
     lookupUrl.searchParams.set("country", country);
     lookupUrl.searchParams.set("postalCode", postalCode);
-    if (city) lookupUrl.searchParams.set("city", city);
+    if (city) {
+        lookupUrl.searchParams.set("city", city);
+    }
     lookupUrl.searchParams.set("weightGrams", String(deliverySettings.defaultWeightGrams));
     lookupUrl.searchParams.set("limit", "8");
-    const point = (await relayPointsFromUrl(lookupUrl)).find(item =>
-        item.location === relayLocation && item.pointType === "relay_point"
+    const point = (await relayPointsFromUrl(lookupUrl)).find(
+        (item) => item.location === relayLocation && item.pointType === "relay_point",
     );
-    if (!point) throw new HttpError(409, "the selected pickup point is unavailable or does not match the search area");
+    if (!point) {
+        throw new HttpError(409, "the selected pickup point is unavailable or does not match the search area");
+    }
     const row = await upsertRelaySelectionRow({
         external_order_id: externalOrderId,
         relay_location: point.location,
@@ -491,12 +605,17 @@ async function resolveDeliveryQuote(request: Request): Promise<Response> {
     if (expectedOrderVersion !== null && row.order_version !== expectedOrderVersion) {
         throw new HttpError(409, "delivery quote order version mismatch");
     }
-    const expectedMerchandise = optionalMinorAmount(body.merchandiseSubtotalMinorAmount, "merchandiseSubtotalMinorAmount");
+    const expectedMerchandise = optionalMinorAmount(
+        body.merchandiseSubtotalMinorAmount,
+        "merchandiseSubtotalMinorAmount",
+    );
     if (expectedMerchandise !== null && row.merchandise_subtotal_minor_amount !== expectedMerchandise) {
         throw new HttpError(409, "delivery quote merchandise value mismatch");
     }
     const expectedCurrency = stringValue(body.currency).toLowerCase();
-    if (expectedCurrency && row.currency !== expectedCurrency) throw new HttpError(409, "delivery quote currency mismatch");
+    if (expectedCurrency && row.currency !== expectedCurrency) {
+        throw new HttpError(409, "delivery quote currency mismatch");
+    }
     const purpose = stringValue(body.purpose) || "fulfillment";
     if (purpose === "financial_lock" && Date.parse(String(row.expires_at)) <= Date.now()) {
         throw new HttpError(409, "delivery quote expired before financial terms were locked");
@@ -576,21 +695,29 @@ function relaySelectionJson(row: JsonRecord): JsonRecord {
 
 function relaySnapshotText(row: JsonRecord, snapshotKey: string, field: string): string {
     const snapshot = row[snapshotKey];
-    if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return "";
+    if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+        return "";
+    }
     return stringValue((snapshot as JsonRecord)[field]);
 }
 
 function relaySnapshotPointType(row: JsonRecord, snapshotKey: string): string {
     const pointType = relaySnapshotText(row, snapshotKey, "pointType");
-    if (pointType) return pointType;
+    if (pointType) {
+        return pointType;
+    }
     const nature = relaySnapshotText(row, snapshotKey, "nature").toUpperCase();
     return nature ? (nature === "C" ? "locker" : "relay_point") : "";
 }
 
 function requiredBodyText(body: JsonRecord, name: string, maxLength: number): string {
     const value = stringValue(body[name]);
-    if (!value) throw new HttpError(400, `${name} is required`);
-    if (value.length > maxLength) throw new HttpError(400, `${name} is too long`);
+    if (!value) {
+        throw new HttpError(400, `${name} is required`);
+    }
+    if (value.length > maxLength) {
+        throw new HttpError(400, `${name} is too long`);
+    }
     return value;
 }
 
@@ -607,19 +734,23 @@ function optionalMinorAmount(value: unknown, name: string): number | null {
 }
 
 function optionalPositiveInteger(value: unknown, name: string): number | null {
-    if (value === undefined || value === null || value === "") return null;
+    if (value === undefined || value === null || value === "") {
+        return null;
+    }
     const integer = Number(value);
-    if (!Number.isSafeInteger(integer) || integer < 1) throw new HttpError(400, `${name} must be a positive integer`);
+    if (!Number.isSafeInteger(integer) || integer < 1) {
+        throw new HttpError(400, `${name} must be a positive integer`);
+    }
     return integer;
 }
 
 function fulfillmentAddressSnapshot(value: unknown, label: "recipient" | "seller", seller: boolean): JsonRecord {
-    if (!isRecord(value)) throw new HttpError(400, `${label} fulfillment profile is required`);
+    if (!isRecord(value)) {
+        throw new HttpError(400, `${label} fulfillment profile is required`);
+    }
     const firstName = stringValue(value.givenName) || stringValue(value.firstName);
     const lastName = stringValue(value.surname) || stringValue(value.lastName);
-    const explicitName = seller
-        ? stringValue(value.name)
-        : stringValue(value.recipient) || stringValue(value.name);
+    const explicitName = seller ? stringValue(value.name) : stringValue(value.recipient) || stringValue(value.name);
     const name = explicitName || `${firstName} ${lastName}`.trim();
     const phone = normalizePhone(stringValue(value.phone), "FR");
     const addressLine1 = stringValue(value.addressLine1);
@@ -631,8 +762,12 @@ function fulfillmentAddressSnapshot(value: unknown, label: "recipient" | "seller
     if (!name || !phone || !addressLine1 || !postalCode || !city || country !== "FR") {
         throw new HttpError(409, `${label} fulfillment profile is incomplete or outside France`);
     }
-    if (!/^\+33[1-9]\d{8}$/.test(phone)) throw new HttpError(409, `${label} phone must be a valid French E.164 number`);
-    if (!/^\d{5}$/.test(postalCode)) throw new HttpError(409, `${label} postal code must contain 5 digits`);
+    if (!/^\+33[1-9]\d{8}$/.test(phone)) {
+        throw new HttpError(409, `${label} phone must be a valid French E.164 number`);
+    }
+    if (!/^\d{5}$/.test(postalCode)) {
+        throw new HttpError(409, `${label} postal code must contain 5 digits`);
+    }
     return {
         name,
         firstName: firstName || name.split(/\s+/)[0] || name,
@@ -651,9 +786,8 @@ function fulfillmentAddressSnapshot(value: unknown, label: "recipient" | "seller
 async function sha256Hex(value: string): Promise<string> {
     const bytes = new TextEncoder().encode(value);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
-    return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
-
 
 async function label(request: Request): Promise<Response> {
     requireCmsRequest(request);
@@ -662,13 +796,17 @@ async function label(request: Request): Promise<Response> {
     const sellerCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
     const row = await shipmentForLabelCapability(token, sellerCmsUserId);
     const labelUrl = typeof row?.label_url === "string" ? row.label_url : "";
-    if (!labelUrl) throw new HttpError(404, "label not found");
+    if (!labelUrl) {
+        throw new HttpError(404, "label not found");
+    }
     const providerUrl = validatedMondialRelayLabelUrl(labelUrl);
     const upstream = await fetch(providerUrl, { redirect: "manual" });
     if (upstream.status >= 300 && upstream.status < 400) {
         throw new HttpError(502, "Mondial Relay label redirects are not allowed");
     }
-    if (!upstream.ok || !upstream.body) throw new HttpError(502, "unable to fetch Mondial Relay label");
+    if (!upstream.ok || !upstream.body) {
+        throw new HttpError(502, "unable to fetch Mondial Relay label");
+    }
     const contentType = (upstream.headers.get("content-type") ?? "").toLowerCase();
     if (!contentType.startsWith("application/pdf")) {
         throw new HttpError(502, "Mondial Relay label response is not a PDF");
@@ -695,19 +833,23 @@ async function issueLabelAccess(request: Request): Promise<Response> {
 async function sellerHandoff(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const body = await readJsonObject(request);
-    return json(await declareSellerHandoff(
-        requiredBodyText(body, "externalOrderId", 200),
-        request.headers.get("x-cms-user-id")?.trim() || "",
-    ));
+    return json(
+        await declareSellerHandoff(
+            requiredBodyText(body, "externalOrderId", 200),
+            request.headers.get("x-cms-user-id")?.trim() || "",
+        ),
+    );
 }
 
 async function cancelShipment(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const body = await readJsonObject(request);
-    return json(await cancelShipmentReservation(
-        requiredBodyText(body, "externalOrderId", 200),
-        requiredBodyText(body, "trackingUntil", 100),
-    ));
+    return json(
+        await cancelShipmentReservation(
+            requiredBodyText(body, "externalOrderId", 200),
+            requiredBodyText(body, "trackingUntil", 100),
+        ),
+    );
 }
 
 async function deliveryProjectionHealth(request: Request): Promise<Response> {
@@ -725,7 +867,7 @@ async function reconcile(request: Request): Promise<Response> {
     const result = await reconcileDueShipments(limit, workerId);
     return json({
         ...result,
-        staleCreations: staleCreations.map(row => ({
+        staleCreations: staleCreations.map((row) => ({
             id: row.id,
             externalOrderId: row.external_order_id,
             status: row.status,
@@ -741,18 +883,24 @@ async function acknowledgeEvent(request: Request): Promise<Response> {
         requiredBodyInteger(body, "eventId"),
         requiredBodyText(body, "claimToken", 100),
     );
-    if (!acknowledged) throw new HttpError(409, "shipment event projection lease is no longer active");
+    if (!acknowledged) {
+        throw new HttpError(409, "shipment event projection lease is no longer active");
+    }
     return json({ acknowledged: true });
 }
 
 async function failProjectionEvent(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const body = await readJsonObject(request);
-    return json(camelizeRecord(await failShipmentEventProjection(
-        requiredBodyInteger(body, "eventId"),
-        requiredBodyText(body, "claimToken", 100),
-        requiredBodyText(body, "error", 2000),
-    )));
+    return json(
+        camelizeRecord(
+            await failShipmentEventProjection(
+                requiredBodyInteger(body, "eventId"),
+                requiredBodyText(body, "claimToken", 100),
+                requiredBodyText(body, "error", 2000),
+            ),
+        ),
+    );
 }
 
 async function projectionExceptions(request: Request): Promise<Response> {
@@ -762,7 +910,7 @@ async function projectionExceptions(request: Request): Promise<Response> {
     const offset = offsetParam(url);
     const rows = await shipmentProjectionExceptionRows(limit, offset);
     return json({
-        items: rows.map(row => ({
+        items: rows.map((row) => ({
             id: row.id,
             shipmentId: row.shipment_id,
             externalOrderId: row.order_public_id,
@@ -786,17 +934,23 @@ async function reviewProjectionException(request: Request): Promise<Response> {
     requireCmsAdminWriteRequest(request);
     const body = await readJsonObject(request);
     const actorCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
-    return json(camelizeRecord(await reviewShipmentEventProjection(
-        requiredBodyInteger(body, "eventId"),
-        requiredBodyText(body, "action", 50),
-        actorCmsUserId,
-        requiredBodyText(body, "reason", 1000),
-    )));
+    return json(
+        camelizeRecord(
+            await reviewShipmentEventProjection(
+                requiredBodyInteger(body, "eventId"),
+                requiredBodyText(body, "action", 50),
+                actorCmsUserId,
+                requiredBodyText(body, "reason", 1000),
+            ),
+        ),
+    );
 }
 
 function requiredBodyInteger(body: JsonRecord, name: string): number {
     const value = Number(body[name]);
-    if (!Number.isSafeInteger(value) || value < 1) throw new HttpError(400, `${name} must be a positive safe integer`);
+    if (!Number.isSafeInteger(value) || value < 1) {
+        throw new HttpError(400, `${name} must be a positive safe integer`);
+    }
     return value;
 }
 
@@ -804,14 +958,16 @@ async function recoverShipment(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const body = await readJsonObject(request);
     const actorCmsUserId = request.headers.get("x-cms-user-id")?.trim() || "";
-    return json(await recoverUnknownShipment(
-        requiredBodyText(body, "shipmentId", 100),
-        requiredBodyText(body, "externalOrderId", 200),
-        requiredBodyText(body, "expeditionNumber", 8),
-        stringValue(body.labelUrl),
-        actorCmsUserId,
-        requiredBodyText(body, "reason", 1000),
-    ));
+    return json(
+        await recoverUnknownShipment(
+            requiredBodyText(body, "shipmentId", 100),
+            requiredBodyText(body, "externalOrderId", 200),
+            requiredBodyText(body, "expeditionNumber", 8),
+            stringValue(body.labelUrl),
+            actorCmsUserId,
+            requiredBodyText(body, "reason", 1000),
+        ),
+    );
 }
 
 async function tracking(request: Request): Promise<Response> {
@@ -819,7 +975,9 @@ async function tracking(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const expeditionNumber = requiredQuery(url, "expeditionNumber");
     const row = await shipmentRowByExpedition(expeditionNumber);
-    if (!row) throw new HttpError(404, "shipment not found");
+    if (!row) {
+        throw new HttpError(404, "shipment not found");
+    }
     if (trackingRefreshDue(row)) {
         const synchronized = await reconcileShipment(row);
         Object.assign(row, {
@@ -848,13 +1006,17 @@ async function parseTrackingLink(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const link = requiredQuery(url, "url");
     const parsed = parseMondialRelayTrackingLink(link);
-    if (!parsed.expeditionNumber) throw new HttpError(400, "unable to extract Mondial Relay expedition number");
+    if (!parsed.expeditionNumber) {
+        throw new HttpError(400, "unable to extract Mondial Relay expedition number");
+    }
     return json({ ...parsed, tracking: await trackingSummary(parsed.expeditionNumber) });
 }
 
 async function trackingSummary(expeditionNumber: string): Promise<JsonRecord> {
     const row = await shipmentRowByExpedition(expeditionNumber);
-    if (!row) return { expeditionNumber, status: "unknown", events: [] };
+    if (!row) {
+        return { expeditionNumber, status: "unknown", events: [] };
+    }
     return {
         expeditionNumber,
         status: row.status ?? "created",
@@ -903,7 +1065,9 @@ function shipmentTrackingJson(row: JsonRecord): JsonRecord {
 
 function toShipmentJson(row: JsonRecord): JsonRecord {
     const out = camelizeRecord(row);
-    if (typeof out.deliveryRelayNumber === "string") out.deliveryRelayLocation = out.deliveryRelayNumber;
+    if (typeof out.deliveryRelayNumber === "string") {
+        out.deliveryRelayLocation = out.deliveryRelayNumber;
+    }
     return out;
 }
 
@@ -980,8 +1144,12 @@ function settingsFromRow(row: JsonRecord | null): DeliverySettings {
 
 function settingsRowFromBody(body: JsonRecord): JsonRecord {
     const row: JsonRecord = {};
-    setText(row, body, "modeCollection", "mode_collection", value => requireOneOf(value.toUpperCase(), ["CCC"], "modeCollection"));
-    setText(row, body, "modeDelivery", "mode_delivery", value => requireOneOf(value.toUpperCase(), ["24R"], "modeDelivery"));
+    setText(row, body, "modeCollection", "mode_collection", (value) =>
+        requireOneOf(value.toUpperCase(), ["CCC"], "modeCollection"),
+    );
+    setText(row, body, "modeDelivery", "mode_delivery", (value) =>
+        requireOneOf(value.toUpperCase(), ["24R"], "modeDelivery"),
+    );
     setText(row, body, "senderName", "sender_name");
     setText(row, body, "senderFirstName", "sender_firstname");
     setText(row, body, "senderLastName", "sender_lastname");
@@ -990,19 +1158,30 @@ function settingsRowFromBody(body: JsonRecord): JsonRecord {
     setText(row, body, "senderAddressLine3", "sender_address_line3");
     setText(row, body, "senderPostalCode", "sender_postal_code");
     setText(row, body, "senderCity", "sender_city");
-    setText(row, body, "senderCountry", "sender_country", value => requireOneOf(value.toUpperCase(), ["FR"], "senderCountry"));
-    const country = typeof row.sender_country === "string" ? row.sender_country : stringValue(body.senderCountry || "FR").toUpperCase();
-    setText(row, body, "senderPhone", "sender_phone", value => normalizeSettingsPhone(value, country, "senderPhone"));
-    setText(row, body, "senderMobile", "sender_mobile", value => normalizeSettingsPhone(value, country, "senderMobile"));
+    setText(row, body, "senderCountry", "sender_country", (value) =>
+        requireOneOf(value.toUpperCase(), ["FR"], "senderCountry"),
+    );
+    const country =
+        typeof row.sender_country === "string"
+            ? row.sender_country
+            : stringValue(body.senderCountry || "FR").toUpperCase();
+    setText(row, body, "senderPhone", "sender_phone", (value) => normalizeSettingsPhone(value, country, "senderPhone"));
+    setText(row, body, "senderMobile", "sender_mobile", (value) =>
+        normalizeSettingsPhone(value, country, "senderMobile"),
+    );
     setText(row, body, "senderEmail", "sender_email");
     setPositiveInteger(row, body, "defaultWeightGrams", "default_weight_grams");
-    setText(row, body, "defaultPackageCount", "default_package_count", value => requireOneOf(value, ["1"], "defaultPackageCount"));
+    setText(row, body, "defaultPackageCount", "default_package_count", (value) =>
+        requireOneOf(value, ["1"], "defaultPackageCount"),
+    );
     setPositiveInteger(row, body, "defaultLengthCm", "default_length_cm");
     setPositiveInteger(row, body, "defaultWidthCm", "default_width_cm");
     setPositiveInteger(row, body, "defaultHeightCm", "default_height_cm");
     setText(row, body, "defaultContent", "default_content");
     setNonNegativeInteger(row, body, "defaultShippingAmount", "default_shipping_amount");
-    setText(row, body, "declaredCurrency", "declared_currency", value => requireOneOf(value.toUpperCase(), ["EUR"], "declaredCurrency"));
+    setText(row, body, "declaredCurrency", "declared_currency", (value) =>
+        requireOneOf(value.toUpperCase(), ["EUR"], "declaredCurrency"),
+    );
     setText(row, body, "connectCulture", "connect_culture");
     setText(row, body, "connectVersionApi", "connect_version_api");
     setText(row, body, "connectOutputFormat", "connect_output_format");
@@ -1012,20 +1191,28 @@ function settingsRowFromBody(body: JsonRecord): JsonRecord {
 
 async function shipmentWithEventsByRequest(url: URL): Promise<JsonRecord | null> {
     const id = queryText(url, "id");
-    if (id) return await shipmentWithEventsRowById(id);
+    if (id) {
+        return await shipmentWithEventsRowById(id);
+    }
     const expeditionNumber = queryText(url, "expeditionNumber");
-    if (expeditionNumber) return await shipmentWithEventsRowByExpedition(expeditionNumber);
+    if (expeditionNumber) {
+        return await shipmentWithEventsRowByExpedition(expeditionNumber);
+    }
     throw new HttpError(400, "id or expeditionNumber is required");
 }
 
 function appendEqualFilter(filters: string[], name: string, value: string | undefined): void {
-    if (value) filters.push(`${name}=eq.${encodeURIComponent(value)}`);
+    if (value) {
+        filters.push(`${name}=eq.${encodeURIComponent(value)}`);
+    }
 }
 
 function trackingUrl(expeditionNumber: string, postalCode: string): string {
     const url = new URL("https://www.mondialrelay.fr/suivi-de-colis/");
     url.searchParams.set("numeroExpedition", expeditionNumber);
-    if (postalCode) url.searchParams.set("codePostal", postalCode);
+    if (postalCode) {
+        url.searchParams.set("codePostal", postalCode);
+    }
     return url.toString();
 }
 
@@ -1047,48 +1234,73 @@ function hasOwn(record: JsonRecord, key: string): boolean {
     return Object.prototype.hasOwnProperty.call(record, key);
 }
 
-function setText(row: JsonRecord, body: JsonRecord, source: string, target: string, transform: (value: string) => string = value => value): void {
-    if (!hasOwn(body, source)) return;
+function setText(
+    row: JsonRecord,
+    body: JsonRecord,
+    source: string,
+    target: string,
+    transform: (value: string) => string = (value) => value,
+): void {
+    if (!hasOwn(body, source)) {
+        return;
+    }
     row[target] = transform(stringValue(body[source]));
 }
 
 function setPositiveInteger(row: JsonRecord, body: JsonRecord, source: string, target: string): void {
-    if (!hasOwn(body, source)) return;
+    if (!hasOwn(body, source)) {
+        return;
+    }
     const value = Number(stringValue(body[source]));
-    if (!Number.isInteger(value) || value < 1) throw new HttpError(400, `${source} must be a positive integer`);
+    if (!Number.isInteger(value) || value < 1) {
+        throw new HttpError(400, `${source} must be a positive integer`);
+    }
     row[target] = value;
 }
 
 function setNonNegativeInteger(row: JsonRecord, body: JsonRecord, source: string, target: string): void {
-    if (!hasOwn(body, source)) return;
+    if (!hasOwn(body, source)) {
+        return;
+    }
     const value = Number(stringValue(body[source]));
-    if (!Number.isSafeInteger(value) || value < 0) throw new HttpError(400, `${source} must be a non-negative safe integer`);
+    if (!Number.isSafeInteger(value) || value < 0) {
+        throw new HttpError(400, `${source} must be a non-negative safe integer`);
+    }
     row[target] = value;
 }
 
 function requireOneOf(value: string, options: string[], name: string): string {
-    if (!options.includes(value)) throw new HttpError(400, `${name} must be ${options.join(" or ")}`);
+    if (!options.includes(value)) {
+        throw new HttpError(400, `${name} must be ${options.join(" or ")}`);
+    }
     return value;
 }
 
 function requirePattern(value: string, pattern: RegExp, message: string): string {
-    if (!pattern.test(value)) throw new HttpError(400, message);
+    if (!pattern.test(value)) {
+        throw new HttpError(400, message);
+    }
     return value;
 }
 
 function normalizeSettingsPhone(value: string, country: string, name: string): string {
     const normalized = normalizePhone(value, country);
-    if (value && !normalized) throw new HttpError(400, `${name} must use E.164 international format`);
-    if (normalized && !/^\+[1-9]\d{7,14}$/.test(normalized)) throw new HttpError(400, `${name} must use E.164 international format`);
+    if (value && !normalized) {
+        throw new HttpError(400, `${name} must use E.164 international format`);
+    }
+    if (normalized && !/^\+[1-9]\d{7,14}$/.test(normalized)) {
+        throw new HttpError(400, `${name} must use E.164 international format`);
+    }
     return normalized;
 }
 
 function parseMondialRelayTrackingLink(value: string): JsonRecord {
     const url = new URL(value);
-    const expeditionNumber = url.searchParams.get("numeroExpedition")
-        ?? url.searchParams.get("expedition")
-        ?? url.pathname.match(/(\d{8,})/)?.[1]
-        ?? "";
+    const expeditionNumber =
+        url.searchParams.get("numeroExpedition") ??
+        url.searchParams.get("expedition") ??
+        url.pathname.match(/(\d{8,})/)?.[1] ??
+        "";
     const postalCode = url.searchParams.get("codePostal") ?? url.searchParams.get("cp") ?? "";
     return {
         carrier: "mondial-relay",

@@ -45,9 +45,9 @@ describe("migrateLegacyOperatorRoles", () => {
     test("migrates every batch without skipping reassigned users", async () => {
         const users = new InMemoryUsersRepository<string>();
         const roles = new InMemoryRolesRepository();
-        await Promise.all(Array.from({ length: 101 }, (_, index) =>
-            users.upsert({ sub: `operator-${index}` }, "support")
-        ));
+        await Promise.all(
+            Array.from({ length: 101 }, (_, index) => users.upsert({ sub: `operator-${index}` }, "support")),
+        );
 
         const result = await migrateLegacyOperatorRoles(users, roles);
 

@@ -33,9 +33,8 @@ export function useDatabase(scenario: Scenario = {}): {
     let row = scenario.row === undefined ? shipmentRow() : scenario.row;
     const calls: DatabaseCall[] = [];
     activeFetch = async (input, init) => {
-        const request = input instanceof Request && !init
-            ? input
-            : new Request(input instanceof Request ? input.url : input, init);
+        const request =
+            input instanceof Request && !init ? input : new Request(input instanceof Request ? input.url : input, init);
         const url = new URL(request.url);
         const method = request.method.toUpperCase();
         if (url.origin !== supabaseUrl) {
@@ -50,42 +49,31 @@ export function useDatabase(scenario: Scenario = {}): {
         };
         calls.push(call);
         if (scenario.failureMethod === method) {
-            return Response.json({
-                message: "private database failure",
-                detail: "recipient_email=private@example.test",
-            }, { status: 500 });
-        }
-        if (method === "POST"
-            && url.pathname === "/rest/v1/rpc/declare_seller_handoff") {
-            const externalOrderId = String(
-                call.body?.p_external_order_id ?? "",
+            return Response.json(
+                {
+                    message: "private database failure",
+                    detail: "recipient_email=private@example.test",
+                },
+                { status: 500 },
             );
+        }
+        if (method === "POST" && url.pathname === "/rest/v1/rpc/declare_seller_handoff") {
+            const externalOrderId = String(call.body?.p_external_order_id ?? "");
             const actor = String(call.body?.p_seller_cms_user_id ?? "").trim();
             if (!actor) {
-                return databaseError(
-                    400,
-                    "validation: seller CMS user id is required",
-                );
+                return databaseError(400, "validation: seller CMS user id is required");
             }
-            if (!row
-                || row.external_order_id !== externalOrderId
-                || row.seller_cms_user_id !== actor) {
+            if (!row || row.external_order_id !== externalOrderId || row.seller_cms_user_id !== actor) {
                 return databaseError(404, "not_found: shipment not found");
             }
             if (row.seller_handoff_declared_at) {
                 return Response.json(handoffRow(row));
             }
             if (row.carrier_accepted_at || row.status !== "label_ready") {
-                return databaseError(
-                    409,
-                    "conflict: seller handoff cannot be declared for the current shipment state",
-                );
+                return databaseError(409, "conflict: seller handoff cannot be declared for the current shipment state");
             }
             if (scenario.mutationConflict) {
-                return databaseError(
-                    409,
-                    "conflict: shipment state changed while declaring seller handoff",
-                );
+                return databaseError(409, "conflict: shipment state changed while declaring seller handoff");
             }
             row = {
                 ...row,
@@ -118,12 +106,16 @@ function handoffRow(row: JsonRecord): JsonRecord {
 }
 
 function installGlobals(): void {
-    (globalThis as {
-        Deno?: { env: { get: (key: string) => string | undefined } };
-    }).Deno = {
+    (
+        globalThis as {
+            Deno?: { env: { get: (key: string) => string | undefined } };
+        }
+    ).Deno = {
         env: {
             get(key) {
-                if (key === "SUPABASE_URL") return supabaseUrl;
+                if (key === "SUPABASE_URL") {
+                    return supabaseUrl;
+                }
                 if (key === "SUPABASE_SECRET_KEY") {
                     return "sb_secret_delivery_test";
                 }
@@ -131,8 +123,7 @@ function installGlobals(): void {
             },
         },
     };
-    globalThis.fetch = ((input, init) =>
-        activeFetch(input, init)) as typeof fetch;
+    globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
 }
 
 export function shipmentRow(overrides: JsonRecord = {}): JsonRecord {

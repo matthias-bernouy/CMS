@@ -17,7 +17,9 @@ export function setupDetail(detail: DetailMedia, callbacks: DetailCallbacks) {
             detail.innerHTML = "";
 
             const preview = buildPreview(item);
-            if (preview) detail.appendChild(preview);
+            if (preview) {
+                detail.appendChild(preview);
+            }
 
             const fields = buildFields(item);
             detail.appendChild(fields);
@@ -30,7 +32,9 @@ export function setupDetail(detail: DetailMedia, callbacks: DetailCallbacks) {
             });
             actions.querySelector("#btn-replace")?.addEventListener("click", async () => {
                 const file = await pickFile(item.type === "image" ? "image/*" : "");
-                if (file) callbacks.onReplace(item.id, file);
+                if (file) {
+                    callbacks.onReplace(item.id, file);
+                }
             });
             actions.querySelector("#btn-delete")!.addEventListener("click", () => {
                 callbacks.onDelete(item.id);
@@ -43,7 +47,7 @@ export function setupDetail(detail: DetailMedia, callbacks: DetailCallbacks) {
             });
 
             detail.open(item.label);
-        }
+        },
     };
 }
 
@@ -52,7 +56,9 @@ function pickFile(accept: string): Promise<File | null> {
     return new Promise((resolve) => {
         const input = document.createElement("input");
         input.type = "file";
-        if (accept) input.accept = accept;
+        if (accept) {
+            input.accept = accept;
+        }
         input.addEventListener("change", () => resolve(input.files?.[0] ?? null), { once: true });
         input.click();
     });
@@ -62,6 +68,8 @@ function readFields(detail: DetailMedia): Record<string, string> {
     const labelInput = detail.querySelector("#detail-label") as HTMLInputElement;
     const altInput = detail.querySelector("#detail-alt") as HTMLTextAreaElement | null;
     const data: Record<string, string> = { label: labelInput.value };
-    if (altInput) data.alt = altInput.value;
+    if (altInput) {
+        data.alt = altInput.value;
+    }
     return data;
 }

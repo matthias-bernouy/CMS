@@ -14,7 +14,7 @@
  */
 export type HeadInjectorContext = {
     document: Document;
-    head:     HTMLElement;
+    head: HTMLElement;
     usedTags: readonly string[];
 };
 

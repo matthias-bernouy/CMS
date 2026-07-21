@@ -150,10 +150,7 @@ describe("platform liability error boundaries", () => {
 
     for (const scenario of upstreamCases) {
         test(scenario.name, async () => {
-            setRestResponder(() => Response.json(
-                { message: scenario.message },
-                { status: scenario.upstreamStatus },
-            ));
+            setRestResponder(() => Response.json({ message: scenario.message }, { status: scenario.upstreamStatus }));
 
             const response = await requestCommerce(scenario.path, {
                 body: scenario.body,

@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { capturedFetches, expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useClaimDetailResponder } from "./fixtures";
 
 installCommerceTestEnvironment();

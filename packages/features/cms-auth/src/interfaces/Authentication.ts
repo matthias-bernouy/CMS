@@ -4,7 +4,7 @@
  * interfaces with their own string union, e.g.
  * `Authentication<'admin' | 'editor' | 'viewer'>`.
  */
-export type DefaultRole = 'admin' | 'user';
+export type DefaultRole = "admin" | "user";
 
 /**
  * Minimal view of an authenticated user, returned by `getSubject`.
@@ -30,7 +30,6 @@ export interface Subject<Role extends string = DefaultRole> {
  * @typeParam Role - String union of roles supported by the implementation.
  */
 export interface Authentication<Role extends string = DefaultRole> {
-
     /**
      * URL of the login page. Suitable for use in anchor tags or client-side
      * navigation. Use `buildLoginUrl` when a post-login redirect is needed.

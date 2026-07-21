@@ -82,8 +82,9 @@
     return `{{ ${expression.trim()} }}`;
   }
   function asSource(source) {
-    if (typeof source === "string")
+    if (typeof source === "string") {
       return source.trim();
+    }
     const url = sourceUrlWithParams(source.url, source.params);
     const alias = source.alias?.trim();
     return alias ? `${url} as ${alias}` : url;
@@ -103,21 +104,24 @@
   }
   function parseSourceBody(value) {
     const raw = value?.trim() ?? "";
-    if (!raw)
+    if (!raw) {
       return null;
+    }
     let parsed;
     try {
       parsed = JSON.parse(raw);
     } catch {
       return null;
     }
-    if (!isRecord(parsed))
+    if (!isRecord(parsed)) {
       return null;
+    }
     const body = {};
     for (const [name, source] of Object.entries(parsed)) {
       const param = normalizeSourceParamValue(source);
-      if (name.trim() && param)
+      if (name.trim() && param) {
         body[name] = param;
+      }
     }
     return Object.keys(body).length ? body : null;
   }
@@ -128,34 +132,42 @@
   }
   function parseRepeat(value) {
     const match = REPEAT_ALIAS_PATTERN.exec(value);
-    if (match)
+    if (match) {
       return { path: match[1].trim(), alias: match[2] };
+    }
     const path = value.trim();
     return path ? { path } : null;
   }
   function asFieldCondition(path, operator = "truthy", value = true) {
     const normalizedPath = normalizeConditionPath(path);
-    if (operator === "truthy")
+    if (operator === "truthy") {
       return normalizedPath;
-    if (operator === "falsy")
+    }
+    if (operator === "falsy") {
       return `!${normalizedPath}`;
-    if (operator === "empty")
+    }
+    if (operator === "empty") {
       return `${normalizedPath}.length == 0`;
-    if (operator === "notEmpty")
+    }
+    if (operator === "notEmpty") {
       return `${normalizedPath}.length > 0`;
+    }
     const comparison = comparisonOperator(operator);
     return `${normalizedPath} ${comparison} ${asConditionLiteral(value)}`;
   }
   function asConditionLiteral(value) {
-    if (typeof value === "string")
+    if (typeof value === "string") {
       return JSON.stringify(value);
+    }
     if (typeof value === "number") {
-      if (!Number.isFinite(value))
+      if (!Number.isFinite(value)) {
         throw new Error(`Invalid condition number: ${value}`);
+      }
       return String(value);
     }
-    if (typeof value === "boolean")
+    if (typeof value === "boolean") {
       return value ? "true" : "false";
+    }
     return "null";
   }
   function asSourceStatusCondition(state, sourceId) {
@@ -174,13 +186,15 @@
   }
   function parseSourceStatusConditions(value) {
     const expression = value?.trim() ?? "";
-    if (!expression)
+    if (!expression) {
       return [];
+    }
     const conditions = [];
     for (const part of expression.split(/\s*\|\|\s*/)) {
       const condition = parseSingleSourceStatusCondition(part);
-      if (!condition)
+      if (!condition) {
         return [];
+      }
       conditions.push(condition);
     }
     return conditions;
@@ -211,11 +225,13 @@
   }
   function sourceUrlWithParams(rawUrl, params) {
     const url = rawUrl.trim();
-    if (!params)
+    if (!params) {
       return url;
+    }
     const entries = Object.entries(normalizeSourceParamMap(params));
-    if (entries.length === 0)
+    if (entries.length === 0) {
       return url;
+    }
     const hashIndex = url.indexOf("#");
     const beforeHash = hashIndex === -1 ? url : url.slice(0, hashIndex);
     const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
@@ -226,70 +242,88 @@
   function parseSingleSourceStatusCondition(value) {
     const expression = value.trim();
     for (const state of CMS_SOURCE_STATES) {
-      if (expression === asSourceStatusCondition(state))
+      if (expression === asSourceStatusCondition(state)) {
         return { state };
+      }
     }
     const match = /^\$sources\.([A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)$/.exec(expression);
-    if (!match)
+    if (!match) {
       return null;
+    }
     return { sourceId: match[1], state: match[2] };
   }
   function normalizeConditionPath(path) {
     const normalized = path.trim();
-    if (!normalized)
+    if (!normalized) {
       throw new Error("Condition path is required");
-    if (normalized === ".")
+    }
+    if (normalized === ".") {
       return normalized;
+    }
     if (!/^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(normalized)) {
       throw new Error(`Invalid condition path: "${path}"`);
     }
     return normalized;
   }
   function comparisonOperator(operator) {
-    if (operator === "equals")
+    if (operator === "equals") {
       return "==";
-    if (operator === "notEquals")
+    }
+    if (operator === "notEquals") {
       return "!=";
-    if (operator === "greaterThan")
+    }
+    if (operator === "greaterThan") {
       return ">";
-    if (operator === "greaterThanOrEqual")
+    }
+    if (operator === "greaterThanOrEqual") {
       return ">=";
-    if (operator === "lessThan")
+    }
+    if (operator === "lessThan") {
       return "<";
-    if (operator === "lessThanOrEqual")
+    }
+    if (operator === "lessThanOrEqual") {
       return "<=";
+    }
     throw new Error(`Unsupported comparison operator: ${operator}`);
   }
   function encodeSourceParamValue(value) {
-    if (value.from === "queryParam")
+    if (value.from === "queryParam") {
       return `#{${value.name.trim()}}`;
-    if (value.from === "state")
+    }
+    if (value.from === "state") {
       return `@{${value.name.trim()}}`;
+    }
     return encodeURIComponent(String(value.value).trim());
   }
   function normalizeSourceParamMap(params) {
     const normalized = {};
     for (const [name, value] of Object.entries(params)) {
       const param = normalizeSourceParamValue(value);
-      if (name.trim() && param)
+      if (name.trim() && param) {
         normalized[name] = param;
+      }
     }
     return normalized;
   }
   function normalizeSourceParamValue(value) {
-    if (!isRecord(value) || typeof value.from !== "string")
+    if (!isRecord(value) || typeof value.from !== "string") {
       return null;
+    }
     if (value.from === "queryParam" || value.from === "state") {
       return typeof value.name === "string" && value.name.trim() ? { from: value.from, name: value.name.trim() } : null;
     }
-    if (value.from !== "raw")
+    if (value.from !== "raw") {
       return null;
-    if (typeof value.value === "string")
+    }
+    if (typeof value.value === "string") {
       return value.value.trim() ? { from: "raw", value: value.value } : null;
-    if (typeof value.value === "number" && Number.isFinite(value.value))
+    }
+    if (typeof value.value === "number" && Number.isFinite(value.value)) {
       return { from: "raw", value: value.value };
-    if (typeof value.value === "boolean")
+    }
+    if (typeof value.value === "boolean") {
       return { from: "raw", value: value.value };
+    }
     return null;
   }
   function isRecord(value) {
@@ -10470,8 +10504,9 @@ p {
     connectedCallback() {
       super.connectedCallback();
       const root = this.shadowRoot;
-      if (!root)
+      if (!root) {
         return;
+      }
       const basePath = this._basePath();
       this._titleSlot = root.querySelector('slot[name="title"]');
       this._actionSlot = root.querySelector('slot[name="action"]');
@@ -10499,8 +10534,9 @@ p {
       const items = Array.from(root.querySelectorAll("[data-route]"));
       for (const item of items) {
         const route = item.dataset.route ?? "";
-        if (!route)
+        if (!route) {
           continue;
+        }
         item.setAttribute("href", `${basePath}/admin/${route}`);
       }
     }
@@ -10513,17 +10549,20 @@ p {
           headers: { Accept: "application/json" },
           signal: request.signal
         });
-        if (!response.ok)
+        if (!response.ok) {
           return;
+        }
         const data = await response.json();
         const name = typeof data.site?.name === "string" ? data.site.name.trim() : "";
         this._setBrandName(root, name || DEFAULT_BRAND_NAME);
       } catch (error) {
-        if (!isAbortError(error))
+        if (!isAbortError(error)) {
           return;
+        }
       } finally {
-        if (this._brandRequest === request)
+        if (this._brandRequest === request) {
           this._brandRequest = null;
+        }
       }
     }
     _setBrandName(root, name) {
@@ -10531,13 +10570,15 @@ p {
       const label = root.querySelector("[data-admin-brand]");
       const menu = root.querySelector("w13c-lateral-menu");
       const mark = Array.from(brandName)[0]?.toUpperCase() ?? "C";
-      if (label)
+      if (label) {
         label.textContent = brandName;
+      }
       menu?.style.setProperty("--menu-brand-mark", JSON.stringify(mark));
     }
     _syncPageHeader() {
-      if (!this._pageHeader)
+      if (!this._pageHeader) {
         return;
+      }
       const hasTitle = this._slotHasVisibleContent(this._titleSlot);
       const hasAction = this._slotHasVisibleContent(this._actionSlot);
       const visible = hasTitle || hasAction;
@@ -10547,15 +10588,17 @@ p {
     }
     _slotHasVisibleContent(slot) {
       return !!slot?.assignedNodes({ flatten: true }).some((node) => {
-        if (node instanceof HTMLElement)
+        if (node instanceof HTMLElement) {
           return !node.hidden && node.textContent?.trim() !== "";
+        }
         return node.textContent?.trim() !== "";
       });
     }
     _onSettingsSaved = () => {
       const root = this.shadowRoot;
-      if (!root)
+      if (!root) {
         return;
+      }
       this._syncSiteName(root, this._basePath());
     };
     _onPageHeaderSlotChange = () => this._syncPageHeader();
@@ -10580,15 +10623,18 @@ p {
     _busy = false;
     _onClick = async (e) => {
       const trigger = e.target.closest("p9r-button, button");
-      if (!trigger || !this.contains(trigger))
+      if (!trigger || !this.contains(trigger)) {
         return;
+      }
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (this._busy)
+      if (this._busy) {
         return;
+      }
       const message = this.getAttribute("message") || "Are you sure?";
-      if (!confirm(message))
+      if (!confirm(message)) {
         return;
+      }
       this._busy = true;
       try {
         await this._submit(false);
@@ -10638,18 +10684,21 @@ ${followMessage}`)) {
       let message = text;
       try {
         const body = JSON.parse(text);
-        if (body?.error)
+        if (body?.error) {
           message = body.error;
+        }
       } catch {}
       ku(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
-      if (emit)
+      if (emit) {
         document.dispatchEvent(new BubblesEvent(emit));
+      }
       const redirect = this.getAttribute("redirect");
-      if (redirect)
+      if (redirect) {
         window.location.href = redirect;
+      }
     }
   }
   function withForce(target) {
@@ -10661,15 +10710,18 @@ ${followMessage}`)) {
     const templates = Array.isArray(body?.templates) ? body.templates : [];
     if (pages.length) {
       lines.push("Pages:");
-      for (const p of pages)
+      for (const p of pages) {
         lines.push(`  • ${p.title || p.path}`);
+      }
     }
     if (templates.length) {
-      if (lines.length)
+      if (lines.length) {
         lines.push("");
+      }
       lines.push("Templates:");
-      for (const t2 of templates)
+      for (const t2 of templates) {
         lines.push(`  • ${t2.name || t2.identifier}`);
+      }
     }
     return lines.join(`
 `);
@@ -10868,12 +10920,15 @@ ${followMessage}`)) {
   var SECRET_KEY_PATTERN_DESCRIPTION = "/^[A-Z][A-Z0-9_]*$/";
   var EXACT_SECRET_REF_PATTERN = /^\$\{([A-Z][A-Z0-9_]*)\}$/;
   function secretKeyError(key) {
-    if (key.length === 0)
+    if (key.length === 0) {
       return "secret key is required";
-    if (!SECRET_KEY_PATTERN.test(key))
+    }
+    if (!SECRET_KEY_PATTERN.test(key)) {
       return `secret key must match ${SECRET_KEY_PATTERN_DESCRIPTION} (env-var style)`;
-    if (key.length > SECRET_KEY_MAX_LENGTH)
+    }
+    if (key.length > SECRET_KEY_MAX_LENGTH) {
       return `secret key too long; max ${SECRET_KEY_MAX_LENGTH} characters`;
+    }
     return null;
   }
   function secretKeyToRef(key) {
@@ -10905,8 +10960,9 @@ ${followMessage}`)) {
     let error = `HTTP ${res.status}`;
     try {
       const body = await res.json();
-      if (body && typeof body.error === "string")
+      if (body && typeof body.error === "string") {
         error = body.error;
+      }
     } catch {}
     return { ok: false, error };
   }
@@ -10939,8 +10995,9 @@ ${followMessage}`)) {
     setTimeout(() => host._refs.search.focus(), 0);
   }
   function closePanel(host) {
-    if (host._refs.panel.matches(":popover-open"))
+    if (host._refs.panel.matches(":popover-open")) {
       host._refs.panel.hidePopover();
+    }
     host._refs.trigger.classList.remove("open");
     host._isOpen = false;
     host._refs.search.value = "";
@@ -11015,8 +11072,9 @@ ${followMessage}`)) {
   }
   async function submitCreate(host) {
     const m = host._createModal;
-    if (!m)
+    if (!m) {
       return;
+    }
     const { key: keyInput, value: valueInput } = inputs(m);
     const key = keyInput.value.trim();
     const value = valueInput.value;
@@ -11056,21 +11114,24 @@ ${followMessage}`)) {
     _keys = [];
     _createModal;
     _onSecretSaved = () => {
-      if (this._isOpen)
+      if (this._isOpen) {
         refreshList(this);
+      }
     };
     constructor() {
       super();
       this._internals = this.attachInternals();
     }
     attributeChangedCallback(name, oldValue, newValue) {
-      if (name !== "value" || oldValue === newValue)
+      if (name !== "value" || oldValue === newValue) {
         return;
+      }
       const value = newValue ?? "";
-      if (this._refs)
+      if (this._refs) {
         setValue(this, value);
-      else
+      } else {
         this._value = value;
+      }
     }
     connectedCallback() {
       if (!this.shadowRoot) {
@@ -11110,8 +11171,9 @@ ${followMessage}`)) {
       });
       r.panel.addEventListener("toggle", (e) => {
         const newState = e.newState;
-        if (newState === "closed" && this._isOpen)
+        if (newState === "closed" && this._isOpen) {
           closePanel(this);
+        }
       });
       r.search.addEventListener("input", () => {
         const q2 = r.search.value.trim().toUpperCase();
@@ -11120,8 +11182,9 @@ ${followMessage}`)) {
       });
       r.list.addEventListener("click", (e) => {
         const li2 = e.target.closest(".option");
-        if (!li2 || !li2.dataset.key)
+        if (!li2 || !li2.dataset.key) {
           return;
+        }
         setValue(this, keyToRef(li2.dataset.key));
         this.dispatchEvent(new Event("change", { bubbles: true }));
         closePanel(this);
@@ -11468,12 +11531,15 @@ cms-endpoints-input .ep-add:hover {
   // ../../features/cms-sources/src/core/urn.ts
   function parseUrn(urn) {
     const parts = urn.split(":");
-    if (parts[0] !== "urn")
+    if (parts[0] !== "urn") {
       return null;
-    if (parts.length === 2 && parts[1])
+    }
+    if (parts.length === 2 && parts[1]) {
       return { source: parts[1], endpoint: null };
-    if (parts.length === 3 && parts[1] && parts[2])
+    }
+    if (parts.length === 3 && parts[1] && parts[2]) {
       return { source: parts[1], endpoint: parts[2] };
+    }
     return null;
   }
   function makeSourceUrn(sourceId) {
@@ -11524,7 +11590,12 @@ cms-endpoints-input .ep-add:hover {
         access: { mode: "public" },
         targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
         meta: { name: "Log in" },
-        input: { body: objectShape({ email: stringShape(), password: stringShape(), returnTo: stringShape() }, ["email", "password"]) },
+        input: {
+          body: objectShape({ email: stringShape(), password: stringShape(), returnTo: stringShape() }, [
+            "email",
+            "password"
+          ])
+        },
         output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
       },
       {
@@ -11587,8 +11658,9 @@ cms-endpoints-input .ep-add:hover {
   }
   function systemSourceUrnOf(urn) {
     const parsed = parseUrn(urn);
-    if (!parsed || !isSystemSourceId(parsed.source))
+    if (!parsed || !isSystemSourceId(parsed.source)) {
       return null;
+    }
     return makeSourceUrn(parsed.source);
   }
 
@@ -11621,8 +11693,9 @@ cms-endpoints-input .ep-add:hover {
     const seen = new Set;
     for (const m of targetUrl.matchAll(PATH_PLACEHOLDER)) {
       const name = m[1];
-      if (seen.has(name))
+      if (seen.has(name)) {
         continue;
+      }
       seen.add(name);
       out.push(name);
     }
@@ -11636,19 +11709,23 @@ cms-endpoints-input .ep-add:hover {
   var ICON_TRASH = ICON_SVG('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
   function makeInput(name, label, placeholder, value) {
     const input = document.createElement("p9r-input");
-    if (name)
+    if (name) {
       input.setAttribute("name", name);
-    if (label)
+    }
+    if (label) {
       input.setAttribute("label", label);
+    }
     input.setAttribute("placeholder", placeholder);
-    if (value != null)
+    if (value != null) {
       input.setAttribute("value", value);
+    }
     return input;
   }
   function makeSelect(values, value, opts = {}) {
     const select = document.createElement("p9r-select");
-    if (opts.name)
+    if (opts.name) {
       select.setAttribute("name", opts.name);
+    }
     select.setAttribute("label", opts.label ?? "");
     for (const v2 of values) {
       const o = select.appendChild(document.createElement("option"));
@@ -11665,12 +11742,15 @@ cms-endpoints-input .ep-add:hover {
     btn.setAttribute("color", "danger");
     btn.setAttribute("size", "sm");
     btn.setAttribute("aria-label", opts.ariaLabel);
-    if (opts.slot)
+    if (opts.slot) {
       btn.setAttribute("slot", opts.slot);
-    if (opts.action)
+    }
+    if (opts.action) {
       btn.dataset.action = opts.action;
-    if (opts.onClick)
+    }
+    if (opts.onClick) {
       btn.addEventListener("click", opts.onClick);
+    }
     btn.innerHTML = svg;
     return btn;
   }
@@ -11678,8 +11758,9 @@ cms-endpoints-input .ep-add:hover {
     const cb = document.createElement("w13c-checkbox");
     cb.dataset.role = "required";
     cb.className = "ep-required";
-    if (checked)
+    if (checked) {
       cb.setAttribute("checked", "");
+    }
     cb.textContent = "Required";
     cb.addEventListener("change", onChange);
     return cb;
@@ -11742,8 +11823,9 @@ cms-endpoints-input .ep-add:hover {
     const f2 = document.createElement("input");
     f2.type = "hidden";
     f2.name = name;
-    if (role)
+    if (role) {
       f2.dataset.role = role;
+    }
     f2.sync = (read) => {
       const v2 = read();
       f2.value = v2 == null || Array.isArray(v2) && v2.length === 0 ? "" : JSON.stringify(v2);
@@ -11767,8 +11849,9 @@ cms-endpoints-input .ep-add:hover {
     row.setAttribute("align", "center");
     row.className = "ep-query-row";
     row.dataset.role = "query-param-row";
-    if (seed.description)
+    if (seed.description) {
       row.dataset.description = seed.description;
+    }
     const name = makeInput("", "", "param name", seed.name);
     name.className = "ep-name";
     name.dataset.role = "param-name";
@@ -11803,8 +11886,9 @@ cms-endpoints-input .ep-add:hover {
   }
   function readQueryParamRow(row) {
     const name = readControl(row.querySelector('[data-role="param-name"]')).trim();
-    if (!name)
+    if (!name) {
       return null;
+    }
     const rawType = readControl(row.querySelector('[data-role="param-type"]'));
     const type = rawType === "computed" ? "string" : rawType;
     const required = row.querySelector('[data-role="required"]').hasAttribute("checked");
@@ -11849,8 +11933,9 @@ cms-endpoints-input .ep-add:hover {
         ariaLabel: "Remove property",
         onClick: () => {
           const i = props.findIndex((p) => p.nameEl === nameEl);
-          if (i >= 0)
+          if (i >= 0) {
             props.splice(i, 1);
+          }
           wrapper.remove();
           onChange();
         }
@@ -11863,8 +11948,9 @@ cms-endpoints-input .ep-add:hover {
     const rebuild = (type, s2) => {
       props.length = 0;
       itemsNode = null;
-      while (typeSelect.nextSibling)
+      while (typeSelect.nextSibling) {
         typeSelect.nextSibling.remove();
+      }
       childrenEl.replaceChildren();
       if (type === "object") {
         const box = document.createElement("div");
@@ -11872,8 +11958,9 @@ cms-endpoints-input .ep-add:hover {
         const list = document.createElement("div");
         list.className = "ep-prop-list";
         const req = new Set(s2.required ?? []);
-        for (const [k2, v2] of Object.entries(s2.properties ?? {}))
+        for (const [k2, v2] of Object.entries(s2.properties ?? {})) {
           list.appendChild(makeProp(k2, v2, req.has(k2)));
+        }
         const add = document.createElement("button");
         add.type = "button";
         add.className = "ep-add-prop";
@@ -11908,21 +11995,26 @@ cms-endpoints-input .ep-add:hover {
         const required = [];
         for (const p of props) {
           const n = readControl(p.nameEl).trim();
-          if (!n)
+          if (!n) {
             continue;
+          }
           properties[n] = p.child.read();
-          if (p.reqEl.hasAttribute("checked"))
+          if (p.reqEl.hasAttribute("checked")) {
             required.push(n);
+          }
         }
         const out = { type };
-        if (Object.keys(properties).length)
+        if (Object.keys(properties).length) {
           out.properties = properties;
-        if (required.length)
+        }
+        if (required.length) {
           out.required = required.filter((n) => Object.hasOwn(properties, n));
+        }
         return preserveNullable(out);
       }
-      if (type === "array")
+      if (type === "array") {
         return preserveNullable(itemsNode ? { type, items: itemsNode.read() } : { type });
+      }
       return preserveNullable({ type });
     };
     return { typeEl, childrenEl, read };
@@ -11967,10 +12059,11 @@ cms-endpoints-input .ep-add:hover {
       });
       element.replaceChildren(head, root.childrenEl, remove);
     };
-    if (seed)
+    if (seed) {
       showTree(seed);
-    else
+    } else {
       showEmpty();
+    }
     return { element, read: () => root?.read() };
   }
 
@@ -12072,8 +12165,9 @@ cms-endpoints-input .ep-add:hover {
       o.textContent = label;
     };
     opt("", "Status…");
-    for (const c3 of COMMON)
+    for (const c3 of COMMON) {
       opt(c3, c3);
+    }
     opt("default", "default");
     opt(CUSTOM, "Custom…");
     select.setAttribute("value", value);
@@ -12086,8 +12180,9 @@ cms-endpoints-input .ep-add:hover {
     input.dataset.role = "response-status-custom";
     input.className = "ep-status";
     input.setAttribute("placeholder", "e.g. 418");
-    if (custom)
+    if (custom) {
       input.setAttribute("value", seed);
+    }
     input.style.display = custom ? "" : "none";
     const validate = () => {
       const v2 = readControl(input).trim();
@@ -12112,8 +12207,9 @@ cms-endpoints-input .ep-add:hover {
       validate();
       onChange();
     });
-    if (custom)
+    if (custom) {
       validate();
+    }
     const element = document.createElement("p9r-stack");
     element.setAttribute("direction", "row");
     element.setAttribute("gap", "sm");
@@ -12154,8 +12250,9 @@ cms-endpoints-input .ep-add:hover {
     row.append(head, tree.element);
     const read = () => {
       const s2 = status.read();
-      if (!s2)
+      if (!s2) {
         return null;
+      }
       const body = tree.read();
       return {
         status: s2,
@@ -12183,8 +12280,9 @@ cms-endpoints-input .ep-add:hover {
     const addRow = (r) => {
       const handle = makeResponseRow(r, sync, () => {
         const i = handles.indexOf(handle);
-        if (i >= 0)
+        if (i >= 0) {
           handles.splice(i, 1);
+        }
         handle.element.remove();
         sync();
       });
@@ -12241,8 +12339,9 @@ cms-endpoints-input .ep-add:hover {
       validate();
       onChange();
     });
-    if (seed.name)
+    if (seed.name) {
       validate();
+    }
     const fromSelect = makeSelect(["static", "secret", "computed"], from);
     fromSelect.className = "ep-status";
     fromSelect.dataset.role = "header-from";
@@ -12255,10 +12354,12 @@ cms-endpoints-input .ep-add:hover {
     credSelect.dataset.role = "header-value-secret";
     credSelect.className = "ep-name";
     credSelect.setAttribute("label", "");
-    if (opts?.api)
+    if (opts?.api) {
       credSelect.setAttribute("api", opts.api);
-    if (from === "secret")
+    }
+    if (from === "secret") {
       credSelect.setAttribute("value", seed.source.ref ?? "");
+    }
     credSelect.style.display = from === "secret" ? "" : "none";
     credSelect.addEventListener("change", onChange);
     const prefixInput = makeInput("", "", "Prefix", secretPrefix);
@@ -12284,8 +12385,9 @@ cms-endpoints-input .ep-add:hover {
     row.append(name, fromSelect, staticInput, prefixInput, credSelect, computedSelect, remove);
     const read = () => {
       const n = readControl(name).trim();
-      if (!n)
+      if (!n) {
         return null;
+      }
       if (readControl(fromSelect) === "secret") {
         const ref = (credSelect.value || credSelect.getAttribute("value") || "").trim();
         const prefix = readControl(prefixInput);
@@ -12317,8 +12419,9 @@ cms-endpoints-input .ep-add:hover {
     const addRow = (h2) => {
       const handle = makeHeaderRow(h2, sync, () => {
         const i = handles.indexOf(handle);
-        if (i >= 0)
+        if (i >= 0) {
           handles.splice(i, 1);
+        }
         handle.element.remove();
         sync();
       }, opts);
@@ -12433,10 +12536,11 @@ cms-endpoints-input .ep-add:hover {
         ensureStyles();
         this._render();
         const seeds = this._parseValue();
-        if (seeds.length)
+        if (seeds.length) {
           seeds.forEach((seed) => this._addRow(seed));
-        else if (!this.hasAttribute("value"))
+        } else if (!this.hasAttribute("value")) {
           this._addRow({});
+        }
       }
       this.addEventListener("click", this._onClick);
     }
@@ -12445,8 +12549,9 @@ cms-endpoints-input .ep-add:hover {
     }
     _parseValue() {
       const raw = this.getAttribute("value");
-      if (!raw)
+      if (!raw) {
         return [];
+      }
       try {
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed : [];
@@ -12459,8 +12564,9 @@ cms-endpoints-input .ep-add:hover {
       this.append(this._rowsContainer, makeAddButton());
     }
     _addRow(seed = {}) {
-      if (!this._rowsContainer)
+      if (!this._rowsContainer) {
         return null;
+      }
       const api = this.getAttribute("api") ?? this.getAttribute("secrets-api") ?? undefined;
       const item = makeEndpointRow(this._rowCount++, seed, api);
       this._rowsContainer.appendChild(item);
@@ -12469,8 +12575,9 @@ cms-endpoints-input .ep-add:hover {
   }
   var stylesInjected = false;
   function ensureStyles() {
-    if (stylesInjected || document.getElementById("cms-endpoints-input-styles"))
+    if (stylesInjected || document.getElementById("cms-endpoints-input-styles")) {
       return;
+    }
     stylesInjected = true;
     const style = document.createElement("style");
     style.id = "cms-endpoints-input-styles";
@@ -12485,20 +12592,23 @@ cms-endpoints-input .ep-add:hover {
     _onEvent = () => {
       const message = this.getAttribute("message") ?? "";
       const type = this.getAttribute("type") ?? "success";
-      if (message)
+      if (message) {
         ku(message, { type });
+      }
     };
     connectedCallback() {
       this.style.display = "none";
       const evt = this.getAttribute("event");
-      if (!evt)
+      if (!evt) {
         return;
+      }
       document.addEventListener(evt, this._onEvent);
       this._attached = evt;
     }
     disconnectedCallback() {
-      if (this._attached)
+      if (this._attached) {
         document.removeEventListener(this._attached, this._onEvent);
+      }
       this._attached = null;
     }
   }
@@ -12530,8 +12640,9 @@ cms-endpoints-input .ep-add:hover {
         const res = await fetch(`${base}/auth/methods`);
         const methods = res.ok ? await res.json() : [];
         const redirect = methods.filter((m) => m.loginUrl);
-        if (!redirect.length)
+        if (!redirect.length) {
           return;
+        }
         wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) => `<a class="provider" href="${esc(m.loginUrl)}${rt2}">${esc(m.displayName)}</a>`).join("");
       } catch {}
     }
@@ -12547,8 +12658,9 @@ cms-endpoints-input .ep-add:hover {
       this._render();
     }
     attributeChangedCallback() {
-      if (this.isConnected)
+      if (this.isConnected) {
         this._render();
+      }
     }
     get _base() {
       return this.getAttribute("base-url") ?? "/api/identity/provider";
@@ -12607,8 +12719,9 @@ cms-endpoints-input .ep-add:hover {
       }
     }
     async _remove() {
-      if (!confirm(`Remove provider "${this._id}"?`))
+      if (!confirm(`Remove provider "${this._id}"?`)) {
         return;
+      }
       if (await this._send("DELETE", { id: this._id })) {
         ku("Provider removed", { type: "success" });
         this._fire();
@@ -12616,7 +12729,11 @@ cms-endpoints-input .ep-add:hover {
     }
     async _send(method, body) {
       try {
-        const res = await fetch(this._base, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const res = await fetch(this._base, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
         if (!res.ok) {
           ku("Action failed", { type: "error" });
           return false;
@@ -12628,8 +12745,9 @@ cms-endpoints-input .ep-add:hover {
       }
     }
     _fire() {
-      if (this._emit)
+      if (this._emit) {
         document.dispatchEvent(new Event(this._emit, { bubbles: true }));
+      }
     }
   }
   customElements.define("cms-provider-actions", CmsProviderActions);
@@ -12656,8 +12774,9 @@ cms-endpoints-input .ep-add:hover {
       this._load();
     }
     attributeChangedCallback() {
-      if (this.isConnected)
+      if (this.isConnected) {
         this._render();
+      }
     }
     get _url() {
       return this.getAttribute("url") ?? "/api/users/role";
@@ -12697,8 +12816,9 @@ cms-endpoints-input .ep-add:hover {
     }
     _onChange(role) {
       this.internals.setFormValue(role);
-      if (this._sub)
+      if (this._sub) {
         this._save(role);
+      }
     }
     async _save(role) {
       try {
@@ -12709,8 +12829,9 @@ cms-endpoints-input .ep-add:hover {
         });
         if (res.ok) {
           ku("Role updated", { type: "success" });
-          if (this._emit)
+          if (this._emit) {
             document.dispatchEvent(new Event(this._emit, { bubbles: true }));
+          }
         } else {
           ku("Failed to update role", { type: "error" });
         }
@@ -12746,9 +12867,12 @@ cms-endpoints-input .ep-add:hover {
         return;
       }
       try {
-        const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id)}`, { headers: { Accept: "application/json" } });
-        if (!res.ok)
+        const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id)}`, {
+          headers: { Accept: "application/json" }
+        });
+        if (!res.ok) {
           throw new Error;
+        }
         this.data = await res.json();
       } catch {
         const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
@@ -12811,8 +12935,9 @@ cms-endpoints-input .ep-add:hover {
       this.shadowRoot.querySelectorAll("p9r-accordion-item").forEach((item) => {
         const n = item.querySelectorAll("w13c-checkbox[checked]").length;
         const badge = item.querySelector(".badge");
-        if (!badge)
+        if (!badge) {
           return;
+        }
         badge.textContent = String(n);
         badge.toggleAttribute("hidden", n === 0);
       });
@@ -12889,31 +13014,36 @@ p9r-action-menu {
     onClick = (event) => {
       const item = event.composedPath().find(isActionItem);
       const action = item?.dataset.action;
-      if (!action || !ACTIONS[action])
+      if (!action || !ACTIONS[action]) {
         return;
+      }
       event.preventDefault();
       this.run(action);
     };
     async run(action) {
       const sub = this.getAttribute("sub") ?? "";
-      if (!sub)
+      if (!sub) {
         return;
-      if (action === "delete" && !confirm("Delete this user? Their account, local password and access tokens are removed. This cannot be undone."))
+      }
+      if (action === "delete" && !confirm("Delete this user? Their account, local password and access tokens are removed. This cannot be undone.")) {
         return;
+      }
       const res = await fetch(this.url(action), this.request(action, sub)).catch(() => null);
       if (!res?.ok) {
         ku(await errorMessage(res), { type: "error" });
         return;
       }
       ku(ACTIONS[action].label, { type: "success" });
-      if (action === "delete")
+      if (action === "delete") {
         window.location.href = `${this.basePath}/admin/users`;
-      else
+      } else {
         document.dispatchEvent(new BubblesEvent(this.getAttribute("emit") ?? "user:updated"));
+      }
     }
     request(action, sub) {
-      if (action === "delete")
+      if (action === "delete") {
         return { method: "DELETE" };
+      }
       return {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -12922,8 +13052,9 @@ p9r-action-menu {
     }
     url(action) {
       const endpoint = `${this.basePath}${ACTIONS[action].endpoint}`;
-      if (action !== "delete")
+      if (action !== "delete") {
         return endpoint;
+      }
       return `${endpoint}?sub=${this.getAttribute("sub-param") ?? encodeURIComponent(this.getAttribute("sub") ?? "")}`;
     }
     get basePath() {
@@ -12939,8 +13070,9 @@ p9r-action-menu {
     }
   }
   async function errorMessage(res) {
-    if (!res)
+    if (!res) {
       return "Network error";
+    }
     const text = await res.text().catch(() => "");
     try {
       return JSON.parse(text)?.error ?? (text || `HTTP ${res.status}`);
@@ -12951,8 +13083,9 @@ p9r-action-menu {
   function isActionItem(target) {
     return target instanceof HTMLElement && target.tagName.toLowerCase() === "p9r-action-menu-item";
   }
-  if (!customElements.get("cms-user-actions"))
+  if (!customElements.get("cms-user-actions")) {
     customElements.define("cms-user-actions", CmsUserActions);
+  }
 
   // src/components/admin/Tokens/TokenCreate.ts
   class CmsTokenCreate extends HTMLElement {
@@ -13144,8 +13277,9 @@ p9r-action-menu {
   var RELOAD_EVENT = "secret:saved";
   async function fetchSecrets(api) {
     const res = await fetch(api, { headers: { Accept: "application/json" } });
-    if (!res.ok)
+    if (!res.ok) {
       throw new Error("Failed to load secrets");
+    }
     return res.json();
   }
   async function postSecret(api, key, value) {
@@ -13172,8 +13306,9 @@ p9r-action-menu {
   async function readError(res) {
     try {
       const body = await res.json();
-      if (body && typeof body.error === "string")
+      if (body && typeof body.error === "string") {
         return body.error;
+      }
     } catch {}
     return `HTTP ${res.status}`;
   }
@@ -13205,27 +13340,31 @@ p9r-action-menu {
   function injectIcons(root) {
     root.querySelectorAll("[data-icon]").forEach((el2) => {
       const name = el2.dataset.icon;
-      if (ICONS[name])
+      if (ICONS[name]) {
         el2.innerHTML = ICONS[name];
+      }
     });
   }
 
   // src/components/admin/Secrets/ops.ts
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
-    if (r.ok)
+    if (r.ok) {
       ku(`Secret ${key} updated`, { type: "success" });
-    else
+    } else {
       ku(`Update failed: ${r.error}`, { type: "error" });
+    }
   }
   async function opDeleteSecret(api, key) {
-    if (!confirm(`Delete secret "${key}"?`))
+    if (!confirm(`Delete secret "${key}"?`)) {
       return;
+    }
     const r = await deleteSecret(api, key);
-    if (r.ok)
+    if (r.ok) {
       ku(`Secret ${key} deleted`, { type: "success" });
-    else
+    } else {
       ku(`Delete failed: ${r.error}`, { type: "error" });
+    }
   }
 
   // src/components/admin/Secrets/Secrets.ts
@@ -13252,8 +13391,9 @@ p9r-action-menu {
       return this.getAttribute("api") ?? "/api/secrets";
     }
     async _reload() {
-      if (!this._list || !this._empty)
+      if (!this._list || !this._empty) {
         return;
+      }
       try {
         const items = await fetchSecrets(this._api);
         items.sort((a, b) => a.key.localeCompare(b.key));
@@ -13289,8 +13429,9 @@ p9r-action-menu {
       return opSaveRow(this._api, key, value);
     }
   }
-  if (!customElements.get("cms-secrets"))
+  if (!customElements.get("cms-secrets")) {
     customElements.define("cms-secrets", CmsSecrets);
+  }
 
   // src/components/admin/SettingsSections/style.css
   var style_default4 = `:host {
@@ -13400,8 +13541,9 @@ w13c-lateral-menu-item {
       const items = Array.from(this.shadowRoot.querySelectorAll("[data-settings-section]"));
       for (const item of items) {
         const section = item.dataset.settingsSection ?? "";
-        if (!isSettingsSection(section))
+        if (!isSettingsSection(section)) {
           continue;
+        }
         item.setAttribute("href", `${basePath}/admin/settings/${section}`);
       }
     }
@@ -13415,11 +13557,13 @@ w13c-lateral-menu-item {
     activeSection() {
       const basePath = this.basePath();
       let path = window.location.pathname;
-      if (basePath && path.startsWith(`${basePath}/`))
+      if (basePath && path.startsWith(`${basePath}/`)) {
         path = path.slice(basePath.length);
+      }
       path = path.replace(/^\/+|\/+$/g, "");
-      if (path === "admin/settings")
+      if (path === "admin/settings") {
         return DEFAULT_SECTION;
+      }
       const section = path.match(/^admin\/settings\/([^/]+)$/)?.[1] ?? "";
       return isSettingsSection(section) ? section : DEFAULT_SECTION;
     }
@@ -13428,8 +13572,9 @@ w13c-lateral-menu-item {
       return (meta?.getAttribute("content") ?? "").replace(/\/+$/, "");
     }
   }
-  if (!customElements.get("cms-settings-nav"))
+  if (!customElements.get("cms-settings-nav")) {
     customElements.define("cms-settings-nav", CmsSettingsNav);
+  }
   function isSettingsSection(value) {
     return SETTINGS_SECTIONS.includes(value);
   }
@@ -13715,21 +13860,25 @@ p {
     sync = () => {
       const heading4 = this.getAttribute("heading") ?? "";
       const description = this.getAttribute("description") ?? "";
-      if (this.heading)
+      if (this.heading) {
         this.heading.textContent = heading4;
-      if (this.description)
+      }
+      if (this.description) {
         this.description.textContent = description;
+      }
       this.toggleAttribute("has-heading", heading4.trim() !== "");
       this.toggleAttribute("has-description", description.trim() !== "");
       this.toggleAttribute("has-actions", hasAssignedContent(this.actionsSlot));
     };
   }
-  if (!customElements.get("cms-detail-section"))
+  if (!customElements.get("cms-detail-section")) {
     customElements.define("cms-detail-section", CmsDetailSection);
+  }
   function hasAssignedContent(slot) {
     return Boolean(slot?.assignedNodes({ flatten: true }).some((node) => {
-      if (node.nodeType !== Node.TEXT_NODE)
+      if (node.nodeType !== Node.TEXT_NODE) {
         return true;
+      }
       return node.textContent?.trim() !== "";
     }));
   }
@@ -13740,15 +13889,17 @@ p {
       super({ css: style_default5, template: template_default6 });
     }
   }
-  if (!customElements.get("cms-shell-detail"))
+  if (!customElements.get("cms-shell-detail")) {
     customElements.define("cms-shell-detail", CmsShellDetail);
+  }
 
   // src/core/dom/meta/getMetaBasePath.ts
   function getMetaBasePath() {
     const meta = document.querySelector('meta[name="basePath"]');
     const content = meta?.getAttribute("content") ?? "";
-    if (!content || content === "/")
+    if (!content || content === "/") {
       return "";
+    }
     return content.replace(/\/+$/, "");
   }
 
@@ -14069,9 +14220,12 @@ cms-shell-detail {
     async load() {
       this.setMessage("Loading theme…");
       try {
-        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, { headers: { Accept: "application/json" } });
-        if (!response.ok)
+        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+          headers: { Accept: "application/json" }
+        });
+        if (!response.ok) {
           throw new Error(`Request failed (${response.status})`);
+        }
         const data = await response.json();
         this.canPersist = Boolean(data.theme);
         this.settings = structuredClone(data.theme ?? themeSettingsFromCss(data.site?.theme ?? ""));
@@ -14090,8 +14244,9 @@ cms-shell-detail {
       const source = this.currentSource();
       const category = this.currentCategory();
       const theme = this.currentTheme();
-      if (!settings || !source || !category || !theme)
+      if (!settings || !source || !category || !theme) {
         return;
+      }
       this.query("[data-category-title]").textContent = category.label;
       this.query("[data-category-description]").textContent = `${source.label} · ${category.description}`;
       this.query("[data-theme-name-input]").value = theme.name;
@@ -14114,8 +14269,9 @@ cms-shell-detail {
       this.query("[data-activate-theme]").toggleAttribute("disabled", active || !this.canPersist);
       const modeSwitch = this.query("[data-mode-switch]");
       modeSwitch.hidden = !source.supportsModes;
-      if (!source.supportsModes)
+      if (!source.supportsModes) {
         this.mode = "light";
+      }
       for (const button of Array.from(modeSwitch.querySelectorAll("[data-mode]"))) {
         button.setAttribute("aria-pressed", String(button.dataset.mode === this.mode));
       }
@@ -14188,8 +14344,9 @@ cms-shell-detail {
       return { sourceId: source?.id ?? "", categoryId: category?.id ?? "" };
     }
     addTheme() {
-      if (!this.settings)
+      if (!this.settings) {
         return;
+      }
       const number = this.settings.themes.length + 1;
       const id = uniqueId(`theme-${number}`, new Set(this.settings.themes.map((item) => item.id)));
       this.settings.themes.push({ id, name: `New theme ${number}`, values: { light: {}, dark: {} } });
@@ -14198,11 +14355,17 @@ cms-shell-detail {
     }
     addCategory() {
       const source = this.currentSource();
-      if (!source)
+      if (!source) {
         return;
+      }
       const number = source.categories.length + 1;
       const id = uniqueId(`${source.id}-category-${number}`, new Set(source.categories.map((item) => item.id)));
-      const category = { id, label: `New category ${number}`, description: `Custom ${source.label} tokens.`, tokens: [] };
+      const category = {
+        id,
+        label: `New category ${number}`,
+        description: `Custom ${source.label} tokens.`,
+        tokens: []
+      };
       source.categories.push(category);
       this.selection = { sourceId: source.id, categoryId: category.id };
       this.render();
@@ -14212,19 +14375,28 @@ cms-shell-detail {
       const settings = this.settings;
       const source = this.currentSource();
       const category = this.currentCategory();
-      if (!settings || !source || !category)
+      if (!settings || !source || !category) {
         return;
+      }
       const allIds = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry) => entry.tokens.map((token) => token.id))));
       const number = allIds.size + 1;
       const id = uniqueId(`custom-${number}`, allIds);
-      category.tokens.push({ id, variable: id, label: `New token ${number}`, description: "Custom design token", type: source.supportsModes ? "color" : "value" });
+      category.tokens.push({
+        id,
+        variable: id,
+        label: `New token ${number}`,
+        description: "Custom design token",
+        type: source.supportsModes ? "color" : "value"
+      });
       this.render();
     }
     async save(activate) {
-      if (!this.settings || !this.canPersist)
+      if (!this.settings || !this.canPersist) {
         return;
-      if (activate)
+      }
+      if (activate) {
         this.settings.activeThemeId = this.selectedThemeId;
+      }
       this.setMessage("Saving…");
       try {
         const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
@@ -14232,8 +14404,9 @@ cms-shell-detail {
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({ theme: this.settings })
         });
-        if (!response.ok)
+        if (!response.ok) {
           throw new Error(await response.text() || `Request failed (${response.status})`);
+        }
         this.setMessage(activate ? "Theme activated." : "Theme saved.");
         this.render();
         dispatchThemeSettingsChanged();
@@ -14243,8 +14416,9 @@ cms-shell-detail {
     }
     setMessage(message, error = false) {
       const element = this.shadowRoot?.querySelector("[data-message]");
-      if (!element)
+      if (!element) {
         return;
+      }
       element.textContent = message;
       element.toggleAttribute("data-error", error);
     }
@@ -14256,16 +14430,21 @@ cms-shell-detail {
     }
     onClick = (event) => {
       const target = event.target;
-      if (target?.closest("[data-add-theme]"))
+      if (target?.closest("[data-add-theme]")) {
         this.addTheme();
-      if (target?.closest("[data-add-theme-category]"))
+      }
+      if (target?.closest("[data-add-theme-category]")) {
         this.addCategory();
-      if (target?.closest("[data-add-element]"))
+      }
+      if (target?.closest("[data-add-element]")) {
         this.addToken();
-      if (target?.closest("[data-save-theme]"))
+      }
+      if (target?.closest("[data-save-theme]")) {
         this.save(false);
-      if (target?.closest("[data-activate-theme]"))
+      }
+      if (target?.closest("[data-activate-theme]")) {
         this.save(true);
+      }
       const mode = target?.closest("[data-mode]")?.dataset.mode;
       if (mode === "light" || mode === "dark") {
         this.mode = mode;
@@ -14275,8 +14454,9 @@ cms-shell-detail {
     onInput = (event) => {
       const input = event.target;
       const theme = this.currentTheme();
-      if (!input || !theme)
+      if (!input || !theme) {
         return;
+      }
       if (input.matches("[data-theme-name-input]")) {
         theme.name = input.value;
         return;
@@ -14300,34 +14480,40 @@ cms-shell-detail {
       if (input.matches("[data-token-label]")) {
         const tokenId2 = input.closest("[data-token-id]")?.dataset.tokenId;
         const token = category?.tokens.find((item) => item.id === tokenId2);
-        if (token)
+        if (token) {
           token.label = input.value;
+        }
         return;
       }
-      if (!input.matches("[data-value-control]"))
+      if (!input.matches("[data-value-control]")) {
         return;
+      }
       const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
-      if (!tokenId)
+      if (!tokenId) {
         return;
+      }
       theme.values[this.mode] ??= {};
       theme.values[this.mode][tokenId] = input.value;
       if (input.type === "color") {
         const text = input.closest("[data-token-id]")?.querySelector('input[type="text"]');
-        if (text)
+        if (text) {
           text.value = input.value;
+        }
       }
     };
     onChange = (event) => {
       const target = event.target;
-      if (!target.matches?.("[data-theme-switch]") || !target.value)
+      if (!target.matches?.("[data-theme-switch]") || !target.value) {
         return;
+      }
       this.selectedThemeId = target.value;
       this.render();
     };
     onCategorySelected = (event) => {
       const source = this.settings?.sources.find((item) => item.id === event.detail?.sourceId);
-      if (!source?.categories.some((category) => category.id === event.detail.categoryId))
+      if (!source?.categories.some((category) => category.id === event.detail.categoryId)) {
         return;
+      }
       this.selection = event.detail;
       this.render();
     };
@@ -14335,16 +14521,18 @@ cms-shell-detail {
       return this.shadowRoot.querySelector(selector);
     }
   }
-  if (!customElements.get("cms-theme-editor"))
+  if (!customElements.get("cms-theme-editor")) {
     customElements.define("cms-theme-editor", CmsThemeEditor);
+  }
   function validHex(value) {
     return /^#[0-9a-f]{6}$/i.test(value);
   }
   function uniqueId(base, existing) {
     let value = base;
     let suffix = 2;
-    while (existing.has(value))
+    while (existing.has(value)) {
       value = `${base}-${suffix++}`;
+    }
     return value;
   }
   function themeSettingsFromCss(css) {
@@ -14353,8 +14541,9 @@ cms-shell-detail {
     const seen = new Set;
     for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:\s*([^;{}]+)\s*;/gi)) {
       const variable = match[1].toLowerCase();
-      if (seen.has(variable))
+      if (seen.has(variable)) {
         continue;
+      }
       seen.add(variable);
       const value = match[2].trim();
       tokens.push({
@@ -14368,22 +14557,28 @@ cms-shell-detail {
     }
     return {
       activeThemeId: "imported",
-      sources: [{
-        id: "other",
-        label: "Other",
-        supportsModes: false,
-        categories: [{
-          id: "general",
-          label: "General",
-          description: "Variables inferred from the current free-form stylesheet.",
-          tokens
-        }]
-      }],
-      themes: [{
-        id: "imported",
-        name: "Imported theme",
-        values: { light: values, dark: {} }
-      }]
+      sources: [
+        {
+          id: "other",
+          label: "Other",
+          supportsModes: false,
+          categories: [
+            {
+              id: "general",
+              label: "General",
+              description: "Variables inferred from the current free-form stylesheet.",
+              tokens
+            }
+          ]
+        }
+      ],
+      themes: [
+        {
+          id: "imported",
+          name: "Imported theme",
+          values: { light: values, dark: {} }
+        }
+      ]
     };
   }
   function capitalize(value) {
@@ -14449,9 +14644,12 @@ w13c-lateral-menu-item.category-item {
     }
     async load() {
       try {
-        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, { headers: { Accept: "application/json" } });
-        if (!response.ok)
+        const response = await fetch(`${getMetaBasePath()}/api/system/settings`, {
+          headers: { Accept: "application/json" }
+        });
+        if (!response.ok) {
           return;
+        }
         const data = await response.json();
         this.sources = structuredClone(data.theme?.sources ?? []);
         this.selection = this.selectionFromUrl();
@@ -14460,8 +14658,9 @@ w13c-lateral-menu-item.category-item {
     }
     render() {
       const menu = this.shadowRoot?.querySelector("w13c-lateral-menu");
-      if (!menu)
+      if (!menu) {
         return;
+      }
       menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
       for (const source of this.sources) {
         const sourceItem = document.createElement("w13c-lateral-menu-item");
@@ -14470,8 +14669,9 @@ w13c-lateral-menu-item.category-item {
         sourceItem.toggleAttribute("active", source.id === this.selection.sourceId);
         sourceItem.append(createSourceIcon(source.id), document.createTextNode(source.label));
         menu.append(sourceItem);
-        if (source.id !== this.selection.sourceId)
+        if (source.id !== this.selection.sourceId) {
           continue;
+        }
         for (const category of source.categories) {
           const categoryItem = document.createElement("w13c-lateral-menu-item");
           categoryItem.classList.add("category-item");
@@ -14486,11 +14686,13 @@ w13c-lateral-menu-item.category-item {
     }
     select(sourceId, categoryId) {
       const source = this.sources.find((item) => item.id === sourceId);
-      if (!source)
+      if (!source) {
         return;
+      }
       const category = source.categories.find((item) => item.id === categoryId) ?? source.categories[0];
-      if (!category)
+      if (!category) {
         return;
+      }
       this.selection = { sourceId: source.id, categoryId: category.id };
       const url = new URL(window.location.href);
       url.searchParams.set("type", source.id);
@@ -14516,8 +14718,9 @@ w13c-lateral-menu-item.category-item {
         return;
       }
       const source = target?.closest("[data-source]");
-      if (source?.dataset.source)
+      if (source?.dataset.source) {
         this.select(source.dataset.source);
+      }
     };
     onPopState = () => {
       this.selection = this.selectionFromUrl();
@@ -14527,16 +14730,18 @@ w13c-lateral-menu-item.category-item {
     onCategoryAdded = (event) => {
       const { sourceId, category } = event.detail ?? {};
       const source = this.sources.find((item) => item.id === sourceId);
-      if (!source || !category || source.categories.some((item) => item.id === category.id))
+      if (!source || !category || source.categories.some((item) => item.id === category.id)) {
         return;
+      }
       source.categories.push(category);
       this.select(source.id, category.id);
     };
     onCategoryUpdated = (event) => {
       const { sourceId, category } = event.detail ?? {};
       const current = this.sources.find((item) => item.id === sourceId)?.categories.find((item) => item.id === category?.id);
-      if (!current || !category)
+      if (!current || !category) {
         return;
+      }
       current.label = category.label;
       current.description = category.description;
       this.render();
@@ -14545,8 +14750,9 @@ w13c-lateral-menu-item.category-item {
       this.load();
     };
   }
-  if (!customElements.get("cms-theme-nav"))
+  if (!customElements.get("cms-theme-nav")) {
     customElements.define("cms-theme-nav", CmsThemeNav);
+  }
   function createSourceIcon(sourceId) {
     return createIcon(sourceIconPaths(sourceId));
   }
@@ -14566,12 +14772,15 @@ w13c-lateral-menu-item.category-item {
     return svg;
   }
   function sourceIconPaths(sourceId) {
-    if (sourceId === "colors")
+    if (sourceId === "colors") {
       return '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.7-.13 2.45-.35 1.1-.33 1.5-1.65.9-2.65-.58-.98-1.35-1.45-1.35-2.4 0-1.1.9-2 2-2h4c1.1 0 2-.9 2-2A10 10 0 0 0 12 2Z"/>';
-    if (sourceId === "typography")
+    }
+    if (sourceId === "typography") {
       return '<path d="M4 5V3h16v2"/><path d="M12 3v18"/><path d="M8 21h8"/>';
-    if (sourceId === "spacing")
+    }
+    if (sourceId === "spacing") {
       return '<path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><path d="M17 9v6"/>';
+    }
     return '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 16 16 8"/>';
   }
 
@@ -14616,10 +14825,12 @@ w13c-lateral-menu-item.category-item {
   }
   function selectionUrl(selection) {
     const params = new URLSearchParams;
-    if (selection.source)
+    if (selection.source) {
       params.set("source", selection.source);
-    if (selection.dashboard)
+    }
+    if (selection.dashboard) {
       params.set("dashboard", selection.dashboard);
+    }
     if (selection.collection && selection.row) {
       params.set("collection", selection.collection);
       params.set("row", selection.row);
@@ -14635,8 +14846,9 @@ w13c-lateral-menu-item.category-item {
   }
   async function getJson(url) {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
+    }
     return response.json();
   }
 
@@ -14714,17 +14926,7 @@ w13c-lateral-menu-item.category-item {
 
   // src/components/admin/Resources/Dashboards/icons.ts
   var SVG_MAX_LENGTH = 8000;
-  var ALLOWED_TAGS = new Set([
-    "svg",
-    "g",
-    "path",
-    "circle",
-    "rect",
-    "line",
-    "polyline",
-    "polygon",
-    "ellipse"
-  ]);
+  var ALLOWED_TAGS = new Set(["svg", "g", "path", "circle", "rect", "line", "polyline", "polygon", "ellipse"]);
   var ALLOWED_ATTRS = new Set([
     "aria-hidden",
     "class",
@@ -14756,16 +14958,18 @@ w13c-lateral-menu-item.category-item {
   ]);
   function appendIconSlot(host, svg2, icon, fallback) {
     const element = createIcon2(svg2, icon, fallback);
-    if (!element)
+    if (!element) {
       return;
+    }
     element.setAttribute("slot", "icon");
     host.append(element);
   }
   function renderIcon(target, svg2, icon, fallback) {
     target.replaceChildren();
     const element = createIcon2(svg2, icon, fallback);
-    if (element)
+    if (element) {
       target.append(element);
+    }
   }
   function createIcon2(svg2, icon, fallback) {
     const iconName = toIconName(icon);
@@ -14773,25 +14977,30 @@ w13c-lateral-menu-item.category-item {
     const template = document.createElement("template");
     template.innerHTML = source.trim();
     const element = template.content.firstElementChild;
-    if (!element || element.tagName.toLowerCase() !== "svg")
+    if (!element || element.tagName.toLowerCase() !== "svg") {
       return null;
+    }
     element.setAttribute("aria-hidden", "true");
     element.setAttribute("focusable", "false");
     return element;
   }
   function sanitizeSvg(value) {
-    if (!value || value.length > SVG_MAX_LENGTH)
+    if (!value || value.length > SVG_MAX_LENGTH) {
       return null;
+    }
     const doc = new DOMParser().parseFromString(value, "image/svg+xml");
-    if (doc.querySelector("parsererror"))
+    if (doc.querySelector("parsererror")) {
       return null;
+    }
     const root = doc.documentElement;
-    if (!root || root.tagName.toLowerCase() !== "svg")
+    if (!root || root.tagName.toLowerCase() !== "svg") {
       return null;
+    }
     for (const element of [root, ...Array.from(root.querySelectorAll("*"))]) {
       const tag = element.tagName.toLowerCase();
-      if (!ALLOWED_TAGS.has(tag))
+      if (!ALLOWED_TAGS.has(tag)) {
         return null;
+      }
       for (const attr of Array.from(element.attributes)) {
         const name = attr.name.toLowerCase();
         const attrValue = attr.value.toLowerCase();
@@ -14809,8 +15018,9 @@ w13c-lateral-menu-item.category-item {
   // src/components/admin/Resources/Dashboards/runtime/bindingFilters.ts
   var configured = false;
   function configureDashboardBindingFilters() {
-    if (configured)
+    if (configured) {
       return;
+    }
     configured = true;
     Mp({
       json: (value) => value === undefined ? undefined : JSON.stringify(value)
@@ -14910,8 +15120,9 @@ w13c-lateral-menu-item {
     readBoundGroups() {
       const target = this.shadowRoot.querySelector("[data-nav-groups-json]");
       const next = parseGroups(target?.dataset.navGroupsJson ?? "");
-      if (!next)
+      if (!next) {
         return;
+      }
       this.groups = next;
       this.selectedSource ||= defaultDashboardSource(this.groups);
       this.ensureDashboardSelection();
@@ -15007,8 +15218,9 @@ w13c-lateral-menu-item {
         return;
       }
       const sourceButton = target?.closest("[data-source]");
-      if (sourceButton?.dataset.source)
+      if (sourceButton?.dataset.source) {
         this.select(sourceButton.dataset.source);
+      }
     };
     onPopState = () => {
       this.syncFromUrl();
@@ -15026,11 +15238,13 @@ w13c-lateral-menu-item {
       return this.shadowRoot.querySelector(selector);
     }
   }
-  if (!customElements.get("cms-dashboards-nav"))
+  if (!customElements.get("cms-dashboards-nav")) {
     customElements.define("cms-dashboards-nav", DashboardNav);
+  }
   function parseGroups(value) {
-    if (!value)
+    if (!value) {
       return null;
+    }
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : null;
@@ -15264,8 +15478,9 @@ p {
 
   // src/components/admin/Resources/Dashboards/domain.ts
   function widgetsForSelection(dashboard, detail, projections = []) {
-    if (!detail)
+    if (!detail) {
       return mainWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
+    }
     const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
     return detailWidgetsFor(dashboard.views, detail.collection).map((widget) => relationWidgets.length ? { ...widget, relationWidgets } : widget);
   }
@@ -15274,51 +15489,62 @@ p {
   }
   function mainWidgetsFor(widgets, detailTargets) {
     return widgets.flatMap((widget) => {
-      if (isDetailWidget(widget))
+      if (isDetailWidget(widget)) {
         return detailTargets.has(widget.id) ? [] : [widget];
-      if (widget.widget === "w-section")
+      }
+      if (widget.widget === "w-section") {
         return sectionWithChildren(widget, mainWidgetsFor(widget.children, detailTargets));
-      if (widget.widget === "w-tabs")
+      }
+      if (widget.widget === "w-tabs") {
         return tabsWithChildren(widget, (tab) => mainWidgetsFor(tab.children, detailTargets));
+      }
       return [widget];
     });
   }
   function detailTargetsFor(widgets) {
     const targets = new Set;
-    for (const widget of widgets)
+    for (const widget of widgets) {
       collectDetailTargets(widget, targets);
+    }
     return targets;
   }
   function collectDetailTargets(widget, targets) {
     if (widget.widget === "w-table" || widget.widget === "w-navigation-list") {
-      if (widget.selection?.opens)
+      if (widget.selection?.opens) {
         targets.add(widget.selection.opens);
+      }
       for (const action of widget.actions ?? []) {
-        if (action.selection?.opens)
+        if (action.selection?.opens) {
           targets.add(action.selection.opens);
-        if (action.after?.opens)
+        }
+        if (action.after?.opens) {
           targets.add(action.after.opens);
+        }
       }
       return;
     }
     if (widget.widget === "w-section") {
-      for (const child of widget.children)
+      for (const child of widget.children) {
         collectDetailTargets(child, targets);
+      }
       return;
     }
     if (widget.widget === "w-tabs") {
       for (const tab of widget.tabs) {
-        for (const child of tab.children)
+        for (const child of tab.children) {
           collectDetailTargets(child, targets);
+        }
       }
     }
   }
   function detailWidgetsFor(widgets, detailWidgetId) {
     return widgets.flatMap((widget) => {
-      if (widget.widget === "w-section")
+      if (widget.widget === "w-section") {
         return detailWidgetsFor(widget.children, detailWidgetId);
-      if (widget.widget === "w-tabs")
+      }
+      if (widget.widget === "w-tabs") {
         return widget.tabs.flatMap((tab) => detailWidgetsFor(tab.children, detailWidgetId));
+      }
       return isDetailWidget(widget) && widget.id === detailWidgetId ? [widget] : [];
     });
   }
@@ -15342,12 +15568,14 @@ p {
       fromId: detail.row,
       ...projection.pageSize ? { pageSize: projection.pageSize } : {},
       rowKey: projection.rowKey ?? "id",
-      columns: projection.columns?.length ? projection.columns : [{
-        id: "id",
-        label: "ID",
-        path: projection.rowKey ?? "id",
-        primary: true
-      }],
+      columns: projection.columns?.length ? projection.columns : [
+        {
+          id: "id",
+          label: "ID",
+          path: projection.rowKey ?? "id",
+          primary: true
+        }
+      ],
       ...projection.actions?.length ? { actions: projection.actions } : {}
     }));
   }
@@ -15376,8 +15604,9 @@ p {
       return structuredClone(dashboard);
     }
     async updateDashboard(dashboard) {
-      if (!this.dashboards.has(dashboard.id))
+      if (!this.dashboards.has(dashboard.id)) {
         return null;
+      }
       this.dashboards.set(dashboard.id, structuredClone(dashboard));
       return structuredClone(dashboard);
     }
@@ -15406,8 +15635,9 @@ p {
       return structuredClone(source);
     }
     async updateSource(source) {
-      if (!this._sources.has(source.urn))
+      if (!this._sources.has(source.urn)) {
         return null;
+      }
       this._sources.set(source.urn, structuredClone(source));
       return structuredClone(source);
     }
@@ -15424,8 +15654,9 @@ p {
     async getEndpoint(urn) {
       for (const source of this._sources.values()) {
         const endpoint = source.endpoints.find((e) => e.urn === urn);
-        if (endpoint)
+        if (endpoint) {
           return structuredClone(endpoint);
+        }
       }
       return null;
     }
@@ -15492,8 +15723,9 @@ p {
     }
     async getSource(urn) {
       const system = this.systemSources.get(urn);
-      if (system)
+      if (system) {
         return structuredClone(system);
+      }
       return this.inner.getSource(urn);
     }
     async getAllSources() {
@@ -15512,8 +15744,9 @@ p {
       return this.inner.getEndpoint(urn);
     }
     assertUserSource(urn, message) {
-      if (systemSourceUrnOf(urn))
+      if (systemSourceUrnOf(urn)) {
         throw new SourceValidationError("urn", message);
+      }
     }
   }
   // ../../features/cms-sources/src/core/endpointHeaders.ts
@@ -15543,17 +15776,20 @@ p {
     }
     async getOrLoad(source, overlay, load) {
       const fingerprint = await schemaFingerprint(source, overlay);
-      if (!fingerprint)
+      if (!fingerprint) {
         return await load();
+      }
       const key = `${overlay.sourceId}:${overlay.id}:${fingerprint}`;
       const now = this.now();
       this.purgeExpired(now);
       const cached = this.entries.get(key);
-      if (cached)
+      if (cached) {
         return structuredClone(cached.fields);
+      }
       const active = this.pending.get(key);
-      if (active)
+      if (active) {
         return cloneNullableFields(await active.promise);
+      }
       const invalidationRevision = this.invalidationRevision;
       const promise = load();
       const pending = { sourceId: overlay.sourceId, overlayId: overlay.id, promise };
@@ -15570,8 +15806,9 @@ p {
         }
         return cloneNullableFields(fields);
       } finally {
-        if (this.pending.get(key) === pending)
+        if (this.pending.get(key) === pending) {
           this.pending.delete(key);
+        }
       }
     }
     invalidate(selector = {}) {
@@ -15581,18 +15818,21 @@ p {
     }
     purgeExpired(now) {
       for (const [key, entry] of this.entries) {
-        if (entry.expiresAt <= now)
+        if (entry.expiresAt <= now) {
           this.entries.delete(key);
+        }
       }
     }
   }
   async function schemaFingerprint(source, overlay) {
     const endpointId = overlay.fieldSource?.endpointId;
-    if (!endpointId)
+    if (!endpointId) {
       return null;
+    }
     const endpoint = source.endpoints.find((candidate) => parseUrn(candidate.urn)?.endpoint === endpointId);
-    if (!endpoint || endpoint.method !== "GET" || endpoint.effects !== undefined || hasComputedParams(endpoint) || hasComputedHeaders(endpoint))
+    if (!endpoint || endpoint.method !== "GET" || endpoint.effects !== undefined || hasComputedParams(endpoint) || hasComputedHeaders(endpoint)) {
       return null;
+    }
     const revision = canonicalJson({
       source: { urn: source.urn, fieldSourceEndpoint: endpoint },
       overlay
@@ -15601,10 +15841,12 @@ p {
     return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
   }
   function canonicalJson(value) {
-    if (value === null || typeof value !== "object")
+    if (value === null || typeof value !== "object") {
       return JSON.stringify(value) ?? "null";
-    if (Array.isArray(value))
+    }
+    if (Array.isArray(value)) {
       return `[${value.map(canonicalJson).join(",")}]`;
+    }
     const entries = Object.entries(value).filter(([, entry]) => entry !== undefined).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
     return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
   }
@@ -15613,10 +15855,12 @@ p {
   }
   function deleteMatching(entries, selector) {
     for (const [key, entry] of entries) {
-      if (selector.sourceId !== undefined && selector.sourceId !== entry.sourceId)
+      if (selector.sourceId !== undefined && selector.sourceId !== entry.sourceId) {
         continue;
-      if (selector.overlayId !== undefined && selector.overlayId !== entry.overlayId)
+      }
+      if (selector.overlayId !== undefined && selector.overlayId !== entry.overlayId) {
         continue;
+      }
       entries.delete(key);
     }
   }
@@ -15635,8 +15879,9 @@ p {
   var UNSAFE_PATH_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
   function dashboardPathSegments(value) {
     const segments = value.split(".");
-    if (!segments.length || segments.some((segment) => !PATH_SEGMENT.test(segment) || UNSAFE_PATH_SEGMENTS.has(segment)))
+    if (!segments.length || segments.some((segment) => !PATH_SEGMENT.test(segment) || UNSAFE_PATH_SEGMENTS.has(segment))) {
       return null;
+    }
     return segments;
   }
   function isSafeDashboardPath(value) {
@@ -15644,8 +15889,9 @@ p {
   }
   function isSafeDashboardExpression(value, roots, pathRequired = false) {
     const match = EXPRESSION.exec(value);
-    if (!match || !roots.includes(match[1]))
+    if (!match || !roots.includes(match[1])) {
       return false;
+    }
     const path = match[2];
     return path === undefined ? !pathRequired : isSafeDashboardPath(path);
   }
@@ -15657,44 +15903,53 @@ p {
     return typeof value === "string" && isSafeDashboardExpression(value, ["field", "resource"], true);
   }
   function evaluateDashboardVisibility(rule, resolve) {
-    if (rule === undefined)
+    if (rule === undefined) {
       return true;
+    }
     const result = evaluateRule(rule, resolve, 0, { nodes: 0 });
     return result.valid && result.matches;
   }
   function evaluateRule(value, resolve, depth, budget) {
-    if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES)
+    if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
       return invalid();
-    if (!isRecord2(value))
+    }
+    if (!isRecord2(value)) {
       return invalid();
+    }
     const hasAll = Object.hasOwn(value, "all");
     const hasAny = Object.hasOwn(value, "any");
     const hasCondition = Object.hasOwn(value, "value") || Object.hasOwn(value, "equals") || Object.hasOwn(value, "notEquals");
     if (hasAll || hasAny) {
-      if (hasAll === hasAny || hasCondition || Object.keys(value).length !== 1)
+      if (hasAll === hasAny || hasCondition || Object.keys(value).length !== 1) {
         return invalid();
+      }
       const rules = hasAll ? value.all : value.any;
-      if (!Array.isArray(rules) || rules.length === 0)
+      if (!Array.isArray(rules) || rules.length === 0) {
         return invalid();
+      }
       let matches = hasAll;
       for (const entry of rules) {
         const result = evaluateRule(entry, resolve, depth + 1, budget);
-        if (!result.valid)
+        if (!result.valid) {
           return invalid();
+        }
         matches = hasAll ? matches && result.matches : matches || result.matches;
       }
       return { valid: true, matches };
     }
     const hasEquals = Object.hasOwn(value, "equals");
     const hasNotEquals = Object.hasOwn(value, "notEquals");
-    if (!isDashboardVisibilityExpression(value.value) || hasEquals === hasNotEquals || Object.keys(value).length !== 2)
+    if (!isDashboardVisibilityExpression(value.value) || hasEquals === hasNotEquals || Object.keys(value).length !== 2) {
       return invalid();
+    }
     const expected = hasEquals ? value.equals : value.notEquals;
-    if (!isVisibilityValue(expected))
+    if (!isVisibilityValue(expected)) {
       return invalid();
+    }
     const actual = resolve(value.value);
-    if (actual === undefined)
+    if (actual === undefined) {
       return { valid: true, matches: false };
+    }
     return { valid: true, matches: hasEquals ? actual === expected : actual !== expected };
   }
   function invalid() {
@@ -15708,32 +15963,40 @@ p {
   }
   // src/components/admin/Resources/Dashboards/runtime/expressions.ts
   function valueAt(value, path) {
-    if (!path)
+    if (!path) {
       return value;
+    }
     const segments = dashboardPathSegments(path);
-    if (!segments)
+    if (!segments) {
       return;
+    }
     return segments.reduce((current, part) => {
-      if (current === null || current === undefined)
+      if (current === null || current === undefined) {
         return;
-      if (Array.isArray(current) && /^\d+$/.test(part))
+      }
+      if (Array.isArray(current) && /^\d+$/.test(part)) {
         return current[Number(part)];
-      if (typeof current !== "object")
+      }
+      if (typeof current !== "object") {
         return;
-      if (!Object.hasOwn(current, part))
+      }
+      if (!Object.hasOwn(current, part)) {
         return;
+      }
       return current[part];
     }, value);
   }
   function setValueAt(target, path, value) {
     const parts = dashboardPathSegments(path);
-    if (!parts)
+    if (!parts) {
       return false;
+    }
     let current = target;
     for (const part of parts.slice(0, -1)) {
       const existing = Object.hasOwn(current, part) ? current[part] : undefined;
-      if (!existing || typeof existing !== "object" || Array.isArray(existing))
+      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
         current[part] = {};
+      }
       current = current[part];
     }
     current[parts.at(-1)] = value;
@@ -15741,12 +16004,15 @@ p {
   }
   function textAt(value, path, fallback = "") {
     const found = valueAt(value, path);
-    if (found === null || found === undefined)
+    if (found === null || found === undefined) {
       return fallback;
-    if (typeof found === "string")
+    }
+    if (typeof found === "string") {
       return found;
-    if (typeof found === "number" || typeof found === "boolean")
+    }
+    if (typeof found === "number" || typeof found === "boolean") {
       return String(found);
+    }
     return fallback;
   }
   function arrayAt(value, path) {
@@ -15754,26 +16020,36 @@ p {
     return Array.isArray(found) ? found : [];
   }
   function resolveExpression(expression, vars) {
-    if (expression === "$search")
+    if (expression === "$search") {
       return;
-    if (expression.startsWith("$selection."))
+    }
+    if (expression.startsWith("$selection.")) {
       return valueAt(vars.selection, expression.slice("$selection.".length));
-    if (expression.startsWith("$resource."))
+    }
+    if (expression.startsWith("$resource.")) {
       return valueAt(vars.resource, expression.slice("$resource.".length));
-    if (expression.startsWith("$field."))
+    }
+    if (expression.startsWith("$field.")) {
       return valueAt(vars.fields, expression.slice("$field.".length));
-    if (expression.startsWith("$filter."))
+    }
+    if (expression.startsWith("$filter.")) {
       return valueAt(vars.filters, expression.slice("$filter.".length));
-    if (expression.startsWith("$media."))
+    }
+    if (expression.startsWith("$media.")) {
       return valueAt(vars.media, expression.slice("$media.".length));
-    if (expression === "$result")
+    }
+    if (expression === "$result") {
       return vars.result;
-    if (expression.startsWith("$result."))
+    }
+    if (expression.startsWith("$result.")) {
       return valueAt(vars.result, expression.slice("$result.".length));
-    if (expression === "$value")
+    }
+    if (expression === "$value") {
       return vars.value;
-    if (expression.startsWith("$value."))
+    }
+    if (expression.startsWith("$value.")) {
       return valueAt(vars.value, expression.slice("$value.".length));
+    }
     return expression;
   }
   function matchesDashboardVisibility(rule, vars) {
@@ -15783,27 +16059,31 @@ p {
     const out = {};
     for (const [key, expression] of Object.entries(params ?? {})) {
       const value = resolveExpression(expression, vars);
-      if (value === undefined || value === null || value === "")
+      if (value === undefined || value === null || value === "") {
         continue;
+      }
       out[key] = String(value);
     }
     return out;
   }
   function resolveBody(body, vars) {
-    if (!body)
+    if (!body) {
       return;
+    }
     const out = {};
     for (const [key, expression] of Object.entries(body)) {
       const value = resolveExpression(expression, vars);
-      if (value === undefined)
+      if (value === undefined) {
         continue;
+      }
       setBodyValue(out, key, value);
     }
     return out;
   }
   function setBodyValue(target, path, value) {
-    if (!setValueAt(target, path, value))
+    if (!setValueAt(target, path, value)) {
       throw new Error(`Unsafe dashboard body path "${path}"`);
+    }
   }
 
   // src/components/admin/Resources/Dashboards/runtime/source.ts
@@ -15833,8 +16113,9 @@ p {
   }
   async function sendSourceDownload(sourceId, ref, method, vars) {
     const response = await sendSourceResponse(sourceId, ref, method, vars, "*/*");
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text() || `Source request failed (${response.status})`);
+    }
     const filename = filenameFromDisposition(response.headers.get("content-disposition"));
     return {
       blob: await response.blob(),
@@ -15852,16 +16133,19 @@ p {
   function sourceUrl(sourceId, ref, vars) {
     const targetSourceId = ref.sourceId ?? sourceId;
     const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
       url.searchParams.set(key, value);
+    }
     return url;
   }
   async function responseJson(response) {
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text() || `Source request failed (${response.status})`);
+    }
     const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("json"))
+    if (!contentType.includes("json")) {
       return response.text();
+    }
     return response.json();
   }
   function filenameFromDisposition(value) {
@@ -15869,8 +16153,9 @@ p {
     return match?.[1]?.trim() || undefined;
   }
   function itemsFrom(data, ref) {
-    if (!ref.itemsPath)
+    if (!ref.itemsPath) {
       return Array.isArray(data) ? data : [];
+    }
     return arrayAt(data, ref.itemsPath);
   }
   function itemFrom(data, ref) {
@@ -15885,13 +16170,15 @@ p {
     }).filter((item) => item.id && item.url);
   }
   function normalizedMediaItem(item) {
-    if (!item || typeof item !== "object" || Array.isArray(item))
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
       return null;
+    }
     const record = item;
     const id = textAt(record, "id");
     const url = textAt(record, "url");
-    if (!id || !url)
+    if (!id || !url) {
       return null;
+    }
     return {
       id,
       url,
@@ -15910,18 +16197,21 @@ p {
   }
   function mediaUrl(item, field, sourceId) {
     const raw = textAt(item, field.item.urlPath);
-    if (isRenderableUrl(raw))
+    if (isRenderableUrl(raw)) {
       return raw;
+    }
     const id = textAt(item, field.item.idPath);
     const endpoint = mediaFileEndpoint(field);
-    if (!sourceId || !endpoint || !id)
+    if (!sourceId || !endpoint || !id) {
       return raw;
+    }
     return route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id)}`);
   }
   function mediaFileEndpoint(field) {
     const upload = field.actions?.upload?.endpoint ?? "";
-    if (!upload.startsWith("upload") || upload.length <= "upload".length)
+    if (!upload.startsWith("upload") || upload.length <= "upload".length) {
       return "";
+    }
     const rest = upload.slice("upload".length);
     return `${rest.charAt(0).toLowerCase()}${rest.slice(1)}`;
   }
@@ -15935,12 +16225,15 @@ p {
   }
   function detailLookupTargets(widget) {
     return detailFields(widget).flatMap((field) => {
-      if (isLookupField(field))
+      if (isLookupField(field)) {
         return [{ key: field.id, lookup: field.lookup, selectedField: field }];
-      if (field.type === "table")
+      }
+      if (field.type === "table") {
         return field.columns.flatMap((column) => column.editable === true && column.type === "combobox" && column.lookup ? [{ key: nestedLookupKey(field.id, column.id), lookup: column.lookup }] : []);
-      if (field.type === "reorderable-list")
+      }
+      if (field.type === "reorderable-list") {
         return field.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [{ key: nestedLookupKey(field.id, item.id), lookup: item.lookup }] : []);
+      }
       return [];
     });
   }
@@ -15948,8 +16241,9 @@ p {
     return new Set(detailLookupTargets(widget).map((target) => target.key));
   }
   function lookupTargetKeysDependingOn(widget, changedFieldId) {
-    if (!changedFieldId)
+    if (!changedFieldId) {
       return new Set;
+    }
     return new Set(detailLookupTargets(widget).filter((target) => Object.values(target.lookup.params ?? {}).some((expression) => expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`))).map((target) => target.key));
   }
   function isLookupField(field) {
@@ -15968,7 +16262,7 @@ p {
       ...field.required ? { required: true } : {},
       ..."placeholder" in field && field.placeholder ? { placeholder: field.placeholder } : {}
     };
-    if (field.type === "number")
+    if (field.type === "number") {
       return {
         ...base,
         input: "number",
@@ -15977,23 +16271,22 @@ p {
         ...field.max !== undefined ? { max: field.max } : {},
         ...field.step !== undefined ? { step: field.step } : {}
       };
-    if (field.type === "checkbox")
+    }
+    if (field.type === "checkbox") {
       return { ...base, input: "checkbox", value: value === true };
-    if (field.type === "textarea")
+    }
+    if (field.type === "textarea") {
       return {
         ...base,
         input: "textarea",
         value: textValue(value),
         ...field.rows !== undefined ? { rows: field.rows } : {}
       };
-    if (field.type === "select")
-      return {
-        ...base,
-        input: "select",
-        value: textValue(value),
-        options: field.options.map(optionData)
-      };
-    if (field.type === "combobox")
+    }
+    if (field.type === "select") {
+      return { ...base, input: "select", value: textValue(value), options: field.options.map(optionData) };
+    }
+    if (field.type === "combobox") {
       return {
         ...base,
         input: "combobox",
@@ -16001,7 +16294,8 @@ p {
         options: optionList(field.options, options[field.id] ?? []),
         creatable: isCreatable(field)
       };
-    if (field.type === "tokens")
+    }
+    if (field.type === "tokens") {
       return {
         ...base,
         input: "tokens",
@@ -16009,7 +16303,8 @@ p {
         options: optionList(field.options, options[field.id] ?? []),
         creatable: isCreatable(field)
       };
-    if (field.type === "table")
+    }
+    if (field.type === "table") {
       return {
         ...base,
         input: "table",
@@ -16019,7 +16314,8 @@ p {
         ...field.editable === true ? { editable: true } : {},
         ...field.addLabel ? { addLabel: field.addLabel } : {}
       };
-    if (field.type === "reorderable-list")
+    }
+    if (field.type === "reorderable-list") {
       return {
         ...base,
         input: "reorderable-list",
@@ -16031,6 +16327,7 @@ p {
         ...field.minItems !== undefined ? { minItems: field.minItems } : {},
         ...field.maxItems !== undefined ? { maxItems: field.maxItems } : {}
       };
+    }
     if (field.type === "schema") {
       const schema = schemas[field.id];
       return {
@@ -16041,11 +16338,13 @@ p {
         schemaStatus: schema?.status ?? "loading"
       };
     }
-    if (field.type === "media")
+    if (field.type === "media") {
       return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
+    }
     if (field.type === "readonly") {
-      if (field.format === "image")
+      if (field.format === "image") {
         return { ...base, input: "image", value: textValue(value) };
+      }
       return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: readonlyValue(value) };
     }
     return { ...base, input: "text", value: textValue(value) };
@@ -16057,18 +16356,21 @@ p {
       path: column.path,
       ...column.width ? { width: column.width } : {}
     };
-    if (column.editable !== true)
+    if (column.editable !== true) {
       return base;
+    }
     const type = column.type ?? "text";
-    if (type === "select")
+    if (type === "select") {
       return { ...base, editable: true, type, options: (column.options ?? []).map(optionData) };
-    if (type === "combobox")
+    }
+    if (type === "combobox") {
       return {
         ...base,
         editable: true,
         type,
         options: optionList(column.options, options[nestedLookupKey(fieldId, column.id)] ?? [])
       };
+    }
     return { ...base, editable: true, type };
   }
   function reorderableField(fieldId, field, options) {
@@ -16080,14 +16382,12 @@ p {
       ...field.placeholder ? { placeholder: field.placeholder } : {}
     };
     const type = field.type ?? "text";
-    if (type === "select")
+    if (type === "select") {
       return { ...base, type, options: (field.options ?? []).map(optionData) };
-    if (type === "combobox")
-      return {
-        ...base,
-        type,
-        options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? [])
-      };
+    }
+    if (type === "combobox") {
+      return { ...base, type, options: optionList(field.options, options[nestedLookupKey(fieldId, field.id)] ?? []) };
+    }
     return { ...base, type };
   }
   function optionData(option) {
@@ -16096,8 +16396,9 @@ p {
   function optionList(staticOptions, dynamicOptions) {
     const seen = new Set;
     return [...staticOptions ?? [], ...dynamicOptions].filter((option) => {
-      if (seen.has(option.value))
+      if (seen.has(option.value)) {
         return false;
+      }
       seen.add(option.value);
       return true;
     }).map(optionData);
@@ -16106,8 +16407,9 @@ p {
     return value === null || value === undefined ? "" : String(value);
   }
   function numberValue(value) {
-    if (value === null || value === undefined || value === "")
+    if (value === null || value === undefined || value === "") {
       return "";
+    }
     const parsed = typeof value === "number" ? value : Number(value);
     return Number.isFinite(parsed) ? parsed : "";
   }
@@ -16124,8 +16426,9 @@ p {
     return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
   }
   function schemaDefinitions(field, fields, definitions) {
-    if (!field.exclude)
+    if (!field.exclude) {
       return definitions;
+    }
     const source = valueAt(fields, field.exclude.from.slice("$field.".length));
     const excluded = new Set((Array.isArray(source) ? source : [source]).flatMap((item) => {
       const value = valueAt(item, field.exclude.valuePath);
@@ -16182,13 +16485,16 @@ p {
   // src/components/admin/Resources/Dashboards/runtime/actions.ts
   async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget)
+    if (!widget) {
       throw new Error(`Dashboard action target "${detail.collection}" was not found`);
+    }
     const action = widget.actions?.find((item) => item.id === actionId);
-    if (!action)
+    if (!action) {
       throw new Error(`Dashboard action "${actionId}" was not found`);
-    if (!action.endpoint)
+    }
+    if (!action.endpoint) {
       throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
+    }
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
     if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
@@ -16202,15 +16508,18 @@ p {
   }
   async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value, groups = [group]) {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
-    if (!action)
+    if (!action) {
       throw new Error(`Dashboard table action "${actionId}" was not found`);
-    if (!action.endpoint)
+    }
+    if (!action.endpoint) {
       throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
+    }
     return executeEndpointAction(group, groups, action, { filters: {}, value });
   }
   async function executeEndpointAction(group, groups, action, vars) {
-    if (!action.endpoint)
+    if (!action.endpoint) {
       throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
+    }
     const method = endpointMethod(group, groups, action.endpoint);
     if (action.download) {
       const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
@@ -16239,19 +16548,28 @@ p {
   }
   async function executeDashboardMediaAction(group, dashboard, detail, media, draft, groups = [group]) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget)
+    if (!widget) {
       throw new Error(`Dashboard media target "${detail.collection}" was not found`);
+    }
     const field = findMediaField(widget, media.field);
     const ref = field?.actions?.[media.action];
-    if (!field || !ref)
+    if (!field || !ref) {
       return [];
+    }
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
     const resource = itemFrom(data, widget.source);
     const fields = { ...fieldValues(widget, resource), ...draft };
     const mediaVars = mediaActionVars(media);
     const files = media.files ?? (media.file ? [media.file] : []);
-    if (!files.length)
-      return [await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), { resource, fields, media: mediaVars })];
+    if (!files.length) {
+      return [
+        await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
+          resource,
+          fields,
+          media: mediaVars
+        })
+      ];
+    }
     return Promise.all(files.map((file) => {
       const body = new FormData;
       body.set("file", file);
@@ -16260,18 +16578,21 @@ p {
   }
   function findDetailWidget(widgets, id) {
     for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id)
+      if (widget.widget === "w-detail" && widget.id === id) {
         return widget;
+      }
       if (widget.widget === "w-section") {
         const found = findDetailWidget(widget.children, id);
-        if (found)
+        if (found) {
           return found;
+        }
       }
       if (widget.widget === "w-tabs") {
         for (const tab of widget.tabs) {
           const found = findDetailWidget(tab.children, id);
-          if (found)
+          if (found) {
             return found;
+          }
         }
       }
     }
@@ -16281,19 +16602,22 @@ p {
     for (const widget of widgets) {
       if ((widget.widget === "w-table" || widget.widget === "w-navigation-list") && (!widgetId || widget.id === widgetId)) {
         const action = widget.actions?.find((item) => item.id === actionId);
-        if (action)
+        if (action) {
           return action;
+        }
       }
       if (widget.widget === "w-section") {
         const found = findCollectionAction(widget.children, actionId, widgetId);
-        if (found)
+        if (found) {
           return found;
+        }
       }
       if (widget.widget === "w-tabs") {
         for (const tab of widget.tabs) {
           const found = findCollectionAction(tab.children, actionId, widgetId);
-          if (found)
+          if (found) {
             return found;
+          }
         }
       }
     }
@@ -16303,8 +16627,9 @@ p {
     const sourceId = ref.sourceId ?? group.source.id;
     const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
     const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
-    if (!endpoint)
+    if (!endpoint) {
       throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    }
     return endpoint.method;
   }
   function endpointInvalidatesSchema(group, groups, ref) {
@@ -16334,8 +16659,9 @@ p {
   // src/components/admin/Resources/Dashboards/DashboardViewActions.ts
   async function runDashboardWidgetAction(context, action) {
     const { group, dashboard, detail } = context;
-    if (!group || !dashboard)
+    if (!group || !dashboard) {
       return;
+    }
     const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
     const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
     try {
@@ -16343,8 +16669,9 @@ p {
         ...context.drafts.get(key) ?? {},
         ...action.fields ?? {}
       }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group]);
-      if (actionDetail)
+      if (actionDetail) {
         context.drafts.delete(key);
+      }
       if (result.invalidatesSchema && context.reloadDefinitions) {
         try {
           await context.reloadDefinitions();
@@ -16359,23 +16686,25 @@ p {
       }
       ku(`${action.action} completed`, { type: "success" });
       const after = result.kind === "value" ? afterTarget(result.after, result.value, actionDetail) : null;
-      if (after)
+      if (after) {
         context.openDetail(after.collection, after.row);
-      else if (!detail)
+      } else if (!detail) {
         context.render();
-      else if (action.action.startsWith("delete"))
+      } else if (action.action.startsWith("delete")) {
         context.clearDetail();
-      else if (detail.row === "__new__" && createdId(result.value))
+      } else if (detail.row === "__new__" && createdId(result.value)) {
         context.openDetail(detail.collection, createdId(result.value));
-      else
+      } else {
         context.reload(detail.collection, detail.row);
+      }
     } catch (error) {
       ku(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
   }
   function downloadBlob(blob, filename) {
-    if (typeof URL.createObjectURL !== "function")
+    if (typeof URL.createObjectURL !== "function") {
       throw new Error("Downloads are not supported in this browser");
+    }
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -16384,22 +16713,27 @@ p {
     document.body.append(link);
     link.click();
     link.remove();
-    if (typeof URL.revokeObjectURL === "function")
+    if (typeof URL.revokeObjectURL === "function") {
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
   }
   function createdId(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value))
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
       return null;
+    }
     const id = value.id;
-    if (typeof id === "string" && id.trim())
+    if (typeof id === "string" && id.trim()) {
       return id;
-    if (typeof id === "number" && Number.isFinite(id))
+    }
+    if (typeof id === "number" && Number.isFinite(id)) {
       return String(id);
+    }
     return null;
   }
   function afterTarget(after, result, detail) {
-    if (!after?.opens)
+    if (!after?.opens) {
       return null;
+    }
     const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
       result,
       ...detail ? { selection: { id: detail.row } } : {}
@@ -16408,18 +16742,22 @@ p {
     return row ? { collection: after.opens, row } : null;
   }
   function stringValue(value) {
-    if (value === null || value === undefined)
+    if (value === null || value === undefined) {
       return "";
-    if (typeof value === "string")
+    }
+    if (typeof value === "string") {
       return value;
-    if (typeof value === "number" || typeof value === "boolean")
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
       return String(value);
+    }
     return "";
   }
   async function runDashboardMediaAction(context, media) {
     const { group, dashboard, detail } = context;
-    if (!group || !dashboard || !detail)
+    if (!group || !dashboard || !detail) {
       return;
+    }
     const key = detailKey(detail.collection, detail.row);
     try {
       await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {}, context.groups ?? [group]);
@@ -16441,24 +16779,27 @@ p {
     const widget = findDetailWidget2(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
     const create = field?.lookup?.create;
-    if (!widget || !field || !create || create.mode !== "inline")
+    if (!widget || !field || !create || create.mode !== "inline") {
       return;
+    }
     const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
     const resource = itemFrom(data, widget.source);
     const baseFields = fieldValues(widget, resource);
     const previousValue = previousDraft[fieldId] ?? baseFields[fieldId];
     const nextValue = nextDraft[fieldId];
     const createdValue = createdInput(previousValue, nextValue);
-    if (!createdValue)
+    if (!createdValue) {
       return;
+    }
     const created = await sendSourceJson(group.source.id, create, endpointMethod2(group, groups, create), {
       resource,
       fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
       value: createdValue
     });
     const createdId2 = valueAt(created, create.valuePath);
-    if (createdId2 === undefined || createdId2 === null || createdId2 === "")
+    if (createdId2 === undefined || createdId2 === null || createdId2 === "") {
       return;
+    }
     const id = String(createdId2);
     return {
       value: replaceCreatedValue(nextValue, createdValue, id),
@@ -16466,8 +16807,9 @@ p {
     };
   }
   function textValue2(value) {
-    if (typeof value === "number" && Number.isFinite(value))
+    if (typeof value === "number" && Number.isFinite(value)) {
       return String(value);
+    }
     return typeof value === "string" ? value.trim() : "";
   }
   function createdInput(previous, next) {
@@ -16478,13 +16820,15 @@ p {
     return typeof next === "string" ? next.trim() : "";
   }
   function replaceCreatedValue(next, created, id) {
-    if (Array.isArray(next))
+    if (Array.isArray(next)) {
       return arrayValue(next).map((value) => value === created ? id : value);
+    }
     return id;
   }
   function arrayValue(value) {
-    if (Array.isArray(value))
+    if (Array.isArray(value)) {
       return value.map((item) => String(item)).filter(Boolean);
+    }
     return typeof value === "string" ? value.split(",").map((item) => item.trim()).filter(Boolean) : [];
   }
   function lookupField(widget, fieldId) {
@@ -16494,24 +16838,28 @@ p {
   function endpointMethod2(group, groups, ref) {
     const sourceId = ref.sourceId ?? group.source.id;
     const endpoint = groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
-    if (!endpoint)
+    if (!endpoint) {
       throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    }
     return endpoint.method;
   }
   function findDetailWidget2(widgets, id) {
     for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id)
+      if (widget.widget === "w-detail" && widget.id === id) {
         return widget;
+      }
       if (widget.widget === "w-section") {
         const found = findDetailWidget2(widget.children, id);
-        if (found)
+        if (found) {
           return found;
+        }
       }
       if (widget.widget === "w-tabs") {
         for (const tab of widget.tabs) {
           const found = findDetailWidget2(tab.children, id);
-          if (found)
+          if (found) {
             return found;
+          }
         }
       }
     }
@@ -16521,14 +16869,16 @@ p {
   // src/components/admin/Resources/Dashboards/DashboardViewLookups.ts
   async function runDashboardLookupCreate(context, change, previousDraft, target) {
     const { group, dashboard, detail } = context;
-    if (!change.created || !group || !dashboard || !detail)
+    if (!change.created || !group || !dashboard || !detail) {
       return;
+    }
     const key = detailKey(detail.collection, change.rowKey);
     const nextDraft = context.drafts.get(key) ?? {};
     try {
       const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft, context.groups ?? [group]);
-      if (result === undefined)
+      if (result === undefined) {
         return;
+      }
       context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
       applyLookupCreate(target, change.field, result.value, result.option);
       ku("Item created", { type: "success" });
@@ -16557,8 +16907,9 @@ p {
   }
   function setText(root, selector, value) {
     const element = root.querySelector(selector);
-    if (element)
+    if (element) {
       element.textContent = value;
+    }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts
@@ -16636,12 +16987,14 @@ p {
     }
     render() {
       const meta = this.shadowRoot?.querySelector("[data-meta]");
-      if (meta)
+      if (meta) {
         meta.textContent = this.getAttribute("meta") ?? "";
+      }
     }
   }
-  if (!customElements.get("cms-dashboard-w-cell"))
+  if (!customElements.get("cms-dashboard-w-cell")) {
     customElements.define("cms-dashboard-w-cell", DashboardWCell);
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts
   var template2 = document.createElement("template");
@@ -16700,14 +17053,16 @@ p {
 
   class DashboardWRow extends HTMLElement {
     onClick = (event) => {
-      if (event.target?.closest("input"))
+      if (event.target?.closest("input")) {
         return;
+      }
       this.select();
     };
     onKeydown = (event) => {
       const key = event instanceof KeyboardEvent ? event.key : "";
-      if (key !== "Enter" && key !== " ")
+      if (key !== "Enter" && key !== " ") {
         return;
+      }
       event.preventDefault();
       this.select();
     };
@@ -16732,17 +17087,20 @@ p {
     }
     set checked(value) {
       const input = this.shadowRoot?.querySelector("[data-check]");
-      if (input)
+      if (input) {
         input.checked = value;
+      }
     }
     select() {
-      if (!this.collection || !this.rowKey)
+      if (!this.collection || !this.rowKey) {
         return;
+      }
       emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
     }
   }
-  if (!customElements.get("cms-dashboard-w-row"))
+  if (!customElements.get("cms-dashboard-w-row")) {
     customElements.define("cms-dashboard-w-row", DashboardWRow);
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
   var style_default7 = `:host {
@@ -16904,8 +17262,9 @@ slot {
     }
     attributeChangedCallback() {
       this.syncConfig();
-      if (this.isConnected)
+      if (this.isConnected) {
         this.render();
+      }
     }
     connectedCallback() {
       this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
@@ -16932,12 +17291,15 @@ slot {
       root.replaceChildren(...(this.value.actions ?? []).map((action) => {
         const button = document.createElement("p9r-button");
         button.dataset.action = action.action;
-        if (action.widget)
+        if (action.widget) {
           button.dataset.widget = action.widget;
-        if (action.target)
+        }
+        if (action.target) {
           button.dataset.target = action.target;
-        if (action.confirm)
+        }
+        if (action.confirm) {
           button.dataset.confirm = action.confirm;
+        }
         button.setAttribute("tone", action.tone ?? "primary");
         button.textContent = action.label;
         return button;
@@ -16958,8 +17320,9 @@ slot {
     syncConfig() {
       this.selectedRow = this.dataset.selected ?? "";
       const widget = parseJson(this.dataset.configJson ?? "");
-      if (!widget || widget.widget !== "w-table")
+      if (!widget || widget.widget !== "w-table") {
         return;
+      }
       this.value = {
         title: widget.title ?? widget.source.endpoint,
         actions: (widget.actions ?? []).map((action) => ({
@@ -16981,8 +17344,9 @@ slot {
     }
     syncRows() {
       const rows = this.rows();
-      for (const row of rows)
+      for (const row of rows) {
         row.toggleAttribute("selected", Boolean(this.selectedRow && row.rowKey === this.selectedRow));
+      }
       this.query("[data-empty]").hidden = rows.length > 0;
     }
     rows() {
@@ -16991,18 +17355,22 @@ slot {
     createRow(row) {
       const element = document.createElement("cms-dashboard-w-row");
       element.setAttribute("row-key", row.id);
-      if (row.collection)
+      if (row.collection) {
         element.setAttribute("collection", row.collection);
+      }
       for (const column of this.value.columns) {
         const cell = document.createElement("cms-dashboard-w-cell");
         const value = row.cells[column.key];
-        if (column.primary)
+        if (column.primary) {
           cell.toggleAttribute("primary", true);
+        }
         if (typeof value === "object") {
-          if (value.tone)
+          if (value.tone) {
             cell.setAttribute("tone", value.tone);
-          if (value.meta)
+          }
+          if (value.meta) {
             cell.setAttribute("meta", value.meta);
+          }
           cell.textContent = value.title;
         } else {
           cell.textContent = value ?? "";
@@ -17014,32 +17382,37 @@ slot {
     onSlotChange = () => this.syncRows();
     onActionClick = (event) => {
       const action = event.target?.closest("[data-action]");
-      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm))
+      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
         return;
-      if (action?.dataset.action)
+      }
+      if (action?.dataset.action) {
         emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
           action: action.dataset.action,
           widget: action.dataset.widget,
           target: action.dataset.target
         });
+      }
     };
     onSelectAll = (event) => {
       const checked = Boolean(event.target?.checked);
-      for (const row of this.rows())
+      for (const row of this.rows()) {
         row.checked = checked;
+      }
     };
     query(selector) {
       return this.shadowRoot.querySelector(selector);
     }
   }
-  if (!customElements.get("cms-dashboard-w-table"))
+  if (!customElements.get("cms-dashboard-w-table")) {
     customElements.define("cms-dashboard-w-table", DashboardWTable);
+  }
   function tableColumns(columns) {
     return ["46px", ...columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" ");
   }
   function parseJson(value) {
-    if (!value)
+    if (!value) {
       return null;
+    }
     try {
       return JSON.parse(value);
     } catch {
@@ -17050,20 +17423,25 @@ slot {
   // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
   class DashboardWSection extends CmsDetailSection {
   }
-  if (!customElements.get("cms-dashboard-w-section"))
+  if (!customElements.get("cms-dashboard-w-section")) {
     customElements.define("cms-dashboard-w-section", DashboardWSection);
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
   var SVG_NS = "http://www.w3.org/2000/svg";
   var PATHS = {
     archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
     download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
-    link: ["M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91", "M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"],
+    link: [
+      "M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91",
+      "M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"
+    ],
     trash: ["M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6", "M10 11v6", "M14 11v6"]
   };
   function actionIcon(icon) {
-    if (!icon)
+    if (!icon) {
       return null;
+    }
     const svg2 = document.createElementNS(SVG_NS, "svg");
     svg2.setAttribute("slot", "icon");
     svg2.setAttribute("aria-hidden", "true");
@@ -17082,23 +17460,26 @@ slot {
     const visible = actions.filter((action) => action.placement !== "more");
     const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
     const result = visible.slice(0, 3).map(renderButton);
-    if (overflow.length)
+    if (overflow.length) {
       result.push(renderOverflowMenu(overflow));
+    }
     return result;
   }
   function renderButton(action) {
     const button = document.createElement("p9r-button");
     button.setAttribute("type", "button");
-    if (action.tone === "primary")
+    if (action.tone === "primary") {
       button.setAttribute("color", "primary");
-    else if (action.tone === "danger") {
+    } else if (action.tone === "danger") {
       button.setAttribute("color", "danger");
       button.setAttribute("variant", "ghost");
-    } else
+    } else {
       button.setAttribute("variant", "outlined");
+    }
     button.dataset.action = action.action ?? action.label;
-    if (action.confirm)
+    if (action.confirm) {
       button.dataset.confirm = action.confirm;
+    }
     button.textContent = action.label;
     return button;
   }
@@ -17108,22 +17489,26 @@ slot {
     for (const [label, sectionActions] of groupedSections(actions)) {
       const section = document.createElement("p9r-action-menu-section");
       section.setAttribute("label", label);
-      for (const action of sectionActions)
+      for (const action of sectionActions) {
         section.append(renderMenuItem(action));
+      }
       menu.append(section);
     }
     return menu;
   }
   function renderMenuItem(action) {
     const item = document.createElement("p9r-action-menu-item");
-    if (action.tone === "danger")
+    if (action.tone === "danger") {
       item.setAttribute("color", "danger");
+    }
     item.dataset.action = action.action ?? action.label;
-    if (action.confirm)
+    if (action.confirm) {
       item.dataset.confirm = action.confirm;
+    }
     const icon = actionIcon(action.icon);
-    if (icon)
+    if (icon) {
       item.append(icon);
+    }
     item.append(document.createTextNode(action.label));
     return item;
   }
@@ -17294,8 +17679,9 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/utils.ts
   function numberData(value) {
-    if (value === undefined)
+    if (value === undefined) {
       return null;
+    }
     const number = Number(value);
     return Number.isInteger(number) ? number : null;
   }
@@ -17320,39 +17706,46 @@ button {
     start = (event) => {
       const tile = tileFromEvent(event);
       const index = numberData(tile?.dataset.index);
-      if (!tile || index === null)
+      if (!tile || index === null) {
         return;
+      }
       const dragEvent = event;
       this.dragFrom = index;
       this.setSuppressClick(true);
       tile.toggleAttribute("data-dragging", true);
       dragEvent.dataTransfer?.setData("text/plain", String(index));
-      if (dragEvent.dataTransfer)
+      if (dragEvent.dataTransfer) {
         dragEvent.dataTransfer.effectAllowed = "move";
+      }
     };
     over = (event) => {
-      if (this.dragFrom === null)
+      if (this.dragFrom === null) {
         return;
+      }
       event.preventDefault();
       const dragEvent = event;
-      if (dragEvent.dataTransfer)
+      if (dragEvent.dataTransfer) {
         dragEvent.dataTransfer.dropEffect = "move";
+      }
       this.markDropTarget(tileFromEvent(event));
     };
     drop = (event) => {
-      if (this.dragFrom === null)
+      if (this.dragFrom === null) {
         return;
+      }
       event.preventDefault();
       const to = numberData(tileFromEvent(event)?.dataset.index);
-      if (to !== null)
+      if (to !== null) {
         this.move(this.dragFrom, to);
+      }
       this.clear();
     };
     end = () => this.clear();
     markDropTarget(target) {
       this.root().querySelectorAll("[data-drop-target]").forEach((tile) => tile.removeAttribute("data-drop-target"));
-      if (target && numberData(target.dataset.index) !== this.dragFrom)
+      if (target && numberData(target.dataset.index) !== this.dragFrom) {
         target.toggleAttribute("data-drop-target", true);
+      }
     }
     clear() {
       this.dragFrom = null;
@@ -17393,10 +17786,12 @@ button {
     button.type = "button";
     button.className = "tile-action";
     button.dataset.mediaAction = action;
-    if (index !== undefined)
+    if (index !== undefined) {
       button.dataset.index = String(index);
-    if (danger)
+    }
+    if (danger) {
       button.setAttribute("data-danger", "");
+    }
     button.setAttribute("aria-label", ariaLabel);
     button.title = ariaLabel;
     button.textContent = label;
@@ -17439,16 +17834,18 @@ button {
       this.shadowRoot?.removeEventListener("dragend", this.drag.end);
     }
     attributeChangedCallback() {
-      if (this.isConnected)
+      if (this.isConnected) {
         this.sync();
+      }
     }
     get items() {
       return this.currentItems.map((item) => ({ ...item }));
     }
     set items(value) {
       this.currentItems = value.map((item) => ({ ...item }));
-      if (this.isConnected)
+      if (this.isConnected) {
         this.sync();
+      }
     }
     sync() {
       this.query("[data-label]").textContent = this.getAttribute("label") ?? "";
@@ -17460,18 +17857,21 @@ button {
     }
     onClick = (event) => {
       const button = event.target?.closest("[data-media-action]");
-      if (button?.dataset.mediaAction === "upload")
+      if (button?.dataset.mediaAction === "upload") {
         return this.openPicker({ action: "upload" });
+      }
       if (button?.dataset.mediaAction === "remove") {
         const index2 = numberData(button.dataset.index);
-        if (index2 !== null)
+        if (index2 !== null) {
           this.removeItem(index2);
+        }
         return;
       }
       const tile = tileFromEvent(event);
       const index = numberData(tile?.dataset.index);
-      if (!this.suppressClick && index !== null)
+      if (!this.suppressClick && index !== null) {
         this.openPicker({ action: "replace", index });
+      }
     };
     openPicker(pick) {
       const input = this.query("[data-file]");
@@ -17484,11 +17884,13 @@ button {
     onFileChange = (event) => {
       event.stopPropagation();
       const files = Array.from(this.query("[data-file]").files ?? []);
-      if (!files.length)
+      if (!files.length) {
         return;
+      }
       const [file] = files;
-      if (!file)
+      if (!file) {
         return;
+      }
       this.pendingPick.action === "replace" ? this.replace(this.pendingPick.index, file) : this.upload(files);
     };
     upload(files) {
@@ -17498,8 +17900,9 @@ button {
     }
     replace(index, file) {
       const previousItem = this.currentItems[index];
-      if (!previousItem)
+      if (!previousItem) {
         return;
+      }
       const item = { ...previousItem, ...this.itemFromFile(file), id: previousItem.id };
       this.revokeLocalUrl(previousItem.url);
       this.currentItems = this.currentItems.map((entry, entryIndex) => entryIndex === index ? item : entry);
@@ -17507,19 +17910,22 @@ button {
     }
     removeItem(index) {
       const item = this.currentItems[index];
-      if (!item)
+      if (!item) {
         return;
+      }
       this.revokeLocalUrl(item.url);
       this.currentItems = this.currentItems.filter((_3, entryIndex) => entryIndex !== index);
       this.changed("remove", { index, item });
     }
     move(from, to) {
-      if (from === to || to < 0 || to >= this.currentItems.length)
+      if (from === to || to < 0 || to >= this.currentItems.length) {
         return;
+      }
       const next = [...this.currentItems];
       const [item] = next.splice(from, 1);
-      if (!item)
+      if (!item) {
         return;
+      }
       next.splice(to, 0, item);
       this.currentItems = next;
       this.changed("reorder", { from, to, item });
@@ -17531,12 +17937,17 @@ button {
     }
     changed(action, detail) {
       this.renderGrid();
-      this.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, { bubbles: true, composed: true, detail: { ...detail, action, value: this.items } }));
+      this.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
+        bubbles: true,
+        composed: true,
+        detail: { ...detail, action, value: this.items }
+      }));
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     }
     revokeLocalUrl(url) {
-      if (!url || !this.localUrls.has(url))
+      if (!url || !this.localUrls.has(url)) {
         return;
+      }
       URL.revokeObjectURL(url);
       this.localUrls.delete(url);
     }
@@ -17544,8 +17955,9 @@ button {
       return this.shadowRoot.querySelector(selector);
     }
   }
-  if (!customElements.get("cms-dashboard-w-media-field"))
+  if (!customElements.get("cms-dashboard-w-media-field")) {
     customElements.define("cms-dashboard-w-media-field", DashboardWMediaField);
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/mediaControl.ts
   function mediaList(field) {
@@ -17560,8 +17972,9 @@ button {
     return "items" in control && Array.isArray(control.items);
   }
   function mediaValue2(value) {
-    if (!Array.isArray(value))
+    if (!Array.isArray(value)) {
       return [];
+    }
     return value.filter((item) => Boolean(item) && typeof item === "object" && ("url" in item));
   }
 
@@ -17574,8 +17987,9 @@ button {
   }
   function image(field) {
     const value = String(field.value ?? "").trim();
-    if (!value)
+    if (!value) {
       return readonlyValue2("No image");
+    }
     const element = document.createElement("img");
     element.className = "detail-image";
     element.src = value;
@@ -17584,8 +17998,9 @@ button {
     return element;
   }
   function readonlyValue2(value) {
-    if (Array.isArray(value))
+    if (Array.isArray(value)) {
       return readonlyList(value);
+    }
     const element = document.createElement("span");
     element.className = "readonly";
     element.textContent = String(value);
@@ -17602,8 +18017,9 @@ button {
     list.className = "readonly readonly-list";
     for (const item of value) {
       const text = typeof item === "string" ? item : String(item.id ?? "");
-      if (!text)
+      if (!text) {
         continue;
+      }
       const entry = document.createElement("li");
       entry.textContent = text;
       list.append(entry);
@@ -17631,26 +18047,36 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/basic.ts
   function createBasicControl(field) {
-    if (field.input === "number")
+    if (field.input === "number") {
       return numberInput(field);
-    if (field.input === "checkbox")
+    }
+    if (field.input === "checkbox") {
       return checkbox(field);
-    if (field.input === "textarea")
+    }
+    if (field.input === "textarea") {
       return textarea(field);
-    if (field.input === "select")
+    }
+    if (field.input === "select") {
       return select(field);
-    if (field.input === "combobox")
+    }
+    if (field.input === "combobox") {
       return combobox(field);
-    if (field.input === "tokens")
+    }
+    if (field.input === "tokens") {
       return tokenInput(field);
-    if (field.input === "chips")
+    }
+    if (field.input === "chips") {
       return chips(field);
-    if (field.input === "badge")
+    }
+    if (field.input === "badge") {
       return badge(String(field.value));
-    if (field.input === "image")
+    }
+    if (field.input === "image") {
       return image(field);
-    if (field.input === "readonly")
+    }
+    if (field.input === "readonly") {
       return readonlyValue2(field.value);
+    }
     return textInput(field);
   }
   function fieldUsesBasicInternalLabel(field) {
@@ -17660,18 +18086,22 @@ button {
     if (field.input === "chips") {
       return Array.from(control.querySelectorAll("[aria-pressed='true']")).map((button) => button.dataset.value ?? "").filter(Boolean);
     }
-    if (field.input === "tokens" && isTokenControl(control))
+    if (field.input === "tokens" && isTokenControl(control)) {
       return control.values;
-    if (field.input === "checkbox" && control instanceof HTMLInputElement)
+    }
+    if (field.input === "checkbox" && control instanceof HTMLInputElement) {
       return control.checked;
+    }
     if (field.input === "number" && isValueControl(control)) {
-      if (control.value === "")
+      if (control.value === "") {
         return "";
+      }
       const value = Number(control.value);
       return Number.isFinite(value) ? value : "";
     }
-    if (isValueControl(control))
+    if (isValueControl(control)) {
       return control.value;
+    }
     return Array.isArray(field.value) ? field.value : String(field.value);
   }
   function textInput(field) {
@@ -17691,8 +18121,9 @@ button {
     input.setAttribute("value", String(field.value));
     for (const attribute of ["min", "max", "step"]) {
       const value = field[attribute];
-      if (value !== undefined)
+      if (value !== undefined) {
         input.setAttribute(attribute, String(value));
+      }
     }
     applyInputMetadata(input, field);
     input.value = String(field.value);
@@ -17723,8 +18154,9 @@ button {
     const input = document.createElement("p9r-select");
     input.setAttribute("label", field.label);
     input.setAttribute("value", String(field.value));
-    if (field.required)
+    if (field.required) {
       input.setAttribute("required", "");
+    }
     input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
     bindFieldControl(input, field);
     return input;
@@ -17734,10 +18166,12 @@ button {
     input.setAttribute("label", field.label);
     input.setAttribute("value", String(field.value));
     input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required)
+    if (field.required) {
       input.setAttribute("required", "");
-    if (field.creatable)
+    }
+    if (field.creatable) {
       input.setAttribute("creatable", "");
+    }
     input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, String(field.value))));
     input.value = String(field.value);
     bindFieldControl(input, field);
@@ -17748,10 +18182,12 @@ button {
     input.setAttribute("label", field.label);
     input.setAttribute("value", arrayValue2(field).join(","));
     input.setAttribute("placeholder", field.placeholder ?? "");
-    if (field.required)
+    if (field.required) {
       input.setAttribute("required", "");
-    if (field.creatable)
+    }
+    if (field.creatable) {
       input.setAttribute("creatable", "");
+    }
     input.replaceChildren(...(field.options ?? []).map((option) => optionElement(option, "")));
     bindFieldControl(input, field);
     return input;
@@ -17773,15 +18209,18 @@ button {
     return group;
   }
   function arrayValue2(field) {
-    if (!Array.isArray(field.value))
+    if (!Array.isArray(field.value)) {
       return String(field.value).split(",").map((item) => item.trim()).filter(Boolean);
+    }
     return field.value.filter((item) => typeof item === "string");
   }
   function applyInputMetadata(input, field) {
-    if (field.placeholder)
+    if (field.placeholder) {
       input.setAttribute("placeholder", field.placeholder);
-    if (field.required)
+    }
+    if (field.required) {
       input.setAttribute("required", "");
+    }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema.ts
@@ -17806,14 +18245,16 @@ button {
   }
   function readSchemaControlValue(field, control) {
     const result = recordValue2(field.value);
-    if (field.schemaStatus !== "ready")
+    if (field.schemaStatus !== "ready") {
       return result;
+    }
     const definitions = new Map((field.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
     for (const element of Array.from(control.querySelectorAll("[data-schema-key]"))) {
       const key = element.dataset.schemaKey ?? "";
       const definition = definitions.get(key);
-      if (!definition || element.dataset.schemaDirty !== "true")
+      if (!definition || element.dataset.schemaDirty !== "true") {
         continue;
+      }
       result[key] = readSchemaValue(definition, element);
     }
     return result;
@@ -17847,8 +18288,9 @@ button {
       const selected = textValue3(value);
       input2.setAttribute("label", definition.label);
       input2.setAttribute("value", selected);
-      if (definition.required)
+      if (definition.required) {
         input2.setAttribute("required", "");
+      }
       input2.replaceChildren(...definition.options.map((option) => optionElement(option, selected)));
       input2.value = selected;
       return input2;
@@ -17857,25 +18299,30 @@ button {
     input.setAttribute("label", definition.label);
     input.setAttribute("type", definition.type === "number" ? "number" : "text");
     input.setAttribute("value", textValue3(value));
-    if (definition.required)
+    if (definition.required) {
       input.setAttribute("required", "");
+    }
     input.value = textValue3(value);
     return input;
   }
   function readSchemaValue(definition, control) {
-    if (definition.type === "boolean" && control instanceof HTMLInputElement)
+    if (definition.type === "boolean" && control instanceof HTMLInputElement) {
       return control.checked;
-    if (!isValueControl(control))
+    }
+    if (!isValueControl(control)) {
       return;
-    if (definition.type !== "number" || control.value === "")
+    }
+    if (definition.type !== "number" || control.value === "") {
       return control.value;
+    }
     const value = Number(control.value);
     return Number.isFinite(value) ? value : "";
   }
   function markDirty(event) {
     const control = event.target?.closest("[data-schema-key]");
-    if (control)
+    if (control) {
       control.dataset.schemaDirty = "true";
+    }
   }
   function statusMessage(status) {
     const message = document.createElement("span");
@@ -17899,15 +18346,18 @@ button {
     input.dataset.itemIndex = String(index);
     input.dataset.itemPath = field.path;
     input.setAttribute("aria-label", field.label);
-    if (field.required)
+    if (field.required) {
       input.setAttribute("required", "");
-    if (field.placeholder)
+    }
+    if (field.placeholder) {
       input.setAttribute("placeholder", field.placeholder);
+    }
     return input;
   }
   function readItemControl(control) {
-    if (control instanceof HTMLInputElement && control.type === "checkbox")
+    if (control instanceof HTMLInputElement && control.type === "checkbox") {
       return control.checked;
+    }
     return "value" in control ? String(control.value ?? "") : "";
   }
   function fieldControl(field, value) {
@@ -17958,16 +18408,19 @@ button {
     return structuredClone(value.items);
   }
   function addItem(value) {
-    if (value.maxItems !== undefined && value.items.length >= value.maxItems)
+    if (value.maxItems !== undefined && value.items.length >= value.maxItems) {
       return false;
+    }
     value.items.push({});
     return true;
   }
   function removeItem(value, index) {
-    if (!Number.isInteger(index))
+    if (!Number.isInteger(index)) {
       return false;
-    if (value.minItems !== undefined && value.items.length <= value.minItems)
+    }
+    if (value.minItems !== undefined && value.items.length <= value.minItems) {
       return false;
+    }
     value.items.splice(index, 1);
     return true;
   }
@@ -17976,15 +18429,17 @@ button {
       return false;
     }
     const [item] = value.items.splice(from, 1);
-    if (!item)
+    if (!item) {
       return false;
+    }
     value.items.splice(to, 0, item);
     return true;
   }
   function updateItem(value, index, path, fieldValue) {
     const item = value.items[index];
-    if (!item)
+    if (!item) {
       return false;
+    }
     setValueAt(item, path, fieldValue);
     return true;
   }
@@ -18164,8 +18619,9 @@ button {
     }
     set data(value) {
       this.value = normalizeData(value);
-      if (this.isConnected)
+      if (this.isConnected) {
         this.render();
+      }
     }
     get items() {
       return cloneItems(this.value);
@@ -18175,16 +18631,19 @@ button {
     }
     onClick = (event) => {
       const target = event.target;
-      if (target?.closest("[data-add]"))
+      if (target?.closest("[data-add]")) {
         return this.addItem();
+      }
       const remove = target?.closest("[data-remove]");
-      if (remove)
+      if (remove) {
         return this.removeItem(Number(remove.dataset.remove));
+      }
     };
     onInput = (event) => {
       const input = event.target?.closest("[data-item-index][data-item-path]");
-      if (!input)
+      if (!input) {
         return;
+      }
       const index = Number(input.dataset.itemIndex);
       if (updateItem(this.value, index, input.dataset.itemPath ?? "", readItemControl(input))) {
         this.commit(false);
@@ -18193,45 +18652,54 @@ button {
     onDragStart = (event) => {
       const handle = event.target?.closest(".handle");
       const row = handle?.closest(".row[data-index]");
-      if (!row)
+      if (!row) {
         return;
+      }
       this.draggingIndex = Number(row.dataset.index);
       row.dataset.dragging = "";
       event.dataTransfer?.setData("text/plain", String(this.draggingIndex));
-      if (event.dataTransfer)
+      if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "move";
+      }
     };
     onDragOver = (event) => {
       const row = event.target?.closest(".row[data-index]");
-      if (!row || this.draggingIndex === null)
+      if (!row || this.draggingIndex === null) {
         return;
+      }
       event.preventDefault();
       this.rows().forEach((candidate) => candidate.toggleAttribute("data-drop-target", candidate === row));
-      if (event.dataTransfer)
+      if (event.dataTransfer) {
         event.dataTransfer.dropEffect = "move";
+      }
     };
     onDrop = (event) => {
       const row = event.target?.closest(".row[data-index]");
-      if (!row || this.draggingIndex === null)
+      if (!row || this.draggingIndex === null) {
         return;
+      }
       event.preventDefault();
-      if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index)))
+      if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index))) {
         this.commit();
+      }
       this.clearDragState();
     };
     onDragEnd = () => this.clearDragState();
     addItem() {
-      if (addItem(this.value))
+      if (addItem(this.value)) {
         this.commit();
+      }
     }
     removeItem(index) {
-      if (removeItem(this.value, index))
+      if (removeItem(this.value, index)) {
         this.commit();
+      }
     }
     commit(render = true) {
       persistPositions(this.value);
-      if (render)
+      if (render) {
         this.render();
+      }
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     }
     clearDragState() {
@@ -18251,17 +18719,20 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
   function createTableEditor(column, value) {
-    if (column.editable !== true)
+    if (column.editable !== true) {
       throw new Error("Cannot create an editor for a readonly column");
+    }
     const control = column.type === "select" ? selectEditor(column, value) : column.type === "combobox" ? comboboxEditor(column, value) : column.type === "tokens" ? tokensEditor(value) : textEditor(value);
     control.dataset.tableColumn = column.key;
     return control;
   }
   function readTableEditor(column, control) {
-    if (column.editable !== true)
+    if (column.editable !== true) {
       return;
-    if (column.type === "tokens")
+    }
+    if (column.type === "tokens") {
       return isTokenControl(control) ? [...control.values] : [];
+    }
     return isValueControl(control) ? control.value : "";
   }
   function textEditor(value) {
@@ -18312,11 +18783,13 @@ button {
       cell.textContent = column.label;
       header.append(cell);
     }
-    if (field.editable)
+    if (field.editable) {
       header.append(document.createElement("span"));
+    }
     root.append(header);
-    for (const row of tableRows(field.value))
+    for (const row of tableRows(field.value)) {
       root.append(tableRow(field, row));
+    }
     if (field.editable) {
       const add = document.createElement("button");
       add.type = "button";
@@ -18367,8 +18840,9 @@ button {
     return element;
   }
   function readTableValue(field, control) {
-    if (!field.editable)
+    if (!field.editable) {
       return structuredClone(tableRows(field.value));
+    }
     return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => readTableRow(field, row)).filter(hasTableValue);
   }
   function isReorderableListControl(control) {
@@ -18378,30 +18852,35 @@ button {
     const value = structuredClone(tableRowSources.get(row) ?? {});
     for (const column of field.columns ?? []) {
       const input = row.querySelector(`[data-table-column="${cssEscape(column.key)}"]`);
-      if (!input)
+      if (!input) {
         continue;
+      }
       setValueAt(value, column.path, readTableEditor(column, input));
     }
     return value;
   }
   function tableRows(value) {
-    if (!Array.isArray(value))
+    if (!Array.isArray(value)) {
       return [];
+    }
     return value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item));
   }
   function hasTableValue(value) {
-    if (Array.isArray(value))
+    if (Array.isArray(value)) {
       return value.some(hasTableValue);
-    if (isRecord5(value))
+    }
+    if (isRecord5(value)) {
       return Object.values(value).some(hasTableValue);
+    }
     return String(value ?? "").trim().length > 0;
   }
   function isRecord5(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
   }
   function tableCellDisplayValue(value) {
-    if (Array.isArray(value))
+    if (Array.isArray(value)) {
       return value.map((item) => String(item)).join(", ");
+    }
     return value === null || value === undefined ? "" : String(value);
   }
   function tableColumns2(columns2, editable) {
@@ -18416,28 +18895,36 @@ button {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/index.ts
   function createFieldControl(field) {
-    if (field.input === "media-list")
+    if (field.input === "media-list") {
       return mediaList(field);
-    if (field.input === "table")
+    }
+    if (field.input === "table") {
       return createTableControl(field);
-    if (field.input === "reorderable-list")
+    }
+    if (field.input === "reorderable-list") {
       return createReorderableListControl(field);
-    if (field.input === "schema")
+    }
+    if (field.input === "schema") {
       return createSchemaControl(field);
+    }
     return createBasicControl(field);
   }
   function fieldUsesInternalLabel(field) {
     return field.input === "media-list" || field.input === "reorderable-list" || field.input === "schema" || fieldUsesBasicInternalLabel(field);
   }
   function readFieldControlValue(field, control) {
-    if (field.input === "media-list" && isMediaControl(control))
+    if (field.input === "media-list" && isMediaControl(control)) {
       return control.items;
-    if (field.input === "table")
+    }
+    if (field.input === "table") {
       return readTableValue(field, control);
-    if (field.input === "reorderable-list" && isReorderableListControl(control))
+    }
+    if (field.input === "reorderable-list" && isReorderableListControl(control)) {
       return control.items;
-    if (field.input === "schema")
+    }
+    if (field.input === "schema") {
       return readSchemaControlValue(field, control);
+    }
     return readBasicControlValue(field, control);
   }
 
@@ -18454,12 +18941,15 @@ button {
       this.renderSections(this.query("[data-aside]"), value.aside, "compact");
     }
     refresh(previous, next) {
-      if (previous.title !== next.title)
+      if (previous.title !== next.title) {
         setText(this.root, "[data-title]", next.title);
-      if (!sameActions(previous.actions, next.actions))
+      }
+      if (!sameActions(previous.actions, next.actions)) {
         this.renderActions(next.actions);
-      if (!sameSectionFields(previous.main, next.main))
+      }
+      if (!sameSectionFields(previous.main, next.main)) {
         this.renderSections(this.query("[data-main]"), next.main);
+      }
       if (!sameSectionFields(previous.aside, next.aside)) {
         this.renderSections(this.query("[data-aside]"), next.aside, "compact");
       }
@@ -18474,10 +18964,12 @@ button {
     renderSection(section, density) {
       const node = this.template("section");
       node.setAttribute("heading", section.title);
-      if (section.description)
+      if (section.description) {
         node.setAttribute("description", section.description);
-      if (density)
+      }
+      if (density) {
         node.setAttribute("density", density);
+      }
       node.querySelector("[data-fields]").replaceChildren(...section.fields.map((field) => this.renderField(field)));
       return node;
     }
@@ -18498,9 +18990,9 @@ button {
   }
   function applyLookupOption(control, value, option) {
     const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option.value);
-    if (existing)
+    if (existing) {
       existing.textContent = option.label;
-    else {
+    } else {
       const element = document.createElement("option");
       element.value = option.value;
       element.textContent = option.label;
@@ -18516,18 +19008,21 @@ button {
     return JSON.stringify(current) === JSON.stringify(next);
   }
   function sameSectionFields(current, next) {
-    if (current.length !== next.length)
+    if (current.length !== next.length) {
       return false;
+    }
     return current.every((section, sectionIndex) => {
       const nextSection = next[sectionIndex];
       return nextSection !== undefined && section.fields.length === nextSection.fields.length && section.fields.every((field, fieldIndex) => sameFieldShape(field, nextSection.fields[fieldIndex]));
     });
   }
   function sameFieldShape(current, next) {
-    if (!next || current.id !== next.id || current.input !== next.input)
+    if (!next || current.id !== next.id || current.input !== next.input) {
       return false;
-    if (current.input !== "schema" && next.input !== "schema")
+    }
+    if (current.input !== "schema" && next.input !== "schema") {
       return true;
+    }
     return current.schemaStatus === next.schemaStatus && JSON.stringify(current.schemaDefinitions) === JSON.stringify(next.schemaDefinitions);
   }
 
@@ -18547,8 +19042,9 @@ button {
       return this.values;
     }
     syncScope(scopeKey) {
-      if (this.scopeKey === scopeKey)
+      if (this.scopeKey === scopeKey) {
         return;
+      }
       this.scopeKey = scopeKey;
       this.values = {};
     }
@@ -18574,8 +19070,9 @@ button {
       const fieldsById = new Map(this.fields().map((field) => [field.id, field]));
       for (const control of Array.from(this.root.querySelectorAll("[data-field-control]"))) {
         const field = fieldsById.get(control.dataset.fieldControl ?? "");
-        if (field)
+        if (field) {
           fields[field.id] = readFieldControlValue(field, control);
+        }
       }
       return fields;
     }
@@ -18587,11 +19084,13 @@ button {
     const widget = parseJson2(dataset.configJson ?? "");
     const sourceJson = dataset.sourceJson ?? "";
     const sourceData = parseJson2(sourceJson);
-    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null)
+    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
       return null;
+    }
     const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
-    if (resource === undefined)
+    if (resource === undefined) {
       return null;
+    }
     return {
       widget,
       resource,
@@ -18600,8 +19099,9 @@ button {
     };
   }
   function parseJson2(value) {
-    if (!value)
+    if (!value) {
       return null;
+    }
     try {
       return JSON.parse(value);
     } catch {
@@ -18613,14 +19113,16 @@ button {
   function toggleChip(chip, emitFieldChange) {
     chip.setAttribute("aria-pressed", String(chip.getAttribute("aria-pressed") !== "true"));
     const control = chip.closest("[data-field-control]");
-    if (control)
+    if (control) {
       emitFieldChange(control);
+    }
   }
   function addTableRow(button, fields, emitFieldChange) {
     const control = button.closest("[data-field-control]");
     const field = control ? fields.find(control.dataset.fieldControl ?? "") : undefined;
-    if (!control || !field || field.input !== "table")
+    if (!control || !field || field.input !== "table") {
       return;
+    }
     control.insertBefore(tableRow(field, {}), button);
     emitFieldChange(control);
     updateDerivedTables(field.id, fields);
@@ -18628,8 +19130,9 @@ button {
   function removeTableRow(button, fields, emitFieldChange) {
     const control = button.closest("[data-field-control]");
     const row = button.closest("[data-table-row]");
-    if (!control || !row)
+    if (!control || !row) {
       return;
+    }
     row.remove();
     emitFieldChange(control);
     updateDerivedTables(control.dataset.fieldControl ?? "", fields);
@@ -18637,15 +19140,18 @@ button {
   function updateDerivedTables(sourceFieldId, fields) {
     const sourceControl = fields.control(sourceFieldId);
     const sourceField = sourceControl ? fields.find(sourceFieldId) : undefined;
-    if (!sourceControl || !sourceField)
+    if (!sourceControl || !sourceField) {
       return;
+    }
     const sourceValue = readFieldControlValue(sourceField, sourceControl);
     for (const field of fields.fields()) {
-      if (field.input !== "table" || field.derive?.sourceField !== sourceFieldId)
+      if (field.input !== "table" || field.derive?.sourceField !== sourceFieldId) {
         continue;
+      }
       const control = fields.control(field.id);
-      if (!control)
+      if (!control) {
         continue;
+      }
       const rows = deriveTableRows(field, sourceValue);
       field.value = rows;
       replaceTableRows(control, field, rows);
@@ -18654,19 +19160,22 @@ button {
   function replaceTableRows(control, field, rows) {
     control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
     const anchor = control.querySelector("[data-table-add]");
-    for (const row of rows)
+    for (const row of rows) {
       control.insertBefore(tableRow(field, row), anchor);
+    }
   }
   function deriveTableRows(field, sourceValue) {
-    if (field.derive?.type !== "cartesian")
+    if (field.derive?.type !== "cartesian") {
       return [];
+    }
     const axes = Array.isArray(sourceValue) ? sourceValue.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)).map((row, index) => ({
       label: textValue5(valueAt(row, field.derive.labelPath)),
       values: listValue(valueAt(row, field.derive.valuesPath)),
       position: index
     })).filter((axis) => axis.label && axis.values.length) : [];
-    if (!axes.length)
+    if (!axes.length) {
       return [];
+    }
     return axes.reduce((sets, axis) => sets.flatMap((set) => axis.values.map((value) => [...set, { label: axis.label, value }])), [[]]).map((choices, index) => ({
       key: choices.map((choice) => `${slug(choice.label)}:${slug(choice.value)}`).join("|"),
       options: choices.map((choice) => choice.value).join(" / "),
@@ -18676,10 +19185,12 @@ button {
     }));
   }
   function listValue(value) {
-    if (Array.isArray(value))
+    if (Array.isArray(value)) {
       return value.map((item) => String(item).trim()).filter(Boolean);
-    if (typeof value === "string")
+    }
+    if (typeof value === "string") {
       return value.split(",").map((item) => item.trim()).filter(Boolean);
+    }
     return [];
   }
   function textValue5(value) {
@@ -18711,8 +19222,9 @@ button {
       this.refreshConditionalFields = refreshConditionalFields;
     }
     bind() {
-      if (this.bound)
+      if (this.bound) {
         return;
+      }
       this.root.addEventListener("click", this.onClick);
       this.root.addEventListener("input", this.onInput);
       this.root.addEventListener("change", this.onChange);
@@ -18728,14 +19240,16 @@ button {
     }
     onClick = (event) => {
       const target = event.target;
-      if (target?.closest("[data-back]"))
+      if (target?.closest("[data-back]")) {
         emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
+      }
       const action = findActionTarget(event);
       const widget = this.isBound() ? parseJson2(this.host.dataset.configJson ?? "") : null;
       const data = this.readData();
-      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm))
+      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
         return;
-      if (action?.dataset.action)
+      }
+      if (action?.dataset.action) {
         emitWidgetEvent(this.host, WIDGET_ACTION_EVENT, {
           action: action.dataset.action,
           detail: true,
@@ -18744,24 +19258,30 @@ button {
           resource: this.isBound() ? this.fields.currentResource() : undefined,
           fields: this.fields.currentFields()
         });
+      }
       const chip = target?.closest(".chip");
-      if (chip)
+      if (chip) {
         toggleChip(chip, this.emitFieldChange);
+      }
       const tableAdd = target?.closest("[data-table-add]");
       const tableRemove = target?.closest("[data-table-remove]");
       const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest("[data-field-control]");
-      if (tableAdd)
+      if (tableAdd) {
         addTableRow(tableAdd, this.fields, this.emitFieldChange);
-      if (tableRemove)
+      }
+      if (tableRemove) {
         removeTableRow(tableRemove, this.fields, this.emitFieldChange);
-      if (changedControl)
+      }
+      if (changedControl) {
         this.afterFieldChange(changedControl.dataset.fieldControl ?? "");
+      }
     };
     onInput = (event) => {
       const control = event.target?.closest("[data-field-control]");
       const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (control && field?.input === "table")
+      if (control && field?.input === "table") {
         updateDerivedTables(field.id, this.fields);
+      }
       if (field && this.isBound()) {
         this.lookups.schedule(field.id);
         this.schemas.schedule(field.id);
@@ -18769,8 +19289,9 @@ button {
     };
     onChange = (event) => {
       const control = event.target?.closest("[data-field-control]");
-      if (!control)
+      if (!control) {
         return;
+      }
       this.emitFieldChange(control, Boolean(event.detail?.created));
       updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
       this.afterFieldChange(control.dataset.fieldControl ?? "");
@@ -18779,8 +19300,9 @@ button {
       event.stopPropagation();
       const control = event.target?.closest("[data-field-control]");
       const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (!field)
+      if (!field) {
         return;
+      }
       emitWidgetEvent(this.host, WIDGET_MEDIA_ACTION_EVENT, {
         ...event.detail,
         rowKey: this.readData().rowKey,
@@ -18789,8 +19311,9 @@ button {
     };
     emitFieldChange = (control, created = false) => {
       const field = this.fields.find(control.dataset.fieldControl ?? "");
-      if (!field)
+      if (!field) {
         return;
+      }
       const value = readFieldControlValue(field, control);
       this.fields.record(field.id, value);
       emitWidgetEvent(this.host, WIDGET_FIELD_CHANGE_EVENT, {
@@ -18836,8 +19359,9 @@ button {
   }
   async function lookupItems(sourceId, lookup, resource, fields, loadData) {
     const vars = { resource, fields };
-    if (!lookupDependenciesResolved(lookup, vars))
+    if (!lookupDependenciesResolved(lookup, vars)) {
       return [];
+    }
     return itemsFrom(await loadData(sourceId, lookup, vars), lookup);
   }
   function optionsFromItems(items, lookup) {
@@ -18849,12 +19373,14 @@ button {
   function selectedOptions(target, resource, fields) {
     const field = target.selectedField;
     const expression = target.lookup.selected;
-    if (!field || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true))
+    if (!field || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) {
       return [];
+    }
     const current = Object.hasOwn(fields, field.id) ? fields[field.id] : valueAt(resource, field.path);
     const selected = new Set(selectedValues(current));
-    if (!selected.size)
+    if (!selected.size) {
       return [];
+    }
     const resolved = resolveExpression(expression, { resource, fields });
     const items = Array.isArray(resolved) ? resolved : [resolved];
     return dedupeOptions(items.flatMap((item) => {
@@ -18865,8 +19391,9 @@ button {
   function optionFromItem(item, lookup, fallbackToValue) {
     const value = textAt(item, lookup.valuePath);
     const label = textAt(item, lookup.labelPath, fallbackToValue ? value : "");
-    if (!value || !label)
+    if (!value || !label) {
       return null;
+    }
     return {
       value,
       label,
@@ -18875,14 +19402,16 @@ button {
     };
   }
   function selectedValues(value) {
-    if (Array.isArray(value))
+    if (Array.isArray(value)) {
       return value.map(String).filter(Boolean);
+    }
     return value === null || value === undefined || value === "" ? [] : [String(value)];
   }
   function lookupDependenciesResolved(lookup, vars) {
     return Object.values(lookup.params ?? {}).every((expression) => {
-      if (expression === "$search" || !expression.startsWith("$"))
+      if (expression === "$search" || !expression.startsWith("$")) {
         return true;
+      }
       const value = resolveExpression(expression, vars);
       return value !== undefined && value !== null && value !== "";
     });
@@ -18890,8 +19419,9 @@ button {
   function dedupeOptions(options) {
     const seen = new Set;
     return options.filter((option) => {
-      if (seen.has(option.value))
+      if (seen.has(option.value)) {
         return false;
+      }
       seen.add(option.value);
       return true;
     });
@@ -18907,8 +19437,9 @@ button {
       return Symbol("detail-request-consumer");
     }
     syncScope(scopeKey) {
-      if (this.scopeKey === scopeKey)
+      if (this.scopeKey === scopeKey) {
         return;
+      }
       this.clear();
       this.scopeKey = scopeKey;
     }
@@ -18934,12 +19465,14 @@ button {
     }
     cancel(consumer) {
       const keys = this.consumerKeys.get(consumer);
-      if (!keys)
+      if (!keys) {
         return;
+      }
       for (const key of keys) {
         const request = this.inFlight.get(key);
-        if (!request)
+        if (!request) {
           continue;
+        }
         request.consumers.delete(consumer);
         if (request.consumers.size === 0) {
           request.controller.abort();
@@ -18949,8 +19482,9 @@ button {
       this.consumerKeys.delete(consumer);
     }
     clear() {
-      for (const request of this.inFlight.values())
+      for (const request of this.inFlight.values()) {
         request.controller.abort();
+      }
       this.inFlight.clear();
       this.consumerKeys.clear();
     }
@@ -18961,14 +19495,16 @@ button {
       this.consumerKeys.set(consumer, keys);
     }
     finish(key, request) {
-      if (this.inFlight.get(key) !== request)
+      if (this.inFlight.get(key) !== request) {
         return;
+      }
       this.inFlight.delete(key);
       for (const consumer of request.consumers) {
         const keys = this.consumerKeys.get(consumer);
         keys?.delete(key);
-        if (keys?.size === 0)
+        if (keys?.size === 0) {
           this.consumerKeys.delete(consumer);
+        }
       }
     }
   }
@@ -18982,8 +19518,9 @@ button {
     }
     consumer(key) {
       const existing = this.consumers.get(key);
-      if (existing)
+      if (existing) {
         return existing;
+      }
       const consumer = this.requests.createConsumer();
       this.consumers.set(key, consumer);
       return consumer;
@@ -18992,16 +19529,18 @@ button {
       const generation = (this.generations.get(key) ?? 0) + 1;
       this.generations.set(key, generation);
       const consumer = this.consumers.get(key);
-      if (consumer)
+      if (consumer) {
         this.requests.cancel(consumer);
+      }
       return generation;
     }
     isCurrent(key, generation) {
       return this.generations.get(key) === generation;
     }
     clear() {
-      for (const consumer of this.consumers.values())
+      for (const consumer of this.consumers.values()) {
         this.requests.cancel(consumer);
+      }
       this.consumers.clear();
       this.generations.clear();
     }
@@ -19030,44 +19569,53 @@ button {
       return this.currentOptions;
     }
     syncScope(scopeKey) {
-      if (this.scopeKey === scopeKey)
+      if (this.scopeKey === scopeKey) {
         return;
+      }
       this.clear();
       this.scopeKey = scopeKey;
     }
     async load(widget, resource, rowKey, sourceId, fields, loadOptions = {}) {
-      if (!loadOptions.targetKeys)
+      if (!loadOptions.targetKeys) {
         this.clearPendingRefresh();
+      }
       const targetKeys = loadOptions.targetKeys ?? allLookupTargetKeys(widget);
       const scopeGeneration = this.scopeGeneration;
       const results = await Promise.all([...targetKeys].map((key) => this.loadTarget(widget, resource, sourceId, fields, key)));
-      if (this.scopeGeneration !== scopeGeneration)
+      if (this.scopeGeneration !== scopeGeneration) {
         return;
+      }
       const next = { ...this.currentOptions };
       let accepted = false;
       for (const result of results) {
-        if (!this.targets.isCurrent(result.key, result.generation))
+        if (!this.targets.isCurrent(result.key, result.generation)) {
           continue;
-        if (result.failed && Object.hasOwn(this.currentOptions, result.key))
+        }
+        if (result.failed && Object.hasOwn(this.currentOptions, result.key)) {
           continue;
+        }
         next[result.key] = result.options;
         accepted = true;
       }
-      if (!accepted)
+      if (!accepted) {
         return;
+      }
       const renderFields = loadOptions.useLatestFields ? this.fields.currentFields() : fields;
       this.currentOptions = next;
       this.callbacks.setData(detailData(widget, resource, rowKey, renderFields, next, sourceId, this.callbacks.schemas()));
-      if (this.callbacks.isConnected())
+      if (this.callbacks.isConnected()) {
         this.callbacks.render();
+      }
     }
     schedule(changedFieldId) {
       const binding = readDetailBinding(this.dataset);
-      if (!binding)
+      if (!binding) {
         return;
+      }
       const targetKeys = lookupTargetKeysDependingOn(binding.widget, changedFieldId);
-      if (targetKeys.size === 0)
+      if (targetKeys.size === 0) {
         return;
+      }
       for (const key of targetKeys) {
         this.pendingTargetKeys.add(key);
         this.invalidateTarget(key);
@@ -19078,8 +19626,9 @@ button {
         const targetedKeys = new Set(this.pendingTargetKeys);
         this.pendingTargetKeys.clear();
         const latest = readDetailBinding(this.dataset);
-        if (!latest?.sourceId)
+        if (!latest?.sourceId) {
           return;
+        }
         this.load(latest.widget, latest.resource, latest.rowKey, latest.sourceId, this.fields.currentFields(), {
           targetKeys: targetedKeys,
           useLatestFields: true
@@ -19118,8 +19667,9 @@ button {
       this.cancelReloadTimer();
     }
     cancelReloadTimer() {
-      if (this.reloadTimer)
+      if (this.reloadTimer) {
         clearTimeout(this.reloadTimer);
+      }
       this.reloadTimer = null;
     }
   }
@@ -19132,8 +19682,9 @@ button {
     const definitions = new Map;
     for (const value of arrayAt(data, path).slice(0, DASHBOARD_MAX_NESTED_FIELDS)) {
       const definition = schemaDefinition(value);
-      if (definition && !definitions.has(definition.id))
+      if (definition && !definitions.has(definition.id)) {
         definitions.set(definition.id, definition);
+      }
     }
     return [...definitions.values()];
   }
@@ -19144,8 +19695,9 @@ button {
     const label = text(row?.label, LABEL_MAX_LENGTH) ?? text(nested?.label, LABEL_MAX_LENGTH) ?? id;
     const rawType = text(row?.type, 16) ?? text(row?.fieldType, 16) ?? text(nested?.fieldType, 16);
     const type = rawType === "enum" ? "string" : rawType;
-    if (!id || !label || !safeKey(id) || type !== "string" && type !== "number" && type !== "boolean")
+    if (!id || !label || !safeKey(id) || type !== "string" && type !== "number" && type !== "boolean") {
       return null;
+    }
     const options = schemaOptions(row?.options ?? nested?.options);
     const unit = text(row?.unit, UNIT_MAX_LENGTH) ?? text(nested?.unit, UNIT_MAX_LENGTH);
     return {
@@ -19158,24 +19710,28 @@ button {
     };
   }
   function schemaOptions(value) {
-    if (!Array.isArray(value))
+    if (!Array.isArray(value)) {
       return [];
+    }
     const seen = new Set;
     return value.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option) => {
       let result;
       if (typeof option === "string" || typeof option === "number") {
         const value2 = text(option, LABEL_MAX_LENGTH);
-        if (value2)
+        if (value2) {
           result = { value: value2, label: value2 };
+        }
       } else {
         const entry = record2(option);
         const optionValue = text(entry?.value, LABEL_MAX_LENGTH);
         const optionLabel = text(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
-        if (optionValue && optionLabel)
+        if (optionValue && optionLabel) {
           result = { value: optionValue, label: optionLabel };
+        }
       }
-      if (!result || seen.has(result.value))
+      if (!result || seen.has(result.value)) {
         return [];
+      }
       seen.add(result.value);
       return [result];
     });
@@ -19184,8 +19740,9 @@ button {
     return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value) && !["__proto__", "prototype", "constructor"].includes(value);
   }
   function text(value, maxLength) {
-    if (typeof value !== "string" && typeof value !== "number")
+    if (typeof value !== "string" && typeof value !== "number") {
       return;
+    }
     const result = String(value).trim();
     return result && result.length <= maxLength ? result : undefined;
   }
@@ -19224,8 +19781,9 @@ button {
       return this.current;
     }
     syncScope(scopeKey) {
-      if (this.scopeKey === scopeKey)
+      if (this.scopeKey === scopeKey) {
         return;
+      }
       this.clear();
       this.scopeKey = scopeKey;
     }
@@ -19233,32 +19791,39 @@ button {
       const configured2 = schemaFields(widget).filter((field) => !options.keys || options.keys.has(field.id));
       const scopeGeneration = this.scopeGeneration;
       const results = await Promise.all(configured2.map((field) => this.loadField(field, resource, sourceId, fields)));
-      if (this.scopeGeneration !== scopeGeneration)
+      if (this.scopeGeneration !== scopeGeneration) {
         return;
+      }
       const next = { ...this.current };
       for (const result of results) {
-        if (!this.targets.isCurrent(result.key, result.generation))
+        if (!this.targets.isCurrent(result.key, result.generation)) {
           continue;
+        }
         next[result.key] = result.failed ? { definitions: this.current[result.key]?.definitions ?? [], status: "error" } : { definitions: result.definitions, status: "ready" };
       }
-      if (results.length === 0)
+      if (results.length === 0) {
         return;
+      }
       this.current = next;
       const renderFields = options.useLatestFields ? this.fields.currentFields() : fields;
       this.callbacks.setData(detailData(widget, resource, rowKey, renderFields, this.callbacks.options(), sourceId, next));
-      if (this.callbacks.isConnected())
+      if (this.callbacks.isConnected()) {
         this.callbacks.render();
+      }
     }
     schedule(changedFieldId) {
       const binding = readDetailBinding(this.dataset);
-      if (!binding)
+      if (!binding) {
         return;
+      }
       const { widget, resource, rowKey, sourceId } = binding;
       const keys = schemaKeysDependingOn(widget, changedFieldId);
-      if (keys.size === 0)
+      if (keys.size === 0) {
         return;
-      if (!sourceId)
+      }
+      if (!sourceId) {
         return;
+      }
       for (const key of keys) {
         this.pendingKeys.add(key);
         this.invalidate(key);
@@ -19274,11 +19839,13 @@ button {
         this.reloadTimer = null;
         const pending = new Set(this.pendingKeys);
         this.pendingKeys.clear();
-        if (this.callbacks.isConnected())
+        if (this.callbacks.isConnected()) {
           this.callbacks.render();
+        }
         const latest = readDetailBinding(this.dataset);
-        if (!latest?.sourceId)
+        if (!latest?.sourceId) {
           return;
+        }
         this.load(latest.widget, latest.resource, latest.rowKey, latest.sourceId, this.fields.currentFields(), {
           keys: pending,
           useLatestFields: true
@@ -19297,7 +19864,12 @@ button {
       const generation = this.targets.invalidate(field.id);
       try {
         const data = await this.requests.load(consumer, sourceId, field.schema, { resource, fields });
-        return { definitions: definitionsAt(data, field.schema.itemsPath), failed: false, generation, key: field.id };
+        return {
+          definitions: definitionsAt(data, field.schema.itemsPath),
+          failed: false,
+          generation,
+          key: field.id
+        };
       } catch {
         return { definitions: [], failed: true, generation, key: field.id };
       }
@@ -19306,8 +19878,9 @@ button {
       return this.targets.invalidate(key);
     }
     cancelTimer() {
-      if (this.reloadTimer)
+      if (this.reloadTimer) {
         clearTimeout(this.reloadTimer);
+      }
       this.reloadTimer = null;
     }
   }
@@ -19688,14 +20261,16 @@ p9r-token-input {
       this.syncScheduled = false;
       this.clearRuntimeState();
       this.value = value;
-      if (this.isConnected)
+      if (this.isConnected) {
         this.render();
+      }
     }
     applyLookupCreate(fieldId, value, option) {
       const control = this.fields.control(fieldId);
       const field = control ? this.fields.find(fieldId) : undefined;
-      if (control && field)
+      if (control && field) {
         applyLookupOption(control, value, option);
+      }
     }
     static get observedAttributes() {
       return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
@@ -19709,10 +20284,11 @@ p9r-token-input {
       this.lifecycleRevision += 1;
       this.syncScheduled = false;
       this.events.bind();
-      if (this.mode === "manual")
+      if (this.mode === "manual") {
         this.render();
-      else
+      } else {
         this.syncBoundData();
+      }
     }
     disconnectedCallback() {
       this.lifecycleRevision += 1;
@@ -19724,11 +20300,13 @@ p9r-token-input {
       this.view.render(this.value);
     }
     refreshConditionalFields() {
-      if (this.mode !== "bound")
+      if (this.mode !== "bound") {
         return;
+      }
       const binding = readDetailBinding(this.dataset);
-      if (!binding)
+      if (!binding) {
         return;
+      }
       const previous = this.value;
       const next = this.mapData(binding.widget, binding.resource, this.value.rowKey, this.fields.currentFields());
       this.value = next;
@@ -19747,10 +20325,12 @@ p9r-token-input {
       this.lookups.syncScope(scopeKey);
       this.schemas.syncScope(scopeKey);
       this.value = this.mapData(widget, resource, rowKey, this.fields.draft);
-      if (this.isConnected)
+      if (this.isConnected) {
         this.render();
-      if (!sourceId)
+      }
+      if (!sourceId) {
         return;
+      }
       const fields = fieldValues(widget, resource);
       this.lookups.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
       this.schemas.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
@@ -19759,19 +20339,23 @@ p9r-token-input {
       return detailData(widget, resource, rowKey, fields, this.lookups.options, this.dataset.sourceId ?? "", this.schemas.values);
     }
     scheduleBoundDataSync() {
-      if (!this.isConnected)
+      if (!this.isConnected) {
         return;
+      }
       this.invalidateRequests();
-      if (this.syncScheduled)
+      if (this.syncScheduled) {
         return;
+      }
       this.syncScheduled = true;
       const lifecycleRevision = this.lifecycleRevision;
       queueMicrotask(() => {
-        if (this.lifecycleRevision !== lifecycleRevision || this.mode !== "bound")
+        if (this.lifecycleRevision !== lifecycleRevision || this.mode !== "bound") {
           return;
+        }
         this.syncScheduled = false;
-        if (this.isConnected)
+        if (this.isConnected) {
           this.syncBoundData();
+        }
       });
     }
     invalidateRequests() {
@@ -19786,12 +20370,14 @@ p9r-token-input {
     resetState(forceRender = false) {
       this.clearRuntimeState();
       this.value = emptyDetailData();
-      if (forceRender || this.isConnected)
+      if (forceRender || this.isConnected) {
         this.render();
+      }
     }
   }
-  if (!customElements.get("cms-dashboard-w-detail"))
+  if (!customElements.get("cms-dashboard-w-detail")) {
     customElements.define("cms-dashboard-w-detail", DashboardWDetail);
+  }
   function emptyDetailData() {
     return { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
   }
@@ -19810,24 +20396,33 @@ p9r-token-input {
   }
   function updateDashboardWidgetExampleField(rowKey, field, value) {
     const product = PRODUCTS.find((item) => item.id === rowKey);
-    if (!product)
+    if (!product) {
       return;
-    if (field === "title" && typeof value === "string")
+    }
+    if (field === "title" && typeof value === "string") {
       product.title = value;
-    if (field === "status" && typeof value === "string")
+    }
+    if (field === "status" && typeof value === "string") {
       product.status = value;
-    if (field === "vendor" && typeof value === "string")
+    }
+    if (field === "vendor" && typeof value === "string") {
       product.vendor = value;
-    if (field === "category" && typeof value === "string")
+    }
+    if (field === "category" && typeof value === "string") {
       product.category = value;
-    if (field === "description" && typeof value === "string")
+    }
+    if (field === "description" && typeof value === "string") {
       product.description = value;
-    if (field === "visibility" && typeof value === "string")
+    }
+    if (field === "visibility" && typeof value === "string") {
       product.visibility = value;
-    if (field === "tags" && isStringArray(value))
+    }
+    if (field === "tags" && isStringArray(value)) {
       product.tags = value;
-    if (field === "media" && isMediaItems(value))
+    }
+    if (field === "media" && isMediaItems(value)) {
       product.media = value;
+    }
   }
   function tableElement() {
     const element = document.createElement("cms-dashboard-w-table");
@@ -19896,15 +20491,43 @@ p9r-token-input {
         {
           title: "Status",
           fields: [
-            { id: "status", label: "Publication", input: "select", value: product.status, options: options("Active", "Draft", "Archived") },
-            { id: "visibility", label: "Visibility", input: "select", value: product.visibility, options: options("Online store", "Hidden") }
+            {
+              id: "status",
+              label: "Publication",
+              input: "select",
+              value: product.status,
+              options: options("Active", "Draft", "Archived")
+            },
+            {
+              id: "visibility",
+              label: "Visibility",
+              input: "select",
+              value: product.visibility,
+              options: options("Online store", "Hidden")
+            }
           ]
         },
         {
           title: "Organization",
           fields: [
-            { id: "vendor", label: "Vendor", input: "combobox", value: product.vendor, options: options("Adidas", "Nike", "Section Making"), placeholder: "Search or add a vendor", creatable: true },
-            { id: "tags", label: "Tags", input: "tokens", value: product.tags, options: options("Sport", "Featured", "Training"), placeholder: "Search or add tags", creatable: true },
+            {
+              id: "vendor",
+              label: "Vendor",
+              input: "combobox",
+              value: product.vendor,
+              options: options("Adidas", "Nike", "Section Making"),
+              placeholder: "Search or add a vendor",
+              creatable: true
+            },
+            {
+              id: "tags",
+              label: "Tags",
+              input: "tokens",
+              value: product.tags,
+              options: options("Sport", "Featured", "Training"),
+              placeholder: "Search or add tags",
+              creatable: true
+            },
             { id: "id", label: "Resource id", input: "readonly", value: product.id }
           ]
         }
@@ -19912,13 +20535,30 @@ p9r-token-input {
     };
   }
   function product(id, title, status, vendor, category, visibility, updated) {
-    return { id, title, status, vendor, category, visibility, updated, description: "Editable sandbox content before any data source is wired.", media: media(id, title), tags: ["Sport", "Featured"] };
+    return {
+      id,
+      title,
+      status,
+      vendor,
+      category,
+      visibility,
+      updated,
+      description: "Editable sandbox content before any data source is wired.",
+      media: media(id, title),
+      tags: ["Sport", "Featured"]
+    };
   }
   function options(...values) {
     return values.map((value) => ({ label: value, value }));
   }
   function media(id, title) {
-    return [{ id: `${id}_media_1`, url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=420&q=80", alt: `${title} media` }];
+    return [
+      {
+        id: `${id}_media_1`,
+        url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=420&q=80",
+        alt: `${title} media`
+      }
+    ];
   }
   function isStringArray(value) {
     return Array.isArray(value) && value.every((item) => typeof item === "string");
@@ -19974,8 +20614,9 @@ p9r-token-input {
       this.shadowRoot?.querySelector(".item")?.removeEventListener("keydown", this.onKeydown);
     }
     attributeChangedCallback() {
-      if (this.isConnected)
+      if (this.isConnected) {
         this.render();
+      }
     }
     get rowKey() {
       return this.getAttribute("row-key") ?? "";
@@ -19995,34 +20636,40 @@ p9r-token-input {
       const icon = this.getAttribute("icon");
       const iconRoot = root.querySelector("[data-icon]");
       iconRoot.hidden = !icon;
-      if (icon)
+      if (icon) {
         renderIcon(iconRoot, undefined, icon, "tag");
+      }
       root.querySelector("[data-handle]").hidden = !this.hasAttribute("reorderable");
       root.querySelector("[data-handle]").draggable = this.hasAttribute("reorderable");
       root.querySelector("[data-chevron]").hidden = !this.collection;
     }
     onClick = (event) => {
-      if (event.target?.closest("[data-handle]"))
+      if (event.target?.closest("[data-handle]")) {
         return;
+      }
       this.select();
     };
     onKeydown = (event) => {
-      if (!(event instanceof KeyboardEvent) || event.key !== "Enter" && event.key !== " ")
+      if (!(event instanceof KeyboardEvent) || event.key !== "Enter" && event.key !== " ") {
         return;
+      }
       event.preventDefault();
       this.select();
     };
     select() {
-      if (this.collection && this.rowKey)
+      if (this.collection && this.rowKey) {
         emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
+      }
     }
   }
-  if (!customElements.get("cms-dashboard-w-navigation-item"))
+  if (!customElements.get("cms-dashboard-w-navigation-item")) {
     customElements.define("cms-dashboard-w-navigation-item", DashboardWNavigationItem);
+  }
   function setText2(root, selector, value) {
     const element = root.querySelector(selector);
-    if (element)
+    if (element) {
       element.textContent = value;
+    }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
@@ -20094,8 +20741,9 @@ slot { display: contents; }
     }
     attributeChangedCallback() {
       this.syncConfig();
-      if (this.isConnected)
+      if (this.isConnected) {
         this.render();
+      }
     }
     connectedCallback() {
       this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
@@ -20117,23 +20765,27 @@ slot { display: contents; }
     }
     syncConfig() {
       const widget = parseJson3(this.dataset.configJson ?? "");
-      if (widget?.widget === "w-navigation-list")
+      if (widget?.widget === "w-navigation-list") {
         this.value = widget;
+      }
     }
     render() {
       const widget = this.value;
-      if (!widget)
+      if (!widget) {
         return;
+      }
       setText(this.shadowRoot, "[data-title]", widget.title ?? "");
       this.query("[data-header]").hidden = !widget.title && !this.visibleActions().length;
       this.query("[data-actions]").replaceChildren(...this.visibleActions().map((action) => {
         const button = document.createElement("p9r-button");
         button.dataset.action = action.id;
         button.dataset.widget = widget.id;
-        if (action.selection?.opens)
+        if (action.selection?.opens) {
           button.dataset.target = action.selection.opens;
-        if (action.confirm)
+        }
+        if (action.confirm) {
           button.dataset.confirm = action.confirm;
+        }
         button.setAttribute("tone", action.tone ?? "primary");
         button.textContent = action.label;
         return button;
@@ -20149,44 +20801,60 @@ slot { display: contents; }
     onSlotChange = () => this.syncItems();
     onActionClick = (event) => {
       const target = event.target?.closest("[data-action]");
-      if (!target?.dataset.action)
+      if (!target?.dataset.action) {
         return;
-      if (target.dataset.confirm && !window.confirm(target.dataset.confirm))
+      }
+      if (target.dataset.confirm && !window.confirm(target.dataset.confirm)) {
         return;
-      emitWidgetEvent(this, WIDGET_ACTION_EVENT, { action: target.dataset.action, widget: target.dataset.widget, target: target.dataset.target });
+      }
+      emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+        action: target.dataset.action,
+        widget: target.dataset.widget,
+        target: target.dataset.target
+      });
     };
     onDragStart = (event) => {
       const item = dragItem(event);
-      if (!item || !this.value?.reorderable)
+      if (!item || !this.value?.reorderable) {
         return;
+      }
       this.dragging = item;
       item.toggleAttribute("data-dragging", true);
       event.dataTransfer?.setData("text/plain", item.rowKey);
-      if (event.dataTransfer)
+      if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "move";
+      }
     };
     onDragOver = (event) => {
       const item = dragItem(event);
-      if (!item || !this.dragging || item === this.dragging)
+      if (!item || !this.dragging || item === this.dragging) {
         return;
+      }
       event.preventDefault();
       this.items().forEach((candidate) => candidate.toggleAttribute("data-drop-target", candidate === item));
-      if (event.dataTransfer)
+      if (event.dataTransfer) {
         event.dataTransfer.dropEffect = "move";
+      }
     };
     onDrop = (event) => {
       const target = dragItem(event);
       const dragging = this.dragging;
-      if (!target || !dragging || target === dragging || !this.value?.reorderable)
+      if (!target || !dragging || target === dragging || !this.value?.reorderable) {
         return;
+      }
       event.preventDefault();
       const movesDown = Boolean(dragging.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
-      if (movesDown)
+      if (movesDown) {
         this.insertBefore(dragging, target.nextSibling);
-      else
+      } else {
         this.insertBefore(dragging, target);
+      }
       const value = this.items().map((item) => item.rowKey).filter(Boolean);
-      emitWidgetEvent(this, WIDGET_ACTION_EVENT, { action: this.value.reorderable.action, widget: this.value.id, value });
+      emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+        action: this.value.reorderable.action,
+        widget: this.value.id,
+        value
+      });
       this.clearDragState();
     };
     onDragEnd = () => this.clearDragState();
@@ -20204,12 +20872,14 @@ slot { display: contents; }
       return this.shadowRoot.querySelector(selector);
     }
   }
-  if (!customElements.get("cms-dashboard-w-navigation-list"))
+  if (!customElements.get("cms-dashboard-w-navigation-list")) {
     customElements.define("cms-dashboard-w-navigation-list", DashboardWNavigationList);
+  }
   function dragItem(event) {
     const fromPath = event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches("cms-dashboard-w-navigation-item"));
-    if (fromPath)
+    if (fromPath) {
       return fromPath;
+    }
     const target = event.target;
     return target instanceof Element ? target.closest("cms-dashboard-w-navigation-item") : null;
   }
@@ -20251,17 +20921,21 @@ slot { display: contents; }
     const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens)
+    if (widget.selection?.opens) {
       row.setAttribute("collection", widget.selection.opens);
+    }
     for (const column of widget.columns) {
       const cell = document.createElement("cms-dashboard-w-cell");
       cell.setAttribute("column", column.id);
-      if (column.primary)
+      if (column.primary) {
         cell.toggleAttribute("primary", true);
-      if (column.primary)
+      }
+      if (column.primary) {
         cell.setAttribute("meta", "{{ row.id }}");
-      if (column.format === "badge")
+      }
+      if (column.format === "badge") {
         cell.setAttribute("tone", "badge");
+      }
       cell.textContent = bindingPath("row", column.path);
       row.append(cell);
     }
@@ -20272,23 +20946,29 @@ slot { display: contents; }
     item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     item.setAttribute("row-key", bindingPath("row", widget.rowKey));
     item.setAttribute("title", bindingPath("row", widget.item.title.path));
-    if (widget.item.subtitle)
+    if (widget.item.subtitle) {
       item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
-    if (widget.item.icon)
+    }
+    if (widget.item.icon) {
       item.setAttribute("icon", widget.item.icon);
-    if (widget.item.badge)
+    }
+    if (widget.item.badge) {
       item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
-    if (widget.selection?.opens)
+    }
+    if (widget.selection?.opens) {
       item.setAttribute("collection", widget.selection.opens);
-    if (widget.reorderable)
+    }
+    if (widget.reorderable) {
       item.toggleAttribute("reorderable", true);
+    }
     return item;
   }
   function sourceUrl2(sourceId, ref, vars) {
     const targetSourceId = ref.sourceId ?? sourceId;
     const url = new URL(route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
       url.searchParams.set(key, value);
+    }
     return `${url.pathname}${url.search}`;
   }
   function repeatPath(alias, path) {
@@ -20327,8 +21007,9 @@ slot { display: contents; }
   }
   function retrySource(event) {
     const target = event.target;
-    if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]"))
+    if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]")) {
       return;
+    }
     target.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
   }
 
@@ -20337,8 +21018,9 @@ slot { display: contents; }
     const section = document.createElement("cms-detail-section");
     section.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
     section.setAttribute("heading", widget.title ?? "Related items");
-    if (widget.placement === "aside")
+    if (widget.placement === "aside") {
       section.setAttribute("density", "compact");
+    }
     section.append(relationTableElement(widget));
     return section;
   }
@@ -20389,23 +21071,29 @@ slot { display: contents; }
     root.replaceChildren(core);
   }
   function widgetElement(widget, context, key, tabState, detail) {
-    if (widget.widget === "w-section")
+    if (widget.widget === "w-section") {
       return sectionElement(widget, context, key, tabState, detail);
-    if (widget.widget === "w-tabs")
+    }
+    if (widget.widget === "w-tabs") {
       return tabsElement(widget, context, key, tabState, detail);
-    if (widget.widget === "w-table")
+    }
+    if (widget.widget === "w-table") {
       return tableElement2(widget, context);
-    if (widget.widget === "w-navigation-list")
+    }
+    if (widget.widget === "w-navigation-list") {
       return navigationListElement(widget, context);
-    if (widget.widget === "w-detail")
+    }
+    if (widget.widget === "w-detail") {
       return detailElement2(widget, context, detail);
+    }
     return document.createElement("span");
   }
   function sectionElement(widget, context, key, tabState, detail) {
     const element = document.createElement("cms-dashboard-w-section");
     element.setAttribute("heading", widget.title);
-    if (widget.description)
+    if (widget.description) {
       element.setAttribute("description", widget.description);
+    }
     const stack = document.createElement("div");
     stack.className = "widget-stack";
     stack.append(...widget.children.map((child, index) => widgetElement(child, context, `${key}.${index}`, tabState, detail)));
@@ -20431,8 +21119,9 @@ slot { display: contents; }
       button.textContent = tab.label;
       tabs.append(button);
     }
-    if (active)
+    if (active) {
       body.append(...active.children.map((child, index) => widgetElement(child, context, `${key}.${activeIndex}.${index}`, tabState, detail)));
+    }
     panel.append(tabs, body);
     return panel;
   }
@@ -20476,13 +21165,15 @@ slot { display: contents; }
     query2(root, "[data-dashboard-head]").hidden = !dashboard;
     query2(root, "[data-detail-toolbar]").hidden = true;
     query2(root, "[data-widgets]").hidden = !dashboard;
-    if (!group || !dashboard)
+    if (!group || !dashboard) {
       return;
+    }
     query2(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
     renderIcon(query2(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map;
-    if (detail)
+    if (detail) {
       selectedRows.set(detail.collection, detail.row);
+    }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
     mountDashboardWidgets(query2(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
   }
@@ -20539,20 +21230,23 @@ slot { display: contents; }
       this.observer = null;
     }
     startBoundSource() {
-      if (this.isExampleMode())
+      if (this.isExampleMode()) {
         return this.render();
+      }
       const source = this.shadowRoot.querySelector("[data-dashboard-list-source]");
       source?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
       this.observer = new MutationObserver(() => this.readBoundGroups());
-      if (source)
+      if (source) {
         this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+      }
       this.readBoundGroups();
     }
     readBoundGroups() {
       const target = this.shadowRoot.querySelector("[data-dashboard-groups-json]");
       const next = parseGroups2(target?.dataset.dashboardGroupsJson ?? "");
-      if (!next)
+      if (!next) {
         return;
+      }
       this.groups = next;
       this.selectedSource ||= defaultDashboardSource(this.groups);
       this.ensureDashboardSelection();
@@ -20587,7 +21281,11 @@ slot { display: contents; }
       return isDashboardExampleMode(this);
     }
     selection() {
-      return { source: this.selectedSource, dashboard: this.selectedDashboard, ...this.detailSelection ? this.detailSelection : {} };
+      return {
+        source: this.selectedSource,
+        dashboard: this.selectedDashboard,
+        ...this.detailSelection ? this.detailSelection : {}
+      };
     }
     syncFromSelection(selection) {
       this.selectedSource = selection.source;
@@ -20596,8 +21294,9 @@ slot { display: contents; }
     }
     onClick = (event) => {
       const tabButton = event.target?.closest("[data-tab-key]");
-      if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex)
+      if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
         return;
+      }
       this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
       this.render();
     };
@@ -20605,14 +21304,16 @@ slot { display: contents; }
     onPopState = () => this.syncSelectionAndRender(currentSelection());
     onWidgetRowSelect = (event) => {
       this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
-      if (!this.isExampleMode())
+      if (!this.isExampleMode()) {
         pushSelectionUrl(this.selection());
+      }
       this.render();
     };
     onWidgetBack = () => {
       this.detailSelection = null;
-      if (!this.isExampleMode())
+      if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
+      }
       this.render();
     };
     onWidgetAction = (event) => {
@@ -20622,8 +21323,9 @@ slot { display: contents; }
       }
       if (event.detail.target) {
         this.detailSelection = { collection: event.detail.target, row: "__new__" };
-        if (!this.isExampleMode())
+        if (!this.isExampleMode()) {
           pushSelectionUrl(this.selection());
+        }
         this.render();
         return;
       }
@@ -20642,13 +21344,15 @@ slot { display: contents; }
         this.render();
         return;
       }
-      if (!this.detailSelection)
+      if (!this.detailSelection) {
         return;
+      }
       const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
       const previousDraft = this.drafts.get(key) ?? {};
       this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
-      if (event.detail.created)
+      if (event.detail.created) {
         runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
+      }
     };
     syncSelectionAndRender(selection) {
       this.syncFromSelection(selection);
@@ -20671,20 +21375,23 @@ slot { display: contents; }
     }
     openDetail(collection, row) {
       this.detailSelection = { collection, row };
-      if (!this.isExampleMode())
+      if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
+      }
       this.render();
     }
     clearDetail() {
       this.detailSelection = null;
-      if (!this.isExampleMode())
+      if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
+      }
       this.render();
     }
     reloadDetail(collection, row) {
       const dashboard = this.activeDashboard();
-      if (!dashboard)
+      if (!dashboard) {
         return;
+      }
       document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
     async reloadDefinitions() {
@@ -20694,11 +21401,13 @@ slot { display: contents; }
       this.render();
     }
   }
-  if (!customElements.get("cms-dashboards-admin"))
+  if (!customElements.get("cms-dashboards-admin")) {
     customElements.define("cms-dashboards-admin", DashboardView);
+  }
   function parseGroups2(value) {
-    if (!value)
+    if (!value) {
       return null;
+    }
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : null;
@@ -20722,14 +21431,16 @@ slot { display: contents; }
     const response = await fetch(route2(`/api/functions/detail?id=${encodeURIComponent(id)}`), {
       headers: { Accept: "application/json" }
     });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
   async function fetchFunctionCatalog() {
     const response = await fetch(route2("/api/functions/catalog"), { headers: { Accept: "application/json" } });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
   async function createFunctionDefinition(definition) {
@@ -20738,14 +21449,16 @@ slot { display: contents; }
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ definition })
     });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
   async function executeFunctionDetail(input) {
     const payload = { id: input.id, params: input.params };
-    if (input.includeBody)
+    if (input.includeBody) {
       payload.body = input.body;
+    }
     const response = await fetch(route2("/api/functions/execute"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -20762,20 +21475,24 @@ slot { display: contents; }
   async function fetchSourceEndpoint(source, endpoint, params = {}) {
     const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source)}/${encodeURIComponent(endpoint)}`), window.location.origin);
     for (const [key, value] of Object.entries(params)) {
-      if (value !== "")
+      if (value !== "") {
         url.searchParams.set(key, value);
+      }
     }
     const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     const contentType = response.headers.get("content-type") ?? "";
     return readResponseBody(response, contentType);
   }
   async function readResponseBody(response, contentType) {
-    if (response.status === 204)
+    if (response.status === 204) {
       return null;
-    if (contentType.includes("application/json"))
+    }
+    if (contentType.includes("application/json")) {
       return response.json().catch(() => null);
+    }
     const text2 = await response.text();
     return text2 || null;
   }
@@ -20803,20 +21520,25 @@ slot { display: contents; }
     const out = {};
     for (const [key, value] of Object.entries(params ?? {})) {
       const resolved = resolveUiValue(value, draft);
-      if (resolved !== undefined && resolved !== null)
+      if (resolved !== undefined && resolved !== null) {
         out[key] = String(resolved);
+      }
     }
     return out;
   }
   function valueAtDraft(draft, path) {
-    if (path === "body")
+    if (path === "body") {
       return draft.body;
-    if (path === "params")
+    }
+    if (path === "params") {
       return draft.params;
-    if (path.startsWith("body."))
+    }
+    if (path.startsWith("body.")) {
       return valueAt2(draft.body, path.slice("body.".length));
-    if (path.startsWith("params."))
+    }
+    if (path.startsWith("params.")) {
       return valueAt2(draft.params, path.slice("params.".length));
+    }
     return;
   }
   function setDraftValue(draft, path, value) {
@@ -20825,17 +21547,20 @@ slot { display: contents; }
       return;
     }
     if (path.startsWith("body.")) {
-      if (!isRecord6(draft.body))
+      if (!isRecord6(draft.body)) {
         draft.body = {};
+      }
       setPathValue(draft.body, path.slice("body.".length), value);
       return;
     }
-    if (path.startsWith("params."))
+    if (path.startsWith("params.")) {
       setPathValue(draft.params, path.slice("params.".length), value);
+    }
   }
   function setPathValue(target, path, value) {
-    if (!isRecord6(target))
+    if (!isRecord6(target)) {
       return;
+    }
     const parts = path.split(".").filter(Boolean);
     let current = target;
     for (const [index, part] of parts.entries()) {
@@ -20843,21 +21568,26 @@ slot { display: contents; }
         current[part] = value;
         return;
       }
-      if (!isRecord6(current[part]))
+      if (!isRecord6(current[part])) {
         current[part] = {};
+      }
       current = current[part];
     }
   }
   function valueAt2(value, path) {
-    if (!path)
+    if (!path) {
       return value;
+    }
     return path.split(".").filter(Boolean).reduce((current, part) => {
-      if (current === null || current === undefined)
+      if (current === null || current === undefined) {
         return;
-      if (Array.isArray(current) && /^\d+$/.test(part))
+      }
+      if (Array.isArray(current) && /^\d+$/.test(part)) {
         return current[Number(part)];
-      if (!isRecord6(current))
+      }
+      if (!isRecord6(current)) {
         return;
+      }
       return current[part];
     }, value);
   }
@@ -20870,8 +21600,9 @@ slot { display: contents; }
   }
   function parseObject(value, label) {
     const parsed = parseJson4(value || "{}", label);
-    if (!isRecord6(parsed))
+    if (!isRecord6(parsed)) {
       throw new Error(`${label} must be a JSON object.`);
+    }
     return parsed;
   }
   function parseJson4(value, label) {
@@ -20892,8 +21623,9 @@ slot { display: contents; }
     return globalThis.CSS?.escape?.(value) ?? value.replace(/["\\]/g, "\\$&");
   }
   function resolveUiValue(value, draft) {
-    if (typeof value === "string" && value.startsWith("$"))
+    if (typeof value === "string" && value.startsWith("$")) {
       return valueAtDraft(draft, value.slice(1));
+    }
     return value;
   }
   function isRecord6(value) {
@@ -20932,8 +21664,9 @@ slot { display: contents; }
   }
   function fieldWrap(titleText, control, hint) {
     const wrap = div("field", label(titleText), control);
-    if (hint)
+    if (hint) {
       wrap.append(hint);
+    }
     return wrap;
   }
   function schemaBlock(titleText, value) {
@@ -20987,43 +21720,51 @@ slot { display: contents; }
   function div(className, ...children) {
     const el2 = document.createElement("div");
     el2.className = className;
-    for (const child of children)
+    for (const child of children) {
       el2.append(typeof child === "string" ? document.createTextNode(child) : child);
+    }
     return el2;
   }
 
   // src/components/admin/Resources/Functions/fields.ts
   function executeFields(detail, draft, onChange) {
     const fields = detail.ui?.execute?.fields ?? [];
-    if (!fields.length)
+    if (!fields.length) {
       return fallbackJsonFields(detail);
+    }
     return div("fields-stack", ...fields.map((field) => executeField(field, draft, onChange)));
   }
   async function hydrateExecuteFields(root, detail, draft) {
     for (const field of detail.ui?.execute?.fields ?? []) {
-      if (field.control === "source-select")
+      if (field.control === "source-select") {
         await hydrateSourceSelect(root, field, draft);
+      }
     }
   }
   async function seedDependents(root, detail, path, draft) {
     for (const field of detail.ui?.execute?.fields ?? []) {
-      if (field.control !== "json-object" || field.seed?.dependsOn !== path)
+      if (field.control !== "json-object" || field.seed?.dependsOn !== path) {
         continue;
+      }
       const input = root.querySelector(`textarea[data-path="${cssEscape2(field.path)}"]`);
-      if (!input || !field.seed)
+      if (!input || !field.seed) {
         continue;
+      }
       const seed = await seedObject(field.seed, draft).catch(() => null);
-      if (seed === null)
+      if (seed === null) {
         continue;
+      }
       setDraftValue(draft, field.path, seed);
       input.value = stringify(seed);
     }
   }
   function executeField(field, draft, onChange) {
-    if (field.control === "source-select")
+    if (field.control === "source-select") {
       return sourceSelectField(field, draft, onChange);
-    if (field.control === "json-object")
+    }
+    if (field.control === "json-object") {
       return jsonObjectField(field, draft, onChange);
+    }
     return textField(field, draft, onChange);
   }
   function sourceSelectField(field, draft, onChange) {
@@ -21057,16 +21798,18 @@ slot { display: contents; }
   }
   async function hydrateSourceSelect(root, field, draft) {
     const select2 = root.querySelector(`select[data-path="${cssEscape2(field.path)}"]`);
-    if (!select2)
+    if (!select2) {
       return;
+    }
     try {
       const response = await fetchSourceEndpoint(field.source, field.endpoint, resolvedParams(field.params, draft));
       const items = arrayAt2(response, field.itemsPath ?? "items");
       select2.replaceChildren(option("", "Select..."));
       for (const item of items) {
         const value = stringValue2(valueAt2(item, field.valuePath ?? "id"));
-        if (!value)
+        if (!value) {
           continue;
+        }
         const label2 = stringValue2(valueAt2(item, field.labelPath ?? field.valuePath ?? "id")) || value;
         select2.append(option(value, label2));
       }
@@ -21080,8 +21823,9 @@ slot { display: contents; }
     const out = {};
     for (const token of arrayAt2(response, seed.pathsPath)) {
       const path = typeof token === "string" ? token : stringValue2(valueAt2(token, seed.pathNamePath ?? "name"));
-      if (!path)
+      if (!path) {
         continue;
+      }
       const sample = typeof token === "string" ? "" : valueAt2(token, seed.samplePath ?? "sample") ?? "";
       setPathValue(out, path, sample);
     }
@@ -21089,24 +21833,28 @@ slot { display: contents; }
   }
   function fallbackJsonFields(detail) {
     const fields = [fieldWrap("Params JSON", textarea2("params", stringify(detail.paramsSample)))];
-    if (detail.body)
+    if (detail.body) {
       fields.push(fieldWrap("Body JSON", textarea2("body", stringify(detail.bodySample ?? {}))));
+    }
     return div("fields-stack", ...fields);
   }
 
   // src/components/admin/Resources/Functions/result.ts
   function readableResult(result) {
-    if (!result.ok)
+    if (!result.ok) {
       return nestedError(result.body) ?? `Function failed with status ${result.status}`;
+    }
     const count = sentCount(result.body);
-    if (count !== null)
+    if (count !== null) {
       return `${count} email${count === 1 ? "" : "s"} sent.`;
+    }
     return result.status === 204 ? "Function completed without response body." : "Function completed.";
   }
   function nestedError(value) {
     for (const candidate of [valueAt2(value, "details.body.error"), valueAt2(value, "error")]) {
-      if (typeof candidate === "string" && candidate.trim())
+      if (typeof candidate === "string" && candidate.trim()) {
         return candidate;
+      }
     }
     return null;
   }
@@ -21261,15 +22009,17 @@ pre {
     resultMessage = null;
     resultBody = null;
     connectedCallback() {
-      if (this.initialized)
+      if (this.initialized) {
         return;
+      }
       this.initialized = true;
       this.load();
     }
     async load() {
       const id = currentFunctionId();
-      if (!id)
+      if (!id) {
         return this.renderState("Missing function id.");
+      }
       this.renderState("Loading function...");
       try {
         this.detail = await fetchFunctionDetail(id);
@@ -21280,15 +22030,17 @@ pre {
       }
     }
     resetDraft() {
-      if (this.detail)
+      if (this.detail) {
         this.draft = initialDraft(this.detail.paramsSample, this.detail.bodySample ?? {});
+      }
     }
     renderState(message) {
       this.replaceChildren(styleNode(style_default13), state(message));
     }
     renderDetail() {
-      if (!this.detail)
+      if (!this.detail) {
         return;
+      }
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
       shell.append(backLink(), title(this.detail), this.headerActions(), this.inputsSection(), this.resultSection(), this.summarySection(), this.contractSection());
@@ -21319,8 +22071,9 @@ pre {
     }
     inputsSection() {
       const section = detailSection("main", "Inputs");
-      if (this.detail)
+      if (this.detail) {
         section.append(executeFields(this.detail, this.draft, (path) => void this.onInputChange(path)));
+      }
       return section;
     }
     resultSection() {
@@ -21339,7 +22092,14 @@ pre {
     summarySection() {
       const d = this.detail;
       const section = detailSection("aside", "Function");
-      section.append(keyValues([["Id", d.id], ["Method", d.method], ["Access", d.access], ["Input", d.inputLabel], ["Steps", d.stepsLabel], ["Return", d.returnLabel]]));
+      section.append(keyValues([
+        ["Id", d.id],
+        ["Method", d.method],
+        ["Access", d.access],
+        ["Input", d.inputLabel],
+        ["Steps", d.stepsLabel],
+        ["Return", d.returnLabel]
+      ]));
       return section;
     }
     contractSection() {
@@ -21352,25 +22112,42 @@ pre {
     }
     async onInputChange(path) {
       this.clearResult();
-      if (path && this.detail)
+      if (path && this.detail) {
         await seedDependents(this, this.detail, path, this.draft);
+      }
     }
     async execute() {
-      if (!this.detail || !this.runButton)
+      if (!this.detail || !this.runButton) {
         return;
+      }
       try {
         this.draft = this.detail.ui?.execute?.fields?.length ? readPathDraft(this, this.draft) : readFallbackDraft(this, Boolean(this.detail.body));
       } catch (error) {
-        this.showResult({ ok: false, status: 0, contentType: "application/json", body: { error: error instanceof Error ? error.message : "Invalid input" } });
+        this.showResult({
+          ok: false,
+          status: 0,
+          contentType: "application/json",
+          body: { error: error instanceof Error ? error.message : "Invalid input" }
+        });
         return;
       }
       this.runButton.disabled = true;
       this.runButton.textContent = "Running...";
       this.showPending();
       try {
-        this.showResult(await executeFunctionDetail({ id: this.detail.id, params: this.draft.params, body: this.draft.body, includeBody: Boolean(this.detail.body) }));
+        this.showResult(await executeFunctionDetail({
+          id: this.detail.id,
+          params: this.draft.params,
+          body: this.draft.body,
+          includeBody: Boolean(this.detail.body)
+        }));
       } catch (error) {
-        this.showResult({ ok: false, status: 0, contentType: "application/json", body: { error: error instanceof Error ? error.message : "Execution failed" } });
+        this.showResult({
+          ok: false,
+          status: 0,
+          contentType: "application/json",
+          body: { error: error instanceof Error ? error.message : "Execution failed" }
+        });
       } finally {
         this.runButton.disabled = false;
         this.runButton.textContent = "Run";
@@ -21390,14 +22167,17 @@ pre {
         this.resultStatus.className = statusClass;
         this.resultStatus.textContent = status;
       }
-      if (this.resultMessage)
+      if (this.resultMessage) {
         this.resultMessage.textContent = message;
-      if (this.resultBody)
+      }
+      if (this.resultBody) {
         this.resultBody.textContent = body;
+      }
     }
   }
-  if (!customElements.get("cms-function-detail"))
+  if (!customElements.get("cms-function-detail")) {
     customElements.define("cms-function-detail", CmsFunctionDetail);
+  }
   function summary(text2) {
     const el2 = document.createElement("summary");
     el2.textContent = text2;
@@ -22106,19 +22886,22 @@ textarea.compact {
 
   // src/components/admin/Resources/WorkflowEditor/mapping.ts
   function referencesFromShape(shape, prefix, label2) {
-    if (!shape)
+    if (!shape) {
       return [];
+    }
     const options2 = [{ value: prefix, label: label2, shape }];
-    if (shape.type !== "object")
+    if (shape.type !== "object") {
       return options2;
+    }
     for (const [name, child] of Object.entries(shape.properties ?? {})) {
       options2.push(...referencesFromShape(child, `${prefix}.${name}`, `${label2} / ${name}`));
     }
     return options2;
   }
   function targetsFromShape(shape, prefix = "") {
-    if (!shape)
+    if (!shape) {
       return [];
+    }
     if (shape.type !== "object" || !Object.keys(shape.properties ?? {}).length) {
       return [{ path: prefix, label: prefix || "Value", shape }];
     }
@@ -22127,12 +22910,14 @@ textarea.compact {
       if (child.type === "object" && Object.keys(child.properties ?? {}).length) {
         return targetsFromShape(child, path);
       }
-      return [{
-        path,
-        label: path,
-        required: shape.required?.includes(name),
-        shape: child
-      }];
+      return [
+        {
+          path,
+          label: path,
+          required: shape.required?.includes(name),
+          shape: child
+        }
+      ];
     });
   }
   function mappingEditor(targets, references, draft, emptyMessage) {
@@ -22156,8 +22941,9 @@ textarea.compact {
     wrap.className = "value-picker";
     const select2 = document.createElement("select");
     select2.append(option2("", label2));
-    for (const reference of references)
+    for (const reference of references) {
       select2.append(option2(reference.value, reference.label));
+    }
     select2.append(option2("__literal__", "Fixed value…"));
     select2.value = draft.mode === "literal" ? "__literal__" : draft.value;
     const literal = document.createElement("input");
@@ -22184,18 +22970,21 @@ textarea.compact {
   function mappedObject(draft) {
     const result = {};
     for (const [path, value] of Object.entries(draft)) {
-      if (!value.value)
+      if (!value.value) {
         continue;
+      }
       setPath(result, path, resolvedDraftValue(value));
     }
     return result;
   }
   function resolvedDraftValue(draft) {
-    if (draft.mode === "reference")
+    if (draft.mode === "reference") {
       return draft.value;
+    }
     const raw = draft.value.trim();
-    if (!raw)
+    if (!raw) {
       return "";
+    }
     try {
       return JSON.parse(raw);
     } catch {
@@ -22217,13 +23006,16 @@ textarea.compact {
     return row;
   }
   function compatibleReferences(references, shape) {
-    if (!shape)
+    if (!shape) {
       return references;
+    }
     return references.filter((reference) => {
-      if (!reference.shape)
+      if (!reference.shape) {
         return true;
-      if (shape.semantic?.kind === "user-id")
+      }
+      if (shape.semantic?.kind === "user-id") {
         return reference.shape.semantic?.kind === "user-id";
+      }
       return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
     });
   }
@@ -22240,8 +23032,9 @@ textarea.compact {
         return;
       }
       const existing = current[part];
-      if (!existing || typeof existing !== "object" || Array.isArray(existing))
+      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
         current[part] = {};
+      }
       current = current[part];
     }
   }
@@ -22279,8 +23072,9 @@ textarea.compact {
   }
   function objectShapeFromFields(fields) {
     const properties = paramsFromFields(fields);
-    if (!Object.keys(properties).length)
+    if (!Object.keys(properties).length) {
       return;
+    }
     const required = fields.filter((field) => field.required && field.name.trim()).map((field) => field.name.trim());
     return {
       type: "object",
@@ -22346,8 +23140,9 @@ textarea.compact {
     message = null;
     saveButton = null;
     connectedCallback() {
-      if (this.initialized)
+      if (this.initialized) {
         return;
+      }
       this.initialized = true;
       this.load();
     }
@@ -22395,15 +23190,17 @@ textarea.compact {
       let idWasEdited = false;
       id?.addEventListener("input", () => idWasEdited = true);
       name?.addEventListener("input", () => {
-        if (id && !idWasEdited)
+        if (id && !idWasEdited) {
           id.value = identifier(name.value);
+        }
       });
     }
     togglePanels(button2) {
       const panels = Array.from(this.querySelectorAll("details.editor-panel"));
       const shouldOpen = panels.some((panel) => !panel.open);
-      for (const panel of panels)
+      for (const panel of panels) {
         panel.open = shouldOpen;
+      }
       button2.textContent = shouldOpen ? "Collapse all" : "Expand all";
     }
     addCall() {
@@ -22430,12 +23227,14 @@ textarea.compact {
       this.renderSteps();
     }
     renderSteps() {
-      if (!this.stepsRoot)
+      if (!this.stepsRoot) {
         return;
+      }
       this.stepsRoot.replaceChildren(...this.steps.map((step, index) => this.stepCard(step, index)));
       const empty = this.querySelector("[data-role='steps-empty']");
-      if (empty)
+      if (empty) {
         empty.hidden = this.steps.length > 0;
+      }
       this.renderReturnPicker();
     }
     renderInputSchemas() {
@@ -22461,10 +23260,11 @@ textarea.compact {
       card.querySelector("[data-role='title']").textContent = step.kind === "call" ? step.id || `Step ${index + 1}` : `Business rule ${index + 1}`;
       card.querySelector("[data-role='subtitle']").textContent = step.kind === "call" ? `${step.source || "Choose a source"}.${step.endpoint || "endpoint"}` : "Execution stops when this condition fails";
       const fields = card.querySelector(".step-fields");
-      if (step.kind === "call")
+      if (step.kind === "call") {
         this.renderCallFields(fields, step);
-      else
+      } else {
         this.renderAssertFields(fields, step);
+      }
       card.querySelector("[data-remove]")?.addEventListener("click", (event) => {
         event.preventDefault();
         this.steps.splice(index, 1);
@@ -22525,12 +23325,10 @@ textarea.compact {
         this.renderSteps();
       });
       const references = this.referencesBefore(this.steps.indexOf(step));
-      const children = [
-        field("Operator", operator),
-        field("Value to inspect", valuePicker(step.left, references))
-      ];
-      if (step.operator !== "exists")
+      const children = [field("Operator", operator), field("Value to inspect", valuePicker(step.left, references))];
+      if (step.operator !== "exists") {
         children.push(field("Expected value", valuePicker(step.right, references)));
+      }
       children.push(field("Failure status", input(step.status, (value) => step.status = value, "403", "number")));
       children.push(field("Failure message", input(step.error, (value) => step.error = value, "Condition failed")));
       root.append(grid(...children));
@@ -22553,8 +23351,9 @@ textarea.compact {
         { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
       ];
       this.steps.slice(0, stepIndex).forEach((step) => {
-        if (step.kind !== "call")
+        if (step.kind !== "call") {
           return;
+        }
         const endpoint = this.endpointContract(step);
         const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status))?.body ?? endpoint?.output?.find((entry) => entry.status === "default")?.body;
         references.push(...referencesFromShape(output, `$steps.${step.id}`, `Step ${step.id}`));
@@ -22566,14 +23365,16 @@ textarea.compact {
     }
     move(index, offset) {
       const target = index + offset;
-      if (target < 0 || target >= this.steps.length)
+      if (target < 0 || target >= this.steps.length) {
         return;
+      }
       [this.steps[index], this.steps[target]] = [this.steps[target], this.steps[index]];
       this.renderSteps();
     }
     async save() {
-      if (!this.saveButton)
+      if (!this.saveButton) {
         return;
+      }
       this.setMessage("Validating function...", "");
       this.saveButton.disabled = true;
       try {
@@ -22617,14 +23418,16 @@ textarea.compact {
       return definition;
     }
     setMessage(text2, kind) {
-      if (!this.message)
+      if (!this.message) {
         return;
+      }
       this.message.className = `message ${kind}`.trim();
       this.message.textContent = text2;
     }
   }
-  if (!customElements.get("cms-function-create"))
+  if (!customElements.get("cms-function-create")) {
     customElements.define("cms-function-create", CmsFunctionCreate);
+  }
   function buildStep(step) {
     if (step.kind === "call") {
       const params = mappedObject(step.params);
@@ -22650,8 +23453,9 @@ textarea.compact {
   }
   function mappedDraft(draft) {
     const root = draft[""];
-    if (root?.value)
+    if (root?.value) {
       return resolvedDraftValue(root);
+    }
     const mapped = mappedObject(draft);
     return Object.keys(mapped).length ? mapped : undefined;
   }
@@ -22798,21 +23602,24 @@ textarea.compact {
   function currentIntegrationRoute() {
     const params = new URL(window.location.href).searchParams;
     const installation = params.get("integration")?.trim();
-    if (installation)
+    if (installation) {
       return { view: "installation", id: installation };
+    }
     const setup = params.get("setup")?.trim();
-    if (setup)
+    if (setup) {
       return { view: "setup", kind: setup };
+    }
     return { view: "list", tab: params.get("tab") === "catalogue" ? "catalogue" : "installed" };
   }
   function integrationRouteUrl(next) {
     const params = new URLSearchParams;
-    if (next.view === "installation")
+    if (next.view === "installation") {
       params.set("integration", next.id);
-    else if (next.view === "setup")
+    } else if (next.view === "setup") {
       params.set("setup", next.kind);
-    else if (next.tab === "catalogue")
+    } else if (next.tab === "catalogue") {
       params.set("tab", "catalogue");
+    }
     const suffix = params.toString() ? `?${params.toString()}` : "";
     return route3(`/admin/integrations${suffix}`);
   }
@@ -22838,8 +23645,9 @@ textarea.compact {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
 
@@ -22865,31 +23673,38 @@ textarea.compact {
     const answers = {};
     for (const input2 of definition.inputs) {
       const element = root.querySelector(`[name="${input2.name}"]`);
-      if (!element)
+      if (!element) {
         continue;
-      if (input2.type === "boolean")
+      }
+      if (input2.type === "boolean") {
         answers[input2.name] = element.checked;
-      else if (input2.type === "json")
+      } else if (input2.type === "json") {
         answers[input2.name] = JSON.parse(element.value || "null");
-      else
+      } else {
         answers[input2.name] = element.value;
+      }
     }
     return answers;
   }
   function control(input2) {
-    if (input2.type === "json")
+    if (input2.type === "json") {
       return textarea3(input2, 6);
-    if (input2.type === "select")
+    }
+    if (input2.type === "select") {
       return select3(input2);
+    }
     const element = document.createElement("input");
     element.name = input2.name;
     element.type = input2.type === "password" ? "password" : input2.type === "boolean" ? "checkbox" : "text";
-    if (input2.defaultValue !== undefined && input2.type !== "boolean")
+    if (input2.defaultValue !== undefined && input2.type !== "boolean") {
       element.value = String(input2.defaultValue);
-    if (input2.defaultValue === true && input2.type === "boolean")
+    }
+    if (input2.defaultValue === true && input2.type === "boolean") {
       element.checked = true;
-    if (input2.required)
+    }
+    if (input2.required) {
       element.required = true;
+    }
     return element;
   }
   function select3(input2) {
@@ -22907,23 +23722,27 @@ textarea.compact {
     const element = document.createElement("textarea");
     element.name = input2.name;
     element.rows = rows;
-    if (typeof input2.defaultValue === "string")
+    if (typeof input2.defaultValue === "string") {
       element.value = input2.defaultValue;
+    }
     return element;
   }
   function hint(input2) {
-    if (input2.secret || input2.type === "password")
+    if (input2.secret || input2.type === "password") {
       return "Stored as a secret.";
-    if (input2.required)
+    }
+    if (input2.required) {
       return "Required.";
+    }
     return "";
   }
 
   // src/components/admin/Resources/Integrations/domain.ts
   function installedCounts(installations) {
     const counts = new Map;
-    for (const installation of installations)
+    for (const installation of installations) {
       counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
+    }
     return counts;
   }
 
@@ -23130,26 +23949,30 @@ textarea.compact {
   function cloneElement(name) {
     const template4 = registry.content.querySelector(`template[data-template="${name}"]`);
     const element = template4?.content.firstElementChild?.cloneNode(true);
-    if (!(element instanceof HTMLElement))
+    if (!(element instanceof HTMLElement)) {
       throw new Error(`Missing integration template: ${name}`);
+    }
     return element;
   }
   function cloneIcon(name) {
     const template4 = registry.content.querySelector(`template[data-icon="${name}"]`) ?? registry.content.querySelector('template[data-icon="grid"]');
     const icon = template4?.content.firstElementChild?.cloneNode(true);
-    if (!icon)
+    if (!icon) {
       throw new Error(`Missing integration icon: ${name}`);
+    }
     return icon;
   }
   function text2(root, selector, value2) {
     const element = root.querySelector(selector);
-    if (element)
+    if (element) {
       element.textContent = String(value2 ?? "");
+    }
   }
   function fillIcon(root, selector, icon) {
     const element = root.querySelector(selector);
-    if (element)
+    if (element) {
       element.replaceChildren(cloneIcon(icon));
+    }
   }
 
   // src/components/admin/Resources/Integrations/ui/resources/format.ts
@@ -23158,33 +23981,41 @@ textarea.compact {
     return types.length ? types.map(typeLabel) : ["No artifacts"];
   }
   function formatRelativeDate(value2) {
-    if (!value2)
+    if (!value2) {
       return "Never";
+    }
     const date = new Date(value2);
-    if (Number.isNaN(date.getTime()))
+    if (Number.isNaN(date.getTime())) {
       return value2;
+    }
     const now = new Date;
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
     const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(date);
-    if (date.toDateString() === now.toDateString())
+    if (date.toDateString() === now.toDateString()) {
       return `Today ${time}`;
-    if (date.toDateString() === yesterday.toDateString())
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
       return `Yesterday ${time}`;
+    }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
   function statusLabel(status) {
-    if (status === "success")
+    if (status === "success") {
       return "Active";
-    if (status === "failed")
+    }
+    if (status === "failed") {
       return "Failed";
+    }
     return "Pending";
   }
   function typeLabel(type) {
-    if (type === "sourceOverlay")
+    if (type === "sourceOverlay") {
       return "Source overlay";
-    if (type === "dashboardRelation")
+    }
+    if (type === "dashboardRelation") {
       return "Dashboard relation";
+    }
     return type[0].toUpperCase() + type.slice(1);
   }
   // src/components/admin/Resources/Integrations/ui/resources/icons.ts
@@ -23206,20 +24037,27 @@ textarea.compact {
   }
   function iconForResourceType(type) {
     const normalized = type.toLowerCase();
-    if (normalized === "dashboard")
+    if (normalized === "dashboard") {
       return "table";
-    if (normalized === "source")
+    }
+    if (normalized === "source") {
       return "receipt";
-    if (normalized === "bloc")
+    }
+    if (normalized === "bloc") {
       return "grid";
-    if (normalized === "function")
+    }
+    if (normalized === "function") {
       return "spark";
-    if (normalized === "trigger")
+    }
+    if (normalized === "trigger") {
       return "share";
-    if (normalized === "secret")
+    }
+    if (normalized === "secret") {
       return "key";
-    if (normalized === "connector")
+    }
+    if (normalized === "connector") {
       return "truck";
+    }
     return "grid";
   }
   function fallbackIcon() {
@@ -23227,8 +24065,9 @@ textarea.compact {
   }
   function integrationAssetUrl(definition, path) {
     const params = new URLSearchParams({ kind: definition.kind, path });
-    if (definition.version)
+    if (definition.version) {
       params.set("version", definition.version);
+    }
     return route3(`/api/integrations/asset?${params.toString()}`);
   }
   // src/components/admin/Resources/Integrations/ui/resources/render.ts
@@ -23236,8 +24075,9 @@ textarea.compact {
     root.replaceChildren();
     const visible = labels.slice(0, 4);
     const remaining = labels.length - visible.length;
-    for (const label2 of visible)
+    for (const label2 of visible) {
       root.append(badge2(label2));
+    }
     if (remaining > 0) {
       const more = badge2(`+${remaining} others`);
       more.classList.add("badge-muted");
@@ -23309,24 +24149,45 @@ textarea.compact {
   }
   function artifactRow(artifact) {
     if (artifact.type === "dashboard") {
-      return { type: "Dashboard", label: artifact.dashboard.meta?.name ?? artifact.dashboard.id, detail: `Dashboard id: ${artifact.dashboard.id}` };
+      return {
+        type: "Dashboard",
+        label: artifact.dashboard.meta?.name ?? artifact.dashboard.id,
+        detail: `Dashboard id: ${artifact.dashboard.id}`
+      };
     }
-    if (artifact.type === "bloc")
+    if (artifact.type === "bloc") {
       return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
+    }
     if (artifact.type === "function") {
-      return { type: "Function", label: artifact.function.meta?.name ?? artifact.function.id, detail: `${artifact.function.method} ${artifact.function.id}` };
+      return {
+        type: "Function",
+        label: artifact.function.meta?.name ?? artifact.function.id,
+        detail: `${artifact.function.method} ${artifact.function.id}`
+      };
     }
     if (artifact.type === "trigger") {
       const event = artifact.trigger.event;
       const source = event.source ?? "*";
       const endpoint = event.endpoint ?? "*";
-      return { type: "Trigger", label: artifact.trigger.label ?? artifact.trigger.id, detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}` };
+      return {
+        type: "Trigger",
+        label: artifact.trigger.label ?? artifact.trigger.id,
+        detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}`
+      };
     }
     if (artifact.type === "sourceOverlay") {
-      return { type: "Source overlay", label: artifact.overlay.label ?? artifact.overlay.id, detail: `Overlay id: ${artifact.overlay.id}` };
+      return {
+        type: "Source overlay",
+        label: artifact.overlay.label ?? artifact.overlay.id,
+        detail: `Overlay id: ${artifact.overlay.id}`
+      };
     }
     if (artifact.type === "relation") {
-      return { type: "Relation", label: artifact.relation.label ?? artifact.relation.id, detail: `Relation id: ${artifact.relation.id}` };
+      return {
+        type: "Relation",
+        label: artifact.relation.label ?? artifact.relation.id,
+        detail: `Relation id: ${artifact.relation.id}`
+      };
     }
     if (artifact.type === "dashboardRelation") {
       return {
@@ -23335,7 +24196,11 @@ textarea.compact {
         detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`
       };
     }
-    return { type: "Source", label: artifact.source.meta?.name ?? artifact.source.id, detail: `Source id: ${artifact.source.id}` };
+    return {
+      type: "Source",
+      label: artifact.source.meta?.name ?? artifact.source.id,
+      detail: `Source id: ${artifact.source.id}`
+    };
   }
   function inputLabel(definition, inputName) {
     return definition.inputs.find((input2) => input2.name === inputName)?.label ?? inputName;
@@ -23353,8 +24218,9 @@ textarea.compact {
     const root = host.query("[data-installations]");
     const rows = [...host.installations].sort((left, right) => left.label.localeCompare(right.label));
     root.replaceChildren();
-    if (rows.length)
+    if (rows.length) {
       root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
+    }
     host.query("[data-installations-empty]").hidden = rows.length > 0;
   }
   function availableDefinitions(host) {
@@ -23386,8 +24252,9 @@ textarea.compact {
   function renderDetail(host) {
     const root = host.query("[data-detail-view]");
     const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
-    if (!installation)
+    if (!installation) {
       return;
+    }
     const definition = definitionFor(host, installation);
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template").content;
@@ -23417,8 +24284,9 @@ textarea.compact {
     renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
     host.query("[data-detail-view]").replaceChildren(shell);
     renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition);
-    if (options2.answers)
+    if (options2.answers) {
       applyAnswers(host.query("[data-fields]"), options2.answers);
+    }
   }
   function renderImporting(host, definition, answers) {
     const shell = cloneElement("importing-shell");
@@ -23440,12 +24308,14 @@ textarea.compact {
   function applyAnswers(root, answers) {
     for (const [name, value2] of Object.entries(answers)) {
       const element = root.querySelector(`[name="${cssEscape3(name)}"]`);
-      if (!element)
+      if (!element) {
         continue;
-      if (element instanceof HTMLInputElement && element.type === "checkbox")
+      }
+      if (element instanceof HTMLInputElement && element.type === "checkbox") {
         element.checked = value2 === true;
-      else
+      } else {
         element.value = value2 == null ? "" : typeof value2 === "string" ? value2 : JSON.stringify(value2);
+      }
     }
   }
   function cssEscape3(value2) {
@@ -23455,34 +24325,43 @@ textarea.compact {
   // src/components/admin/Resources/Integrations/ui/actions.ts
   async function handleClick(host, event) {
     const target = event.target instanceof Element ? event.target : null;
-    if (!target)
+    if (!target) {
       return;
+    }
     const tab = target.closest("[data-tab]");
-    if (tab)
+    if (tab) {
       return closeAndSetTab(host, tab.dataset.tab ?? "installed");
-    if (target.closest("[data-detail-back]"))
+    }
+    if (target.closest("[data-detail-back]")) {
       return closeAndSetTab(host, "installed");
-    if (target.closest("[data-setup-cancel]"))
+    }
+    if (target.closest("[data-setup-cancel]")) {
       return closeAndSetTab(host, "catalogue");
-    if (target.closest("[data-import-setup]"))
+    }
+    if (target.closest("[data-import-setup]")) {
       return importActive(host);
+    }
     const runSync = target.closest("[data-run-sync]");
-    if (runSync)
+    if (runSync) {
       return runIntegrationSync(host, runSync);
+    }
     const installation = target.closest("[data-installation-id]");
     if (installation?.dataset.integrationId) {
-      if (!shouldInterceptNavigation(event))
+      if (!shouldInterceptNavigation(event)) {
         return;
+      }
       event.preventDefault();
       return host.openDetail(installation.dataset.integrationId);
     }
     const definition = target.closest("[data-definition-kind]");
     if (definition?.dataset.definitionKind) {
-      if (!shouldInterceptNavigation(event))
+      if (!shouldInterceptNavigation(event)) {
         return;
+      }
       const known = host.definitions.find((item) => item.kind === definition.dataset.definitionKind);
-      if (!known)
+      if (!known) {
         return;
+      }
       event.preventDefault();
       host.openSetup(known);
     }
@@ -23495,8 +24374,9 @@ textarea.compact {
     renderSetup(host, definition, options2);
   }
   async function importActive(host) {
-    if (!host.activeDefinition)
+    if (!host.activeDefinition) {
       return;
+    }
     const definition = host.activeDefinition;
     const answers = collectAnswers(host.query("[data-fields]"), definition);
     renderImporting(host, definition, answers);
@@ -23512,25 +24392,29 @@ textarea.compact {
   }
   async function runIntegrationSync(host, button2) {
     const id = button2.dataset.integrationId;
-    if (!id)
+    if (!id) {
       return;
+    }
     const status = host.querySelector("[data-action-status]");
     button2.setAttribute("aria-busy", "true");
     button2.textContent = "Syncing";
-    if (status)
+    if (status) {
       status.textContent = "";
+    }
     try {
       await rerunIntegrationInstallation(id);
       await host.waitForBoundData(() => true);
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status)
+      if (status) {
         status.textContent = "Synced";
+      }
     } catch (error) {
       button2.removeAttribute("aria-busy");
       button2.textContent = "Run sync";
-      if (status)
+      if (status) {
         status.textContent = error instanceof Error ? error.message : "Sync failed";
+      }
     }
   }
   function closeAndSetTab(host, tab) {
@@ -23538,8 +24422,9 @@ textarea.compact {
     host.renderAll();
   }
   function shouldInterceptNavigation(event) {
-    if (!(event instanceof MouseEvent))
+    if (!(event instanceof MouseEvent)) {
       return true;
+    }
     return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
 
@@ -23579,14 +24464,16 @@ textarea.compact {
       host.installationsLoaded = true;
       changed = true;
     }
-    if (!changed || !host.definitionsLoaded || !host.installationsLoaded)
+    if (!changed || !host.definitionsLoaded || !host.installationsLoaded) {
       return;
+    }
     host.renderAll();
     resolveWaiters(host);
   }
   function waitForBoundData(host, predicate, timeoutMs = 5000) {
-    if (predicate())
+    if (predicate()) {
       return Promise.resolve();
+    }
     return new Promise((resolve, reject) => {
       const waiter = {
         predicate,
@@ -23602,16 +24489,18 @@ textarea.compact {
   }
   function resolveWaiters(host) {
     for (const waiter of [...host.waiters]) {
-      if (!waiter.predicate())
+      if (!waiter.predicate()) {
         continue;
+      }
       clearTimeout(waiter.timeout);
       host.waiters = host.waiters.filter((item) => item !== waiter);
       waiter.resolve();
     }
   }
   function parseArray(value2) {
-    if (!value2)
+    if (!value2) {
       return null;
+    }
     try {
       const parsed = JSON.parse(value2);
       return Array.isArray(parsed) ? parsed : [];
@@ -24233,8 +25122,9 @@ button[slot="back"]:disabled {
     }
     query(selector) {
       const element = this.querySelector(selector);
-      if (!element)
+      if (!element) {
         throw new Error(`Missing element: ${selector}`);
+      }
       return element;
     }
     bind() {
@@ -24242,10 +25132,12 @@ button[slot="back"]:disabled {
     }
     renderRoute() {
       const route4 = currentIntegrationRoute();
-      if (route4.view === "installation")
+      if (route4.view === "installation") {
         return this.showInstallation(route4.id);
-      if (route4.view === "setup")
+      }
+      if (route4.view === "setup") {
         return this.showSetup(route4.kind);
+      }
       this.showList(route4.tab);
     }
     showList(tab) {
@@ -24292,8 +25184,9 @@ button[slot="back"]:disabled {
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
-  if (!customElements.get("cms-integrations-admin"))
+  if (!customElements.get("cms-integrations-admin")) {
     customElements.define("cms-integrations-admin", IntegrationBrowser);
+  }
 
   // src/components/admin/Resources/Triggers/template.html
   var template_default14 = `<section class="triggers-surface">
@@ -24407,8 +25300,9 @@ input[type="checkbox"] {
   }
   async function fetchTriggers() {
     const response = await fetch(route4("/api/triggers"), { headers: { Accept: "application/json" } });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
   async function fetchTriggerCatalog() {
@@ -24416,10 +25310,12 @@ input[type="checkbox"] {
       fetch(route4("/api/functions/catalog"), { headers: { Accept: "application/json" } }),
       fetch(route4("/api/functions"), { headers: { Accept: "application/json" } })
     ]);
-    if (!sourcesResponse.ok)
+    if (!sourcesResponse.ok) {
       throw new Error(await sourcesResponse.text());
-    if (!functionsResponse.ok)
+    }
+    if (!functionsResponse.ok) {
       throw new Error(await functionsResponse.text());
+    }
     return {
       sources: await sourcesResponse.json(),
       functions: await functionsResponse.json()
@@ -24431,8 +25327,9 @@ input[type="checkbox"] {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ definition, enabled })
     });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
   async function setTriggerEnabled(id, enabled) {
@@ -24441,8 +25338,9 @@ input[type="checkbox"] {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, enabled })
     });
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(await response.text());
+    }
     return response.json();
   }
 
@@ -24504,14 +25402,16 @@ input[type="checkbox"] {
       }
     }
   }
-  if (!customElements.get("cms-triggers-admin"))
+  if (!customElements.get("cms-triggers-admin")) {
     customElements.define("cms-triggers-admin", TriggersAdmin);
+  }
   function cell(content) {
     const td = document.createElement("td");
-    if (typeof content === "string")
+    if (typeof content === "string") {
       td.textContent = content;
-    else
+    } else {
       td.append(content);
+    }
     return td;
   }
   function textBlock(primary, secondary) {
@@ -24529,14 +25429,16 @@ input[type="checkbox"] {
     const badge3 = document.createElement("span");
     badge3.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
     badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} - ${formatDate(trigger.lastRun.at)}` : "Never";
-    if (trigger.lastRun?.error)
+    if (trigger.lastRun?.error) {
       badge3.title = trigger.lastRun.error;
+    }
     return badge3;
   }
   function formatDate(value2) {
     const date = new Date(value2);
-    if (Number.isNaN(date.getTime()))
+    if (Number.isNaN(date.getTime())) {
       return value2;
+    }
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
 
@@ -25091,8 +25993,9 @@ textarea {
     message = null;
     saveButton = null;
     connectedCallback() {
-      if (this.initialized)
+      if (this.initialized) {
         return;
+      }
       this.initialized = true;
       this.load();
     }
@@ -25166,21 +26069,24 @@ textarea {
       let idWasEdited = false;
       id.addEventListener("input", () => idWasEdited = true);
       label2.addEventListener("input", () => {
-        if (!idWasEdited)
+        if (!idWasEdited) {
           id.value = identifier2(label2.value);
+        }
       });
     }
     togglePanels(button2) {
       const panels = Array.from(this.querySelectorAll("details.editor-panel"));
       const shouldOpen = panels.some((panel) => !panel.open);
-      for (const panel of panels)
+      for (const panel of panels) {
         panel.open = shouldOpen;
+      }
       button2.textContent = shouldOpen ? "Collapse all" : "Expand all";
     }
     populateSources() {
       const select4 = this.select("source");
-      for (const source of this.sources)
+      for (const source of this.sources) {
         select4.append(option3(source.id, source.label));
+      }
     }
     syncEndpointOptions() {
       const select4 = this.select("endpoint");
@@ -25189,14 +26095,16 @@ textarea {
     }
     populateFunctions() {
       const select4 = this.select("function");
-      for (const fn2 of this.functions)
+      for (const fn2 of this.functions) {
         select4.append(option3(fn2.id, `${fn2.label} (${fn2.method})`));
+      }
     }
     syncFunctionContract() {
       const root = this.querySelector("[data-role='function-contract']");
       const fn2 = this.functions.find((item) => item.id === this.select("function").value);
-      if (!root)
+      if (!root) {
         return;
+      }
       if (!fn2) {
         root.textContent = "Create a function before creating a trigger.";
         return;
@@ -25208,10 +26116,12 @@ textarea {
       const enabled = this.checkbox("condition-enabled").checked;
       const root = this.querySelector("[data-role='condition']");
       const right = this.querySelector("[data-role='right-field']");
-      if (root)
+      if (root) {
         root.hidden = !enabled;
-      if (right)
+      }
+      if (right) {
         right.hidden = this.select("operator").value === "exists";
+      }
       this.renderConditionPickers();
     }
     resetEventMappings() {
@@ -25277,22 +26187,26 @@ textarea {
     }
     syncPhaseHelp() {
       const help = this.querySelector("[data-role='phase-help']");
-      if (!help)
+      if (!help) {
         return;
+      }
       help.textContent = this.select("phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
     }
     syncExecutionOptions() {
       const failure = this.select("failure");
       const asyncMode = this.select("mode").value === "async";
       const block = failure.querySelector('option[value="block"]');
-      if (block)
+      if (block) {
         block.disabled = asyncMode;
-      if (asyncMode && failure.value === "block")
+      }
+      if (asyncMode && failure.value === "block") {
         failure.value = "ignore";
+      }
     }
     async save() {
-      if (!this.saveButton)
+      if (!this.saveButton) {
         return;
+      }
       this.saveButton.disabled = true;
       this.setMessage("Validating trigger...", "");
       try {
@@ -25333,8 +26247,9 @@ textarea {
     condition() {
       const operator = this.select("operator").value;
       const left = resolvedDraftValue(this.conditionLeft);
-      if (operator === "exists")
+      if (operator === "exists") {
         return { exists: left };
+      }
       return { [operator]: [left, resolvedDraftValue(this.conditionRight)] };
     }
     input(name) {
@@ -25350,14 +26265,16 @@ textarea {
       return this.input(name);
     }
     setMessage(text3, kind) {
-      if (!this.message)
+      if (!this.message) {
         return;
+      }
       this.message.className = `message ${kind}`.trim();
       this.message.textContent = text3;
     }
   }
-  if (!customElements.get("cms-trigger-create"))
+  if (!customElements.get("cms-trigger-create")) {
     customElements.define("cms-trigger-create", CmsTriggerCreate);
+  }
   function option3(value2, label2) {
     const el2 = document.createElement("option");
     el2.value = value2;
@@ -25365,12 +26282,14 @@ textarea {
     return el2;
   }
   function parseOptionalObject(raw, label2) {
-    if (!raw.trim())
+    if (!raw.trim()) {
       return;
+    }
     try {
       const value2 = JSON.parse(raw);
-      if (!value2 || typeof value2 !== "object" || Array.isArray(value2))
+      if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
         throw new Error;
+      }
       return value2;
     } catch {
       throw new Error(`${label2} must be a JSON object.`);
@@ -25378,8 +26297,9 @@ textarea {
   }
   function mappedDraft2(draft) {
     const root = draft[""];
-    if (root?.value)
+    if (root?.value) {
       return resolvedDraftValue(root);
+    }
     const mapped = mappedObject(draft);
     return Object.keys(mapped).length ? mapped : undefined;
   }
@@ -25388,8 +26308,9 @@ textarea {
   }
   function parseValue(raw) {
     const text3 = raw.trim();
-    if (text3.startsWith("$"))
+    if (text3.startsWith("$")) {
       return text3;
+    }
     try {
       return JSON.parse(text3);
     } catch {
@@ -25406,8 +26327,9 @@ textarea {
   function uniqueReferences(references) {
     const seen = new Set;
     return references.filter((reference) => {
-      if (seen.has(reference.value))
+      if (seen.has(reference.value)) {
         return false;
+      }
       seen.add(reference.value);
       return true;
     });
@@ -25769,8 +26691,9 @@ button:hover {
     }
     set saveStatus(label2) {
       const target = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
-      if (target)
+      if (target) {
         target.textContent = label2;
+      }
     }
     setPageTitle(title2, path) {
       this.shadowRoot.querySelector(".name").textContent = title2;
@@ -25784,8 +26707,9 @@ button:hover {
     }
     _onClick = (event) => {
       const button2 = event.target?.closest("button");
-      if (!button2)
+      if (!button2) {
         return;
+      }
       const viewport = button2.dataset.viewport;
       if (viewport) {
         this._setViewport(viewport, true);
@@ -25824,22 +26748,26 @@ button:hover {
       }
     };
     _setViewport(viewport, emit) {
-      if (this._viewport === viewport)
+      if (this._viewport === viewport) {
         return;
+      }
       this._viewport = viewport;
       this._syncButtons();
-      if (!emit)
+      if (!emit) {
         return;
+      }
       this._emitViewportChange();
     }
     _setMode(mode, emit) {
-      if (this._mode === mode)
+      if (this._mode === mode) {
         return;
+      }
       this._mode = mode;
       this._syncButtons();
       this._syncModeAttribute();
-      if (!emit)
+      if (!emit) {
         return;
+      }
       this.dispatchEvent(new CustomEvent(TOPBAR_EDITOR_MODE_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
@@ -25847,12 +26775,14 @@ button:hover {
       }));
     }
     _setSourceState(sourceState, emit) {
-      if (this._sourceState === sourceState)
+      if (this._sourceState === sourceState) {
         return;
+      }
       this._sourceState = sourceState;
       this._syncButtons();
-      if (!emit)
+      if (!emit) {
         return;
+      }
       this.dispatchEvent(new CustomEvent(TOPBAR_SOURCE_STATE_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
@@ -25867,8 +26797,9 @@ button:hover {
     _syncModeAttribute() {
       this.setAttribute("mode", this._mode);
       const reload = this.shadowRoot.querySelector('[data-action="view-reload"]');
-      if (reload)
+      if (reload) {
         reload.disabled = this._mode !== "view";
+      }
     }
     _syncButtonGroup(selector, dataKey, value2) {
       for (const button2 of Array.from(this.shadowRoot.querySelectorAll(selector))) {
@@ -26028,23 +26959,28 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceBinding.ts
   function sourceForBinding(sources, binding) {
-    if (!binding)
+    if (!binding) {
       return null;
+    }
     return sources.find((source) => sourceMatchesBinding(source, binding)) ?? null;
   }
   function sourceMatchesBinding(source, binding) {
-    if (binding.method && (source.method ?? "GET") !== binding.method)
+    if (binding.method && (source.method ?? "GET") !== binding.method) {
       return false;
+    }
     return bindingQuery(source.url, binding.url) !== null;
   }
   function paramsForBinding(source, binding) {
-    if (!binding)
+    if (!binding) {
       return {};
-    if (binding.params)
+    }
+    if (binding.params) {
       return binding.params;
+    }
     const query3 = bindingQuery(source.url, binding.url);
-    if (!query3)
+    if (!query3) {
       return {};
+    }
     const params = {};
     for (const [name, value2] of new URLSearchParams(query3).entries()) {
       params[name] = paramValue(value2);
@@ -26053,11 +26989,13 @@ button:hover {
   }
   function paramValue(value2) {
     const queryParam = tokenValue2(value2, "#");
-    if (queryParam)
+    if (queryParam) {
       return { from: "queryParam", name: queryParam };
+    }
     const state2 = tokenValue2(value2, "@");
-    if (state2)
+    if (state2) {
       return { from: "state", name: state2 };
+    }
     return { from: "raw", value: value2 };
   }
   function tokenValue2(value2, prefix) {
@@ -26065,10 +27003,12 @@ button:hover {
     return match?.[1]?.trim() || null;
   }
   function bindingQuery(sourceUrl3, bindingUrl) {
-    if (bindingUrl === sourceUrl3)
+    if (bindingUrl === sourceUrl3) {
       return "";
-    if (bindingUrl.startsWith(`${sourceUrl3}?`))
+    }
+    if (bindingUrl.startsWith(`${sourceUrl3}?`)) {
       return bindingUrl.slice(sourceUrl3.length + 1);
+    }
     if (sourceUrl3.includes("?") && bindingUrl.startsWith(`${sourceUrl3}&`)) {
       return bindingUrl.slice(sourceUrl3.length + 1);
     }
@@ -26098,12 +27038,14 @@ button:hover {
       const modeElement = row.querySelector(".param-mode");
       const mode = modeElement ? selectedMode(modeElement) : "queryParam";
       const rawValue = row.querySelector(".param-value")?.value.trim();
-      if (!name || !rawValue)
+      if (!name || !rawValue) {
         continue;
-      if (mode === "raw")
+      }
+      if (mode === "raw") {
         params[name] = { from: "raw", value: rawValue };
-      else
+      } else {
         params[name] = { from: mode, name: rawValue };
+      }
     }
     return params;
   }
@@ -26119,15 +27061,10 @@ button:hover {
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourceGroups.ts
   function filteredSources(sources, query3) {
     const normalized = query3.trim().toLowerCase();
-    if (!normalized)
+    if (!normalized) {
       return sources;
-    return sources.filter((source) => [
-      source.label,
-      source.description,
-      source.provider,
-      source.providerLabel,
-      source.url
-    ].some((value2) => value2?.toLowerCase().includes(normalized)));
+    }
+    return sources.filter((source) => [source.label, source.description, source.provider, source.providerLabel, source.url].some((value2) => value2?.toLowerCase().includes(normalized)));
   }
   function providerGroups(sources) {
     const groups = new Map;
@@ -26278,8 +27215,9 @@ button:hover {
   }
   function renderRequestParams(section, source, initialBinding) {
     const params = source.params ?? [];
-    if (params.length === 0)
+    if (params.length === 0) {
       return;
+    }
     section.append(renderHeading("Request params"));
     const initialParams = paramsForBinding(source, initialBinding);
     for (const param of params) {
@@ -26295,8 +27233,9 @@ button:hover {
   }
   function renderRequestBody(section, source, initialBinding) {
     const fields = bodyBindingFields(source.body?.fields ?? []);
-    if (fields.length === 0)
+    if (fields.length === 0) {
       return;
+    }
     section.append(renderHeading("Request body"));
     for (const field2 of fields) {
       section.append(renderBindingRow({
@@ -26384,8 +27323,9 @@ button:hover {
   }
   function selectOption(select4, value2) {
     const index = Array.from(select4.options).findIndex((option5) => option5.value === value2);
-    if (index >= 0)
+    if (index >= 0) {
       select4.selectedIndex = index;
+    }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts
@@ -26398,8 +27338,9 @@ button:hover {
   function renderFieldList(fields, emptyMessage) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field2 of fields)
+    for (const field2 of fields) {
       list.append(renderField(field2, 0));
+    }
     if (list.children.length === 0) {
       const empty3 = document.createElement("p");
       empty3.className = "details-empty";
@@ -26428,8 +27369,9 @@ button:hover {
     if (field2.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field2.children)
+      for (const child of field2.children) {
         children.append(renderField(child, depth + 1));
+      }
       item.append(children);
     }
     return item;
@@ -26467,8 +27409,9 @@ button:hover {
     scroll.append(title2, renderBindingConfig(source, options2.initialBinding));
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
-    if (options2.canRemove)
+    if (options2.canRemove) {
       footer.append(removeButton2(options2.onRemove));
+    }
     footer.append(insertButton(options2.onSelect));
     container.append(scroll, footer);
   }
@@ -27168,8 +28111,9 @@ h2 {
       return this._sources.filter((source) => this._activeMethod === "all" || this._sourceMethod(source) === this._activeMethod);
     }
     _onBackdropClick = (event) => {
-      if (event.target === this.backdrop)
+      if (event.target === this.backdrop) {
         this.close();
+      }
     };
     _onSearchInput = () => {
       this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
@@ -27183,8 +28127,9 @@ h2 {
       this._render();
     };
     _onKeydown = (event) => {
-      if (!this.backdrop.hidden && event.key === "Escape")
+      if (!this.backdrop.hidden && event.key === "Escape") {
         this.close();
+      }
     };
     get backdrop() {
       return this.query(".backdrop");
@@ -27232,11 +28177,13 @@ h2 {
     _selectedMethodFilter() {
       const options2 = Array.from(this.methodFilter.options);
       const selected = options2.find((option5) => option5.selected);
-      if (selected?.value)
+      if (selected?.value) {
         return selected.value;
+      }
       const selectedIndexValue = this.methodFilter.options[this.methodFilter.selectedIndex]?.value;
-      if (selectedIndexValue)
+      if (selectedIndexValue) {
         return selectedIndexValue;
+      }
       const selectedAttr = options2.find((option5) => option5.hasAttribute("selected"));
       return selectedAttr?.value ?? this.methodFilter.getAttribute("value") ?? "GET";
     }
@@ -27447,8 +28394,9 @@ textarea { min-height: 92px; resize: vertical; }
       return root;
     }
     root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
-    if (operatorNeedsValue(draft.operator))
+    if (operatorNeedsValue(draft.operator)) {
       root.append(valueInput(draft, onChange));
+    }
     return root;
   }
   function fieldExpression(draft) {
@@ -27513,14 +28461,18 @@ textarea { min-height: 92px; resize: vertical; }
   }
   function parseValue2(value2) {
     const trimmed = value2.trim();
-    if (trimmed === "true")
+    if (trimmed === "true") {
       return true;
-    if (trimmed === "false")
+    }
+    if (trimmed === "false") {
       return false;
-    if (trimmed === "null")
+    }
+    if (trimmed === "null") {
       return null;
-    if (trimmed && Number.isFinite(Number(trimmed)))
+    }
+    if (trimmed && Number.isFinite(Number(trimmed))) {
       return Number(trimmed);
+    }
     return trimmed;
   }
   function empty3(text3) {
@@ -27565,12 +28517,14 @@ textarea { min-height: 92px; resize: vertical; }
     const section = document.createElement("section");
     section.className = "source";
     section.append(textBlock2("source-title", source.label));
-    if (source.sourceName)
+    if (source.sourceName) {
       section.append(textBlock2("source-name", `Source: ${source.sourceName}`));
+    }
     const states = document.createElement("div");
     states.className = "states";
-    for (const state2 of STATES)
+    for (const state2 of STATES) {
       states.append(renderState(source, state2, options2));
+    }
     section.append(states);
     return section;
   }
@@ -27662,14 +28616,20 @@ textarea { min-height: 92px; resize: vertical; }
       return button2;
     }
     renderPanel() {
-      if (this._mode === "field")
+      if (this._mode === "field") {
         return renderFieldMode(this._fields, this._fieldDraft, (render) => render ? this.render() : this.syncSummary());
-      if (this._mode === "advanced")
+      }
+      if (this._mode === "advanced") {
         return renderAdvancedMode(this._advancedExpression, (value2) => {
           this._advancedExpression = value2;
           this.syncSummary();
         });
-      return renderSourceStateMode({ sources: this._sources, selected: this._selected, onChange: () => this.syncSummary() });
+      }
+      return renderSourceStateMode({
+        sources: this._sources,
+        selected: this._selected,
+        onChange: () => this.syncSummary()
+      });
     }
     renderSummary() {
       const summary2 = document.createElement("div");
@@ -27696,37 +28656,48 @@ textarea { min-height: 92px; resize: vertical; }
       this.removeButton.disabled = !this._canRemove;
     }
     currentExpression() {
-      if (this._mode === "advanced")
+      if (this._mode === "advanced") {
         return this._advancedExpression.trim();
-      if (this._mode === "field" && this._fieldDraft.path)
+      }
+      if (this._mode === "field" && this._fieldDraft.path) {
         return fieldExpression(this._fieldDraft);
+      }
       return selectedSourceConditions(this._sources, this._selected).map((condition) => `${condition.sourceEditor.target.localName}.${condition.sourceState}`).join(" || ");
     }
     canApply() {
-      if (this._mode === "source")
+      if (this._mode === "source") {
         return this._selected.size > 0;
+      }
       return this.currentExpression().trim().length > 0;
     }
     apply = () => {
-      if (!this.canApply())
+      if (!this.canApply()) {
         return;
+      }
       const detail = this._mode === "source" ? { conditions: selectedSourceConditions(this._sources, this._selected) } : { conditions: [], expression: this.currentExpression().trim() };
-      this.dispatchEvent(new CustomEvent(CONDITION_PICKER_APPLY_EVENT, { bubbles: true, composed: true, detail }));
+      this.dispatchEvent(new CustomEvent(CONDITION_PICKER_APPLY_EVENT, {
+        bubbles: true,
+        composed: true,
+        detail
+      }));
       this.close();
     };
     removeCondition = () => {
-      if (!this._canRemove)
+      if (!this._canRemove) {
         return;
+      }
       this.dispatchEvent(new CustomEvent(CONDITION_PICKER_REMOVE_EVENT, { bubbles: true, composed: true }));
       this.close();
     };
     onBackdropClick = (event) => {
-      if (event.target === this.backdrop)
+      if (event.target === this.backdrop) {
         this.close();
+      }
     };
     onKeydown = (event) => {
-      if (!this.backdrop.hidden && event.key === "Escape")
+      if (!this.backdrop.hidden && event.key === "Escape") {
         this.close();
+      }
     };
     get backdrop() {
       return this.shadowRoot.querySelector(".backdrop");
@@ -28238,8 +29209,9 @@ dd {
     };
   }
   function blockPickerOptionItem(option5) {
-    if (option5.item)
+    if (option5.item) {
       return option5.item;
+    }
     if (option5.entry) {
       return {
         kind: "block",
@@ -28249,18 +29221,21 @@ dd {
     throw new Error("Block picker option requires either item or entry.");
   }
   function blockPickerSourceLabel(kind) {
-    if (kind === "template")
+    if (kind === "template") {
       return "Template";
-    if (kind === "media")
+    }
+    if (kind === "media") {
       return "Media";
+    }
     return "Block";
   }
   function blockPickerItemLabel(item) {
     return item.kind === "block" ? item.entry.label : item.label;
   }
   function blockPickerItemDescription(item) {
-    if (item.kind === "block")
+    if (item.kind === "block") {
       return item.entry.description ?? item.entry.tag;
+    }
     return item.description ?? blockPickerItemHandle(item);
   }
   function blockPickerItemCategory(item) {
@@ -28273,10 +29248,12 @@ dd {
     return item.kind === "block" ? item.entry.icon : item.icon;
   }
   function blockPickerItemHandle(item) {
-    if (item.kind === "block")
+    if (item.kind === "block") {
       return item.entry.tag;
-    if (item.kind === "media")
+    }
+    if (item.kind === "media") {
       return item.accept?.join(", ") ?? "media";
+    }
     return item.id;
   }
   function blockPickerIconText(item) {
@@ -28289,8 +29266,9 @@ dd {
     return subCategory ? `${category} / ${subCategory}` : category;
   }
   function blockPickerOptionMatches(option5, query3) {
-    if (!query3)
+    if (!query3) {
       return true;
+    }
     const item = blockPickerOptionItem(option5);
     return [
       blockPickerItemLabel(item),
@@ -28402,8 +29380,9 @@ dd {
         this._renderSidebar();
         this._renderEntries();
       }, this._sourceCount("template"), this._sourceCount("template") === 0), this._filterButton("Media", this._activeSource === "media", () => {
-        if (this._selectSingleSourceOption("media"))
+        if (this._selectSingleSourceOption("media")) {
           return;
+        }
         this._activeSource = "media";
         this._activeCategory = "";
         this._activeOption = null;
@@ -28431,8 +29410,9 @@ dd {
       button2.disabled = disabled;
       button2.ariaPressed = String(active);
       button2.addEventListener("click", () => {
-        if (button2.disabled)
+        if (button2.disabled) {
           return;
+        }
         onClick();
       });
       const text3 = document.createElement("span");
@@ -28496,11 +29476,13 @@ dd {
         button2.textContent = group.label;
         button2.disabled = Boolean(group.disabledReason);
         button2.ariaSelected = String(slotKey === this._activeSlotKey);
-        if (group.disabledReason)
+        if (group.disabledReason) {
           button2.title = group.disabledReason;
+        }
         button2.addEventListener("click", () => {
-          if (button2.disabled)
+          if (button2.disabled) {
             return;
+          }
           this._activeSlotKey = slotKey;
           this._activeCategory = "";
           this._activeOption = null;
@@ -28547,10 +29529,12 @@ dd {
     }
     _isVisibleOption(option5, query3) {
       const item = blockPickerOptionItem(option5);
-      if (item.kind !== this._activeSource)
+      if (item.kind !== this._activeSource) {
         return false;
-      if (this._activeCategory && blockPickerCategoryLabel(option5) !== this._activeCategory)
+      }
+      if (this._activeCategory && blockPickerCategoryLabel(option5) !== this._activeCategory) {
         return false;
+      }
       return blockPickerOptionMatches(option5, query3);
     }
     _sourceCount(source) {
@@ -28558,8 +29542,9 @@ dd {
     }
     _selectSingleSourceOption(source) {
       const options2 = this._activeGroup()?.options.filter((option5) => blockPickerOptionItem(option5).kind === source) ?? [];
-      if (options2.length !== 1)
+      if (options2.length !== 1) {
         return false;
+      }
       this._selectOption(options2[0]);
       return true;
     }
@@ -28569,8 +29554,9 @@ dd {
     _categories() {
       const categories = new Set;
       for (const option5 of this._activeGroup()?.options ?? []) {
-        if (blockPickerOptionItem(option5).kind !== this._activeSource)
+        if (blockPickerOptionItem(option5).kind !== this._activeSource) {
           continue;
+        }
         categories.add(blockPickerCategoryLabel(option5));
       }
       return [...categories].sort((a, b) => a.localeCompare(b));
@@ -28582,12 +29568,14 @@ dd {
       return this._groups.find((group) => !group.disabledReason) ?? this._groups[0];
     }
     _onBackdropClick = (event) => {
-      if (event.target === this.backdrop)
+      if (event.target === this.backdrop) {
         this.close();
+      }
     };
     _onKeydown = (event) => {
-      if (event.key === "Escape")
+      if (event.key === "Escape") {
         this.close();
+      }
     };
     get backdrop() {
       return this.shadowRoot.querySelector(".backdrop");
@@ -28625,23 +29613,27 @@ dd {
   function onStructureDragStart(state2, node, event) {
     state2.draggedNode = node;
     event.dataTransfer?.setData("text/plain", node.label);
-    if (event.dataTransfer)
+    if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = "move";
+    }
   }
   function onStructureDragOver(state2, node, row, event, context) {
-    if (!canDropOnNode(state2, node, context))
+    if (!canDropOnNode(state2, node, context)) {
       return;
+    }
     event.preventDefault();
     context.clearDropRow();
     const position = structureDropPosition(row, event);
     row.classList.add(position === "before" ? "drop-before" : "drop-after");
     state2.dropRow = row;
-    if (event.dataTransfer)
+    if (event.dataTransfer) {
       event.dataTransfer.dropEffect = "move";
+    }
   }
   function onStructureDrop(state2, node, event, context) {
-    if (!canDropOnNode(state2, node, context))
+    if (!canDropOnNode(state2, node, context)) {
       return;
+    }
     event.preventDefault();
     const position = structureDropPosition(event.currentTarget, event);
     context.emitMove(position === "before" ? "move-before" : "move-after", node, state2.draggedNode);
@@ -28674,10 +29666,12 @@ dd {
       context.emitDelete(context.selectedEditor);
       return;
     }
-    if (!event.ctrlKey && !event.metaKey)
+    if (!event.ctrlKey && !event.metaKey) {
       return;
-    if (isEditableKeyEvent(event))
+    }
+    if (isEditableKeyEvent(event)) {
       return;
+    }
     const key = event.key.toLowerCase();
     if (key === "c" && context.selectedEditor) {
       event.preventDefault();
@@ -28689,8 +29683,9 @@ dd {
   }
   function isEditableKeyEvent(event) {
     return event.composedPath().some((target) => {
-      if (!(target instanceof Element))
+      if (!(target instanceof Element)) {
         return false;
+      }
       return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
     });
   }
@@ -28699,27 +29694,31 @@ dd {
   class StructureTreeEvents {
     tree;
     onBlockPickerSelect = (event) => {
-      if (!this.tree.state.pendingPickerAction)
+      if (!this.tree.state.pendingPickerAction) {
         return;
+      }
       const { action, editor } = this.tree.state.pendingPickerAction;
       this.tree.emitter.emitAction(action, editor, event.detail.option.item, event.detail.option.slot);
       this.tree.state.pendingPickerAction = null;
     };
     onDataSourceSelect = (event) => {
-      if (!this.tree.state.pendingSourceEditor)
+      if (!this.tree.state.pendingSourceEditor) {
         return;
+      }
       this.tree.emitter.emitAction("set-source", this.tree.state.pendingSourceEditor, undefined, undefined, undefined, undefined, event.detail.source, event.detail.binding);
       this.tree.state.pendingSourceEditor = null;
     };
     onDataSourceRemove = () => {
-      if (!this.tree.state.pendingSourceEditor)
+      if (!this.tree.state.pendingSourceEditor) {
         return;
+      }
       this.tree.emitter.emitAction("remove-source", this.tree.state.pendingSourceEditor);
       this.tree.state.pendingSourceEditor = null;
     };
     onConditionApply = (event) => {
-      if (!this.tree.state.pendingConditionEditor)
+      if (!this.tree.state.pendingConditionEditor) {
         return;
+      }
       if (event.detail.expression) {
         this.tree.emitter.emitAction("set-condition", this.tree.state.pendingConditionEditor, undefined, undefined, undefined, undefined, undefined, undefined, undefined, event.detail.expression);
       } else {
@@ -28728,8 +29727,9 @@ dd {
       this.tree.state.pendingConditionEditor = null;
     };
     onConditionRemove = () => {
-      if (!this.tree.state.pendingConditionEditor)
+      if (!this.tree.state.pendingConditionEditor) {
         return;
+      }
       this.tree.emitter.emitAction("remove-source-status-condition", this.tree.state.pendingConditionEditor);
       this.tree.state.pendingConditionEditor = null;
     };
@@ -28786,12 +29786,14 @@ dd {
       clearStructureDropRow(this.tree.state.dragDrop);
     }
     onTreeClick = (event) => {
-      if (event.target === this.tree.refs.tree)
+      if (event.target === this.tree.refs.tree) {
         this.tree.pickers.openRootPicker();
+      }
     };
     onTreeContextMenu = (event) => {
-      if (event.target !== this.tree.refs.tree)
+      if (event.target !== this.tree.refs.tree) {
         return;
+      }
       event.preventDefault();
       const mouseEvent = event;
       this.tree.menus.openRootContextMenu(mouseEvent.clientX, mouseEvent.clientY);
@@ -28816,8 +29818,9 @@ dd {
     button2.textContent = label2;
     button2.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (button2.disabled)
+      if (button2.disabled) {
         return;
+      }
       closeContextMenu();
       action();
     });
@@ -28903,20 +29906,24 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureNodeRelations.ts
   function canDuplicateNode(node, parentNode, slotForChild, slotChildCount) {
     const parent = parentNode(node);
-    if (!parent)
+    if (!parent) {
       return true;
+    }
     const slot = slotForChild(parent, node);
-    if (!slot?.max)
+    if (!slot?.max) {
       return true;
+    }
     return slotChildCount(parent, slot) < slot.max;
   }
   function canDeleteNode(node, parentNode, slotForChild, slotChildCount) {
     const parent = parentNode(node);
-    if (!parent)
+    if (!parent) {
       return true;
+    }
     const slot = slotForChild(parent, node);
-    if (!slot?.min)
+    if (!slot?.min) {
       return true;
+    }
     return slotChildCount(parent, slot) > slot.min;
   }
   function slotForChild(parent, child) {
@@ -28931,11 +29938,13 @@ dd {
   }
   function parentStructureNode(nodes, child) {
     for (const node of nodes) {
-      if (node.children.includes(child))
+      if (node.children.includes(child)) {
         return node;
+      }
       const parent = parentStructureNode(node.children, child);
-      if (parent)
+      if (parent) {
         return parent;
+      }
     }
     return null;
   }
@@ -28950,30 +29959,27 @@ dd {
   function visibleStructureNodes(nodes, isCollapsed, depth = 0) {
     return nodes.flatMap((node) => {
       const current = [{ item: node, depth }];
-      if (isCollapsed(node))
+      if (isCollapsed(node)) {
         return current;
-      return [
-        ...current,
-        ...visibleStructureNodes(node.children, isCollapsed, depth + 1)
-      ];
+      }
+      return [...current, ...visibleStructureNodes(node.children, isCollapsed, depth + 1)];
     });
   }
   function pathToEditor(nodes, editor, ancestors = []) {
     for (const node of nodes) {
       const path = [...ancestors, node];
-      if (node.editor === editor)
+      if (node.editor === editor) {
         return path;
+      }
       const childPath = pathToEditor(node.children, editor, path);
-      if (childPath)
+      if (childPath) {
         return childPath;
+      }
     }
     return null;
   }
   function flattenStructureNodes(nodes) {
-    return nodes.flatMap((node) => [
-      node,
-      ...flattenStructureNodes(node.children)
-    ]);
+    return nodes.flatMap((node) => [node, ...flattenStructureNodes(node.children)]);
   }
   function editorChildrenOf(parent) {
     return parent.children;
@@ -29001,20 +30007,24 @@ dd {
     return badge3;
   }
   function structureBadgeClass(value2) {
-    if (CMS_SOURCE_STATES.includes(value2))
+    if (CMS_SOURCE_STATES.includes(value2)) {
       return `badge source-status ${value2}`;
+    }
     return value2 === "Source" || value2 === "Repeat" ? "badge data" : "badge";
   }
   function structureBadgeIcon(value2) {
-    if (value2 === "Source")
+    if (value2 === "Source") {
       return "▦";
-    if (value2 === "Repeat")
+    }
+    if (value2 === "Repeat") {
       return "↻";
+    }
     return null;
   }
   function structureIconText(node) {
-    if (node.icon)
+    if (node.icon) {
       return node.icon.slice(0, 1).toUpperCase();
+    }
     return node.label.slice(0, 1).toUpperCase();
   }
   function structureNodeLabel(node) {
@@ -29070,13 +30080,16 @@ dd {
       return visibleStructureNodes(nodes, (node) => this.isCollapsed(node), depth);
     }
     expandPathToSelected() {
-      if (!this.state.selectedEditor)
+      if (!this.state.selectedEditor) {
         return;
+      }
       const path = pathToEditor(this.state.nodes, this.state.selectedEditor);
-      if (!path)
+      if (!path) {
         return;
-      for (const node of path.slice(0, -1))
+      }
+      for (const node of path.slice(0, -1)) {
         this.state.collapsedTargets.delete(this.nodeCollapseKey(node));
+      }
     }
     toggleNode(node) {
       const key = this.nodeCollapseKey(node);
@@ -29097,11 +30110,13 @@ dd {
     }
     setRepeatableTargets(targets) {
       for (const node of flattenStructureNodes(this.state.nodes)) {
-        if (!targets.includes(node.target))
+        if (!targets.includes(node.target)) {
           this.state.repeatableTargets.delete(node.target);
+        }
       }
-      for (const target of targets)
+      for (const target of targets) {
         this.state.repeatableTargets.add(target);
+      }
     }
     sourceDataSources() {
       return this.state.dataSources;
@@ -29121,8 +30136,9 @@ dd {
     sourceAncestorNodes(node) {
       const sources = [];
       for (let current = this.parentNode(node);current; current = this.parentNode(current)) {
-        if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+        if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
           sources.push(current);
+        }
       }
       return sources;
     }
@@ -29136,12 +30152,15 @@ dd {
       return sourceStatusConditionsFromElement(node.target);
     }
     canSetSourceStatusCondition(node, source = this.nearestSourceNode(node)) {
-      if (!source)
+      if (!source) {
         return false;
-      if (!source.target.contains(node.target) || source.target === node.target)
+      }
+      if (!source.target.contains(node.target) || source.target === node.target) {
         return false;
-      if (hasNonSourceStatusCondition(node.target))
+      }
+      if (hasNonSourceStatusCondition(node.target)) {
         return false;
+      }
       return !hasSourceStatusConditionAncestor(node.target, source.target);
     }
     iconText(node) {
@@ -29165,15 +30184,17 @@ dd {
   }
   function nearestSourceAncestor(target) {
     for (let current = target.parentElement;current; current = current.parentElement) {
-      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
         return current;
+      }
     }
     return null;
   }
   function hasSourceStatusConditionAncestor(target, source) {
     for (let current = target.parentElement;current && current !== source; current = current.parentElement) {
-      if (sourceStatusConditionTargetsSource(current, source))
+      if (sourceStatusConditionTargetsSource(current, source)) {
         return true;
+      }
     }
     return false;
   }
@@ -29183,8 +30204,9 @@ dd {
   function sourceStatusConditionTargetsSource(target, source) {
     const conditions = sourceStatusConditionsFromElement(target);
     return conditions.some((condition) => {
-      if (condition.sourceId)
+      if (condition.sourceId) {
         return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+      }
       return nearestSourceAncestor(target) === source;
     });
   }
@@ -29194,8 +30216,9 @@ dd {
     const byPath = new Map;
     for (const scope of scopes) {
       for (const option5 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option5.path))
+        if (!byPath.has(option5.path)) {
           byPath.set(option5.path, option5);
+        }
       }
     }
     return [...byPath.values()];
@@ -29216,8 +30239,9 @@ dd {
     return options2;
   }
   function relativePath(path, prefix) {
-    if (path === ".")
+    if (path === ".") {
       return prefix;
+    }
     return prefix ? `${prefix}.${path}` : path;
   }
 
@@ -29236,8 +30260,9 @@ dd {
     return options2.length === 1 ? options2[0] ?? null : null;
   }
   function useDefaultTemplate(templates, groups, context) {
-    if (templates.length === 0)
+    if (templates.length === 0) {
       return false;
+    }
     if (templates.length === 1) {
       context.emitAction("add-root", templates[0]);
       return true;
@@ -29277,8 +30302,9 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerOptions.ts
   function slotOptions(context, slot, parent, replaced) {
     const blockOptions = context.catalog.filter((entry) => {
-      if (entry.category === "Runtime")
+      if (entry.category === "Runtime") {
         return false;
+      }
       return slot.accepts.some((accept) => acceptsEntry(accept, entry));
     }).map((entry) => ({
       item: {
@@ -29295,19 +30321,21 @@ dd {
       slotLabel: slot.label
     }));
     const mediaAccept = mediaAcceptForSlot(slot);
-    const mediaOptions = mediaAccept ? [{
-      item: {
-        kind: "media",
-        label: "Media",
-        description: "Choose a file from the CMS library.",
-        category: "Media",
-        subCategory: mediaAccept.join(", "),
-        icon: "M",
-        accept: mediaAccept
-      },
-      slot: slot.slot,
-      slotLabel: slot.label
-    }] : [];
+    const mediaOptions = mediaAccept ? [
+      {
+        item: {
+          kind: "media",
+          label: "Media",
+          description: "Choose a file from the CMS library.",
+          category: "Media",
+          subCategory: mediaAccept.join(", "),
+          icon: "M",
+          accept: mediaAccept
+        },
+        slot: slot.slot,
+        slotLabel: slot.label
+      }
+    ] : [];
     return [
       ...blockOptions.filter((option5) => canFitItem(context, parent, slot, option5.item, replaced)),
       ...externalOptions,
@@ -29316,8 +30344,9 @@ dd {
   }
   function mediaAcceptForSlot(slot) {
     const explicit = slot.accepts.find((accept) => accept.kind === "media");
-    if (explicit?.kind === "media")
+    if (explicit?.kind === "media") {
       return explicit.accept ?? ["image"];
+    }
     if (slot.accepts.some((accept) => accept.kind === "component" && accept.tag.toLowerCase() === "img")) {
       return ["image"];
     }
@@ -29327,38 +30356,47 @@ dd {
     return null;
   }
   function acceptsEntry(accept, entry) {
-    if (accept.kind === "media")
+    if (accept.kind === "media") {
       return false;
-    if (accept.kind === "any-component")
+    }
+    if (accept.kind === "any-component") {
       return true;
+    }
     return accept.tag.toLowerCase() === entry.tag.toLowerCase();
   }
   function acceptsItem(accept, item) {
-    if (item.kind === "media")
+    if (item.kind === "media") {
       return accept.kind === "media";
-    if (item.kind === "block")
+    }
+    if (item.kind === "block") {
       return acceptsEntry(accept, item.entry);
-    if (accept.kind === "media")
+    }
+    if (accept.kind === "media") {
       return false;
-    if (accept.kind === "any-component")
+    }
+    if (accept.kind === "any-component") {
       return true;
+    }
     return false;
   }
   function canFitItem(context, parent, slot, item, replaced) {
-    if (typeof slot.max !== "number")
+    if (typeof slot.max !== "number") {
       return true;
+    }
     const replacedSlot = replaced ? context.slotForChild(parent, replaced) : undefined;
     const replacedCount = replacedSlot && context.sameSlot(replacedSlot, slot) ? 1 : 0;
     return context.slotChildCount(parent, slot) - replacedCount + itemRootCount(item) <= slot.max;
   }
   function itemRootCount(item) {
-    if (item.kind !== "template")
+    if (item.kind !== "template") {
       return 1;
+    }
     const template9 = document.createElement("template");
     template9.innerHTML = item.content;
     const elementCount = template9.content.children.length;
-    if (elementCount > 0)
+    if (elementCount > 0) {
       return elementCount;
+    }
     return template9.content.textContent?.trim() ? 1 : 0;
   }
 
@@ -29378,21 +30416,25 @@ dd {
         slotLabel: "Page"
       }))
     ];
-    return [{
-      label: "Page",
-      disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
-      options: options2
-    }];
+    return [
+      {
+        label: "Page",
+        disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
+        options: options2
+      }
+    ];
   }
   function defaultTemplateGroups(templates) {
-    return [{
-      label: "Default templates",
-      disabledReason: templates.length === 0 ? "No default templates." : undefined,
-      options: templates.map((item) => ({
-        item,
-        slotLabel: "Page"
-      }))
-    }];
+    return [
+      {
+        label: "Default templates",
+        disabledReason: templates.length === 0 ? "No default templates." : undefined,
+        options: templates.map((item) => ({
+          item,
+          slotLabel: "Page"
+        }))
+      }
+    ];
   }
   function childGroups(context, node) {
     return node.editor.getContentSlots().map((slot) => {
@@ -29408,18 +30450,22 @@ dd {
   }
   function replaceGroups(context, node) {
     const parent = context.parentNode(node);
-    if (!parent)
+    if (!parent) {
       return rootGroups(context);
+    }
     const slot = context.slotForChild(parent, node);
-    if (!slot)
+    if (!slot) {
       return [];
+    }
     const options2 = slotOptions(context, slot, parent, node);
-    return [{
-      slot: slot.slot,
-      label: slot.label,
-      disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
-      options: options2
-    }];
+    return [
+      {
+        slot: slot.slot,
+        label: slot.label,
+        disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
+        options: options2
+      }
+    ];
   }
   function hasEnabledGroup(groups) {
     return groups.some((group) => !group.disabledReason && group.options.length > 0);
@@ -29531,23 +30577,26 @@ dd {
       const selected = [];
       for (const condition of this.tree.nodes.sourceStatusConditions(node)) {
         const source = condition.sourceId ? sources.find((candidate) => candidate.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === condition.sourceId) : sources[0];
-        if (!source)
+        if (!source) {
           continue;
+        }
         selected.push({ sourceEditor: source.editor, sourceState: condition.state });
       }
       return selected;
     }
     sourceName(source) {
       const binding = parseSource(source.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-      if (!binding)
+      if (!binding) {
         return;
+      }
       const dataSource = this.tree.state.dataSources.find((candidate) => sourceUrlMatchesBinding(candidate.url, binding.url));
       return dataSource?.label ?? binding.alias ?? binding.url;
     }
     dataScopes(node) {
       const nodes = [];
-      for (let current = node;current; current = this.tree.nodes.parentNode(current))
+      for (let current = node;current; current = this.tree.nodes.parentNode(current)) {
         nodes.unshift(current);
+      }
       return nodes.flatMap((candidate) => candidate.editor.getDataScopes());
     }
     customConditionExpression(node) {
@@ -29579,8 +30628,9 @@ dd {
     }
     get scrollContainer() {
       const panelBody = this.host.parentElement?.shadowRoot?.querySelector(".panel-body");
-      if (panelBody)
+      if (panelBody) {
         return panelBody;
+      }
       return this.host;
     }
     get blockPicker() {
@@ -29618,8 +30668,9 @@ dd {
     button2.textContent = context.defaultTemplates.length > 0 ? "Use default template" : "Add block";
     button2.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (context.useDefaultTemplate(context.defaultTemplates))
+      if (context.useDefaultTemplate(context.defaultTemplates)) {
         return;
+      }
       context.openRootPicker();
     });
     empty4.append("No editable elements", button2);
@@ -29636,8 +30687,9 @@ dd {
     const item = document.createElement("button");
     item.className = context.itemClass(node);
     item.draggable = true;
-    if (node.editor === context.selectedEditor)
+    if (node.editor === context.selectedEditor) {
       item.classList.add("selected");
+    }
     item.type = "button";
     item.addEventListener("click", () => {
       context.selectEditor(node.editor);
@@ -29700,8 +30752,9 @@ dd {
         context.toggleBadges(node);
       });
       more.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter" && event.key !== " ")
+        if (event.key !== "Enter" && event.key !== " ") {
           return;
+        }
         event.preventDefault();
         event.stopPropagation();
         context.toggleBadges(node);
@@ -29732,14 +30785,16 @@ dd {
         }));
         return;
       }
-      for (const node of this.tree.nodes.visibleNodes())
+      for (const node of this.tree.nodes.visibleNodes()) {
         treeEl.append(this.renderNode(node.item, node.depth));
-      if (request.anchor)
+      }
+      if (request.anchor) {
         this.restoreScrollAnchor(request.anchor);
-      else if (this.tree.state.scrollSelectedIntoViewOnRender)
+      } else if (this.tree.state.scrollSelectedIntoViewOnRender) {
         this.scrollSelectedIntoView();
-      else
+      } else {
         scrollContainer.scrollTop = previousScrollTop;
+      }
     }
     renderNode(node, depth) {
       return renderStructureTreeRow(node, depth, {
@@ -29777,30 +30832,35 @@ dd {
     }
     trackRenderedRow(node, row) {
       const key = this.tree.nodes.nodeCollapseKey(node);
-      if (typeof key === "object")
+      if (typeof key === "object") {
         this.tree.state.renderedRows.set(key, row);
+      }
     }
     findRenderedRow(key) {
       return typeof key === "object" ? this.tree.state.renderedRows.get(key) ?? null : null;
     }
     scrollSelectedIntoView() {
-      if (!this.tree.state.selectedEditor)
+      if (!this.tree.state.selectedEditor) {
         return;
+      }
       const requestId = this.tree.state.scrollRequestId;
       requestAnimationFrame(() => this.scrollSelectedIntoViewNow(requestId));
     }
     restoreScrollAnchor(anchor) {
       const row = this.findRenderedRow(anchor.key);
-      if (!row)
+      if (!row) {
         return;
+      }
       this.tree.refs.scrollContainer.scrollTop += row.getBoundingClientRect().top - anchor.offsetTop;
     }
     scrollSelectedIntoViewNow(requestId) {
-      if (requestId !== this.tree.state.scrollRequestId)
+      if (requestId !== this.tree.state.scrollRequestId) {
         return;
+      }
       const selected = this.tree.host.shadowRoot.querySelector(".item.selected");
-      if (!selected)
+      if (!selected) {
         return;
+      }
       const scrollContainer = this.tree.refs.scrollContainer;
       const top = Math.max(0, selected.offsetTop - scrollContainer.clientHeight * 0.2 + selected.offsetHeight / 2);
       typeof scrollContainer.scrollTo === "function" ? scrollContainer.scrollTo({ top, behavior: "smooth" }) : scrollContainer.scrollTop = top;
@@ -29882,8 +30942,9 @@ dd {
       this.state.selectedEditor = selectedEditor;
       this.state.catalog = [...catalog];
       this.state.scrollSelectedIntoViewOnRender = options2.scrollSelectedIntoView === true;
-      if (this.state.scrollSelectedIntoViewOnRender)
+      if (this.state.scrollSelectedIntoViewOnRender) {
         this.nodes.expandPathToSelected();
+      }
       this.nodes.setRepeatableTargets(options2.repeatableTargets ?? []);
       this.renderer.render();
     }
@@ -30201,12 +31262,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${[
-    style_default20,
-    sourceStates_default,
-    badges_default,
-    context_default
-  ].map((css) => String(css)).join(`
+  template9.innerHTML = `<style>${[style_default20, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default20)}`;
 
   class StructureTree extends HTMLElement {
@@ -30398,21 +31454,25 @@ iframe {
         this.syncFrameUrls();
         return;
       }
-      if (name === "mode")
+      if (name === "mode") {
         return;
+      }
       this.syncViewportSize();
     }
     onFrameLoad = (event) => {
       const frame = event.currentTarget;
-      if (!(frame instanceof HTMLElement) || frame.localName !== "iframe")
+      if (!(frame instanceof HTMLElement) || frame.localName !== "iframe") {
         return;
+      }
       const iframe = frame;
       const kind = iframe.dataset.frameKind === "view" ? "view" : "editor";
       const frameDocument = iframe.contentDocument;
-      if (!frameDocument)
+      if (!frameDocument) {
         return;
-      if (kind === "editor")
+      }
+      if (kind === "editor") {
         installEditorFormGuard(frameDocument);
+      }
       this.dispatchEvent(new CustomEvent(CANVAS_FRAME_READY_EVENT, {
         bubbles: true,
         composed: true,
@@ -30426,10 +31486,12 @@ iframe {
     };
     onBackgroundClick = (event) => {
       const target = event.target;
-      if (!(target instanceof Element))
+      if (!(target instanceof Element)) {
         return;
-      if (target.closest(".page"))
+      }
+      if (target.closest(".page")) {
         return;
+      }
       this.dispatchEvent(new CustomEvent(CANVAS_BACKGROUND_CLICK_EVENT, {
         bubbles: true,
         composed: true
@@ -30440,8 +31502,9 @@ iframe {
       this.syncFrameUrl("view", this.viewFrame, this.viewFrameUrl());
     }
     syncFrameUrl(kind, frame, url) {
-      if (this._currentFrameUrls[kind] === url)
+      if (this._currentFrameUrls[kind] === url) {
         return;
+      }
       this._currentFrameUrls[kind] = url;
       if (frame.contentWindow) {
         frame.contentWindow.location.replace(url);
@@ -30471,8 +31534,9 @@ iframe {
     }
     cssSize(value2) {
       const size = value2?.trim();
-      if (!size)
+      if (!size) {
         return null;
+      }
       return /^\d+$/.test(size) ? `${size}px` : size;
     }
     get editorFrame() {
@@ -30488,12 +31552,14 @@ iframe {
   var EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
   function installEditorFormGuard(document2) {
     const state2 = document2;
-    if (state2[EDITOR_FORM_GUARD_KEY])
+    if (state2[EDITOR_FORM_GUARD_KEY]) {
       return;
+    }
     state2[EDITOR_FORM_GUARD_KEY] = true;
     document2.addEventListener("submit", (event) => {
-      if (!event.defaultPrevented)
+      if (!event.defaultPrevented) {
         event.preventDefault();
+      }
     }, true);
   }
 
@@ -30865,8 +31931,9 @@ input:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataAttributes.ts
   function parseDataScopes(raw) {
-    if (!raw)
+    if (!raw) {
       return [];
+    }
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
@@ -30911,8 +31978,9 @@ input:disabled {
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
       for (const option5 of options2) {
-        if (!byPath.has(option5.path))
+        if (!byPath.has(option5.path)) {
           byPath.set(option5.path, option5);
+        }
       }
     }
     return [...byPath.values()];
@@ -30921,11 +31989,13 @@ input:disabled {
     return fields.flatMap((field2) => {
       const relativePath2 = prefix && field2.path !== "." ? `${prefix}.${field2.path}` : field2.path === "." ? prefix : field2.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field2.type === "array")
+      if (field2.type === "array") {
         return [];
+      }
       const children = fieldOptions2(field2.children ?? [], scopeName, scopeLabel, relativePath2);
-      if (field2.type === "object" || field2.children?.length)
+      if (field2.type === "object" || field2.children?.length) {
         return children;
+      }
       const label2 = field2.label ? `${scopeLabel} / ${field2.label}` : `${scopeLabel} / ${relativePath2}`;
       return [{ label: label2, path }, ...children];
     });
@@ -30959,16 +32029,18 @@ input:disabled {
       this._refs.search().focus();
     }
     insertExpression(expression) {
-      if (!expression)
+      if (!expression) {
         return;
+      }
       this._actions.insertText(asInterpolation(expression));
       this.close({ restoreFocus: false });
       this._actions.finish();
     }
     close(options2 = {}) {
       this._refs.picker().hidden = true;
-      if (options2.restoreFocus === false)
+      if (options2.restoreFocus === false) {
         return;
+      }
       this._actions.focusControl();
       this._actions.restoreSelection();
     }
@@ -30976,8 +32048,9 @@ input:disabled {
       if (event.key === "Enter") {
         event.preventDefault();
         const first = this._refs.list().querySelector(".data-option");
-        if (first)
+        if (first) {
           this.insertExpression(first.dataset.path ?? "");
+        }
       } else if (event.key === "Escape") {
         event.preventDefault();
         this.close();
@@ -31036,15 +32109,17 @@ input:disabled {
       const enabled = this._refs.host().hasAttribute("data-scopes") && !this._refs.host().hasAttribute("disabled");
       this._refs.button().hidden = !enabled;
       this._refs.button().disabled = !enabled;
-      if (!enabled)
+      if (!enabled) {
         this._refs.picker().hidden = true;
+      }
       this.saveSelection();
     }
     openPicker = (event) => {
       event.preventDefault();
       event.stopPropagation();
-      if (this._refs.button().disabled)
+      if (this._refs.button().disabled) {
         return;
+      }
       this._picker.open();
     };
     saveSelection = () => {
@@ -31305,8 +32380,9 @@ textarea:disabled {
   }
   function findRangeWrapper(editor, range, tagName, predicate) {
     const start = closestWrapper(editor, range.startContainer, tagName, predicate);
-    if (!start)
+    if (!start) {
       return null;
+    }
     const end = closestWrapper(editor, range.endContainer, tagName, predicate);
     return start === end ? start : null;
   }
@@ -31356,40 +32432,48 @@ textarea:disabled {
     }
     saveSelection = () => {
       const selection = this._selection();
-      if (!selection || selection.rangeCount === 0)
+      if (!selection || selection.rangeCount === 0) {
         return;
+      }
       const range = selection.getRangeAt(0);
-      if (!this._editor().contains(range.commonAncestorContainer))
+      if (!this._editor().contains(range.commonAncestorContainer)) {
         return;
+      }
       this._savedRange = range.cloneRange();
     };
     restoreSelection() {
-      if (!this._savedRange)
+      if (!this._savedRange) {
         return;
+      }
       const selection = this._selection();
-      if (!selection)
+      if (!selection) {
         return;
+      }
       selection.removeAllRanges();
       selection.addRange(this._savedRange);
     }
     toggleRange(tagName) {
-      if (this.unwrapMatchingRange(tagName))
+      if (this.unwrapMatchingRange(tagName)) {
         return;
+      }
       this.wrapRange(tagName);
     }
     wrapRange(tagName, attributes = {}) {
       const range = this.getUsableRange();
-      if (!range || range.collapsed)
+      if (!range || range.collapsed) {
         return;
+      }
       this.setSavedRange(wrapRangeContents(range, tagName, attributes));
     }
     unwrapMatchingRange(tagName, predicate = () => true) {
       const range = this.getUsableRange();
-      if (!range)
+      if (!range) {
         return false;
+      }
       const wrapper = findRangeWrapper(this._editor(), range, tagName, predicate);
-      if (!wrapper)
+      if (!wrapper) {
         return false;
+      }
       this.setSavedRange(unwrapElement(this._editor(), wrapper));
       return true;
     }
@@ -31412,17 +32496,20 @@ textarea:disabled {
       this.setSavedRange(nextRange);
     }
     stepTextSize(direction) {
-      if (!this.hasSelectedRange())
+      if (!this.hasSelectedRange()) {
         return false;
+      }
       const range = this.getUsableRange();
-      if (!range)
+      if (!range) {
         return false;
+      }
       const wrapper = findRangeWrapper(this._editor(), range, "span", (element) => element.style.fontSize !== "");
       const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize) : 1;
       const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
       const nextIndex = direction === "increase" ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1) : Math.max(0, fallbackIndex - 1);
-      if (wrapper)
+      if (wrapper) {
         this.setSavedRange(unwrapElement(this._editor(), wrapper));
+      }
       this.wrapRange("span", { style: `font-size: ${TEXT_SIZE_STEPS[nextIndex]}` });
       return true;
     }
@@ -31431,11 +32518,13 @@ textarea:disabled {
         return this._savedRange.cloneRange();
       }
       const selection = this._selection();
-      if (!selection || selection.rangeCount === 0)
+      if (!selection || selection.rangeCount === 0) {
         return null;
+      }
       const range = selection.getRangeAt(0);
-      if (!this._editor().contains(range.commonAncestorContainer))
+      if (!this._editor().contains(range.commonAncestorContainer)) {
         return null;
+      }
       return range.cloneRange();
     }
     setSavedRange(range) {
@@ -31446,18 +32535,24 @@ textarea:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextActions.ts
   function richTextActions(capability) {
     const actions = [];
-    if (capability.bold)
+    if (capability.bold) {
       actions.push("bold");
-    if (capability.italic)
+    }
+    if (capability.italic) {
       actions.push("italic");
-    if (capability.underline)
+    }
+    if (capability.underline) {
       actions.push("underline");
-    if (capability.code)
+    }
+    if (capability.code) {
       actions.push("code");
-    if (capability.link)
+    }
+    if (capability.link) {
       actions.push("link");
-    if (capability.dynamic)
+    }
+    if (capability.dynamic) {
       actions.push("dynamic");
+    }
     return actions;
   }
   function richTextActionIcon(action) {
@@ -31472,24 +32567,30 @@ textarea:disabled {
     return icons[action];
   }
   function richTextActionTitle(action) {
-    if (action === "bold")
+    if (action === "bold") {
       return "Bold";
-    if (action === "italic")
+    }
+    if (action === "italic") {
       return "Italic";
-    if (action === "underline")
+    }
+    if (action === "underline") {
       return "Underline";
-    if (action === "code")
+    }
+    if (action === "code") {
       return "Code";
-    if (action === "link")
+    }
+    if (action === "link") {
       return "Link";
+    }
     return "Dynamic data";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextToolbar.ts
   function renderRichTextToolbar(toolbar, capability, handlers) {
     toolbar.replaceChildren();
-    if (capability.size)
+    if (capability.size) {
       toolbar.append(renderSizeButton("decrease", handlers.textSize), renderSizeButton("increase", handlers.textSize));
+    }
     for (const action of richTextActions(capability)) {
       const button2 = document.createElement("button");
       button2.className = "tool";
@@ -31817,14 +32918,16 @@ textarea:disabled {
       renderRichTextToolbar(this.toolbar, this.capability, {
         action: (action) => this.runAction(action),
         textSize: (direction) => {
-          if (this._range.stepTextSize(direction))
+          if (this._range.stepTextSize(direction)) {
             this.finishAction();
+          }
         }
       });
     }
     runAction(action) {
-      if (action !== "dynamic" && !this._range.hasSelectedRange())
+      if (action !== "dynamic" && !this._range.hasSelectedRange()) {
         return;
+      }
       if (action === "bold") {
         this._range.toggleRange("strong");
       } else if (action === "italic") {
@@ -31839,8 +32942,9 @@ textarea:disabled {
           return;
         }
         const href = window.prompt("Link URL");
-        if (href)
+        if (href) {
           this._range.wrapRange("a", { href });
+        }
       } else {
         this._dataPicker.open();
         return;
@@ -32929,41 +34033,53 @@ input {
     };
   }
   function fileKind(item) {
-    if (item.mimeType?.startsWith("image/"))
+    if (item.mimeType?.startsWith("image/")) {
       return "image";
-    if (item.mimeType?.includes("pdf"))
+    }
+    if (item.mimeType?.includes("pdf")) {
       return "pdf";
+    }
     return "file";
   }
   function matchesFileAccept(item, accept) {
-    if (!accept || accept.length === 0)
+    if (!accept || accept.length === 0) {
       return true;
+    }
     const mimeType = item.mimeType ?? "";
-    if (accept.includes("image") && mimeType.startsWith("image/"))
+    if (accept.includes("image") && mimeType.startsWith("image/")) {
       return true;
-    if (accept.includes("svg") && mimeType === "image/svg+xml")
+    }
+    if (accept.includes("svg") && mimeType === "image/svg+xml") {
       return true;
-    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml")
+    }
+    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
       return true;
-    if (accept.includes("video") && mimeType.startsWith("video/"))
+    }
+    if (accept.includes("video") && mimeType.startsWith("video/")) {
       return true;
-    if (accept.includes("audio") && mimeType.startsWith("audio/"))
+    }
+    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
       return true;
-    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/"))
+    }
+    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
       return true;
+    }
     return false;
   }
   function fileMeta(item) {
     const parts = [item.mimeType ?? "File"];
-    if (typeof item.size === "number")
+    if (typeof item.size === "number") {
       parts.push(formatFileSize(item.size));
+    }
     return parts.join(" · ");
   }
   function formatFileSize(size) {
-    if (size < 1024)
+    if (size < 1024) {
       return `${size} B`;
-    if (size < 1024 * 1024)
+    }
+    if (size < 1024 * 1024) {
       return `${Math.round(size / 1024)} KB`;
+    }
     return `${(size / 1024 / 1024).toFixed(1)} MB`;
   }
 
@@ -33004,14 +34120,16 @@ input {
       this._load();
     }
     _wire() {
-      if (this._wired)
+      if (this._wired) {
         return;
+      }
       this._wired = true;
       this.closeButton.addEventListener("click", () => this._close());
       this.cancelButton.addEventListener("click", () => this._close());
       this.backdrop.addEventListener("click", (event) => {
-        if (event.target === this.backdrop)
+        if (event.target === this.backdrop) {
           this._close();
+        }
       });
       this.selectButton.addEventListener("click", () => this._confirm());
       this.searchInput.addEventListener("input", () => this._renderItems());
@@ -33020,8 +34138,9 @@ input {
       this._selected = null;
       this._updateSelection();
       const params = new URLSearchParams;
-      if (this._folder)
+      if (this._folder) {
         params.set("parentId", this._folder);
+      }
       params.set("accept", this._accept.join(","));
       params.set("sortBy", "name");
       params.set("limit", "10000");
@@ -33058,10 +34177,12 @@ input {
       this.grid.replaceChildren();
       const query3 = this.searchInput.value.trim().toLowerCase();
       const items = this._items.filter((item) => {
-        if (item.type === "file" && !matchesFileAccept(item, this._fileAccept))
+        if (item.type === "file" && !matchesFileAccept(item, this._fileAccept)) {
           return false;
-        if (!query3)
+        }
+        if (!query3) {
           return true;
+        }
         return item.name.toLowerCase().includes(query3);
       });
       this.empty.hidden = items.length > 0;
@@ -33081,8 +34202,9 @@ input {
           this._updateSelection();
         });
         button2.addEventListener("dblclick", () => {
-          if (item.type === "file" && !this._multiple)
+          if (item.type === "file" && !this._multiple) {
             this._confirm();
+          }
         });
         const preview = this._preview(item);
         const copy = document.createElement("span");
@@ -33120,8 +34242,9 @@ input {
     }
     _confirm() {
       if (this._multiple) {
-        if (this._selectedMany.length === 0)
+        if (this._selectedMany.length === 0) {
           return;
+        }
         this.dispatchEvent(new CustomEvent("select-files", {
           bubbles: true,
           composed: true,
@@ -33132,8 +34255,9 @@ input {
         this._close();
         return;
       }
-      if (!this._selected)
+      if (!this._selected) {
         return;
+      }
       this.dispatchEvent(new CustomEvent("select-file", {
         bubbles: true,
         composed: true,
@@ -33151,13 +34275,15 @@ input {
         this._selectedMany.splice(existingIndex, 1);
         return;
       }
-      if (this._maxSelection && this._selectedMany.length >= this._maxSelection)
+      if (this._maxSelection && this._selectedMany.length >= this._maxSelection) {
         return;
+      }
       this._selectedMany.push(item);
     }
     _isSelected(item) {
-      if (this._multiple)
+      if (this._multiple) {
         return this._selectedMany.some((selected) => selected.id === item.id);
+      }
       return this._selected?.id === item.id;
     }
     _close() {
@@ -33223,23 +34349,30 @@ input {
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
   function allowedLinkModes(options2) {
     const modes = [];
-    if (options2.allowPage)
+    if (options2.allowPage) {
       modes.push("page");
-    if (options2.allowExternal)
+    }
+    if (options2.allowExternal) {
       modes.push("external");
-    if (options2.allowMedia)
+    }
+    if (options2.allowMedia) {
       modes.push("media");
+    }
     return modes;
   }
   function modeForLinkValue(value2, options2) {
-    if (value2 && isMediaLink(value2))
+    if (value2 && isMediaLink(value2)) {
       return "media";
-    if (value2 && isExternalLink(value2))
+    }
+    if (value2 && isExternalLink(value2)) {
       return "external";
-    if (!options2.allowPage && !options2.allowExternal && options2.allowMedia)
+    }
+    if (!options2.allowPage && !options2.allowExternal && options2.allowMedia) {
       return "media";
-    if (!options2.allowPage && options2.allowExternal)
+    }
+    if (!options2.allowPage && options2.allowExternal) {
       return "external";
+    }
     return "page";
   }
   function isExternalLink(value2) {
@@ -33252,14 +34385,17 @@ input {
     return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
   }
   function mediaDisplayName(value2, isImage, mediaLabel = "") {
-    if (mediaLabel)
+    if (mediaLabel) {
       return mediaLabel;
-    if (value2.includes("/.cms/files/by-id/"))
+    }
+    if (value2.includes("/.cms/files/by-id/")) {
       return isImage ? "Image" : "Selected file";
+    }
     const clean = value2.split(/[?#]/, 1)[0] ?? value2;
     const segment = clean.split("/").filter(Boolean).at(-1);
-    if (!segment)
+    if (!segment) {
       return "File";
+    }
     try {
       return decodeURIComponent(segment);
     } catch {
@@ -33270,10 +34406,12 @@ input {
     return isImage ? "Image" : "File selected";
   }
   function linkSummaryFallback(mode) {
-    if (mode === "external")
+    if (mode === "external") {
       return "External URL";
-    if (mode === "media")
+    }
+    if (mode === "media") {
       return "File";
+    }
     return "Internal page";
   }
 
@@ -33304,10 +34442,12 @@ input {
       return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "disabled"];
     }
     attributeChangedCallback() {
-      if (!this.shadowRoot)
+      if (!this.shadowRoot) {
         return;
-      if (this._isReflectingValue)
+      }
+      if (this._isReflectingValue) {
         return;
+      }
       this._syncFromAttributes();
       this._render();
     }
@@ -33324,8 +34464,9 @@ input {
       this._mode = modeForLinkValue(this._value, this._modeOptions());
     }
     _wire() {
-      if (this._wired)
+      if (this._wired) {
         return;
+      }
       this._wired = true;
       this.searchInput.addEventListener("focus", () => this._openPicker());
       this.searchInput.addEventListener("click", () => this._openPicker());
@@ -33334,33 +34475,38 @@ input {
         this._renderPages();
       });
       this.externalInput.addEventListener("input", () => {
-        if (this.disabled)
+        if (this.disabled) {
           return;
+        }
         this._setValue(this.externalInput.value);
       });
       this.fileButton.addEventListener("click", () => this._openFilesCenter());
       this.pagePanel.addEventListener("focusout", () => {
         setTimeout(() => {
-          if (this.shadowRoot?.activeElement && this.pagePanel.contains(this.shadowRoot.activeElement))
+          if (this.shadowRoot?.activeElement && this.pagePanel.contains(this.shadowRoot.activeElement)) {
             return;
+          }
           this._closePicker();
         }, 0);
       });
       this.target.addEventListener("click", () => {
-        if (this.disabled || this._mode !== "page")
+        if (this.disabled || this._mode !== "page") {
           return;
+        }
         this.searchInput.focus();
         this._openPicker();
       });
     }
     async _loadPages() {
-      if (this._loaded || !this._allowPage())
+      if (this._loaded || !this._allowPage()) {
         return;
+      }
       this._loaded = true;
       try {
         const response = await fetch(`${this._basePath()}/api/page/links`);
-        if (!response.ok)
+        if (!response.ok) {
           return;
+        }
         this._pages = await response.json();
         this._renderPages();
         this._renderSummary();
@@ -33403,13 +34549,16 @@ input {
       button2.ariaSelected = String(this._mode === mode);
       button2.disabled = this.disabled;
       button2.addEventListener("click", () => {
-        if (this.disabled)
+        if (this.disabled) {
           return;
+        }
         this._mode = mode;
-        if (mode !== "page")
+        if (mode !== "page") {
           this._pickerOpen = false;
-        if (mode === "external")
+        }
+        if (mode === "external") {
           this.externalInput.value = this._value;
+        }
         this._render();
       });
       return button2;
@@ -33422,8 +34571,9 @@ input {
       this.externalInput.disabled = this.disabled;
       this.fileButton.disabled = this.disabled;
       this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
-      if (this._mode === "external")
+      if (this._mode === "external") {
         this.externalInput.value = this._value;
+      }
       this._renderMediaFile();
     }
     _renderPages() {
@@ -33431,8 +34581,9 @@ input {
       this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
       const query3 = this.searchInput.value.trim().toLowerCase();
       const pages = this._pages.filter((page) => {
-        if (!query3)
+        if (!query3) {
           return true;
+        }
         return page.title.toLowerCase().includes(query3) || page.path.toLowerCase().includes(query3);
       });
       this.empty.hidden = !this._pickerOpen || pages.length > 0;
@@ -33443,8 +34594,9 @@ input {
         button2.ariaSelected = String(page.path === this._value);
         button2.disabled = this.disabled;
         button2.addEventListener("click", () => {
-          if (this.disabled)
+          if (this.disabled) {
             return;
+          }
           this._setValue(page.path);
           this.searchInput.value = "";
           this._closePicker();
@@ -33478,8 +34630,9 @@ input {
       }));
     }
     _openPicker() {
-      if (this.disabled || this._mode !== "page")
+      if (this.disabled || this._mode !== "page") {
         return;
+      }
       this._pickerOpen = true;
       this._renderPages();
     }
@@ -33488,15 +34641,17 @@ input {
       this._renderPages();
     }
     _openFilesCenter() {
-      if (this.disabled)
+      if (this.disabled) {
         return;
+      }
       const center = new FilesCenter;
       const cleanup = () => center.remove();
       center.addEventListener("close", cleanup, { once: true });
       center.addEventListener("select-file", (event) => {
         const detail = event.detail;
-        if (!detail?.src)
+        if (!detail?.src) {
           return;
+        }
         this._mode = "media";
         this._mediaLabel = detail.label;
         this._setValue(detail.src);
@@ -33625,8 +34780,9 @@ input {
     return dataSources.filter((source) => methods.size === 0 || methods.has(endpointMethod3(source)));
   }
   function selectedEndpoint(setting, dataSources) {
-    if (!setting.defaultValue)
+    if (!setting.defaultValue) {
       return null;
+    }
     const binding = initialEndpointBinding(setting);
     return endpointOptions(setting, dataSources).find((source) => {
       if (usesSourceBinding(setting) && binding) {
@@ -33636,10 +34792,12 @@ input {
     }) ?? null;
   }
   function initialEndpointBinding(setting) {
-    if (!setting.defaultValue)
+    if (!setting.defaultValue) {
       return null;
-    if (!usesSourceBinding(setting))
+    }
+    if (!usesSourceBinding(setting)) {
       return { url: setting.defaultValue };
+    }
     const source = parseSource(setting.defaultValue);
     const body = parseSourceBody(setting.defaultBody);
     return source ? {
@@ -33666,8 +34824,9 @@ input {
   }
   function removedEndpointAttributes(setting) {
     const attributes = { [setting.attribute]: null };
-    if (setting.methodAttribute)
+    if (setting.methodAttribute) {
       attributes[setting.methodAttribute] = null;
+    }
     if (usesSourceBinding(setting)) {
       attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = null;
       attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
@@ -33707,10 +34866,12 @@ input {
       button2.ariaLabel = setting.ariaLabel ?? setting.label;
       button2.disabled = setting.disabled === true;
       this.syncButton(button2, setting);
-      if (!setting.disabled)
+      if (!setting.disabled) {
         button2.addEventListener("click", () => this.open(setting, button2));
-      if (label2)
+      }
+      if (label2) {
         wrapper.append(label2);
+      }
       wrapper.append(button2);
       if (setting.help) {
         const help = document.createElement("div");
@@ -33752,8 +34913,9 @@ input {
       const cleanup = () => {
         picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
         picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
-        if (this.disconnectPickerEvents === cleanup)
+        if (this.disconnectPickerEvents === cleanup) {
           this.disconnectPickerEvents = null;
+        }
       };
       this.disconnectPickerEvents = cleanup;
       picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
@@ -33764,8 +34926,9 @@ input {
       });
     }
     ensurePicker() {
-      if (this.picker)
+      if (this.picker) {
         return this.picker;
+      }
       this.picker = new DataSourcePicker;
       this.root.append(this.picker);
       return this.picker;
@@ -33777,8 +34940,9 @@ input {
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
     const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
-    if (label2)
+    if (label2) {
       wrapper.append(label2);
+    }
     const controls = document.createElement("div");
     controls.className = "color-custom";
     const picker = createColorPicker(setting);
@@ -33793,8 +34957,9 @@ input {
     apply.textContent = "Apply";
     apply.disabled = setting.disabled === true;
     apply.addEventListener("click", () => {
-      if (!setting.disabled)
+      if (!setting.disabled) {
         emitColorChange(input2.value.trim());
+      }
     });
     controls.append(picker, input2, apply);
     wrapper.append(controls);
@@ -33835,11 +35000,13 @@ input {
       group.append(option5);
     }
     const selected = Array.from(select4.querySelectorAll("option")).find((option5) => option5.value === (setting.defaultValue ?? ""));
-    if (selected)
+    if (selected) {
       selected.selected = true;
+    }
     select4.addEventListener("change", () => {
-      if (setting.disabled || !select4.value)
+      if (setting.disabled || !select4.value) {
         return;
+      }
       input2.value = select4.value;
       picker.value = colorPickerValue(select4.value);
       emitColorChange(select4.value);
@@ -33866,22 +35033,25 @@ input {
   }
   function wireColorInputs(setting, picker, input2, emitColorChange) {
     picker.addEventListener("input", () => {
-      if (setting.disabled)
+      if (setting.disabled) {
         return;
+      }
       input2.value = picker.value;
       emitColorChange(picker.value);
     });
     input2.addEventListener("change", () => {
-      if (setting.disabled)
+      if (setting.disabled) {
         return;
+      }
       picker.value = colorPickerValue(input2.value);
       emitColorChange(input2.value.trim());
     });
   }
   function colorPickerValue(value2) {
     const normalized = value2?.trim() ?? "";
-    if (/^#[\da-f]{6}$/i.test(normalized))
+    if (/^#[\da-f]{6}$/i.test(normalized)) {
       return normalized;
+    }
     if (/^#[\da-f]{3}$/i.test(normalized)) {
       return `#${normalized.slice(1).split("").map((character) => character.repeat(2)).join("")}`;
     }
@@ -33892,11 +35062,13 @@ input {
   function wireTextControl(control3, selector, setting, emitValue) {
     whenDefined(control3, () => {
       const input2 = control3.shadowRoot?.querySelector(selector);
-      if (!input2)
+      if (!input2) {
         return;
+      }
       input2.disabled = setting.disabled === true;
-      if (setting.disabled)
+      if (setting.disabled) {
         return;
+      }
       input2.addEventListener("input", () => emitValue(input2.value));
       input2.addEventListener("change", () => emitValue(input2.value));
     });
@@ -33904,8 +35076,9 @@ input {
   function wireContentControl(control3, selector, emitValue) {
     whenDefined(control3, () => {
       const input2 = control3.shadowRoot?.querySelector(selector);
-      if (!input2)
+      if (!input2) {
         return;
+      }
       input2.addEventListener("input", () => emitValue(input2.value));
       input2.addEventListener("change", () => emitValue(input2.value));
     });
@@ -33914,30 +35087,35 @@ input {
     whenDefined(control3, () => {
       control3.addEventListener("input", (event) => {
         const value2 = event.detail?.value;
-        if (typeof value2 === "string")
+        if (typeof value2 === "string") {
           emitValue(value2);
+        }
       });
     });
   }
   function wirePageLinkControl(control3, setting, emitValue) {
     whenDefined(control3, () => {
-      if (setting.disabled)
+      if (setting.disabled) {
         return;
+      }
       control3.addEventListener("input", (event) => {
         const value2 = event.detail?.value;
-        if (typeof value2 === "string")
+        if (typeof value2 === "string") {
           emitValue(value2);
+        }
       });
     });
   }
   function wireToggleControl(control3, setting, emitValue) {
     whenDefined(control3, () => {
       const button2 = control3.shadowRoot?.querySelector("button");
-      if (!button2)
+      if (!button2) {
         return;
+      }
       button2.disabled = setting.disabled === true;
-      if (setting.disabled)
+      if (setting.disabled) {
         return;
+      }
       button2.addEventListener("click", () => {
         const checked = button2.ariaPressed !== "true";
         button2.ariaPressed = String(checked);
@@ -33948,19 +35126,21 @@ input {
   }
   function applyDisabled(control3, setting) {
     control3.toggleAttribute("disabled", setting.disabled === true);
-    if (setting.disabled)
+    if (setting.disabled) {
       control3.setAttribute("aria-disabled", "true");
-    else
+    } else {
       control3.removeAttribute("aria-disabled");
+    }
   }
   function setDataScopes(control3, dataScopes) {
     control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
   }
   function whenDefined(control3, callback) {
-    if (customElements.get(control3.localName))
+    if (customElements.get(control3.localName)) {
       callback();
-    else
+    } else {
       customElements.whenDefined(control3.localName).then(callback);
+    }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/icons.ts
@@ -33992,8 +35172,9 @@ input {
   };
   function settingIcon(name) {
     const path = SETTING_ICON_PATHS[name];
-    if (!path)
+    if (!path) {
       return null;
+    }
     const svg2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg2.setAttribute("viewBox", "0 0 24 24");
     svg2.setAttribute("aria-hidden", "true");
@@ -34042,19 +35223,22 @@ input {
         const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
         const selector = setting.type === "textarea" ? "textarea" : "select";
         const control4 = createSettingControl(tag, setting);
-        if (setting.type === "textarea")
+        if (setting.type === "textarea") {
           setDataScopes(control4, this.dataScopes());
-        else
+        } else {
           control4.setAttribute("options", JSON.stringify(setting.options));
+        }
         wireTextControl(control4, selector, setting, emit);
         return control4;
       }
-      if (setting.type === "segmented")
+      if (setting.type === "segmented") {
         return this.renderSegmented(setting);
+      }
       if (setting.type === "toggle") {
         const control4 = createSettingControl("cms-editor-v2-toggle", setting);
-        if (setting.defaultValue)
+        if (setting.defaultValue) {
           control4.setAttribute("checked", "");
+        }
         wireToggleControl(control4, setting, emit);
         return control4;
       }
@@ -34066,8 +35250,9 @@ input {
         wirePageLinkControl(control4, setting, emit);
         return control4;
       }
-      if (setting.type === "endpoint-picker")
+      if (setting.type === "endpoint-picker") {
         return this.endpointSettings.render(setting);
+      }
       if (setting.type === "color") {
         return renderColorSetting(setting, this.themeTokens(), renderFieldLabel, emit);
       }
@@ -34092,8 +35277,9 @@ input {
         button2.ariaPressed = String(option5.value === setting.defaultValue);
         button2.append(...renderOptionContent(setting.display, option5.display, option5.icon ?? setting.icon, option5.label));
         button2.addEventListener("click", () => {
-          if (setting.disabled)
+          if (setting.disabled) {
             return;
+          }
           for (const item of Array.from(control3.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
@@ -34101,8 +35287,9 @@ input {
         });
         control3.append(button2);
       }
-      if (label2)
+      if (label2) {
         wrapper.append(label2);
+      }
       wrapper.append(control3);
       return wrapper;
     }
@@ -34115,16 +35302,19 @@ input {
     if (setting.ariaLabel || setting.labelDisplay && setting.labelDisplay !== "visible") {
       control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
     }
-    if (setting.help)
+    if (setting.help) {
       control3.setAttribute("hint", setting.help);
-    if (setting.placeholder)
+    }
+    if (setting.placeholder) {
       control3.setAttribute("placeholder", setting.placeholder);
+    }
     applyDisabled(control3, setting);
     return control3;
   }
   function renderFieldLabel(label2, display) {
-    if (display === "hidden")
+    if (display === "hidden") {
       return null;
+    }
     const element = document.createElement("div");
     element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
     element.textContent = label2;
@@ -34146,29 +35336,34 @@ input {
   function visibleSettings(settings) {
     const values = collectSettingValues(settings);
     return settings.flatMap((setting) => {
-      if (!isSettingVisible(setting.visibleWhen, values))
+      if (!isSettingVisible(setting.visibleWhen, values)) {
         return [];
-      if (setting.type !== "row")
+      }
+      if (setting.type !== "row") {
         return [setting];
+      }
       const visibleChildren = setting.settings.filter((child) => isSettingVisible(child.visibleWhen, values));
       return visibleChildren.length > 0 ? [{ ...setting, settings: visibleChildren }] : [];
     });
   }
   function attributesForSettingValue(setting, value2) {
     const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value2, rule.value)) ?? [];
-    if (matchingRules.length === 0)
+    if (matchingRules.length === 0) {
       return;
+    }
     const attributes = { [setting.attribute]: value2 };
-    for (const rule of matchingRules)
+    for (const rule of matchingRules) {
       Object.assign(attributes, rule.attributes);
+    }
     return attributes;
   }
   function collectSettingValues(settings) {
     const values = new Map;
     for (const setting of settings) {
       if (setting.type === "row") {
-        for (const child of setting.settings)
+        for (const child of setting.settings) {
           values.set(child.attribute, child.defaultValue);
+        }
       } else {
         values.set(setting.attribute, setting.defaultValue);
       }
@@ -34176,16 +35371,19 @@ input {
     return values;
   }
   function isSettingVisible(visibleWhen, values) {
-    if (!visibleWhen)
+    if (!visibleWhen) {
       return true;
+    }
     const rules = Array.isArray(visibleWhen) ? visibleWhen : [visibleWhen];
     return rules.every((rule) => matchesVisibilityRule(rule, values.get(rule.attribute)));
   }
   function matchesVisibilityRule(rule, actual) {
-    if (rule.equals !== undefined && !visibilityValueMatches(actual, rule.equals))
+    if (rule.equals !== undefined && !visibilityValueMatches(actual, rule.equals)) {
       return false;
-    if (rule.notEquals !== undefined && visibilityValueMatches(actual, rule.notEquals))
+    }
+    if (rule.notEquals !== undefined && visibilityValueMatches(actual, rule.notEquals)) {
       return false;
+    }
     return true;
   }
   function visibilityValueMatches(actual, expected) {
@@ -34213,8 +35411,9 @@ input {
       control3.setAttribute("data-scopes", JSON.stringify(dataScopes));
       wireRichTextControl(control3, (content) => emitContentChange(content, "html"));
     } else {
-      if (capability.dynamic)
+      if (capability.dynamic) {
         setDataScopes(control3, dataScopes);
+      }
       wireContentControl(control3, "input", (content) => emitContentChange(content, "text"));
     }
     section.append(control3);
@@ -34942,8 +36141,9 @@ label {
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
     for (const option5 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option5.path))
+      if (!byPath.has(option5.path)) {
         byPath.set(option5.path, option5);
+      }
     }
     return [...byPath.values()];
   }
@@ -34951,25 +36151,25 @@ label {
     return fields.flatMap((field2) => {
       const relativePath2 = prefix && field2.path !== "." ? `${prefix}.${field2.path}` : field2.path === "." ? prefix : field2.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field2.type !== "array")
+      if (field2.type !== "array") {
         return repeatArrayFields(field2.children ?? [], scopeName, scopeLabel, relativePath2);
-      return [{
-        path: fullPath,
-        label: field2.path,
-        scopeLabel,
-        fields: field2.children ?? []
-      }];
+      }
+      return [
+        {
+          path: fullPath,
+          label: field2.path,
+          scopeLabel,
+          fields: field2.children ?? []
+        }
+      ];
     });
   }
   function visibleRepeatOptions(options2, query3) {
     const normalizedQuery = query3.trim().toLowerCase();
-    if (!normalizedQuery)
+    if (!normalizedQuery) {
       return options2;
-    return options2.filter((option5) => [
-      option5.path,
-      option5.label,
-      option5.scopeLabel
-    ].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
+    }
+    return options2.filter((option5) => [option5.path, option5.label, option5.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -35112,8 +36312,9 @@ label {
     _renderFields(fields) {
       const list = document.createElement("ul");
       list.className = "fields";
-      for (const field2 of fields)
+      for (const field2 of fields) {
         list.append(this._renderField(field2, 0));
+      }
       if (list.children.length === 0) {
         const empty4 = document.createElement("p");
         empty4.className = "details-empty";
@@ -35136,16 +36337,18 @@ label {
       if (field2.children?.length) {
         const children = document.createElement("ul");
         children.className = "field-children";
-        for (const child of field2.children)
+        for (const child of field2.children) {
           children.append(this._renderField(child, depth + 1));
+        }
         item.append(children);
       }
       return item;
     }
     _select(option5, alias = defaultRepeatAlias(option5.path)) {
       const cleanAlias = alias.trim();
-      if (!cleanAlias)
+      if (!cleanAlias) {
         return;
+      }
       this.dispatchEvent(new CustomEvent(REPEAT_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
@@ -35160,16 +36363,18 @@ label {
       return visibleRepeatOptions(this._options, this.search.value);
     }
     _onBackdropClick = (event) => {
-      if (event.target === this.backdrop)
+      if (event.target === this.backdrop) {
         this.close();
+      }
     };
     _onSearchInput = () => {
       this._activeOption = null;
       this._render();
     };
     _onKeydown = (event) => {
-      if (!this.backdrop.hidden && event.key === "Escape")
+      if (!this.backdrop.hidden && event.key === "Escape") {
         this.close();
+      }
     };
     get backdrop() {
       return this.shadowRoot.querySelector(".backdrop");
@@ -35237,13 +36442,15 @@ label {
       return this.host.shadowRoot.querySelector(`[data-page-field="${name}"]`);
     }
     upgrade(element) {
-      if (element)
+      if (element) {
         customElements.upgrade(element);
+      }
       return element;
     }
     defineElement(tagName, constructor) {
-      if (customElements.get(tagName))
+      if (customElements.get(tagName)) {
         return;
+      }
       try {
         customElements.define(tagName, constructor);
       } catch {
@@ -35279,8 +36486,9 @@ label {
       this._overlay.setAttribute(HIGHLIGHT_ATTR, "");
       doc.body.append(this._overlay);
       this._resizeObserver = new ResizeObserver(() => this.update());
-      for (const target of targets)
+      for (const target of targets) {
         this._resizeObserver.observe(target);
+      }
       doc.defaultView?.addEventListener("scroll", this.update, true);
       doc.defaultView?.addEventListener("resize", this.update);
       this.update();
@@ -35301,11 +36509,13 @@ label {
       this.hide();
     }
     update = () => {
-      if (!this._target || !this._overlay)
+      if (!this._target || !this._overlay) {
         return;
+      }
       const win = this._target.ownerDocument.defaultView;
-      if (!win)
+      if (!win) {
         return;
+      }
       const rect = unionRect(this._measurementTargets(this._target));
       this._overlay.style.left = `${rect.left + win.scrollX}px`;
       this._overlay.style.top = `${rect.top + win.scrollY}px`;
@@ -35313,15 +36523,17 @@ label {
       this._overlay.style.height = `${rect.height}px`;
     };
     _measurementTargets(target) {
-      if (!t(target))
+      if (!t(target)) {
         return [target];
+      }
       const output = Array.from(target.children).find((element) => element.hasAttribute(_2));
       const children = output ? Array.from(output.children).flatMap((element) => visibleBoxes(element)) : [];
       return children.length > 0 ? children : [target];
     }
     _ensureStyle(doc) {
-      if (doc.getElementById(STYLE_ID))
+      if (doc.getElementById(STYLE_ID)) {
         return;
+      }
       const style = doc.createElement("style");
       style.id = STYLE_ID;
       style.textContent = `
@@ -35340,8 +36552,9 @@ label {
   }
   function visibleBoxes(element) {
     const rect = element.getBoundingClientRect();
-    if (rect.width > 0 || rect.height > 0)
+    if (rect.width > 0 || rect.height > 0) {
       return [element];
+    }
     return Array.from(element.children).flatMap((child) => visibleBoxes(child));
   }
   function unionRect(elements) {
@@ -35355,24 +36568,31 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureDocument.ts
   function isEmptyDocumentContent(contentRoot) {
-    if (!contentRoot)
+    if (!contentRoot) {
       return true;
+    }
     const meaningfulNodes = Array.from(contentRoot.childNodes).filter((node2) => node2.nodeType !== Node.TEXT_NODE || (node2.textContent ?? "").trim() !== "");
-    if (meaningfulNodes.length === 0)
+    if (meaningfulNodes.length === 0) {
       return true;
-    if (meaningfulNodes.length !== 1)
+    }
+    if (meaningfulNodes.length !== 1) {
       return false;
+    }
     const node = meaningfulNodes[0];
-    if (!node)
+    if (!node) {
       return true;
-    if (node.nodeType !== Node.ELEMENT_NODE)
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
       return false;
+    }
     const element = node;
-    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0)
+    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0) {
       return false;
+    }
     return Array.from(element.childNodes).every((child) => {
-      if (child.nodeType === Node.TEXT_NODE)
+      if (child.nodeType === Node.TEXT_NODE) {
         return (child.textContent ?? "").trim() === "";
+      }
       return child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === "br";
     });
   }
@@ -35382,8 +36602,9 @@ label {
   }
   function serializableContentHtml(contentRoot) {
     const content = contentRoot?.cloneNode(true);
-    if (!content)
+    if (!content) {
       return "";
+    }
     c2(content);
     clearBindingRuntimeState(content);
     return content.innerHTML;
@@ -35405,47 +36626,55 @@ label {
   }
   function bindingPreviewCore(document2) {
     const root = document2?.querySelector("[data-cms-editor-root]");
-    if (root?.matches(CMS_BINDING_CORE_TAG))
+    if (root?.matches(CMS_BINDING_CORE_TAG)) {
       return root;
+    }
     return root?.querySelector(CMS_BINDING_CORE_TAG) ?? document2?.querySelector(CMS_BINDING_CORE_TAG) ?? null;
   }
   function syncViewFrameContent(editorDocument, viewDocument, sourceStateForce) {
     const editorContent = editorDocument?.querySelector("[data-cms-content]");
     const viewContent = viewDocument?.querySelector("[data-cms-content]");
-    if (!editorContent || !viewContent)
+    if (!editorContent || !viewContent) {
       return;
+    }
     viewContent.innerHTML = serializableContentHtml(editorContent);
     syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
     restartViewBindingRuntime(viewDocument);
   }
   function restartViewBindingRuntime(viewDocument) {
     const core = bindingPreviewCore(viewDocument);
-    if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled))
+    if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) {
       return;
-    if (startViewBindingRuntime(core))
+    }
+    if (startViewBindingRuntime(core)) {
       return;
+    }
     viewDocument?.defaultView?.customElements.whenDefined(core.localName).then(() => {
       viewDocument.defaultView?.customElements.upgrade(core);
-      if (!core.isConnected || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled))
+      if (!core.isConnected || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) {
         return;
+      }
       startViewBindingRuntime(core);
     }).catch(() => {
       return;
     });
   }
   function startViewBindingRuntime(core) {
-    if (typeof core.startRuntime !== "function")
+    if (typeof core.startRuntime !== "function") {
       return false;
-    if (typeof core.runtime?.deactivate === "function")
+    }
+    if (typeof core.runtime?.deactivate === "function") {
       core.runtime.deactivate();
-    else
+    } else {
       core.runtime?.stop();
+    }
     core.startRuntime();
     return true;
   }
   function injectBindingPreviewStyle(document2) {
-    if (document2.getElementById(BINDING_PREVIEW_STYLE_ID))
+    if (document2.getElementById(BINDING_PREVIEW_STYLE_ID)) {
       return;
+    }
     const style = document2.createElement("style");
     style.id = BINDING_PREVIEW_STYLE_ID;
     style.textContent = bindingPreviewCss();
@@ -35463,12 +36692,7 @@ label {
       ];
       return `${selectors.join(",")}{display:none!important}`;
     };
-    return [
-      hiddenFor("loaded"),
-      hiddenFor("loading"),
-      hiddenFor("empty"),
-      hiddenFor("error")
-    ].join(`
+    return [hiddenFor("loaded"), hiddenFor("loading"), hiddenFor("empty"), hiddenFor("error")].join(`
 `);
   }
 
@@ -35528,19 +36752,23 @@ label {
   }
   function eventElement(event) {
     const target = event.target;
-    if (!target || !("nodeType" in target))
+    if (!target || !("nodeType" in target)) {
       return null;
-    if (target.nodeType === Node.ELEMENT_NODE)
+    }
+    if (target.nodeType === Node.ELEMENT_NODE) {
       return target;
+    }
     return target.parentElement;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/insertion.ts
   function createInsertion(document2, item, slotName, sourceStatusConditions) {
-    if (!document2)
+    if (!document2) {
       return null;
-    if (item.kind === "media")
+    }
+    if (item.kind === "media") {
       return null;
+    }
     if (item.kind === "block") {
       const fragment2 = createBlockFragment(document2, item.entry);
       const slotElements2 = slotElementChildren(fragment2);
@@ -35549,8 +36777,9 @@ label {
         applyCondition(child, sourceStatusConditions);
       }
       const selectionTarget2 = slotElements2.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements2[0] ?? null;
-      if (!selectionTarget2)
+      if (!selectionTarget2) {
         return null;
+      }
       return {
         fragment: fragment2,
         selectionTarget: selectionTarget2,
@@ -35566,8 +36795,9 @@ label {
       applyCondition(child, sourceStatusConditions);
     }
     const selectionTarget = slotElements[0] ?? null;
-    if (!selectionTarget)
+    if (!selectionTarget) {
       return null;
+    }
     return {
       fragment,
       selectionTarget,
@@ -35582,8 +36812,9 @@ label {
     }
   }
   function applyCondition(element, sourceStatusConditions) {
-    if (sourceStatusConditions?.length)
+    if (sourceStatusConditions?.length) {
       applySourceStatusConditions(element, sourceStatusConditions);
+    }
   }
   function createBlockFragment(document2, entry) {
     if (!entry.defaultContent) {
@@ -35604,32 +36835,38 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/slots.ts
   function canInsertNodeCount(parent, slot, insertedElements) {
-    if (typeof slot.max !== "number")
+    if (typeof slot.max !== "number") {
       return true;
+    }
     return slotChildCount2(parent, slot) + insertedElements.length <= slot.max;
   }
   function canReplaceNodeCount(parent, replaced, slot, insertedElements) {
-    if (typeof slot.max !== "number")
+    if (typeof slot.max !== "number") {
       return true;
+    }
     const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
     return slotChildCount2(parent, slot) - replacedCount + insertedElements.length <= slot.max;
   }
   function canDuplicate(runtime, editor) {
     const parent = parentEditor(runtime, editor);
-    if (!parent)
+    if (!parent) {
       return true;
+    }
     const slot = findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
-    if (!slot)
+    if (!slot) {
       return true;
+    }
     return !isSlotFull2(parent, slot);
   }
   function canDelete(runtime, editor) {
     const parent = parentEditor(runtime, editor);
-    if (!parent)
+    if (!parent) {
       return true;
+    }
     const slot = findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
-    if (!slot?.min)
+    if (!slot?.min) {
       return true;
+    }
     return slotChildCount2(parent, slot) > slot.min;
   }
   function canInsertSibling(runtime, reference, insertedElement, applySourceConditions, sourceConditionsForSibling) {
@@ -35641,26 +36878,31 @@ label {
     }
     const slotName = reference.target.getAttribute("slot") ?? undefined;
     const slot = findSlot(parent, slotName);
-    if (!slot || !canInsertNodeCount(parent, slot, [insertedElement]))
+    if (!slot || !canInsertNodeCount(parent, slot, [insertedElement])) {
       return false;
+    }
     applySlot(insertedElement, slotName);
     applySourceConditions(insertedElement, sourceConditionsForSibling(reference));
     return true;
   }
   function canMoveEditor(runtime, source, target) {
-    if (!canDelete(runtime, source))
+    if (!canDelete(runtime, source)) {
       return false;
+    }
     const targetParent = parentEditor(runtime, target);
-    if (!targetParent)
+    if (!targetParent) {
       return true;
+    }
     const targetSlotName = target.target.getAttribute("slot") ?? undefined;
     const targetSlot = findSlot(targetParent, targetSlotName);
-    if (!targetSlot)
+    if (!targetSlot) {
       return false;
+    }
     const sourceParent = parentEditor(runtime, source);
     const isSameSlot = sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
-    if (isSameSlot)
+    if (isSameSlot) {
       return true;
+    }
     return canInsertNodeCount(targetParent, targetSlot, [source.target]);
   }
   function isSlotFull2(parent, slot) {
@@ -35670,13 +36912,15 @@ label {
     return parent.getContentSlots().find((slot) => (slot.slot ?? undefined) === slotName);
   }
   function remainingSlotCapacity(parent, slot) {
-    if (typeof slot.max !== "number")
+    if (typeof slot.max !== "number") {
       return Number.MAX_SAFE_INTEGER;
+    }
     return Math.max(0, slot.max - slotChildCount2(parent, slot));
   }
   function parentEditor(runtime, editor) {
-    if (!runtime || !editor.target.parentElement)
+    if (!runtime || !editor.target.parentElement) {
       return null;
+    }
     return runtime.getClosestEditor(editor.target.parentElement)?.target === editor.target ? null : runtime.getClosestEditor(editor.target.parentElement) ?? null;
   }
   function slotChildCount2(parent, slot) {
@@ -35691,8 +36935,9 @@ label {
     center.addEventListener("select-file", (event) => {
       const detail = event.detail;
       const element = createMediaElement(frameDocument, detail);
-      if (!element)
+      if (!element) {
         return;
+      }
       onSelect([element]);
     }, { once: true });
     center.addEventListener("select-files", (event) => {
@@ -35709,17 +36954,20 @@ label {
     });
   }
   function createMediaElement(document2, detail) {
-    if (!document2)
+    if (!document2) {
       return null;
+    }
     if (detail.mimeType?.startsWith("image/") ?? true) {
       const image2 = document2.createElement("img");
       image2.setAttribute("src", detail.src);
       image2.setAttribute("alt", detail.label);
       image2.addEventListener("load", () => {
-        if (image2.naturalWidth > 0)
+        if (image2.naturalWidth > 0) {
           image2.setAttribute("width", String(image2.naturalWidth));
-        if (image2.naturalHeight > 0)
+        }
+        if (image2.naturalHeight > 0) {
           image2.setAttribute("height", String(image2.naturalHeight));
+        }
       }, { once: true });
       return image2;
     }
@@ -35749,61 +36997,75 @@ label {
     }
     addChild(parent, item, slotName) {
       const slot = findSlot(parent, slotName);
-      if (!slot || isSlotFull2(parent, slot))
+      if (!slot || isSlotFull2(parent, slot)) {
         return;
-      if (item.kind === "media")
+      }
+      if (item.kind === "media") {
         return this.insertMedia(parent, item, slot, slotName);
+      }
       const insertion = this.createInsertion(item, slotName);
-      if (!insertion || !canInsertNodeCount(parent, slot, insertion.slotElements))
+      if (!insertion || !canInsertNodeCount(parent, slot, insertion.slotElements)) {
         return;
+      }
       parent.target.append(insertion.fragment);
       this.reloadFrameDocument(insertion.selectionTarget);
     }
     addRoot(item) {
       const document2 = this.context.editorDocument();
-      if (!document2 || item.kind === "media")
+      if (!document2 || item.kind === "media") {
         return;
+      }
       const insertion = this.createInsertion(item);
-      if (!insertion)
+      if (!insertion) {
         return;
-      if (this.context.isEmptyDocumentContent())
+      }
+      if (this.context.isEmptyDocumentContent()) {
         document2.contentRoot.replaceChildren();
+      }
       document2.contentRoot.append(insertion.fragment);
       this.reloadFrameDocument(insertion.selectionTarget);
     }
     replaceEditor(editor, item, slotName) {
       const parent = parentEditor(this.context.runtime(), editor);
-      if (!parent)
+      if (!parent) {
         return this.replaceRootEditor(editor, item);
+      }
       const slot = findSlot(parent, slotName);
-      if (!slot)
+      if (!slot) {
         return;
+      }
       const sourceStatusConditions = sourceStatusConditionsFromElement(editor.target);
-      if (item.kind === "media")
+      if (item.kind === "media") {
         return this.replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions);
+      }
       const insertion = this.createInsertion(item, slotName, sourceStatusConditions);
-      if (!insertion || !canReplaceNodeCount(parent, editor, slot, insertion.slotElements))
+      if (!insertion || !canReplaceNodeCount(parent, editor, slot, insertion.slotElements)) {
         return;
+      }
       editor.target.replaceWith(insertion.fragment);
       this.reloadFrameDocument(insertion.selectionTarget);
     }
     reloadFrameDocument(selectedTarget = null) {
       const frameDocument = this.context.frameDocument();
-      if (!frameDocument)
+      if (!frameDocument) {
         return;
+      }
       const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector(CMS_BINDING_CORE_TAG);
       const contentRoot = frameDocument.querySelector("[data-cms-content]");
-      if (!root || !contentRoot)
+      if (!root || !contentRoot) {
         return;
+      }
       this.context.loadDocument({ root, contentRoot }, selectedTarget);
       this.context.syncViewFrameContent();
     }
     replaceRootEditor(editor, item) {
-      if (item.kind === "media")
+      if (item.kind === "media") {
         return;
+      }
       const insertion = this.createInsertion(item);
-      if (!insertion)
+      if (!insertion) {
         return;
+      }
       editor.target.replaceWith(insertion.fragment);
       this.reloadFrameDocument(insertion.selectionTarget);
     }
@@ -35812,34 +37074,40 @@ label {
     }
     insertMedia(parent, item, slot, slotName, sourceStatusConditions) {
       const remaining = remainingSlotCapacity(parent, slot);
-      if (remaining <= 0)
+      if (remaining <= 0) {
         return;
+      }
       openMediaPicker(this.context.frameDocument(), item.accept, {
         multiple: remaining > 1,
         maxSelection: typeof slot.max === "number" ? remaining : undefined
       }, (elements) => this.appendMedia(parent, slot, elements, slotName, sourceStatusConditions));
     }
     appendMedia(parent, slot, elements, slotName, sourceStatusConditions) {
-      if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements))
+      if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements)) {
         return;
+      }
       for (const element of elements) {
         applySlot(element, slotName);
-        if (sourceStatusConditions?.length)
+        if (sourceStatusConditions?.length) {
           applySourceStatusConditions(element, sourceStatusConditions);
+        }
       }
       parent.target.append(...elements);
       this.reloadFrameDocument(elements[0] ?? null);
     }
     replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions) {
-      if (!canReplaceNodeCount(parent, editor, slot, [editor.target]))
+      if (!canReplaceNodeCount(parent, editor, slot, [editor.target])) {
         return;
+      }
       openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
         const element = elements[0];
-        if (!element)
+        if (!element) {
           return;
+        }
         applySlot(element, slotName);
-        if (sourceStatusConditions?.length)
+        if (sourceStatusConditions?.length) {
           applySourceStatusConditions(element, sourceStatusConditions);
+        }
         editor.target.replaceWith(element);
         this.reloadFrameDocument(element);
       });
@@ -35856,15 +37124,17 @@ label {
       this.content = content;
     }
     duplicateEditor(editor) {
-      if (!canDuplicate(this.context.runtime(), editor))
+      if (!canDuplicate(this.context.runtime(), editor)) {
         return;
+      }
       const clone = editor.target.cloneNode(true);
       editor.target.after(clone);
       this.content.reloadFrameDocument(clone);
     }
     deleteEditor(editor) {
-      if (!canDelete(this.context.runtime(), editor))
+      if (!canDelete(this.context.runtime(), editor)) {
         return;
+      }
       const nextSelectionTarget = this.findNextSelectionTargetAfterDelete(editor);
       editor.target.remove();
       this.content.reloadFrameDocument(nextSelectionTarget);
@@ -35874,8 +37144,9 @@ label {
     }
     pasteAfter(editor) {
       const document2 = this.context.editorDocument();
-      if (!this._clipboardElement || !document2)
+      if (!this._clipboardElement || !document2) {
         return;
+      }
       const clone = this._clipboardElement.cloneNode(true);
       if (!editor) {
         document2.contentRoot.append(clone);
@@ -35883,38 +37154,45 @@ label {
         return;
       }
       if (!canInsertSibling(this.context.runtime(), editor, clone, (element, state2) => {
-        if (state2.length)
+        if (state2.length) {
           applySourceStatusConditions(element, state2);
-      }, (reference) => sourceStatusConditionsFromElement(reference.target)))
+        }
+      }, (reference) => sourceStatusConditionsFromElement(reference.target))) {
         return;
+      }
       editor.target.after(clone);
       this.content.reloadFrameDocument(clone);
     }
     moveEditor(source, target, position) {
-      if (source === target || source.target.contains(target.target))
+      if (source === target || source.target.contains(target.target)) {
         return;
-      if (!canMoveEditor(this.context.runtime(), source, target))
+      }
+      if (!canMoveEditor(this.context.runtime(), source, target)) {
         return;
+      }
       applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
       applySiblingSourceStatus(source.target, sourceStatusConditionsFromElement(target.target));
-      if (position === "before")
+      if (position === "before") {
         target.target.before(source.target);
-      else
+      } else {
         target.target.after(source.target);
+      }
       this.content.reloadFrameDocument(source.target);
     }
     findNextSelectionTargetAfterDelete(editor) {
       const parent = editor.target.parentElement;
-      if (!parent)
+      if (!parent) {
         return null;
+      }
       return this.context.runtime()?.getClosestEditor(parent)?.target ?? null;
     }
   }
   function applySiblingSourceStatus(target, state2) {
-    if (state2.length)
+    if (state2.length) {
       applySourceStatusConditions(target, state2);
-    else if (sourceStatusConditionsFromElement(target).length)
+    } else if (sourceStatusConditionsFromElement(target).length) {
       target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+    }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/sourceDependencyCleanup.ts
@@ -35934,8 +37212,9 @@ label {
       usage.target.textContent = withoutBindingExpressions(usage.target.textContent ?? "");
       return;
     }
-    if (!usage.attribute || !(usage.target instanceof Element))
+    if (!usage.attribute || !(usage.target instanceof Element)) {
       return;
+    }
     if (usage.attribute === CMS_BINDING_ATTRIBUTES.repeat || usage.attribute === CMS_BINDING_ATTRIBUTES.condition) {
       usage.target.removeAttribute(usage.attribute);
       return;
@@ -35952,16 +37231,19 @@ label {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) {
         const text3 = child;
-        if (bindingTextDependsOn(text3.data, inheritedScope))
+        if (bindingTextDependsOn(text3.data, inheritedScope)) {
           usages.push({ target: text3 });
+        }
         continue;
       }
-      if (child.nodeType !== Node.ELEMENT_NODE)
+      if (child.nodeType !== Node.ELEMENT_NODE) {
         continue;
+      }
       const element = child;
       const scope = collectElementDependencies(element, inheritedScope, usages);
-      if (isBindingBoundary(element))
+      if (isBindingBoundary(element)) {
         continue;
+      }
       collectBindingDependencies(element, scope, usages);
     }
   }
@@ -35971,21 +37253,25 @@ label {
       sourceId: inheritedScope.sourceId,
       sourceLocal: inheritedScope.sourceLocal
     };
-    if (!options2.isRoot && isBindingBoundary(element))
+    if (!options2.isRoot && isBindingBoundary(element)) {
       return scope;
+    }
     const repeat = element.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
     if (repeat && (inheritedScope.sourceLocal || bindingTextDependsOn(repeat, inheritedScope))) {
       usages.push({ target: element, attribute: CMS_BINDING_ATTRIBUTES.repeat });
       const parsed = parseRepeat(repeat);
       const repeatAlias = parsed?.alias?.trim();
-      if (repeatAlias)
+      if (repeatAlias) {
         scope.aliases.add(repeatAlias);
+      }
     }
     for (const attribute of Array.from(element.attributes)) {
-      if (attribute.name === CMS_BINDING_ATTRIBUTES.source)
+      if (attribute.name === CMS_BINDING_ATTRIBUTES.source) {
         continue;
-      if (attribute.name === CMS_BINDING_ATTRIBUTES.repeat)
+      }
+      if (attribute.name === CMS_BINDING_ATTRIBUTES.repeat) {
         continue;
+      }
       if (bindingTextDependsOn(attribute.value, scope)) {
         usages.push({ target: element, attribute: attribute.name });
       }
@@ -35995,8 +37281,9 @@ label {
   function collectEditorBindingDependencies(editor, inheritedScope, usages) {
     for (const child of editor.getChildren()) {
       const scope = collectElementDependencies(child.target, inheritedScope, usages);
-      if (isBindingBoundary(child.target))
+      if (isBindingBoundary(child.target)) {
         continue;
+      }
       collectBindingDependencies(child.target, scope, usages);
       collectEditorBindingDependencies(child, scope, usages);
     }
@@ -36006,11 +37293,13 @@ label {
   }
   function bindingTextDependsOn(value2, scope) {
     for (const alias of scope.aliases) {
-      if (expressionReferencesScope(value2, alias))
+      if (expressionReferencesScope(value2, alias)) {
         return true;
+      }
     }
-    if (!scope.sourceLocal)
+    if (!scope.sourceLocal) {
       return false;
+    }
     return containsBindingSyntax(value2, scope);
   }
   function expressionReferencesScope(value2, scope) {
@@ -36022,14 +37311,16 @@ label {
     if (statusConditions.length > 0) {
       return statusConditions.some((condition) => !condition.sourceId || condition.sourceId === scope.sourceId);
     }
-    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value2))
+    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value2)) {
       return true;
+    }
     const matches = value2.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
     for (const match of matches) {
       const expression = match[1]?.trim() ?? "";
       const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
-      if (head && expression[head.length] !== ".")
+      if (head && expression[head.length] !== ".") {
         return true;
+      }
     }
     return false;
   }
@@ -36048,8 +37339,9 @@ label {
         ids.set(usage.target, id);
       }
       const key = `${id}:${usage.attribute ?? ""}`;
-      if (seen.has(key))
+      if (seen.has(key)) {
         return false;
+      }
       seen.add(key);
       return true;
     });
@@ -36059,27 +37351,32 @@ label {
   var BINDING_READY_ATTRIBUTE = "cms-ready";
   function setSource(editor, source, binding = { url: source.url }) {
     editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, asSource(binding));
-    if (binding.trigger === "submit" || binding.trigger === "change")
+    if (binding.trigger === "submit" || binding.trigger === "change") {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, binding.trigger);
-    else
+    } else {
       editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
+    }
     const method = binding.method ?? source.method ?? "GET";
-    if (method && (method !== "GET" || binding.trigger === "submit" || binding.trigger === "change"))
+    if (method && (method !== "GET" || binding.trigger === "submit" || binding.trigger === "change")) {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
-    else
+    } else {
       editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+    }
     const body = binding.body ? asSourceBody(binding.body) : "";
-    if (body)
+    if (body) {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceBody, body);
-    else
+    } else {
       editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
+    }
   }
   function removeSource(editor, confirmRemoveSourceDependents) {
     const usages = sourceDependentBindings(editor);
-    if (usages.length > 0 && !confirmRemoveSourceDependents(usages.length))
+    if (usages.length > 0 && !confirmRemoveSourceDependents(usages.length)) {
       return false;
-    for (const usage of usages)
+    }
+    for (const usage of usages) {
       clearSourceDependencyUsage(usage);
+    }
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
@@ -36099,8 +37396,9 @@ label {
   }
   function confirmRemoveSourceDependents(count) {
     const confirm2 = globalThis.confirm;
-    if (typeof confirm2 !== "function")
+    if (typeof confirm2 !== "function") {
       return true;
+    }
     const plural = count === 1 ? "binding depends" : "bindings depend";
     return confirm2(`This source has ${count} descendant ${plural} on its data. Remove the source and clean those dependent bindings?`);
   }
@@ -36111,27 +37409,34 @@ label {
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
   }
   function setSourceStatusCondition(editor, sourceEditor, state2) {
-    if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target))
+    if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target)) {
       return false;
-    if (hasNonSourceStatusCondition2(editor.target))
+    }
+    if (hasNonSourceStatusCondition2(editor.target)) {
       return false;
+    }
     const sourceId = ensureSourceId(sourceEditor.target);
-    if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target))
+    if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target)) {
       return false;
+    }
     applySourceStatusCondition(editor.target, state2, sourceId);
     return true;
   }
   function setSourceStatusConditions(editor, conditions) {
-    if (conditions.length === 0)
+    if (conditions.length === 0) {
       return false;
-    if (hasNonSourceStatusCondition2(editor.target))
+    }
+    if (hasNonSourceStatusCondition2(editor.target)) {
       return false;
+    }
     const next = [];
     for (const condition of conditions) {
-      if (!canUseSourceForStatusCondition(editor.target, condition.sourceEditor.target))
+      if (!canUseSourceForStatusCondition(editor.target, condition.sourceEditor.target)) {
         return false;
-      if (hasSourceStatusConditionAncestor2(editor.target, condition.sourceEditor.target))
+      }
+      if (hasSourceStatusConditionAncestor2(editor.target, condition.sourceEditor.target)) {
         return false;
+      }
       next.push({
         sourceId: ensureSourceId(condition.sourceEditor.target),
         state: condition.sourceState
@@ -36141,8 +37446,9 @@ label {
     return true;
   }
   function removeSourceStatusCondition(editor) {
-    if (sourceStatusConditionsFromElement(editor.target).length === 0)
+    if (sourceStatusConditionsFromElement(editor.target).length === 0) {
       return false;
+    }
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
     return true;
   }
@@ -36154,30 +37460,34 @@ label {
   }
   function hasSourceStatusConditionAncestor2(target, source) {
     for (let current = target.parentElement;current && current !== source; current = current.parentElement) {
-      if (sourceStatusConditionTargetsSource2(current, source))
+      if (sourceStatusConditionTargetsSource2(current, source)) {
         return true;
+      }
     }
     return false;
   }
   function sourceStatusConditionTargetsSource2(target, source) {
     const conditions = sourceStatusConditionsFromElement(target);
     return conditions.some((condition) => {
-      if (condition.sourceId)
+      if (condition.sourceId) {
         return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+      }
       return nearestSourceAncestor2(target) === source;
     });
   }
   function nearestSourceAncestor2(target) {
     for (let current = target.parentElement;current; current = current.parentElement) {
-      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
         return current;
+      }
     }
     return null;
   }
   function ensureSourceId(source) {
     const current = source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId)?.trim();
-    if (current && isSourceId(current))
+    if (current && isSourceId(current)) {
       return current;
+    }
     const parsed = parseSource(source.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
     const base = normalizeSourceId(parsed?.alias ?? source.localName) || "source";
     const id = uniqueSourceId(source, base);
@@ -36196,8 +37506,9 @@ label {
   function sourceIdExists(source, id) {
     const root = source.getRootNode();
     for (const element of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
-      if (element !== source && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id)
+      if (element !== source && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id) {
         return true;
+      }
     }
     return false;
   }
@@ -36211,8 +37522,9 @@ label {
     const seen = new Set;
     return conditions.filter((condition) => {
       const key = `${condition.sourceId ?? ""}:${condition.state}`;
-      if (seen.has(key))
+      if (seen.has(key)) {
         return false;
+      }
       seen.add(key);
       return true;
     });
@@ -36230,21 +37542,24 @@ label {
       this.reload(editor.target);
     }
     removeSource(editor) {
-      if (!removeSource(editor, confirmRemoveSourceDependents))
+      if (!removeSource(editor, confirmRemoveSourceDependents)) {
         return;
+      }
       this.reload(editor.target);
     }
     openRepeatPicker(editor) {
       const runtime = this.context.runtime();
-      if (!runtime)
+      if (!runtime) {
         return;
+      }
       this._pendingRepeatEditor = editor;
       runtime.select(editor);
       this.context.repeatPicker().open(runtime.getSelectedDataScopes(), this.context.findStructureNodeLabel(editor) ?? editor.target.localName);
     }
     applyRepeatSelection(path, alias) {
-      if (!this._pendingRepeatEditor)
+      if (!this._pendingRepeatEditor) {
         return;
+      }
       this.setRepeat(this._pendingRepeatEditor, path, alias);
       this._pendingRepeatEditor = null;
     }
@@ -36257,37 +37572,43 @@ label {
       this.reload(editor.target);
     }
     setSourceStatusCondition(editor, sourceEditor, state2) {
-      if (!setSourceStatusCondition(editor, sourceEditor, state2))
+      if (!setSourceStatusCondition(editor, sourceEditor, state2)) {
         return;
+      }
       this.reload(editor.target);
     }
     setSourceStatusConditions(editor, conditions) {
-      if (!setSourceStatusConditions(editor, conditions))
+      if (!setSourceStatusConditions(editor, conditions)) {
         return;
+      }
       this.reload(editor.target);
     }
     setCondition(editor, expression) {
       const value2 = expression.trim();
-      if (!value2)
+      if (!value2) {
         return;
+      }
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.condition, value2);
       this.reload(editor.target);
     }
     removeSourceStatusCondition(editor) {
       if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)) {
         editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
-      } else if (!removeSourceStatusCondition(editor))
+      } else if (!removeSourceStatusCondition(editor)) {
         return;
+      }
       this.reload(editor.target);
     }
     reload(selectedTarget) {
       const frameDocument = this.context.frameDocument();
-      if (!frameDocument)
+      if (!frameDocument) {
         return;
+      }
       const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector(CMS_BINDING_CORE_TAG);
       const contentRoot = frameDocument.querySelector("[data-cms-content]");
-      if (!root || !contentRoot)
+      if (!root || !contentRoot) {
         return;
+      }
       this.context.loadDocument({ root, contentRoot }, selectedTarget);
       this.context.syncViewFrameContent();
     }
@@ -36306,38 +37627,39 @@ label {
     handleStructureAction(detail) {
       const { action, editor, entry, item, sourceEditor, sourceState } = detail;
       const blockItem = item ?? (entry ? { kind: "block", entry } : null);
-      if (action === "duplicate" && editor)
+      if (action === "duplicate" && editor) {
         this.editor.duplicateEditor(editor);
-      else if (action === "delete" && editor)
+      } else if (action === "delete" && editor) {
         this.editor.deleteEditor(editor);
-      else if (action === "copy" && editor)
+      } else if (action === "copy" && editor) {
         this.editor.copyEditor(editor);
-      else if (action === "paste-after")
+      } else if (action === "paste-after") {
         this.editor.pasteAfter(editor ?? null);
-      else if (action === "set-source" && editor && detail.dataSource)
+      } else if (action === "set-source" && editor && detail.dataSource) {
         this.bindings.setSource(editor, detail.dataSource, detail.sourceBinding);
-      else if (action === "remove-source" && editor)
+      } else if (action === "remove-source" && editor) {
         this.bindings.removeSource(editor);
-      else if (action === "configure-repeat" && editor)
+      } else if (action === "configure-repeat" && editor) {
         this.bindings.openRepeatPicker(editor);
-      else if (action === "remove-repeat" && editor)
+      } else if (action === "remove-repeat" && editor) {
         this.bindings.removeRepeat(editor);
-      else if (action === "set-condition" && editor && detail.conditionExpression)
+      } else if (action === "set-condition" && editor && detail.conditionExpression) {
         this.bindings.setCondition(editor, detail.conditionExpression);
-      else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState)
+      } else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState) {
         this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
-      else if (action === "set-source-status-conditions" && editor && detail.sourceConditions)
+      } else if (action === "set-source-status-conditions" && editor && detail.sourceConditions) {
         this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
-      else if (action === "remove-source-status-condition" && editor)
+      } else if (action === "remove-source-status-condition" && editor) {
         this.bindings.removeSourceStatusCondition(editor);
-      else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
+      } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
         this.editor.moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
-      } else if (action === "replace" && editor && blockItem)
+      } else if (action === "replace" && editor && blockItem) {
         this.content.replaceEditor(editor, blockItem, detail.slot);
-      else if (action === "add-root" && blockItem)
+      } else if (action === "add-root" && blockItem) {
         this.content.addRoot(blockItem);
-      else if (editor && blockItem)
+      } else if (editor && blockItem) {
         this.content.addChild(editor, blockItem, detail.slot);
+      }
     }
     applyRepeatSelection(path, alias) {
       this.bindings.applyRepeatSelection(path, alias);
@@ -36377,8 +37699,9 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/valueSurface.ts
   var VALUE_KEY_PATTERN = /^[A-Za-z0-9_.-]+$/;
   function hasStandardValueSurface(target) {
-    if (!("value" in target))
+    if (!("value" in target)) {
       return false;
+    }
     try {
       const value2 = target.value;
       target.value = value2;
@@ -36400,8 +37723,9 @@ label {
   var PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
   var PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
   function applyParamSyncSetting(editor, setting, value2) {
-    if (!isParamSyncSetting(setting))
+    if (!isParamSyncSetting(setting)) {
       return false;
+    }
     const target = editor.target;
     const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
@@ -36438,8 +37762,9 @@ label {
   }
   function paramSyncSettings(editor) {
     const target = editor.target;
-    if (!hasStandardValueSurface(target))
+    if (!hasStandardValueSurface(target)) {
       return null;
+    }
     const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
     const hasFieldName = isValidValueKey(fieldName);
@@ -36488,8 +37813,9 @@ label {
   var PAGE_STATE_USE_NAME_SETTING = "__cms-page-state-use-name";
   var PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
   function applyPageStateSetting(editor, setting, value2) {
-    if (!isPageStateSetting(setting))
+    if (!isPageStateSetting(setting)) {
       return false;
+    }
     const target = editor.target;
     const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
@@ -36499,8 +37825,9 @@ label {
         return true;
       }
       const next = current || fieldName;
-      if (isValidValueKey(next))
+      if (isValidValueKey(next)) {
         target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+      }
       return true;
     }
     if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
@@ -36513,8 +37840,9 @@ label {
     }
     if (typeof value2 === "string") {
       const next = value2.trim();
-      if (isValidValueKey(next))
+      if (isValidValueKey(next)) {
         target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+      }
     }
     return true;
   }
@@ -36524,21 +37852,24 @@ label {
   }
   function pageStateSettings(editor) {
     const target = editor.target;
-    if (!hasStandardValueSurface(target))
+    if (!hasStandardValueSurface(target)) {
       return null;
+    }
     const hasSyncAttribute = target.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState);
     const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
     const hasFieldName = isValidValueKey(fieldName);
     const isEnabled = hasSyncAttribute;
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
-    const settings = [{
-      type: "toggle",
-      label: "Sync with page state",
-      attribute: PAGE_STATE_ENABLE_SETTING,
-      defaultValue: isEnabled
-    }];
-    if (isEnabled && hasFieldName)
+    const settings = [
+      {
+        type: "toggle",
+        label: "Sync with page state",
+        attribute: PAGE_STATE_ENABLE_SETTING,
+        defaultValue: isEnabled
+      }
+    ];
+    if (isEnabled && hasFieldName) {
       settings.push({
         type: "toggle",
         label: "Use field name",
@@ -36546,7 +37877,8 @@ label {
         defaultValue: usesFieldName,
         help: `Uses "${fieldName}" as the page state key.`
       });
-    if (isEnabled && !usesFieldName)
+    }
+    if (isEnabled && !usesFieldName) {
       settings.push({
         type: "text",
         label: "State key",
@@ -36556,6 +37888,7 @@ label {
         help: "Letters, numbers, underscores, dashes and dots only.",
         required: true
       });
+    }
     return { kind: "surcharge", label: "Page state", settings };
   }
   function isPageStateSetting(setting) {
@@ -36590,8 +37923,9 @@ label {
     }
     editor.target.insertBefore(fragment, referenceNode);
     for (const node of currentNodes) {
-      if (!isReservedSlotNode(node, reserved))
+      if (!isReservedSlotNode(node, reserved)) {
         node.remove();
+      }
     }
   }
   function resolveSetting(editor, setting) {
@@ -36604,8 +37938,9 @@ label {
     return resolveSettingValue(editor, setting);
   }
   function resolveSettingValue(editor, setting) {
-    if (isParamSyncSetting(setting) || isPageStateSetting(setting))
+    if (isParamSyncSetting(setting) || isPageStateSetting(setting)) {
       return setting;
+    }
     if (setting.type === "toggle") {
       return {
         ...setting,
@@ -36626,16 +37961,18 @@ label {
   }
   function assertTextSlotCompatibility(editor) {
     const hasDefaultSlot = editor.getContentSlots().some((slot) => !slot.slot);
-    if (!hasDefaultSlot)
+    if (!hasDefaultSlot) {
       return;
+    }
     throw new Error("Editors cannot combine textCapability() with an unnamed content slot.");
   }
   function textContentFragment(editor) {
     const reserved = reservedSlotNames(editor.getContentSlots());
     const container = editor.target.ownerDocument.createElement("div");
     for (const node of Array.from(editor.target.childNodes)) {
-      if (isReservedSlotNode(node, reserved))
+      if (isReservedSlotNode(node, reserved)) {
         continue;
+      }
       container.append(node.cloneNode(true));
     }
     return container;
@@ -36668,16 +38005,18 @@ label {
   function exitStateSession(sessionsByEditor, editor, stateId) {
     const sessions = sessionsByEditor.get(editor);
     const session = sessions?.get(stateId);
-    if (!sessions || !session)
+    if (!sessions || !session) {
       return;
+    }
     session.exit();
     sessions.delete(stateId);
   }
   function exitAllStateSessions(sessionsByEditor, nodes) {
     for (const node of flattenStructure(nodes)) {
       const sessions = sessionsByEditor.get(node.editor);
-      if (!sessions)
+      if (!sessions) {
         continue;
+      }
       for (const session of sessions.values()) {
         session.exit();
       }
@@ -36696,8 +38035,9 @@ label {
     }
     select(editor, options2 = {}) {
       const runtime = this.context.runtime();
-      if (!runtime)
+      if (!runtime) {
         return;
+      }
       const selection = runtime.select(editor);
       this.context.renderStructure(options2);
       if (!selection) {
@@ -36712,8 +38052,9 @@ label {
     }
     renderSettings() {
       const runtime = this.context.runtime();
-      if (!runtime)
+      if (!runtime) {
         return;
+      }
       const selection = runtime.getSelection();
       if (!selection) {
         this.context.settings().setSettings([]);
@@ -36761,8 +38102,9 @@ label {
     }
     exitAllStateSessions() {
       const runtime = this.context.runtime();
-      if (!runtime)
+      if (!runtime) {
         return;
+      }
       exitAllStateSessions(this.context.stateSessions(), runtime.getStructure());
     }
   }
@@ -36813,8 +38155,9 @@ label {
     modal.hidden = true;
   }
   function syncPageSettingsForm(config, pageField) {
-    if (!config)
+    if (!config) {
       return;
+    }
     pageField("title").value = config.title;
     pageField("path").value = config.path;
     pageField("published").value = String(config.published);
@@ -36822,8 +38165,9 @@ label {
     pageField("tags").value = config.tags.join(", ");
   }
   function readPageSettingsForm(config, pageField) {
-    if (!config)
+    if (!config) {
       return null;
+    }
     return {
       id: config.id,
       title: pageField("title").value.trim(),
@@ -36834,11 +38178,14 @@ label {
     };
   }
   function applyPageSettingsTitle(topBar, config) {
-    if (config)
+    if (config) {
       topBar.setPageTitle(config.title, config.path);
+    }
   }
   function parseTags(value2) {
-    return [...new Set(value2.split(",").map((tag) => tag.trim()).filter(Boolean))];
+    return [
+      ...new Set(value2.split(",").map((tag) => tag.trim()).filter(Boolean))
+    ];
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellStructureTreeSync.ts
@@ -36871,8 +38218,9 @@ label {
     }
     customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
       const upgradedTree = root.querySelector("cms-editor-v2-structure-tree");
-      if (isStructureTree(upgradedTree))
+      if (isStructureTree(upgradedTree)) {
         apply(upgradedTree);
+      }
     });
   }
 
@@ -36885,8 +38233,9 @@ label {
     }
     customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
       const upgradedTree = root.querySelector("cms-editor-v2-structure-tree");
-      if (isStructureTree2(upgradedTree))
+      if (isStructureTree2(upgradedTree)) {
         upgradedTree.setDataSources(dataSources);
+      }
     });
   }
 
@@ -36908,11 +38257,13 @@ label {
   function findStructureNodeLabel(runtime, editor) {
     const visit = (nodes) => {
       for (const node of nodes) {
-        if (node.editor === editor)
+        if (node.editor === editor) {
           return node.label;
+        }
         const childLabel = visit(node.children);
-        if (childLabel)
+        if (childLabel) {
           return childLabel;
+        }
       }
       return null;
     };
@@ -36992,16 +38343,19 @@ label {
       applyShellChromeLabels(this.context.host, topBar, resource, defaults, (name) => this.pageField(name));
     }
     requestChromeSyncWhenTopBarIsReady() {
-      if (this.context.state.chromeSyncPending)
+      if (this.context.state.chromeSyncPending) {
         return;
+      }
       this.context.state.chromeSyncPending = true;
       customElements.whenDefined("cms-editor-v2-topbar").then(() => {
         this.context.state.chromeSyncPending = false;
         const topBar = this.context.host.shadowRoot.querySelector("cms-editor-v2-topbar");
-        if (topBar)
+        if (topBar) {
           customElements.upgrade(topBar);
-        if (!this.isTopBar(topBar))
+        }
+        if (!this.isTopBar(topBar)) {
           return;
+        }
         const resource = this.context.host.getAttribute("resource") ?? "page";
         this.applyChromeLabels(topBar, resource, shellResourceChromeDefaults(resource));
       });
@@ -37029,8 +38383,9 @@ label {
     };
     onSettingsTabsClick = (event) => {
       const button2 = event.target?.closest("[data-settings-mode]");
-      if (!button2)
+      if (!button2) {
         return;
+      }
       this.context.state.settingsMode = button2.dataset.settingsMode === "overrides" ? "overrides" : "settings";
       this.context.commands.syncSettingsTabs();
       this.context.commands.renderSettings();
@@ -37085,24 +38440,27 @@ label {
     };
     onSettingChange = (event) => {
       const selection = this.context.state.runtime?.getSelection();
-      if (!selection)
+      if (!selection) {
         return;
+      }
       this.context.commands.applySetting(selection.editor, event.detail.setting, event.detail.value, event.detail.attributes);
       this.context.commands.syncViewFrameContent();
       this.context.highlight.show(selection.editor);
     };
     onContentChange = (event) => {
       const selection = this.context.state.runtime?.getSelection();
-      if (!selection?.textCapability)
+      if (!selection?.textCapability) {
         return;
+      }
       setTextValue(selection.editor, selection.textCapability.format, event.detail.value);
       this.context.commands.syncViewFrameContent();
       this.context.highlight.show(selection.editor);
     };
     onStateToggle = (event) => {
       const selection = this.context.state.runtime?.getSelection();
-      if (!selection)
+      if (!selection) {
         return;
+      }
       this.context.commands.toggleState(selection.editor, event.detail.state);
       this.context.commands.renderSettings();
       this.context.highlight.show(selection.editor);
@@ -37112,16 +38470,18 @@ label {
     };
     onFrameClick = (event) => {
       const runtime = this.context.state.runtime;
-      if (!runtime)
+      if (!runtime) {
         return;
+      }
       event.preventDefault();
       this.context.commands.select(runtime.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
         scrollStructureIntoView: true
       });
     };
     onCanvasBackgroundClick = () => {
-      if (this.context.state.runtime)
+      if (this.context.state.runtime) {
         this.context.commands.select(null, { scrollStructureIntoView: false });
+      }
     };
   }
 
@@ -37147,10 +38507,12 @@ label {
       let current = target;
       while (current) {
         const editor = this._editorsByTarget.get(current);
-        if (editor)
+        if (editor) {
           return editor;
-        if (stopAt && current === stopAt)
+        }
+        if (stopAt && current === stopAt) {
           return;
+        }
         current = current.parentElement;
       }
       return;
@@ -37159,8 +38521,9 @@ label {
       let current = target.parentElement;
       while (current) {
         const editor = this._editorsByTarget.get(current);
-        if (editor && this._containsTargetInRichText(editor, target))
+        if (editor && this._containsTargetInRichText(editor, target)) {
           return editor;
+        }
         current = current.parentElement;
       }
       return;
@@ -37168,14 +38531,18 @@ label {
     getDirectChildren(parent) {
       const children = [];
       for (const editor of this._editorsByTarget.values()) {
-        if (editor.target === parent)
+        if (editor.target === parent) {
           continue;
-        if (this.getRichTextOwner(editor.target))
+        }
+        if (this.getRichTextOwner(editor.target)) {
           continue;
-        if (!parent.contains(editor.target))
+        }
+        if (!parent.contains(editor.target)) {
           continue;
-        if (this._getClosestRegisteredAncestor(editor.target) !== parent)
+        }
+        if (this._getClosestRegisteredAncestor(editor.target) !== parent) {
           continue;
+        }
         children.push(editor);
       }
       return children;
@@ -37185,8 +38552,9 @@ label {
       let current = target.parentElement;
       while (current) {
         const editor = this._editorsByTarget.get(current);
-        if (editor)
+        if (editor) {
           ancestors.unshift(editor);
+        }
         current = current.parentElement;
       }
       return ancestors;
@@ -37202,8 +38570,9 @@ label {
       let current = target.parentElement;
       while (current) {
         const editor = this._editorsByTarget.get(current);
-        if (editor && !this.getRichTextOwner(editor.target))
+        if (editor && !this.getRichTextOwner(editor.target)) {
           return current;
+        }
         current = current.parentElement;
       }
       return;
@@ -37213,13 +38582,15 @@ label {
     }
     _isInsideNamedContentSlot(editor, target) {
       const namedSlots = new Set(editor.getContentSlots().map((slot) => slot.slot).filter((slot) => Boolean(slot)));
-      if (namedSlots.size === 0)
+      if (namedSlots.size === 0) {
         return false;
+      }
       let current = target;
       while (current && current !== editor.target) {
         const slot = current.getAttribute("slot");
-        if (slot && namedSlots.has(slot))
+        if (slot && namedSlots.has(slot)) {
           return true;
+        }
         current = current.parentElement;
       }
       return false;
@@ -37247,14 +38618,16 @@ label {
         this._registry = _registry;
       }
       mount() {
-        if (this._isMounted)
+        if (this._isMounted) {
           return;
+        }
         this._isMounted = true;
         this.mountEditor();
       }
       unmount() {
-        if (!this._isMounted)
+        if (!this._isMounted) {
           return;
+        }
         this._isMounted = false;
         this.unmountEditor();
       }
@@ -37279,13 +38652,15 @@ label {
         });
       }
       getContentSlots() {
-        if (t(this.target))
+        if (t(this.target)) {
           return [];
+        }
         return [...super.getContentSlots(), ...this._addedContentSlots];
       }
       addContentSlots(slots) {
-        if (t(this.target))
+        if (t(this.target)) {
           return;
+        }
         this._addedContentSlots.push(...toList(slots));
         this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
           editor: this,
@@ -37293,13 +38668,15 @@ label {
         });
       }
       getTextCapability() {
-        if (t(this.target))
+        if (t(this.target)) {
           return null;
+        }
         return this._textCapabilityOverride !== undefined ? this._textCapabilityOverride : super.getTextCapability();
       }
       setTextCapability(capability) {
-        if (t(this.target))
+        if (t(this.target)) {
           return;
+        }
         this._textCapabilityOverride = capability;
         this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
           editor: this,
@@ -37354,8 +38731,9 @@ label {
   }
   function declareSourceDataScope(editor, dataSources) {
     const source = parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-    if (!source)
+    if (!source) {
       return;
+    }
     const schemaUrl = source.url.split("?")[0] ?? source.url;
     const dataSource = dataSources.find((candidate) => candidate.url === schemaUrl);
     editor.declareDataScope({
@@ -37367,14 +38745,16 @@ label {
   }
   function parseSourceBinding(value2) {
     const parsed = parseSource(value2);
-    if (!parsed)
+    if (!parsed) {
       return null;
+    }
     return typeof parsed === "string" ? { url: parsed } : parsed;
   }
   function declareRepeatDataScope(editor, registry2) {
     const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
-    if (!repeat?.alias)
+    if (!repeat?.alias) {
       return;
+    }
     const field2 = findDataField(registry2.collectDataScopes(editor.target), repeat.path);
     editor.declareDataScope({
       name: repeat.alias,
@@ -37386,18 +38766,21 @@ label {
     for (const scope of scopes) {
       const field2 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
       const match = field2 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
-      if (match)
+      if (match) {
         return match;
+      }
     }
     return;
   }
   function findDataFieldInList(fields, path) {
     for (const field2 of fields) {
-      if (field2.path === path)
+      if (field2.path === path) {
         return field2;
+      }
       const child = field2.children ? findDataFieldInList(field2.children, path) : undefined;
-      if (child)
+      if (child) {
         return child;
+      }
     }
     return;
   }
@@ -37412,18 +38795,22 @@ label {
   }
   function findClosestRuntimeEditor(context, target) {
     const { document: document2, registry: registry2 } = context;
-    if (!target || !document2.contentRoot.contains(target))
+    if (!target || !document2.contentRoot.contains(target)) {
       return;
+    }
     const closest = registry2.getClosestEditor(target, document2.contentRoot);
-    if (!closest)
+    if (!closest) {
       return;
+    }
     let current = closest.target;
     while (current && document2.contentRoot.contains(current)) {
       const editor = registry2.getEditor(current);
-      if (editor?.getStructureMode() === "opaque")
+      if (editor?.getStructureMode() === "opaque") {
         return editor;
-      if (current === document2.contentRoot)
+      }
+      if (current === document2.contentRoot) {
         break;
+      }
       current = current.parentElement;
     }
     return findRichTextOwner(context, closest.target) ?? closest;
@@ -37438,19 +38825,25 @@ label {
   function structureChildren(context, parent) {
     const children = [];
     for (const editor of context.editors) {
-      if (!context.document.contentRoot.contains(editor.target))
+      if (!context.document.contentRoot.contains(editor.target)) {
         continue;
-      if (editor.target === parent)
+      }
+      if (editor.target === parent) {
         continue;
-      if (findRichTextOwner(context, editor.target))
+      }
+      if (findRichTextOwner(context, editor.target)) {
         continue;
-      if (!parent.contains(editor.target))
+      }
+      if (!parent.contains(editor.target)) {
         continue;
-      if (closestStructureParent(context, editor.target, parent) !== parent)
+      }
+      if (closestStructureParent(context, editor.target, parent) !== parent) {
         continue;
+      }
       const entry = context.entriesByEditor.get(editor);
-      if (!entry)
+      if (!entry) {
         continue;
+      }
       children.push({
         kind: "editor",
         editor,
@@ -37467,18 +38860,22 @@ label {
   function structureBadges(editor) {
     const badges = [];
     const slot = editor.target.getAttribute("slot");
-    if (slot)
+    if (slot) {
       badges.push(slot);
-    if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+    }
+    if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
       badges.push("Source");
-    if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat))
+    }
+    if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)) {
       badges.push("Repeat");
+    }
     const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
     const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map((item) => item.state))];
-    if (sourceStatuses.length > 0)
+    if (sourceStatuses.length > 0) {
       badges.push(...sourceStatuses);
-    else if (condition?.trim())
+    } else if (condition?.trim()) {
       badges.push("condition");
+    }
     return badges;
   }
   function closestStructureParent(context, target, stopAt) {
@@ -37486,8 +38883,9 @@ label {
     while (current && current !== stopAt) {
       if (context.document.contentRoot.contains(current)) {
         const editor = context.registry.getEditor(current);
-        if (editor && !findRichTextOwner(context, editor.target))
+        if (editor && !findRichTextOwner(context, editor.target)) {
           return current;
+        }
       }
       current = current.parentElement;
     }
@@ -37495,8 +38893,9 @@ label {
   }
   function hasCompositionAncestor(element) {
     for (let parent = element.parentElement;parent; parent = parent.parentElement) {
-      if (t(parent))
+      if (t(parent)) {
         return true;
+      }
     }
     return false;
   }
@@ -37522,8 +38921,9 @@ label {
       this._document = document2;
       for (const element of runtimeElements(document2.root)) {
         const entry = this._catalogByTag.get(element.localName);
-        if (!entry)
+        if (!entry) {
           continue;
+        }
         const editor = createRuntimeEditor(entry, element, this.registry);
         this._editors.push(editor);
         this._entriesByEditor.set(editor, entry);
@@ -37561,8 +38961,9 @@ label {
       return this.getSelection();
     }
     getSelection() {
-      if (!this._selectedEditor)
+      if (!this._selectedEditor) {
         return null;
+      }
       return {
         editor: this._selectedEditor,
         settings: this._selectedEditor.getSettings(),
@@ -37575,8 +38976,9 @@ label {
       return this._selectedEditor?.getSettings() ?? [];
     }
     getSelectedDataScopes() {
-      if (!this._selectedEditor)
+      if (!this._selectedEditor) {
         return [];
+      }
       return this.registry.collectDataScopes(this._selectedEditor.target, {
         includeTarget: !this._selectedEditor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)
       });
@@ -37615,8 +39017,9 @@ label {
     setInsertItems(items) {
       this.context.state.insertItems = items.map((item) => ({ ...item }));
       this.context.renderSync.syncStructureTreeInsertItems();
-      if (this.context.state.runtime)
+      if (this.context.state.runtime) {
         this.context.commands.renderStructure();
+      }
     }
     setDefaultTemplateSelection(selection) {
       this.context.state.defaultTemplateSelection = { ...selection };
@@ -37627,10 +39030,12 @@ label {
         ...source,
         fields: [...source.fields],
         ...source.params ? { params: [...source.params] } : {},
-        ...source.body ? { body: {
-          ...source.body,
-          fields: [...source.body.fields]
-        } } : {}
+        ...source.body ? {
+          body: {
+            ...source.body,
+            fields: [...source.body.fields]
+          }
+        } : {}
       }));
       this.context.renderSync.syncStructureTreeDataSources();
     }
@@ -38350,11 +39755,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[
-      style_default33,
-      pageSettings_default,
-      pageSettingsTags_default
-    ].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default33, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default33)}`;
     return template22;
   }
@@ -38564,21 +39965,25 @@ label {
   }
   function shellResource(shell) {
     const resource = shell.getAttribute("resource");
-    if (resource === "template")
+    if (resource === "template") {
       return resource;
+    }
     return "page";
   }
   function configureShell(shell) {
-    if (!(shell instanceof Shell))
+    if (!(shell instanceof Shell)) {
       return;
-    if (configuredShells.has(shell))
+    }
+    if (configuredShells.has(shell)) {
       return;
+    }
     configuredShells.add(shell);
     shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
     shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
     configureShellCatalogAndFrame(shell);
-    if (currentPageIdentifier())
+    if (currentPageIdentifier()) {
       loadDocumentConfig(shell, shellResource(shell), currentPageIdentifier());
+    }
   }
   async function configureShellCatalogAndFrame(shell) {
     const [catalog, insertItems, dataSources, settings] = await Promise.all([
@@ -38593,7 +39998,11 @@ label {
     shell.setDefaultTemplateSelection({
       category: settings.editor?.layoutCategory || undefined
     });
-    const themeTokens = (settings.theme?.sources ?? []).flatMap((source) => source.categories.flatMap((category) => category.tokens.filter((token) => token.type === "color").map((token) => ({ label: token.label, variable: token.variable, category: `${source.label} · ${category.label}` }))));
+    const themeTokens = (settings.theme?.sources ?? []).flatMap((source) => source.categories.flatMap((category) => category.tokens.filter((token) => token.type === "color").map((token) => ({
+      label: token.label,
+      variable: token.variable,
+      category: `${source.label} · ${category.label}`
+    }))));
     const settingsView = shell.shadowRoot?.querySelector("cms-editor-v2-settings-view");
     settingsView?.setThemeTokens(themeTokens);
     const documentId = currentPageIdentifier();
@@ -38629,8 +40038,9 @@ label {
   async function fetchJson(path, fallback) {
     try {
       const response = await fetch(`${getMetaBasePath()}/api/${path}`);
-      if (!response.ok)
+      if (!response.ok) {
         return fallback;
+      }
       return await response.json();
     } catch (error) {
       console.error("[editor] failed to load picker source", path, error);
@@ -38741,8 +40151,9 @@ label {
   }
   async function onSaveDocument(event) {
     const shell = event.currentTarget;
-    if (!(shell instanceof Shell))
+    if (!(shell instanceof Shell)) {
       return;
+    }
     try {
       await saveDocument(shellResource(shell), event.detail.page, event.detail.content);
       shell.setSaveStatus("Saved");
@@ -38753,16 +40164,18 @@ label {
   }
   async function onDeleteDocument(event) {
     const shell = event.currentTarget;
-    if (!(shell instanceof Shell))
+    if (!(shell instanceof Shell)) {
       return;
+    }
     const resource = shellResource(shell);
     const id = currentPageIdentifier();
     if (!id) {
       shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
       return;
     }
-    if (!window.confirm(`Delete this ${resource}? This cannot be undone.`))
+    if (!window.confirm(`Delete this ${resource}? This cannot be undone.`)) {
       return;
+    }
     try {
       await deleteDocument(resource, id);
       window.location.href = listUrl(resource);
@@ -38834,8 +40247,9 @@ label {
     document.querySelectorAll("cms-editor-shell").forEach(configureShell);
   }
   function configureAddedShells(node) {
-    if (!(node instanceof Element))
+    if (!(node instanceof Element)) {
       return;
+    }
     if (node.matches("cms-editor-shell")) {
       configureShell(node);
     }
@@ -39267,8 +40681,9 @@ label {
       closeBtn.addEventListener("click", () => this.close());
       cancelBtn.addEventListener("click", () => this.close());
       backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop)
+        if (e.target === backdrop) {
           this.close();
+        }
       });
       applyBtn.addEventListener("click", () => {
         this.dispatchEvent(new CustomEvent("crop", { detail: {} }));
@@ -39557,12 +40972,14 @@ label {
       const closeBtn = this.shadowRoot.getElementById("close-btn");
       closeBtn.addEventListener("click", () => this.close());
       backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop)
+        if (e.target === backdrop) {
           this.close();
+        }
       });
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && this.hasAttribute("open"))
+        if (e.key === "Escape" && this.hasAttribute("open")) {
           this.close();
+        }
       });
     }
     open(label2) {
@@ -40058,38 +41475,46 @@ label {
   // src/components/media/GridMedia/api/read.ts
   async function fetchItems(folder, types) {
     const url = new URL(filesBase(), window.location.origin);
-    if (folder)
+    if (folder) {
       url.searchParams.set("parentId", folder);
+    }
     const accept = expandAccept(types);
-    if (accept)
+    if (accept) {
       url.searchParams.set("accept", accept);
+    }
     url.searchParams.set("sortBy", "name");
     url.searchParams.set("limit", "10000");
     const res = await fetch(url.toString());
-    if (!res.ok)
+    if (!res.ok) {
       return [];
+    }
     const page = await res.json();
     let items = page.items.map(toLocal);
     if (types && types.length > 0) {
       items = items.filter((i) => types.includes(i.type));
     }
     items.sort((a, b) => {
-      if (a.type === "folder" && b.type !== "folder")
+      if (a.type === "folder" && b.type !== "folder") {
         return -1;
-      if (a.type !== "folder" && b.type === "folder")
+      }
+      if (a.type !== "folder" && b.type === "folder") {
         return 1;
+      }
       return a.label.localeCompare(b.label);
     });
     return items;
   }
   function expandAccept(types) {
-    if (!types || types.length === 0)
+    if (!types || types.length === 0) {
       return;
+    }
     const accept = new Set;
-    if (types.includes("folder"))
+    if (types.includes("folder")) {
       accept.add("folder");
-    if (types.includes("image") || types.includes("other"))
+    }
+    if (types.includes("image") || types.includes("other")) {
       accept.add("file");
+    }
     return accept.size > 0 ? [...accept].join(",") : undefined;
   }
   async function resolveBreadcrumbTrail(id) {
@@ -40099,8 +41524,9 @@ label {
       const url = new URL(`${filesBase()}/item`, window.location.origin);
       url.searchParams.set("id", currentId);
       const res = await fetch(url.toString());
-      if (!res.ok)
+      if (!res.ok) {
         break;
+      }
       const item = await res.json();
       trail.unshift({ id: item.id, label: item.name });
       currentId = item.parentId;
@@ -40140,12 +41566,14 @@ label {
   async function uploadFiles(files, folder) {
     for (let i = 0;i < files.length; i++) {
       const file = files.item(i);
-      if (!file)
+      if (!file) {
         continue;
+      }
       const form = new FormData;
       form.append("file", file);
-      if (folder)
+      if (folder) {
         form.append("parentId", folder);
+      }
       const res = await fetch(`${filesBase()}/upload`, { method: "POST", body: form });
       if (res.ok) {
         const item = await res.json();
@@ -40158,18 +41586,22 @@ label {
     form.append("file", file);
     form.append("id", id);
     const res = await fetch(`${filesBase()}/content`, { method: "PUT", body: form });
-    if (res.ok)
+    if (res.ok) {
       _localPreview.set(id, URL.createObjectURL(file));
+    }
     return res.ok;
   }
   async function saveItemMetadata(id, data) {
     const patch = {};
-    if (typeof data["label"] === "string")
+    if (typeof data["label"] === "string") {
       patch.name = data["label"];
-    if (typeof data["parent"] === "string")
+    }
+    if (typeof data["parent"] === "string") {
       patch.parentId = data["parent"];
-    if (Object.keys(patch).length === 0)
+    }
+    if (Object.keys(patch).length === 0) {
       return true;
+    }
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id);
     const res = await fetch(url.toString(), {
@@ -40181,16 +41613,19 @@ label {
   }
   // src/components/media/GridMedia/types.ts
   function formatSize(bytes) {
-    if (bytes < 1024)
+    if (bytes < 1024) {
       return bytes + " B";
-    if (bytes < 1024 * 1024)
+    }
+    if (bytes < 1024 * 1024) {
       return (bytes / 1024).toFixed(1) + " KB";
+    }
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   }
   function variantUrl(item, _width, _height) {
     const url = item.absoluteURL ?? "";
-    if (!url || !item.contentHash)
+    if (!url || !item.contentHash) {
       return url;
+    }
     return withFileVersion(url, item.contentHash);
   }
 
@@ -40263,13 +41698,15 @@ label {
     let activeItem = null;
     menu.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-action]");
-      if (!btn || !activeItem)
+      if (!btn || !activeItem) {
         return;
+      }
       const action = btn.dataset.action;
-      if (action === "rename")
+      if (action === "rename") {
         callbacks.onRename(activeItem);
-      else if (action === "delete")
+      } else if (action === "delete") {
         callbacks.onDelete(activeItem.id);
+      }
       menu.classList.remove("visible");
     });
     document.addEventListener("click", () => menu.classList.remove("visible"));
@@ -40296,8 +41733,9 @@ label {
     };
     const apply = () => {
       const name = input2.value.trim();
-      if (!name || !currentItem)
+      if (!name || !currentItem) {
         return;
+      }
       const id = currentItem.id;
       hide();
       callbacks.onApply(id, name);
@@ -40305,14 +41743,17 @@ label {
     confirmBtn.addEventListener("click", apply);
     cancelBtn.addEventListener("click", hide);
     backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop)
+      if (e.target === backdrop) {
         hide();
+      }
     });
     input2.addEventListener("keydown", (e) => {
-      if (e.key === "Enter")
+      if (e.key === "Enter") {
         apply();
-      if (e.key === "Escape")
+      }
+      if (e.key === "Escape") {
         hide();
+      }
     });
     return {
       open(item) {
@@ -40341,8 +41782,9 @@ label {
     };
     const create = () => {
       const name = input2.value.trim();
-      if (!name)
+      if (!name) {
         return;
+      }
       hide();
       callbacks.onCreate(name);
     };
@@ -40350,14 +41792,17 @@ label {
     confirmBtn.addEventListener("click", create);
     cancelBtn.addEventListener("click", hide);
     backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop)
+      if (e.target === backdrop) {
         hide();
+      }
     });
     input2.addEventListener("keydown", (e) => {
-      if (e.key === "Enter")
+      if (e.key === "Enter") {
         create();
-      if (e.key === "Escape")
+      }
+      if (e.key === "Escape") {
         hide();
+      }
     });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && backdrop.classList.contains("visible")) {
@@ -40373,8 +41818,9 @@ label {
     let dragCounter = 0;
     let internalDrag = false;
     fileInput.addEventListener("change", () => {
-      if (fileInput.files?.length)
+      if (fileInput.files?.length) {
         callbacks.onFiles(fileInput.files);
+      }
     });
     s2.getElementById("grid").addEventListener("dragstart", () => {
       internalDrag = true;
@@ -40384,19 +41830,23 @@ label {
     });
     document.addEventListener("dragenter", (e) => {
       e.preventDefault();
-      if (internalDrag)
+      if (internalDrag) {
         return;
+      }
       dragCounter++;
-      if (dragCounter === 1)
+      if (dragCounter === 1) {
         dropOverlay.classList.add("visible");
+      }
     });
     document.addEventListener("dragleave", (e) => {
       e.preventDefault();
-      if (internalDrag)
+      if (internalDrag) {
         return;
+      }
       dragCounter--;
-      if (dragCounter === 0)
+      if (dragCounter === 0) {
         dropOverlay.classList.remove("visible");
+      }
     });
     document.addEventListener("dragover", (e) => e.preventDefault());
     document.addEventListener("drop", (e) => {
@@ -40407,8 +41857,9 @@ label {
         internalDrag = false;
         return;
       }
-      if (e.dataTransfer?.files.length)
+      if (e.dataTransfer?.files.length) {
         callbacks.onFiles(e.dataTransfer.files);
+      }
     });
     return {
       trigger() {
@@ -40422,8 +41873,9 @@ label {
   var ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
   function buildPreview(item) {
     const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
-    if (!isImage)
+    if (!isImage) {
       return null;
+    }
     const img = document.createElement("img");
     img.slot = "preview";
     img.src = variantUrl(item, 800, 600);
@@ -40501,8 +41953,9 @@ label {
       open(item) {
         detail.innerHTML = "";
         const preview = buildPreview(item);
-        if (preview)
+        if (preview) {
           detail.appendChild(preview);
+        }
         const fields = buildFields(item);
         detail.appendChild(fields);
         const actions = buildActions(item);
@@ -40512,8 +41965,9 @@ label {
         });
         actions.querySelector("#btn-replace")?.addEventListener("click", async () => {
           const file = await pickFile(item.type === "image" ? "image/*" : "");
-          if (file)
+          if (file) {
             callbacks.onReplace(item.id, file);
+          }
         });
         actions.querySelector("#btn-delete").addEventListener("click", () => {
           callbacks.onDelete(item.id);
@@ -40532,8 +41986,9 @@ label {
     return new Promise((resolve) => {
       const input2 = document.createElement("input");
       input2.type = "file";
-      if (accept)
+      if (accept) {
         input2.accept = accept;
+      }
       input2.addEventListener("change", () => resolve(input2.files?.[0] ?? null), { once: true });
       input2.click();
     });
@@ -40542,8 +41997,9 @@ label {
     const labelInput = detail.querySelector("#detail-label");
     const altInput = detail.querySelector("#detail-alt");
     const data = { label: labelInput.value };
-    if (altInput)
+    if (altInput) {
       data.alt = altInput.value;
+    }
     return data;
   }
 
@@ -40574,8 +42030,9 @@ label {
     });
     const detail = setupDetail(host.detail, {
       onSave: async (id, data) => {
-        if (await saveItemMetadata(id, data))
+        if (await saveItemMetadata(id, data)) {
           host.detail.close();
+        }
       },
       onReplace: async (id, file) => {
         if (await replaceFileContent(id, file)) {
@@ -40584,8 +42041,9 @@ label {
         }
       },
       onDelete: async (id) => {
-        if (!confirm("Delete this file?"))
+        if (!confirm("Delete this file?")) {
           return;
+        }
         if (await deleteItem(id)) {
           host.detail.close();
           refresh();
@@ -40601,25 +42059,29 @@ label {
     const grid2 = s2.getElementById("grid");
     grid2.addEventListener("click", (e) => {
       const card = e.target.closest("p9r-card-media");
-      if (!card)
+      if (!card) {
         return;
+      }
       const id = card.dataset.id;
       if (card.dataset.type === "folder") {
         const folder = host._items.find((i) => i.id === id);
         host._navigateTo(id, folder?.label);
       } else {
         const item = host._items.find((i) => i.id === id);
-        if (item)
+        if (item) {
           detail.open(item);
+        }
       }
     });
     grid2.addEventListener("contextmenu", (e) => {
       const card = e.target.closest("p9r-card-media");
-      if (!card)
+      if (!card) {
         return;
+      }
       const item = host._items.find((i) => i.id === card.dataset.id);
-      if (!item)
+      if (!item) {
         return;
+      }
       e.preventDefault();
       ctxMenu.show(e, item);
     });
@@ -40629,8 +42091,9 @@ label {
   function wireBreadcrumb(host, s2) {
     s2.getElementById("breadcrumb").addEventListener("click", (e) => {
       const target = e.target;
-      if (!target.classList.contains("bc-item"))
+      if (!target.classList.contains("bc-item")) {
         return;
+      }
       const folder = target.dataset.folder || null;
       const index = parseInt(target.dataset.index || "-1");
       host._breadcrumb = host._breadcrumb.slice(0, index + 1);
@@ -40684,23 +42147,27 @@ label {
     }
     _navigateTo(folderId, label2) {
       const url = new URL(window.location.href);
-      if (folderId)
+      if (folderId) {
         url.searchParams.set("folder", folderId);
-      else
+      } else {
         url.searchParams.delete("folder");
+      }
       window.history.pushState({}, "", url.toString());
       this._folder = folderId;
-      if (!folderId)
+      if (!folderId) {
         this._breadcrumb = [];
-      else if (label2)
+      } else if (label2) {
         this._breadcrumb.push({ id: folderId, label: label2 });
+      }
       this._refresh();
     }
     async _confirmDelete(id) {
-      if (!confirm("Delete this item?"))
+      if (!confirm("Delete this item?")) {
         return;
-      if (await deleteItem(id))
+      }
+      if (await deleteItem(id)) {
         this._refresh();
+      }
     }
   }
   if (!customElements.get("p9r-grid-media")) {
@@ -40733,8 +42200,9 @@ label {
     _fileInput = null;
     _wired = false;
     connectedCallback() {
-      if (!this.firstElementChild)
+      if (!this.firstElementChild) {
         this._render();
+      }
       if (!this._wired) {
         this._wire();
         this._wired = true;
@@ -40758,24 +42226,29 @@ label {
     }
     async _handleUpload() {
       const files = this._fileInput?.files;
-      if (!files || files.length === 0)
+      if (!files || files.length === 0) {
         return;
+      }
       await uploadFiles(files, this._currentFolder());
-      if (this._fileInput)
+      if (this._fileInput) {
         this._fileInput.value = "";
+      }
       this._grid?.refresh();
     }
     async _handleCreateFolder() {
       const button2 = this.querySelector('[data-action="create-folder"]');
       const input2 = this.querySelector('[data-role="folder-name"]');
       const name = input2?.value?.trim();
-      if (!name)
+      if (!name) {
         return;
+      }
       const ok = await createFolder(name, this._currentFolder());
-      if (!ok)
+      if (!ok) {
         return;
-      if (input2)
+      }
+      if (input2) {
         input2.value = "";
+      }
       button2?.dispatchEvent(new BubblesEvent("form:success"));
       this._grid?.refresh();
     }
@@ -40783,8 +42256,9 @@ label {
       return new URL(window.location.href).searchParams.get("folder");
     }
   }
-  if (!customElements.get("cms-media-admin"))
+  if (!customElements.get("cms-media-admin")) {
     customElements.define("cms-media-admin", MediaAdmin);
+  }
 
   // src/components/media/MediaCenter/template.html
   var template_default38 = `<dialog>
@@ -41275,8 +42749,9 @@ dialog::backdrop {
       s2.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
       s2.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
       this._dialog.addEventListener("click", (e) => {
-        if (e.target === this._dialog)
+        if (e.target === this._dialog) {
           this._dialog?.close();
+        }
       });
       s2.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
       const nfBackdrop = s2.getElementById("nf-backdrop");
@@ -41284,16 +42759,19 @@ dialog::backdrop {
       s2.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
       s2.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
       nfInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter")
+        if (e.key === "Enter") {
           this._createFolder(nfInput, nfBackdrop);
-        if (e.key === "Escape")
+        }
+        if (e.key === "Escape") {
           nfBackdrop.classList.remove("open");
+        }
       });
       const fileInput = s2.getElementById("file-input");
       s2.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", async () => {
-        if (!fileInput.files?.length)
+        if (!fileInput.files?.length) {
           return;
+        }
         await uploadFiles(fileInput.files, this._folder);
         fileInput.value = "";
         this._refresh();
@@ -41301,8 +42779,9 @@ dialog::backdrop {
       this._btnSelect.addEventListener("click", () => this._confirmSelection());
       this._grid.addEventListener("click", (e) => {
         const card = e.target.closest("p9r-card-media");
-        if (!card)
+        if (!card) {
           return;
+        }
         const id = card.dataset.id;
         const type = card.dataset.type;
         if (type === "folder") {
@@ -41314,14 +42793,16 @@ dialog::backdrop {
       });
       this._grid.addEventListener("dblclick", (e) => {
         const card = e.target.closest("p9r-card-media");
-        if (!card || card.dataset.type === "folder")
+        if (!card || card.dataset.type === "folder") {
           return;
+        }
         this._confirmSelection();
       });
       s2.getElementById("breadcrumb").addEventListener("click", (e) => {
         const target = e.target;
-        if (!target.classList.contains("bc-item"))
+        if (!target.classList.contains("bc-item")) {
           return;
+        }
         const folder = target.dataset.folder || null;
         const index = parseInt(target.dataset.index || "-1");
         this._breadcrumb = this._breadcrumb.slice(0, index + 1);
@@ -41396,8 +42877,9 @@ dialog::backdrop {
       }
     }
     _confirmSelection() {
-      if (!this._selectedItem)
+      if (!this._selectedItem) {
         return;
+      }
       const src = this._selectedItem.absoluteURL ?? "";
       this.dispatchEvent(new CustomEvent("select-item", {
         detail: { src, alt: this._selectedItem.label, mimetype: this._selectedItem.mimetype },
@@ -41425,8 +42907,9 @@ dialog::backdrop {
     }
     async _createFolder(input2, backdrop) {
       const name = input2.value.trim();
-      if (!name)
+      if (!name) {
         return;
+      }
       await createFolder(name, this._folder);
       backdrop.classList.remove("open");
       this._refresh();
@@ -41531,7 +43014,10 @@ dialog::backdrop {
     }
     get _types() {
       const raw = this.getAttribute("types") || "image";
-      return ["folder", ...raw.split(",").map((t2) => t2.trim()).filter(Boolean)];
+      return [
+        "folder",
+        ...raw.split(",").map((t2) => t2.trim()).filter(Boolean)
+      ];
     }
     _build(label2) {
       const shadow = this.attachShadow({ mode: "open" });
@@ -41593,8 +43079,9 @@ dialog::backdrop {
 
   // src/components/index.ts
   function define(tag, constructor) {
-    if (!customElements.get(tag))
+    if (!customElements.get(tag)) {
       customElements.define(tag, constructor);
+    }
   }
   define(CMS_BINDING_CORE_TAG, cl);
   Mp({

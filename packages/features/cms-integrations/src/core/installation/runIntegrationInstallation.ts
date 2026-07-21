@@ -7,10 +7,7 @@ import type {
     IntegrationImportDto,
     IntegrationImportResult,
 } from "../../interfaces/IntegrationImport";
-import type {
-    IntegrationInstallation,
-    IntegrationRun,
-} from "../../interfaces/IntegrationInstallation";
+import type { IntegrationInstallation, IntegrationRun } from "../../interfaces/IntegrationInstallation";
 import type { IntegrationInstallationRepository } from "../../interfaces/IntegrationInstallationRepository";
 
 export type RunIntegrationInstallationCreateRequest = {

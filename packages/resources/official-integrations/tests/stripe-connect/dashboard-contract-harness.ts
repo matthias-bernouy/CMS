@@ -40,7 +40,7 @@ export const newerAt = "2026-07-06T12:09:00.000Z";
 export const refreshedAt = "2026-07-06T12:10:00.000Z";
 
 export async function responseBody(response: Response): Promise<JsonRecord> {
-    return await response.json() as JsonRecord;
+    return (await response.json()) as JsonRecord;
 }
 
 export function clearProviderRequests(harness: DashboardReadHarness): void {
@@ -49,19 +49,13 @@ export function clearProviderRequests(harness: DashboardReadHarness): void {
 }
 
 export function postgrestTables(harness: DashboardReadHarness): string[] {
-    return harness.rest.postgrestRequests.map(request => request.table);
+    return harness.rest.postgrestRequests.map((request) => request.table);
 }
 
-export function postgrestQuery(
-    harness: DashboardReadHarness,
-    index: number,
-): Record<string, string> {
+export function postgrestQuery(harness: DashboardReadHarness, index: number): Record<string, string> {
     return Object.fromEntries(harness.rest.postgrestRequests[index]?.searchParams ?? []);
 }
 
-export function postgrestBody(
-    harness: DashboardReadHarness,
-    index: number,
-): JsonRecord {
+export function postgrestBody(harness: DashboardReadHarness, index: number): JsonRecord {
     return harness.rest.postgrestRequests[index]?.body ?? {};
 }

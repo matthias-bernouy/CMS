@@ -7,7 +7,9 @@ describe("editor binding core endpoint", () => {
         const cms = {
             cache: {
                 get: (key: string) => cache.get(key) ?? null,
-                set: (key: string, value: unknown) => { cache.set(key, value); },
+                set: (key: string, value: unknown) => {
+                    cache.set(key, value);
+                },
             },
         };
 

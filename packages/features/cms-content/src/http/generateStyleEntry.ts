@@ -10,8 +10,6 @@ import { generateThemeCss } from "cms-content/core/theme";
  */
 export async function generateStyleEntry(reader: ContentReader): Promise<CacheEntry> {
     const settings = await reader.getSystem();
-    const css = [settings.site?.theme ?? "", generateThemeCss(settings.theme)]
-        .filter(Boolean)
-        .join("\n\n");
+    const css = [settings.site?.theme ?? "", generateThemeCss(settings.theme)].filter(Boolean).join("\n\n");
     return compress(css, "text/css");
 }

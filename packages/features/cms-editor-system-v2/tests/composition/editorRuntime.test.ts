@@ -1,19 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import {
-    Editor,
-    type ContentSlot,
-} from "@bernouy/cms-content/editor";
+import { Editor, type ContentSlot } from "@bernouy/cms-content/editor";
 import {
     COMPOSITION_INPUT_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
 } from "@bernouy/components/base";
-import {
-    EditorRegistry,
-    EditorRuntime,
-    RuntimeEditor,
-} from "../../src/runtime";
+import { EditorRegistry, EditorRuntime, RuntimeEditor } from "../../src/runtime";
 
 const childSlot: ContentSlot = {
     label: "Child actions",
@@ -31,7 +24,7 @@ class UnsafeCompositionEditor extends Editor {
 }
 
 function blocConstructor(HTMLElementCtor: typeof HTMLElement): CustomElementConstructor {
-    return class TestBloc extends HTMLElementCtor { } as unknown as CustomElementConstructor;
+    return class TestBloc extends HTMLElementCtor {} as unknown as CustomElementConstructor;
 }
 
 describe("composition editor runtime", () => {
@@ -72,7 +65,7 @@ describe("composition editor runtime", () => {
 
         runtime.load({ root: contentRoot, contentRoot });
 
-        expect(runtime.getStructure().map(node => node.label)).toEqual(["Composition"]);
+        expect(runtime.getStructure().map((node) => node.label)).toEqual(["Composition"]);
         expect(runtime.getEditor(generated)).toBeUndefined();
         expect(runtime.getEditor(nestedComposition)).toBeUndefined();
         expect(runtime.getClosestEditor(generated)?.target).toBe(composition);
@@ -88,10 +81,7 @@ describe("composition editor runtime", () => {
                 <template ${COMPOSITION_INPUT_ATTRIBUTE}></template>
             </x-parent>
         `);
-        const editor = new RuntimeEditor(
-            document.getElementById("composition")!,
-            new EditorRegistry(),
-        );
+        const editor = new RuntimeEditor(document.getElementById("composition")!, new EditorRegistry());
 
         editor.addContentSlots(childSlot);
         editor.setTextCapability({ format: "text", dynamic: true });

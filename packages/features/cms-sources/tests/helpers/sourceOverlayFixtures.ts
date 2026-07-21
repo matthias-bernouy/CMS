@@ -1,8 +1,4 @@
-import type {
-    DataShape,
-    Source,
-    SourceOverlay,
-} from "@bernouy/cms-sources";
+import type { DataShape, Source, SourceOverlay } from "@bernouy/cms-sources";
 
 export const source: Source = {
     urn: "urn:user-account",
@@ -17,15 +13,17 @@ export const source: Source = {
             urn: "urn:user-account:listAccounts",
             method: "GET",
             targetUrl: "https://api.example.com/accounts",
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: {
-                        accounts: { type: "array", items: accountShape() },
+            output: [
+                {
+                    status: "200",
+                    body: {
+                        type: "object",
+                        properties: {
+                            accounts: { type: "array", items: accountShape() },
+                        },
                     },
                 },
-            }],
+            ],
         },
         {
             urn: "urn:user-account:updateAccount",
@@ -40,10 +38,7 @@ export const overlay: SourceOverlay = {
     id: "user-account-extra-fields",
     sourceId: "user-account",
     input: [{ endpointId: "updateAccount", editable: "self" }],
-    output: [
-        { endpointId: "getAccount" },
-        { endpointId: "listAccounts", path: "accounts[]" },
-    ],
+    output: [{ endpointId: "getAccount" }, { endpointId: "listAccounts", path: "accounts[]" }],
     fields: [
         { id: "company", label: "Company", type: "string", showInDashboardTable: true },
         { id: "employeeCount", label: "Employees", type: "number" },

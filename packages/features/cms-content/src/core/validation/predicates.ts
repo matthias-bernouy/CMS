@@ -16,8 +16,12 @@
  * No consecutive slashes, no trailing slash (except the root `/` itself).
  */
 export function isValidPathFormat(path: string): boolean {
-    if (!path || typeof path !== "string") return false;
-    if (path === "/") return true;
+    if (!path || typeof path !== "string") {
+        return false;
+    }
+    if (path === "/") {
+        return true;
+    }
     return /^(?:\/[a-zA-Z0-9-]+)+$/.test(path);
 }
 
@@ -27,7 +31,9 @@ export function isValidPathFormat(path: string): boolean {
  * consecutive dashes.
  */
 export function isValidResourceIdentifier(id: string): boolean {
-    if (!id || typeof id !== "string") return false;
+    if (!id || typeof id !== "string") {
+        return false;
+    }
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
 }
 
@@ -39,7 +45,9 @@ export function isValidResourceIdentifier(id: string): boolean {
  * `prepare_bloc`.
  */
 export function isValidCustomElementTag(tag: string): boolean {
-    if (!tag || typeof tag !== "string") return false;
+    if (!tag || typeof tag !== "string") {
+        return false;
+    }
     return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(tag);
 }
 
@@ -50,8 +58,14 @@ export function isValidCustomElementTag(tag: string): boolean {
  * already contain spaces/accents on existing sites.
  */
 export function isValidCategoryFolder(name: string): boolean {
-    if (!name || typeof name !== "string") return false;
-    if (name === "." || name === "..")     return false;
-    if (name.startsWith("."))              return false;
+    if (!name || typeof name !== "string") {
+        return false;
+    }
+    if (name === "." || name === "..") {
+        return false;
+    }
+    if (name.startsWith(".")) {
+        return false;
+    }
     return !/[/\\\0]/.test(name);
 }

@@ -1,9 +1,20 @@
 import { describe, test, expect } from "bun:test";
-import { ValidatingAnalyticsStore, InMemoryAnalyticsStore, AnalyticsValidationError, type AnalyticsEvent } from "@bernouy/cms-analytics";
+import {
+    ValidatingAnalyticsStore,
+    InMemoryAnalyticsStore,
+    AnalyticsValidationError,
+    type AnalyticsEvent,
+} from "@bernouy/cms-analytics";
 
 const event = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
-    type: "pageview", ts: new Date("2026-06-10T12:00:00Z"), path: "/produits", status: 200,
-    durationMs: 12, visitorId: "v1", device: "desktop", browser: "chrome",
+    type: "pageview",
+    ts: new Date("2026-06-10T12:00:00Z"),
+    path: "/produits",
+    status: 200,
+    durationMs: 12,
+    visitorId: "v1",
+    device: "desktop",
+    browser: "chrome",
     ...over,
 });
 

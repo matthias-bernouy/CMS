@@ -26,7 +26,9 @@ describe("upsertRole", () => {
 
     test("rejects the virtual admin id", async () => {
         const { roles } = makeStores();
-        await expect(upsertRole(roles, { id: ADMIN_ROLE, label: "Admin", grants: [] })).rejects.toThrow(RoleValidationError);
+        await expect(upsertRole(roles, { id: ADMIN_ROLE, label: "Admin", grants: [] })).rejects.toThrow(
+            RoleValidationError,
+        );
     });
 
     test("rejects an invalid slug on create", async () => {
@@ -36,30 +38,41 @@ describe("upsertRole", () => {
 
     test("rejects an unknown urn:cms permission grant", async () => {
         const { roles } = makeStores();
-        await expect(upsertRole(roles, { id: "editor", label: "X", grants: [{ permission: "urn:cms:users:fly" }] }))
-            .rejects.toThrow(RoleValidationError);
+        await expect(
+            upsertRole(roles, { id: "editor", label: "X", grants: [{ permission: "urn:cms:users:fly" }] }),
+        ).rejects.toThrow(RoleValidationError);
     });
 
     test("rejects conditional grants until an evaluator exists", async () => {
         const { roles } = makeStores();
-        await expect(upsertRole(roles, {
-            id: "editor",
-            label: "X",
-            grants: [{ permission: cmsPermission("users", "view"), condition: { only: "me" } }],
-        })).rejects.toThrow(RoleValidationError);
+        await expect(
+            upsertRole(roles, {
+                id: "editor",
+                label: "X",
+                grants: [{ permission: cmsPermission("users", "view"), condition: { only: "me" } }],
+            }),
+        ).rejects.toThrow(RoleValidationError);
     });
 
     test("updates a custom role's label + grants", async () => {
         const { roles } = makeStores();
         await upsertRole(roles, { id: "editor", label: "Editor", grants: [] });
-        const updated = await upsertRole(roles, { id: "editor", label: "Redacteur", grants: [{ permission: cmsPermission("pages", "edit") }] });
+        const updated = await upsertRole(roles, {
+            id: "editor",
+            label: "Redacteur",
+            grants: [{ permission: cmsPermission("pages", "edit") }],
+        });
         expect(updated.label).toBe("Redacteur");
         expect(updated.grants).toHaveLength(1);
     });
 
     test("updating a built-in role changes grants but keeps its fixed label", async () => {
         const { roles } = makeStores();
-        const updated = await upsertRole(roles, { id: USER_ROLE, label: "Renamed", grants: [{ permission: cmsPermission("files", "view") }] });
+        const updated = await upsertRole(roles, {
+            id: USER_ROLE,
+            label: "Renamed",
+            grants: [{ permission: cmsPermission("files", "view") }],
+        });
         expect(updated.label).toBe("User");
         expect(updated.builtin).toBe(true);
         expect(updated.grants).toHaveLength(1);

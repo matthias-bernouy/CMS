@@ -25,7 +25,13 @@ describe("public integrations 1.0.0", () => {
             answers: { id: "newsletter" },
             functionName: "cms-newsletter",
             schemas: ["newsletter"],
-            expectedEndpoints: ["setSubscription", "listSubscriptions", "exportSubscriptions", "getSubscription", "deleteSubscription"],
+            expectedEndpoints: [
+                "setSubscription",
+                "listSubscriptions",
+                "exportSubscriptions",
+                "getSubscription",
+                "deleteSubscription",
+            ],
         },
         {
             kind: "emailer",
@@ -35,7 +41,16 @@ describe("public integrations 1.0.0", () => {
             answers: { id: "emailer" },
             functionNames: ["cms-emailer", "cms-broadcast"],
             schemas: ["emailer", "broadcast"],
-            expectedEndpoints: ["listTemplates", "getTemplate", "upsertTemplate", "sendTestEmail", "sendTemplateEmail", "listMessages", "getSettings", "updateSettings"],
+            expectedEndpoints: [
+                "listTemplates",
+                "getTemplate",
+                "upsertTemplate",
+                "sendTestEmail",
+                "sendTemplateEmail",
+                "listMessages",
+                "getSettings",
+                "updateSettings",
+            ],
         },
         {
             kind: "stripe-connect",
@@ -81,21 +96,21 @@ describe("public integrations 1.0.0", () => {
             expect(dashboard).toBeTruthy();
         }
         expect(harness.deployment?.dataApiSchemas).toEqual(scenario.schemas);
-        expect(harness.deployment?.functions.map(fn => fn.name)).toEqual(
+        expect(harness.deployment?.functions.map((fn) => fn.name)).toEqual(
             "functionNames" in scenario ? scenario.functionNames : [scenario.functionName],
         );
-        expect(harness.importedBlocs.map(bloc => bloc.tag)).toEqual(scenario.blocTags);
+        expect(harness.importedBlocs.map((bloc) => bloc.tag)).toEqual(scenario.blocTags);
 
-        const endpointUrns = source?.endpoints.map(endpoint => endpoint.urn) ?? [];
+        const endpointUrns = source?.endpoints.map((endpoint) => endpoint.urn) ?? [];
         for (const endpoint of scenario.expectedEndpoints) {
             expect(endpointUrns).toContain(`urn:${scenario.sourceId}:${endpoint}`);
         }
 
         const dashboardJson = JSON.stringify(dashboard);
-        expect(dashboardJson).not.toContain("\"widget\":\"w-create\"");
-        expect(dashboardJson).not.toContain("\"widget\":\"w-update\"");
-        expect(dashboardJson).not.toContain("\"widget\":\"w-delete\"");
-        expect(dashboardJson).not.toContain("\"collection\"");
+        expect(dashboardJson).not.toContain('"widget":"w-create"');
+        expect(dashboardJson).not.toContain('"widget":"w-update"');
+        expect(dashboardJson).not.toContain('"widget":"w-delete"');
+        expect(dashboardJson).not.toContain('"collection"');
 
         if (scenario.kind === "newsletter") {
             const table = dashboard?.views[0] as Record<string, unknown> | undefined;
@@ -131,9 +146,13 @@ describe("public integrations 1.0.0", () => {
         for (const entry of await repo.list()) {
             const definition = await repo.get(entry.kind);
             for (const artifact of definition?.artifacts ?? []) {
-                if (artifact.type !== "source") continue;
+                if (artifact.type !== "source") {
+                    continue;
+                }
                 for (const endpoint of artifact.source.endpoints) {
-                    if (endpoint.output?.length) continue;
+                    if (endpoint.output?.length) {
+                        continue;
+                    }
                     missing.push(`${entry.kind}:${artifact.source.id}:${endpoint.endpointId}`);
                 }
             }
@@ -146,7 +165,9 @@ describe("public integrations 1.0.0", () => {
 export async function importScenario(kind: string, answers: Record<string, string | boolean>) {
     const repo = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
     const definition = await repo.get(kind);
-    if (!definition) throw new Error(`${kind} definition not found`);
+    if (!definition) {
+        throw new Error(`${kind} definition not found`);
+    }
 
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
@@ -192,7 +213,11 @@ export async function importScenario(kind: string, answers: Record<string, strin
                 outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
                 resources: [
                     { type: "schema", id: "schema.sql", action: "applied" },
-                    ...(next.functions ?? []).map(fn => ({ type: "function" as const, id: fn.name, action: "deployed" as const })),
+                    ...(next.functions ?? []).map((fn) => ({
+                        type: "function" as const,
+                        id: fn.name,
+                        action: "deployed" as const,
+                    })),
                 ],
             };
         },
@@ -226,30 +251,37 @@ function newsletterDependencySource() {
     return {
         urn: "urn:newsletter",
         meta: { name: "Newsletter" },
-        endpoints: [{
-            urn: "urn:newsletter:listSubscriptions",
-            method: "GET" as const,
-            targetUrl: "https://newsletter.test/subscriptions",
-            input: {
-                params: [
-                    { name: "subscribed", in: "query" as const, schema: { type: "string" as const } },
-                    { name: "limit", in: "query" as const, schema: { type: "number" as const } },
-                    { name: "offset", in: "query" as const, schema: { type: "number" as const } },
+        endpoints: [
+            {
+                urn: "urn:newsletter:listSubscriptions",
+                method: "GET" as const,
+                targetUrl: "https://newsletter.test/subscriptions",
+                input: {
+                    params: [
+                        { name: "subscribed", in: "query" as const, schema: { type: "string" as const } },
+                        { name: "limit", in: "query" as const, schema: { type: "number" as const } },
+                        { name: "offset", in: "query" as const, schema: { type: "number" as const } },
+                    ],
+                },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object" as const,
+                            properties: {
+                                subscriptions: {
+                                    type: "array" as const,
+                                    items: {
+                                        type: "object" as const,
+                                        properties: { email: { type: "string" as const } },
+                                    },
+                                },
+                                total: { type: "number" as const },
+                            },
+                        },
+                    },
                 ],
             },
-            output: [{
-                status: "200",
-                body: {
-                    type: "object" as const,
-                    properties: {
-                        subscriptions: {
-                            type: "array" as const,
-                            items: { type: "object" as const, properties: { email: { type: "string" as const } } },
-                        },
-                        total: { type: "number" as const },
-                    },
-                },
-            }],
-        }],
+        ],
     };
 }

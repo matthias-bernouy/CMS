@@ -25,13 +25,17 @@ export async function runFetch(url: string, signal: AbortSignal, init: RequestIn
     let res: Response;
     try {
         const headers = new Headers(init.headers);
-        if (!headers.has("Accept")) headers.set("Accept", "application/json");
+        if (!headers.has("Accept")) {
+            headers.set("Accept", "application/json");
+        }
         res = await fetch(url, { ...init, headers, signal });
     } catch (err) {
         return isAbort(err) ? { kind: "aborted" } : { kind: "error", status: null, message: messageOf(err) };
     }
 
-    if (!res.ok) return { kind: "error", status: res.status, message: `HTTP ${res.status}` };
+    if (!res.ok) {
+        return { kind: "error", status: res.status, message: `HTTP ${res.status}` };
+    }
 
     let body: string;
     try {
@@ -40,7 +44,9 @@ export async function runFetch(url: string, signal: AbortSignal, init: RequestIn
         return isAbort(err) ? { kind: "aborted" } : { kind: "error", status: res.status, message: messageOf(err) };
     }
 
-    if (body.trim() === "") return { kind: "success", data: null };
+    if (body.trim() === "") {
+        return { kind: "success", data: null };
+    }
 
     try {
         return { kind: "success", data: JSON.parse(body) };

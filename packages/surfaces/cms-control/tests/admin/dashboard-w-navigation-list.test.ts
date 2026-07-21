@@ -1,9 +1,16 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { Button } from "@bernouy/components";
 import "../../src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationList";
-import { WIDGET_ACTION_EVENT, WIDGET_ROW_SELECT_EVENT, type WidgetActionDetail, type WidgetRowSelectDetail } from "../../src/components/admin/Resources/Dashboards/widgets/shared";
+import {
+    WIDGET_ACTION_EVENT,
+    WIDGET_ROW_SELECT_EVENT,
+    type WidgetActionDetail,
+    type WidgetRowSelectDetail,
+} from "../../src/components/admin/Resources/Dashboards/widgets/shared";
 
-if (!customElements.get("p9r-button")) customElements.define("p9r-button", Button);
+if (!customElements.get("p9r-button")) {
+    customElements.define("p9r-button", Button);
+}
 
 afterEach(() => document.body.replaceChildren());
 
@@ -21,7 +28,9 @@ describe("dashboard navigation list widget", () => {
         expect(item.shadowRoot!.querySelector("[data-chevron]")?.hasAttribute("hidden")).toBe(false);
 
         const selections: WidgetRowSelectDetail[] = [];
-        item.addEventListener(WIDGET_ROW_SELECT_EVENT, event => selections.push((event as CustomEvent<WidgetRowSelectDetail>).detail));
+        item.addEventListener(WIDGET_ROW_SELECT_EVENT, (event) =>
+            selections.push((event as CustomEvent<WidgetRowSelectDetail>).detail),
+        );
         item.shadowRoot!.querySelector<HTMLElement>(".item")!.click();
         expect(selections).toEqual([{ collection: "extraFieldDetail", rowKey: "club" }]);
     });
@@ -46,34 +55,45 @@ describe("dashboard navigation list widget", () => {
         const club = navigationItem("club", "Club", "club", "string");
         list.append(agency, club);
         const actions: WidgetActionDetail[] = [];
-        list.addEventListener(WIDGET_ACTION_EVENT, event => actions.push((event as CustomEvent<WidgetActionDetail>).detail));
+        list.addEventListener(WIDGET_ACTION_EVENT, (event) =>
+            actions.push((event as CustomEvent<WidgetActionDetail>).detail),
+        );
         document.body.append(list);
         await Promise.resolve();
 
-        agency.shadowRoot!.querySelector<HTMLElement>("[data-handle]")!.dispatchEvent(new Event("dragstart", { bubbles: true, composed: true }));
+        agency
+            .shadowRoot!.querySelector<HTMLElement>("[data-handle]")!
+            .dispatchEvent(new Event("dragstart", { bubbles: true, composed: true }));
         club.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
 
-        expect(Array.from(list.querySelectorAll("cms-dashboard-w-navigation-item")).map(item => item.getAttribute("row-key"))).toEqual(["club", "agency"]);
+        expect(
+            Array.from(list.querySelectorAll("cms-dashboard-w-navigation-item")).map((item) =>
+                item.getAttribute("row-key"),
+            ),
+        ).toEqual(["club", "agency"]);
         expect(actions).toEqual([{ action: "reorderExtraFields", widget: "extraFields", value: ["club", "agency"] }]);
     });
 });
 
 function navigationList(): HTMLElement {
     const list = document.createElement("cms-dashboard-w-navigation-list");
-    list.setAttribute("data-config-json", JSON.stringify({
-        widget: "w-navigation-list",
-        id: "extraFields",
-        title: "Personal information fields",
-        source: { endpoint: "listExtraFields", itemsPath: "fields" },
-        rowKey: "id",
-        item: { icon: "tag", title: { path: "label" }, subtitle: { path: "id" }, badge: { path: "type" } },
-        selection: { opens: "extraFieldDetail" },
-        reorderable: { action: "reorderExtraFields" },
-        actions: [
-            { id: "newExtraField", label: "Add field", selection: { opens: "extraFieldDetail" } },
-            { id: "reorderExtraFields", label: "Reorder fields", endpoint: { endpoint: "reorderExtraFields" } },
-        ],
-    }));
+    list.setAttribute(
+        "data-config-json",
+        JSON.stringify({
+            widget: "w-navigation-list",
+            id: "extraFields",
+            title: "Personal information fields",
+            source: { endpoint: "listExtraFields", itemsPath: "fields" },
+            rowKey: "id",
+            item: { icon: "tag", title: { path: "label" }, subtitle: { path: "id" }, badge: { path: "type" } },
+            selection: { opens: "extraFieldDetail" },
+            reorderable: { action: "reorderExtraFields" },
+            actions: [
+                { id: "newExtraField", label: "Add field", selection: { opens: "extraFieldDetail" } },
+                { id: "reorderExtraFields", label: "Reorder fields", endpoint: { endpoint: "reorderExtraFields" } },
+            ],
+        }),
+    );
     return list;
 }
 
@@ -83,7 +103,9 @@ function navigationItem(id: string, label: string, subtitle: string, badge: stri
     item.setAttribute("title", label);
     item.setAttribute("subtitle", subtitle);
     item.setAttribute("badge", badge);
-    if (withIcon) item.setAttribute("icon", "tag");
+    if (withIcon) {
+        item.setAttribute("icon", "tag");
+    }
     item.setAttribute("collection", "extraFieldDetail");
     item.toggleAttribute("reorderable", true);
     return item;

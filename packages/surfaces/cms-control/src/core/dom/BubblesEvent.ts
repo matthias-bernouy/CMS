@@ -1,10 +1,8 @@
-
-
-export default class BubblesEvent extends Event{
-    constructor(type: string){
+export default class BubblesEvent extends Event {
+    constructor(type: string) {
         super(type, {
             bubbles: true,
-            composed: true
-        })
+            composed: true,
+        });
     }
 }

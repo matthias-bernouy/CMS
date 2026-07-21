@@ -1,4 +1,4 @@
-import MissingParam from 'cms-control/errors/Http/MissingParam';
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 export type TemplateCreateDto = {
     identifier: string;
@@ -12,11 +12,15 @@ export type TemplateCreateDto = {
  */
 export function parseTemplateCreateDto(body: Record<string, unknown>): TemplateCreateDto {
     const { identifier, name } = body;
-    if (!identifier) throw new MissingParam('identifier');
-    if (!name)       throw new MissingParam('name');
+    if (!identifier) {
+        throw new MissingParam("identifier");
+    }
+    if (!name) {
+        throw new MissingParam("name");
+    }
     return {
         identifier: String(identifier),
-        name:       String(name),
-        category:   body.category == null ? '' : String(body.category),
+        name: String(name),
+        category: body.category == null ? "" : String(body.category),
     };
 }

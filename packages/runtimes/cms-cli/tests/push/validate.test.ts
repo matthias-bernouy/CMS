@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { extractRefs, validateDocs } from "cms-cli/push/shared/validate";
 
 const empty = () => new Set<string>();
-const set   = (s: string[]) => new Set(s);
+const set = (s: string[]) => new Set(s);
 
 describe("extractRefs", () => {
     test("captures non-system custom-element tags as bloc refs", () => {
@@ -40,28 +40,19 @@ describe("extractRefs", () => {
 
 describe("validateDocs", () => {
     test("no issue when every ref is on remote", () => {
-        const r = validateDocs(
-            [{ source: "/about", content: "<cs-card></cs-card>" }],
-            set(["cs-card"]), empty(),
-        );
+        const r = validateDocs([{ source: "/about", content: "<cs-card></cs-card>" }], set(["cs-card"]), empty());
         expect(r.errors).toEqual([]);
         expect(r.warnings).toEqual([]);
     });
 
     test("warning when ref is local-only (forward-compat)", () => {
-        const r = validateDocs(
-            [{ source: "/about", content: "<cs-local></cs-local>" }],
-            empty(), set(["cs-local"]),
-        );
+        const r = validateDocs([{ source: "/about", content: "<cs-local></cs-local>" }], empty(), set(["cs-local"]));
         expect(r.errors).toEqual([]);
         expect(r.warnings).toEqual([{ source: "/about", kind: "bloc", name: "cs-local" }]);
     });
 
     test("error when ref is unknown both remote and local", () => {
-        const r = validateDocs(
-            [{ source: "/x", content: "<cs-mystery></cs-mystery>" }],
-            empty(), empty(),
-        );
+        const r = validateDocs([{ source: "/x", content: "<cs-mystery></cs-mystery>" }], empty(), empty());
         expect(r.errors).toEqual([{ source: "/x", kind: "bloc", name: "cs-mystery" }]);
         expect(r.warnings).toEqual([]);
     });
@@ -72,18 +63,16 @@ describe("validateDocs", () => {
                 { source: "/a", content: `<cs-a></cs-a><cs-a></cs-a><cs-missing></cs-missing>` },
                 { source: "/b", content: `<cs-a></cs-a>` },
             ],
-            empty(), set(["cs-a"]),
+            empty(),
+            set(["cs-a"]),
         );
-        expect(r.warnings.filter(w => w.source === "/a" && w.name === "cs-a")).toHaveLength(1);
-        expect(r.warnings.filter(w => w.source === "/b" && w.name === "cs-a")).toHaveLength(1);
+        expect(r.warnings.filter((w) => w.source === "/a" && w.name === "cs-a")).toHaveLength(1);
+        expect(r.warnings.filter((w) => w.source === "/b" && w.name === "cs-a")).toHaveLength(1);
         expect(r.errors).toEqual([{ source: "/a", kind: "bloc", name: "cs-missing" }]);
     });
 
     test("works on template sources too — same generic shape", () => {
-        const r = validateDocs(
-            [{ source: "template:header", content: "<cs-button></cs-button>" }],
-            empty(), empty(),
-        );
+        const r = validateDocs([{ source: "template:header", content: "<cs-button></cs-button>" }], empty(), empty());
         expect(r.errors).toEqual([{ source: "template:header", kind: "bloc", name: "cs-button" }]);
     });
 });

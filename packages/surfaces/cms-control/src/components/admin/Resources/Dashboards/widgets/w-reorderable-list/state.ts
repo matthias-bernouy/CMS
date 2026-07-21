@@ -44,14 +44,20 @@ export function cloneItems(value: ReorderableListData): ReorderableListItem[] {
 }
 
 export function addItem(value: ReorderableListData): boolean {
-    if (value.maxItems !== undefined && value.items.length >= value.maxItems) return false;
+    if (value.maxItems !== undefined && value.items.length >= value.maxItems) {
+        return false;
+    }
     value.items.push({});
     return true;
 }
 
 export function removeItem(value: ReorderableListData, index: number): boolean {
-    if (!Number.isInteger(index)) return false;
-    if (value.minItems !== undefined && value.items.length <= value.minItems) return false;
+    if (!Number.isInteger(index)) {
+        return false;
+    }
+    if (value.minItems !== undefined && value.items.length <= value.minItems) {
+        return false;
+    }
     value.items.splice(index, 1);
     return true;
 }
@@ -61,14 +67,18 @@ export function moveItem(value: ReorderableListData, from: number, to: number): 
         return false;
     }
     const [item] = value.items.splice(from, 1);
-    if (!item) return false;
+    if (!item) {
+        return false;
+    }
     value.items.splice(to, 0, item);
     return true;
 }
 
 export function updateItem(value: ReorderableListData, index: number, path: string, fieldValue: unknown): boolean {
     const item = value.items[index];
-    if (!item) return false;
+    if (!item) {
+        return false;
+    }
     setValueAt(item, path, fieldValue);
     return true;
 }

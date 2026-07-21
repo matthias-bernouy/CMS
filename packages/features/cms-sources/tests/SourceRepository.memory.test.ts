@@ -6,16 +6,14 @@ import type { Source } from "cms-sources/interfaces/Source";
 const source = (): Source => ({
     urn: "urn:shop",
     meta: { name: "Shop" },
-    endpoints: [
-        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" },
-    ],
+    endpoints: [{ urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" }],
 });
 
 /** Same urn as `source()`, but two endpoints and no `meta` — for full-replace tests. */
 const sourceTwoEndpoints = (): Source => ({
     urn: "urn:shop",
     endpoints: [
-        { urn: "urn:shop:getCart", method: "GET",  targetUrl: "https://api.shop.com/cart" },
+        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" },
         { urn: "urn:shop:addItem", method: "POST", targetUrl: "https://api.shop.com/cart/items" },
     ],
 });
@@ -69,7 +67,7 @@ describe("InMemorySourceRepository", () => {
             urn: "urn:shop",
             meta: { name: "Shop" },
             endpoints: [
-                { urn: "urn:shop:getCart", method: "GET",  targetUrl: "https://api.shop.com/cart" },
+                { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" },
                 { urn: "urn:shop:addItem", method: "POST", targetUrl: "https://api.shop.com/cart/items" },
             ],
         });
@@ -78,8 +76,8 @@ describe("InMemorySourceRepository", () => {
             endpoints: [{ urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" }],
         });
         const p = await r.getSource("urn:shop");
-        expect(p?.endpoints).toHaveLength(1);   // the second endpoint is gone
-        expect(p?.meta).toBeUndefined();        // the previously-set meta was dropped
+        expect(p?.endpoints).toHaveLength(1); // the second endpoint is gone
+        expect(p?.meta).toBeUndefined(); // the previously-set meta was dropped
     });
 
     test("updateSource — mutating the input after update doesn't corrupt the store", async () => {

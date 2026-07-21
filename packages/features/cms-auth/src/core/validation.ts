@@ -4,7 +4,10 @@ import type { IdentityProviderKind } from "cms-auth/interfaces/IdentityProvider"
  *  HTTP surface maps it to a 400 without importing surface error classes. */
 export class AuthValidationError extends Error {
     status = 400;
-    constructor(readonly field: string, readonly reason: string) {
+    constructor(
+        readonly field: string,
+        readonly reason: string,
+    ) {
         super(`Invalid ${field}: ${reason}`);
         this.name = "AuthValidationError";
     }

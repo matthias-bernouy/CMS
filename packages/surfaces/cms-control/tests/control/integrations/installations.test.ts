@@ -7,10 +7,13 @@ describe("GET /api/integrations/installations", () => {
     test("lists tracked installations and reconciles missing source artifacts", async () => {
         const { cms, sources } = makeCms();
 
-        await postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "secret-source-main", apiKey: "sk_test" },
-        }), cms);
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
 
         let res = await getIntegrationInstallations(getInstallations(), cms);
         let body = await res.json();
@@ -29,10 +32,13 @@ describe("GET /api/integrations/installations", () => {
     test("marks artifact status as unknown when source reconciliation fails", async () => {
         const { cms } = makeCms();
 
-        await postIntegrationImport(postImport({
-            kind: "test-secret-source",
-            answers: { id: "secret-source-main", apiKey: "sk_test" },
-        }), cms);
+        await postIntegrationImport(
+            postImport({
+                kind: "test-secret-source",
+                answers: { id: "secret-source-main", apiKey: "sk_test" },
+            }),
+            cms,
+        );
         cms.sources.getAllSources = async () => {
             throw new Error("source store unavailable");
         };
@@ -48,11 +54,14 @@ describe("GET /api/integrations/installations", () => {
     test("includes the definition snapshot on installation details", async () => {
         const { cms } = makeCms();
 
-        await postIntegrationImport(postImport({
-            kind: "manual-source",
-            definition: manualSourceDefinition(),
-            answers: { id: "manual", targetUrl: "https://api.example.com/items" },
-        }), cms);
+        await postIntegrationImport(
+            postImport({
+                kind: "manual-source",
+                definition: manualSourceDefinition(),
+                answers: { id: "manual", targetUrl: "https://api.example.com/items" },
+            }),
+            cms,
+        );
 
         const res = await getIntegrationInstallations(getInstallations("manual-source"), cms);
         const body = await res.json();
@@ -64,10 +73,13 @@ describe("GET /api/integrations/installations", () => {
     test("reconciles function artifacts against the function repository", async () => {
         const { cms, functions } = makeCms();
 
-        await postIntegrationImport(postImport({
-            definition: sourceWithFunctionDefinition(),
-            answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
-        }), cms);
+        await postIntegrationImport(
+            postImport({
+                definition: sourceWithFunctionDefinition(),
+                answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
+            }),
+            cms,
+        );
 
         let res = await getIntegrationInstallations(getInstallations("function-source"), cms);
         let body = await res.json();

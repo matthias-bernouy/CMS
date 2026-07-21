@@ -93,7 +93,9 @@ export class BindingCore extends HTMLElement {
             this._revealInertSources();
             return;
         }
-        if (this._runtime && !this._runtime.isStopped) return;
+        if (this._runtime && !this._runtime.isStopped) {
+            return;
+        }
         this._runtime = new BindingRuntime(this, FILTERS, {
             sourceStateForce: this._sourceStateForce(),
         });
@@ -101,7 +103,9 @@ export class BindingCore extends HTMLElement {
     }
 
     attributeChangedCallback(): void {
-        if (!this.isConnected) return;
+        if (!this.isConnected) {
+            return;
+        }
         this._syncRuntime({ restart: true });
     }
 
@@ -121,10 +125,14 @@ export class BindingCore extends HTMLElement {
     }
 
     private _isRuntimeDisabled(): boolean {
-        if (this.hasAttribute(BINDING_DISABLED_ATTR) || this.closest(`[${BIND_STOP_ATTR}]`) !== null) return true;
+        if (this.hasAttribute(BINDING_DISABLED_ATTR) || this.closest(`[${BIND_STOP_ATTR}]`) !== null) {
+            return true;
+        }
 
         for (let parent = this.parentElement; parent; parent = parent.parentElement) {
-            if (parent.localName === BINDING_CORE_TAG && parent.hasAttribute(BINDING_DISABLED_ATTR)) return true;
+            if (parent.localName === BINDING_CORE_TAG && parent.hasAttribute(BINDING_DISABLED_ATTR)) {
+                return true;
+            }
         }
 
         return false;
@@ -138,7 +146,9 @@ export class BindingCore extends HTMLElement {
     private _revealInertSources(): void {
         revealSources(this);
         queueMicrotask(() => {
-            if (this.isConnected && this._isRuntimeDisabled()) revealSources(this);
+            if (this.isConnected && this._isRuntimeDisabled()) {
+                revealSources(this);
+            }
         });
     }
 }

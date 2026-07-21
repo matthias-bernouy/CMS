@@ -12,9 +12,9 @@ const validException = {
 
 describe("audit exceptions", () => {
     test("accepts a complete active exception lasting at most 30 days", () => {
-        expect(
-            validateAuditExceptions({ schemaVersion: 1, exceptions: [validException] }, TODAY),
-        ).toEqual([validException]);
+        expect(validateAuditExceptions({ schemaVersion: 1, exceptions: [validException] }, TODAY)).toEqual([
+            validException,
+        ]);
     });
 
     test("rejects expired and overlong exceptions", () => {
@@ -40,14 +40,11 @@ describe("audit exceptions", () => {
 
     test("requires every review field and rejects duplicates", () => {
         const { owner: _owner, ...withoutOwner } = validException;
+        expect(() => validateAuditExceptions({ schemaVersion: 1, exceptions: [withoutOwner] }, TODAY)).toThrow(
+            "must contain only",
+        );
         expect(() =>
-            validateAuditExceptions({ schemaVersion: 1, exceptions: [withoutOwner] }, TODAY),
-        ).toThrow("must contain only");
-        expect(() =>
-            validateAuditExceptions(
-                { schemaVersion: 1, exceptions: [validException, validException] },
-                TODAY,
-            ),
+            validateAuditExceptions({ schemaVersion: 1, exceptions: [validException, validException] }, TODAY),
         ).toThrow("Duplicate");
     });
 

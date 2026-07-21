@@ -8,7 +8,6 @@ import type { BlobInput, CmsFilesBlobStore } from "cms-files/interfaces/CmsFiles
  * multi-tenant isolation. Server-only (uses `node:fs` + Bun's file APIs).
  */
 export class LocalFsCmsFilesBlob implements CmsFilesBlobStore {
-
     constructor(private readonly root: string) {}
 
     async put(key: string, data: BlobInput): Promise<{ size: number }> {

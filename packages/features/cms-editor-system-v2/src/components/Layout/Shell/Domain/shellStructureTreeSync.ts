@@ -3,7 +3,13 @@ import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
 import type { DefaultTemplateSelection, StructureTree } from "../../StructureTree/StructureTree";
 
 export function isStructureTree(value: Element | null | undefined): value is StructureTree {
-    return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value && "setDefaultTemplateSelection" in value);
+    return Boolean(
+        value &&
+            "catalog" in value &&
+            "setStructure" in value &&
+            "setInsertItems" in value &&
+            "setDefaultTemplateSelection" in value,
+    );
 }
 
 export function syncStructureTreeCatalog(
@@ -12,7 +18,7 @@ export function syncStructureTreeCatalog(
     insertItems: BlockPickerItem[],
     defaultTemplateSelection: DefaultTemplateSelection,
 ): void {
-    withStructureTree(root, tree => {
+    withStructureTree(root, (tree) => {
         tree.catalog = catalog;
         tree.setInsertItems(insertItems);
         tree.setDefaultTemplateSelection(defaultTemplateSelection);
@@ -24,7 +30,7 @@ export function syncStructureTreeInsertItems(
     insertItems: BlockPickerItem[],
     defaultTemplateSelection: DefaultTemplateSelection,
 ): void {
-    withStructureTree(root, tree => {
+    withStructureTree(root, (tree) => {
         tree.setInsertItems(insertItems);
         tree.setDefaultTemplateSelection(defaultTemplateSelection);
     });
@@ -34,7 +40,7 @@ export function syncStructureTreeDefaultTemplateSelection(
     root: ShadowRoot,
     defaultTemplateSelection: DefaultTemplateSelection,
 ): void {
-    withStructureTree(root, tree => {
+    withStructureTree(root, (tree) => {
         tree.setDefaultTemplateSelection(defaultTemplateSelection);
     });
 }
@@ -48,6 +54,8 @@ function withStructureTree(root: ShadowRoot, apply: (tree: StructureTree) => voi
 
     customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
         const upgradedTree = root.querySelector("cms-editor-v2-structure-tree");
-        if (isStructureTree(upgradedTree)) apply(upgradedTree);
+        if (isStructureTree(upgradedTree)) {
+            apply(upgradedTree);
+        }
     });
 }

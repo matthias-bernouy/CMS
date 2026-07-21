@@ -42,7 +42,7 @@ export function securityHeaders(): Record<string, string> {
         "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
         ...(process.env.MODE === "DEV"
             ? { "Cross-Origin-Opener-Policy-Report-Only": "same-origin" }
-            : { "Cross-Origin-Opener-Policy":            "same-origin" }),
+            : { "Cross-Origin-Opener-Policy": "same-origin" }),
         "Cross-Origin-Resource-Policy": "same-origin",
     };
 }
@@ -88,9 +88,7 @@ export function securityHeaders(): Record<string, string> {
 // Lazy for the same reason as `securityHeaders()`: header name flips with
 // `process.env.MODE`, which the CLI may set after import.
 function cspHeaderName(): string {
-    return process.env.MODE === "DEV"
-        ? "Content-Security-Policy-Report-Only"
-        : "Content-Security-Policy";
+    return process.env.MODE === "DEV" ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
 }
 
 export function htmlCspHeader(): Record<string, string> {
@@ -102,8 +100,12 @@ export function htmlCspHeader(): Record<string, string> {
  * (extras-empty) header when the caller doesn't provide extras.
  */
 function buildCspHeaderForEntry(contentType: string, extras?: CspExtras): Record<string, string> {
-    if (!contentType.startsWith("text/html")) return {};
-    if (!extras) return htmlCspHeader();
+    if (!contentType.startsWith("text/html")) {
+        return {};
+    }
+    if (!extras) {
+        return htmlCspHeader();
+    }
     return { [cspHeaderName()]: buildCspContent(extras) };
 }
 
@@ -131,11 +133,11 @@ export function publicAssetCacheControl(req: Request): string {
     // the entry's ETag when the build hasn't changed, which turns a
     // ~1 MB transfer into a ~0-byte revalidation. SSE live-reload still
     // forces a full page reload on bloc rebuild, so no risk of stale UI.
-    if (process.env.MODE === "DEV") return "no-cache, must-revalidate";
+    if (process.env.MODE === "DEV") {
+        return "no-cache, must-revalidate";
+    }
     const hasVersion = new URL(req.url).searchParams.has("v");
-    return hasVersion
-        ? "public, max-age=31536000, immutable"
-        : "no-cache, must-revalidate";
+    return hasVersion ? "public, max-age=31536000, immutable" : "no-cache, must-revalidate";
 }
 
 export function compress(raw: string | ArrayBuffer | Uint8Array, contentType: string): CacheEntry {
@@ -194,15 +196,19 @@ export async function cachedResponseAsync(
  */
 export type SendCompressedOptions = {
     skipCspHeader?: boolean;
-    cspExtras?:     CspExtras;
-    status?:        number;
+    cspExtras?: CspExtras;
+    status?: number;
 };
 
 type Encoding = "br" | "gzip" | "identity";
 
 function responseEncoding(accept: string): Encoding {
-    if (accept.includes("br")) return "br";
-    if (accept.includes("gzip")) return "gzip";
+    if (accept.includes("br")) {
+        return "br";
+    }
+    if (accept.includes("gzip")) {
+        return "gzip";
+    }
     return "identity";
 }
 
@@ -226,8 +232,12 @@ function representationHeaders(entry: CacheEntry, encoding: Encoding, etag: stri
 }
 
 function bodyFor(entry: CacheEntry, encoding: Encoding): BodyInit {
-    if (encoding === "br") return entry.brotli as BodyInit;
-    if (encoding === "gzip") return entry.gzip as BodyInit;
+    if (encoding === "br") {
+        return entry.brotli as BodyInit;
+    }
+    if (encoding === "gzip") {
+        return entry.gzip as BodyInit;
+    }
     return entry.raw as BodyInit;
 }
 

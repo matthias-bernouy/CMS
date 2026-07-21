@@ -57,12 +57,7 @@ export type ProviderReconciliationHarness = {
         clearStripeRequests(): void;
     };
     run(runKey: string, limit?: number): Promise<Response>;
-    submit(
-        userId: string,
-        endpoint: string,
-        body: unknown,
-        params?: Record<string, string>,
-    ): Promise<Response>;
+    submit(userId: string, endpoint: string, body: unknown, params?: Record<string, string>): Promise<Response>;
 };
 
 export type CreateProviderReconciliationHarness = () => Promise<ProviderReconciliationHarness>;
@@ -81,31 +76,42 @@ export async function createTrackedProviderTransferFixture(
     releases: Array<{ id: string; amount: number }> = [{ id: "initial", amount: 1080 }],
 ): Promise<TrackedProviderTransferFixture> {
     const harness = await createHarness();
-    await successfulJson(await harness.submit("user-123", "createConnectOnboardingSessionForUser", {
-        email: "seller-transfer-context@example.com",
-    }, { userId: "seller-transfer-context" }));
-    const created = await successfulJson(await harness.submit("user-123", "createProtectedPayment", {
-        sellerUserId: "seller-transfer-context",
-        amountTotal: 1200,
-        sellerTransferAmount: 1080,
-        currency: "eur",
-        clientReferenceId: reference,
-        financialTermsHash: paymentLedgerFinancialTermsHash,
-        dualApprovalThresholdAmount: 1000,
-    }));
+    await successfulJson(
+        await harness.submit(
+            "user-123",
+            "createConnectOnboardingSessionForUser",
+            {
+                email: "seller-transfer-context@example.com",
+            },
+            { userId: "seller-transfer-context" },
+        ),
+    );
+    const created = await successfulJson(
+        await harness.submit("user-123", "createProtectedPayment", {
+            sellerUserId: "seller-transfer-context",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            currency: "eur",
+            clientReferenceId: reference,
+            financialTermsHash: paymentLedgerFinancialTermsHash,
+            dualApprovalThresholdAmount: 1000,
+        }),
+    );
     const paymentId = Number(created.paymentId);
     const paymentIntentId = String(created.stripePaymentIntentId);
     harness.rest.setPaymentIntentSucceeded(paymentIntentId);
     for (const [index, release] of releases.entries()) {
-        await successfulJson(await harness.submit("system-transfer-context", "requestSettlementRelease", {
-            paymentId,
-            releaseAuthorizationId: `${reference}-${release.id}`,
-            releaseKind: index === 0 ? "initial" : "reserve",
-            amount: release.amount,
-            currency: "eur",
-        }));
+        await successfulJson(
+            await harness.submit("system-transfer-context", "requestSettlementRelease", {
+                paymentId,
+                releaseAuthorizationId: `${reference}-${release.id}`,
+                releaseKind: index === 0 ? "initial" : "reserve",
+                amount: release.amount,
+                currency: "eur",
+            }),
+        );
     }
-    const stripeTransferIds = harness.rest.rows("transfers").map(row => String(row.stripe_transfer_id));
+    const stripeTransferIds = harness.rest.rows("transfers").map((row) => String(row.stripe_transfer_id));
     harness.rest.clearPostgrestRequests();
     harness.rest.clearStripeRequests();
     return { ...harness, paymentId, paymentIntentId, stripeTransferIds };
@@ -116,18 +122,27 @@ export async function createPaymentLedgerFixture(
     reference: string,
 ): Promise<ProviderReconciliationHarness & { paymentId: number; paymentIntentId: string }> {
     const harness = await createHarness();
-    await successfulJson(await harness.submit("user-123", "createConnectOnboardingSessionForUser", {
-        email: "seller-ledger@example.com",
-    }, { userId: "seller-ledger" }));
-    const created = await successfulJson(await harness.submit("user-123", "createProtectedPayment", {
-        sellerUserId: "seller-ledger",
-        amountTotal: 1200,
-        sellerTransferAmount: 1080,
-        currency: "eur",
-        clientReferenceId: reference,
-        financialTermsHash: paymentLedgerFinancialTermsHash,
-        dualApprovalThresholdAmount: 1000,
-    }));
+    await successfulJson(
+        await harness.submit(
+            "user-123",
+            "createConnectOnboardingSessionForUser",
+            {
+                email: "seller-ledger@example.com",
+            },
+            { userId: "seller-ledger" },
+        ),
+    );
+    const created = await successfulJson(
+        await harness.submit("user-123", "createProtectedPayment", {
+            sellerUserId: "seller-ledger",
+            amountTotal: 1200,
+            sellerTransferAmount: 1080,
+            currency: "eur",
+            clientReferenceId: reference,
+            financialTermsHash: paymentLedgerFinancialTermsHash,
+            dualApprovalThresholdAmount: 1000,
+        }),
+    );
     const paymentId = Number(created.paymentId);
     const paymentIntentId = String(created.stripePaymentIntentId);
     harness.rest.setPaymentIntentSucceeded(paymentIntentId);
@@ -157,8 +172,6 @@ export async function successfulJson(response: Response): Promise<JsonRecord> {
     return body;
 }
 
-export function postgrestCalls(
-    harness: ProviderReconciliationHarness,
-): Array<[string, string]> {
-    return harness.rest.postgrestRequests.map(request => [request.method, request.table]);
+export function postgrestCalls(harness: ProviderReconciliationHarness): Array<[string, string]> {
+    return harness.rest.postgrestRequests.map((request) => [request.method, request.table]);
 }

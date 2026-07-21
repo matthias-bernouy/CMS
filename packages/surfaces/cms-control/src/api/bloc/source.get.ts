@@ -15,12 +15,14 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
 export default async function getBlocSource(req: Request, cms: ControlCms) {
     const url = new URL(req.url);
     const tag = url.searchParams.get("tag");
-    if (!tag) throw new MissingParam("tag");
+    if (!tag) {
+        throw new MissingParam("tag");
+    }
 
     const source = await cms.repository.getBlocSource(tag);
     if (!source) {
         return new Response(JSON.stringify({ error: "no source bundle" }), {
-            status:  404,
+            status: 404,
             headers: { "Content-Type": "application/json" },
         });
     }

@@ -36,7 +36,7 @@ export function cloneSourceContent(el: Element): CapturedSourceContent {
     for (const child of Array.from(el.childNodes)) {
         template.appendChild(child.cloneNode(true));
         if (child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName === "TEMPLATE") {
-            body.appendChild(((child as HTMLTemplateElement).content.cloneNode(true)));
+            body.appendChild((child as HTMLTemplateElement).content.cloneNode(true));
         } else {
             body.appendChild(child.cloneNode(true));
         }
@@ -46,8 +46,14 @@ export function cloneSourceContent(el: Element): CapturedSourceContent {
 }
 
 export function isEmpty(data: unknown): boolean {
-    if (data == null) return true;
-    if (Array.isArray(data)) return data.length === 0;
-    if (typeof data === "object") return Object.keys(data as object).length === 0;
+    if (data == null) {
+        return true;
+    }
+    if (Array.isArray(data)) {
+        return data.length === 0;
+    }
+    if (typeof data === "object") {
+        return Object.keys(data as object).length === 0;
+    }
     return false;
 }

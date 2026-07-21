@@ -35,7 +35,7 @@ describe("dashboard reorderable list widget", () => {
             { id: "club", details: { value: "club", label: "Club" }, order: { position: 0 } },
             { id: "agency", details: { value: "agency", label: "Agency" }, order: { position: 1 } },
         ]);
-        expect(items.map(item => item.order.position)).toEqual([0, 1]);
+        expect(items.map((item) => item.order.position)).toEqual([0, 1]);
         const snapshot = list.items;
         snapshot[0]!.details = { value: "changed", label: "Changed" };
         expect(list.items[0]?.details).toEqual({ value: "club", label: "Club" });
@@ -69,11 +69,13 @@ describe("dashboard reorderable list widget", () => {
             items: [{}],
             itemKey: "__proto__.dashboardPolluted",
             positionPath: "__proto__.dashboardPolluted",
-            fields: [{
-                id: "unsafe",
-                label: "Unsafe",
-                path: "__proto__.dashboardPolluted",
-            }],
+            fields: [
+                {
+                    id: "unsafe",
+                    label: "Unsafe",
+                    path: "__proto__.dashboardPolluted",
+                },
+            ],
         };
         document.body.append(list);
 

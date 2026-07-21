@@ -71,12 +71,7 @@ const blocs: Array<[string, string]> = [
     ["range-tabs", "./src/ui/Dataviz/RangeTabs/RangeTabs.ts"],
 ];
 
-async function buildBundle(
-    entrypoint: string,
-    outdir: string,
-    filename: string,
-    format: "iife" | "esm",
-) {
+async function buildBundle(entrypoint: string, outdir: string, filename: string, format: "iife" | "esm") {
     const result = await Bun.build({
         entrypoints: [entrypoint],
         outdir,
@@ -86,7 +81,9 @@ async function buildBundle(
         naming: filename,
     });
     if (!result.success) {
-        for (const log of result.logs) console.error(log);
+        for (const log of result.logs) {
+            console.error(log);
+        }
         process.exit(1);
     }
 }

@@ -17,7 +17,9 @@ describe("dashboard source states", () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls += 1;
-            if (calls === 1) return new Response("unavailable", { status: 503 });
+            if (calls === 1) {
+                return new Response("unavailable", { status: 503 });
+            }
             return Response.json({ mode: "marketplace" });
         }) as unknown as typeof fetch;
 
@@ -25,7 +27,7 @@ describe("dashboard source states", () => {
         const wrapper = urlSourceWrapper("/settings", "dashboardData");
         const editable = document.createElement("section");
         editable.dataset.editableSettings = "true";
-        editable.innerHTML = "<button type=\"button\">Save settings</button>";
+        editable.innerHTML = '<button type="button">Save settings</button>';
         appendSourceContent(wrapper, editable);
         core.append(wrapper);
         document.body.append(core);
@@ -67,7 +69,9 @@ describe("dashboard source states", () => {
 async function waitFor(predicate: () => boolean, timeout = 1_000): Promise<void> {
     const started = Date.now();
     while (!predicate()) {
-        if (Date.now() - started > timeout) throw new Error("Timed out waiting for dashboard source state");
-        await new Promise(resolve => setTimeout(resolve, 5));
+        if (Date.now() - started > timeout) {
+            throw new Error("Timed out waiting for dashboard source state");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5));
     }
 }

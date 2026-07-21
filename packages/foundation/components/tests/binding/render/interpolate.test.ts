@@ -80,9 +80,14 @@ describe("interpolateString — filters (injected)", () => {
     });
 
     test("built-in urlencode preserves plus signs and query delimiters", () => {
-        expect(interpolateString("email={{ email | urlencode }}", s({
-            email: "seller+2@example.com",
-        }))).toBe("email=seller%2B2%40example.com");
+        expect(
+            interpolateString(
+                "email={{ email | urlencode }}",
+                s({
+                    email: "seller+2@example.com",
+                }),
+            ),
+        ).toBe("email=seller%2B2%40example.com");
     });
 });
 

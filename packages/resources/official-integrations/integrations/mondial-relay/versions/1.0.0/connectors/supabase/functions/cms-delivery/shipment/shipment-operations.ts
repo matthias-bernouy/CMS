@@ -9,22 +9,20 @@ import {
 } from "./supabase.ts";
 import type { JsonRecord } from "./types.ts";
 
-export async function declareSellerHandoff(
-    externalOrderId: string,
-    sellerCmsUserId: string,
-): Promise<JsonRecord> {
-    if (!externalOrderId) throw new HttpError(400, "externalOrderId is required");
+export async function declareSellerHandoff(externalOrderId: string, sellerCmsUserId: string): Promise<JsonRecord> {
+    if (!externalOrderId) {
+        throw new HttpError(400, "externalOrderId is required");
+    }
     if (!sellerCmsUserId) {
         throw new HttpError(400, "seller CMS user id is required");
     }
-    return handoffResult(await declareSellerHandoffRow(
-        externalOrderId,
-        sellerCmsUserId,
-    ));
+    return handoffResult(await declareSellerHandoffRow(externalOrderId, sellerCmsUserId));
 }
 
 export async function cancelShipmentReservation(externalOrderId: string, trackingUntil: string): Promise<JsonRecord> {
-    if (!externalOrderId || !trackingUntil) throw new HttpError(400, "externalOrderId and trackingUntil are required");
+    if (!externalOrderId || !trackingUntil) {
+        throw new HttpError(400, "externalOrderId and trackingUntil are required");
+    }
     return shipmentResult(await cancelShipmentUnscanned(externalOrderId, trackingUntil));
 }
 
@@ -36,8 +34,12 @@ export async function recoverUnknownShipment(
     actorCmsUserId: string,
     reason: string,
 ): Promise<JsonRecord> {
-    if (!/^\d{8}$/.test(expeditionNumber)) throw new HttpError(400, "expeditionNumber must contain 8 digits");
-    if (!actorCmsUserId || reason.trim().length < 8) throw new HttpError(400, "an administrator and a recovery reason are required");
+    if (!/^\d{8}$/.test(expeditionNumber)) {
+        throw new HttpError(400, "expeditionNumber must contain 8 digits");
+    }
+    if (!actorCmsUserId || reason.trim().length < 8) {
+        throw new HttpError(400, "an administrator and a recovery reason are required");
+    }
     const row = await shipmentRowById(shipmentId);
     if (!row || row.external_order_id !== externalOrderId) {
         throw new HttpError(404, "exact shipment creation reservation not found");
@@ -48,7 +50,9 @@ export async function recoverUnknownShipment(
             idempotentReplay: true,
         };
     }
-    if (row.status !== "unknown") throw new HttpError(409, "only an unknown shipment reservation can be recovered");
+    if (row.status !== "unknown") {
+        throw new HttpError(409, "only an unknown shipment reservation can be recovered");
+    }
     const validatedLabelUrl = labelUrl ? validatedMondialRelayLabelUrl(labelUrl).toString() : "";
     await insertShipmentRecoveryEvent({
         shipment_id: row.id,
@@ -57,15 +61,21 @@ export async function recoverUnknownShipment(
         previous_status: row.status,
         expedition_number: expeditionNumber,
     });
-    const updated = await updateShipment(String(row.id), {
-        expedition_number: expeditionNumber,
-        tracking_number: expeditionNumber,
-        status: validatedLabelUrl ? "label_ready" : "created",
-        label_url: validatedLabelUrl || null,
-        tracking_url: trackingUrl(expeditionNumber, String(row.recipient_postal_code ?? "")),
-        last_error: null,
-    }, "unknown");
-    if (!updated) throw new HttpError(409, "shipment state changed while applying recovery");
+    const updated = await updateShipment(
+        String(row.id),
+        {
+            expedition_number: expeditionNumber,
+            tracking_number: expeditionNumber,
+            status: validatedLabelUrl ? "label_ready" : "created",
+            label_url: validatedLabelUrl || null,
+            tracking_url: trackingUrl(expeditionNumber, String(row.recipient_postal_code ?? "")),
+            last_error: null,
+        },
+        "unknown",
+    );
+    if (!updated) {
+        throw new HttpError(409, "shipment state changed while applying recovery");
+    }
     return shipmentResult(updated);
 }
 
@@ -90,6 +100,8 @@ function shipmentResult(row: JsonRecord): JsonRecord {
 function trackingUrl(expeditionNumber: string, postalCode: string): string {
     const url = new URL("https://www.mondialrelay.fr/suivi-de-colis/");
     url.searchParams.set("numeroExpedition", expeditionNumber);
-    if (postalCode) url.searchParams.set("codePostal", postalCode);
+    if (postalCode) {
+        url.searchParams.set("codePostal", postalCode);
+    }
     return url.toString();
 }

@@ -3,17 +3,17 @@ import type { IntegrationDefinition, SetupResourceRow } from "../../model";
 export function resourceRows(definition: IntegrationDefinition): SetupResourceRow[] {
     return [
         ...(definition.artifacts ?? []).map(artifactRow),
-        ...(definition.secrets ?? []).map(secret => ({
+        ...(definition.secrets ?? []).map((secret) => ({
             type: "Secret",
             label: inputLabel(definition, secret.input),
             detail: `Secret key: ${secret.key}`,
         })),
-        ...(definition.generatedSecrets ?? []).map(secret => ({
+        ...(definition.generatedSecrets ?? []).map((secret) => ({
             type: "Secret",
             label: secret.name,
             detail: `Generated key: ${secret.key}`,
         })),
-        ...(definition.connectors ?? []).map(connector => ({
+        ...(definition.connectors ?? []).map((connector) => ({
             type: "Connector",
             label: connector.provider,
             detail: connector.root ? `Connector root: ${connector.root}` : "Connector deployment",
@@ -23,23 +23,45 @@ export function resourceRows(definition: IntegrationDefinition): SetupResourceRo
 
 function artifactRow(artifact: NonNullable<IntegrationDefinition["artifacts"]>[number]): SetupResourceRow {
     if (artifact.type === "dashboard") {
-        return { type: "Dashboard", label: artifact.dashboard.meta?.name ?? artifact.dashboard.id, detail: `Dashboard id: ${artifact.dashboard.id}` };
+        return {
+            type: "Dashboard",
+            label: artifact.dashboard.meta?.name ?? artifact.dashboard.id,
+            detail: `Dashboard id: ${artifact.dashboard.id}`,
+        };
     }
-    if (artifact.type === "bloc") return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
+    if (artifact.type === "bloc") {
+        return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
+    }
     if (artifact.type === "function") {
-        return { type: "Function", label: artifact.function.meta?.name ?? artifact.function.id, detail: `${artifact.function.method} ${artifact.function.id}` };
+        return {
+            type: "Function",
+            label: artifact.function.meta?.name ?? artifact.function.id,
+            detail: `${artifact.function.method} ${artifact.function.id}`,
+        };
     }
     if (artifact.type === "trigger") {
         const event = artifact.trigger.event;
         const source = event.source ?? "*";
         const endpoint = event.endpoint ?? "*";
-        return { type: "Trigger", label: artifact.trigger.label ?? artifact.trigger.id, detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}` };
+        return {
+            type: "Trigger",
+            label: artifact.trigger.label ?? artifact.trigger.id,
+            detail: `${event.phase} ${source}.${endpoint} -> ${artifact.trigger.function.id}`,
+        };
     }
     if (artifact.type === "sourceOverlay") {
-        return { type: "Source overlay", label: artifact.overlay.label ?? artifact.overlay.id, detail: `Overlay id: ${artifact.overlay.id}` };
+        return {
+            type: "Source overlay",
+            label: artifact.overlay.label ?? artifact.overlay.id,
+            detail: `Overlay id: ${artifact.overlay.id}`,
+        };
     }
     if (artifact.type === "relation") {
-        return { type: "Relation", label: artifact.relation.label ?? artifact.relation.id, detail: `Relation id: ${artifact.relation.id}` };
+        return {
+            type: "Relation",
+            label: artifact.relation.label ?? artifact.relation.id,
+            detail: `Relation id: ${artifact.relation.id}`,
+        };
     }
     if (artifact.type === "dashboardRelation") {
         return {
@@ -48,9 +70,13 @@ function artifactRow(artifact: NonNullable<IntegrationDefinition["artifacts"]>[n
             detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`,
         };
     }
-    return { type: "Source", label: artifact.source.meta?.name ?? artifact.source.id, detail: `Source id: ${artifact.source.id}` };
+    return {
+        type: "Source",
+        label: artifact.source.meta?.name ?? artifact.source.id,
+        detail: `Source id: ${artifact.source.id}`,
+    };
 }
 
 function inputLabel(definition: IntegrationDefinition, inputName: string): string {
-    return definition.inputs.find(input => input.name === inputName)?.label ?? inputName;
+    return definition.inputs.find((input) => input.name === inputName)?.label ?? inputName;
 }

@@ -72,8 +72,12 @@ export function readRuntimeEnv(source: EnvSource): RuntimeEnv {
 }
 
 export function parsePort(raw: string | undefined, name: string, fallback: number): number {
-    if (raw === undefined) return fallback;
-    if (!/^\d+$/.test(raw)) throw new Error(`${name} must be an integer port`);
+    if (raw === undefined) {
+        return fallback;
+    }
+    if (!/^\d+$/.test(raw)) {
+        throw new Error(`${name} must be an integer port`);
+    }
     const port = Number(raw);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new Error(`${name} must be between 1 and 65535`);
@@ -83,12 +87,16 @@ export function parsePort(raw: string | undefined, name: string, fallback: numbe
 
 function required(source: EnvSource, name: string): string {
     const value = source[name]?.trim();
-    if (!value) throw new Error(`env ${name} missing`);
+    if (!value) {
+        throw new Error(`env ${name} missing`);
+    }
     return value;
 }
 
 function parseOptionalHttpUrl(raw: string | undefined, name: string, fallback: string): string {
-    if (raw === undefined) return fallback;
+    if (raw === undefined) {
+        return fallback;
+    }
     return parseHttpUrl(raw, name);
 }
 
@@ -106,7 +114,11 @@ function parseHttpUrl(raw: string, name: string): string {
 }
 
 function parseNonNegativeInteger(raw: string | undefined, name: string, fallback: number): number {
-    if (raw === undefined) return fallback;
-    if (!/^\d+$/.test(raw)) throw new Error(`${name} must be a non-negative integer`);
+    if (raw === undefined) {
+        return fallback;
+    }
+    if (!/^\d+$/.test(raw)) {
+        throw new Error(`${name} must be a non-negative integer`);
+    }
     return Number(raw);
 }

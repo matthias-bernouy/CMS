@@ -1,8 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import {
-    functionCatalog,
-    type FunctionCatalogSource,
-} from "cms-control/core/control/workflows/functionCatalog";
+import { functionCatalog, type FunctionCatalogSource } from "cms-control/core/control/workflows/functionCatalog";
 
 export type { FunctionCatalogSource };
 

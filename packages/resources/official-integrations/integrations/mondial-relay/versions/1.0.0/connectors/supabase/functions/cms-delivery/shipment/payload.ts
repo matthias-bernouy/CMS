@@ -19,8 +19,14 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
         mobile: "",
         email: "",
     });
-    const weightGrams = integerValue(body.weightGrams ?? nested(body, "package", "weightGrams") ?? defaults.defaultWeightGrams, "weightGrams");
-    const packageCount = integerValue(body.packageCount ?? nested(body, "package", "quantity") ?? defaults.defaultPackageCount, "packageCount");
+    const weightGrams = integerValue(
+        body.weightGrams ?? nested(body, "package", "weightGrams") ?? defaults.defaultWeightGrams,
+        "weightGrams",
+    );
+    const packageCount = integerValue(
+        body.packageCount ?? nested(body, "package", "quantity") ?? defaults.defaultPackageCount,
+        "packageCount",
+    );
     const deliveryRelayLocation = relayLocation(body);
     const deliveryRelayCountry = deliveryRelayLocation.slice(0, 2).toUpperCase();
 
@@ -28,7 +34,9 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
         id: crypto.randomUUID(),
         externalOrderId: stringValue(body.externalOrderId ?? body.external_order_id),
         customerId: stringValue(body.customerId ?? body.customer_id),
-        modeCollection: (stringValue(body.modeCollection ?? body.mode_collection) || defaults.modeCollection).toUpperCase(),
+        modeCollection: (
+            stringValue(body.modeCollection ?? body.mode_collection) || defaults.modeCollection
+        ).toUpperCase(),
         modeDelivery: (stringValue(body.modeDelivery ?? body.mode_delivery) || defaults.modeDelivery).toUpperCase(),
         sender,
         recipient,
@@ -36,9 +44,15 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
         deliveryRelayCountry,
         weightGrams,
         packageCount,
-        lengthCm: integerValue(body.lengthCm ?? nested(body, "package", "lengthCm") ?? defaults.defaultLengthCm, "lengthCm"),
+        lengthCm: integerValue(
+            body.lengthCm ?? nested(body, "package", "lengthCm") ?? defaults.defaultLengthCm,
+            "lengthCm",
+        ),
         widthCm: integerValue(body.widthCm ?? nested(body, "package", "widthCm") ?? defaults.defaultWidthCm, "widthCm"),
-        heightCm: integerValue(body.heightCm ?? nested(body, "package", "heightCm") ?? defaults.defaultHeightCm, "heightCm"),
+        heightCm: integerValue(
+            body.heightCm ?? nested(body, "package", "heightCm") ?? defaults.defaultHeightCm,
+            "heightCm",
+        ),
         content: stringValue(body.content ?? nested(body, "package", "content")) || defaults.defaultContent,
         declaredValueMinorAmount: minorAmount(body.declaredValueMinorAmount, "declaredValueMinorAmount"),
         declaredValue: minorAmountText(body.declaredValueMinorAmount, "declaredValueMinorAmount"),
@@ -56,15 +70,19 @@ export function shipmentPayload(body: JsonRecord, settings: DeliverySettings | n
 }
 
 function addressFrom(body: JsonRecord, prefix: "sender" | "recipient", defaults: Address): Address {
-    const source = isRecord(body[prefix]) ? body[prefix] as JsonRecord : {};
+    const source = isRecord(body[prefix]) ? (body[prefix] as JsonRecord) : {};
     const key = (name: string) => `${prefix}${name.charAt(0).toUpperCase()}${name.slice(1)}`;
     const field = (...aliases: string[]) => {
         for (const alias of aliases) {
-            if (Object.prototype.hasOwnProperty.call(source, alias)) return { supplied: true, value: source[alias] };
+            if (Object.prototype.hasOwnProperty.call(source, alias)) {
+                return { supplied: true, value: source[alias] };
+            }
         }
         for (const alias of aliases) {
             const flatKey = key(alias);
-            if (Object.prototype.hasOwnProperty.call(body, flatKey)) return { supplied: true, value: body[flatKey] };
+            if (Object.prototype.hasOwnProperty.call(body, flatKey)) {
+                return { supplied: true, value: body[flatKey] };
+            }
         }
         return { supplied: false, value: undefined };
     };
@@ -99,26 +117,46 @@ function addressFrom(body: JsonRecord, prefix: "sender" | "recipient", defaults:
 }
 
 function validateShipmentPayload(payload: ShipmentPayload): void {
-    if (!payload.externalOrderId) throw new HttpError(400, "externalOrderId is required for protected fulfillment");
-    if (payload.modeCollection !== "CCC") throw new HttpError(400, "modeCollection must be CCC for Mondial Relay Connect France");
-    if (payload.modeDelivery !== "24R") throw new HttpError(400, "modeDelivery must be 24R for Mondial Relay Connect France");
+    if (!payload.externalOrderId) {
+        throw new HttpError(400, "externalOrderId is required for protected fulfillment");
+    }
+    if (payload.modeCollection !== "CCC") {
+        throw new HttpError(400, "modeCollection must be CCC for Mondial Relay Connect France");
+    }
+    if (payload.modeDelivery !== "24R") {
+        throw new HttpError(400, "modeDelivery must be 24R for Mondial Relay Connect France");
+    }
     requireFrance(payload.sender.country, "sender.country");
     requireFrance(payload.recipient.country, "recipient.country");
     requireFrance(payload.deliveryRelayCountry, "deliveryRelayLocation");
     requireAddress(payload.sender, "sender");
     requireAddress(payload.recipient, "recipient");
-    if (payload.weightGrams < 1) throw new HttpError(400, "weightGrams must be positive");
-    if (payload.packageCount !== 1) throw new HttpError(400, "packageCount must be 1 for protected single-parcel fulfillment");
-    for (const [name, value] of [["lengthCm", payload.lengthCm], ["widthCm", payload.widthCm], ["heightCm", payload.heightCm]] as const) {
-        if (value < 1) throw new HttpError(400, `${name} must be positive`);
+    if (payload.weightGrams < 1) {
+        throw new HttpError(400, "weightGrams must be positive");
+    }
+    if (payload.packageCount !== 1) {
+        throw new HttpError(400, "packageCount must be 1 for protected single-parcel fulfillment");
+    }
+    for (const [name, value] of [
+        ["lengthCm", payload.lengthCm],
+        ["widthCm", payload.widthCm],
+        ["heightCm", payload.heightCm],
+    ] as const) {
+        if (value < 1) {
+            throw new HttpError(400, `${name} must be positive`);
+        }
     }
     validateMoney(payload.declaredValue, payload.declaredCurrency, "declaredValue");
-    if (payload.declaredCurrency !== "EUR") throw new HttpError(400, "declaredValue.currency must be EUR");
+    if (payload.declaredCurrency !== "EUR") {
+        throw new HttpError(400, "declaredValue.currency must be EUR");
+    }
 }
 
 function requireAddress(address: Address, label: string): void {
     for (const field of ["name", "addressLine1", "city", "postalCode", "country"] as const) {
-        if (!address[field]) throw new HttpError(400, `${label}.${field} is required`);
+        if (!address[field]) {
+            throw new HttpError(400, `${label}.${field} is required`);
+        }
     }
     validateFrenchPostalCode(address.postalCode, `${label}.postalCode`);
     validateInternationalPhone(address.phone, `${label}.phone`);
@@ -127,57 +165,91 @@ function requireAddress(address: Address, label: string): void {
 
 function relayLocation(body: JsonRecord): string {
     const explicit = stringValue(body.deliveryRelayLocation ?? nested(body, "deliveryRelay", "location")).toUpperCase();
-    if (/^[A-Z]{2}-[A-Z0-9]{3,10}$/.test(explicit)) return explicit;
+    if (/^[A-Z]{2}-[A-Z0-9]{3,10}$/.test(explicit)) {
+        return explicit;
+    }
     const number = stringValue(body.deliveryRelayNumber ?? nested(body, "deliveryRelay", "number")).toUpperCase();
-    const country = (stringValue(body.deliveryRelayCountry ?? nested(body, "deliveryRelay", "country")) || "FR").toUpperCase();
-    if (number) return number.includes("-") ? number : `${country}-${number}`;
+    const country = (
+        stringValue(body.deliveryRelayCountry ?? nested(body, "deliveryRelay", "country")) || "FR"
+    ).toUpperCase();
+    if (number) {
+        return number.includes("-") ? number : `${country}-${number}`;
+    }
     throw new HttpError(400, "deliveryRelayLocation is required for 24R pickup point delivery");
 }
 
 function requireFrance(value: string, name: string): void {
-    if (value !== "FR") throw new HttpError(400, `${name} must be FR for Mondial Relay Connect France`);
+    if (value !== "FR") {
+        throw new HttpError(400, `${name} must be FR for Mondial Relay Connect France`);
+    }
 }
 
 function validateFrenchPostalCode(value: string, name: string): void {
-    if (!/^\d{5}$/.test(value)) throw new HttpError(400, `${name} must be 5 digits for FR`);
+    if (!/^\d{5}$/.test(value)) {
+        throw new HttpError(400, `${name} must be 5 digits for FR`);
+    }
 }
 
 function validateMoney(value: string, currency: string, name: string): void {
     const amount = Number(value);
-    if (!Number.isFinite(amount) || amount < 0) throw new HttpError(400, `${name}.value must be a non-negative number`);
-    if (amount > 0 && !currency) throw new HttpError(400, `${name}.currency is required when ${name}.value is greater than 0`);
-    if (currency && !/^[A-Z]{3}$/.test(currency)) throw new HttpError(400, `${name}.currency must be a 3-letter currency code`);
+    if (!Number.isFinite(amount) || amount < 0) {
+        throw new HttpError(400, `${name}.value must be a non-negative number`);
+    }
+    if (amount > 0 && !currency) {
+        throw new HttpError(400, `${name}.currency is required when ${name}.value is greater than 0`);
+    }
+    if (currency && !/^[A-Z]{3}$/.test(currency)) {
+        throw new HttpError(400, `${name}.currency must be a 3-letter currency code`);
+    }
 }
 
 function splitName(name: string): { firstName: string; lastName: string } {
     const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length <= 1) return { firstName: parts[0] || "Customer", lastName: parts[0] || "Customer" };
+    if (parts.length <= 1) {
+        return { firstName: parts[0] || "Customer", lastName: parts[0] || "Customer" };
+    }
     return { firstName: parts.slice(0, -1).join(" "), lastName: parts.at(-1) || "" };
 }
 
 export function splitStreet(addressLine: string): { houseNo: string; streetName: string } {
     const match = addressLine.trim().match(/^(\d+[A-Za-z]?)\s+(.+)$/);
-    if (!match) return { houseNo: "", streetName: addressLine.trim() };
+    if (!match) {
+        return { houseNo: "", streetName: addressLine.trim() };
+    }
     return { houseNo: match[1] ?? "", streetName: match[2] ?? addressLine.trim() };
 }
 
 export function stringValue(value: unknown): string {
-    if (typeof value === "string") return value.trim();
-    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    if (typeof value === "string") {
+        return value.trim();
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return String(value);
+    }
     return "";
 }
 
 export function normalizePhone(value: string, country = "FR"): string {
     const raw = value.trim();
-    if (!raw) return "";
+    if (!raw) {
+        return "";
+    }
     let text = raw.replace(/\(0\)/g, "").replace(/[\s.()/\-]/g, "");
-    if (text.startsWith("00")) text = `+${text.slice(2)}`;
+    if (text.startsWith("00")) {
+        text = `+${text.slice(2)}`;
+    }
     if (!text.startsWith("+")) {
         const digits = text.replace(/\D/g, "");
-        if (!digits) return "";
+        if (!digits) {
+            return "";
+        }
         if (country.toUpperCase() === "FR") {
-            if (/^0[1-9]\d{8}$/.test(digits)) return `+33${digits.slice(1)}`;
-            if (/^33[1-9]\d{8}$/.test(digits)) return `+${digits}`;
+            if (/^0[1-9]\d{8}$/.test(digits)) {
+                return `+33${digits.slice(1)}`;
+            }
+            if (/^33[1-9]\d{8}$/.test(digits)) {
+                return `+${digits}`;
+            }
         }
         return `+${digits}`;
     }
@@ -192,7 +264,9 @@ export function normalizePhone(value: string, country = "FR"): string {
 function integerValue(value: unknown, name: string): number {
     const text = stringValue(value);
     const number = Number(text);
-    if (!Number.isInteger(number)) throw new HttpError(400, `${name} must be an integer`);
+    if (!Number.isInteger(number)) {
+        throw new HttpError(400, `${name} must be an integer`);
+    }
     return number;
 }
 
@@ -210,7 +284,9 @@ function minorAmountText(value: unknown, name: string): string {
     const major = Math.floor(amount / 100);
     const minor = String(amount % 100).padStart(2, "0");
     const text = `${major}.${minor}`;
-    if (!/^\d{1,7}\.\d{2}$/.test(text)) throw new HttpError(400, `${name} exceeds the Mondial Relay limit`);
+    if (!/^\d{1,7}\.\d{2}$/.test(text)) {
+        throw new HttpError(400, `${name} exceeds the Mondial Relay limit`);
+    }
     return text;
 }
 
@@ -232,7 +308,9 @@ function validateInternationalPhone(value: string, name: string): void {
 function phoneValue(value: unknown, fallback: string, country: string, name: string): string {
     const raw = stringValue(value) || fallback;
     const normalized = normalizePhone(raw, country);
-    if (raw && !normalized) throw new HttpError(400, `${name} must use E.164 international format`);
+    if (raw && !normalized) {
+        throw new HttpError(400, `${name} must use E.164 international format`);
+    }
     return normalized;
 }
 
@@ -273,7 +351,9 @@ function fallbackSettings(): DeliverySettings {
 
 function integerSetting(name: string, fallback: number): number {
     const text = envDefault(name, "");
-    if (!text) return fallback;
+    if (!text) {
+        return fallback;
+    }
     const value = Number(text);
     return Number.isInteger(value) && value > 0 ? value : fallback;
 }

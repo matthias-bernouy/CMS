@@ -57,20 +57,29 @@ export function syncRenderedOffers(host) {
             image.style.height = host.getAttribute("image-height") || "12rem";
             image.style.objectFit = host.getAttribute("image-fit") || "cover";
         }
-        if (image && mediaId) setAttributeIfChanged(image, "src", `${host.sourceBase}/myOfferImage?id=${encodeURIComponent(mediaId)}`);
-        else image?.removeAttribute("src");
+        if (image && mediaId) {
+            setAttributeIfChanged(image, "src", `${host.sourceBase}/myOfferImage?id=${encodeURIComponent(mediaId)}`);
+        } else {
+            image?.removeAttribute("src");
+        }
 
         const price = card.querySelector("[data-offer-price]");
         price?.toggleAttribute("hidden", host.getAttribute("show-price") === "false");
-        if (price) setTextIfChanged(price, formatMoney(price.dataset.displayAmount, price.dataset.currency, locale));
+        if (price) {
+            setTextIfChanged(price, formatMoney(price.dataset.displayAmount, price.dataset.currency, locale));
+        }
 
         const status = card.querySelector("[data-offer-status]");
         status?.toggleAttribute("hidden", host.getAttribute("show-status") === "false");
-        if (status) setTextIfChanged(status, host.statusLabel(status.getAttribute("data-offer-status")));
+        if (status) {
+            setTextIfChanged(status, host.statusLabel(status.getAttribute("data-offer-status")));
+        }
 
         const updated = card.querySelector("[data-offer-updated]");
         updated?.toggleAttribute("hidden", host.getAttribute("show-updated-at") === "false");
-        if (updated) setTextIfChanged(updated, formatDate(updated.dataset.date, locale));
+        if (updated) {
+            setTextIfChanged(updated, formatDate(updated.dataset.date, locale));
+        }
 
         const edit = card.querySelector("[data-edit-button]");
         const action = host.offerAction(edit.dataset.workflowState);
@@ -81,10 +90,16 @@ export function syncRenderedOffers(host) {
 
     copyColorAttributes(host, host.querySelector("[data-empty-state]"), "card");
     const isUnfiltered = host.status === "all";
-    setTextIfChanged(host.querySelector("[data-empty-title]"), isUnfiltered
-        ? host.getAttribute("empty-title") || "Aucune annonce pour le moment"
-        : host.getAttribute("empty-filtered-title") || "Aucune annonce avec ce statut");
-    setTextIfChanged(host.querySelector("[data-empty-message]"), isUnfiltered
-        ? host.getAttribute("empty-message") || "Créez votre première annonce pour commencer à vendre."
-        : host.getAttribute("empty-filtered-message") || "Essayez un autre statut pour retrouver vos annonces.");
+    setTextIfChanged(
+        host.querySelector("[data-empty-title]"),
+        isUnfiltered
+            ? host.getAttribute("empty-title") || "Aucune annonce pour le moment"
+            : host.getAttribute("empty-filtered-title") || "Aucune annonce avec ce statut",
+    );
+    setTextIfChanged(
+        host.querySelector("[data-empty-message]"),
+        isUnfiltered
+            ? host.getAttribute("empty-message") || "Créez votre première annonce pour commencer à vendre."
+            : host.getAttribute("empty-filtered-message") || "Essayez un autre statut pour retrouver vos annonces.",
+    );
 }

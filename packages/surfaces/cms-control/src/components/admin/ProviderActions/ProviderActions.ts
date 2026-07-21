@@ -10,18 +10,37 @@ import { isBuiltinProvider } from "@bernouy/cms-auth/components";
  * `emit` on success so a `cms-source` with `cms-reload-on` refreshes.
  */
 class CmsProviderActions extends HTMLElement {
+    static get observedAttributes() {
+        return ["provider-id", "kind", "enabled"];
+    }
 
-    static get observedAttributes() { return ["provider-id", "kind", "enabled"]; }
+    connectedCallback() {
+        this._render();
+    }
+    attributeChangedCallback() {
+        if (this.isConnected) {
+            this._render();
+        }
+    }
 
-    connectedCallback() { this._render(); }
-    attributeChangedCallback() { if (this.isConnected) this._render(); }
-
-    private get _base()    { return this.getAttribute("base-url") ?? "/api/identity/provider"; }
-    private get _id()      { return this.getAttribute("provider-id") ?? ""; }
-    private get _kind()    { return this.getAttribute("kind") ?? ""; }
-    private get _enabled() { return this.getAttribute("enabled") === "true"; }
-    private get _emit()    { return this.getAttribute("emit"); }
-    private get _builtin() { return isBuiltinProvider(this._kind); }
+    private get _base() {
+        return this.getAttribute("base-url") ?? "/api/identity/provider";
+    }
+    private get _id() {
+        return this.getAttribute("provider-id") ?? "";
+    }
+    private get _kind() {
+        return this.getAttribute("kind") ?? "";
+    }
+    private get _enabled() {
+        return this.getAttribute("enabled") === "true";
+    }
+    private get _emit() {
+        return this.getAttribute("emit");
+    }
+    private get _builtin() {
+        return isBuiltinProvider(this._kind);
+    }
 
     private _render() {
         const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
@@ -50,7 +69,9 @@ class CmsProviderActions extends HTMLElement {
           ${this._builtin ? "" : `<button type="button" class="btn remove">Remove</button>`}
         </div>`;
         root.querySelector(".switch")!.addEventListener("click", () => this._toggle());
-        root.querySelector(".edit")?.addEventListener("click", () => document.getElementById(`edit-${this._id}`)?.setAttribute("open", ""));
+        root.querySelector(".edit")?.addEventListener("click", () =>
+            document.getElementById(`edit-${this._id}`)?.setAttribute("open", ""),
+        );
         root.querySelector(".remove")?.addEventListener("click", () => this._remove());
     }
 
@@ -64,7 +85,9 @@ class CmsProviderActions extends HTMLElement {
     }
 
     private async _remove() {
-        if (!confirm(`Remove provider "${this._id}"?`)) return;
+        if (!confirm(`Remove provider "${this._id}"?`)) {
+            return;
+        }
         if (await this._send("DELETE", { id: this._id })) {
             showToast("Provider removed", { type: "success" });
             this._fire();
@@ -73,8 +96,15 @@ class CmsProviderActions extends HTMLElement {
 
     private async _send(method: string, body: unknown): Promise<boolean> {
         try {
-            const res = await fetch(this._base, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-            if (!res.ok) { showToast("Action failed", { type: "error" }); return false; }
+            const res = await fetch(this._base, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+                showToast("Action failed", { type: "error" });
+                return false;
+            }
             return true;
         } catch {
             showToast("Network error", { type: "error" });
@@ -82,7 +112,11 @@ class CmsProviderActions extends HTMLElement {
         }
     }
 
-    private _fire() { if (this._emit) document.dispatchEvent(new Event(this._emit, { bubbles: true })); }
+    private _fire() {
+        if (this._emit) {
+            document.dispatchEvent(new Event(this._emit, { bubbles: true }));
+        }
+    }
 }
 
 customElements.define("cms-provider-actions", CmsProviderActions);

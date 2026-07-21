@@ -2,11 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { expectGenericFailure } from "../../order-contexts/shared/harness";
 import { reservation } from "../fixtures/context";
 import { expectedShipmentRequest, replayShipment, shipment } from "../fixtures/delivery";
-import {
-    expectedCompletionRequest,
-    replayFulfillment,
-    replayResult,
-} from "../fixtures/result";
+import { expectedCompletionRequest, replayFulfillment, replayResult } from "../fixtures/result";
 import { executeShipmentCreation } from "../harness";
 import { creationResponder, privateFailure } from "../responders";
 
@@ -22,24 +18,21 @@ describe("seller shipment creation recovery", () => {
                 return reservationAttempt === 1
                     ? reservation
                     : {
-                        ...reservation,
-                        claimToken: replayClaimToken,
-                        status: "succeeded",
-                        fulfillmentStatus: "label_created",
-                    };
+                          ...reservation,
+                          claimToken: replayClaimToken,
+                          status: "succeeded",
+                          fulfillmentStatus: "label_created",
+                      };
             },
             shipment: () => {
                 shipmentAttempt += 1;
-                return Response.json(
-                    shipmentAttempt === 1 ? shipment : replayShipment,
-                    { status: shipmentAttempt === 1 ? 201 : 200 },
-                );
+                return Response.json(shipmentAttempt === 1 ? shipment : replayShipment, {
+                    status: shipmentAttempt === 1 ? 201 : 200,
+                });
             },
             fulfillment: () => {
                 completionAttempt += 1;
-                return completionAttempt === 1
-                    ? privateFailure(500, "lost completion response")
-                    : replayFulfillment;
+                return completionAttempt === 1 ? privateFailure(500, "lost completion response") : replayFulfillment;
             },
         });
 
@@ -49,8 +42,8 @@ describe("seller shipment creation recovery", () => {
         await expectGenericFailure(failed.response);
         expect(replay.response.status).toBe(200);
         expect(await replay.response.json()).toEqual(replayResult);
-        expect(failed.calls.map(call => call.url.pathname)).toEqual(paths());
-        expect(replay.calls.map(call => call.url.pathname)).toEqual(paths());
+        expect(failed.calls.map((call) => call.url.pathname)).toEqual(paths());
+        expect(replay.calls.map((call) => call.url.pathname)).toEqual(paths());
         expect(failed.calls[3]?.body).toEqual(expectedShipmentRequest());
         expect(replay.calls[3]?.body).toEqual(expectedShipmentRequest());
         expect(failed.calls[4]?.body).toEqual(expectedCompletionRequest());
@@ -63,8 +56,10 @@ describe("seller shipment creation recovery", () => {
 
 function paths() {
     return [
-        "/shipmentCreationSellerContext", "/reserveShipmentCreation",
-        "/resolveDeliveryQuote", "/createShipment",
+        "/shipmentCreationSellerContext",
+        "/reserveShipmentCreation",
+        "/resolveDeliveryQuote",
+        "/createShipment",
         "/completeShipmentCreation",
     ];
 }

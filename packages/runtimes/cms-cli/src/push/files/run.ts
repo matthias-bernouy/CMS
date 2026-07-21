@@ -7,13 +7,9 @@ import { applyPushFiles, fetchRemoteTree } from "./apply";
 
 export type RunFilesFlags = { force: boolean; yes: boolean; dryRun: boolean };
 
-export async function runFiles(
-    adminBase: URL,
-    token:     string,
-    flags:     RunFilesFlags,
-): Promise<number> {
+export async function runFiles(adminBase: URL, token: string, flags: RunFilesFlags): Promise<number> {
     const config = await loadPushConfig(process.cwd());
-    const force  = flags.force || config.forcePushDefault;
+    const force = flags.force || config.forcePushDefault;
 
     const local = await scanFiles(config.siteDir);
     if (local.length === 0) {
@@ -21,24 +17,37 @@ export async function runFiles(
         return 0;
     }
 
-    const state   = await loadState(config.siteDir);
-    const tree    = await fetchRemoteTree(adminBase, token);
+    const state = await loadState(config.siteDir);
+    const tree = await fetchRemoteTree(adminBase, token);
     const entries = classifyFiles(local, tree.filesByPath, state, force);
 
-    renderRecap(entries.map(e => ({ path: e.file.path, status: e.status })), "file");
+    renderRecap(
+        entries.map((e) => ({ path: e.file.path, status: e.status })),
+        "file",
+    );
 
-    const writes = entries.filter(e => e.status === "new" || e.status === "update");
-    if (writes.length === 0) { console.log("\n→ No file changes."); return 0; }
-    if (flags.dryRun)        { console.log(`\n→ Dry-run — would push ${writes.length} file(s).`); return 0; }
+    const writes = entries.filter((e) => e.status === "new" || e.status === "update");
+    if (writes.length === 0) {
+        console.log("\n→ No file changes.");
+        return 0;
+    }
+    if (flags.dryRun) {
+        console.log(`\n→ Dry-run — would push ${writes.length} file(s).`);
+        return 0;
+    }
 
-    if (!await confirm(`\nPush ${writes.length} file(s)?`, flags.yes)) {
+    if (!(await confirm(`\nPush ${writes.length} file(s)?`, flags.yes))) {
         console.log("→ Aborted.");
         return 0;
     }
 
     const result = await applyPushFiles(adminBase, token, entries, tree);
-    for (const { path, error } of result.failed) console.error(`    ✗ ${path}: ${error}`);
-    for (const { path }        of result.pushed) console.log  (`    ✓ ${path}`);
+    for (const { path, error } of result.failed) {
+        console.error(`    ✗ ${path}: ${error}`);
+    }
+    for (const { path } of result.pushed) {
+        console.log(`    ✓ ${path}`);
+    }
 
     for (const ok of result.pushed) {
         state.entities[`file:${ok.path}`] = { hash: ok.hash, lastSeenRemote: String(ok.size) };

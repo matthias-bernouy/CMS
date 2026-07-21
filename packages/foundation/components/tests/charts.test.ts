@@ -10,7 +10,11 @@ describe("formatValue", () => {
 describe("lineSvg", () => {
     test("empty → ''", () => expect(lineSvg([])).toBe(""));
     test("renders area + polyline + a dot per point + gradient fill", () => {
-        const svg = lineSvg([{ label: "a", value: 1 }, { label: "b", value: 2 }, { label: "c", value: 1 }]);
+        const svg = lineSvg([
+            { label: "a", value: 1 },
+            { label: "b", value: 2 },
+            { label: "c", value: 1 },
+        ]);
         expect(svg).toContain("<polyline");
         expect(svg).toContain("<polygon");
         expect((svg.match(/<circle/g) ?? []).length).toBe(3);
@@ -21,7 +25,13 @@ describe("lineSvg", () => {
 describe("barsHtml", () => {
     test("empty → ''", () => expect(barsHtml([], false)).toBe(""));
     test("bar width = share of total; show-count prints the count too", () => {
-        const html = barsHtml([{ label: "/a", value: 75 }, { label: "/b", value: 25 }], true);
+        const html = barsHtml(
+            [
+                { label: "/a", value: 75 },
+                { label: "/b", value: 25 },
+            ],
+            true,
+        );
         expect((html.match(/class="bar"/g) ?? []).length).toBe(2);
         expect(html).toContain('width="75.0"');
         expect(html).toContain('width="25.0"');

@@ -24,19 +24,29 @@ export async function listSellerOfferReadModel(
         p_limit: limit,
         p_offset: offset,
     });
-    if (!isRecord(result) || typeof result.seller_exists !== "boolean"
-        || typeof result.status_valid !== "boolean") {
+    if (!isRecord(result) || typeof result.seller_exists !== "boolean" || typeof result.status_valid !== "boolean") {
         throw invalidReadModel();
     }
-    if (!result.seller_exists) return json({ items: [], total: 0, limit, offset });
-    if (!result.status_valid) throw new HttpError(400, "status is invalid");
+    if (!result.seller_exists) {
+        return json({ items: [], total: 0, limit, offset });
+    }
+    if (!result.status_valid) {
+        throw new HttpError(400, "status is invalid");
+    }
     const rows = recordArray(result.rows);
     const workflowStates = recordArray(result.workflow_states);
     const media = recordArray(result.media);
     const activePriceProposals = recordArray(result.active_price_proposals);
     const total = typeof result.total === "number" ? result.total : null;
-    if (!rows || !workflowStates || !media || !activePriceProposals
-        || total === null || !Number.isFinite(total) || total < 0) {
+    if (
+        !rows ||
+        !workflowStates ||
+        !media ||
+        !activePriceProposals ||
+        total === null ||
+        !Number.isFinite(total) ||
+        total < 0
+    ) {
         throw invalidReadModel();
     }
     const items = decorateSellerOffers(rows, workflowStates, media, activePriceProposals);
@@ -57,19 +67,20 @@ function decorateSellerOffers(
     const displayPriceByOffer = new Map<string, unknown>();
     for (const proposal of activePriceProposals) {
         const offerId = String(proposal.offer_id);
-        if (!displayPriceByOffer.has(offerId)) displayPriceByOffer.set(offerId, proposal.amount);
+        if (!displayPriceByOffer.has(offerId)) {
+            displayPriceByOffer.set(offerId, proposal.amount);
+        }
     }
-    const stateByCode = new Map(states.map(state => [String(state.code), state]));
-    return rows.map(row => {
+    const stateByCode = new Map(states.map((state) => [String(state.code), state]));
+    return rows.map((row) => {
         const offerMedia = mediaByOffer.get(String(row.id)) ?? [];
-        const main = offerMedia.find(item => item.is_main === true) ?? offerMedia[0];
+        const main = offerMedia.find((item) => item.is_main === true) ?? offerMedia[0];
         const workflowState = stateByCode.get(String(row.workflow_state)) ?? null;
         return {
             ...row,
             main_image_media_id: main ? String(main.media_id) : null,
             display_status: sellerDisplayStatus(row, workflowState),
-            seller_display_price_amount: displayPriceByOffer.get(String(row.id))
-                ?? row.accepted_price_amount ?? null,
+            seller_display_price_amount: displayPriceByOffer.get(String(row.id)) ?? row.accepted_price_amount ?? null,
             workflow_state_info: workflowState,
         };
     });
@@ -87,12 +98,24 @@ function groupByOffer(rows: JsonRecord[]): Map<string, JsonRecord[]> {
 }
 
 function sellerDisplayStatus(offer: JsonRecord, state: JsonRecord | null): string {
-    if (offer.publication_status === "archived" || state?.code === "archived") return "archived";
-    if (state?.terminal === true) return "rejected";
-    if (offer.publication_status === "active") return "online";
-    if (offer.publication_status === "paused") return "paused";
-    if (state?.phase === "seller_input") return "action_required";
-    if (state?.phase === "admin_review") return "under_review";
+    if (offer.publication_status === "archived" || state?.code === "archived") {
+        return "archived";
+    }
+    if (state?.terminal === true) {
+        return "rejected";
+    }
+    if (offer.publication_status === "active") {
+        return "online";
+    }
+    if (offer.publication_status === "paused") {
+        return "paused";
+    }
+    if (state?.phase === "seller_input") {
+        return "action_required";
+    }
+    if (state?.phase === "admin_review") {
+        return "under_review";
+    }
     return "draft";
 }
 

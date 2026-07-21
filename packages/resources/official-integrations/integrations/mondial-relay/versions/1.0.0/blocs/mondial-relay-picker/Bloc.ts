@@ -35,7 +35,9 @@ class MondialRelayPicker extends HTMLElement {
     }
 
     connectedCallback() {
-        if (this.defaultValue === null) this.defaultValue = this.getAttribute("value") || "";
+        if (this.defaultValue === null) {
+            this.defaultValue = this.getAttribute("value") || "";
+        }
         this.render();
         this.syncPresentation();
         this.form.addEventListener("submit", this.onSubmit);
@@ -44,11 +46,16 @@ class MondialRelayPicker extends HTMLElement {
 
         if (isFramed()) {
             this.renderPreview();
-            this.setStatus(this.getAttribute("preview-label") || "La recherche Mondial Relay sera disponible sur la page publiée.", "idle");
+            this.setStatus(
+                this.getAttribute("preview-label") || "La recherche Mondial Relay sera disponible sur la page publiée.",
+                "idle",
+            );
             return;
         }
-        this.restoreSelection().catch(error => {
-            if (!isNotFound(error)) this.fail(error);
+        this.restoreSelection().catch((error) => {
+            if (!isNotFound(error)) {
+                this.fail(error);
+            }
         });
     }
 
@@ -62,11 +69,15 @@ class MondialRelayPicker extends HTMLElement {
         if (name === "value") {
             this.internalsRef.setFormValue(value || "");
         }
-        if (!this.isConnected || !this.form) return;
+        if (!this.isConnected || !this.form) {
+            return;
+        }
         this.syncPresentation(name);
         if (name === "order-id" && !isFramed()) {
-            this.restoreSelection().catch(error => {
-                if (!isNotFound(error)) this.fail(error);
+            this.restoreSelection().catch((error) => {
+                if (!isNotFound(error)) {
+                    this.fail(error);
+                }
             });
         }
     }
@@ -89,15 +100,22 @@ class MondialRelayPicker extends HTMLElement {
 
     formDisabledCallback(disabled) {
         this.formDisabled = disabled;
-        if (this.isConnected) this.syncDisabled();
+        if (this.isConnected) {
+            this.syncDisabled();
+        }
     }
 
     formResetCallback() {
         this.selectedItem = null;
-        if (this.defaultValue) this.setAttribute("value", this.defaultValue);
-        else this.removeAttribute("value");
+        if (this.defaultValue) {
+            this.setAttribute("value", this.defaultValue);
+        } else {
+            this.removeAttribute("value");
+        }
         this.internalsRef.setFormValue(this.defaultValue || "");
-        if (!this.isConnected) return;
+        if (!this.isConnected) {
+            return;
+        }
         this.selectedBox.hidden = true;
         this.list.replaceChildren();
         this.setStatus("", "idle");
@@ -107,9 +125,9 @@ class MondialRelayPicker extends HTMLElement {
         this.postalCodeInput?.focus();
     }
 
-    onSubmit = event => {
+    onSubmit = (event) => {
         event.preventDefault();
-        this.search().catch(error => this.fail(error));
+        this.search().catch((error) => this.fail(error));
     };
 
     onPostalCodeInput = () => this.syncPostalCodeValidity();
@@ -276,7 +294,8 @@ class MondialRelayPicker extends HTMLElement {
 
     syncPresentation(changedAttribute = "") {
         this.titleElement.textContent = this.getAttribute("title") || "Choisissez un point relais";
-        this.copyElement.textContent = this.getAttribute("copy") || "Trouvez les points relais Mondial Relay disponibles près de chez vous.";
+        this.copyElement.textContent =
+            this.getAttribute("copy") || "Trouvez les points relais Mondial Relay disponibles près de chez vous.";
         this.searchButton.textContent = this.getAttribute("button-label") || "Rechercher";
         if (!changedAttribute || changedAttribute === "postal-code") {
             this.postalCodeInput.value = this.getAttribute("postal-code")?.trim() ?? "";
@@ -292,8 +311,11 @@ class MondialRelayPicker extends HTMLElement {
             ["text-color", "--relay-text"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
         this.syncDisabled();
     }
@@ -309,17 +331,23 @@ class MondialRelayPicker extends HTMLElement {
 
     async search() {
         this.syncPostalCodeValidity();
-        if (!this.form.reportValidity()) return;
+        if (!this.form.reportValidity()) {
+            return;
+        }
         this.setBusy(true);
         this.setStatus("Recherche des points relais…", "idle");
         try {
             const url = new URL(`${this.sourceBase()}/relayPoints`, window.location.origin);
             url.searchParams.set("postalCode", this.postalCodeInput.value.trim());
-            if (this.cityInput.value.trim()) url.searchParams.set("city", this.cityInput.value.trim());
+            if (this.cityInput.value.trim()) {
+                url.searchParams.set("city", this.cityInput.value.trim());
+            }
             url.searchParams.set("country", this.country());
             url.searchParams.set("limit", this.getAttribute("limit") || "8");
             const weight = this.getAttribute("weight-grams")?.trim();
-            if (weight) url.searchParams.set("weightGrams", weight);
+            if (weight) {
+                url.searchParams.set("weightGrams", weight);
+            }
 
             const data = await this.requestJson(url);
             this.items = Array.isArray(data.items) ? data.items.map(relayItem).filter(Boolean) : [];
@@ -355,7 +383,7 @@ class MondialRelayPicker extends HTMLElement {
             copy.append(title, address);
             button.append(copy, choose);
             button.addEventListener("click", () => {
-                this.selectRelay(item).catch(error => this.fail(error));
+                this.selectRelay(item).catch((error) => this.fail(error));
             });
             this.list.append(button);
         }
@@ -395,16 +423,18 @@ class MondialRelayPicker extends HTMLElement {
         this.selectedAddress.textContent = relayAddress(item);
         this.list.replaceChildren();
         if (emit) {
-            this.dispatchEvent(new CustomEvent("mondial-relay-picker:change", {
-                bubbles: true,
-                composed: true,
-                detail: {
-                    ...item,
-                    searchPostalCode: this.postalCodeInput.value.trim(),
-                    searchCity: this.cityInput.value.trim(),
-                    orderId: this.orderId() || null,
-                },
-            }));
+            this.dispatchEvent(
+                new CustomEvent("mondial-relay-picker:change", {
+                    bubbles: true,
+                    composed: true,
+                    detail: {
+                        ...item,
+                        searchPostalCode: this.postalCodeInput.value.trim(),
+                        searchCity: this.cityInput.value.trim(),
+                        orderId: this.orderId() || null,
+                    },
+                }),
+            );
             this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
             this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         }
@@ -419,10 +449,14 @@ class MondialRelayPicker extends HTMLElement {
     }
 
     async restoreSelection() {
-        if (!this.orderId()) return;
-        const selection = relayItem(await this.requestFunction("getRelayPointForOrder", {
-            query: { orderId: this.orderId() },
-        }));
+        if (!this.orderId()) {
+            return;
+        }
+        const selection = relayItem(
+            await this.requestFunction("getRelayPointForOrder", {
+                query: { orderId: this.orderId() },
+            }),
+        );
         if (selection) {
             this.applySelection(selection, false);
             this.setStatus("Point relais enregistré pour cette commande.", "success");
@@ -438,14 +472,18 @@ class MondialRelayPicker extends HTMLElement {
             city: "Paris",
             country: "FR",
         });
-        if (!first) return;
+        if (!first) {
+            return;
+        }
         this.items = [first];
         this.renderList();
     }
 
     async requestFunction(id, options = {}) {
         const url = new URL(`/.cms/sources/system-functions/${encodeURIComponent(id)}`, window.location.origin);
-        for (const [name, value] of Object.entries(options.query || {})) url.searchParams.set(name, String(value));
+        for (const [name, value] of Object.entries(options.query || {})) {
+            url.searchParams.set(name, String(value));
+        }
         return this.requestJson(url, options);
     }
 
@@ -467,8 +505,12 @@ class MondialRelayPicker extends HTMLElement {
             },
         });
         const body = await response.json().catch(() => null);
-        if (!response.ok) throw new HttpResponseError(response.status, errorMessageFromBody(body, response));
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Réponse du service de livraison invalide.");
+        if (!response.ok) {
+            throw new HttpResponseError(response.status, errorMessageFromBody(body, response));
+        }
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            throw new Error("Réponse du service de livraison invalide.");
+        }
         return body;
     }
 
@@ -493,20 +535,48 @@ class MondialRelayPicker extends HTMLElement {
         this.setBusy(false);
     }
 
-    country() { return (this.getAttribute("country")?.trim() || "FR").toUpperCase(); }
-    orderId() { return this.getAttribute("order-id")?.trim() || ""; }
-    get form() { return this.root.querySelector("form"); }
-    get titleElement() { return this.root.querySelector("[data-title]"); }
-    get copyElement() { return this.root.querySelector("[data-copy]"); }
-    get postalCodeInput() { return this.root.querySelector("[name='postalCode']"); }
-    get cityInput() { return this.root.querySelector("[name='city']"); }
-    get searchButton() { return this.root.querySelector("[data-search]"); }
-    get clearButton() { return this.root.querySelector("[data-clear]"); }
-    get selectedBox() { return this.root.querySelector("[data-selected]"); }
-    get selectedName() { return this.root.querySelector("[data-selected-name]"); }
-    get selectedAddress() { return this.root.querySelector("[data-selected-address]"); }
-    get list() { return this.root.querySelector("[data-list]"); }
-    get status() { return this.root.querySelector("[data-status]"); }
+    country() {
+        return (this.getAttribute("country")?.trim() || "FR").toUpperCase();
+    }
+    orderId() {
+        return this.getAttribute("order-id")?.trim() || "";
+    }
+    get form() {
+        return this.root.querySelector("form");
+    }
+    get titleElement() {
+        return this.root.querySelector("[data-title]");
+    }
+    get copyElement() {
+        return this.root.querySelector("[data-copy]");
+    }
+    get postalCodeInput() {
+        return this.root.querySelector("[name='postalCode']");
+    }
+    get cityInput() {
+        return this.root.querySelector("[name='city']");
+    }
+    get searchButton() {
+        return this.root.querySelector("[data-search]");
+    }
+    get clearButton() {
+        return this.root.querySelector("[data-clear]");
+    }
+    get selectedBox() {
+        return this.root.querySelector("[data-selected]");
+    }
+    get selectedName() {
+        return this.root.querySelector("[data-selected-name]");
+    }
+    get selectedAddress() {
+        return this.root.querySelector("[data-selected-address]");
+    }
+    get list() {
+        return this.root.querySelector("[data-list]");
+    }
+    get status() {
+        return this.root.querySelector("[data-status]");
+    }
 }
 
 class HttpResponseError extends Error {
@@ -517,10 +587,14 @@ class HttpResponseError extends Error {
 }
 
 function relayItem(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
     const location = text(value.location) || text(value.relayLocation);
     const name = text(value.name);
-    if (!location || !name) return null;
+    if (!location || !name) {
+        return null;
+    }
     return {
         location,
         number: text(value.number),
@@ -550,7 +624,9 @@ function text(value) {
 }
 
 function finiteNumber(value) {
-    if (value === null || value === undefined || value === "") return null;
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
     const number = Number(value);
     return Number.isFinite(number) ? number : null;
 }
@@ -573,12 +649,19 @@ function errorMessage(error) {
 }
 
 function errorMessageFromBody(body, response) {
-    if (body && typeof body === "object" && "error" in body) return String(body.error);
+    if (body && typeof body === "object" && "error" in body) {
+        return String(body.error);
+    }
     return `${response.status} ${response.statusText}`;
 }
 
 function isFrenchUserMessage(value) {
-    return Boolean(value) && /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|relais|colis|livraison|commande|adresse|code postal|ville|réponse)\b/i.test(value);
+    return (
+        Boolean(value) &&
+        /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|relais|colis|livraison|commande|adresse|code postal|ville|réponse)\b/i.test(
+            value,
+        )
+    );
 }
 
 function isNotFound(error) {
@@ -586,7 +669,11 @@ function isNotFound(error) {
 }
 
 function isFramed() {
-    try { return window.self !== window.top; } catch { return true; }
+    try {
+        return window.self !== window.top;
+    } catch {
+        return true;
+    }
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", MondialRelayPicker);

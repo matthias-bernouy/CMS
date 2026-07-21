@@ -18,8 +18,12 @@ export function createInsertion(
     slotName?: string,
     sourceStatusConditions?: CmsSourceStatusCondition[],
 ): ContentInsertion | null {
-    if (!document) return null;
-    if (item.kind === "media") return null;
+    if (!document) {
+        return null;
+    }
+    if (item.kind === "media") {
+        return null;
+    }
 
     if (item.kind === "block") {
         const fragment = createBlockFragment(document, item.entry);
@@ -28,8 +32,11 @@ export function createInsertion(
             applySlot(child, slotName);
             applyCondition(child, sourceStatusConditions);
         }
-        const selectionTarget = slotElements.find(child => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
-        if (!selectionTarget) return null;
+        const selectionTarget =
+            slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
+        if (!selectionTarget) {
+            return null;
+        }
         return {
             fragment,
             selectionTarget,
@@ -47,7 +54,9 @@ export function createInsertion(
     }
 
     const selectionTarget = slotElements[0] ?? null;
-    if (!selectionTarget) return null;
+    if (!selectionTarget) {
+        return null;
+    }
 
     return {
         fragment,
@@ -64,14 +73,16 @@ export function applySlot(element: HTMLElement, slotName: string | undefined): v
     }
 }
 
-export function applyCondition(element: HTMLElement, sourceStatusConditions: CmsSourceStatusCondition[] | undefined): void {
-    if (sourceStatusConditions?.length) applySourceStatusConditions(element, sourceStatusConditions);
+export function applyCondition(
+    element: HTMLElement,
+    sourceStatusConditions: CmsSourceStatusCondition[] | undefined,
+): void {
+    if (sourceStatusConditions?.length) {
+        applySourceStatusConditions(element, sourceStatusConditions);
+    }
 }
 
-function createBlockFragment(
-    document: Document,
-    entry: EditorCatalogEntry,
-): DocumentFragment {
+function createBlockFragment(document: Document, entry: EditorCatalogEntry): DocumentFragment {
     if (!entry.defaultContent) {
         const fragment = document.createDocumentFragment();
         fragment.append(document.createElement(entry.tag));

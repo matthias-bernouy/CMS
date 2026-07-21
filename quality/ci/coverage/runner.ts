@@ -37,14 +37,18 @@ async function writeReports(baseline: CoverageBaseline, markdown: string): Promi
         writeFile(join(REPORT_DIRECTORY, "summary.md"), markdown),
         writeFile(join(REPORT_DIRECTORY, "summary.json"), `${JSON.stringify(baseline, null, 4)}\n`),
     ]);
-    if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, markdown);
+    if (process.env.GITHUB_STEP_SUMMARY) {
+        await appendFile(process.env.GITHUB_STEP_SUMMARY, markdown);
+    }
 }
 
 function assertPackageSet(baseline: CoverageBaseline, measured: CoverageBaseline): void {
     const expectedNames = Object.keys(baseline.packages).sort();
     const actualNames = Object.keys(measured.packages).sort();
     if (JSON.stringify(expectedNames) !== JSON.stringify(actualNames)) {
-        throw new Error("Tested package set differs from the coverage baseline; regenerate it intentionally with --update");
+        throw new Error(
+            "Tested package set differs from the coverage baseline; regenerate it intentionally with --update",
+        );
     }
 }
 
@@ -75,6 +79,10 @@ export async function runCoverageRatchet(): Promise<void> {
     assertPackageSet(baseline, measured);
     const regressions = compareCoverageBaselines(baseline, measured, "working tree");
     const reference = resolveCoverageReference(process.env.COVERAGE_BASELINE_REF, process.env.CI);
-    if (reference) regressions.push(...compareWithReference(reference, baseline, measured));
-    if (regressions.length > 0) throw new Error(`Coverage regressions:\n- ${regressions.join("\n- ")}`);
+    if (reference) {
+        regressions.push(...compareWithReference(reference, baseline, measured));
+    }
+    if (regressions.length > 0) {
+        throw new Error(`Coverage regressions:\n- ${regressions.join("\n- ")}`);
+    }
 }

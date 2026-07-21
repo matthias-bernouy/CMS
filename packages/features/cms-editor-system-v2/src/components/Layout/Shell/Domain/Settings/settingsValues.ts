@@ -10,9 +10,9 @@ import { isParamSyncSetting } from "./paramSync";
 import { isPageStateSetting } from "./pageState";
 
 export function resolveSettingsValues(editor: Editor, sections: SettingSection[]): SettingSection[] {
-    return sections.map(section => ({
+    return sections.map((section) => ({
         ...section,
-        settings: section.settings.map(setting => resolveSetting(editor, setting)),
+        settings: section.settings.map((setting) => resolveSetting(editor, setting)),
     }));
 }
 
@@ -20,9 +20,7 @@ export function getTextValue(editor: Editor, format: "text" | "richtext"): strin
     assertTextSlotCompatibility(editor);
 
     const textFragment = textContentFragment(editor);
-    const value = format === "richtext"
-        ? textFragment.innerHTML
-        : textFragment.textContent ?? "";
+    const value = format === "richtext" ? textFragment.innerHTML : (textFragment.textContent ?? "");
 
     return editor.getContentSlots().length > 0 ? value.trim() : value;
 }
@@ -32,8 +30,7 @@ export function setTextValue(editor: Editor, format: "text" | "richtext", value:
 
     const reserved = reservedSlotNames(editor.getContentSlots());
     const currentNodes = Array.from(editor.target.childNodes);
-    const referenceNode = currentNodes.find(node => !isReservedSlotNode(node, reserved))
-        ?? editor.target.firstChild;
+    const referenceNode = currentNodes.find((node) => !isReservedSlotNode(node, reserved)) ?? editor.target.firstChild;
     const fragment = editor.target.ownerDocument.createDocumentFragment();
 
     if (format === "richtext") {
@@ -47,7 +44,9 @@ export function setTextValue(editor: Editor, format: "text" | "richtext", value:
     editor.target.insertBefore(fragment, referenceNode);
 
     for (const node of currentNodes) {
-        if (!isReservedSlotNode(node, reserved)) node.remove();
+        if (!isReservedSlotNode(node, reserved)) {
+            node.remove();
+        }
     }
 }
 
@@ -55,7 +54,7 @@ function resolveSetting(editor: Editor, setting: Setting): Setting {
     if (setting.type === "row") {
         return {
             ...setting,
-            settings: setting.settings.map(child => resolveSettingValue(editor, child)),
+            settings: setting.settings.map((child) => resolveSettingValue(editor, child)),
         };
     }
 
@@ -63,7 +62,9 @@ function resolveSetting(editor: Editor, setting: Setting): Setting {
 }
 
 function resolveSettingValue(editor: Editor, setting: SettingControl): SettingControl {
-    if (isParamSyncSetting(setting) || isPageStateSetting(setting)) return setting;
+    if (isParamSyncSetting(setting) || isPageStateSetting(setting)) {
+        return setting;
+    }
 
     if (setting.type === "toggle") {
         return {
@@ -88,8 +89,10 @@ function resolveSettingValue(editor: Editor, setting: SettingControl): SettingCo
 }
 
 function assertTextSlotCompatibility(editor: Editor): void {
-    const hasDefaultSlot = editor.getContentSlots().some(slot => !slot.slot);
-    if (!hasDefaultSlot) return;
+    const hasDefaultSlot = editor.getContentSlots().some((slot) => !slot.slot);
+    if (!hasDefaultSlot) {
+        return;
+    }
 
     throw new Error("Editors cannot combine textCapability() with an unnamed content slot.");
 }
@@ -99,7 +102,9 @@ function textContentFragment(editor: Editor): HTMLElement {
     const container = editor.target.ownerDocument.createElement("div");
 
     for (const node of Array.from(editor.target.childNodes)) {
-        if (isReservedSlotNode(node, reserved)) continue;
+        if (isReservedSlotNode(node, reserved)) {
+            continue;
+        }
         container.append(node.cloneNode(true));
     }
 
@@ -107,7 +112,7 @@ function textContentFragment(editor: Editor): HTMLElement {
 }
 
 function reservedSlotNames(slots: ContentSlot[]): Set<string> {
-    return new Set(slots.map(slot => slot.slot).filter((slot): slot is string => Boolean(slot)));
+    return new Set(slots.map((slot) => slot.slot).filter((slot): slot is string => Boolean(slot)));
 }
 
 function isReservedSlotNode(node: ChildNode, reserved: Set<string>): boolean {

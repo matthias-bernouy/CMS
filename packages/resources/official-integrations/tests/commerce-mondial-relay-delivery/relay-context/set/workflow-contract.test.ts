@@ -1,26 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import {
-    authorization,
-    buyerId,
-    lockedFinancialTerms,
-    orderPublicId,
-    savedQuote,
-    sellerAccount,
-} from "../fixtures";
+import { authorization, buyerId, lockedFinancialTerms, orderPublicId, savedQuote, sellerAccount } from "../fixtures";
 import { executeRelay } from "../harness";
 import { successfulResponder } from "../responders";
 import { callSnapshot } from "./calls";
 
 describe("setRelayPointForOrder contract", () => {
     test("preserves response, call order, payloads, and provider freshness", async () => {
-        const first = await executeRelay(
-            "setRelayPointForOrder",
-            successfulResponder(),
-        );
-        const second = await executeRelay(
-            "setRelayPointForOrder",
-            successfulResponder(),
-        );
+        const first = await executeRelay("setRelayPointForOrder", successfulResponder());
+        const second = await executeRelay("setRelayPointForOrder", successfulResponder());
 
         expect(first.response.status).toBe(200);
         const responseBody = await first.response.json();
@@ -29,19 +16,14 @@ describe("setRelayPointForOrder contract", () => {
             financialTerms: lockedFinancialTerms,
         });
         expect(JSON.stringify(responseBody)).not.toContain("privateProvider");
-        expect(first.calls.map(call => [
-            call.method,
-            call.url.pathname,
-        ])).toEqual([
+        expect(first.calls.map((call) => [call.method, call.url.pathname])).toEqual([
             ["GET", "/delivery-setup-context"],
             ["GET", "/account"],
             ["POST", "/relay-selection"],
             ["POST", "/resolve"],
             ["POST", "/financial-lock"],
         ]);
-        expect(first.calls.map(call => Object.fromEntries(
-            call.url.searchParams,
-        ))).toEqual([
+        expect(first.calls.map((call) => Object.fromEntries(call.url.searchParams))).toEqual([
             { orderId: "42" },
             { userId: "seller-subject" },
             {},
@@ -49,8 +31,7 @@ describe("setRelayPointForOrder contract", () => {
             {},
         ]);
         expect(first.calls[2]?.body).toEqual({
-            requestKey:
-                `commerce-order:${orderPublicId}:version:1:relay:FR-024474`,
+            requestKey: `commerce-order:${orderPublicId}:version:1:relay:FR-024474`,
             externalOrderId: orderPublicId,
             orderVersion: 1,
             selectedForCmsUserId: buyerId,
@@ -79,23 +60,9 @@ describe("setRelayPointForOrder contract", () => {
             currency: "eur",
             expectedVersion: 1,
         });
-        expect(first.calls.map(call => call.userId)).toEqual([
-            buyerId,
-            null,
-            buyerId,
-            null,
-            buyerId,
-        ]);
-        expect(first.calls.map(call => call.accountUserId)).toEqual([
-            null,
-            buyerId,
-            null,
-            null,
-            null,
-        ]);
+        expect(first.calls.map((call) => call.userId)).toEqual([buyerId, null, buyerId, null, buyerId]);
+        expect(first.calls.map((call) => call.accountUserId)).toEqual([null, buyerId, null, null, null]);
         expect(await second.response.json()).toEqual(responseBody);
-        expect(second.calls.map(callSnapshot)).toEqual(
-            first.calls.map(callSnapshot),
-        );
+        expect(second.calls.map(callSnapshot)).toEqual(first.calls.map(callSnapshot));
     });
 });

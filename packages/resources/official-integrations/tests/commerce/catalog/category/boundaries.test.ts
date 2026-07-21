@@ -22,10 +22,9 @@ describe("commerce category detail boundaries", () => {
 
     test("rejects missing and invalid selectors before database work", async () => {
         const missing = await requestCommerce("/category");
-        const invalid = await requestCommerce(
-            "/admin/category?id=invalid&fullSlug=sports%2Ftennis",
-            { userRole: null },
-        );
+        const invalid = await requestCommerce("/admin/category?id=invalid&fullSlug=sports%2Ftennis", {
+            userRole: null,
+        });
 
         expect(missing.status).toBe(400);
         expect(await missing.json()).toEqual({ error: "id or fullSlug is required" });
@@ -47,10 +46,7 @@ describe("commerce category detail boundaries", () => {
 
         const publicResponse = await requestCommerce("/category?id=__new__&fullSlug=sports%2Ftennis");
         const publicCalls = capturedFetches();
-        const admin = await requestCommerce(
-            "/admin/category?id=__new__&fullSlug=sports%2Ftennis",
-            { userRole: null },
-        );
+        const admin = await requestCommerce("/admin/category?id=__new__&fullSlug=sports%2Ftennis", { userRole: null });
 
         expect(publicResponse.status).toBe(200);
         expect(publicCalls[0]!.body).toEqual({
@@ -88,7 +84,7 @@ describe("commerce category detail boundaries", () => {
             useCategoryResponder({ category: { ...categoryRow, status } });
 
             const response = await requestCommerce("/admin/category?id=9", { userRole: null });
-            const body = await response.json() as Record<string, unknown>;
+            const body = (await response.json()) as Record<string, unknown>;
 
             expect(response.status).toBe(200);
             expect(body.status).toBe(status);
@@ -132,12 +128,14 @@ describe("commerce category detail boundaries", () => {
     });
 
     test("fails closed when the private read model is malformed", async () => {
-        setRestResponder(() => jsonResponse({
-            state: "ok",
-            category: categoryRow,
-            parent: null,
-            category_fields: [null],
-        }));
+        setRestResponder(() =>
+            jsonResponse({
+                state: "ok",
+                category: categoryRow,
+                parent: null,
+                category_fields: [null],
+            }),
+        );
 
         const response = await requestCommerce("/category?id=9");
 

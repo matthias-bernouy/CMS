@@ -1,13 +1,24 @@
 import { describe, test, expect } from "bun:test";
-import { can, canRole, grantsFor, effectiveGrantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-permissions";
+import {
+    can,
+    canRole,
+    grantsFor,
+    effectiveGrantsFor,
+    defaultRoleDefinitions,
+    cmsPermission,
+    CMS_PERMISSIONS,
+    CMS_PERMISSION_CATALOGUE,
+    USER_ROLE,
+    PUBLIC_ROLE,
+    ADMIN_ROLE,
+    type RolesConfig,
+    type Grant,
+} from "@bernouy/cms-permissions";
 
 const roles = (definitions: RolesConfig["definitions"]): RolesConfig => ({ definitions });
 
 describe("can", () => {
-    const grants: Grant[] = [
-        { permission: cmsPermission("users", "create") },
-        { permission: "urn:stripe:getInvoice" },
-    ];
+    const grants: Grant[] = [{ permission: cmsPermission("users", "create") }, { permission: "urn:stripe:getInvoice" }];
 
     test("grants an exact permission-id match (CMS capability + gateway endpoint)", () => {
         expect(can(grants, cmsPermission("users", "create"))).toBe(true);

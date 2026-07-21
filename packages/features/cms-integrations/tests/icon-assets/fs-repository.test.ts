@@ -104,8 +104,14 @@ function writeDefinition(fixture: Fixture, path: string): void {
         inputs: [],
         artifacts: [
             { type: "source", source: { id: "items", meta: { name: "Items", icon: { path } }, endpoints: [] } },
-            { type: "dashboard", dashboard: { id: "items", source: "items", meta: { name: "Items", icon: { path } }, views: [] } },
-            { type: "dashboard", dashboard: { id: "semantic", source: "items", meta: { name: "Semantic", icon: "layout" }, views: [] } },
+            {
+                type: "dashboard",
+                dashboard: { id: "items", source: "items", meta: { name: "Items", icon: { path } }, views: [] },
+            },
+            {
+                type: "dashboard",
+                dashboard: { id: "semantic", source: "items", meta: { name: "Semantic", icon: "layout" }, views: [] },
+            },
         ],
     });
 }

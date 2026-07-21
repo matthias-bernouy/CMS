@@ -16,22 +16,27 @@ export async function readIntegrationAsset(
     path: string,
     maxBytes?: number,
 ): Promise<IntegrationAsset | null> {
-    if (!path.startsWith("assets/")) return null;
+    if (!path.startsWith("assets/")) {
+        return null;
+    }
     const contentType = CONTENT_TYPES[extname(path).toLowerCase()];
-    if (!contentType) return null;
+    if (!contentType) {
+        return null;
+    }
     const relativePath = path.slice("assets/".length);
 
     try {
         const assetRoot = await resolveExistingPathWithin(versionRoot, "asset", "assets");
         const assetPath = await resolveExistingPathWithin(assetRoot, "asset", relativePath);
         return {
-            bytes: maxBytes === undefined
-                ? await readFile(assetPath)
-                : await readFileBounded(assetPath, path, maxBytes),
+            bytes:
+                maxBytes === undefined ? await readFile(assetPath) : await readFileBounded(assetPath, path, maxBytes),
             contentType,
         };
     } catch (error) {
-        if (isNodeError(error) && error.code === "ENOENT") return null;
+        if (isNodeError(error) && error.code === "ENOENT") {
+            return null;
+        }
         throw error;
     }
 }
@@ -43,7 +48,9 @@ async function readFileBounded(filePath: string, assetPath: string, maxBytes: nu
         let offset = 0;
         while (offset < bytes.length) {
             const result = await handle.read(bytes, offset, bytes.length - offset, offset);
-            if (result.bytesRead === 0) break;
+            if (result.bytesRead === 0) {
+                break;
+            }
             offset += result.bytesRead;
         }
         if (offset > maxBytes) {

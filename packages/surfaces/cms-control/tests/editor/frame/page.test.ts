@@ -5,7 +5,10 @@ import { cmsWithPage, pricingPage } from "./frameTestUtils";
 describe("editor frame endpoint - pages", () => {
     test("renders the requested page id into the editor frame", async () => {
         const { cms, requestedIds, requestedPaths } = cmsWithPage(pricingPage());
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=page-1"),
+            cms as any,
+        );
         const html = await response.text();
 
         expect(response.status).toBe(200);
@@ -25,7 +28,10 @@ describe("editor frame endpoint - pages", () => {
 
     test("renders stored content directly without resolving reserved custom elements", async () => {
         const { cms } = cmsWithPage(pricingPage(`<w13c-reserved-example data-id="hero">stale</w13c-reserved-example>`));
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=page-1"),
+            cms as any,
+        );
         const html = await response.text();
 
         expect(response.status).toBe(200);
@@ -34,7 +40,10 @@ describe("editor frame endpoint - pages", () => {
 
     test("defers editor runtimes until authored custom-element children are parsed", async () => {
         const { cms } = cmsWithPage(pricingPage());
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=page-1"),
+            cms as any,
+        );
         const html = await response.text();
 
         const component = html.indexOf(`<script defer src="/cms/api/editor/component.js"></script>`);
@@ -47,12 +56,17 @@ describe("editor frame endpoint - pages", () => {
     });
 
     test("sanitizes stored HTML before rendering the frame", async () => {
-        const { cms } = cmsWithPage(pricingPage(`
+        const { cms } = cmsWithPage(
+            pricingPage(`
             <a href="javascript:alert(1)">bad link</a>
             <iframe srcdoc="<script>alert(1)</script>"></iframe>
             <w13c-reserved-example data-id="hero">stale</w13c-reserved-example>
-        `));
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        `),
+        );
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=page-1"),
+            cms as any,
+        );
         const html = await response.text();
 
         expect(response.status).toBe(200);
@@ -64,7 +78,10 @@ describe("editor frame endpoint - pages", () => {
 
     test("redirects to pages admin when the page is missing", async () => {
         const { cms } = cmsWithPage(null);
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=missing-id"), cms as any);
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=missing-id"),
+            cms as any,
+        );
 
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe("/cms/admin/pages");
@@ -72,7 +89,10 @@ describe("editor frame endpoint - pages", () => {
 
     test("keeps path loading as a temporary fallback", async () => {
         const { cms, requestedIds, requestedPaths } = cmsWithPage(pricingPage());
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?path=/pricing"), cms as any);
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?path=/pricing"),
+            cms as any,
+        );
 
         expect(response.status).toBe(200);
         expect(requestedIds).toEqual([]);
@@ -81,11 +101,16 @@ describe("editor frame endpoint - pages", () => {
 
     test("wraps page content directly in the editor binding core", async () => {
         const { cms } = cmsWithPage(pricingPage());
-        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?id=page-1"),
+            cms as any,
+        );
         const html = await response.text();
 
         expect(response.status).toBe(200);
-        expect(html).toContain(`<div data-cms-editor-root style="display:contents"><cms-binding-core cms-binding-disabled cms-source-state-force="loading">`);
+        expect(html).toContain(
+            `<div data-cms-editor-root style="display:contents"><cms-binding-core cms-binding-disabled cms-source-state-force="loading">`,
+        );
         expect(html).toContain(`<div data-cms-content="" style="display:contents"><p>Hello</p></div>`);
         expect(html).toContain("/cms/api/editor/binding-core.js");
     });

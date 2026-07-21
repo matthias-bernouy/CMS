@@ -1,11 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { executeFunction, type CmsFunction } from "@bernouy/cms-functions";
-import {
-    InMemorySourceRepository,
-    makeEndpointUrn,
-    makeSourceUrn,
-    type Source,
-} from "@bernouy/cms-sources";
+import { InMemorySourceRepository, makeEndpointUrn, makeSourceUrn, type Source } from "@bernouy/cms-sources";
 import { FunctionExecutionProbe } from "../helpers/functionExecutionProbe";
 
 describe("function execution contract", () => {
@@ -24,26 +19,28 @@ describe("function execution contract", () => {
                 resolveSecret: async () => "provider-secret",
                 fetchImpl: async (input, init) => {
                     const providerRequest = new Request(input, init);
-                    const body = await providerRequest.json() as Record<string, unknown>;
+                    const body = (await providerRequest.json()) as Record<string, unknown>;
                     upstream.push({
                         authorization: providerRequest.headers.get("authorization"),
                         body,
                     });
-                    return Response.json(body.phase === "prepare"
-                        ? {
-                            operationId: "op-prepare",
-                            state: "prepared",
-                            reviewReason: null,
-                            events: ["reserved", "checked"],
-                            providerSecret: "must-be-projected-out",
-                        }
-                        : {
-                            operationId: "op-confirm",
-                            state: "confirmed",
-                            reviewReason: null,
-                            events: ["captured", "projected"],
-                            providerSecret: "must-be-projected-out",
-                        });
+                    return Response.json(
+                        body.phase === "prepare"
+                            ? {
+                                  operationId: "op-prepare",
+                                  state: "prepared",
+                                  reviewReason: null,
+                                  events: ["reserved", "checked"],
+                                  providerSecret: "must-be-projected-out",
+                              }
+                            : {
+                                  operationId: "op-confirm",
+                                  state: "confirmed",
+                                  reviewReason: null,
+                                  events: ["captured", "projected"],
+                                  providerSecret: "must-be-projected-out",
+                              },
+                    );
                 },
             }),
         });
@@ -99,10 +96,14 @@ describe("function execution contract", () => {
             deps: probe.deps({
                 resolveContext: async () => ({}),
                 resolveSecret: async () => "provider-secret",
-                fetchImpl: async () => Response.json({
-                    error: "provider rejected operation",
-                    internalReason: "must-not-leak",
-                }, { status: 409 }),
+                fetchImpl: async () =>
+                    Response.json(
+                        {
+                            error: "provider rejected operation",
+                            internalReason: "must-not-leak",
+                        },
+                        { status: 409 },
+                    ),
             }),
         });
 
@@ -169,46 +170,51 @@ function paymentWorkflow(): CmsFunction {
 function paymentsSource(): Source {
     return {
         urn: makeSourceUrn("payments"),
-        endpoints: [{
-            urn: makeEndpointUrn("payments", "applyOperation"),
-            method: "POST",
-            targetUrl: "https://provider.test/operations",
-            headers: [
-                { name: "authorization", source: { from: "secret", ref: "PAYMENTS_API_KEY", prefix: "Bearer " } },
-                { name: "x-user-id", source: { from: "computed", ref: "userID" } },
-            ],
-            input: {
-                body: {
-                    type: "object",
-                    properties: {
-                        phase: { type: "string" },
-                        orderId: { type: "string" },
-                        previousOperationId: { type: "string" },
+        endpoints: [
+            {
+                urn: makeEndpointUrn("payments", "applyOperation"),
+                method: "POST",
+                targetUrl: "https://provider.test/operations",
+                headers: [
+                    { name: "authorization", source: { from: "secret", ref: "PAYMENTS_API_KEY", prefix: "Bearer " } },
+                    { name: "x-user-id", source: { from: "computed", ref: "userID" } },
+                ],
+                input: {
+                    body: {
+                        type: "object",
+                        properties: {
+                            phase: { type: "string" },
+                            orderId: { type: "string" },
+                            previousOperationId: { type: "string" },
+                        },
+                        required: ["phase", "orderId"],
                     },
-                    required: ["phase", "orderId"],
                 },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: {
+                                operationId: { type: "string" },
+                                state: { type: "string" },
+                                reviewReason: { type: "string", nullable: true },
+                                events: { type: "array", items: { type: "string" } },
+                            },
+                            required: ["operationId", "state", "reviewReason", "events"],
+                        },
+                    },
+                    {
+                        status: "409",
+                        body: {
+                            type: "object",
+                            properties: { error: { type: "string" } },
+                            required: ["error"],
+                        },
+                    },
+                ],
             },
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: {
-                        operationId: { type: "string" },
-                        state: { type: "string" },
-                        reviewReason: { type: "string", nullable: true },
-                        events: { type: "array", items: { type: "string" } },
-                    },
-                    required: ["operationId", "state", "reviewReason", "events"],
-                },
-            }, {
-                status: "409",
-                body: {
-                    type: "object",
-                    properties: { error: { type: "string" } },
-                    required: ["error"],
-                },
-            }],
-        }],
+        ],
     };
 }
 

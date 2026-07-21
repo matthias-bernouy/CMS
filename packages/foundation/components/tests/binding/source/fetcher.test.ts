@@ -2,7 +2,9 @@ import { describe, test, expect, afterEach } from "bun:test";
 import { runFetch } from "../../../src/binding/fetcher";
 
 const realFetch = globalThis.fetch;
-afterEach(() => { globalThis.fetch = realFetch; });
+afterEach(() => {
+    globalThis.fetch = realFetch;
+});
 
 /** Minimal Response stub — runFetch only reads `ok`, `status`, `text()`. */
 function respond(status: number, body: string) {
@@ -14,7 +16,9 @@ function respond(status: number, body: string) {
 }
 
 function rejectWith(err: unknown) {
-    globalThis.fetch = (async () => { throw err; }) as unknown as typeof fetch;
+    globalThis.fetch = (async () => {
+        throw err;
+    }) as unknown as typeof fetch;
 }
 
 const signal = new AbortController().signal;

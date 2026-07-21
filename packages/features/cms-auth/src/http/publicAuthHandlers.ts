@@ -12,27 +12,23 @@ import { AuthValidationError } from "cms-auth/core/validation";
 import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
 
 export const PUBLIC_AUTH_ROUTES = {
-    base:                     "/.cms/auth",
-    signup:                   "/signup",
-    login:                    "/login",
-    logout:                   "/logout",
-    me:                       "/me",
+    base: "/.cms/auth",
+    signup: "/signup",
+    login: "/login",
+    logout: "/logout",
+    me: "/me",
     requestEmailVerification: "/email/verification/request",
     confirmEmailVerification: "/email/verification/confirm",
-    requestPasswordReset:     "/password/reset/request",
-    confirmPasswordReset:     "/password/reset/confirm",
+    requestPasswordReset: "/password/reset/request",
+    confirmPasswordReset: "/password/reset/confirm",
 } as const;
 
-export type PublicAuthRoutesConfig<Role extends string = string> =
-    PublicAuthFlowConfig<Role> & {
-        local: LocalAuthentication<Role>;
-        allowSignup?: boolean;
-    };
+export type PublicAuthRoutesConfig<Role extends string = string> = PublicAuthFlowConfig<Role> & {
+    local: LocalAuthentication<Role>;
+    allowSignup?: boolean;
+};
 
-export function registerPublicAuthRoutes<Role extends string>(
-    runner: Runner,
-    cfg: PublicAuthRoutesConfig<Role>,
-): void {
+export function registerPublicAuthRoutes<Role extends string>(runner: Runner, cfg: PublicAuthRoutesConfig<Role>): void {
     if (cfg.allowSignup !== false) {
         runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.signup, async (req) => {
             const body = await readJsonObject(req);
@@ -46,7 +42,9 @@ export function registerPublicAuthRoutes<Role extends string>(
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.login, (req) => cfg.local.loginJson(req));
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.logout, () => cfg.local.logoutJson());
-    runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.me, async (req) => privateAuthJsonResponse({ subject: await cfg.local.getSubject(req) }));
+    runner.addEndpoint("GET", PUBLIC_AUTH_ROUTES.me, async (req) =>
+        privateAuthJsonResponse({ subject: await cfg.local.getSubject(req) }),
+    );
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.requestEmailVerification, async (req) => {
         const body = await readJsonObject(req);
@@ -86,7 +84,9 @@ async function readJsonObject(req: Request): Promise<Record<string, unknown>> {
 
 function requiredString(body: Record<string, unknown>, field: string): string {
     const value = body[field];
-    if (typeof value !== "string" || !value) throw new AuthValidationError(field, "required");
+    if (typeof value !== "string" || !value) {
+        throw new AuthValidationError(field, "required");
+    }
     return value;
 }
 

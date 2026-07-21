@@ -41,7 +41,10 @@ export function renderSale(host, sale) {
 export function copyColors(host, target, prefix) {
     for (const name of ["text-color", "background-color", "border-color", "accent-color"]) {
         const value = host.getAttribute(`${prefix}-${name}`)?.trim();
-        if (value) target.setAttribute(name, value);
-        else target.removeAttribute(name);
+        if (value) {
+            target.setAttribute(name, value);
+        } else {
+            target.removeAttribute(name);
+        }
     }
 }

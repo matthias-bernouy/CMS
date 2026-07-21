@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    expectRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { capturedFetches, expectRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useFilterSchemaResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
@@ -17,7 +12,7 @@ describe("commerce optimized offer filter schema budget", () => {
         const calls = capturedFetches();
 
         expect(response.status).toBe(200);
-        expect(calls.map(call => new URL(call.url).pathname.split("/").at(-1))).toEqual([
+        expect(calls.map((call) => new URL(call.url).pathname.split("/").at(-1))).toEqual([
             "get_offer_filter_schema_read_model",
         ]);
         expect(expectRpc("get_offer_filter_schema_read_model").body).toEqual({

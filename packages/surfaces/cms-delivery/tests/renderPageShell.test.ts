@@ -9,7 +9,18 @@ const BINDING_CORE_URL = "/.cms/assets/cms-binding-core.js?v=core";
 function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
     const system: TSystem = {
         initializationStep: 1,
-        site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, forbidden: null, serverError: null, login: null },
+        site: {
+            name: "Site",
+            favicon: "",
+            visible: true,
+            host: "",
+            language: "",
+            theme: "",
+            notFound: null,
+            forbidden: null,
+            serverError: null,
+            login: null,
+        },
         editor: { layoutCategory: "", ...legacyEditor },
         security: { connectExtras: [], mediaExtras: [] },
     };
@@ -19,18 +30,25 @@ function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
             getBlocsList: async () => [],
         } as unknown as ContentReader,
         resolveAssets: async () => ({
-            componentUrl:   "/.cms/assets/component.js?v=c",
+            componentUrl: "/.cms/assets/component.js?v=c",
             bindingCoreUrl: BINDING_CORE_URL,
-            styleUrl:       "/.cms/style?v=s",
-            blocUrls:       [],
-            scriptUrls:     ["/.cms/assets/component.js?v=c"],
+            styleUrl: "/.cms/style?v=s",
+            blocUrls: [],
+            scriptUrls: ["/.cms/assets/component.js?v=c"],
         }),
         defaultFaviconUrl: "/.cms/assets/favicon",
         headInjectors: [],
     };
 }
 
-const page = { path: "/p", title: "T", description: "D", content: "<p>HELLO_BODY</p>", visible: true, tags: [] } as unknown as TPage;
+const page = {
+    path: "/p",
+    title: "T",
+    description: "D",
+    content: "<p>HELLO_BODY</p>",
+    visible: true,
+    tags: [],
+} as unknown as TPage;
 
 async function htmlOf(legacyEditor?: Record<string, unknown>): Promise<string> {
     const entry = await renderPage(page, makeCtx(legacyEditor));
@@ -38,7 +56,6 @@ async function htmlOf(legacyEditor?: Record<string, unknown>): Promise<string> {
 }
 
 describe("renderPage — binding core wrapper", () => {
-
     test("wraps content in <cms-binding-core> and injects the system-bloc script", async () => {
         const html = await htmlOf();
         expect(html).toContain("HELLO_BODY");
@@ -59,21 +76,23 @@ describe("renderPage — binding core wrapper", () => {
     test("includes CSP origins declared by successful integration installations", async () => {
         const ctx = makeCtx();
         ctx.integrationInstallations = {
-            list: async () => [{
-                id: "secure-embed",
-                status: "success",
-                definitionSnapshot: {
-                    kind: "secure-embed",
-                    label: "Secure Embed",
-                    inputs: [],
-                    security: {
-                        csp: {
-                            script: ["https://connect-js.stripe.com"],
-                            frame: ["https://connect.stripe.com"],
+            list: async () => [
+                {
+                    id: "secure-embed",
+                    status: "success",
+                    definitionSnapshot: {
+                        kind: "secure-embed",
+                        label: "Secure Embed",
+                        inputs: [],
+                        security: {
+                            csp: {
+                                script: ["https://connect-js.stripe.com"],
+                                frame: ["https://connect.stripe.com"],
+                            },
                         },
                     },
                 },
-            }],
+            ],
         } as RenderContext["integrationInstallations"];
 
         const entry = await renderPage(page, ctx);
@@ -89,19 +108,16 @@ describe("renderPage — binding core wrapper", () => {
             getBlocsList: () => Promise<{ id: string }[]>;
             getBlocViewJS: (tag: string) => Promise<string | null>;
         };
-        repository.getBlocsList = async () => [
-            { id: "site-header" },
-            { id: "base-nav" },
-            { id: "base-link" },
-        ];
-        repository.getBlocViewJS = async tag => ({
-            "site-header": "const t = `<base-nav></base-nav>`;",
-            "base-nav": "const t = `<base-link></base-link>`;",
-            "base-link": "LINK();",
-        }[tag] ?? null);
+        repository.getBlocsList = async () => [{ id: "site-header" }, { id: "base-nav" }, { id: "base-link" }];
+        repository.getBlocViewJS = async (tag) =>
+            ({
+                "site-header": "const t = `<base-nav></base-nav>`;",
+                "base-nav": "const t = `<base-link></base-link>`;",
+                "base-link": "LINK();",
+            })[tag] ?? null;
         let resolvedTags: string[] = [];
         const resolveAssets = ctx.resolveAssets;
-        ctx.resolveAssets = async tags => {
+        ctx.resolveAssets = async (tags) => {
             resolvedTags = tags;
             return resolveAssets(tags);
         };
@@ -110,5 +126,4 @@ describe("renderPage — binding core wrapper", () => {
 
         expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
     });
-
 });

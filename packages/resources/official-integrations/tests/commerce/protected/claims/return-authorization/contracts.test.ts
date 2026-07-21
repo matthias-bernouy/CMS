@@ -87,21 +87,26 @@ describe("commerce claim return authorization contracts", () => {
                 name: "null deadline",
                 claim: { ...claimRow, return_ship_by_at: null },
                 expected: {
-                    allowed: true, reason: "authorized", returnShipByAt: null,
+                    allowed: true,
+                    reason: "authorized",
+                    returnShipByAt: null,
                 },
             },
             {
                 name: "invalid deadline",
                 claim: { ...claimRow, return_ship_by_at: "not-a-date" },
                 expected: {
-                    allowed: true, reason: "authorized", returnShipByAt: "not-a-date",
+                    allowed: true,
+                    reason: "authorized",
+                    returnShipByAt: "not-a-date",
                 },
             },
             {
                 name: "past deadline",
                 claim: { ...claimRow, return_ship_by_at: "2000-01-01T00:00:00.000Z" },
                 expected: {
-                    allowed: false, reason: "return_ship_deadline_passed",
+                    allowed: false,
+                    reason: "return_ship_deadline_passed",
                     returnShipByAt: "2000-01-01T00:00:00.000Z",
                 },
             },
@@ -109,7 +114,8 @@ describe("commerce claim return authorization contracts", () => {
                 name: "different status",
                 claim: { ...claimRow, status: "under_review" },
                 expected: {
-                    allowed: false, reason: "claim_not_awaiting_return",
+                    allowed: false,
+                    reason: "claim_not_awaiting_return",
                     claimStatus: "under_review",
                 },
             },
@@ -134,7 +140,8 @@ describe("commerce claim return authorization contracts", () => {
                     return_ship_by_at: "2000-01-01T00:00:00.000Z",
                 },
                 expected: {
-                    allowed: false, reason: "claim_not_awaiting_return",
+                    allowed: false,
+                    reason: "claim_not_awaiting_return",
                     claimStatus: "under_review",
                     returnShipByAt: "2000-01-01T00:00:00.000Z",
                 },

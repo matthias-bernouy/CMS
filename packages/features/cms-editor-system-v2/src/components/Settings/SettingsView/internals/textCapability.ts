@@ -28,7 +28,9 @@ export function renderTextCapability(
         control.setAttribute("data-scopes", JSON.stringify(dataScopes));
         wireRichTextControl(control, (content) => emitContentChange(content, "html"));
     } else {
-        if (capability.dynamic) setDataScopes(control, dataScopes);
+        if (capability.dynamic) {
+            setDataScopes(control, dataScopes);
+        }
         wireContentControl(control, "input", (content) => emitContentChange(content, "text"));
     }
     section.append(control);

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    createPaymentLedgerFixture,
-    type CreateProviderReconciliationHarness,
-} from "../harness";
+import { createPaymentLedgerFixture, type CreateProviderReconciliationHarness } from "../harness";
 
 export function registerPaymentReconciliationLedgerDivergenceContracts(
     createHarness: CreateProviderReconciliationHarness,
@@ -31,12 +28,15 @@ export function registerPaymentReconciliationLedgerDivergenceContracts(
                 settlement_status: "manual_review",
                 manual_review_reason: "provider ledger arithmetic divergence",
             });
-            expect(fixture.rest.stripeRequests.some(request => (
-                request.method === "POST" && request.pathname === "/v1/transfers"
-            ))).toBe(false);
-            expect(fixture.rest.postgrestRequests.find(request => (
-                request.table === "rpc/mark_payment_manual_review"
-            ))?.body).toEqual({
+            expect(
+                fixture.rest.stripeRequests.some(
+                    (request) => request.method === "POST" && request.pathname === "/v1/transfers",
+                ),
+            ).toBe(false);
+            expect(
+                fixture.rest.postgrestRequests.find((request) => request.table === "rpc/mark_payment_manual_review")
+                    ?.body,
+            ).toEqual({
                 p_payment_id: fixture.paymentId,
                 p_reason: "provider ledger arithmetic divergence",
                 p_details: {

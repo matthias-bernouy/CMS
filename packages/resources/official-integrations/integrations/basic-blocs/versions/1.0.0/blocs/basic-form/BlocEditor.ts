@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ContentSlot,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
 
 export class BasicFormEditor extends Editor {
     protected override settings(): SettingSection[] {
@@ -47,9 +42,7 @@ export class BasicFormEditor extends Editor {
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [
-            { label: "Fields", accepts: [{ kind: "any-component" }], min: 1 },
-        ];
+        return [{ label: "Fields", accepts: [{ kind: "any-component" }], min: 1 }];
     }
 }
 

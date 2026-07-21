@@ -8,10 +8,7 @@ import {
     type SettingSection,
 } from "@bernouy/cms-content/editor";
 import { EditorRuntime } from "../src/runtime";
-import {
-    COMPOSITION_INPUT_ATTRIBUTE,
-    COMPOSITION_RUNTIME_ATTRIBUTE,
-} from "@bernouy/components/composition-runtime";
+import { COMPOSITION_INPUT_ATTRIBUTE, COMPOSITION_RUNTIME_ATTRIBUTE } from "@bernouy/components/composition-runtime";
 
 function createDocument() {
     return parseHTML(`
@@ -31,16 +28,14 @@ function createDocument() {
 }
 
 function blocConstructor(HTMLElementCtor: typeof HTMLElement): CustomElementConstructor {
-    return class TestBloc extends HTMLElementCtor { } as unknown as CustomElementConstructor;
+    return class TestBloc extends HTMLElementCtor {} as unknown as CustomElementConstructor;
 }
 
 const dataScope: DataScope = {
     name: "plans",
     label: "Plans",
     source: "urn:test:plans",
-    fields: [
-        { path: "name", type: "string" },
-    ],
+    fields: [{ path: "name", type: "string" }],
 };
 
 const childOverride: SettingSection = {
@@ -132,11 +127,13 @@ class RichTextParentEditor extends Editor {
     }
 
     protected override contentSlots(): ContentSlot[] {
-        return [{
-            label: "Items",
-            slot: "items",
-            accepts: [{ kind: "any-component" }],
-        }];
+        return [
+            {
+                label: "Items",
+                slot: "items",
+                accepts: [{ kind: "any-component" }],
+            },
+        ];
     }
 }
 
@@ -200,7 +197,7 @@ describe("EditorRuntime", () => {
 
         runtime.load({ root: contentRoot, contentRoot });
 
-        expect(runtime.getStructure().map(node => node.label)).toEqual(["Composition"]);
+        expect(runtime.getStructure().map((node) => node.label)).toEqual(["Composition"]);
         expect(runtime.getEditor(generated)).toBeUndefined();
         expect(runtime.getEditor(nestedComposition)).toBeUndefined();
         expect(runtime.getClosestEditor(generated)?.target).toBe(composition);
@@ -239,8 +236,8 @@ describe("EditorRuntime", () => {
         runtime.load({ root, contentRoot });
 
         const structure = runtime.getStructure();
-        expect(structure.map(node => node.label)).toEqual(["Parent"]);
-        expect(structure[0]?.children.map(node => node.label)).toEqual(["Child"]);
+        expect(structure.map((node) => node.label)).toEqual(["Parent"]);
+        expect(structure[0]?.children.map((node) => node.label)).toEqual(["Child"]);
         expect(runtime.registry.getEditor(root)?.getDataScopes()).toEqual([dataScope]);
         expect(runtime.getSelectedSettings()).toEqual([]);
 
@@ -254,10 +251,7 @@ describe("EditorRuntime", () => {
             },
             childOverride,
         ]);
-        expect(runtime.getSelection()?.contentSlots).toEqual([
-            childContentSlot,
-            parentContentOverride,
-        ]);
+        expect(runtime.getSelection()?.contentSlots).toEqual([childContentSlot, parentContentOverride]);
         expect(runtime.getSelection()?.textCapability).toEqual({
             format: "richtext",
             bold: true,
@@ -315,10 +309,15 @@ describe("EditorRuntime", () => {
         });
 
         const structure = runtime.getStructure();
-        expect(structure.map(node => node.target.id)).toEqual(["rich"]);
-        expect(structure[0]?.children.map(node => node.target.id)).toEqual(["item"]);
+        expect(structure.map((node) => node.target.id)).toEqual(["rich"]);
+        expect(structure[0]?.children.map((node) => node.target.id)).toEqual(["item"]);
         expect(structure[0]?.children[0]?.children).toEqual([]);
-        expect(runtime.getEditor(rich)?.getChildren().map(editor => editor.target.id)).toEqual(["item"]);
+        expect(
+            runtime
+                .getEditor(rich)
+                ?.getChildren()
+                .map((editor) => editor.target.id),
+        ).toEqual(["item"]);
         expect(runtime.getEditor(item)?.getChildren()).toEqual([]);
         expect(runtime.getEditor(size)).toBeDefined();
         expect(runtime.getClosestEditor(size)?.target).toBe(rich);
@@ -389,7 +388,7 @@ describe("EditorRuntime", () => {
         });
 
         const structure = runtime.getStructure();
-        expect(structure.map(node => node.label)).toEqual(["Opaque"]);
+        expect(structure.map((node) => node.label)).toEqual(["Opaque"]);
         expect(structure[0]?.children).toEqual([]);
         expect(runtime.getEditor(document.getElementById("child")!)?.getSettings()).toEqual([
             {
@@ -449,10 +448,12 @@ describe("EditorRuntime", () => {
             },
         ]);
 
-        expect(() => runtime.load({
-            root: document.getElementById("parent")!,
-            contentRoot: document.getElementById("runtime-root")!,
-        })).toThrow("EditorDocument contentRoot must be inside root.");
+        expect(() =>
+            runtime.load({
+                root: document.getElementById("parent")!,
+                contentRoot: document.getElementById("runtime-root")!,
+            }),
+        ).toThrow("EditorDocument contentRoot must be inside root.");
     });
 
     test("declares data scopes from cms-source attributes", () => {
@@ -468,34 +469,35 @@ describe("EditorRuntime", () => {
                 </body>
             </html>
         `);
-        const runtime = new EditorRuntime([
-            {
-                tag: "x-parent",
-                label: "Parent",
-                bloc: blocConstructor(HTMLElement),
-                editor: ParentEditor,
-            },
-            {
-                tag: "x-child",
-                label: "Child",
-                bloc: blocConstructor(HTMLElement),
-                editor: ChildEditor,
-            },
-        ], [
-            {
-                label: "Plans",
-                url: "/api/plans",
-                fields: [
-                    {
-                        path: "items",
-                        type: "array",
-                        children: [
-                            { path: "name", type: "string" },
-                        ],
-                    },
-                ],
-            },
-        ]);
+        const runtime = new EditorRuntime(
+            [
+                {
+                    tag: "x-parent",
+                    label: "Parent",
+                    bloc: blocConstructor(HTMLElement),
+                    editor: ParentEditor,
+                },
+                {
+                    tag: "x-child",
+                    label: "Child",
+                    bloc: blocConstructor(HTMLElement),
+                    editor: ChildEditor,
+                },
+            ],
+            [
+                {
+                    label: "Plans",
+                    url: "/api/plans",
+                    fields: [
+                        {
+                            path: "items",
+                            type: "array",
+                            children: [{ path: "name", type: "string" }],
+                        },
+                    ],
+                },
+            ],
+        );
 
         runtime.load({
             root: document.getElementById("content-root")!,
@@ -516,9 +518,7 @@ describe("EditorRuntime", () => {
                     {
                         path: "items",
                         type: "array",
-                        children: [
-                            { path: "name", type: "string" },
-                        ],
+                        children: [{ path: "name", type: "string" }],
                     },
                 ],
             },
@@ -562,7 +562,7 @@ describe("EditorRuntime", () => {
         });
 
         const source = runtime.getStructure()[0]!;
-        expect(source.children.map(node => node.target.id)).toEqual(["success", "loading-a", "loading-b", "error"]);
+        expect(source.children.map((node) => node.target.id)).toEqual(["success", "loading-a", "loading-b", "error"]);
         expect(source.children[0]!.badges).toEqual([]);
         expect(source.children[1]!.badges).toEqual(["loading"]);
         expect(source.children[2]!.badges).toEqual(["loading"]);
@@ -604,7 +604,7 @@ describe("EditorRuntime", () => {
         });
 
         const source = runtime.getStructure()[0]!;
-        expect(source.children.map(node => node.target.id)).toEqual(["one", "two"]);
+        expect(source.children.map((node) => node.target.id)).toEqual(["one", "two"]);
     });
 
     test("declares data scopes from named cms-repeat attributes", () => {
@@ -620,35 +620,38 @@ describe("EditorRuntime", () => {
                 </body>
             </html>
         `);
-        const runtime = new EditorRuntime([
-            {
-                tag: "x-parent",
-                label: "Parent",
-                bloc: blocConstructor(HTMLElement),
-                editor: ParentEditor,
-            },
-            {
-                tag: "x-child",
-                label: "Child",
-                bloc: blocConstructor(HTMLElement),
-                editor: ChildEditor,
-            },
-        ], [
-            {
-                label: "Plans",
-                url: "/api/plans",
-                fields: [
-                    {
-                        path: "items",
-                        type: "array",
-                        children: [
-                            { path: "name", type: "string" },
-                            { path: "price", type: "number" },
-                        ],
-                    },
-                ],
-            },
-        ]);
+        const runtime = new EditorRuntime(
+            [
+                {
+                    tag: "x-parent",
+                    label: "Parent",
+                    bloc: blocConstructor(HTMLElement),
+                    editor: ParentEditor,
+                },
+                {
+                    tag: "x-child",
+                    label: "Child",
+                    bloc: blocConstructor(HTMLElement),
+                    editor: ChildEditor,
+                },
+            ],
+            [
+                {
+                    label: "Plans",
+                    url: "/api/plans",
+                    fields: [
+                        {
+                            path: "items",
+                            type: "array",
+                            children: [
+                                { path: "name", type: "string" },
+                                { path: "price", type: "number" },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        );
 
         runtime.load({
             root: document.getElementById("content-root")!,
@@ -696,36 +699,39 @@ describe("EditorRuntime", () => {
                 </body>
             </html>
         `);
-        const runtime = new EditorRuntime([
-            {
-                tag: "x-parent",
-                label: "Parent",
-                bloc: blocConstructor(HTMLElement),
-                editor: ParentEditor,
-            },
-            {
-                tag: "x-child",
-                label: "Child",
-                bloc: blocConstructor(HTMLElement),
-                editor: ChildEditor,
-            },
-        ], [
-            {
-                label: "Rackets",
-                url: "/api/rackets",
-                fields: [
-                    {
-                        path: ".",
-                        type: "array",
-                        children: [
-                            { path: "id", type: "string" },
-                            { path: "label", type: "string" },
-                            { path: "weight_g", type: "number" },
-                        ],
-                    },
-                ],
-            },
-        ]);
+        const runtime = new EditorRuntime(
+            [
+                {
+                    tag: "x-parent",
+                    label: "Parent",
+                    bloc: blocConstructor(HTMLElement),
+                    editor: ParentEditor,
+                },
+                {
+                    tag: "x-child",
+                    label: "Child",
+                    bloc: blocConstructor(HTMLElement),
+                    editor: ChildEditor,
+                },
+            ],
+            [
+                {
+                    label: "Rackets",
+                    url: "/api/rackets",
+                    fields: [
+                        {
+                            path: ".",
+                            type: "array",
+                            children: [
+                                { path: "id", type: "string" },
+                                { path: "label", type: "string" },
+                                { path: "weight_g", type: "number" },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        );
 
         runtime.load({
             root: document.getElementById("content-root")!,

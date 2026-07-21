@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    projectEndpointResponse,
-    triggerResponseProjection,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { projectEndpointResponse, triggerResponseProjection, type SourceEndpoint } from "@bernouy/cms-sources";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -21,8 +17,10 @@ describe("commerce cancellation response privacy", () => {
     test("keeps financial authorizations available only to in-process triggers", async () => {
         const endpoints = await commerceEndpoints();
         for (const endpointId of ["cancelMyOrder", "cancelMySale"]) {
-            const definition = endpoints.find(candidate => candidate.endpointId === endpointId);
-            if (!definition?.output) throw new Error(`Missing ${endpointId} response contract`);
+            const definition = endpoints.find((candidate) => candidate.endpointId === endpointId);
+            if (!definition?.output) {
+                throw new Error(`Missing ${endpointId} response contract`);
+            }
             const endpoint: SourceEndpoint = {
                 urn: `urn:commerce:${endpointId}`,
                 method: definition.method,
@@ -63,25 +61,49 @@ describe("commerce cancellation response privacy", () => {
 
 function cancellationResult(): Record<string, unknown> {
     return {
-        id: 17, orderId: 42, status: "refund_pending", requestedByKind: "buyer",
-        requestedBy: "buyer-user-id", reason: "requested", createdAt: "2026-07-16T00:00:00Z",
+        id: 17,
+        orderId: 42,
+        status: "refund_pending",
+        requestedByKind: "buyer",
+        requestedBy: "buyer-user-id",
+        reason: "requested",
+        createdAt: "2026-07-16T00:00:00Z",
         refundAuthorization: {
-            status: "approved", orderId: 42, orderPublicId: "order-public-42", providerPaymentId: 9,
-            refundRequestId: "refund-17", commerceRefundRequestId: 17, businessKey: "refund-17",
-            amount: 2500, authorizedSellerAmount: 1900, sellerEntitlementReductionAmount: 300,
-            sellerRecoveryAmount: 200, protectionFeeRefundAmount: 100, currency: "EUR",
-            financialTermsHash: "terms-hash", requiresFinanceApproval: false, requiresDualApproval: true,
+            status: "approved",
+            orderId: 42,
+            orderPublicId: "order-public-42",
+            providerPaymentId: 9,
+            refundRequestId: "refund-17",
+            commerceRefundRequestId: 17,
+            businessKey: "refund-17",
+            amount: 2500,
+            authorizedSellerAmount: 1900,
+            sellerEntitlementReductionAmount: 300,
+            sellerRecoveryAmount: 200,
+            protectionFeeRefundAmount: 100,
+            currency: "EUR",
+            financialTermsHash: "terms-hash",
+            requiresFinanceApproval: false,
+            requiresDualApproval: true,
         },
         paymentCancellationAuthorization: {
-            status: "requested", paymentCancellationRequestId: 19, cancellationRequestId: "cancel-19",
-            orderId: 42, orderPublicId: "order-public-42", clientReferenceId: "order-public-42",
-            targetOrderStatus: "cancelled", reason: "requested", amount: 2500, currency: "EUR",
-            financialTermsHash: "terms-hash", providerPaymentIntentId: "pi_internal",
+            status: "requested",
+            paymentCancellationRequestId: 19,
+            cancellationRequestId: "cancel-19",
+            orderId: 42,
+            orderPublicId: "order-public-42",
+            clientReferenceId: "order-public-42",
+            targetOrderStatus: "cancelled",
+            reason: "requested",
+            amount: 2500,
+            currency: "EUR",
+            financialTermsHash: "terms-hash",
+            providerPaymentIntentId: "pi_internal",
         },
     };
 }
 
 async function commerceEndpoints(): Promise<EndpointDefinition[]> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8")) as Definition;
-    return definition.artifacts.find(artifact => artifact.source)?.source?.endpoints ?? [];
+    return definition.artifacts.find((artifact) => artifact.source)?.source?.endpoints ?? [];
 }

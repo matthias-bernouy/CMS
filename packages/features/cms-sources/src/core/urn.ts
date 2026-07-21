@@ -10,9 +10,15 @@ export type ParsedUrn = { source: string; endpoint: string | null };
 /** Parses a urn. Returns `null` if the form is invalid. */
 export function parseUrn(urn: string): ParsedUrn | null {
     const parts = urn.split(":");
-    if (parts[0] !== "urn") return null;
-    if (parts.length === 2 && parts[1]) return { source: parts[1], endpoint: null };
-    if (parts.length === 3 && parts[1] && parts[2]) return { source: parts[1], endpoint: parts[2] };
+    if (parts[0] !== "urn") {
+        return null;
+    }
+    if (parts.length === 2 && parts[1]) {
+        return { source: parts[1], endpoint: null };
+    }
+    if (parts.length === 3 && parts[1] && parts[2]) {
+        return { source: parts[1], endpoint: parts[2] };
+    }
     return null;
 }
 

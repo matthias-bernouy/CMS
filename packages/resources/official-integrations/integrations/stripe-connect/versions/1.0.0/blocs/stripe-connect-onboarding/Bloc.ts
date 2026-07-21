@@ -7,11 +7,26 @@ let stripeJsLoader = null;
 class StripeConnectOnboarding extends HTMLElement {
     static get observedAttributes() {
         return [
-            "accent-color", "accent-text-color", "title", "copy", "activation-title",
-            "activation-copy", "button-label", "missing-title", "profile-link-label",
-            "ready-copy", "iban-label", "privacy-copy", "security-copy",
-            "available-label", "pending-label", "profile-url",
-            "terms-url", "marketplace-terms-label", "payment-terms-label", "eyebrow",
+            "accent-color",
+            "accent-text-color",
+            "title",
+            "copy",
+            "activation-title",
+            "activation-copy",
+            "button-label",
+            "missing-title",
+            "profile-link-label",
+            "ready-copy",
+            "iban-label",
+            "privacy-copy",
+            "security-copy",
+            "available-label",
+            "pending-label",
+            "profile-url",
+            "terms-url",
+            "marketplace-terms-label",
+            "payment-terms-label",
+            "eyebrow",
         ];
     }
 
@@ -32,7 +47,7 @@ class StripeConnectOnboarding extends HTMLElement {
             this.setStatus("L’activation des versements est disponible sur la page publiée.", "idle");
             return;
         }
-        this.refresh().catch(error => this.showError(error));
+        this.refresh().catch((error) => this.showError(error));
     }
 
     disconnectedCallback() {
@@ -41,16 +56,18 @@ class StripeConnectOnboarding extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected && this.root.childNodes.length) this.syncPresentation();
+        if (this.isConnected && this.root.childNodes.length) {
+            this.syncPresentation();
+        }
     }
 
     onActivate = () => {
-        this.prepareActivation().catch(error => this.showError(error));
+        this.prepareActivation().catch((error) => this.showError(error));
     };
 
-    onSubmit = event => {
+    onSubmit = (event) => {
         event.preventDefault();
-        this.submit().catch(error => this.showError(error));
+        this.submit().catch((error) => this.showError(error));
     };
 
     render() {
@@ -258,34 +275,62 @@ class StripeConnectOnboarding extends HTMLElement {
     syncPresentation() {
         const accent = this.getAttribute("accent-color")?.trim();
         const accentText = this.getAttribute("accent-text-color")?.trim();
-        if (accent) this.style.setProperty("--wallet-accent", accent);
-        else this.style.removeProperty("--wallet-accent");
-        if (accentText) this.style.setProperty("--wallet-accent-text", accentText);
-        else this.style.removeProperty("--wallet-accent-text");
+        if (accent) {
+            this.style.setProperty("--wallet-accent", accent);
+        } else {
+            this.style.removeProperty("--wallet-accent");
+        }
+        if (accentText) {
+            this.style.setProperty("--wallet-accent-text", accentText);
+        } else {
+            this.style.removeProperty("--wallet-accent-text");
+        }
         this.setText("[data-title]", "title", "Mon portefeuille");
         this.setText("[data-eyebrow]", "eyebrow", "Portefeuille");
         this.setText("[data-copy]", "copy", "Consulte ici le solde de tes ventes et l’état de tes versements.");
         this.setText("[data-activation-title]", "activation-title", "Recevoir le produit de mes ventes");
-        this.setText("[data-activation-copy]", "activation-copy", "Active ton portefeuille en quelques étapes pour recevoir tes prochains versements.");
+        this.setText(
+            "[data-activation-copy]",
+            "activation-copy",
+            "Active ton portefeuille en quelques étapes pour recevoir tes prochains versements.",
+        );
         this.setText("[data-activate]", "button-label", "Activer mes versements");
         this.setText("[data-submit]", "button-label", "Activer mes versements");
         this.setText("[data-missing-title]", "missing-title", "Ton profil est incomplet");
         this.setText("[data-profile-link]", "profile-link-label", "Compléter mon profil");
         this.setText("[data-marketplace-terms]", "marketplace-terms-label", "conditions générales de la plateforme");
         this.setText("[data-payment-terms]", "payment-terms-label", "conditions du service de paiement");
-        this.setText("[data-ready-copy]", "ready-copy", "Ton profil est complet. Ajoute le compte bancaire sur lequel tu souhaites recevoir tes versements.");
+        this.setText(
+            "[data-ready-copy]",
+            "ready-copy",
+            "Ton profil est complet. Ajoute le compte bancaire sur lequel tu souhaites recevoir tes versements.",
+        );
         this.setText("[data-iban-label]", "iban-label", "IBAN du compte de versement");
-        this.setText("[data-privacy-copy]", "privacy-copy", "Nous ne conservons pas ton IBAN. Il est transmis de manière sécurisée à notre prestataire de paiement.");
-        this.setText("[data-security-copy]", "security-copy", "Notre prestataire de paiement vérifie tes informations de manière sécurisée.");
+        this.setText(
+            "[data-privacy-copy]",
+            "privacy-copy",
+            "Nous ne conservons pas ton IBAN. Il est transmis de manière sécurisée à notre prestataire de paiement.",
+        );
+        this.setText(
+            "[data-security-copy]",
+            "security-copy",
+            "Notre prestataire de paiement vérifie tes informations de manière sécurisée.",
+        );
         const profileLink = this.root.querySelector("[data-profile-link]");
         const termsLink = this.root.querySelector("[data-marketplace-terms]");
-        if (profileLink) profileLink.setAttribute("href", this.getAttribute("profile-url")?.trim() || "/account/profile");
-        if (termsLink) termsLink.setAttribute("href", this.getAttribute("terms-url")?.trim() || "/legal/terms");
+        if (profileLink) {
+            profileLink.setAttribute("href", this.getAttribute("profile-url")?.trim() || "/account/profile");
+        }
+        if (termsLink) {
+            termsLink.setAttribute("href", this.getAttribute("terms-url")?.trim() || "/legal/terms");
+        }
     }
 
     setText(selector, attribute, fallback) {
         const element = this.root.querySelector(selector);
-        if (element) element.textContent = this.getAttribute(attribute)?.trim() || fallback;
+        if (element) {
+            element.textContent = this.getAttribute(attribute)?.trim() || fallback;
+        }
     }
 
     async refresh() {
@@ -293,11 +338,13 @@ class StripeConnectOnboarding extends HTMLElement {
         this.setBusy(true);
         try {
             const status = await this.requestStripeSource("getConnectStatus");
-            this.dispatchEvent(new CustomEvent("stripe-connect-onboarding:status", {
-                bubbles: true,
-                composed: true,
-                detail: status,
-            }));
+            this.dispatchEvent(
+                new CustomEvent("stripe-connect-onboarding:status", {
+                    bubbles: true,
+                    composed: true,
+                    detail: status,
+                }),
+            );
             if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) {
                 await this.showWallet();
                 return;
@@ -305,12 +352,18 @@ class StripeConnectOnboarding extends HTMLElement {
             if (status.onboardingStatus === "pending_verification") {
                 this.hidePanels();
                 this.header.hidden = false;
-                this.setStatus("Tes informations sont en cours de vérification. Cela peut prendre quelques minutes.", "success");
+                this.setStatus(
+                    "Tes informations sont en cours de vérification. Cela peut prendre quelques minutes.",
+                    "success",
+                );
                 return;
             }
             this.showActivation();
             if (status.onboardingStatus === "requirements_due") {
-                this.setStatus("Des informations supplémentaires sont nécessaires. Vérifie d’abord ton profil.", "error");
+                this.setStatus(
+                    "Des informations supplémentaires sont nécessaires. Vérifie d’abord ton profil.",
+                    "error",
+                );
             } else if (status.onboardingStatus === "rejected") {
                 this.setStatus("Ton compte de versement n’a pas pu être vérifié.", "error");
             } else {
@@ -348,7 +401,9 @@ class StripeConnectOnboarding extends HTMLElement {
                 return;
             }
             if (text(profile.countryCode).toUpperCase() !== "FR") {
-                throw new PublicError("L’activation des versements est actuellement réservée aux profils domiciliés en France.");
+                throw new PublicError(
+                    "L’activation des versements est actuellement réservée aux profils domiciliés en France.",
+                );
             }
             this.profile = normalizedProfile(profile);
             this.activationPanel.hidden = true;
@@ -366,7 +421,9 @@ class StripeConnectOnboarding extends HTMLElement {
             await this.prepareActivation();
             return;
         }
-        if (!this.form.reportValidity()) return;
+        if (!this.form.reportValidity()) {
+            return;
+        }
         this.setBusy(true);
         this.setStatus("Envoi sécurisé de tes informations…", "idle");
         try {
@@ -406,8 +463,11 @@ class StripeConnectOnboarding extends HTMLElement {
                 body: JSON.stringify({ accountToken, bankAccountToken, contactEmail: this.profile.email }),
             });
             this.ibanInput.value = "";
-            if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) await this.showWallet();
-            else await this.refresh();
+            if (status.onboardingStatus === "enabled" && status.payoutsEnabled === true) {
+                await this.showWallet();
+            } else {
+                await this.refresh();
+            }
         } finally {
             this.setBusy(false);
         }
@@ -421,13 +481,15 @@ class StripeConnectOnboarding extends HTMLElement {
         this.walletPanel.hidden = false;
         this.balances.replaceChildren();
         const balances = Array.isArray(wallet.balances) ? wallet.balances : [];
-        const displayedBalances = balances.length
-            ? balances
-            : [{ currency: "eur", available: 0, pending: 0 }];
-        for (const balance of displayedBalances) this.balances.append(walletBalance(balance, {
-            available: this.getAttribute("available-label")?.trim() || "Solde disponible",
-            pending: this.getAttribute("pending-label")?.trim() || "En attente",
-        }));
+        const displayedBalances = balances.length ? balances : [{ currency: "eur", available: 0, pending: 0 }];
+        for (const balance of displayedBalances) {
+            this.balances.append(
+                walletBalance(balance, {
+                    available: this.getAttribute("available-label")?.trim() || "Solde disponible",
+                    pending: this.getAttribute("pending-label")?.trim() || "En attente",
+                }),
+            );
+        }
         this.clearStatus();
     }
 
@@ -508,7 +570,7 @@ class StripeConnectOnboarding extends HTMLElement {
 
     async clientConfig() {
         if (!this.clientConfigPromise) {
-            this.clientConfigPromise = this.requestStripeSource("getConnectClientConfig").then(config => {
+            this.clientConfigPromise = this.requestStripeSource("getConnectClientConfig").then((config) => {
                 if (typeof config.publishableKey !== "string" || !config.publishableKey.startsWith("pk_")) {
                     throw new Error("Stripe publishable key is missing");
                 }
@@ -542,28 +604,57 @@ class StripeConnectOnboarding extends HTMLElement {
         });
         const body = await response.json().catch(() => null);
         if (!response.ok) {
-            const message = body && typeof body === "object" && "error" in body
-                ? String(body.error)
-                : `${response.status} ${response.statusText}`;
+            const message =
+                body && typeof body === "object" && "error" in body
+                    ? String(body.error)
+                    : `${response.status} ${response.statusText}`;
             throw new Error(message);
         }
-        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid source response");
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            throw new Error("Invalid source response");
+        }
         return body;
     }
 
-    get activateButton() { return this.root.querySelector("[data-activate]"); }
-    get submitButton() { return this.root.querySelector("[data-submit]"); }
-    get status() { return this.root.querySelector("[data-status]"); }
-    get loadingPanel() { return this.root.querySelector("[data-loading]"); }
-    get activationPanel() { return this.root.querySelector("[data-activation]"); }
-    get missingPanel() { return this.root.querySelector("[data-missing]"); }
-    get missingCopy() { return this.root.querySelector("[data-missing-copy]"); }
-    get form() { return this.root.querySelector("[data-form]"); }
-    get ibanInput() { return this.root.querySelector("[name='iban']"); }
-    get walletPanel() { return this.root.querySelector("[data-wallet]"); }
-    get shell() { return this.root.querySelector(".shell"); }
-    get balances() { return this.root.querySelector("[data-balances]"); }
-    get header() { return this.root.querySelector("[data-header]"); }
+    get activateButton() {
+        return this.root.querySelector("[data-activate]");
+    }
+    get submitButton() {
+        return this.root.querySelector("[data-submit]");
+    }
+    get status() {
+        return this.root.querySelector("[data-status]");
+    }
+    get loadingPanel() {
+        return this.root.querySelector("[data-loading]");
+    }
+    get activationPanel() {
+        return this.root.querySelector("[data-activation]");
+    }
+    get missingPanel() {
+        return this.root.querySelector("[data-missing]");
+    }
+    get missingCopy() {
+        return this.root.querySelector("[data-missing-copy]");
+    }
+    get form() {
+        return this.root.querySelector("[data-form]");
+    }
+    get ibanInput() {
+        return this.root.querySelector("[name='iban']");
+    }
+    get walletPanel() {
+        return this.root.querySelector("[data-wallet]");
+    }
+    get shell() {
+        return this.root.querySelector(".shell");
+    }
+    get balances() {
+        return this.root.querySelector("[data-balances]");
+    }
+    get header() {
+        return this.root.querySelector("[data-header]");
+    }
 }
 
 const profileFields = [
@@ -579,12 +670,12 @@ const profileFields = [
 ];
 
 function missingProfileFields(profile) {
-    return profileFields.filter(field => !text(profile?.[field.property])).map(field => field.label);
+    return profileFields.filter((field) => !text(profile?.[field.property])).map((field) => field.label);
 }
 
 function normalizedProfile(profile) {
     return {
-        ...Object.fromEntries(profileFields.map(field => [field.property, text(profile[field.property])])),
+        ...Object.fromEntries(profileFields.map((field) => [field.property, text(profile[field.property])])),
         addressLine2: text(profile.addressLine2),
     };
 }
@@ -615,21 +706,38 @@ function money(value, currency) {
 
 function parseDate(value) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (!match) throw new PublicError("La date de naissance du profil doit respecter le format AAAA-MM-JJ.");
+    if (!match) {
+        throw new PublicError("La date de naissance du profil doit respecter le format AAAA-MM-JJ.");
+    }
     return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
 }
 
 function loadStripeJs() {
-    if (typeof window.Stripe === "function") return Promise.resolve(window.Stripe);
-    if (stripeJsLoader) return stripeJsLoader;
+    if (typeof window.Stripe === "function") {
+        return Promise.resolve(window.Stripe);
+    }
+    if (stripeJsLoader) {
+        return stripeJsLoader;
+    }
     stripeJsLoader = new Promise((resolve, reject) => {
         const existing = document.querySelector(`script[src="${STRIPE_JS_URL}"]`);
         const script = existing || document.createElement("script");
-        script.addEventListener("load", () => {
-            if (typeof window.Stripe === "function") resolve(window.Stripe);
-            else reject(new PublicError("Le service de paiement sécurisé est indisponible."));
-        }, { once: true });
-        script.addEventListener("error", () => reject(new PublicError("Le service de paiement sécurisé n’a pas pu être chargé.")), { once: true });
+        script.addEventListener(
+            "load",
+            () => {
+                if (typeof window.Stripe === "function") {
+                    resolve(window.Stripe);
+                } else {
+                    reject(new PublicError("Le service de paiement sécurisé est indisponible."));
+                }
+            },
+            { once: true },
+        );
+        script.addEventListener(
+            "error",
+            () => reject(new PublicError("Le service de paiement sécurisé n’a pas pu être chargé.")),
+            { once: true },
+        );
         if (!existing) {
             script.src = STRIPE_JS_URL;
             script.async = true;
@@ -648,15 +756,20 @@ function text(value) {
 }
 
 function publicErrorMessage(error) {
-    if (error instanceof PublicError) return error.message;
+    if (error instanceof PublicError) {
+        return error.message;
+    }
     return "Une erreur est survenue. Réessaie dans quelques instants.";
 }
 
 class PublicError extends Error {}
 
 function isFramed() {
-    try { return window.top !== window.self; }
-    catch { return true; }
+    try {
+        return window.top !== window.self;
+    } catch {
+        return true;
+    }
 }
 
 function escapeHtml(value) {

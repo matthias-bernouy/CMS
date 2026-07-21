@@ -7,8 +7,12 @@ export async function buildSourceOverlayWrites(
     deps: IntegrationImportDeps,
     overlays: SourceOverlay[],
 ): Promise<IntegrationSourceOverlayWrite[]> {
-    if (!overlays.length) return [];
-    if (!deps.sourceOverlays) throw new IntegrationRuntimeError("source overlay repository not configured");
+    if (!overlays.length) {
+        return [];
+    }
+    if (!deps.sourceOverlays) {
+        throw new IntegrationRuntimeError("source overlay repository not configured");
+    }
 
     const writes: IntegrationSourceOverlayWrite[] = [];
     const seen = new Set<string>();
@@ -24,10 +28,16 @@ export async function buildSourceOverlayWrites(
 }
 
 function mergeSourceOverlayArtifact(overlay: SourceOverlay, previous: SourceOverlay | null): SourceOverlay {
-    if (!previous || overlay.fieldSource || overlay.fields.length) return overlay;
+    if (!previous || overlay.fieldSource || overlay.fields.length) {
+        return overlay;
+    }
     return {
         ...overlay,
         fields: previous.fields,
-        ...(overlay.sections?.length ? { sections: overlay.sections } : previous.sections ? { sections: previous.sections } : {}),
+        ...(overlay.sections?.length
+            ? { sections: overlay.sections }
+            : previous.sections
+              ? { sections: previous.sections }
+              : {}),
     };
 }

@@ -1,11 +1,5 @@
-import type {
-    IntegrationAnswerValue,
-    IntegrationDefinition,
-} from "./Integration";
-import type {
-    IntegrationArtifactResult,
-    IntegrationSecretResult,
-} from "./IntegrationImport";
+import type { IntegrationAnswerValue, IntegrationDefinition } from "./Integration";
+import type { IntegrationArtifactResult, IntegrationSecretResult } from "./IntegrationImport";
 import type { IntegrationConnectorDeployResult } from "./IntegrationConnectorDeployer";
 
 export type IntegrationInstallationStatus = "success" | "failed" | "pending";

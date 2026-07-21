@@ -9,7 +9,8 @@ import { loadClaimReturnAuthorizationContext } from "./read-model/claims.ts";
 
 export { getClaim } from "./read-model/claims.ts";
 
-const claimSelect = "id,public_id,order_id,buyer_cms_user_id,seller_id,reason,status,description,buyer_requested_amount,resolution_outcome,resolution_buyer_refund_amount,resolution_seller_transfer_amount,resolution_protection_fee_refund_amount,decision_reason,seller_response_by_at,return_ship_by_at,return_delivery_status,return_provider_reference,return_carrier_accepted_at,return_recipient_handoff_at,resolved_at,resolved_by,version,created_at,updated_at";
+const claimSelect =
+    "id,public_id,order_id,buyer_cms_user_id,seller_id,reason,status,description,buyer_requested_amount,resolution_outcome,resolution_buyer_refund_amount,resolution_seller_transfer_amount,resolution_protection_fee_refund_amount,decision_reason,seller_response_by_at,return_ship_by_at,return_delivery_status,return_provider_reference,return_carrier_accepted_at,return_recipient_handoff_at,resolved_at,resolved_by,version,created_at,updated_at";
 
 export async function openMyOrderClaim(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
@@ -38,10 +39,21 @@ export async function listClaims(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const limit = Math.min(Math.max(integer(url.searchParams.get("limit"), "limit") ?? 50, 1), 100);
     const offset = Math.max(integer(url.searchParams.get("offset"), "offset") ?? 0, 0);
-    const params = new URLSearchParams({ select: claimSelect, order: "created_at.desc,id.desc", limit: String(limit), offset: String(offset) });
-    for (const [query, column] of [["status", "status"], ["reason", "reason"], ["orderId", "order_id"]] as const) {
+    const params = new URLSearchParams({
+        select: claimSelect,
+        order: "created_at.desc,id.desc",
+        limit: String(limit),
+        offset: String(offset),
+    });
+    for (const [query, column] of [
+        ["status", "status"],
+        ["reason", "reason"],
+        ["orderId", "order_id"],
+    ] as const) {
         const value = text(url.searchParams.get(query));
-        if (value) params.set(column, `eq.${value}`);
+        if (value) {
+            params.set(column, `eq.${value}`);
+        }
     }
     const { rows, total } = await listRows(`marketplace_claims?${params.toString()}`);
     return json({ items: camelize(rows), total, limit, offset });
@@ -70,47 +82,58 @@ export async function getClaimEvidenceMetadata(request: Request): Promise<Respon
         { id },
         "id,claim_id,submitted_by_kind,mime_type,file_size,original_filename,sha256,description,metadata,created_at",
     );
-    if (!evidence) throw new HttpError(404, "claim evidence not found");
+    if (!evidence) {
+        throw new HttpError(404, "claim evidence not found");
+    }
     return json(publicClaimEvidence(evidence));
 }
 
 export async function getClaimReturnAuthorization(request: Request): Promise<Response> {
     const claimId = integer(new URL(request.url).searchParams.get("claimId"), "claimId", true)!;
-    const { claim, order, seller, financialTerms } =
-        await loadClaimReturnAuthorizationContext(claimId);
+    const { claim, order, seller, financialTerms } = await loadClaimReturnAuthorizationContext(claimId);
     if (!order || !seller || !text(seller.cmsUserId)) {
         throw new HttpError(409, "claim return participants are incomplete");
     }
     const deadline = Date.parse(text(claim.returnShipByAt) ?? "");
     const deadlinePassed = Number.isFinite(deadline) && deadline <= Date.now();
-    const awaitingReturn = claim.status === "return_required"
-        && claim.resolutionOutcome === "return_required"
-        && !claim.returnRecipientHandoffAt;
-    return json(camelize({
-        allowed: awaitingReturn && !deadlinePassed,
-        reason: !awaitingReturn ? "claim_not_awaiting_return" : deadlinePassed ? "return_ship_deadline_passed" : "authorized",
-        claimId: claim.id,
-        claimPublicId: claim.publicId,
-        claimStatus: claim.status,
-        claimVersion: claim.version,
-        returnShipByAt: claim.returnShipByAt,
-        returnDeliveryStatus: claim.returnDeliveryStatus,
-        orderId: order.id,
-        orderPublicId: order.publicId,
-        orderNumber: order.orderNumber,
-        buyerCmsUserId: claim.buyerCmsUserId,
-        sellerId: seller.id,
-        sellerCmsUserId: seller.cmsUserId,
-        deliveryQuoteId: financialTerms?.deliveryQuoteId,
-        merchandiseSubtotalMinorAmount: financialTerms?.merchandiseSubtotalAmount,
-        currency: financialTerms?.currency,
-    }));
+    const awaitingReturn =
+        claim.status === "return_required" &&
+        claim.resolutionOutcome === "return_required" &&
+        !claim.returnRecipientHandoffAt;
+    return json(
+        camelize({
+            allowed: awaitingReturn && !deadlinePassed,
+            reason: !awaitingReturn
+                ? "claim_not_awaiting_return"
+                : deadlinePassed
+                  ? "return_ship_deadline_passed"
+                  : "authorized",
+            claimId: claim.id,
+            claimPublicId: claim.publicId,
+            claimStatus: claim.status,
+            claimVersion: claim.version,
+            returnShipByAt: claim.returnShipByAt,
+            returnDeliveryStatus: claim.returnDeliveryStatus,
+            orderId: order.id,
+            orderPublicId: order.publicId,
+            orderNumber: order.orderNumber,
+            buyerCmsUserId: claim.buyerCmsUserId,
+            sellerId: seller.id,
+            sellerCmsUserId: seller.cmsUserId,
+            deliveryQuoteId: financialTerms?.deliveryQuoteId,
+            merchandiseSubtotalMinorAmount: financialTerms?.merchandiseSubtotalAmount,
+            currency: financialTerms?.currency,
+        }),
+    );
 }
 
 export async function recordClaimReturnDelivery(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     const providerEvidence = body.providerEvidence;
-    if (providerEvidence !== undefined && (typeof providerEvidence !== "object" || providerEvidence === null || Array.isArray(providerEvidence))) {
+    if (
+        providerEvidence !== undefined &&
+        (typeof providerEvidence !== "object" || providerEvidence === null || Array.isArray(providerEvidence))
+    ) {
         throw new HttpError(400, "providerEvidence must be an object");
     }
     const result = await rpc("record_claim_return_delivery", {

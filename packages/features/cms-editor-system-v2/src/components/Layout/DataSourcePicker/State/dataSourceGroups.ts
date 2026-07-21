@@ -8,15 +8,15 @@ export type DataSourceProviderGroup = {
 
 export function filteredSources(sources: EditorDataSource[], query: string): EditorDataSource[] {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return sources;
+    if (!normalized) {
+        return sources;
+    }
 
-    return sources.filter(source => [
-        source.label,
-        source.description,
-        source.provider,
-        source.providerLabel,
-        source.url,
-    ].some(value => value?.toLowerCase().includes(normalized)));
+    return sources.filter((source) =>
+        [source.label, source.description, source.provider, source.providerLabel, source.url].some((value) =>
+            value?.toLowerCase().includes(normalized),
+        ),
+    );
 }
 
 export function providerGroups(sources: EditorDataSource[]): DataSourceProviderGroup[] {

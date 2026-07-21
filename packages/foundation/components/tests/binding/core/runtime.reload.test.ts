@@ -41,7 +41,6 @@ describe("Source — reload", () => {
         expect(text(elt.querySelector("p"))).toBe("2");
         src.dispose();
     });
-
 });
 
 describe("Source — #{param} reactivity", () => {
@@ -71,7 +70,10 @@ describe("Source — #{param} reactivity", () => {
 
     test("a source without #{} does NOT reload on a param change", async () => {
         let calls = 0;
-        globalThis.fetch = (async () => { calls++; return res(200, "[]"); }) as unknown as typeof fetch;
+        globalThis.fetch = (async () => {
+            calls++;
+            return res(200, "[]");
+        }) as unknown as typeof fetch;
 
         const elt = el(`<div cms-source="/api/static"><span cms-repeat="."></span></div>`);
         document.body.appendChild(elt);

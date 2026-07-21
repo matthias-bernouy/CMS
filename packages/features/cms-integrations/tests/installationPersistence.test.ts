@@ -47,17 +47,19 @@ describe("@bernouy/cms-integrations installation persistence", () => {
         const installations = new CreateFailingIntegrationInstallationRepository();
         const definition = unstableInstallationDefinition();
 
-        await expect(runIntegrationInstallation({
-            mode: "create",
-            deps: { sources, secrets },
-            installations,
-            siteIntegrations: [definition],
-            dto: {
-                kind: "unstable-installation",
-                answers: { id: "main", apiKey: "secret" },
-                options: {},
-            },
-        })).rejects.toThrow(/installation create failed/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "create",
+                deps: { sources, secrets },
+                installations,
+                siteIntegrations: [definition],
+                dto: {
+                    kind: "unstable-installation",
+                    answers: { id: "main", apiKey: "secret" },
+                    options: {},
+                },
+            }),
+        ).rejects.toThrow(/installation create failed/);
 
         expect(await sources.getSource("urn:main")).toBeNull();
         expect(await secrets.listKeys()).toEqual([]);
@@ -78,13 +80,15 @@ describe("@bernouy/cms-integrations installation persistence", () => {
         const before = await installations.get("test-secret-source");
         const key = before!.secretRefs.apiKey;
 
-        await expect(runIntegrationInstallation({
-            mode: "rerun",
-            deps: { sources, secrets },
-            installations,
-            integrationId: "test-secret-source",
-            body: { answers: { apiKey: "sk_new" } },
-        })).rejects.toThrow(/installation replace failed/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "rerun",
+                deps: { sources, secrets },
+                installations,
+                integrationId: "test-secret-source",
+                body: { answers: { apiKey: "sk_new" } },
+            }),
+        ).rejects.toThrow(/installation replace failed/);
 
         expect(await secrets.get(key)).toBe("sk_old");
         const after = await installations.get("test-secret-source");

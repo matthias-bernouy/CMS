@@ -1,6 +1,8 @@
 export function majorToMinor(value) {
     const normalized = String(value).trim().replace(",", ".");
-    if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return NaN;
+    if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) {
+        return NaN;
+    }
     const [units, decimals = ""] = normalized.split(".");
     const amount = Number(units) * 100 + Number(decimals.padEnd(2, "0"));
     return Number.isSafeInteger(amount) ? amount : NaN;

@@ -22,13 +22,15 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                     source: {
                         id: "orders",
                         meta: { name: "Orders" },
-                        endpoints: [{
-                            endpointId: "createOrder",
-                            method: "POST",
-                            targetUrl: "https://example.com/orders",
-                            params: [],
-                            output: [{ status: "200", body: { type: "object" } }],
-                        }],
+                        endpoints: [
+                            {
+                                endpointId: "createOrder",
+                                method: "POST",
+                                targetUrl: "https://example.com/orders",
+                                params: [],
+                                output: [{ status: "200", body: { type: "object" } }],
+                            },
+                        ],
                     },
                 },
                 {
@@ -62,7 +64,11 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             [definition],
         );
         await triggers.setEnabled("notify-on-order", false);
-        await triggers.recordRun("notify-on-order", { at: "2026-01-01T00:00:00.000Z", status: "error", error: "disabled test" });
+        await triggers.recordRun("notify-on-order", {
+            at: "2026-01-01T00:00:00.000Z",
+            status: "error",
+            error: "disabled test",
+        });
 
         const rerun = await importIntegration(
             { sources, functions, triggers, secrets },
@@ -147,18 +153,14 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             ],
         });
 
-        await importIntegration(
-            { sources, functions, roles, secrets },
-            { kind: "shop", answers: {}, options: {} },
-            [definition],
-        );
+        await importIntegration({ sources, functions, roles, secrets }, { kind: "shop", answers: {}, options: {} }, [
+            definition,
+        ]);
 
-        expect((await roles.get(PUBLIC_ROLE))?.grants.map(grant => grant.permission).sort()).toEqual([
+        expect((await roles.get(PUBLIC_ROLE))?.grants.map((grant) => grant.permission).sort()).toEqual([
             "urn:shop:catalog",
             "urn:system-functions:checkout",
         ]);
-        expect((await roles.get(USER_ROLE))?.grants.map(grant => grant.permission)).toEqual([
-            "urn:shop:myOrders",
-        ]);
+        expect((await roles.get(USER_ROLE))?.grants.map((grant) => grant.permission)).toEqual(["urn:shop:myOrders"]);
     });
 });

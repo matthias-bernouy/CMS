@@ -11,9 +11,9 @@ import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
  * the AES-GCM auth tag.
  */
 export type EncryptedSecretDocument = {
-    _id:        string;
+    _id: string;
     ciphertext: Buffer;
-    iv:         Buffer;
+    iv: Buffer;
 };
 
 export type EncryptedMongoSecretStoreConfig = {
@@ -40,33 +40,30 @@ export type EncryptedMongoSecretStoreConfig = {
  * dump alone is useless to an attacker without the KEK.
  */
 export class EncryptedMongoSecretStore implements SecretStore {
-
-    private readonly _scopeId:    string;
+    private readonly _scopeId: string;
     private readonly _collection: Collection<EncryptedSecretDocument>;
-    private readonly _crypto:     SecretCrypto;
+    private readonly _crypto: SecretCrypto;
 
     constructor(config: EncryptedMongoSecretStoreConfig) {
-        this._scopeId    = config.scopeId;
+        this._scopeId = config.scopeId;
         this._collection = config.collection;
-        this._crypto     = config.secretCrypto;
+        this._crypto = config.secretCrypto;
     }
 
     async get(key: string): Promise<string | null> {
         const doc = await this._collection.findOne({ _id: key });
-        if (!doc) return null;
+        if (!doc) {
+            return null;
+        }
         return this._crypto.decrypt(this._scopeId, {
             ciphertext: asBuffer(doc.ciphertext),
-            iv:         asBuffer(doc.iv),
+            iv: asBuffer(doc.iv),
         });
     }
 
     async set(key: string, value: string): Promise<void> {
         const blob = await this._crypto.encrypt(this._scopeId, value);
-        await this._collection.replaceOne(
-            { _id: key },
-            { ciphertext: blob.ciphertext, iv: blob.iv },
-            { upsert: true },
-        );
+        await this._collection.replaceOne({ _id: key }, { ciphertext: blob.ciphertext, iv: blob.iv }, { upsert: true });
     }
 
     async delete(key: string): Promise<void> {
@@ -80,7 +77,7 @@ export class EncryptedMongoSecretStore implements SecretStore {
         for (const doc of docs) {
             const value = await this._crypto.decrypt(this._scopeId, {
                 ciphertext: asBuffer(doc.ciphertext),
-                iv:         asBuffer(doc.iv),
+                iv: asBuffer(doc.iv),
             });
             out.push({ key: doc._id, value });
         }

@@ -30,17 +30,19 @@ export type CreateTriggerInterceptorOptions = {
 export function createTriggerInterceptor(options: CreateTriggerInterceptorOptions): TriggerInterceptor {
     return async (endpoint, request, next) => {
         const match = endpointMatch(endpoint);
-        if (!match) return next(request);
+        if (!match) {
+            return next(request);
+        }
         const installed = options.triggers.findEndpointTriggers
             ? await options.triggers.findEndpointTriggers(match.source, match.endpoint)
             : await options.triggers.getAllTriggers();
         const requestTriggers = matchingTriggers(installed, endpoint, "request");
         const responseTriggers = matchingTriggers(installed, endpoint, "response");
-        if (!requestTriggers.length && !responseTriggers.length) return next(request);
+        if (!requestTriggers.length && !responseTriggers.length) {
+            return next(request);
+        }
 
-        const userPromise = options.resolveUser
-            ? options.resolveUser(request).catch(() => ({}))
-            : Promise.resolve({});
+        const userPromise = options.resolveUser ? options.resolveUser(request).catch(() => ({})) : Promise.resolve({});
         const requestBodyPromise = needsRequestBody(requestTriggers, responseTriggers)
             ? readJsonBodyUnderLimit(request.clone(), options.maxBodyBytes ?? DEFAULT_TRIGGER_BODY_LIMIT_BYTES)
             : Promise.resolve(undefined);
@@ -54,7 +56,9 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
                 user: await userPromise,
                 requestBody: await requestBodyPromise,
             });
-            if (result.blocked) return result.response!;
+            if (result.blocked) {
+                return result.response!;
+            }
         }
         scheduleAsyncTriggers(requestTriggers, {
             ...runtimeOptions(options, endpoint, request),
@@ -64,7 +68,9 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
         });
 
         const response = await next(request);
-        if (!responseTriggers.length) return response;
+        if (!responseTriggers.length) {
+            return response;
+        }
 
         const responseBodyPromise = responseBodyForTriggers(
             response,
@@ -82,7 +88,9 @@ export function createTriggerInterceptor(options: CreateTriggerInterceptorOption
                 user: await userPromise,
                 requestBody: await requestBodyPromise,
             });
-            if (result.blocked) return result.response!;
+            if (result.blocked) {
+                return result.response!;
+            }
         }
         scheduleAsyncTriggers(responseTriggers, {
             ...runtimeOptions(options, endpoint, request),
@@ -102,7 +110,9 @@ function responseBodyForTriggers(
     triggers: readonly TriggerRecord[],
     maxBodyBytes: number,
 ): Promise<unknown | undefined> {
-    if (!anyTriggerReadsResponseBody(triggers)) return Promise.resolve(undefined);
+    if (!anyTriggerReadsResponseBody(triggers)) {
+        return Promise.resolve(undefined);
+    }
     const projected = triggerResponseProjection(response);
     return projected !== undefined
         ? Promise.resolve(projected.byteLength <= maxBodyBytes ? projected.body : undefined)
@@ -120,16 +130,19 @@ function runtimeOptions(options: CreateTriggerInterceptorOptions, endpoint: Sour
     };
 }
 
-function needsRequestBody(requestTriggers: readonly TriggerRecord[], responseTriggers: readonly TriggerRecord[]): boolean {
+function needsRequestBody(
+    requestTriggers: readonly TriggerRecord[],
+    responseTriggers: readonly TriggerRecord[],
+): boolean {
     return anyTriggerReadsRequestBody(requestTriggers) || anyTriggerReadsRequestBody(responseTriggers);
 }
 
 function syncTriggers(triggers: readonly TriggerRecord[]): TriggerRecord[] {
-    return triggers.filter(trigger => (trigger.mode ?? "async") === "sync");
+    return triggers.filter((trigger) => (trigger.mode ?? "async") === "sync");
 }
 
 function asyncTriggers(triggers: readonly TriggerRecord[]): TriggerRecord[] {
-    return triggers.filter(trigger => (trigger.mode ?? "async") === "async");
+    return triggers.filter((trigger) => (trigger.mode ?? "async") === "async");
 }
 
 function scheduleAsyncTriggers(
@@ -143,7 +156,9 @@ function scheduleAsyncTriggers(
     },
 ): void {
     const records = asyncTriggers(triggers);
-    if (!records.length) return;
+    if (!records.length) {
+        return;
+    }
     void (async () => {
         await runTriggers({
             triggers: options.triggers,

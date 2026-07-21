@@ -19,7 +19,7 @@ export const CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click"
 export class Canvas extends HTMLElement {
     private readonly _currentFrameUrls: Record<CanvasFrameKind, string | null> = {
         editor: null,
-        view:   null,
+        view: null,
     };
 
     static get observedAttributes(): string[] {
@@ -70,42 +70,58 @@ export class Canvas extends HTMLElement {
             return;
         }
 
-        if (name === "mode") return;
+        if (name === "mode") {
+            return;
+        }
 
         this.syncViewportSize();
     }
 
     private readonly onFrameLoad = (event: Event): void => {
         const frame = event.currentTarget;
-        if (!(frame instanceof HTMLElement) || frame.localName !== "iframe") return;
+        if (!(frame instanceof HTMLElement) || frame.localName !== "iframe") {
+            return;
+        }
 
         const iframe = frame as HTMLIFrameElement;
         const kind = iframe.dataset.frameKind === "view" ? "view" : "editor";
         const frameDocument = iframe.contentDocument;
-        if (!frameDocument) return;
-        if (kind === "editor") installEditorFormGuard(frameDocument);
+        if (!frameDocument) {
+            return;
+        }
+        if (kind === "editor") {
+            installEditorFormGuard(frameDocument);
+        }
 
-        this.dispatchEvent(new CustomEvent<CanvasFrameReadyDetail>(CANVAS_FRAME_READY_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: {
-                document: frameDocument,
-                frame: iframe,
-                kind,
-                url:      this._currentFrameUrls[kind] ?? iframe.src,
-            },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<CanvasFrameReadyDetail>(CANVAS_FRAME_READY_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    document: frameDocument,
+                    frame: iframe,
+                    kind,
+                    url: this._currentFrameUrls[kind] ?? iframe.src,
+                },
+            }),
+        );
     };
 
     private readonly onBackgroundClick = (event: Event): void => {
         const target = event.target;
-        if (!(target instanceof Element)) return;
-        if (target.closest(".page")) return;
+        if (!(target instanceof Element)) {
+            return;
+        }
+        if (target.closest(".page")) {
+            return;
+        }
 
-        this.dispatchEvent(new CustomEvent(CANVAS_BACKGROUND_CLICK_EVENT, {
-            bubbles: true,
-            composed: true,
-        }));
+        this.dispatchEvent(
+            new CustomEvent(CANVAS_BACKGROUND_CLICK_EVENT, {
+                bubbles: true,
+                composed: true,
+            }),
+        );
     };
 
     private syncFrameUrls(): void {
@@ -114,7 +130,9 @@ export class Canvas extends HTMLElement {
     }
 
     private syncFrameUrl(kind: CanvasFrameKind, frame: HTMLIFrameElement, url: string): void {
-        if (this._currentFrameUrls[kind] === url) return;
+        if (this._currentFrameUrls[kind] === url) {
+            return;
+        }
 
         this._currentFrameUrls[kind] = url;
         if (frame.contentWindow) {
@@ -125,15 +143,11 @@ export class Canvas extends HTMLElement {
     }
 
     private editorFrameUrl(): string {
-        return this.getAttribute("editor-frame-url")?.trim()
-            || this.getAttribute("frame-url")?.trim()
-            || "about:blank";
+        return this.getAttribute("editor-frame-url")?.trim() || this.getAttribute("frame-url")?.trim() || "about:blank";
     }
 
     private viewFrameUrl(): string {
-        return this.getAttribute("view-frame-url")?.trim()
-            || this.getAttribute("frame-url")?.trim()
-            || "about:blank";
+        return this.getAttribute("view-frame-url")?.trim() || this.getAttribute("frame-url")?.trim() || "about:blank";
     }
 
     private syncViewportSize(): void {
@@ -153,7 +167,9 @@ export class Canvas extends HTMLElement {
 
     private cssSize(value: string | null): string | null {
         const size = value?.trim();
-        if (!size) return null;
+        if (!size) {
+            return null;
+        }
         return /^\d+$/.test(size) ? `${size}px` : size;
     }
 
@@ -174,9 +190,17 @@ const EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
 
 function installEditorFormGuard(document: Document): void {
     const state = document as Document & { [EDITOR_FORM_GUARD_KEY]?: boolean };
-    if (state[EDITOR_FORM_GUARD_KEY]) return;
+    if (state[EDITOR_FORM_GUARD_KEY]) {
+        return;
+    }
     state[EDITOR_FORM_GUARD_KEY] = true;
-    document.addEventListener("submit", (event) => {
-        if (!event.defaultPrevented) event.preventDefault();
-    }, true);
+    document.addEventListener(
+        "submit",
+        (event) => {
+            if (!event.defaultPrevented) {
+                event.preventDefault();
+            }
+        },
+        true,
+    );
 }

@@ -25,7 +25,9 @@ describe("@bernouy/cms-integrations installation secrets", () => {
 
         expect(result.installation.id).toBe("test-secret-source");
         expect(result.installation.runCount).toBe(1);
-        expect(result.installation.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "created" }]);
+        expect(result.installation.artifacts).toEqual([
+            { type: "source", id: "urn:secret-source-main", action: "created" },
+        ]);
         const secretKey = result.installation.secretRefs.apiKey;
         expect(secretKey).toMatch(/^TEST_SOURCE_SECRET_SOURCE_MAIN_[A-F0-9]{8}_API_KEY$/);
         expect(JSON.stringify(result.installation)).not.toContain("sk_test");
@@ -42,17 +44,19 @@ describe("@bernouy/cms-integrations installation secrets", () => {
             inputs: [{ name: "password", label: "Password", type: "password", required: true }],
         };
 
-        await expect(runIntegrationInstallation({
-            mode: "create",
-            deps: { sources, secrets },
-            installations,
-            siteIntegrations: [definition],
-            dto: {
-                kind: "password-only",
-                answers: { password: "plain_password" },
-                options: {},
-            },
-        })).rejects.toThrow(/password inputs must declare secret: true/);
+        await expect(
+            runIntegrationInstallation({
+                mode: "create",
+                deps: { sources, secrets },
+                installations,
+                siteIntegrations: [definition],
+                dto: {
+                    kind: "password-only",
+                    answers: { password: "plain_password" },
+                    options: {},
+                },
+            }),
+        ).rejects.toThrow(/password inputs must declare secret: true/);
 
         expect(await installations.get("password-only")).toBeNull();
     });
@@ -85,7 +89,10 @@ describe("@bernouy/cms-integrations installation secrets", () => {
         const deployer: IntegrationConnectorDeployer = {
             provider: "supabase",
             async deploy() {
-                return { provider: "supabase", outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" } };
+                return {
+                    provider: "supabase",
+                    outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
+                };
             },
         };
 
@@ -101,12 +108,16 @@ describe("@bernouy/cms-integrations installation secrets", () => {
         expect(result.installation.secretRefs).toEqual({ cmsApiKey: "GENERATED_MAIN_API_KEY" });
         const generated = await secrets.get("GENERATED_MAIN_API_KEY");
         expect(generated?.startsWith("cms_")).toBe(true);
-        if (!generated) throw new Error("missing generated secret");
+        if (!generated) {
+            throw new Error("missing generated secret");
+        }
         expect(JSON.stringify(result.installation)).not.toContain(generated);
-        expect(result.installation.runs[0]?.connectors).toEqual([{
-            provider: "supabase",
-            outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
-        }]);
+        expect(result.installation.runs[0]?.connectors).toEqual([
+            {
+                provider: "supabase",
+                outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
+            },
+        ]);
     });
 });
 
@@ -131,30 +142,38 @@ function generatedSecretDefinition(): IntegrationDefinition {
         kind: "generated-secret",
         label: "Generated Secret",
         inputs: [{ name: "id", label: "ID", type: "text", required: true }],
-        generatedSecrets: [{
-            name: "cmsApiKey",
-            key: "GENERATED_{{env answers.id}}_API_KEY",
-            bytes: 16,
-            prefix: "cms_",
-        }],
-        connectors: [{ provider: "supabase" }],
-        artifacts: [{
-            type: "source",
-            source: {
-                id: "{{answers.id}}",
-                meta: { name: "Generated Secret" },
-                endpoints: [{
-                    endpointId: "health",
-                    method: "GET",
-                    targetUrl: "{{connectors.supabase.functionsBaseUrl}}/health",
-                    params: [],
-                    output: [{ status: "200", body: { type: "object" } }],
-                    headers: [{
-                        name: "authorization",
-                        source: { from: "secret", ref: "{{secrets.cmsApiKey}}", prefix: "Bearer " },
-                    }],
-                }],
+        generatedSecrets: [
+            {
+                name: "cmsApiKey",
+                key: "GENERATED_{{env answers.id}}_API_KEY",
+                bytes: 16,
+                prefix: "cms_",
             },
-        }],
+        ],
+        connectors: [{ provider: "supabase" }],
+        artifacts: [
+            {
+                type: "source",
+                source: {
+                    id: "{{answers.id}}",
+                    meta: { name: "Generated Secret" },
+                    endpoints: [
+                        {
+                            endpointId: "health",
+                            method: "GET",
+                            targetUrl: "{{connectors.supabase.functionsBaseUrl}}/health",
+                            params: [],
+                            output: [{ status: "200", body: { type: "object" } }],
+                            headers: [
+                                {
+                                    name: "authorization",
+                                    source: { from: "secret", ref: "{{secrets.cmsApiKey}}", prefix: "Bearer " },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            },
+        ],
     };
 }

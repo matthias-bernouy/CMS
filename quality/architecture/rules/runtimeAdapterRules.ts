@@ -1,9 +1,5 @@
 import { builtinModules } from "node:module";
-import {
-    type ArchitectureViolation,
-    type SourceImport,
-    type WorkspacePackage,
-} from "../core/architectureTypes";
+import { type ArchitectureViolation, type SourceImport, type WorkspacePackage } from "../core/architectureTypes";
 import { parseWorkspaceSpecifier } from "../core/resolution/packageExports";
 import { toRelativePath } from "../core/pathUtils";
 
@@ -19,13 +15,9 @@ export function checkSurfaceAdapters(
     rootDir: string,
 ): void {
     for (const imported of imports) {
-        if (!isRuntimeAdapter(
-            imported.specifier,
-            adapterSubpaths,
-            infrastructureModules,
-            false,
-            packageByName,
-        )) continue;
+        if (!isRuntimeAdapter(imported.specifier, adapterSubpaths, infrastructureModules, false, packageByName)) {
+            continue;
+        }
         violations.push({
             kind: "surface-runtime-adapter",
             file: toRelativePath(rootDir, file),
@@ -43,18 +35,20 @@ export function isRuntimeAdapter(
     packageByName: ReadonlyMap<string, WorkspacePackage>,
 ): boolean {
     const normalizedBuiltin = specifier.replace(/^node:/, "");
-    if (browser && (
-        specifier === "bun"
-        || specifier.startsWith("bun:")
-        || NODE_BUILTINS.has(normalizedBuiltin)
-    )) return true;
-    if (infrastructureModules.some((module) => (
-        specifier === module || specifier.startsWith(`${module}/`)
-    ))) return true;
-    if (specifier.startsWith("@aws-sdk/")) return true;
+    if (browser && (specifier === "bun" || specifier.startsWith("bun:") || NODE_BUILTINS.has(normalizedBuiltin))) {
+        return true;
+    }
+    if (infrastructureModules.some((module) => specifier === module || specifier.startsWith(`${module}/`))) {
+        return true;
+    }
+    if (specifier.startsWith("@aws-sdk/")) {
+        return true;
+    }
 
     const workspaceImport = parseWorkspaceSpecifier(specifier, packageByName);
-    if (!workspaceImport) return false;
+    if (!workspaceImport) {
+        return false;
+    }
     const subpathSegments = workspaceImport.subpath.replaceAll("\\", "/").split("/");
     return subpathSegments.some((segment) => adapterSubpaths.includes(segment.toLowerCase()));
 }

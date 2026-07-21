@@ -3,9 +3,7 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { paymentSources } from "./sources";
 
-export type PaymentFunctionId =
-    | "getPaymentForOrder"
-    | "refreshPaymentForOrder";
+export type PaymentFunctionId = "getPaymentForOrder" | "refreshPaymentForOrder";
 
 export type CapturedCall = {
     url: URL;
@@ -46,18 +44,18 @@ export async function executePaymentWorkflow(
 }
 
 export async function loadPaymentFunction(id: PaymentFunctionId) {
-    const definition = await new FsIntegrationDefinitionRepository(
-        OFFICIAL_INTEGRATIONS_ROOT,
-    ).get("commerce-stripe-payments");
-    const artifact = definition?.artifacts?.find(item =>
-        item.type === "function" && item.function.id === id
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
+        "commerce-stripe-payments",
     );
+    const artifact = definition?.artifacts?.find((item) => item.type === "function" && item.function.id === id);
     if (!artifact || artifact.type !== "function") {
         throw new Error(`${id} function not found`);
     }
     const fn = structuredClone(artifact.function);
     for (const step of fn.steps) {
-        if (!("call" in step)) continue;
+        if (!("call" in step)) {
+            continue;
+        }
         if (step.call.source === "{{dependencies.commerce.sourceId}}") {
             step.call.source = "commerce";
         } else if (step.call.source === "{{dependencies.stripe.sourceId}}") {
@@ -68,9 +66,7 @@ export async function loadPaymentFunction(id: PaymentFunctionId) {
 }
 
 export function getRequest(orderId = 42): Request {
-    return new Request(
-        `https://cms.test/functions/getPaymentForOrder?orderId=${orderId}`,
-    );
+    return new Request(`https://cms.test/functions/getPaymentForOrder?orderId=${orderId}`);
 }
 
 export function refreshRequest(body: unknown = { orderId: 42 }): Request {
@@ -83,8 +79,8 @@ export function refreshRequest(body: unknown = { orderId: 42 }): Request {
 
 async function requestBody(request: Request): Promise<unknown> {
     const text = await request.clone().text();
-    if (!text) return null;
-    return request.headers.get("content-type")?.includes("application/json")
-        ? JSON.parse(text)
-        : text;
+    if (!text) {
+        return null;
+    }
+    return request.headers.get("content-type")?.includes("application/json") ? JSON.parse(text) : text;
 }

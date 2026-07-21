@@ -1,13 +1,10 @@
-import type {
-    IntegrationArtifactResult,
-} from "./IntegrationImport";
-import type {
-    IntegrationInstallation,
-    IntegrationInstallationStatus,
-    IntegrationRun,
-} from "./IntegrationInstallation";
+import type { IntegrationArtifactResult } from "./IntegrationImport";
+import type { IntegrationInstallation, IntegrationInstallationStatus, IntegrationRun } from "./IntegrationInstallation";
 
-export type IntegrationInstallationCreate = Omit<IntegrationInstallation, "createdAt" | "updatedAt" | "runCount" | "runs" | "status" | "artifacts"> & {
+export type IntegrationInstallationCreate = Omit<
+    IntegrationInstallation,
+    "createdAt" | "updatedAt" | "runCount" | "runs" | "status" | "artifacts"
+> & {
     status?: IntegrationInstallationStatus;
     artifacts?: IntegrationArtifactResult[];
     runs?: IntegrationRun[];

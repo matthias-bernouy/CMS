@@ -22,9 +22,9 @@ function logger(): ScheduledFunctionLogger & { messages: string[] } {
     const messages: string[] = [];
     return {
         messages,
-        info: message => messages.push(message),
-        warn: message => messages.push(message),
-        error: message => messages.push(message),
+        info: (message) => messages.push(message),
+        warn: (message) => messages.push(message),
+        error: (message) => messages.push(message),
     };
 }
 
@@ -41,7 +41,9 @@ function fakeTimer(): ScheduledFunctionTimer & { callbacks: Array<() => void>; d
         },
         clear(handle) {
             const index = callbacks.indexOf(handle as () => void);
-            if (index >= 0) callbacks.splice(index, 1);
+            if (index >= 0) {
+                callbacks.splice(index, 1);
+            }
         },
     };
 }
@@ -55,14 +57,20 @@ describe("scheduled system function runner", () => {
         const runner = startScheduledSystemFunctions({
             functions,
             sources: new InMemorySourceRepository(),
-            jobs: [{ functionId: "worker", intervalMs: 1_000, initialDelayMs: 25, body: ctx => ({ runId: ctx.runId }) }],
+            jobs: [
+                { functionId: "worker", intervalMs: 1_000, initialDelayMs: 25, body: (ctx) => ({ runId: ctx.runId }) },
+            ],
             timer,
             logger: logs,
             randomUUID: () => "run-1",
         });
 
         expect(timer.delays).toEqual([25]);
-        expect(await runner.runNow("worker")).toMatchObject({ status: "succeeded", runId: "run-1", responseStatus: 200 });
+        expect(await runner.runNow("worker")).toMatchObject({
+            status: "succeeded",
+            runId: "run-1",
+            responseStatus: 200,
+        });
         expect(logs.messages).toEqual([expect.stringContaining("worker succeeded")]);
         await runner.stop();
     });
@@ -101,17 +109,19 @@ describe("scheduled system function runner", () => {
         const functions = new InMemoryFunctionRepository();
         await functions.createFunction({
             ...systemFunction("worker"),
-            steps: [{
-                assert: {
-                    condition: { equals: [1, 2] },
-                    failure: { status: 503, error: "temporary failure" },
+            steps: [
+                {
+                    assert: {
+                        condition: { equals: [1, 2] },
+                        failure: { status: 503, error: "temporary failure" },
+                    },
                 },
-            }],
+            ],
         });
         const runner = startScheduledSystemFunctions({
             functions,
             sources: new InMemorySourceRepository(),
-            jobs: [{ functionId: "worker", intervalMs: 1_000, body: ctx => ({ runId: ctx.runId }) }],
+            jobs: [{ functionId: "worker", intervalMs: 1_000, body: (ctx) => ({ runId: ctx.runId }) }],
             timer: fakeTimer(),
             logger: logger(),
         });
@@ -129,7 +139,7 @@ describe("scheduled system function runner", () => {
         const runner = startScheduledSystemFunctions({
             functions,
             sources: new InMemorySourceRepository(),
-            jobs: [{ functionId: "worker", intervalMs: 2_000, body: ctx => ({ runId: ctx.runId }) }],
+            jobs: [{ functionId: "worker", intervalMs: 2_000, body: (ctx) => ({ runId: ctx.runId }) }],
             timer,
             logger: logger(),
         });
@@ -144,15 +154,17 @@ describe("scheduled system function runner", () => {
     test("validates every job before scheduling the first timer", () => {
         const timer = fakeTimer();
 
-        expect(() => startScheduledSystemFunctions({
-            functions: new InMemoryFunctionRepository(),
-            sources: new InMemorySourceRepository(),
-            jobs: [
-                { functionId: "valid", intervalMs: 1_000, body: () => ({}) },
-                { functionId: "invalid", intervalMs: 999, body: () => ({}) },
-            ],
-            timer,
-        })).toThrow("interval must be at least 1000ms");
+        expect(() =>
+            startScheduledSystemFunctions({
+                functions: new InMemoryFunctionRepository(),
+                sources: new InMemorySourceRepository(),
+                jobs: [
+                    { functionId: "valid", intervalMs: 1_000, body: () => ({}) },
+                    { functionId: "invalid", intervalMs: 999, body: () => ({}) },
+                ],
+                timer,
+            }),
+        ).toThrow("interval must be at least 1000ms");
         expect(timer.callbacks).toHaveLength(0);
     });
 

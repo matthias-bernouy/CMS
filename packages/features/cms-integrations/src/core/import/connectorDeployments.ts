@@ -16,7 +16,7 @@ export function buildConnectorDeployments(
     },
     context: TemplateContext,
 ): IntegrationConnectorDeployment[] {
-    return (definition.connectors ?? []).map(connector => {
+    return (definition.connectors ?? []).map((connector) => {
         const resolved = resolveTemplates(connector, context);
         return {
             integrationKind: definition.kind,
@@ -38,14 +38,18 @@ export async function deployConnectorDeployments(
     results: IntegrationConnectorDeployResult[];
     outputs: Record<string, Record<string, string>>;
 }> {
-    if (!deployments.length) return { results: [], outputs: {} };
+    if (!deployments.length) {
+        return { results: [], outputs: {} };
+    }
     const deployers = connectorDeployersByProvider(deps.connectorDeployers);
     const results: IntegrationConnectorDeployResult[] = [];
     const outputs: Record<string, Record<string, string>> = {};
 
     for (const deployment of deployments) {
         const deployer = deployers.get(deployment.provider);
-        if (!deployer) throw new IntegrationRuntimeError(`connector deployer "${deployment.provider}" not configured`);
+        if (!deployer) {
+            throw new IntegrationRuntimeError(`connector deployer "${deployment.provider}" not configured`);
+        }
         const result = await deployer.deploy(deployment, {
             answers: context.answers,
             generated: context.generated ?? {},
@@ -66,9 +70,13 @@ function connectorDeployersByProvider(
     deployers: IntegrationImportDeps["connectorDeployers"],
 ): Map<string, IntegrationConnectorDeployer> {
     const out = new Map<string, IntegrationConnectorDeployer>();
-    if (!deployers) return out;
+    if (!deployers) {
+        return out;
+    }
     if (Array.isArray(deployers)) {
-        for (const deployer of deployers) out.set(deployer.provider, deployer);
+        for (const deployer of deployers) {
+            out.set(deployer.provider, deployer);
+        }
         return out;
     }
     for (const [provider, deployer] of Object.entries(deployers)) {

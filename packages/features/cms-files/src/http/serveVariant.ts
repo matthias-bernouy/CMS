@@ -3,15 +3,22 @@ import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { variantKey } from "cms-files/core/imageVariants";
 
 export type VariantServeDeps = {
-    metadata:     CmsFilesMetadataRepository;
+    metadata: CmsFilesMetadataRepository;
     /** Source bytes (the originals), for the best-effort fallback. */
-    sourceBlob:   CmsFilesBlobStore;
+    sourceBlob: CmsFilesBlobStore;
     /** Shared variant store (S3 in prod), where the worker writes variants. */
     variantStore: CmsFilesBlobStore;
 };
 
 const MAX_WIDTH = 4000; // sanity bound on the URL; no generation happens here
-const RASTER_FALLBACK_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif", "image/bmp"]);
+const RASTER_FALLBACK_TYPES = new Set([
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/avif",
+    "image/bmp",
+]);
 const notFound = () => new Response("Not found", { status: 404 });
 
 /**
@@ -34,50 +41,78 @@ export async function serveVariantRequest(
     opts: { prefix: string },
 ): Promise<Response> {
     const { pathname } = new URL(req.url);
-    if (!pathname.startsWith(opts.prefix)) return notFound();
+    if (!pathname.startsWith(opts.prefix)) {
+        return notFound();
+    }
 
     let segments: string[];
-    try { segments = pathname.slice(opts.prefix.length).split("/").map(decodeURIComponent); }
-    catch { return notFound(); }
+    try {
+        segments = pathname.slice(opts.prefix.length).split("/").map(decodeURIComponent);
+    } catch {
+        return notFound();
+    }
     segments = segments.map((s) => s.trim()).filter(Boolean);
-    if (segments.length !== 2) return notFound();
+    if (segments.length !== 2) {
+        return notFound();
+    }
 
     const [id, leaf] = segments;
     const m = /^(\d+)\.(webp)$/.exec(leaf!);
-    if (!m) return notFound();
+    if (!m) {
+        return notFound();
+    }
     const width = Number(m[1]);
-    if (!Number.isInteger(width) || width < 1 || width > MAX_WIDTH) return notFound();
+    if (!Number.isInteger(width) || width < 1 || width > MAX_WIDTH) {
+        return notFound();
+    }
 
     const item = await deps.metadata.getItem(id!);
-    if (!item || item.type !== "file") return notFound();
+    if (!item || item.type !== "file") {
+        return notFound();
+    }
 
     // Variant ready → stream it immutable (content-addressed by contentHash).
     if (item.contentHash) {
         const variant = await deps.variantStore.get(variantKey(item.contentHash, { width, format: "webp" }));
-        if (variant) return imageResponse(variant, "image/webp", cacheControl(true));
+        if (variant) {
+            return imageResponse(variant, "image/webp", cacheControl(true));
+        }
     }
 
     // Fallback: the original, served NOT-immutable so it is replaced once the
     // worker has generated the variant.
-    if (!RASTER_FALLBACK_TYPES.has(item.mimeType)) return notFound();
+    if (!RASTER_FALLBACK_TYPES.has(item.mimeType)) {
+        return notFound();
+    }
     const original = await deps.sourceBlob.get(item.id);
-    if (!original) return notFound();
+    if (!original) {
+        return notFound();
+    }
     return imageResponse(original, item.mimeType, cacheControl(false), item.size);
 }
 
 /** Immutable for a ready variant (prod); always revalidate in dev and for the
  *  original fallback (the variant will supersede it). */
 function cacheControl(variantReady: boolean): string {
-    if (!variantReady || process.env.MODE === "DEV") return "no-cache, must-revalidate";
+    if (!variantReady || process.env.MODE === "DEV") {
+        return "no-cache, must-revalidate";
+    }
     return "public, max-age=31536000, immutable";
 }
 
-function imageResponse(body: ReadableStream<Uint8Array>, contentType: string, cache: string, length?: number): Response {
+function imageResponse(
+    body: ReadableStream<Uint8Array>,
+    contentType: string,
+    cache: string,
+    length?: number,
+): Response {
     const headers: Record<string, string> = {
-        "Content-Type":           contentType,
+        "Content-Type": contentType,
         "X-Content-Type-Options": "nosniff",
-        "Cache-Control":          cache,
+        "Cache-Control": cache,
     };
-    if (length !== undefined) headers["Content-Length"] = String(length);
+    if (length !== undefined) {
+        headers["Content-Length"] = String(length);
+    }
     return new Response(body, { headers });
 }

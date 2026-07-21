@@ -20,7 +20,9 @@ export function stringAt(value: JsonRecord, key: string): string {
 }
 
 export function stripeObjectId(value: unknown): string {
-    if (typeof value === "string") return value;
+    if (typeof value === "string") {
+        return value;
+    }
     return isRecord(value) ? stringAt(value, "id") : "";
 }
 
@@ -31,8 +33,12 @@ export function numberAt(value: JsonRecord, key: string): number | undefined {
 
 export function unixTimestampAt(value: JsonRecord, key: string): number | undefined {
     const nested = value[key];
-    if (typeof nested === "number") return nested;
-    if (typeof nested !== "string") return undefined;
+    if (typeof nested === "number") {
+        return nested;
+    }
+    if (typeof nested !== "string") {
+        return undefined;
+    }
     const milliseconds = Date.parse(nested);
     return Number.isFinite(milliseconds) ? Math.floor(milliseconds / 1000) : undefined;
 }
@@ -60,7 +66,9 @@ export function requiredRecordString(value: JsonRecord, key: string, maxLength: 
 
 export function requiredRecordInteger(value: JsonRecord, key: string): number {
     const child = value[key];
-    if (!Number.isSafeInteger(child)) throw new HttpError(400, `Stripe event ${key} is invalid`);
+    if (!Number.isSafeInteger(child)) {
+        throw new HttpError(400, `Stripe event ${key} is invalid`);
+    }
     return child as number;
 }
 

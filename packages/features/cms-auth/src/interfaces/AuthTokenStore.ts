@@ -1,17 +1,17 @@
 export type AuthTokenPurpose = "email_verification" | "password_reset";
 
 export type AuthToken = {
-    id:         string;
-    purpose:    AuthTokenPurpose;
-    sub:        string;
-    createdAt:  Date;
-    expiresAt:  Date;
+    id: string;
+    purpose: AuthTokenPurpose;
+    sub: string;
+    createdAt: Date;
+    expiresAt: Date;
     consumedAt: Date | null;
 };
 
 export type NewAuthToken = {
-    purpose:   AuthTokenPurpose;
-    sub:       string;
+    purpose: AuthTokenPurpose;
+    sub: string;
     expiresAt: Date;
 };
 

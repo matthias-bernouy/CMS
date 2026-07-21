@@ -1,5 +1,5 @@
-import template from './view/template.html' with { type: 'text' };
-import css from './view/style.css' with { type: 'text' };
+import template from "./view/template.html" with { type: "text" };
+import css from "./view/style.css" with { type: "text" };
 import { Component } from "@bernouy/components/base";
 import type { DetailMedia } from "../DetailMedia/DetailMedia";
 import type { CropSystem } from "../CropSystem/CropSystem";
@@ -11,7 +11,6 @@ import { wireGrid } from "./events/grid";
 import { wireBreadcrumb } from "./events/breadcrumb";
 
 export class GridMedia extends Component {
-
     _folder: string | null = null;
     _breadcrumb: BreadcrumbEntry[] = [];
     _items: MediaItem[] = [];
@@ -23,8 +22,12 @@ export class GridMedia extends Component {
         });
     }
 
-    get detail() { return this.shadowRoot!.getElementById("detail") as unknown as DetailMedia; }
-    get crop()   { return this.shadowRoot!.getElementById("crop")   as unknown as CropSystem; }
+    get detail() {
+        return this.shadowRoot!.getElementById("detail") as unknown as DetailMedia;
+    }
+    get crop() {
+        return this.shadowRoot!.getElementById("crop") as unknown as CropSystem;
+    }
 
     override connectedCallback() {
         const s = this.shadowRoot!;
@@ -46,7 +49,9 @@ export class GridMedia extends Component {
 
     upload() {}
 
-    refresh() { this._refresh(); }
+    refresh() {
+        this._refresh();
+    }
 
     async _refresh() {
         this._items = await api.fetchItems(this._folder);
@@ -60,20 +65,30 @@ export class GridMedia extends Component {
 
     _navigateTo(folderId: string | null, label?: string) {
         const url = new URL(window.location.href);
-        if (folderId) url.searchParams.set("folder", folderId);
-        else          url.searchParams.delete("folder");
+        if (folderId) {
+            url.searchParams.set("folder", folderId);
+        } else {
+            url.searchParams.delete("folder");
+        }
         window.history.pushState({}, "", url.toString());
 
         this._folder = folderId;
-        if (!folderId) this._breadcrumb = [];
-        else if (label) this._breadcrumb.push({ id: folderId, label });
+        if (!folderId) {
+            this._breadcrumb = [];
+        } else if (label) {
+            this._breadcrumb.push({ id: folderId, label });
+        }
 
         this._refresh();
     }
 
     async _confirmDelete(id: string) {
-        if (!confirm("Delete this item?")) return;
-        if (await api.deleteItem(id)) this._refresh();
+        if (!confirm("Delete this item?")) {
+            return;
+        }
+        if (await api.deleteItem(id)) {
+            this._refresh();
+        }
     }
 }
 

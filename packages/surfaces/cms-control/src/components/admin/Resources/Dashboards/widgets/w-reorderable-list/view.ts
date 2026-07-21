@@ -3,8 +3,9 @@ import { createItemControl } from "./controls";
 import type { ReorderableListData, ReorderableListItem } from "./state";
 
 export function renderList(root: ShadowRoot, value: ReorderableListData): void {
-    query<HTMLElement>(root, "[data-rows]")
-        .replaceChildren(...value.items.map((item, index) => renderRow(value, item, index)));
+    query<HTMLElement>(root, "[data-rows]").replaceChildren(
+        ...value.items.map((item, index) => renderRow(value, item, index)),
+    );
     renderHeader(root, value);
     const add = query<HTMLButtonElement>(root, "[data-add]");
     add.textContent = value.addLabel ?? "Add item";

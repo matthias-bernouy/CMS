@@ -6,18 +6,18 @@ export async function sendTestEmail(cms: ControlCms, dto: EmailTestDto): Promise
     const publicAuth = cms.publicAuth;
     const composer = publicAuth.emailComposer ?? new DefaultAuthEmailComposer();
     const actionUrl = buildDemoActionUrl(
-        dto.kind === "email_verification"
-            ? publicAuth.emailVerificationUrl
-            : publicAuth.passwordResetUrl,
+        dto.kind === "email_verification" ? publicAuth.emailVerificationUrl : publicAuth.passwordResetUrl,
     );
-    await publicAuth.emailer.send(await composer.compose({
-        kind:      dto.kind,
-        to:        { email: dto.to, displayName: "Test Recipient" },
-        actionUrl,
-        token:     "test-token",
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-        siteName:  publicAuth.siteName,
-    }));
+    await publicAuth.emailer.send(
+        await composer.compose({
+            kind: dto.kind,
+            to: { email: dto.to, displayName: "Test Recipient" },
+            actionUrl,
+            token: "test-token",
+            expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            siteName: publicAuth.siteName,
+        }),
+    );
 }
 
 function buildDemoActionUrl(base: string): string {

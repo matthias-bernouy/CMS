@@ -30,7 +30,9 @@ test("file-size guidance covers handwritten repository files", () => {
     ]) {
         expect(isGovernedFile(path)).toBeTrue();
     }
-    for (const path of ["bun.lock", "README.md"]) expect(isGovernedFile(path)).toBeFalse();
+    for (const path of ["bun.lock", "README.md"]) {
+        expect(isGovernedFile(path)).toBeFalse();
+    }
 });
 
 test("file-size guidance ignores known generated and atomic files", () => {
@@ -38,17 +40,20 @@ test("file-size guidance ignores known generated and atomic files", () => {
     expect(isGovernedFile(generated)).toBeFalse();
     expect(fileSizeException(generated)).toContain("generated");
     expect(isGovernedFile("quality/ci/coverage/baseline.json")).toBeFalse();
-    const schema = "packages/resources/official-integrations/integrations/demo/versions/1.0.0/connectors/supabase/schema.sql";
+    const schema =
+        "packages/resources/official-integrations/integrations/demo/versions/1.0.0/connectors/supabase/schema.sql";
     expect(fileSizeException(schema)).toContain("atomic");
 });
 
 test("file-size guidance classifies every current file without a Git baseline", () => {
-    const findings = findFileSizeFindings(new Map([
-        ["small.ts", 150],
-        ["review.ts", 151],
-        ["edge.ts", 180],
-        ["large.ts", 181],
-    ]));
+    const findings = findFileSizeFindings(
+        new Map([
+            ["small.ts", 150],
+            ["review.ts", 151],
+            ["edge.ts", 180],
+            ["large.ts", 181],
+        ]),
+    );
     expect(findings).toEqual([
         { path: "edge.ts", currentLines: 180, severity: "info" },
         { path: "large.ts", currentLines: 181, severity: "warning" },

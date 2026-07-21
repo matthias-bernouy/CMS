@@ -10,7 +10,9 @@ export async function hydrateDefinitionIconAssets(
     definition: IntegrationDefinition,
     loadAsset: IntegrationAssetLoader,
 ): Promise<IntegrationDefinition> {
-    if (!definition.artifacts?.some(hasUnhydratedIconAsset)) return definition;
+    if (!definition.artifacts?.some(hasUnhydratedIconAsset)) {
+        return definition;
+    }
     const resolveSvg = cachedSvgResolver(loadAsset);
     const artifacts: DeclarativeArtifactTemplate[] = [];
     for (const artifact of definition.artifacts) {
@@ -20,8 +22,12 @@ export async function hydrateDefinitionIconAssets(
 }
 
 function hasUnhydratedIconAsset(artifact: DeclarativeArtifactTemplate): boolean {
-    if (artifact.type === "source") return isAssetIcon(artifact.source.meta.icon) && !artifact.source.meta.svg;
-    if (artifact.type === "dashboard") return isAssetIcon(artifact.dashboard.meta?.icon) && !artifact.dashboard.meta?.svg;
+    if (artifact.type === "source") {
+        return isAssetIcon(artifact.source.meta.icon) && !artifact.source.meta.svg;
+    }
+    if (artifact.type === "dashboard") {
+        return isAssetIcon(artifact.dashboard.meta?.icon) && !artifact.dashboard.meta?.svg;
+    }
     return false;
 }
 
@@ -35,7 +41,9 @@ async function hydrateArtifactIcon(
     }
     if (artifact.type === "dashboard" && artifact.dashboard.meta) {
         const meta = await hydrateMeta(artifact.dashboard.meta, resolveSvg);
-        return meta === artifact.dashboard.meta ? artifact : { ...artifact, dashboard: { ...artifact.dashboard, meta } };
+        return meta === artifact.dashboard.meta
+            ? artifact
+            : { ...artifact, dashboard: { ...artifact.dashboard, meta } };
     }
     return artifact;
 }
@@ -44,15 +52,19 @@ async function hydrateMeta<T extends { icon?: string; svg?: string }>(
     meta: T,
     resolveSvg: (path: string) => Promise<string>,
 ): Promise<T> {
-    if (meta.svg || !isAssetIcon(meta.icon)) return meta;
+    if (meta.svg || !isAssetIcon(meta.icon)) {
+        return meta;
+    }
     return { ...meta, svg: await resolveSvg(meta.icon) };
 }
 
 function cachedSvgResolver(loadAsset: IntegrationAssetLoader): (path: string) => Promise<string> {
     const cache = new Map<string, Promise<string>>();
-    return path => {
+    return (path) => {
         const cached = cache.get(path);
-        if (cached) return cached;
+        if (cached) {
+            return cached;
+        }
         const pending = loadSvg(path, loadAsset);
         cache.set(path, pending);
         return pending;
@@ -64,7 +76,9 @@ async function loadSvg(path: string, loadAsset: IntegrationAssetLoader): Promise
         throw new Error(`Integration icon asset "${path}" must be an SVG`);
     }
     const asset = await loadAsset(path);
-    if (!asset) throw new Error(`Integration icon asset "${path}" was not found`);
+    if (!asset) {
+        throw new Error(`Integration icon asset "${path}" was not found`);
+    }
     if (!/^image\/svg\+xml(?:\s*;|$)/i.test(asset.contentType)) {
         throw new Error(`Integration icon asset "${path}" must have an SVG content type`);
     }

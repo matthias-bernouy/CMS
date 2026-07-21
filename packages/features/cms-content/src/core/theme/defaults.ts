@@ -1,9 +1,4 @@
-import type {
-    ThemeDefinition,
-    ThemeSettings,
-    ThemeSource,
-    ThemeToken,
-} from "cms-content/interfaces/theme";
+import type { ThemeDefinition, ThemeSettings, ThemeSource, ThemeToken } from "cms-content/interfaces/theme";
 
 const DEFAULT_VALUES: Record<string, string> = {
     "primary-base": "#16634d",
@@ -100,7 +95,12 @@ function source(id: string, label: string, supportsModes: boolean, categories: T
     return { id, label, supportsModes, categories };
 }
 
-function category(id: string, label: string, description: string, tokens: ThemeToken[]): ThemeSource["categories"][number] {
+function category(
+    id: string,
+    label: string,
+    description: string,
+    tokens: ThemeToken[],
+): ThemeSource["categories"][number] {
     return { id, label, description, tokens };
 }
 

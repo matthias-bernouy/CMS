@@ -22,12 +22,18 @@ describe("LocalFsCmsRepository blocs", () => {
             viewJS: "",
             editorJS: "",
             source: {
-                "manifest.json": encode(JSON.stringify({
-                    "default-tag": "site-demo",
-                    bloc: "./Bloc.ts",
-                    editor: "./BlocEditor.ts",
-                    meta: { title: "Demo", description: "Demo bloc" },
-                }, null, 4) + "\n"),
+                "manifest.json": encode(
+                    JSON.stringify(
+                        {
+                            "default-tag": "site-demo",
+                            bloc: "./Bloc.ts",
+                            editor: "./BlocEditor.ts",
+                            meta: { title: "Demo", description: "Demo bloc" },
+                        },
+                        null,
+                        4,
+                    ) + "\n",
+                ),
                 "Bloc.ts": encode("export class DemoBloc extends HTMLElement {}\n"),
                 "BlocEditor.ts": encode(`
                     import { Editor } from "@bernouy/cms-control/editor";
@@ -58,12 +64,18 @@ describe("LocalFsCmsRepository blocs", () => {
             viewJS: "",
             editorJS: "",
             source: {
-                "manifest.json": encode(JSON.stringify({
-                    "default-tag": "site-demo",
-                    bloc: "./Bloc.ts",
-                    editor: "./BlocEditor.ts",
-                    meta: { title: "Demo", description: "Demo bloc" },
-                }, null, 4) + "\n"),
+                "manifest.json": encode(
+                    JSON.stringify(
+                        {
+                            "default-tag": "site-demo",
+                            bloc: "./Bloc.ts",
+                            editor: "./BlocEditor.ts",
+                            meta: { title: "Demo", description: "Demo bloc" },
+                        },
+                        null,
+                        4,
+                    ) + "\n",
+                ),
                 "Bloc.ts": encode("export class DemoBloc extends HTMLElement {}\n"),
                 "BlocEditor.ts": encode(`
                     import { Editor } from "@bernouy/cms-control/editor";
@@ -81,12 +93,18 @@ describe("LocalFsCmsRepository blocs", () => {
             viewJS: "",
             editorJS: "",
             source: {
-                "manifest.json": encode(JSON.stringify({
-                    "default-tag": "site-demo",
-                    bloc: "./Bloc.ts",
-                    editor: "./BlocEditor.ts",
-                    meta: { title: "Demo", description: "Demo bloc" },
-                }, null, 4) + "\n"),
+                "manifest.json": encode(
+                    JSON.stringify(
+                        {
+                            "default-tag": "site-demo",
+                            bloc: "./Bloc.ts",
+                            editor: "./BlocEditor.ts",
+                            meta: { title: "Demo", description: "Demo bloc" },
+                        },
+                        null,
+                        4,
+                    ) + "\n",
+                ),
                 "Bloc.ts": encode("export class DemoBloc extends HTMLElement {}\n"),
                 "BlocEditor.ts": encode(`
                     import { Editor } from "@bernouy/cms-control/editor";
@@ -113,12 +131,18 @@ describe("LocalFsCmsRepository blocs", () => {
             viewJS: "",
             editorJS: "",
             source: {
-                "manifest.json": encode(JSON.stringify({
-                    "default-tag": "generated-demo",
-                    bloc: "./Bloc.ts",
-                    editor: "./BlocEditor.ts",
-                    meta: { title: "Generated Demo", description: "Generated bloc" },
-                }, null, 4) + "\n"),
+                "manifest.json": encode(
+                    JSON.stringify(
+                        {
+                            "default-tag": "generated-demo",
+                            bloc: "./Bloc.ts",
+                            editor: "./BlocEditor.ts",
+                            meta: { title: "Generated Demo", description: "Generated bloc" },
+                        },
+                        null,
+                        4,
+                    ) + "\n",
+                ),
                 "Bloc.ts": encode("export class GeneratedDemoBloc extends HTMLElement {}\n"),
                 "BlocEditor.ts": encode(`
                     import { Editor } from "@bernouy/cms-control/editor";
@@ -127,7 +151,10 @@ describe("LocalFsCmsRepository blocs", () => {
             },
         });
 
-        const manifest = await readFile(join(siteDir, ".p9r", "generated", "blocs", "Integrations", "generated-demo", "manifest.json"), "utf-8");
+        const manifest = await readFile(
+            join(siteDir, ".p9r", "generated", "blocs", "Integrations", "generated-demo", "manifest.json"),
+            "utf-8",
+        );
         expect(manifest).toContain(`"default-tag": "generated-demo"`);
         expect(await repository.getBlocViewJS("generated-demo")).toContain(`customElements.define("generated-demo"`);
     });
@@ -140,26 +167,26 @@ describe("LocalFsCmsRepository system settings", () => {
 
         await repository.updateSystem({
             email: {
-                enabled:   true,
+                enabled: true,
                 fromEmail: "no-reply@example.com",
-                fromName:  "CMS",
-                replyTo:   "support@example.com",
+                fromName: "CMS",
+                replyTo: "support@example.com",
                 transport: "smtp",
-                smtp:      {
-                    host:              "smtp.example.com",
-                    port:              587,
-                    secure:            false,
-                    username:          "postmaster@example.com",
+                smtp: {
+                    host: "smtp.example.com",
+                    port: 587,
+                    secure: false,
+                    username: "postmaster@example.com",
                     passwordSecretRef: "${SMTP_PASSWORD}",
                 },
                 templates: {
                     emailVerification: {
                         subject: "Verify {{siteName}}",
-                        html:    "<a href=\"{{actionUrl}}\">Verify</a>",
+                        html: '<a href="{{actionUrl}}">Verify</a>',
                     },
                     passwordReset: {
                         subject: "",
-                        html:    "",
+                        html: "",
                     },
                 },
             },

@@ -20,14 +20,16 @@ describe("groupBlocsBySignature", () => {
             ["nav", "footer", "prodA"],
             ["nav", "footer", "prodA"],
         ]);
-        expect(tagToGroup.get("nav")).toBe(tagToGroup.get("footer"));            // core together
-        expect(tagToGroup.get("blogA")).toBe(tagToGroup.get("blogB"));           // blog cluster together
-        expect(tagToGroup.get("blogA")).not.toBe(tagToGroup.get("nav"));         // not in core
-        expect(tagToGroup.get("prodA")).not.toBe(tagToGroup.get("blogA"));       // no cross-cluster leak
+        expect(tagToGroup.get("nav")).toBe(tagToGroup.get("footer")); // core together
+        expect(tagToGroup.get("blogA")).toBe(tagToGroup.get("blogB")); // blog cluster together
+        expect(tagToGroup.get("blogA")).not.toBe(tagToGroup.get("nav")); // not in core
+        expect(tagToGroup.get("prodA")).not.toBe(tagToGroup.get("blogA")); // no cross-cluster leak
         expect(tagToGroup.get("prodA")).not.toBe(tagToGroup.get("nav"));
         // consistency: every group's tags map back to that group
         for (const [gid, tags] of groups) {
-            for (const t of tags) expect(tagToGroup.get(t)).toBe(gid);
+            for (const t of tags) {
+                expect(tagToGroup.get(t)).toBe(gid);
+            }
         }
     });
 
@@ -43,17 +45,20 @@ describe("groupBlocsBySignature", () => {
     });
 
     test("a bloc used on a single page is its own group (tail)", () => {
-        const { groups, tagToGroup } = groupBlocsBySignature([
-            ["nav", "rare"],
-            ["nav"],
-        ]);
+        const { groups, tagToGroup } = groupBlocsBySignature([["nav", "rare"], ["nav"]]);
         expect(groups.get(tagToGroup.get("rare")!)).toEqual(["rare"]);
         expect(tagToGroup.get("rare")).not.toBe(tagToGroup.get("nav"));
     });
 
     test("is deterministic and tag-order-independent within a page", () => {
-        const a = groupBlocsBySignature([["x", "y"], ["x", "y", "z"]]);
-        const b = groupBlocsBySignature([["y", "x"], ["z", "y", "x"]]);
+        const a = groupBlocsBySignature([
+            ["x", "y"],
+            ["x", "y", "z"],
+        ]);
+        const b = groupBlocsBySignature([
+            ["y", "x"],
+            ["z", "y", "x"],
+        ]);
         expect([...a.groups.keys()].sort()).toEqual([...b.groups.keys()].sort());
         expect(a.tagToGroup.get("x")).toBe(b.tagToGroup.get("x"));
     });
@@ -82,7 +87,7 @@ describe("getBlocGroupManifest", () => {
                     { content: "<site-header></site-header>" },
                     { content: "<site-header></site-header>" },
                 ],
-                getBlocsList: async () => Object.keys(views).map(id => ({ id })),
+                getBlocsList: async () => Object.keys(views).map((id) => ({ id })),
                 getBlocViewJS: async (tag: string) => views[tag] ?? null,
             },
         } as unknown as DeliveryCms;
@@ -105,7 +110,7 @@ describe("getBlocGroupManifest", () => {
                     { content: "<site-header></site-header>" },
                     { content: "<base-nav></base-nav>" },
                 ],
-                getBlocsList: async () => Object.keys(views).map(id => ({ id })),
+                getBlocsList: async () => Object.keys(views).map((id) => ({ id })),
                 getBlocViewJS: async (tag: string) => views[tag] ?? null,
             },
         } as unknown as DeliveryCms;

@@ -12,23 +12,27 @@ import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
  * from the environment here.
  */
 export class TtlCache implements Cache {
-
     private store = new Map<string, { entry: CacheEntry; expiresAt: number }>();
     private readonly bypass: boolean;
     private readonly ttlMs: number;
     private readonly now: () => number;
 
     constructor(opts: { ttlMs?: number; bypass?: boolean; now?: () => number } = {}) {
-        this.ttlMs  = opts.ttlMs ?? 60_000;
+        this.ttlMs = opts.ttlMs ?? 60_000;
         this.bypass = opts.bypass ?? false;
-        this.now    = opts.now ?? Date.now; // injectable for deterministic tests
+        this.now = opts.now ?? Date.now; // injectable for deterministic tests
     }
 
     get(key: string): CacheEntry | null {
-        if (this.bypass) return null;
+        if (this.bypass) {
+            return null;
+        }
         const hit = this.store.get(key);
-        if (!hit) return null;
-        if (hit.expiresAt <= this.now()) {   // expired → drop, force a fresh render
+        if (!hit) {
+            return null;
+        }
+        if (hit.expiresAt <= this.now()) {
+            // expired → drop, force a fresh render
             this.store.delete(key);
             return null;
         }
@@ -36,7 +40,9 @@ export class TtlCache implements Cache {
     }
 
     set(key: string, value: CacheEntry): void {
-        if (this.bypass) return;
+        if (this.bypass) {
+            return;
+        }
         this.store.set(key, { entry: value, expiresAt: this.now() + this.ttlMs });
     }
 
@@ -46,8 +52,9 @@ export class TtlCache implements Cache {
 
     deleteMatching(predicate: (key: string) => boolean): void {
         for (const key of this.store.keys()) {
-            if (predicate(key)) this.store.delete(key);
+            if (predicate(key)) {
+                this.store.delete(key);
+            }
         }
     }
-
 }

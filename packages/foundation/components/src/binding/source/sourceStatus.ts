@@ -20,7 +20,9 @@ export function sourceStatusConditions(fragment: DocumentFragment): Set<SourceSt
     const roots = Array.from(fragment.children);
     const descendants = Array.from(fragment.querySelectorAll(`[${CONDITION_ATTR}]`));
     for (const element of [...roots, ...descendants]) {
-        for (const state of sourceStatusConditionStates(element.getAttribute(CONDITION_ATTR))) states.add(state);
+        for (const state of sourceStatusConditionStates(element.getAttribute(CONDITION_ATTR))) {
+            states.add(state);
+        }
     }
     return states;
 }
@@ -28,10 +30,10 @@ export function sourceStatusConditions(fragment: DocumentFragment): Set<SourceSt
 export function statusValue(state: SourceState, value: unknown): SourceStatusValue {
     return {
         loading: state === "loading",
-        loaded:  state === "loaded",
-        empty:   state === "empty",
-        error:   state === "error",
-        status:  isStatusObject(value) ? value.status : undefined,
+        loaded: state === "loaded",
+        empty: state === "empty",
+        error: state === "error",
+        status: isStatusObject(value) ? value.status : undefined,
         message: isStatusObject(value) ? value.message : undefined,
     };
 }
@@ -49,13 +51,17 @@ export function scopeForSourceStatus(
 ): Scope {
     const sources = options.sourceStatusesFor?.(source, sourceStatus) ?? localSourceStatusScope(source, sourceStatus);
     const vars: Record<string, unknown> = { $source: sourceStatus, $sources: sources };
-    if (alias) vars[alias] = value;
+    if (alias) {
+        vars[alias] = value;
+    }
     return { value, vars };
 }
 
 function sourceStatusConditionStates(value: string | null): SourceState[] {
     const states: SourceState[] = [];
-    for (const match of (value ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g)) {
+    for (const match of (value ?? "").matchAll(
+        /(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g,
+    )) {
         states.push(match[1] as SourceState);
     }
     return states;

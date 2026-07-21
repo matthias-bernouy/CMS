@@ -6,7 +6,10 @@ import { DuplicateBlocTagError, type CmsRepository } from "@bernouy/cms-content"
 import { invalidateBlocAssets, invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
 
 export class BlocImportError extends Error {
-    constructor(message: string, readonly status: number) {
+    constructor(
+        message: string,
+        readonly status: number,
+    ) {
         super(message);
         this.name = "BlocImportError";
     }
@@ -32,7 +35,11 @@ export type BlocImportRuntime = {
     repository?: CmsRepository;
 };
 
-export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput, runtime: BlocImportRuntime = {}): Promise<BlocImportResult> {
+export async function importBlocArtifact(
+    cms: ControlCms,
+    input: BlocImportInput,
+    runtime: BlocImportRuntime = {},
+): Promise<BlocImportResult> {
     if (!input.name || !input.viewJS || !input.tag) {
         throw new BlocImportError("Missing argument (name, tag, viewJS required)", 400);
     }
@@ -82,8 +89,11 @@ export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput
     );
 
     try {
-        if (force) await repository.replaceBloc(bloc);
-        else       await repository.createBloc(bloc);
+        if (force) {
+            await repository.replaceBloc(bloc);
+        } else {
+            await repository.createBloc(bloc);
+        }
     } catch (e) {
         if (!force && e instanceof DuplicateBlocTagError) {
             throw new BlocImportError(`Bloc with tag "${bloc.id}" already exists`, 409);
@@ -98,14 +108,22 @@ export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput
 }
 
 export function parseSourceMap(raw: FormDataEntryValue | null): Record<string, string> | undefined {
-    if (raw === null || raw === "") return undefined;
-    if (typeof raw !== "string") return undefined;
+    if (raw === null || raw === "") {
+        return undefined;
+    }
+    if (typeof raw !== "string") {
+        return undefined;
+    }
     try {
         const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return undefined;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            return undefined;
+        }
         const out: Record<string, string> = {};
         for (const [k, v] of Object.entries(parsed)) {
-            if (typeof v === "string") out[k] = v;
+            if (typeof v === "string") {
+                out[k] = v;
+            }
         }
         return Object.keys(out).length > 0 ? out : undefined;
     } catch {
@@ -119,31 +137,54 @@ function asFile(value: string | File, name: string): File {
 
 function resolveDefaultContent(source: Record<string, string> | undefined): { content?: string; error?: string } {
     const { manifest, error } = parseSourceManifest(source);
-    if (error) return { error };
-    if (!source) return {};
-    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return {};
+    if (error) {
+        return { error };
+    }
+    if (!source) {
+        return {};
+    }
+    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+        return {};
+    }
     const value = (manifest as { defaultContent?: unknown }).defaultContent;
-    if (value === undefined || value === null || value === "") return {};
-    if (typeof value !== "string") return { error: "manifest.defaultContent must be a file path" };
+    if (value === undefined || value === null || value === "") {
+        return {};
+    }
+    if (typeof value !== "string") {
+        return { error: "manifest.defaultContent must be a file path" };
+    }
 
     const normalizedPath = normalizeSourcePath(value);
-    if (!normalizedPath) return { error: "manifest.defaultContent must be a relative file path" };
+    if (!normalizedPath) {
+        return { error: "manifest.defaultContent must be a relative file path" };
+    }
 
     const encoded = source[normalizedPath] ?? source[`./${normalizedPath}`];
-    if (!encoded) return { error: `manifest.defaultContent file "${normalizedPath}" not found in source bundle` };
+    if (!encoded) {
+        return { error: `manifest.defaultContent file "${normalizedPath}" not found in source bundle` };
+    }
 
     return { content: decodeSourceFile(encoded) };
 }
 
-function parseSourceManifest(source: Record<string, string> | undefined): { manifest?: Record<string, unknown>; error?: string } {
-    if (!source) return {};
+function parseSourceManifest(source: Record<string, string> | undefined): {
+    manifest?: Record<string, unknown>;
+    error?: string;
+} {
+    if (!source) {
+        return {};
+    }
 
     const manifestRaw = source["manifest.json"] ?? source["./manifest.json"];
-    if (!manifestRaw) return {};
+    if (!manifestRaw) {
+        return {};
+    }
 
     try {
         const manifest = JSON.parse(decodeSourceFile(manifestRaw));
-        if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return {};
+        if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+            return {};
+        }
         return { manifest: manifest as Record<string, unknown> };
     } catch {
         return { error: "Invalid manifest.json" };
@@ -151,10 +192,14 @@ function parseSourceManifest(source: Record<string, string> | undefined): { mani
 }
 
 function normalizeSourcePath(path: string): string | null {
-    if (path.startsWith("/") || path.includes("\0")) return null;
+    if (path.startsWith("/") || path.includes("\0")) {
+        return null;
+    }
 
     const normalized = posix.normalize(path).replace(/^\.\//, "");
-    if (!normalized || normalized === "." || normalized.startsWith("../")) return null;
+    if (!normalized || normalized === "." || normalized.startsWith("../")) {
+        return null;
+    }
 
     return normalized;
 }

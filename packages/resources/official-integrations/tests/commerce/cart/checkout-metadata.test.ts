@@ -1,16 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import {
-    installCommerceTestEnvironment,
-    jsonResponse,
-    requestCommerce,
-    setRestResponder,
-} from "../harness";
+import { installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
 
 installCommerceTestEnvironment();
 
 describe("commerce cart checkout metadata", () => {
     test("filters every created order and adds ordered public metadata entries", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const url = new URL(request.url);
             if (url.pathname.endsWith("/custom_field_definitions")) {
                 expect(url.searchParams.get("entity_type")).toBe("eq.order");
@@ -41,7 +36,7 @@ describe("commerce cart checkout metadata", () => {
                 metadata: { note: "First", gift: true },
             },
         });
-        const body = await response.json() as Record<string, any>;
+        const body = (await response.json()) as Record<string, any>;
 
         expect(response.status).toBe(201);
         expect(body.orders).toEqual([
@@ -66,13 +61,15 @@ describe("commerce cart checkout metadata", () => {
     });
 
     test("fails closed when checkout does not return an order list", async () => {
-        setRestResponder(request => new URL(request.url).pathname.endsWith("/custom_field_definitions")
-            ? jsonResponse([])
-            : jsonResponse({
-                checkout_group_id: "group-unsafe",
-                orders: { metadata: { internalRisk: "must-not-leak" } },
-                idempotent_replay: false,
-            }));
+        setRestResponder((request) =>
+            new URL(request.url).pathname.endsWith("/custom_field_definitions")
+                ? jsonResponse([])
+                : jsonResponse({
+                      checkout_group_id: "group-unsafe",
+                      orders: { metadata: { internalRisk: "must-not-leak" } },
+                      idempotent_replay: false,
+                  }),
+        );
 
         const response = await requestCommerce("/me/cart/checkout", {
             userId: "buyer-user-456",

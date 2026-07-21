@@ -1,6 +1,9 @@
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type {
-    IdentityProviderRepository, IdentityProvider, NewIdentityProvider, IdentityProviderPatch,
+    IdentityProviderRepository,
+    IdentityProvider,
+    NewIdentityProvider,
+    IdentityProviderPatch,
 } from "cms-auth/interfaces/IdentityProvider";
 
 /**
@@ -14,10 +17,12 @@ export type MongoIdentityProviderConfig = { collectionPrefix?: string };
 type ProviderDoc = Omit<IdentityProvider, "id"> & { _id: string };
 
 export class MongoIdentityProviderRepository implements IdentityProviderRepository {
-
     private readonly _prefix: string;
 
-    constructor(private readonly db: Db, config: MongoIdentityProviderConfig = {}) {
+    constructor(
+        private readonly db: Db,
+        config: MongoIdentityProviderConfig = {},
+    ) {
         this._prefix = config.collectionPrefix ?? "";
     }
 
@@ -39,8 +44,11 @@ export class MongoIdentityProviderRepository implements IdentityProviderReposito
         const now = new Date();
         const { id, ...rest } = input;
         const doc: ProviderDoc = { _id: id, ...rest, createdAt: now, updatedAt: now };
-        try { await this.col.insertOne(doc as OptionalUnlessRequiredId<ProviderDoc>); }
-        catch (e) { throw clashOr(e, id); }
+        try {
+            await this.col.insertOne(doc as OptionalUnlessRequiredId<ProviderDoc>);
+        } catch (e) {
+            throw clashOr(e, id);
+        }
         return fromDoc(doc);
     }
 

@@ -21,17 +21,16 @@ import { dummyPasswordVerify } from "cms-auth/core/passwordTiming";
 export type MongoLocalCredentialConfig = { collectionPrefix?: string };
 
 type CredentialDoc = {
-    _id:        string;
-    emailEnc:   EncryptedBlob;
-    emailIndex: string;       // unique HMAC(email)
-    hash:       string;       // argon2id password hash
+    _id: string;
+    emailEnc: EncryptedBlob;
+    emailIndex: string; // unique HMAC(email)
+    hash: string; // argon2id password hash
     emailVerifiedAt?: Date | null;
-    createdAt:       Date;
-    updatedAt:       Date;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 export class MongoLocalCredentialStore implements LocalCredentialStore {
-
     private readonly _prefix: string;
 
     constructor(
@@ -54,17 +53,20 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         const email = normalizeEmail(input.email);
         const now = new Date();
         const doc: CredentialDoc = {
-            _id:             randomUUIDv7(),
-            emailEnc:        await this.fieldCrypto.encrypt(email),
-            emailIndex:      this.fieldCrypto.blindIndex(email),
-            hash:            await Bun.password.hash(input.password),
+            _id: randomUUIDv7(),
+            emailEnc: await this.fieldCrypto.encrypt(email),
+            emailIndex: this.fieldCrypto.blindIndex(email),
+            hash: await Bun.password.hash(input.password),
             emailVerifiedAt: input.emailVerified === false ? null : now,
-            createdAt:       now,
-            updatedAt:       now,
+            createdAt: now,
+            updatedAt: now,
         };
-        try { await this.col.insertOne(doc as OptionalUnlessRequiredId<CredentialDoc>); }
-        catch (e) {
-            if (e && typeof e === "object" && (e as { code?: number }).code === 11000) throw new Error("email already registered");
+        try {
+            await this.col.insertOne(doc as OptionalUnlessRequiredId<CredentialDoc>);
+        } catch (e) {
+            if (e && typeof e === "object" && (e as { code?: number }).code === 11000) {
+                throw new Error("email already registered");
+            }
             throw e;
         }
         return { sub: doc._id, email };
@@ -74,9 +76,16 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         const doc = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(normalizeEmail(email)) });
         // Spend a verify's worth of time on an unknown email too, so timing
         // doesn't reveal which emails are registered.
-        if (!doc) { await dummyPasswordVerify(password); return null; }
-        if (!(await Bun.password.verify(password, doc.hash))) return null;
-        if (doc.emailVerifiedAt === null) return null;
+        if (!doc) {
+            await dummyPasswordVerify(password);
+            return null;
+        }
+        if (!(await Bun.password.verify(password, doc.hash))) {
+            return null;
+        }
+        if (doc.emailVerifiedAt === null) {
+            return null;
+        }
         const stored = await this.fieldCrypto.decrypt(doc.emailEnc);
         return { sub: doc._id, email: stored };
     }
@@ -109,7 +118,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
 
     async list(): Promise<LocalCredential[]> {
         const docs = await this.col.find().sort({ createdAt: 1 }).toArray();
-        return Promise.all(docs.map(d => this._fromDoc(d)));
+        return Promise.all(docs.map((d) => this._fromDoc(d)));
     }
 
     private async _fromDoc(d: CredentialDoc): Promise<LocalCredential> {

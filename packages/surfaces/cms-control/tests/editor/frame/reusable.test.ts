@@ -5,12 +5,12 @@ import { cmsWithReusableDocument } from "./frameTestUtils";
 describe("editor frame endpoint - reusable documents", () => {
     test("renders template content into the editor frame", async () => {
         const { cms, requestedIds } = cmsWithReusableDocument({
-            id:          "template-1",
-            identifier:  "hero-template",
-            name:        "Hero template",
+            id: "template-1",
+            identifier: "hero-template",
+            name: "Hero template",
             description: "Template description",
-            category:    "Hero",
-            content:     `<section><p>Template content</p></section>`,
+            category: "Hero",
+            content: `<section><p>Template content</p></section>`,
         });
         const response = await getEditorFrame(
             new Request("http://localhost/cms/api/editor/frame?type=template&id=template-1"),
@@ -30,12 +30,12 @@ describe("editor frame endpoint - reusable documents", () => {
 
     test("sanitizes reusable document content before rendering the frame", async () => {
         const { cms } = cmsWithReusableDocument({
-            id:          "template-1",
-            identifier:  "main-template",
-            name:        "Main template",
+            id: "template-1",
+            identifier: "main-template",
+            name: "Main template",
             description: "Template description",
-            category:    "Layout",
-            content:     `<svg><image href="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"></image></svg><p onclick="alert(1)">Safe text</p>`,
+            category: "Layout",
+            content: `<svg><image href="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"></image></svg><p onclick="alert(1)">Safe text</p>`,
         });
         const response = await getEditorFrame(
             new Request("http://localhost/cms/api/editor/frame?type=template&id=template-1"),

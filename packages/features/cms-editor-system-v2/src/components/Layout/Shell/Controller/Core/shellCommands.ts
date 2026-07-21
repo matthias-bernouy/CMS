@@ -29,27 +29,27 @@ export class ShellCommands {
 
     saveDocument(): void {
         dispatchSaveDocument({
-            host:           this.context.host,
-            pageConfig:     () => this.context.state.pageConfig,
-            contentHtml:    () => this.getContentHtml(),
+            host: this.context.host,
+            pageConfig: () => this.context.state.pageConfig,
+            contentHtml: () => this.getContentHtml(),
             syncEditorMode: () => this.syncEditorMode(),
-            setSaveStatus:  label => this.setSaveStatus(label),
-            saveEventName:  this.context.saveEventName,
+            setSaveStatus: (label) => this.setSaveStatus(label),
+            saveEventName: this.context.saveEventName,
         });
     }
 
     handleFrameReady(detail: CanvasFrameReadyDetail): void {
         handleShellFrameReady({
-            frames:                this.context.frames,
+            frames: this.context.frames,
             detail,
-            bindViewFrameDocument: document => this.bindViewFrameDocument(document),
-            bindFrameDocument:     document => this.bindFrameDocument(document),
-            syncViewFrameContent:  () => this.syncViewFrameContent(),
+            bindViewFrameDocument: (document) => this.bindViewFrameDocument(document),
+            bindFrameDocument: (document) => this.bindFrameDocument(document),
+            syncViewFrameContent: () => this.syncViewFrameContent(),
             syncBindingPreviewCore: () => this.syncBindingPreviewCore(),
-            loadDocument:          document => this.context.host.loadDocument(document),
-            clearDocument:         () => this.clearDocument(),
-            renderStructure:       () => this.renderStructure(),
-            settings:              () => this.context.renderSync.settings(),
+            loadDocument: (document) => this.context.host.loadDocument(document),
+            clearDocument: () => this.clearDocument(),
+            renderStructure: () => this.renderStructure(),
+            settings: () => this.context.renderSync.settings(),
         });
     }
 
@@ -61,7 +61,12 @@ export class ShellCommands {
         this.context.selection.renderSettings();
     }
 
-    applySetting(editor: Editor, setting: SettingControl, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+    applySetting(
+        editor: Editor,
+        setting: SettingControl,
+        value: string | boolean,
+        attributes?: SettingsViewAttributeChanges,
+    ): void {
         this.context.selection.applySetting(editor, setting, value, attributes);
     }
 

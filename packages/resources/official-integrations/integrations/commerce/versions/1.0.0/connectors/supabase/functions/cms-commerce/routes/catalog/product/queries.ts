@@ -24,15 +24,24 @@ export async function listProducts(request: Request, admin: boolean): Promise<Re
     addSearch(params, url.searchParams.get("q"), ["title", "slug"]);
     const { rows, total } = await listRows(`products?${params.toString()}`);
     const items = admin ? rows : await redactMetadata(rows, "product");
-    return json({ items: camelize(items), total, limit: Number(params.get("limit")), offset: Number(params.get("offset")) });
+    return json({
+        items: camelize(items),
+        total,
+        limit: Number(params.get("limit")),
+        offset: Number(params.get("offset")),
+    });
 }
 
 export async function getProduct(request: Request, admin: boolean): Promise<Response> {
     const url = new URL(request.url);
-    if (admin && url.searchParams.get("id") === "__new__") return json(newProduct());
+    if (admin && url.searchParams.get("id") === "__new__") {
+        return json(newProduct());
+    }
     const selector = productSelector(url);
     const bundle = await getProductReadModel(admin ? "admin" : "public", selector.id, selector.slug);
-    if (!bundle) throw new HttpError(404, "product not found");
+    if (!bundle) {
+        throw new HttpError(404, "product not found");
+    }
     return json(productData(bundle, !admin));
 }
 
@@ -48,7 +57,9 @@ export async function upsertProduct(request: Request): Promise<Response> {
 function productSelector(url: URL): { id: number | null; slug: string | null } {
     const id = optionalId(url.searchParams.get("id"));
     const slug = text(url.searchParams.get("slug")) ?? null;
-    if (id === null && !slug) throw new HttpError(400, "id or slug is required");
+    if (id === null && !slug) {
+        throw new HttpError(400, "id or slug is required");
+    }
     return { id, slug: id === null ? slug : null };
 }
 
@@ -56,15 +67,27 @@ async function redactMetadata(rows: JsonRecord[], entityType: string): Promise<J
     const definitions = await restJson<JsonRecord[]>(
         `custom_field_definitions?select=key&entity_type=eq.${entityType}&public_readable=eq.true&enabled=eq.true`,
     );
-    const allowed = new Set(definitions.map(row => String(row.key)));
-    return rows.map(row => ({ ...row, metadata: publicMetadata(row.metadata, allowed) }));
+    const allowed = new Set(definitions.map((row) => String(row.key)));
+    return rows.map((row) => ({ ...row, metadata: publicMetadata(row.metadata, allowed) }));
 }
 
 function newProduct(): JsonRecord {
     return {
-        id: null, slug: "", title: "", description: "", brandId: null, primaryCategoryId: null,
-        status: "draft", visibility: "public",
-        metadata: {}, media: [], mainImageMediaId: null, variantAxes: [], variants: [], variantMatrix: [], version: 1,
+        id: null,
+        slug: "",
+        title: "",
+        description: "",
+        brandId: null,
+        primaryCategoryId: null,
+        status: "draft",
+        visibility: "public",
+        metadata: {},
+        media: [],
+        mainImageMediaId: null,
+        variantAxes: [],
+        variants: [],
+        variantMatrix: [],
+        version: 1,
     };
 }
 
@@ -75,15 +98,21 @@ function paging(url: URL): URLSearchParams {
 }
 
 function addEq(params: URLSearchParams, column: string, value: string | null): void {
-    if (value?.trim()) params.set(column, `eq.${value.trim()}`);
+    if (value?.trim()) {
+        params.set(column, `eq.${value.trim()}`);
+    }
 }
 
 function addSearch(params: URLSearchParams, value: string | null, columns: string[]): void {
     const query = value?.trim().replace(/[,*()]/g, " ");
-    if (query) params.set("or", `(${columns.map(column => `${column}.ilike.*${query}*`).join(",")})`);
+    if (query) {
+        params.set("or", `(${columns.map((column) => `${column}.ilike.*${query}*`).join(",")})`);
+    }
 }
 
 function optionalId(value: string | null): number | null {
-    if (!value || value === "__new__") return null;
+    if (!value || value === "__new__") {
+        return null;
+    }
     return integer(value, "id", true)!;
 }

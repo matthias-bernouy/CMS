@@ -21,7 +21,10 @@ function setup(opts: { rateLimit?: InMemoryRateLimiter } = {}) {
         providerId: "local",
         loginPagePath: "/cms/t/login",
         logoutPath: "/cms/t/auth/logout",
-        credentials, resolver, codec, pats,
+        credentials,
+        resolver,
+        codec,
+        pats,
         cookieName: "cms-t-session",
         defaultHome: "/cms/t/admin/pages",
         ...(opts.rateLimit ? { rateLimit: opts.rateLimit } : {}),
@@ -38,7 +41,8 @@ const loginReq = (email: string, password: string) =>
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, password }),
     });
-const login = (routes: Record<string, Handler>, email: string, pw: string) => routes["POST /login"]!(loginReq(email, pw));
+const login = (routes: Record<string, Handler>, email: string, pw: string) =>
+    routes["POST /login"]!(loginReq(email, pw));
 const loc = (res: Response) => res.headers.get("location") ?? "";
 const cookie = (res: Response) => res.headers.get("set-cookie") ?? "";
 
@@ -79,7 +83,7 @@ describe("LocalAuthentication login", () => {
     test("a successful login resets the counter", async () => {
         const { routes, credentials } = setup({ rateLimit: new InMemoryRateLimiter({ limit: 2, windowSeconds: 60 }) });
         await credentials.create({ email: "a@x.com", password: "pw" });
-        await login(routes, "a@x.com", "no");                          // count 1
+        await login(routes, "a@x.com", "no"); // count 1
         expect(cookie(await login(routes, "a@x.com", "pw"))).toContain("cms-t-session="); // count 2 → success → reset
         // Counter cleared: without the reset this 3rd attempt would be rate_limited.
         expect(loc(await login(routes, "a@x.com", "no"))).toContain("error=1");
@@ -103,7 +107,9 @@ describe("LocalAuthentication.getSubject", () => {
         const { auth, resolver, codec } = setup();
         const subject = await resolver.fromIdentity({ sub: "u1", provider: "local", email: "bob@example.com" });
         const token = await codec.sign({ kind: "session", sub: subject.identifier }, 3600);
-        const got = await auth.getSubject(new Request("http://x/cms/t/admin", { headers: { cookie: `cms-t-session=${token}` } }));
+        const got = await auth.getSubject(
+            new Request("http://x/cms/t/admin", { headers: { cookie: `cms-t-session=${token}` } }),
+        );
         expect(got?.identifier).toBe("local:u1");
         expect(got?.role).toBe("user");
     });
@@ -112,7 +118,9 @@ describe("LocalAuthentication.getSubject", () => {
         const { auth, resolver, pats } = setup();
         const subject = await resolver.fromIdentity({ sub: "u1", provider: "local" });
         const { token } = await pats.create({ sub: subject.identifier, name: "cli" });
-        const got = await auth.getSubject(new Request("http://x/cms/t/api/x", { headers: { authorization: `Bearer ${token}` } }));
+        const got = await auth.getSubject(
+            new Request("http://x/cms/t/api/x", { headers: { authorization: `Bearer ${token}` } }),
+        );
         expect(got?.identifier).toBe("local:u1");
     });
 

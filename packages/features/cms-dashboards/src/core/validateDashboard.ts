@@ -24,6 +24,7 @@ export function validateDashboard(dashboard: DashboardDto, options: ValidateDash
     const widgetIds = new Set<string>();
     collectWidgetIds(dashboard.views, "views", widgetIds, errors);
     dashboard.views.forEach((widget, index) =>
-        validateWidget(widget, `views.${index}`, dashboard, source, widgetIds, errors));
+        validateWidget(widget, `views.${index}`, dashboard, source, widgetIds, errors),
+    );
     return errors;
 }

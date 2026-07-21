@@ -1,10 +1,15 @@
 import { describe, test, expect } from "bun:test";
 import { randomBytes } from "node:crypto";
 import {
-    encryptAesGcm, decryptAesGcm,
-    LocalKekProvider, serializeBlob, parseBlob,
-    EnvelopeSecretCrypto, loadKek,
-    type DekRepository, type DekRecord,
+    encryptAesGcm,
+    decryptAesGcm,
+    LocalKekProvider,
+    serializeBlob,
+    parseBlob,
+    EnvelopeSecretCrypto,
+    loadKek,
+    type DekRepository,
+    type DekRecord,
 } from "@bernouy/envelope-crypto";
 
 const KEY = randomBytes(32);
@@ -15,21 +20,27 @@ function makeDekRepo() {
     const rows = new Map<string, DekRecord>();
     const calls = { get: 0, create: 0 };
     const repo: DekRepository = {
-        async get(scopeId) { calls.get++; return rows.get(scopeId) ?? null; },
+        async get(scopeId) {
+            calls.get++;
+            return rows.get(scopeId) ?? null;
+        },
         async create(record) {
             calls.create++;
             const existing = rows.get(record.scopeId);
-            if (existing) return existing;
+            if (existing) {
+                return existing;
+            }
             rows.set(record.scopeId, record);
             return record;
         },
-        async delete(scopeId) { rows.delete(scopeId); },
+        async delete(scopeId) {
+            rows.delete(scopeId);
+        },
     };
     return { repo, rows, calls };
 }
 
 describe("aesGcm", () => {
-
     test("round-trips a utf8 string", () => {
         const blob = encryptAesGcm("héllo wörld", KEY);
         expect(decryptAesGcm(blob, KEY).toString("utf8")).toBe("héllo wörld");
@@ -54,7 +65,6 @@ describe("aesGcm", () => {
 });
 
 describe("LocalKekProvider", () => {
-
     test("rejects a KEK that is not 32 bytes", () => {
         expect(() => new LocalKekProvider(randomBytes(16))).toThrow("32 bytes");
     });
@@ -83,7 +93,6 @@ describe("LocalKekProvider", () => {
 });
 
 describe("EnvelopeSecretCrypto", () => {
-
     test("encrypt/decrypt round-trips within a scope", async () => {
         const { repo } = makeDekRepo();
         const crypto = new EnvelopeSecretCrypto(new LocalKekProvider(KEY), repo);
@@ -136,12 +145,18 @@ describe("EnvelopeSecretCrypto", () => {
         const kek = new LocalKekProvider(KEY);
         // The row another process persisted between our `get` and `create`.
         const winnerRecord: DekRecord = {
-            scopeId: "tenant-a", wrapped: (await kek.generateDek()).wrapped,
-            createdAt: new Date(), rotatedAt: null,
+            scopeId: "tenant-a",
+            wrapped: (await kek.generateDek()).wrapped,
+            createdAt: new Date(),
+            rotatedAt: null,
         };
         const losingRepo: DekRepository = {
-            async get() { return null; },              // we saw no row…
-            async create() { return winnerRecord; },   // …but the store says someone else won
+            async get() {
+                return null;
+            }, // we saw no row…
+            async create() {
+                return winnerRecord;
+            }, // …but the store says someone else won
             async delete() {},
         };
         const loser = new EnvelopeSecretCrypto(kek, losingRepo);
@@ -171,7 +186,6 @@ describe("EnvelopeSecretCrypto", () => {
 });
 
 describe("loadKek", () => {
-
     test("decodes a base64 32-byte KEK", () => {
         const kek = randomBytes(32);
         expect(loadKek(kek.toString("base64")).equals(kek)).toBe(true);

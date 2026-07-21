@@ -20,7 +20,11 @@ const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 export type PullIntegrationsResult = { pulled: string[]; failed: { id: string; error: string }[] };
 
 /** Pull tracked integrations and their generated source artifacts. */
-export async function pullIntegrations(adminBase: URL, token: string, siteDir: string): Promise<PullIntegrationsResult> {
+export async function pullIntegrations(
+    adminBase: URL,
+    token: string,
+    siteDir: string,
+): Promise<PullIntegrationsResult> {
     const out: PullIntegrationsResult = { pulled: [], failed: [] };
     const installations: IntegrationInstallation[] = [];
     let blocGroups: Map<string, string> | null = null;
@@ -33,8 +37,15 @@ export async function pullIntegrations(adminBase: URL, token: string, siteDir: s
                     await writeGeneratedSource(siteDir, await fetchSource(adminBase, token, artifact.id));
                 }
                 if (artifact.type === "bloc") {
-                    blocGroups ??= new Map((await fetchRemoteBlocList(adminBase, token)).map(bloc => [bloc.tag, bloc.group]));
-                    await writeGeneratedBloc(siteDir, artifact.id, blocGroups.get(artifact.id) ?? "", await fetchRequiredBlocSource(adminBase, token, artifact.id));
+                    blocGroups ??= new Map(
+                        (await fetchRemoteBlocList(adminBase, token)).map((bloc) => [bloc.tag, bloc.group]),
+                    );
+                    await writeGeneratedBloc(
+                        siteDir,
+                        artifact.id,
+                        blocGroups.get(artifact.id) ?? "",
+                        await fetchRequiredBlocSource(adminBase, token, artifact.id),
+                    );
                 }
             }
             installations.push(installationFromDetail(detail));
@@ -43,34 +54,42 @@ export async function pullIntegrations(adminBase: URL, token: string, siteDir: s
             out.failed.push({ id, error: err instanceof Error ? err.message : String(err) });
         }
     }
-    if (installations.length > 0) await writeIntegrationInstallations(siteDir, installations);
+    if (installations.length > 0) {
+        await writeIntegrationInstallations(siteDir, installations);
+    }
     return out;
 }
 
 async function fetchList(adminBase: URL, token: string): Promise<RemoteIntegrationListItem[]> {
     const url = new URL("api/integrations/installations", adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    return await res.json() as RemoteIntegrationListItem[];
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    return (await res.json()) as RemoteIntegrationListItem[];
 }
 
 async function fetchIntegration(adminBase: URL, token: string, id: string): Promise<RemoteIntegrationDetail> {
     const url = new URL(`api/integrations/installations?id=${encodeURIComponent(id)}`, adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    return await res.json() as RemoteIntegrationDetail;
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    return (await res.json()) as RemoteIntegrationDetail;
 }
 
 async function fetchSource(adminBase: URL, token: string, urn: string): Promise<Source> {
     const url = new URL(`api/sources?urn=${encodeURIComponent(urn)}`, adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
     return reconstructSource(await res.json());
 }
 
 async function writeGeneratedSource(siteDir: string, source: Source): Promise<void> {
-    const id   = parseUrn(source.urn)?.source ?? "source";
-    const dir  = safeJoin(siteDir, GENERATED_SOURCES_DIR);
+    const id = parseUrn(source.urn)?.source ?? "source";
+    const dir = safeJoin(siteDir, GENERATED_SOURCES_DIR);
     const file = safeJoin(dir, `${id}.json`);
     await mkdir(dir, { recursive: true });
     await writeFile(file, JSON.stringify(source, null, 2) + "\n", "utf-8");
@@ -78,22 +97,37 @@ async function writeGeneratedSource(siteDir: string, source: Source): Promise<vo
 
 async function fetchRequiredBlocSource(adminBase: URL, token: string, tag: string): Promise<Record<string, string>> {
     const source = await fetchBlocSource(adminBase, token, tag);
-    if (!source) throw new Error(`bloc "${tag}" has no source bundle on the server`);
+    if (!source) {
+        throw new Error(`bloc "${tag}" has no source bundle on the server`);
+    }
     return source;
 }
 
-async function writeGeneratedBloc(siteDir: string, tag: string, group: string, source: Record<string, string>): Promise<void> {
+async function writeGeneratedBloc(
+    siteDir: string,
+    tag: string,
+    group: string,
+    source: Record<string, string>,
+): Promise<void> {
     await writeBlocSource(safeJoin(siteDir, GENERATED_BLOCS_DIR, categoryToFolder(group), tag), source);
 }
 
 async function writeIntegrationImport(siteDir: string, detail: RemoteIntegrationDetail): Promise<void> {
     const dir = safeJoin(siteDir, SITE_INTEGRATIONS_DIR);
     await mkdir(dir, { recursive: true });
-    await writeFile(safeJoin(dir, `${slug(detail.id)}.json`), JSON.stringify({
-        kind: detail.id,
-        ...(detail.definition ? { definition: detail.definition } : {}),
-        answers: detail.answers ?? {},
-    }, null, 2) + "\n", "utf-8");
+    await writeFile(
+        safeJoin(dir, `${slug(detail.id)}.json`),
+        JSON.stringify(
+            {
+                kind: detail.id,
+                ...(detail.definition ? { definition: detail.definition } : {}),
+                answers: detail.answers ?? {},
+            },
+            null,
+            2,
+        ) + "\n",
+        "utf-8",
+    );
 }
 
 async function writeIntegrationInstallations(siteDir: string, installations: IntegrationInstallation[]): Promise<void> {
@@ -116,7 +150,7 @@ function installationFromDetail(detail: RemoteIntegrationDetail): IntegrationIns
         secretRefs: {},
         secretInputs: detail.secretInputs ?? [],
         artifacts: detail.artifacts.map(({ exists: _exists, ...artifact }) => artifact),
-        runs: (detail.runs ?? []).map(run => ({
+        runs: (detail.runs ?? []).map((run) => ({
             ...run,
             startedAt: new Date(run.startedAt),
             finishedAt: new Date(run.finishedAt),
@@ -125,5 +159,10 @@ function installationFromDetail(detail: RemoteIntegrationDetail): IntegrationIns
 }
 
 function slug(value: string): string {
-    return value.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "integration";
+    return (
+        value
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]+/g, "-")
+            .replace(/^-+|-+$/g, "") || "integration"
+    );
 }

@@ -1,10 +1,13 @@
 import type { Source } from "@bernouy/cms-sources";
-import type { DashboardDto, DashboardEmbeddedLookupRef, DashboardField,
-    DashboardOption } from "../../interfaces/Dashboard";
+import type {
+    DashboardDto,
+    DashboardEmbeddedLookupRef,
+    DashboardField,
+    DashboardOption,
+} from "../../interfaces/Dashboard";
 import { DASHBOARD_MAX_NESTED_FIELDS } from "../../interfaces/Dashboard";
 import { validateEmbeddedLookupRef, validateEndpointRef } from "./endpointRefs";
-import { isRecord, validateOptions, validatePath, validateRequiredId,
-    validateRequiredPath } from "./shared";
+import { isRecord, validateOptions, validatePath, validateRequiredId, validateRequiredPath } from "./shared";
 
 export function validateTableField(
     field: Extract<DashboardField, { type: "table" }>,
@@ -24,24 +27,36 @@ export function validateTableField(
         if (typeof field.addLabel !== "string" || !field.addLabel.trim()) {
             errors.push(`${path}.addLabel must be a non-empty string`);
         }
-        if (field.editable !== true) errors.push(`${path}.addLabel requires an editable table`);
+        if (field.editable !== true) {
+            errors.push(`${path}.addLabel requires an editable table`);
+        }
     }
     const columnIds = new Set<string>();
     field.columns.slice(0, DASHBOARD_MAX_NESTED_FIELDS).forEach((column, index) => {
         const columnPath = `${path}.columns.${index}`;
         validateRequiredId(`${columnPath}.id`, column.id, errors);
         if (column.id) {
-            if (columnIds.has(column.id)) errors.push(`${columnPath}.id is duplicated`);
+            if (columnIds.has(column.id)) {
+                errors.push(`${columnPath}.id is duplicated`);
+            }
             columnIds.add(column.id);
         }
-        if (!column.label) errors.push(`${columnPath}.label is required`);
+        if (!column.label) {
+            errors.push(`${columnPath}.label is required`);
+        }
         validateRequiredPath("path", column.path, columnPath, errors);
-        if (Object.hasOwn(column, "value")) errors.push(`${columnPath}.value is not supported; use type`);
+        if (Object.hasOwn(column, "value")) {
+            errors.push(`${columnPath}.value is not supported; use type`);
+        }
         validateTableColumnEditing(field, column, columnPath, dashboard, source, errors);
     });
     if (field.derive) {
-        if (field.derive.type !== "cartesian") errors.push(`${path}.derive.type is not supported`);
-        if (!field.derive.sourceField) errors.push(`${path}.derive.sourceField is required`);
+        if (field.derive.type !== "cartesian") {
+            errors.push(`${path}.derive.type is not supported`);
+        }
+        if (!field.derive.sourceField) {
+            errors.push(`${path}.derive.sourceField is required`);
+        }
         validateRequiredPath("derive.labelPath", field.derive.labelPath, path, errors);
         validateRequiredPath("derive.valuesPath", field.derive.valuesPath, path, errors);
     }
@@ -68,12 +83,23 @@ export function validateReorderableListField(
         const itemPath = `${path}.fields.${index}`;
         validateRequiredId(`${itemPath}.id`, itemField.id, errors);
         if (itemField.id) {
-            if (itemFieldIds.has(itemField.id)) errors.push(`${itemPath}.id is duplicated`);
+            if (itemFieldIds.has(itemField.id)) {
+                errors.push(`${itemPath}.id is duplicated`);
+            }
             itemFieldIds.add(itemField.id);
         }
-        if (!itemField.label) errors.push(`${itemPath}.label is required`);
+        if (!itemField.label) {
+            errors.push(`${itemPath}.label is required`);
+        }
         validateRequiredPath("path", itemField.path, itemPath, errors);
-        validateNestedEditor(itemField, itemPath, ["text", "checkbox", "select", "combobox"], dashboard, source, errors);
+        validateNestedEditor(
+            itemField,
+            itemPath,
+            ["text", "checkbox", "select", "combobox"],
+            dashboard,
+            source,
+            errors,
+        );
     }
     if (field.minItems !== undefined && (!Number.isInteger(field.minItems) || field.minItems < 0)) {
         errors.push(`${path}.minItems must be a non-negative integer`);
@@ -94,9 +120,11 @@ function validateTableColumnEditing(
     source: Source | null,
     errors: string[],
 ): void {
-    const hasEditingConfig = column.editable === true || column.type !== undefined
-        || column.options !== undefined
-        || column.lookup !== undefined;
+    const hasEditingConfig =
+        column.editable === true ||
+        column.type !== undefined ||
+        column.options !== undefined ||
+        column.lookup !== undefined;
     if (hasEditingConfig && table.editable !== true) {
         errors.push(`${path} cannot configure editing unless the table is editable`);
         return;
@@ -130,14 +158,18 @@ function validateNestedEditor(
         errors.push(`${path}.type is not supported`);
         return;
     }
-    if (type === "select" && editor.options === undefined) errors.push(`${path}.options is required`);
+    if (type === "select" && editor.options === undefined) {
+        errors.push(`${path}.options is required`);
+    }
     if (type === "combobox" && !editor.options?.length && !editor.lookup) {
         errors.push(`${path} must declare options or lookup`);
     }
     if (editor.options !== undefined) {
         if (type !== "select" && type !== "combobox") {
             errors.push(`${path}.options is not supported for ${type} editors`);
-        } else validateOptions(editor.options, `${path}.options`, errors);
+        } else {
+            validateOptions(editor.options, `${path}.options`, errors);
+        }
     }
     if (editor.lookup !== undefined) {
         if (type !== "combobox") {
@@ -164,8 +196,12 @@ export function validateMediaField(
     validatePath("item.idPath", field.item.idPath, path, errors);
     validateRequiredPath("item.urlPath", field.item.urlPath, path, errors);
     validatePath("item.altPath", field.item.altPath, path, errors);
-    if (!field.actions) return;
+    if (!field.actions) {
+        return;
+    }
     for (const [action, ref] of Object.entries(field.actions)) {
-        if (ref) validateEndpointRef(dashboard, ref, `${path}.actions.${action}`, source, errors);
+        if (ref) {
+            validateEndpointRef(dashboard, ref, `${path}.actions.${action}`, source, errors);
+        }
     }
 }

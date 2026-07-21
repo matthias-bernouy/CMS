@@ -2,15 +2,12 @@ import { describe, expect, test } from "bun:test";
 import type { Source, SourceEndpoint } from "@bernouy/cms-sources";
 import { validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
 
-const endpoint = (
-    endpointId: string,
-    inputParams: string[] = [],
-): SourceEndpoint => ({
+const endpoint = (endpointId: string, inputParams: string[] = []): SourceEndpoint => ({
     urn: `urn:products:${endpointId}`,
     method: "GET",
     targetUrl: `https://example.com/${endpointId}`,
     input: {
-        params: inputParams.map(name => ({
+        params: inputParams.map((name) => ({
             name,
             in: "query",
             schema: { type: "string" },
@@ -126,9 +123,7 @@ const validDashboard = (): Dashboard => ({
                                     body: { name: "$field.name" },
                                     valuePath: "id",
                                     labelPath: "name",
-                                    fields: [
-                                        { id: "name", label: "Name", path: "name", type: "text", required: true },
-                                    ],
+                                    fields: [{ id: "name", label: "Name", path: "name", type: "text", required: true }],
                                 },
                             },
                         },
@@ -216,13 +211,18 @@ describe("validateDashboard", () => {
         });
 
         expect(validateDashboard(dashboard, { source })).toEqual([]);
-        const amount = detail.main[0]!.fields.at(-1)! as Extract<typeof detail.main[0]["fields"][number], { type: "number" }>;
+        const amount = detail.main[0]!.fields.at(-1)! as Extract<
+            (typeof detail.main)[0]["fields"][number],
+            { type: "number" }
+        >;
         amount.step = 0;
         amount.max = 0;
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            "views.1.main.0.fields.4.step must be greater than zero",
-            "views.1.main.0.fields.4.max must be greater than or equal to min",
-        ]));
+        expect(validateDashboard(dashboard, { source })).toEqual(
+            expect.arrayContaining([
+                "views.1.main.0.fields.4.step must be greater than zero",
+                "views.1.main.0.fields.4.max must be greater than or equal to min",
+            ]),
+        );
     });
 
     test("rejects legacy widgets", () => {
@@ -244,7 +244,9 @@ describe("validateDashboard", () => {
         const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
         table.source.endpoint = "missing";
 
-        expect(validateDashboard(dashboard, { source })).toContain('views.0.source.endpoint references unknown endpoint "missing"');
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.0.source.endpoint references unknown endpoint "missing"',
+        );
     });
 
     test("rejects params not declared by source endpoints", () => {
@@ -252,33 +254,47 @@ describe("validateDashboard", () => {
         const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
         table.source.params = { unknown: "$filter.search" };
 
-        expect(validateDashboard(dashboard, { source })).toContain('views.0.source.params.unknown is not declared by endpoint "urn:products:listProducts"');
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.0.source.params.unknown is not declared by endpoint "urn:products:listProducts"',
+        );
     });
 
     test("validates lookup modal creation fields", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
-        const brand = detail.main[0]!.fields[2] as Extract<Dashboard["views"][number], { widget: "w-detail" }>["main"][number]["fields"][number] & {
+        const brand = detail.main[0]!.fields[2] as Extract<
+            Dashboard["views"][number],
+            { widget: "w-detail" }
+        >["main"][number]["fields"][number] & {
             type: "combobox";
         };
-        if (brand.lookup?.create?.mode === "modal") brand.lookup.create.fields = [];
+        if (brand.lookup?.create?.mode === "modal") {
+            brand.lookup.create.fields = [];
+        }
 
-        expect(validateDashboard(dashboard, { source })).toContain("views.1.main.0.fields.2.lookup.create.fields must contain at least one field");
+        expect(validateDashboard(dashboard, { source })).toContain(
+            "views.1.main.0.fields.2.lookup.create.fields must contain at least one field",
+        );
     });
 
     test("validates action metadata and media endpoints", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
         detail.actions![1]!.section = "";
-        const media = detail.main[1]!.fields[0] as Extract<Dashboard["views"][number], { widget: "w-detail" }>["main"][number]["fields"][number] & {
+        const media = detail.main[1]!.fields[0] as Extract<
+            Dashboard["views"][number],
+            { widget: "w-detail" }
+        >["main"][number]["fields"][number] & {
             type: "media";
         };
         media.actions!.upload!.endpoint = "missingUpload";
 
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            "views.1.actions.1.section must be non-empty when provided",
-            'views.1.main.1.fields.0.actions.upload.endpoint references unknown endpoint "missingUpload"',
-        ]));
+        expect(validateDashboard(dashboard, { source })).toEqual(
+            expect.arrayContaining([
+                "views.1.actions.1.section must be non-empty when provided",
+                'views.1.main.1.fields.0.actions.upload.endpoint references unknown endpoint "missingUpload"',
+            ]),
+        );
     });
 
     test("validates download action filenames", () => {
@@ -293,7 +309,9 @@ describe("validateDashboard", () => {
             },
         ];
 
-        expect(validateDashboard(dashboard, { source })).toContain("views.0.actions.0.download.filename must be a safe file name");
+        expect(validateDashboard(dashboard, { source })).toContain(
+            "views.0.actions.0.download.filename must be a safe file name",
+        );
     });
 
     test("validates post-action detail targets", () => {
@@ -304,10 +322,14 @@ describe("validateDashboard", () => {
         expect(validateDashboard(dashboard, { source })).toEqual([]);
 
         detail.actions![0]!.after = { opens: "missingDetail", row: "$result.id" };
-        expect(validateDashboard(dashboard, { source })).toContain('views.1.actions.0.after.opens references unknown widget "missingDetail"');
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.1.actions.0.after.opens references unknown widget "missingDetail"',
+        );
 
         detail.actions![0]!.after = { opens: "productDetail", row: "$unknown.id" };
-        expect(validateDashboard(dashboard, { source })).toContain("views.1.actions.0.after.row has an invalid binding expression");
+        expect(validateDashboard(dashboard, { source })).toContain(
+            "views.1.actions.0.after.row has an invalid binding expression",
+        );
     });
 
     test("rejects invalid binding expressions", () => {
@@ -315,6 +337,8 @@ describe("validateDashboard", () => {
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
         detail.actions![0]!.endpoint.body = { title: "$bad.title" };
 
-        expect(validateDashboard(dashboard, { source })).toContain("views.1.actions.0.endpoint.body.title has an invalid binding expression");
+        expect(validateDashboard(dashboard, { source })).toContain(
+            "views.1.actions.0.endpoint.body.title has an invalid binding expression",
+        );
     });
 });

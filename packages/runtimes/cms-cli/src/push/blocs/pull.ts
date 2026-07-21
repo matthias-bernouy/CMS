@@ -9,9 +9,9 @@ import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
 export type PullBlocsResult = {
-    pulled:  string[];
+    pulled: string[];
     skipped: { tag: string; reason: string }[];
-    failed:  { tag: string; error:  string }[];
+    failed: { tag: string; error: string }[];
 };
 
 export type RemoteBlocSummary = { tag: string; group: string };
@@ -53,17 +53,27 @@ export async function pullBlocs(adminBase: URL, token: string, siteDir: string):
 export async function fetchRemoteBlocList(adminBase: URL, token: string): Promise<RemoteBlocSummary[]> {
     const url = new URL("api/bloc/list", adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    const data = await res.json() as { id: string; group?: string }[];
-    return data.map(b => ({ tag: b.id, group: b.group ?? "" }));
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    const data = (await res.json()) as { id: string; group?: string }[];
+    return data.map((b) => ({ tag: b.id, group: b.group ?? "" }));
 }
 
-export async function fetchBlocSource(adminBase: URL, token: string, tag: string): Promise<Record<string, string> | null> {
+export async function fetchBlocSource(
+    adminBase: URL,
+    token: string,
+    tag: string,
+): Promise<Record<string, string> | null> {
     const url = new URL(`api/bloc/source?tag=${encodeURIComponent(tag)}`, adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
-    const data = await res.json() as { source?: Record<string, string> };
+    if (res.status === 404) {
+        return null;
+    }
+    if (!res.ok) {
+        throw new Error(`GET ${url} → HTTP ${res.status}`);
+    }
+    const data = (await res.json()) as { source?: Record<string, string> };
     return data.source ?? null;
 }
 
@@ -71,19 +81,24 @@ export async function writeBlocSource(target: string, source: Record<string, str
     for (const [rel, base64] of Object.entries(source)) {
         const full = safeJoin(target, rel);
         await mkdir(dirname(full), { recursive: true });
-        const bytes = rel === "manifest.json"
-            ? Buffer.from(stripLegacyManifestFields(Buffer.from(base64, "base64").toString("utf-8")), "utf-8")
-            : Buffer.from(base64, "base64");
+        const bytes =
+            rel === "manifest.json"
+                ? Buffer.from(stripLegacyManifestFields(Buffer.from(base64, "base64").toString("utf-8")), "utf-8")
+                : Buffer.from(base64, "base64");
         await writeFile(full, bytes);
     }
 }
 
 async function readGeneratedIntegrationBlocIds(siteDir: string): Promise<Set<string>> {
     const file = join(siteDir, GENERATED_INTEGRATION_INSTALLATIONS_FILE);
-    if (!existsSync(file)) return new Set();
+    if (!existsSync(file)) {
+        return new Set();
+    }
     try {
         const parsed = JSON.parse(await readFile(file, "utf-8")) as unknown;
-        if (!Array.isArray(parsed)) return new Set();
+        if (!Array.isArray(parsed)) {
+            return new Set();
+        }
         return new Set(parsed.flatMap(installationBlocArtifacts));
     } catch {
         return new Set();
@@ -92,10 +107,10 @@ async function readGeneratedIntegrationBlocIds(siteDir: string): Promise<Set<str
 
 function installationBlocArtifacts(value: unknown): string[] {
     const installation = value as Partial<IntegrationInstallation> | null;
-    if (!installation || !Array.isArray(installation.artifacts)) return [];
-    return installation.artifacts
-        .filter(artifact => artifact.type === "bloc")
-        .map(artifact => artifact.id);
+    if (!installation || !Array.isArray(installation.artifacts)) {
+        return [];
+    }
+    return installation.artifacts.filter((artifact) => artifact.type === "bloc").map((artifact) => artifact.id);
 }
 
 /**
@@ -105,10 +120,17 @@ function installationBlocArtifacts(value: unknown): string[] {
  */
 function stripLegacyManifestFields(raw: string): string {
     let manifest: Record<string, unknown>;
-    try { manifest = JSON.parse(raw); }
-    catch { return raw; }
-    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return raw;
-    if (!("default-group" in manifest)) return raw;
+    try {
+        manifest = JSON.parse(raw);
+    } catch {
+        return raw;
+    }
+    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+        return raw;
+    }
+    if (!("default-group" in manifest)) {
+        return raw;
+    }
     delete manifest["default-group"];
     return JSON.stringify(manifest, null, 4) + "\n";
 }

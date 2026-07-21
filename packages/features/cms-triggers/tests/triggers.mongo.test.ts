@@ -7,16 +7,20 @@ describe("MongoTriggerRepository endpoint queries", () => {
         const calls: Array<{ filter: unknown; options: unknown }> = [];
         let createdIndex: unknown;
         const collection = {
-            createIndex: async (index: unknown) => { createdIndex = index; },
+            createIndex: async (index: unknown) => {
+                createdIndex = index;
+            },
             find: (filter: unknown, options: unknown) => {
                 calls.push({ filter, options });
                 return {
-                    toArray: async () => [{
-                        _id: "global",
-                        enabled: true,
-                        event: { kind: "endpoint", phase: "response" },
-                        function: { id: "notify" },
-                    }],
+                    toArray: async () => [
+                        {
+                            _id: "global",
+                            enabled: true,
+                            event: { kind: "endpoint", phase: "response" },
+                            function: { id: "notify" },
+                        },
+                    ],
                 };
             },
         };
@@ -28,20 +32,22 @@ describe("MongoTriggerRepository endpoint queries", () => {
 
         const index = { "event.source": 1, "event.endpoint": 1, "event.phase": 1, enabled: 1 };
         expect(createdIndex).toEqual(index);
-        expect(calls).toEqual([{
-            filter: {
-                enabled: true,
-                "event.kind": "endpoint",
-                "event.phase": { $in: ["request", "response"] },
-                $or: [
-                    { "event.source": "orders", "event.endpoint": "createOrder" },
-                    { "event.source": "orders", "event.endpoint": { $exists: false } },
-                    { "event.source": { $exists: false }, "event.endpoint": "createOrder" },
-                    { "event.source": { $exists: false }, "event.endpoint": { $exists: false } },
-                ],
+        expect(calls).toEqual([
+            {
+                filter: {
+                    enabled: true,
+                    "event.kind": "endpoint",
+                    "event.phase": { $in: ["request", "response"] },
+                    $or: [
+                        { "event.source": "orders", "event.endpoint": "createOrder" },
+                        { "event.source": "orders", "event.endpoint": { $exists: false } },
+                        { "event.source": { $exists: false }, "event.endpoint": "createOrder" },
+                        { "event.source": { $exists: false }, "event.endpoint": { $exists: false } },
+                    ],
+                },
+                options: { hint: index },
             },
-            options: { hint: index },
-        }]);
-        expect(records.map(record => record.id)).toEqual(["global"]);
+        ]);
+        expect(records.map((record) => record.id)).toEqual(["global"]);
     });
 });

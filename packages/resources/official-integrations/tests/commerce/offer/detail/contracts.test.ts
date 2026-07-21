@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../harness";
+import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
 import { adminOfferDetail, sellerOfferDetail } from "./expected";
 import { useFullOfferDetailResponder } from "./fixtures";
 
@@ -37,11 +34,10 @@ describe("commerce offer detail contracts", () => {
         const response = await requestCommerce("/me/offer?id=91", {
             userId: "seller-user-123",
         });
-        const body = await response.json() as Record<string, unknown>;
+        const body = (await response.json()) as Record<string, unknown>;
 
         expect(response.status).toBe(200);
         expect(body.mainImageMediaId).toBe("201");
-        expect((body.media as Array<Record<string, unknown>>).map(item => item.mediaId))
-            .toEqual([201, 202]);
+        expect((body.media as Array<Record<string, unknown>>).map((item) => item.mediaId)).toEqual([201, 202]);
     });
 });

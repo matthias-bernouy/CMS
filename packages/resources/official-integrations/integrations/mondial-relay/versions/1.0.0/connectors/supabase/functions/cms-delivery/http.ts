@@ -50,20 +50,28 @@ export function routePath(request: Request): string {
 
 export async function readJsonObject(request: Request): Promise<JsonRecord> {
     const value = await request.json().catch(() => null);
-    if (!isRecord(value)) throw new HttpError(400, "request body must be a JSON object");
+    if (!isRecord(value)) {
+        throw new HttpError(400, "request body must be a JSON object");
+    }
     return value;
 }
 
 export function requireCmsRequest(request: Request): void {
     const expected = envText("CMS_DELIVERY_API_KEY");
-    if (!expected) throw new HttpError(500, "CMS delivery API key is not configured");
+    if (!expected) {
+        throw new HttpError(500, "CMS delivery API key is not configured");
+    }
     const authorization = request.headers.get("authorization") ?? "";
-    if (authorization !== `Bearer ${expected}`) throw new HttpError(401, "unauthorized");
+    if (authorization !== `Bearer ${expected}`) {
+        throw new HttpError(401, "unauthorized");
+    }
 }
 
 export function requireCmsWriteRequest(request: Request): void {
     requireCmsRequest(request);
-    if (request.method !== "POST") throw new HttpError(405, "method not allowed");
+    if (request.method !== "POST") {
+        throw new HttpError(405, "method not allowed");
+    }
 }
 
 export function requireCmsAdminWriteRequest(request: Request): void {
@@ -78,10 +86,13 @@ export function handleError(error: unknown): Response {
         console.error(error);
         return json({ error: "internal error" }, 500);
     }
-    return json({
-        error: error.message,
-        ...(error instanceof ProviderStatusError ? { mondialRelay: error.provider } : {}),
-    }, error.status);
+    return json(
+        {
+            error: error.message,
+            ...(error instanceof ProviderStatusError ? { mondialRelay: error.provider } : {}),
+        },
+        error.status,
+    );
 }
 
 export function isRecord(value: unknown): value is JsonRecord {
@@ -95,7 +106,9 @@ export function queryText(url: URL, name: string): string | undefined {
 
 export function requiredQuery(url: URL, name: string): string {
     const value = queryText(url, name);
-    if (!value) throw new HttpError(400, `${name} is required`);
+    if (!value) {
+        throw new HttpError(400, `${name} is required`);
+    }
     return value;
 }
 

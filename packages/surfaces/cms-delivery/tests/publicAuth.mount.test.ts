@@ -17,18 +17,38 @@ type Role = "user";
 class CaptureRunner implements Runner {
     readonly endpoints = new Set<string>();
 
-    constructor(readonly basePath: string = "/", private readonly root: CaptureRunner | null = null) {}
+    constructor(
+        readonly basePath: string = "/",
+        private readonly root: CaptureRunner | null = null,
+    ) {}
 
-    addEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", path: string, _handler: RouteHandler, _middlewares?: Middleware[]): void {
+    addEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        path: string,
+        _handler: RouteHandler,
+        _middlewares?: Middleware[],
+    ): void {
         this.target.endpoints.add(`${method} ${joinPath(this.basePath, path)}`);
     }
     use() {}
-    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("GET", path, handler, middlewares); }
-    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("POST", path, handler, middlewares); }
-    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PATCH", path, handler, middlewares); }
-    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("DELETE", path, handler, middlewares); }
-    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("PUT", path, handler, middlewares); }
-    getRequestIP() { return undefined; }
+    get(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("GET", path, handler, middlewares);
+    }
+    post(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("POST", path, handler, middlewares);
+    }
+    patch(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PATCH", path, handler, middlewares);
+    }
+    delete(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("DELETE", path, handler, middlewares);
+    }
+    put(path: string, handler: RouteHandler, middlewares?: Middleware[]) {
+        this.addEndpoint("PUT", path, handler, middlewares);
+    }
+    getRequestIP() {
+        return undefined;
+    }
     removeRoutesByPathPrefix() {}
     start() {}
     stop() {}
@@ -37,7 +57,11 @@ class CaptureRunner implements Runner {
         callback(new CaptureRunner(joinPath(this.basePath, prefix), this.target));
     }
 
-    setDefaultEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", _handler: RouteHandler, _middlewares?: Middleware[]): void {
+    setDefaultEndpoint(
+        method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS",
+        _handler: RouteHandler,
+        _middlewares?: Middleware[],
+    ): void {
         this.target.endpoints.add(`${method} ${this.basePath}`);
     }
 

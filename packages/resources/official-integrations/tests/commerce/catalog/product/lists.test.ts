@@ -24,12 +24,21 @@ describe("commerce product list contracts and baseline budgets", () => {
 
         expect(response.status).toBe(200);
         expect(body).toEqual({
-            items: [{
-                id: 42, slug: "racket-pro", title: "Racket Pro", description: null, brandId: 7,
-                status: "active", visibility: "public",
-                metadata: { publicSpec: "graphite", privateCost: 12000, snake_key: "opaque" },
-                version: 3, createdAt: "2026-07-01T10:00:00Z", updatedAt: "2026-07-04T10:00:00Z",
-            }],
+            items: [
+                {
+                    id: 42,
+                    slug: "racket-pro",
+                    title: "Racket Pro",
+                    description: null,
+                    brandId: 7,
+                    status: "active",
+                    visibility: "public",
+                    metadata: { publicSpec: "graphite", privateCost: 12000, snake_key: "opaque" },
+                    version: 3,
+                    createdAt: "2026-07-01T10:00:00Z",
+                    updatedAt: "2026-07-04T10:00:00Z",
+                },
+            ],
             total: 7,
             limit: 2,
             offset: 3,
@@ -43,9 +52,11 @@ describe("commerce product list contracts and baseline budgets", () => {
     });
 
     test("preserves the redacted public list and two-call budget", async () => {
-        setRestResponder(request => {
+        setRestResponder((request) => {
             const resource = new URL(request.url).pathname.split("/").at(-1);
-            if (resource === "products") return jsonResponse([productRow]);
+            if (resource === "products") {
+                return jsonResponse([productRow]);
+            }
             if (resource === "custom_field_definitions") {
                 return jsonResponse([{ key: "publicSpec" }, { key: "snake_key" }]);
             }
@@ -59,26 +70,39 @@ describe("commerce product list contracts and baseline budgets", () => {
 
         expect(response.status).toBe(200);
         expect(body).toEqual({
-            items: [{
-                id: 42, slug: "racket-pro", title: "Racket Pro", description: null, brandId: 7,
-                status: "active", visibility: "public",
-                metadata: { publicSpec: "graphite", snake_key: "opaque" },
-                version: 3, createdAt: "2026-07-01T10:00:00Z", updatedAt: "2026-07-04T10:00:00Z",
-            }],
+            items: [
+                {
+                    id: 42,
+                    slug: "racket-pro",
+                    title: "Racket Pro",
+                    description: null,
+                    brandId: 7,
+                    status: "active",
+                    visibility: "public",
+                    metadata: { publicSpec: "graphite", snake_key: "opaque" },
+                    version: 3,
+                    createdAt: "2026-07-01T10:00:00Z",
+                    updatedAt: "2026-07-04T10:00:00Z",
+                },
+            ],
             total: 0,
             limit: 100,
             offset: 0,
         });
-        expect(calls.map(call => new URL(call.url).pathname.split("/").at(-1)))
-            .toEqual(["products", "custom_field_definitions"]);
+        expect(calls.map((call) => new URL(call.url).pathname.split("/").at(-1))).toEqual([
+            "products",
+            "custom_field_definitions",
+        ]);
         expect(query.get("status")).toBe("eq.active");
         expect(query.get("visibility")).toBe("eq.public");
     });
 
     test("loads public metadata definitions even for an empty page", async () => {
-        setRestResponder(request => new URL(request.url).pathname.endsWith("/products")
-            ? jsonResponse([])
-            : jsonResponse([{ key: "publicSpec" }]));
+        setRestResponder((request) =>
+            new URL(request.url).pathname.endsWith("/products")
+                ? jsonResponse([])
+                : jsonResponse([{ key: "publicSpec" }]),
+        );
 
         const response = await requestCommerce("/products");
 

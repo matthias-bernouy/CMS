@@ -13,10 +13,8 @@ export type CreationReplies = {
     fulfillment?: Reply;
 };
 
-export function creationResponder(
-    replies: CreationReplies = {},
-): (request: Request) => Promise<Response> {
-    return async request => {
+export function creationResponder(replies: CreationReplies = {}): (request: Request) => Promise<Response> {
+    return async (request) => {
         const pathname = new URL(request.url).pathname;
         if (pathname === "/shipmentCreationSellerContext") {
             return await response(request, replies.setup, sellerSetup);
@@ -38,11 +36,14 @@ export function creationResponder(
 }
 
 export function privateFailure(status: number, error: string): Response {
-    return Response.json({
-        error,
-        recipientAddress: "7 Private Street",
-        providerPayload: { reference: "private-provider-reference" },
-    }, { status });
+    return Response.json(
+        {
+            error,
+            recipientAddress: "7 Private Street",
+            providerPayload: { reference: "private-provider-reference" },
+        },
+        { status },
+    );
 }
 
 async function response(
@@ -51,9 +52,9 @@ async function response(
     fallback: unknown,
     status = 200,
 ): Promise<Response> {
-    const value = typeof reply === "function"
-        ? await reply(request)
-        : reply ?? fallback;
-    if (value instanceof Response) return value;
+    const value = typeof reply === "function" ? await reply(request) : (reply ?? fallback);
+    if (value instanceof Response) {
+        return value;
+    }
     return Response.json(value, { status });
 }

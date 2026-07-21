@@ -6,7 +6,7 @@ import template from "./template.html" with { type: "text" };
 const SETTINGS_SECTIONS = ["general", "email", "secrets", "identity", "connectors"] as const;
 const DEFAULT_SECTION: SettingsSection = "general";
 
-type SettingsSection = typeof SETTINGS_SECTIONS[number];
+type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 export class CmsSettingsNav extends Component {
     constructor() {
@@ -29,7 +29,9 @@ export class CmsSettingsNav extends Component {
         const items = Array.from(this.shadowRoot!.querySelectorAll<HTMLElement>("[data-settings-section]"));
         for (const item of items) {
             const section = item.dataset.settingsSection ?? "";
-            if (!isSettingsSection(section)) continue;
+            if (!isSettingsSection(section)) {
+                continue;
+            }
             item.setAttribute("href", `${basePath}/admin/settings/${section}`);
         }
     }
@@ -45,9 +47,13 @@ export class CmsSettingsNav extends Component {
     private activeSection(): SettingsSection {
         const basePath = this.basePath();
         let path = window.location.pathname;
-        if (basePath && path.startsWith(`${basePath}/`)) path = path.slice(basePath.length);
+        if (basePath && path.startsWith(`${basePath}/`)) {
+            path = path.slice(basePath.length);
+        }
         path = path.replace(/^\/+|\/+$/g, "");
-        if (path === "admin/settings") return DEFAULT_SECTION;
+        if (path === "admin/settings") {
+            return DEFAULT_SECTION;
+        }
         const section = path.match(/^admin\/settings\/([^/]+)$/)?.[1] ?? "";
         return isSettingsSection(section) ? section : DEFAULT_SECTION;
     }
@@ -58,7 +64,9 @@ export class CmsSettingsNav extends Component {
     }
 }
 
-if (!customElements.get("cms-settings-nav")) customElements.define("cms-settings-nav", CmsSettingsNav);
+if (!customElements.get("cms-settings-nav")) {
+    customElements.define("cms-settings-nav", CmsSettingsNav);
+}
 
 function isSettingsSection(value: string): value is SettingsSection {
     return SETTINGS_SECTIONS.includes(value as SettingsSection);

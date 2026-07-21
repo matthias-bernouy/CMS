@@ -6,6 +6,8 @@
  */
 export function buildRequestUrl(target: string): URL {
     const u = new URL(target, window.location.href);
-    for (const [k, v] of new URLSearchParams(window.location.search)) u.searchParams.append(k, v);
+    for (const [k, v] of new URLSearchParams(window.location.search)) {
+        u.searchParams.append(k, v);
+    }
     return u;
 }

@@ -12,15 +12,18 @@ export type AuthMethodsRoutesConfig = {
 };
 
 export const AUTH_ROUTES = {
-    base:         "/auth",
-    login:        "/login",
-    logout:       "/logout",
-    oidcLogin:    "/:provider/login",
+    base: "/auth",
+    login: "/login",
+    logout: "/logout",
+    oidcLogin: "/:provider/login",
     oidcCallback: "/:provider/callback",
-    methods:      "/methods",
+    methods: "/methods",
 } as const;
 
-export function localLoginHandler<Role extends string>(local: LocalAuthentication<Role>, req: Request): Promise<Response> {
+export function localLoginHandler<Role extends string>(
+    local: LocalAuthentication<Role>,
+    req: Request,
+): Promise<Response> {
     return local.login(req);
 }
 
@@ -28,11 +31,17 @@ export function localLogoutHandler<Role extends string>(local: LocalAuthenticati
     return local.logout(req);
 }
 
-export function oidcLoginHandler<Role extends string>(oidc: OidcAuthentication<Role>, req: Request): Promise<Response> | Response {
+export function oidcLoginHandler<Role extends string>(
+    oidc: OidcAuthentication<Role>,
+    req: Request,
+): Promise<Response> | Response {
     return oidc.login(req);
 }
 
-export function oidcCallbackHandler<Role extends string>(oidc: OidcAuthentication<Role>, req: Request): Promise<Response> | Response {
+export function oidcCallbackHandler<Role extends string>(
+    oidc: OidcAuthentication<Role>,
+    req: Request,
+): Promise<Response> | Response {
     return oidc.callback(req);
 }
 

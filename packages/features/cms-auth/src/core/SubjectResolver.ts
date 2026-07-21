@@ -21,7 +21,6 @@ export const internalUserId = (provider: string | undefined, sub: string): strin
  * `defaultRole`; an existing one keeps its stored role.
  */
 export class SubjectResolver<Role extends string = string> {
-
     constructor(
         private readonly users: UsersRepository<Role>,
         private readonly defaultRole: Role,

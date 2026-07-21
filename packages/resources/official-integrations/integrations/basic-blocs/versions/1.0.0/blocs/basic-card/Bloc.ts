@@ -1,10 +1,5 @@
 export class BasicCard extends HTMLElement {
-    static observedAttributes = [
-        "background-color",
-        "border-color",
-        "muted-text-color",
-        "text-color",
-    ];
+    static observedAttributes = ["background-color", "border-color", "muted-text-color", "text-color"];
 
     constructor() {
         super();
@@ -16,7 +11,9 @@ export class BasicCard extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.syncColors();
+        if (this.isConnected) {
+            this.syncColors();
+        }
     }
 
     render() {
@@ -126,7 +123,9 @@ export class BasicCard extends HTMLElement {
     }
 
     syncColors() {
-        if (!this.card) return;
+        if (!this.card) {
+            return;
+        }
         for (const [attribute, property] of [
             ["background-color", "--cms-card-background"],
             ["border-color", "--cms-card-border-color"],
@@ -134,8 +133,11 @@ export class BasicCard extends HTMLElement {
             ["text-color", "--cms-card-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.card.style.setProperty(property, value);
-            else this.card.style.removeProperty(property);
+            if (value) {
+                this.card.style.setProperty(property, value);
+            } else {
+                this.card.style.removeProperty(property);
+            }
         }
     }
 }

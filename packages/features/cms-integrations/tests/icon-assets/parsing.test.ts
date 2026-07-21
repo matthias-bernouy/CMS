@@ -16,25 +16,25 @@ describe("integration artifact icon parsing", () => {
         const [source, dashboard, semantic] = definition.artifacts ?? [];
 
         expect(source?.type === "source" ? source.source.meta.icon : null).toBe("assets/source.svg");
-        expect(dashboard?.type === "dashboard" ? dashboard.dashboard.meta?.icon : null)
-            .toBe("assets/dashboard.svg");
+        expect(dashboard?.type === "dashboard" ? dashboard.dashboard.meta?.icon : null).toBe("assets/dashboard.svg");
         expect(semantic?.type === "dashboard" ? semantic.dashboard.meta?.icon : null).toBe("layout");
     });
 
     test("rejects structured icon references outside assets or with a raster extension", () => {
-        expect(() => definitionWithIcon({ path: "../icon.svg" }))
-            .toThrow(/must reference an SVG inside assets/);
-        expect(() => definitionWithIcon({ path: "assets/icon.png" }))
-            .toThrow(/must reference an SVG inside assets/);
-        expect(() => definitionWithIcon("assets/../icon.svg"))
-            .toThrow(/must reference an SVG inside assets/);
-        expect(() => definitionWithIcon("assets\\icon.svg"))
-            .toThrow(/must reference an SVG inside assets/);
+        expect(() => definitionWithIcon({ path: "../icon.svg" })).toThrow(/must reference an SVG inside assets/);
+        expect(() => definitionWithIcon({ path: "assets/icon.png" })).toThrow(/must reference an SVG inside assets/);
+        expect(() => definitionWithIcon("assets/../icon.svg")).toThrow(/must reference an SVG inside assets/);
+        expect(() => definitionWithIcon("assets\\icon.svg")).toThrow(/must reference an SVG inside assets/);
     });
 });
 
 function definitionWithIcon(icon: unknown): void {
-    parseIntegrationDefinition({ kind: "invalid-icon", label: "Invalid", inputs: [], artifacts: [sourceArtifact(icon)] });
+    parseIntegrationDefinition({
+        kind: "invalid-icon",
+        label: "Invalid",
+        inputs: [],
+        artifacts: [sourceArtifact(icon)],
+    });
 }
 
 function sourceArtifact(icon: unknown): Record<string, unknown> {

@@ -16,7 +16,9 @@ export function checkEnvironmentReads(
     for (const read of collectEnvironmentReads(sourceFile)) {
         const occurrence = (seen.get(read.expression) ?? 0) + 1;
         seen.set(read.expression, occurrence);
-        if (occurrence <= (allowed[read.expression] ?? 0)) continue;
+        if (occurrence <= (allowed[read.expression] ?? 0)) {
+            continue;
+        }
         violations.push({
             kind: "environment-read",
             file: relativeFile,
@@ -36,8 +38,8 @@ function collectEnvironmentReads(sourceFile: ts.SourceFile): Array<{ expression:
                 reads.push({ expression: compactExpression(node.getText(sourceFile)), line: lineOf(sourceFile, node) });
             }
         } else if (
-            (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node))
-            && isEnvironmentObject(node.expression)
+            (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+            isEnvironmentObject(node.expression)
         ) {
             reads.push({ expression: compactExpression(node.getText(sourceFile)), line: lineOf(sourceFile, node) });
             return;
@@ -53,27 +55,37 @@ function collectDestructuredRead(
     sourceFile: ts.SourceFile,
     reads: Array<{ expression: string; line: number }>,
 ): void {
-    if (!ts.isVariableDeclaration(node) || !ts.isObjectBindingPattern(node.name) || !node.initializer) return;
+    if (!ts.isVariableDeclaration(node) || !ts.isObjectBindingPattern(node.name) || !node.initializer) {
+        return;
+    }
     const owner = environmentOwnerName(node.initializer);
-    if (!owner) return;
+    if (!owner) {
+        return;
+    }
     for (const element of node.name.elements) {
         const property = element.propertyName ?? element.name;
-        if (bindingPropertyName(property) !== "env") continue;
+        if (bindingPropertyName(property) !== "env") {
+            continue;
+        }
         reads.push({ expression: `${owner}.env`, line: lineOf(sourceFile, element) });
     }
 }
 
 function isEnvironmentObject(node: ts.Node): boolean {
-    if (!isPropertyAccessNamed(node, "env")) return false;
+    if (!isPropertyAccessNamed(node, "env")) {
+        return false;
+    }
     const owner = node.expression;
-    if (environmentOwnerName(owner)) return true;
-    return ts.isMetaProperty(owner)
-        && owner.keywordToken === ts.SyntaxKind.ImportKeyword
-        && owner.name.text === "meta";
+    if (environmentOwnerName(owner)) {
+        return true;
+    }
+    return ts.isMetaProperty(owner) && owner.keywordToken === ts.SyntaxKind.ImportKeyword && owner.name.text === "meta";
 }
 
 function environmentOwnerName(node: ts.Expression): string | undefined {
-    if (ts.isIdentifier(node) && (node.text === "process" || node.text === "Bun")) return node.text;
+    if (ts.isIdentifier(node) && (node.text === "process" || node.text === "Bun")) {
+        return node.text;
+    }
     if (isPropertyAccessNamed(node, "process") && ts.isIdentifier(node.expression)) {
         return node.expression.text === "globalThis" ? "globalThis.process" : undefined;
     }
@@ -81,7 +93,9 @@ function environmentOwnerName(node: ts.Expression): string | undefined {
 }
 
 function bindingPropertyName(node: ts.BindingName | ts.PropertyName): string | undefined {
-    if (ts.isIdentifier(node) || ts.isStringLiteralLike(node) || ts.isNumericLiteral(node)) return node.text;
+    if (ts.isIdentifier(node) || ts.isStringLiteralLike(node) || ts.isNumericLiteral(node)) {
+        return node.text;
+    }
     return undefined;
 }
 
@@ -89,16 +103,22 @@ function isPropertyAccessNamed(
     node: ts.Node,
     name: string,
 ): node is ts.PropertyAccessExpression | ts.ElementAccessExpression {
-    if (ts.isPropertyAccessExpression(node)) return node.name.text === name;
-    return ts.isElementAccessExpression(node)
-        && !!node.argumentExpression
-        && ts.isStringLiteralLike(node.argumentExpression)
-        && node.argumentExpression.text === name;
+    if (ts.isPropertyAccessExpression(node)) {
+        return node.name.text === name;
+    }
+    return (
+        ts.isElementAccessExpression(node) &&
+        !!node.argumentExpression &&
+        ts.isStringLiteralLike(node.argumentExpression) &&
+        node.argumentExpression.text === name
+    );
 }
 
 function isAccessOnExpression(parent: ts.Node, expression: ts.Node): boolean {
-    return (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent))
-        && parent.expression === expression;
+    return (
+        (ts.isPropertyAccessExpression(parent) || ts.isElementAccessExpression(parent)) &&
+        parent.expression === expression
+    );
 }
 
 function compactExpression(expression: string): string {

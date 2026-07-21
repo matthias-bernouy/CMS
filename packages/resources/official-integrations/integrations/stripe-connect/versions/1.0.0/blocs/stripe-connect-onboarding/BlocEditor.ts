@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({
     type: "color",
@@ -62,10 +57,7 @@ export class StripeConnectOnboardingEditor extends Editor {
             {
                 kind: "self",
                 label: "Colours",
-                settings: [
-                    color("Wallet colour", "accent-color"),
-                    color("Wallet text colour", "accent-text-color"),
-                ],
+                settings: [color("Wallet colour", "accent-color"), color("Wallet text colour", "accent-text-color")],
             },
         ];
     }

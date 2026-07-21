@@ -6,12 +6,10 @@ import type { Component, Composition } from "@bernouy/components/base";
 // scoped instead of reaching global scope.
 
 declare global {
-
     var p9r: {
         readonly Component: typeof Component;
         readonly Composition: typeof Composition;
     };
-
 }
 
 export {};

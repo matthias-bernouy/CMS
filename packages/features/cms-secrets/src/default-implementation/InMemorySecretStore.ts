@@ -11,7 +11,6 @@ import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
  * encryption-at-rest; that's an implementation concern of backed stores.
  */
 export class InMemorySecretStore implements SecretStore {
-
     private _data = new Map<string, string>();
 
     async get(key: string): Promise<string | null> {

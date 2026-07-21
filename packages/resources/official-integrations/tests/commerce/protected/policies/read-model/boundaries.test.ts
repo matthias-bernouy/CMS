@@ -24,16 +24,24 @@ describe("commerce protected C2C policy read boundaries", () => {
         const wrongMethod = await requestCommerce("/admin/c2c-policies", { method: "DELETE" });
 
         expect(await responseSummary(unauthenticated)).toEqual({
-            status: 401, body: { error: "invalid CMS API key" }, allow: null,
+            status: 401,
+            body: { error: "invalid CMS API key" },
+            allow: null,
         });
         expect(await responseSummary(wrongRole)).toEqual({
-            status: 403, body: { error: "CMS admin role is required" }, allow: null,
+            status: 403,
+            body: { error: "CMS admin role is required" },
+            allow: null,
         });
         expect(await responseSummary(wrongRoleMethod)).toEqual({
-            status: 403, body: { error: "CMS admin role is required" }, allow: null,
+            status: 403,
+            body: { error: "CMS admin role is required" },
+            allow: null,
         });
         expect(await responseSummary(wrongMethod)).toEqual({
-            status: 405, body: "Method Not Allowed", allow: "GET, POST, OPTIONS",
+            status: 405,
+            body: "Method Not Allowed",
+            allow: "GET, POST, OPTIONS",
         });
         expect(capturedFetches()).toHaveLength(0);
     });
@@ -47,7 +55,8 @@ describe("commerce protected C2C policy read boundaries", () => {
         const read = await requestCommerce("/admin/c2c-policies", { userRole: "admin" });
 
         expect({ status: options.status, body: await options.text() }).toEqual({
-            status: 200, body: "ok",
+            status: 200,
+            body: "ok",
         });
         expect(read.status).toBe(200);
     });
@@ -115,9 +124,7 @@ async function responseSummary(response: Response): Promise<{
 }> {
     return {
         status: response.status,
-        body: response.headers.get("content-type")?.includes("json")
-            ? await response.json()
-            : await response.text(),
+        body: response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text(),
         allow: response.headers.get("allow"),
     };
 }

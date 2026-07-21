@@ -3,14 +3,20 @@ import { toLocal, filesBase, type LocalTypeFilter, type FilesItem, type FilesPag
 
 export async function fetchItems(folder: string | null, types?: LocalTypeFilter): Promise<LocalMediaItem[]> {
     const url = new URL(filesBase(), window.location.origin);
-    if (folder) url.searchParams.set("parentId", folder);
+    if (folder) {
+        url.searchParams.set("parentId", folder);
+    }
     const accept = expandAccept(types);
-    if (accept) url.searchParams.set("accept", accept);
+    if (accept) {
+        url.searchParams.set("accept", accept);
+    }
     url.searchParams.set("sortBy", "name");
     url.searchParams.set("limit", "10000");
 
     const res = await fetch(url.toString());
-    if (!res.ok) return [];
+    if (!res.ok) {
+        return [];
+    }
     const page = (await res.json()) as FilesPage;
 
     let items = page.items.map(toLocal);
@@ -21,8 +27,12 @@ export async function fetchItems(folder: string | null, types?: LocalTypeFilter)
         items = items.filter((i) => types.includes(i.type));
     }
     items.sort((a, b) => {
-        if (a.type === "folder" && b.type !== "folder") return -1;
-        if (a.type !== "folder" && b.type === "folder") return 1;
+        if (a.type === "folder" && b.type !== "folder") {
+            return -1;
+        }
+        if (a.type !== "folder" && b.type === "folder") {
+            return 1;
+        }
         return a.label.localeCompare(b.label);
     });
     return items;
@@ -34,10 +44,16 @@ export async function fetchItems(folder: string | null, types?: LocalTypeFilter)
  * mime-type split happens client-side), so both collapse to `file`.
  */
 function expandAccept(types?: LocalTypeFilter): string | undefined {
-    if (!types || types.length === 0) return undefined;
+    if (!types || types.length === 0) {
+        return undefined;
+    }
     const accept = new Set<string>();
-    if (types.includes("folder")) accept.add("folder");
-    if (types.includes("image") || types.includes("other")) accept.add("file");
+    if (types.includes("folder")) {
+        accept.add("folder");
+    }
+    if (types.includes("image") || types.includes("other")) {
+        accept.add("file");
+    }
     return accept.size > 0 ? [...accept].join(",") : undefined;
 }
 
@@ -48,7 +64,9 @@ export async function resolveBreadcrumbTrail(id: string): Promise<BreadcrumbEntr
         const url = new URL(`${filesBase()}/item`, window.location.origin);
         url.searchParams.set("id", currentId);
         const res = await fetch(url.toString());
-        if (!res.ok) break;
+        if (!res.ok) {
+            break;
+        }
         const item = (await res.json()) as FilesItem;
         trail.unshift({ id: item.id, label: item.name });
         currentId = item.parentId;

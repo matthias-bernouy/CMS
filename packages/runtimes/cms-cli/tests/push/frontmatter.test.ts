@@ -18,10 +18,10 @@ tags: [public, "marketing", 'top']
 <bloc-card></bloc-card>`;
         const { frontmatter, content } = parseFrontmatter(raw);
         expect(frontmatter).toEqual({
-            title:       "About",
+            title: "About",
             description: "Our story",
-            visible:     false,
-            tags:        ["public", "marketing", "top"],
+            visible: false,
+            tags: ["public", "marketing", "top"],
         });
         expect(content).toBe("<bloc-card></bloc-card>");
     });
@@ -34,7 +34,7 @@ description: "Navbar shared across pages"
 <nav></nav>`;
         const { frontmatter } = parseFrontmatter(raw);
         expect(frontmatter).toEqual({
-            name:        "Header global",
+            name: "Header global",
             description: "Navbar shared across pages",
         });
     });

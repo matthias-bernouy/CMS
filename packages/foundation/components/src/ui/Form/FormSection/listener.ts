@@ -1,4 +1,4 @@
-import { emitToggle } from './emit';
+import { emitToggle } from "./emit";
 
 interface SectionHost extends HTMLElement {
     collapsed: boolean;
@@ -10,7 +10,9 @@ export const handleToggleClick = (host: SectionHost) => {
 };
 
 export const handleToggleKey = (host: SectionHost, e: KeyboardEvent) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.key !== "Enter" && e.key !== " ") {
+        return;
+    }
     e.preventDefault();
     handleToggleClick(host);
 };

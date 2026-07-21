@@ -1,8 +1,4 @@
-import {
-    parseUrn,
-    sourceEndpointAccessMode,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { parseUrn, sourceEndpointAccessMode, type SourceEndpoint } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
 import { editorSourceFromEndpoint } from "cms-control/core/editorSources/sourceDto";
 
@@ -16,7 +12,7 @@ export type {
 export default async function getEditorSources(_req: Request, cms: ControlCms): Promise<Response> {
     try {
         const providers = await cms.sources.getAllSources();
-        const sources = providers.flatMap(provider => {
+        const sources = providers.flatMap((provider) => {
             const parsed = parseUrn(provider.urn);
             const descriptor = {
                 provider: parsed?.source ?? provider.urn,
@@ -25,7 +21,7 @@ export default async function getEditorSources(_req: Request, cms: ControlCms): 
             };
             return provider.endpoints
                 .filter(isEditorEndpoint)
-                .map(endpoint => editorSourceFromEndpoint(cms, endpoint, descriptor));
+                .map((endpoint) => editorSourceFromEndpoint(cms, endpoint, descriptor));
         });
 
         return Response.json(sources);

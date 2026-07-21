@@ -23,7 +23,6 @@ import type { EndpointSeed } from "./shared";
  * empty (`[]`) or malformed → ZERO rows; a fully ABSENT attribute → one starter.
  */
 export class CmsEndpointsInput extends HTMLElement {
-
     private _rowCount = 0;
     private _initialized = false;
     private _rowsContainer: HTMLElement | null = null;
@@ -36,7 +35,7 @@ export class CmsEndpointsInput extends HTMLElement {
             // Append collapsed: opening here would fire the accordion height
             // transition (the "grows in from the bottom" glitch).
             e.preventDefault();
-            this._addRow({})?.scrollIntoView({ block: 'nearest' });
+            this._addRow({})?.scrollIntoView({ block: "nearest" });
             return;
         }
 
@@ -56,22 +55,27 @@ export class CmsEndpointsInput extends HTMLElement {
             ensureStyles();
             this._render();
             const seeds = this._parseValue();
-            if (seeds.length) seeds.forEach(seed => this._addRow(seed));          // edit: seed exactly
-            else if (!this.hasAttribute('value')) this._addRow({});               // no attr → one starter
+            if (seeds.length) {
+                seeds.forEach((seed) => this._addRow(seed)); // edit: seed exactly
+            } else if (!this.hasAttribute("value")) {
+                this._addRow({}); // no attr → one starter
+            }
             // present-but-empty / malformed → zero rows (added via "Add endpoint").
         }
-        this.addEventListener('click', this._onClick);
+        this.addEventListener("click", this._onClick);
     }
 
     disconnectedCallback(): void {
-        this.removeEventListener('click', this._onClick);
+        this.removeEventListener("click", this._onClick);
     }
 
     /** Parse the `value` attribute (a JSON array of endpoints). Absent / non-array
      *  / malformed → `[]`. */
     private _parseValue(): EndpointSeed[] {
-        const raw = this.getAttribute('value');
-        if (!raw) return [];
+        const raw = this.getAttribute("value");
+        if (!raw) {
+            return [];
+        }
         try {
             const parsed = JSON.parse(raw);
             return Array.isArray(parsed) ? parsed : [];
@@ -82,15 +86,17 @@ export class CmsEndpointsInput extends HTMLElement {
 
     private _render(): void {
         // Single-open accordion (no `multiple`): opening one item collapses the rest.
-        this._rowsContainer = document.createElement('p9r-accordion');
+        this._rowsContainer = document.createElement("p9r-accordion");
         this.append(this._rowsContainer, makeAddButton());
     }
 
     private _addRow(seed: EndpointSeed = {}): HTMLElement | null {
-        if (!this._rowsContainer) return null;
+        if (!this._rowsContainer) {
+            return null;
+        }
         // Forward the secrets API base to the Headers tab's credential pickers if
         // the host exposes one; otherwise each picker defaults to /api/secrets.
-        const api = this.getAttribute('api') ?? this.getAttribute('secrets-api') ?? undefined;
+        const api = this.getAttribute("api") ?? this.getAttribute("secrets-api") ?? undefined;
         const item = makeEndpointRow(this._rowCount++, seed, api);
         this._rowsContainer.appendChild(item);
         return item;
@@ -101,12 +107,14 @@ let stylesInjected = false;
 /** Inject the component stylesheet once. It's light DOM, so the sheet goes in the
  *  document head; every rule is scoped to the `cms-endpoints-input` tag. */
 function ensureStyles(): void {
-    if (stylesInjected || document.getElementById('cms-endpoints-input-styles')) return;
+    if (stylesInjected || document.getElementById("cms-endpoints-input-styles")) {
+        return;
+    }
     stylesInjected = true;
-    const style = document.createElement('style');
-    style.id = 'cms-endpoints-input-styles';
+    const style = document.createElement("style");
+    style.id = "cms-endpoints-input-styles";
     style.textContent = css;
     document.head.appendChild(style);
 }
 
-customElements.define('cms-endpoints-input', CmsEndpointsInput);
+customElements.define("cms-endpoints-input", CmsEndpointsInput);

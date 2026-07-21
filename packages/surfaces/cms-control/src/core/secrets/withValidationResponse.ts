@@ -13,10 +13,10 @@ export async function withValidationResponse(fn: () => Promise<Response>): Promi
         return await fn();
     } catch (e) {
         if (e instanceof InvalidParam || e instanceof MissingParam) {
-            return new Response(
-                JSON.stringify({ error: e.message }),
-                { status: 400, headers: { "Content-Type": "application/json" } },
-            );
+            return new Response(JSON.stringify({ error: e.message }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
         }
         throw e;
     }

@@ -42,13 +42,13 @@ function buildModal(host: CredentialSelect): HTMLElement {
 
 function inputs(m: HTMLElement) {
     return {
-        key:   m.querySelector('[data-role="key"]')   as P9rInput,
+        key: m.querySelector('[data-role="key"]') as P9rInput,
         value: m.querySelector('[data-role="value"]') as P9rInput,
     };
 }
 
 export function openCreateDialog(host: CredentialSelect): void {
-    const m = host._createModal ??= buildModal(host);
+    const m = (host._createModal ??= buildModal(host));
     const { key, value } = inputs(m);
     key.value = "";
     value.value = "";
@@ -66,9 +66,11 @@ export function destroyCreateDialog(host: CredentialSelect): void {
 
 export async function submitCreate(host: CredentialSelect): Promise<void> {
     const m = host._createModal;
-    if (!m) return;
+    if (!m) {
+        return;
+    }
     const { key: keyInput, value: valueInput } = inputs(m);
-    const key   = keyInput.value.trim();
+    const key = keyInput.value.trim();
     const value = valueInput.value;
     const keyError = secretKeyError(key);
     if (keyError) {
@@ -83,7 +85,10 @@ export async function submitCreate(host: CredentialSelect): Promise<void> {
         return;
     }
     const r = await createCredential(host._api, key, value);
-    if (!r.ok) { showToast(`Create failed: ${r.error}`, { type: "error" }); return; }
+    if (!r.ok) {
+        showToast(`Create failed: ${r.error}`, { type: "error" });
+        return;
+    }
     showToast(`Credential ${key} created`, { type: "success" });
     m.removeAttribute("open");
     await refreshList(host);

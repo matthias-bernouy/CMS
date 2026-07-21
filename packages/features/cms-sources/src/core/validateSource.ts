@@ -1,10 +1,7 @@
 import type { Source } from "../interfaces/Source";
 import { isEndpointUrn, isSourceUrn, sourceUrnOf } from "./urn";
 import { isSystemSourceUrn } from "./systemSources";
-import {
-    isValidResponseStatus,
-    validateEndpoint,
-} from "./sourceEndpointValidation";
+import { isValidResponseStatus, validateEndpoint } from "./sourceEndpointValidation";
 export {
     isAllowedSourceTargetUrl,
     validateSourceTargetUrl,
@@ -49,13 +46,20 @@ export function validateSource(source: Source): string[] {
     return errors;
 }
 
-function validateEndpointIdentity(endpoint: { urn: string }, sourceUrn: string, seen: Set<string>, errors: string[]): void {
+function validateEndpointIdentity(
+    endpoint: { urn: string },
+    sourceUrn: string,
+    seen: Set<string>,
+    errors: string[],
+): void {
     if (!isEndpointUrn(endpoint.urn)) {
         errors.push(`invalid endpoint urn: "${endpoint.urn}" (expected "urn:<source>:<endpoint>")`);
     } else if (!endpointBelongsToSource(endpoint.urn, sourceUrn)) {
         errors.push(`endpoint "${endpoint.urn}" does not belong to source "${sourceUrn}"`);
     }
 
-    if (seen.has(endpoint.urn)) errors.push(`duplicate endpoint urn: "${endpoint.urn}"`);
+    if (seen.has(endpoint.urn)) {
+        errors.push(`duplicate endpoint urn: "${endpoint.urn}"`);
+    }
     seen.add(endpoint.urn);
 }

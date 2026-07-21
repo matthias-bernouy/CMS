@@ -18,7 +18,9 @@ export class SecretValidationError extends Error {
  */
 export function validateSecretKey(key: string): void {
     const err = secretKeyError(key);
-    if (err) throw new SecretValidationError(err);
+    if (err) {
+        throw new SecretValidationError(err);
+    }
 }
 
 /**
@@ -36,8 +38,16 @@ export class ValidatingSecretStore implements SecretStore {
         return this.inner.set(key, value);
     }
 
-    get(key: string)    { return this.inner.get(key); }
-    delete(key: string) { return this.inner.delete(key); }
-    list()              { return this.inner.list(); }
-    listKeys()          { return this.inner.listKeys(); }
+    get(key: string) {
+        return this.inner.get(key);
+    }
+    delete(key: string) {
+        return this.inner.delete(key);
+    }
+    list() {
+        return this.inner.list();
+    }
+    listKeys() {
+        return this.inner.listKeys();
+    }
 }

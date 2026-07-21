@@ -43,7 +43,13 @@ describe("renderRef", () => {
 
     test("does not render a draft 500 fallback page publicly", async () => {
         const delivery = deliveryWithDraftFallback("serverError");
-        const res = await renderRef(new Request("http://site/error"), delivery, "serverError", 500, "Internal server error");
+        const res = await renderRef(
+            new Request("http://site/error"),
+            delivery,
+            "serverError",
+            500,
+            "Internal server error",
+        );
 
         expect(res.status).toBe(500);
         expect(await res.text()).toBe("Internal server error");

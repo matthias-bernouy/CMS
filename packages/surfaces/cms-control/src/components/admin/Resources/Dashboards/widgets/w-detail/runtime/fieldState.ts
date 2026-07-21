@@ -27,7 +27,9 @@ export class DetailFieldState {
     }
 
     syncScope(scopeKey: string): void {
-        if (this.scopeKey === scopeKey) return;
+        if (this.scopeKey === scopeKey) {
+            return;
+        }
         this.scopeKey = scopeKey;
         this.values = {};
     }
@@ -42,12 +44,12 @@ export class DetailFieldState {
     }
 
     find(fieldId: string): WDetailField | undefined {
-        return this.fields().find(field => field.id === fieldId);
+        return this.fields().find((field) => field.id === fieldId);
     }
 
     fields(): WDetailField[] {
         const data = this.readData();
-        return [...data.main, ...data.aside].flatMap(section => section.fields);
+        return [...data.main, ...data.aside].flatMap((section) => section.fields);
     }
 
     currentResource(): unknown | undefined {
@@ -56,17 +58,22 @@ export class DetailFieldState {
 
     currentFields(): Record<string, unknown> {
         const fields: Record<string, unknown> = { ...this.values };
-        const fieldsById = new Map(this.fields().map(field => [field.id, field]));
+        const fieldsById = new Map(this.fields().map((field) => [field.id, field]));
         for (const control of Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]"))) {
             const field = fieldsById.get(control.dataset.fieldControl ?? "");
-            if (field) fields[field.id] = readFieldControlValue(field, control);
+            if (field) {
+                fields[field.id] = readFieldControlValue(field, control);
+            }
         }
         return fields;
     }
 
     control(fieldId: string): HTMLElement | null {
-        return Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]"))
-            .find(control => control.dataset.fieldControl === fieldId) ?? null;
+        return (
+            Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]")).find(
+                (control) => control.dataset.fieldControl === fieldId,
+            ) ?? null
+        );
     }
 }
 
@@ -74,9 +81,13 @@ export function readDetailBinding(dataset: DOMStringMap): DetailBinding | null {
     const widget = parseJson<DetailWidget>(dataset.configJson ?? "");
     const sourceJson = dataset.sourceJson ?? "";
     const sourceData = parseJson<unknown>(sourceJson);
-    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) return null;
+    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
+        return null;
+    }
     const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
-    if (resource === undefined) return null;
+    if (resource === undefined) {
+        return null;
+    }
     return {
         widget,
         resource,
@@ -86,7 +97,9 @@ export function readDetailBinding(dataset: DOMStringMap): DetailBinding | null {
 }
 
 export function parseJson<T>(value: string): T | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     try {
         return JSON.parse(value) as T;
     } catch {

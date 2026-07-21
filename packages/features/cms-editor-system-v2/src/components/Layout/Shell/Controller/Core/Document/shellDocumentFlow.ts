@@ -23,24 +23,28 @@ export function dispatchSaveDocument(context: SaveContext): void {
 
     context.syncEditorMode();
     context.setSaveStatus("Saving");
-    context.host.dispatchEvent(new CustomEvent<EditorV2SaveDocumentDetail>(context.saveEventName, {
-        bubbles:  true,
-        composed: true,
-        detail:   {
-            page: {
-                ...pageConfig,
-                tags: [...pageConfig.tags],
+    context.host.dispatchEvent(
+        new CustomEvent<EditorV2SaveDocumentDetail>(context.saveEventName, {
+            bubbles: true,
+            composed: true,
+            detail: {
+                page: {
+                    ...pageConfig,
+                    tags: [...pageConfig.tags],
+                },
+                content: context.contentHtml(),
             },
-            content: context.contentHtml(),
-        },
-    }));
+        }),
+    );
 }
 
 export function dispatchDeleteDocument(host: EventTarget, eventName: string): void {
-    host.dispatchEvent(new CustomEvent(eventName, {
-        bubbles:  true,
-        composed: true,
-    }));
+    host.dispatchEvent(
+        new CustomEvent(eventName, {
+            bubbles: true,
+            composed: true,
+        }),
+    );
 }
 
 type FrameReadyContext = {
@@ -59,12 +63,12 @@ type FrameReadyContext = {
 export function handleShellFrameReady(context: FrameReadyContext): void {
     context.frames.handleFrameReady(context.detail.kind, context.detail.document, {
         bindViewFrameDocument: context.bindViewFrameDocument,
-        bindFrameDocument:     context.bindFrameDocument,
-        syncViewFrameContent:  context.syncViewFrameContent,
+        bindFrameDocument: context.bindFrameDocument,
+        syncViewFrameContent: context.syncViewFrameContent,
         syncBindingPreviewCore: context.syncBindingPreviewCore,
-        loadDocument:          context.loadDocument,
-        clearDocument:         context.clearDocument,
-        renderStructure:       context.renderStructure,
-        settings:              context.settings,
+        loadDocument: context.loadDocument,
+        clearDocument: context.clearDocument,
+        renderStructure: context.renderStructure,
+        settings: context.settings,
     });
 }

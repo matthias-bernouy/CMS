@@ -1,9 +1,5 @@
 import { detailData, type DetailOptions, type DetailSchemas } from "../../../runtime/mapping";
-import {
-    allLookupTargetKeys,
-    loadDetailLookupOptions,
-    lookupTargetKeysDependingOn,
-} from "../../../runtime/lookups";
+import { allLookupTargetKeys, loadDetailLookupOptions, lookupTargetKeysDependingOn } from "../../../runtime/lookups";
 import type { WDetailData } from "../types";
 import { DetailFieldState, readDetailBinding, type DetailWidget } from "./fieldState";
 import { DetailRequestCoordinator, DetailRequestTargets } from "./requests";
@@ -42,7 +38,9 @@ export class DetailLookups {
     }
 
     syncScope(scopeKey: string): void {
-        if (this.scopeKey === scopeKey) return;
+        if (this.scopeKey === scopeKey) {
+            return;
+        }
         this.clear();
         this.scopeKey = scopeKey;
     }
@@ -55,43 +53,53 @@ export class DetailLookups {
         fields: Record<string, unknown>,
         loadOptions: { targetKeys?: ReadonlySet<string>; useLatestFields?: boolean } = {},
     ): Promise<void> {
-        if (!loadOptions.targetKeys) this.clearPendingRefresh();
+        if (!loadOptions.targetKeys) {
+            this.clearPendingRefresh();
+        }
         const targetKeys = loadOptions.targetKeys ?? allLookupTargetKeys(widget);
         const scopeGeneration = this.scopeGeneration;
-        const results = await Promise.all([...targetKeys].map(key => (
-            this.loadTarget(widget, resource, sourceId, fields, key)
-        )));
-        if (this.scopeGeneration !== scopeGeneration) return;
+        const results = await Promise.all(
+            [...targetKeys].map((key) => this.loadTarget(widget, resource, sourceId, fields, key)),
+        );
+        if (this.scopeGeneration !== scopeGeneration) {
+            return;
+        }
 
         const next = { ...this.currentOptions };
         let accepted = false;
         for (const result of results) {
-            if (!this.targets.isCurrent(result.key, result.generation)) continue;
-            if (result.failed && Object.hasOwn(this.currentOptions, result.key)) continue;
+            if (!this.targets.isCurrent(result.key, result.generation)) {
+                continue;
+            }
+            if (result.failed && Object.hasOwn(this.currentOptions, result.key)) {
+                continue;
+            }
             next[result.key] = result.options;
             accepted = true;
         }
-        if (!accepted) return;
+        if (!accepted) {
+            return;
+        }
 
         const renderFields = loadOptions.useLatestFields ? this.fields.currentFields() : fields;
         this.currentOptions = next;
-        this.callbacks.setData(detailData(
-            widget,
-            resource,
-            rowKey,
-            renderFields,
-            next,
-            sourceId,
-            this.callbacks.schemas(),
-        ));
-        if (this.callbacks.isConnected()) this.callbacks.render();
+        this.callbacks.setData(
+            detailData(widget, resource, rowKey, renderFields, next, sourceId, this.callbacks.schemas()),
+        );
+        if (this.callbacks.isConnected()) {
+            this.callbacks.render();
+        }
     }
 
     schedule(changedFieldId: string): void {
         const binding = readDetailBinding(this.dataset);
-        if (!binding) return;
+        if (!binding) {
+            return;
+        }
         const targetKeys = lookupTargetKeysDependingOn(binding.widget, changedFieldId);
-        if (targetKeys.size === 0) return;
+        if (targetKeys.size === 0) {
+            return;
+        }
         for (const key of targetKeys) {
             this.pendingTargetKeys.add(key);
             this.invalidateTarget(key);
@@ -102,11 +110,20 @@ export class DetailLookups {
             const targetedKeys = new Set(this.pendingTargetKeys);
             this.pendingTargetKeys.clear();
             const latest = readDetailBinding(this.dataset);
-            if (!latest?.sourceId) return;
-            void this.load(latest.widget, latest.resource, latest.rowKey, latest.sourceId, this.fields.currentFields(), {
-                targetKeys: targetedKeys,
-                useLatestFields: true,
-            });
+            if (!latest?.sourceId) {
+                return;
+            }
+            void this.load(
+                latest.widget,
+                latest.resource,
+                latest.rowKey,
+                latest.sourceId,
+                this.fields.currentFields(),
+                {
+                    targetKeys: targetedKeys,
+                    useLatestFields: true,
+                },
+            );
         }, 250);
     }
 
@@ -152,7 +169,9 @@ export class DetailLookups {
     }
 
     private cancelReloadTimer(): void {
-        if (this.reloadTimer) clearTimeout(this.reloadTimer);
+        if (this.reloadTimer) {
+            clearTimeout(this.reloadTimer);
+        }
         this.reloadTimer = null;
     }
 }

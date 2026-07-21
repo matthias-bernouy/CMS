@@ -10,22 +10,30 @@ export function wireGrid(host: GridMedia, s: ShadowRoot, ctxMenu: CtxMenu, detai
 
     grid.addEventListener("click", (e) => {
         const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
-        if (!card) return;
+        if (!card) {
+            return;
+        }
         const id = card.dataset.id!;
         if (card.dataset.type === "folder") {
-            const folder = host._items.find(i => i.id === id);
+            const folder = host._items.find((i) => i.id === id);
             host._navigateTo(id, folder?.label);
         } else {
-            const item = host._items.find(i => i.id === id);
-            if (item) detail.open(item);
+            const item = host._items.find((i) => i.id === id);
+            if (item) {
+                detail.open(item);
+            }
         }
     });
 
     grid.addEventListener("contextmenu", (e) => {
         const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
-        if (!card) return;
-        const item = host._items.find(i => i.id === card.dataset.id);
-        if (!item) return;
+        if (!card) {
+            return;
+        }
+        const item = host._items.find((i) => i.id === card.dataset.id);
+        if (!item) {
+            return;
+        }
         e.preventDefault();
         ctxMenu.show(e as MouseEvent, item);
     });

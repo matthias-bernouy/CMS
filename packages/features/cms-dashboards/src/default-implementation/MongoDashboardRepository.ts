@@ -31,7 +31,9 @@ export class MongoDashboardRepository implements DashboardRepository {
         try {
             await this.dashboards.insertOne(toDoc(dashboard) as OptionalUnlessRequiredId<DashboardDoc>);
         } catch (error) {
-            if (isDuplicateKey(error)) throw new DuplicateDashboardError(dashboard.id);
+            if (isDuplicateKey(error)) {
+                throw new DuplicateDashboardError(dashboard.id);
+            }
             throw error;
         }
         return structuredClone(dashboard);
@@ -39,11 +41,7 @@ export class MongoDashboardRepository implements DashboardRepository {
 
     async updateDashboard(dashboard: Dashboard): Promise<Dashboard | null> {
         const { id: _id, ...rest } = dashboard;
-        const doc = await this.dashboards.findOneAndReplace(
-            { _id },
-            rest,
-            { returnDocument: "after" },
-        );
+        const doc = await this.dashboards.findOneAndReplace({ _id }, rest, { returnDocument: "after" });
         return fromDoc(doc);
     }
 
@@ -58,12 +56,12 @@ export class MongoDashboardRepository implements DashboardRepository {
 
     async getDashboardsForSource(sourceId: string): Promise<Dashboard[]> {
         const docs = await this.dashboards.find({ source: sourceId }).toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        return docs.map((doc) => fromDoc(doc)!);
     }
 
     async getAllDashboards(): Promise<Dashboard[]> {
         const docs = await this.dashboards.find().toArray();
-        return docs.map(doc => fromDoc(doc)!);
+        return docs.map((doc) => fromDoc(doc)!);
     }
 }
 
@@ -73,7 +71,9 @@ function toDoc(dashboard: Dashboard): DashboardDoc {
 }
 
 function fromDoc(doc: DashboardDoc | null): Dashboard | null {
-    if (!doc) return null;
+    if (!doc) {
+        return null;
+    }
     const { _id, ...rest } = doc;
     return { id: _id, ...rest };
 }

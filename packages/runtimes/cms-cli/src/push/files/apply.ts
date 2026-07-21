@@ -3,18 +3,18 @@ import type { ClassifiedFile, RemoteFile } from "./classify";
 
 /** Remote file tree, indexed by readable path. */
 export type RemoteTree = {
-    filesByPath:    Map<string, RemoteFile>;
+    filesByPath: Map<string, RemoteFile>;
     /** Folder id keyed by its readable path ("images/icons"). Mutated as we create. */
     folderIdByPath: Map<string, string>;
 };
 
 /** Wire shape of a file-tree item from `/api/files`. */
 type WireItem = {
-    id:       string;
-    name:     string;
-    type:     "folder" | "file";
+    id: string;
+    name: string;
+    type: "folder" | "file";
     parentId: string | null;
-    size?:    number;
+    size?: number;
 };
 
 export type ApplyResult = {
@@ -46,11 +46,17 @@ export async function fetchRemoteTree(adminBase: URL, token: string): Promise<Re
 
 async function listChildren(adminBase: URL, token: string, parentId: string | null): Promise<WireItem[]> {
     const url = new URL("api/files", adminBase);
-    if (parentId) url.searchParams.set("parentId", parentId);
+    if (parentId) {
+        url.searchParams.set("parentId", parentId);
+    }
     const res = await fetch(url.href, { headers: auth(token) });
-    if (!res.ok) throw new Error(`GET ${url.href} → HTTP ${res.status}`);
-    const data = await res.json() as { items?: WireItem[] };
-    if (!Array.isArray(data.items)) throw new Error(`GET ${url.href} did not return { items }`);
+    if (!res.ok) {
+        throw new Error(`GET ${url.href} → HTTP ${res.status}`);
+    }
+    const data = (await res.json()) as { items?: WireItem[] };
+    if (!Array.isArray(data.items)) {
+        throw new Error(`GET ${url.href} did not return { items }`);
+    }
     return data.items;
 }
 
@@ -63,12 +69,12 @@ async function listChildren(adminBase: URL, token: string, parentId: string | nu
  */
 export async function applyPushFiles(
     adminBase: URL,
-    token:     string,
-    entries:   ClassifiedFile[],
-    tree:      RemoteTree,
+    token: string,
+    entries: ClassifiedFile[],
+    tree: RemoteTree,
 ): Promise<ApplyResult> {
     const result: ApplyResult = { pushed: [], failed: [] };
-    const writes = entries.filter(e => e.status === "new" || e.status === "update");
+    const writes = entries.filter((e) => e.status === "new" || e.status === "update");
 
     for (const e of writes) {
         const { file } = e;
@@ -85,12 +91,14 @@ export async function applyPushFiles(
 
 /** Ensure each segment of `dir` exists, creating missing folders. Returns the leaf id. */
 async function ensureFolder(
-    adminBase:      URL,
-    token:          string,
-    dir:            string,
+    adminBase: URL,
+    token: string,
+    dir: string,
     folderIdByPath: Map<string, string>,
 ): Promise<string | null> {
-    if (!dir) return null;
+    if (!dir) {
+        return null;
+    }
     let parentId: string | null = null;
     let cur = "";
     for (const seg of dir.split("/")) {
@@ -108,12 +116,14 @@ async function ensureFolder(
 async function createFolder(adminBase: URL, token: string, name: string, parentId: string | null): Promise<string> {
     const url = new URL("api/files/folder", adminBase).href;
     const res = await fetch(url, {
-        method:  "POST",
+        method: "POST",
         headers: { ...auth(token), "Content-Type": "application/json" },
-        body:    JSON.stringify({ name, parentId }),
+        body: JSON.stringify({ name, parentId }),
     });
-    if (!res.ok) throw new Error(`POST ${url} → HTTP ${res.status}${await tail(res)}`);
-    const item = await res.json() as { id: string };
+    if (!res.ok) {
+        throw new Error(`POST ${url} → HTTP ${res.status}${await tail(res)}`);
+    }
+    const item = (await res.json()) as { id: string };
     return item.id;
 }
 
@@ -123,12 +133,18 @@ async function uploadOne(adminBase: URL, token: string, file: LocalFile, parentI
     // Stream the bytes; pass the basename explicitly so the multipart filename
     // isn't the absolute path.
     form.append("file", Bun.file(file.abs), file.name);
-    if (parentId) form.append("parentId", parentId);
+    if (parentId) {
+        form.append("parentId", parentId);
+    }
     // Carry the dev registry uuid so the remote adopts it as the _id (upsert).
-    if (file.id) form.append("id", file.id);
+    if (file.id) {
+        form.append("id", file.id);
+    }
     // No Content-Type header — fetch sets the multipart boundary itself.
     const res = await fetch(url, { method: "POST", headers: auth(token), body: form });
-    if (!res.ok) throw new Error(`POST ${url} → HTTP ${res.status}${await tail(res)}`);
+    if (!res.ok) {
+        throw new Error(`POST ${url} → HTTP ${res.status}${await tail(res)}`);
+    }
 }
 
 async function tail(res: Response): Promise<string> {

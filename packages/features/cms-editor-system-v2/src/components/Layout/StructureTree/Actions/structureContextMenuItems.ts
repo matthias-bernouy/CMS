@@ -12,7 +12,9 @@ export function contextMenuButton(
     button.textContent = label;
     button.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (button.disabled) return;
+        if (button.disabled) {
+            return;
+        }
         closeContextMenu();
         action();
     });

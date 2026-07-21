@@ -13,11 +13,16 @@ import {
 
 export async function resolveDeliverySubject(delivery: DeliveryCms, req: Request): Promise<Subject<string> | null> {
     const auth = delivery.auth;
-    if (!auth) return null;
+    if (!auth) {
+        return null;
+    }
     return auth.local.getSubject(req).catch(() => null);
 }
 
-export async function resolveDeliverySourceContext(delivery: DeliveryCms, req: Request): Promise<Record<string, string>> {
+export async function resolveDeliverySourceContext(
+    delivery: DeliveryCms,
+    req: Request,
+): Promise<Record<string, string>> {
     const subject = await resolveDeliverySubject(delivery, req);
     return subject ? { userID: subject.identifier, userRole: subject.role } : {};
 }
@@ -28,26 +33,36 @@ export async function authorizeDeliverySourceEndpoint(
     req: Request,
     options: { subject?: Subject<string> | null } = {},
 ): Promise<SourceAuthorizationResult> {
-    if (delivery.auth && sourceUrnOf(endpoint.urn) === SYSTEM_AUTH_SOURCE_URN) return true;
+    if (delivery.auth && sourceUrnOf(endpoint.urn) === SYSTEM_AUTH_SOURCE_URN) {
+        return true;
+    }
 
     const roles = delivery.roles;
-    if (!roles) return false;
+    if (!roles) {
+        return false;
+    }
 
     const subject = Object.prototype.hasOwnProperty.call(options, "subject")
-        ? options.subject ?? null
+        ? (options.subject ?? null)
         : await resolveDeliverySubject(delivery, req);
 
-    if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerAccessMode(subject?.role ?? PUBLIC_ROLE))) {
+    if (
+        !sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerAccessMode(subject?.role ?? PUBLIC_ROLE))
+    ) {
         return {
             authorized: false,
             status: subject ? 403 : 401,
         };
     }
 
-    if (subject?.role === ADMIN_ROLE) return true;
+    if (subject?.role === ADMIN_ROLE) {
+        return true;
+    }
 
     const definitions = await roles.list();
-    if (canRole(subject?.role ?? PUBLIC_ROLE, { definitions }, endpoint.urn)) return true;
+    if (canRole(subject?.role ?? PUBLIC_ROLE, { definitions }, endpoint.urn)) {
+        return true;
+    }
 
     return {
         authorized: false,
@@ -56,7 +71,11 @@ export async function authorizeDeliverySourceEndpoint(
 }
 
 function callerAccessMode(roleId: string): SourceEndpointAccessMode {
-    if (roleId === PUBLIC_ROLE) return "public";
-    if (roleId === USER_ROLE) return "auth";
+    if (roleId === PUBLIC_ROLE) {
+        return "public";
+    }
+    if (roleId === USER_ROLE) {
+        return "auth";
+    }
     return "admin";
 }

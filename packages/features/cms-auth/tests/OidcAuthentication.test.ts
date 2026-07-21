@@ -57,8 +57,12 @@ describe("OidcAuthentication", () => {
         const { auth, codec } = await setup();
         let tokenCalls = 0;
         mockFetch(async (url) => {
-            if (url === `${ISSUER}/.well-known/openid-configuration`) return discovery();
-            if (url === `${ISSUER}/token`) tokenCalls++;
+            if (url === `${ISSUER}/.well-known/openid-configuration`) {
+                return discovery();
+            }
+            if (url === `${ISSUER}/token`) {
+                tokenCalls++;
+            }
             return new Response("unexpected", { status: 500 });
         });
         const cookie = await flightCookie(codec, { state: "expected", nonce: "nonce" });
@@ -73,9 +77,15 @@ describe("OidcAuthentication", () => {
     test("callback rejects a nonce mismatch after id_token verification", async () => {
         const { auth, codec } = await setup();
         mockFetch(async (url) => {
-            if (url === `${ISSUER}/.well-known/openid-configuration`) return discovery();
-            if (url === `${ISSUER}/token`) return json({ id_token: await idToken({ nonce: "other", email_verified: true }) });
-            if (url === `${ISSUER}/jwks`) return json({ keys: [publicJwk] });
+            if (url === `${ISSUER}/.well-known/openid-configuration`) {
+                return discovery();
+            }
+            if (url === `${ISSUER}/token`) {
+                return json({ id_token: await idToken({ nonce: "other", email_verified: true }) });
+            }
+            if (url === `${ISSUER}/jwks`) {
+                return json({ keys: [publicJwk] });
+            }
             return new Response("unexpected", { status: 500 });
         });
         const cookie = await flightCookie(codec, { state: "state", nonce: "expected" });
@@ -89,11 +99,17 @@ describe("OidcAuthentication", () => {
     test("does not trust an unverified email claim", async () => {
         const { auth, codec, users } = await setup();
         mockFetch(async (url) => {
-            if (url === `${ISSUER}/.well-known/openid-configuration`) return discovery();
-            if (url === `${ISSUER}/token`) {
-                return json({ id_token: await idToken({ nonce: "nonce", email: "claimed@example.test", email_verified: false }) });
+            if (url === `${ISSUER}/.well-known/openid-configuration`) {
+                return discovery();
             }
-            if (url === `${ISSUER}/jwks`) return json({ keys: [publicJwk] });
+            if (url === `${ISSUER}/token`) {
+                return json({
+                    id_token: await idToken({ nonce: "nonce", email: "claimed@example.test", email_verified: false }),
+                });
+            }
+            if (url === `${ISSUER}/jwks`) {
+                return json({ keys: [publicJwk] });
+            }
             return new Response("unexpected", { status: 500 });
         });
         const cookie = await flightCookie(codec, { state: "state", nonce: "nonce", returnTo: "/admin" });
@@ -121,12 +137,19 @@ describe("OidcAuthentication", () => {
         const originalWarn = console.warn;
         console.warn = (...args: unknown[]) => {
             const message = args.join(" ");
-            if (message.startsWith("[oidc:sso]")) warnings.push(message);
-            else originalWarn(...args);
+            if (message.startsWith("[oidc:sso]")) {
+                warnings.push(message);
+            } else {
+                originalWarn(...args);
+            }
         };
         mockFetch(async (url) => {
-            if (url === `${ISSUER}/.well-known/openid-configuration`) return discovery();
-            if (url === `${ISSUER}/token`) return new Response("provider-secret-detail", { status: 400 });
+            if (url === `${ISSUER}/.well-known/openid-configuration`) {
+                return discovery();
+            }
+            if (url === `${ISSUER}/token`) {
+                return new Response("provider-secret-detail", { status: 400 });
+            }
             return new Response("unexpected", { status: 500 });
         });
         const cookie = await flightCookie(codec, { state: "state", nonce: "nonce" });
@@ -206,13 +229,16 @@ async function flightCookie(
     c: SignedCookieCodec,
     patch: Partial<{ state: string; nonce: string; codeVerifier: string; returnTo: string }>,
 ): Promise<string> {
-    const token = await c.sign({
-        kind: "oidc-flight",
-        state: patch.state ?? "state",
-        nonce: patch.nonce ?? "nonce",
-        codeVerifier: patch.codeVerifier ?? "verifier",
-        returnTo: patch.returnTo ?? "/admin",
-    }, 600);
+    const token = await c.sign(
+        {
+            kind: "oidc-flight",
+            state: patch.state ?? "state",
+            nonce: patch.nonce ?? "nonce",
+            codeVerifier: patch.codeVerifier ?? "verifier",
+            returnTo: patch.returnTo ?? "/admin",
+        },
+        600,
+    );
     return `${COOKIE}-oidc-sso=${encodeURIComponent(token)}`;
 }
 

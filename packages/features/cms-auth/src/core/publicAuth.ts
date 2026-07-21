@@ -14,16 +14,16 @@ const DEFAULT_AUTH_EMAIL_COOLDOWN_SECONDS = 5 * 60;
 const DEFAULT_EMAIL_COMPOSER = new DefaultAuthEmailComposer();
 
 type VerificationTarget = {
-    sub:             string;
-    email:           string;
+    sub: string;
+    email: string;
     emailVerifiedAt: Date | null;
 };
 
 export type PublicAuthFlowConfig<Role extends string = string> = {
     credentials: LocalCredentialStore;
-    users:       UsersRepository<Role>;
-    tokens:      AuthTokenStore;
-    emailer:     Emailer;
+    users: UsersRepository<Role>;
+    tokens: AuthTokenStore;
+    emailer: Emailer;
     emailComposer?: AuthEmailComposer;
     defaultRole: Role;
     /** Frontend page where users land after clicking a verification email. */
@@ -32,16 +32,16 @@ export type PublicAuthFlowConfig<Role extends string = string> = {
     passwordResetUrl: string;
     siteName?: string;
     emailVerificationTtlSeconds?: number;
-    passwordResetTtlSeconds?:     number;
+    passwordResetTtlSeconds?: number;
     /** Cooldown before another auth email can be sent for the same subject and
      *  purpose. Defaults to 5 minutes. Set 0 in tests/dev to disable. */
-    authEmailCooldownSeconds?:    number;
-    buildEmailVerificationUrl?:   (token: string) => string;
-    buildPasswordResetUrl?:       (token: string) => string;
+    authEmailCooldownSeconds?: number;
+    buildEmailVerificationUrl?: (token: string) => string;
+    buildPasswordResetUrl?: (token: string) => string;
 };
 
 export type SignupLocalUserInput = {
-    email:    string;
+    email: string;
     password: string;
 };
 
@@ -80,7 +80,9 @@ export async function signupLocalUser<Role extends string>(
         { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
         cfg.defaultRole,
     );
-    if (!emailDeliveryEnabled) return { created: true, sent: false };
+    if (!emailDeliveryEnabled) {
+        return { created: true, sent: false };
+    }
 
     return {
         created: true,
@@ -95,8 +97,10 @@ export async function requestEmailVerification<Role extends string>(
     const email = normalizeEmail(input.email);
     validateEmail(email);
     const credential = await cfg.credentials.getByEmail(email);
-    if (!credential) return { sent: false };
-    if (!await isEmailDeliveryEnabled(cfg)) {
+    if (!credential) {
+        return { sent: false };
+    }
+    if (!(await isEmailDeliveryEnabled(cfg))) {
         await cfg.credentials.markEmailVerified(credential.sub);
         return { sent: false };
     }
@@ -109,10 +113,14 @@ export async function confirmEmailVerification<Role extends string>(
 ): Promise<void> {
     const token = requireToken(input.token);
     const authToken = await cfg.tokens.consume("email_verification", token);
-    if (!authToken) throw new AuthValidationError("token", "invalid or expired");
+    if (!authToken) {
+        throw new AuthValidationError("token", "invalid or expired");
+    }
 
     const marked = await cfg.credentials.markEmailVerified(authToken.sub);
-    if (!marked) throw new AuthValidationError("token", "credential not found");
+    if (!marked) {
+        throw new AuthValidationError("token", "credential not found");
+    }
     await cfg.tokens.deleteForSub(authToken.sub, "email_verification");
 }
 
@@ -123,23 +131,32 @@ export async function requestPasswordReset<Role extends string>(
     const email = normalizeEmail(input.email);
     validateEmail(email);
     const credential = await cfg.credentials.getByEmail(email);
-    if (!credential) return { sent: false };
-    if (!await isEmailDeliveryEnabled(cfg)) return { sent: false };
+    if (!credential) {
+        return { sent: false };
+    }
+    if (!(await isEmailDeliveryEnabled(cfg))) {
+        return { sent: false };
+    }
 
-    if (await inEmailCooldown(cfg, "password_reset", credential.sub)) return { sent: false };
+    if (await inEmailCooldown(cfg, "password_reset", credential.sub)) {
+        return { sent: false };
+    }
 
     await cfg.tokens.deleteForSub(credential.sub, "password_reset");
     const expiresAt = expiresIn(cfg.passwordResetTtlSeconds ?? DEFAULT_PASSWORD_RESET_TTL_SECONDS);
     const { token } = await cfg.tokens.create({ purpose: "password_reset", sub: credential.sub, expiresAt });
     const actionUrl = cfg.buildPasswordResetUrl?.(token) ?? buildTokenUrl(cfg.passwordResetUrl, token);
-    const sent = await sendAuthEmail(cfg, await emailComposer(cfg).compose({
-        kind: "password_reset",
-        to: { email: credential.email },
-        actionUrl,
-        token,
-        expiresAt,
-        siteName: cfg.siteName,
-    }));
+    const sent = await sendAuthEmail(
+        cfg,
+        await emailComposer(cfg).compose({
+            kind: "password_reset",
+            to: { email: credential.email },
+            actionUrl,
+            token,
+            expiresAt,
+            siteName: cfg.siteName,
+        }),
+    );
     if (!sent) {
         await cfg.tokens.deleteForSub(credential.sub, "password_reset");
     }
@@ -153,10 +170,14 @@ export async function confirmPasswordReset<Role extends string>(
     const token = requireToken(input.token);
     validatePassword(input.password);
     const authToken = await cfg.tokens.consume("password_reset", token);
-    if (!authToken) throw new AuthValidationError("token", "invalid or expired");
+    if (!authToken) {
+        throw new AuthValidationError("token", "invalid or expired");
+    }
 
     const changed = await cfg.credentials.setPassword(authToken.sub, input.password);
-    if (!changed) throw new AuthValidationError("token", "credential not found");
+    if (!changed) {
+        throw new AuthValidationError("token", "credential not found");
+    }
     await cfg.credentials.markEmailVerified(authToken.sub);
     await cfg.tokens.deleteForSub(authToken.sub, "password_reset");
 }
@@ -165,21 +186,28 @@ async function sendVerificationForCredential<Role extends string>(
     cfg: PublicAuthFlowConfig<Role>,
     credential: VerificationTarget,
 ): Promise<boolean> {
-    if (credential.emailVerifiedAt) return false;
-    if (await inEmailCooldown(cfg, "email_verification", credential.sub)) return false;
+    if (credential.emailVerifiedAt) {
+        return false;
+    }
+    if (await inEmailCooldown(cfg, "email_verification", credential.sub)) {
+        return false;
+    }
 
     await cfg.tokens.deleteForSub(credential.sub, "email_verification");
     const expiresAt = expiresIn(cfg.emailVerificationTtlSeconds ?? DEFAULT_EMAIL_VERIFICATION_TTL_SECONDS);
     const { token } = await cfg.tokens.create({ purpose: "email_verification", sub: credential.sub, expiresAt });
     const actionUrl = cfg.buildEmailVerificationUrl?.(token) ?? buildTokenUrl(cfg.emailVerificationUrl, token);
-    const sent = await sendAuthEmail(cfg, await emailComposer(cfg).compose({
-        kind: "email_verification",
-        to: { email: credential.email },
-        actionUrl,
-        token,
-        expiresAt,
-        siteName: cfg.siteName,
-    }));
+    const sent = await sendAuthEmail(
+        cfg,
+        await emailComposer(cfg).compose({
+            kind: "email_verification",
+            to: { email: credential.email },
+            actionUrl,
+            token,
+            expiresAt,
+            siteName: cfg.siteName,
+        }),
+    );
     if (!sent) {
         await cfg.tokens.deleteForSub(credential.sub, "email_verification");
         await cfg.credentials.markEmailVerified(credential.sub);
@@ -199,7 +227,9 @@ async function sendAuthEmail<Role extends string>(
         await cfg.emailer.send(email);
         return true;
     } catch (error) {
-        if (isEmailDeliveryDisabledError(error)) return false;
+        if (isEmailDeliveryDisabledError(error)) {
+            return false;
+        }
         throw error;
     }
 }
@@ -210,9 +240,13 @@ async function inEmailCooldown<Role extends string>(
     sub: string,
 ): Promise<boolean> {
     const cooldownSeconds = cfg.authEmailCooldownSeconds ?? DEFAULT_AUTH_EMAIL_COOLDOWN_SECONDS;
-    if (cooldownSeconds <= 0) return false;
+    if (cooldownSeconds <= 0) {
+        return false;
+    }
     const active = await cfg.tokens.findActive(purpose, sub);
-    if (!active) return false;
+    if (!active) {
+        return false;
+    }
     return Date.now() - active.createdAt.getTime() < cooldownSeconds * 1000;
 }
 
@@ -237,10 +271,14 @@ function normalizeEmail(email: string): string {
 }
 
 function validateEmail(email: string): void {
-    if (!email || !email.includes("@")) throw new AuthValidationError("email", "invalid");
+    if (!email || !email.includes("@")) {
+        throw new AuthValidationError("email", "invalid");
+    }
 }
 
 function requireToken(token: string): string {
-    if (!token) throw new AuthValidationError("token", "required");
+    if (!token) {
+        throw new AuthValidationError("token", "required");
+    }
     return token;
 }

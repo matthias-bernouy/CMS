@@ -20,16 +20,16 @@
  */
 export type CspExtras = {
     connectExtras: string[];
-    mediaExtras:   string[];
+    mediaExtras: string[];
     /** Hosts to allow as origins for `<link rel="stylesheet">`. Needed when
      *  the rendered HTML references stylesheets uploaded to a public CDN
      *  served on a different host than the page itself. */
-    styleExtras?:  string[];
+    styleExtras?: string[];
     /** Hosts to allow as origins for `<script src>`. Same rationale as
      *  `styleExtras` — pre-uploaded JS bundles on a cross-origin CDN. */
     scriptExtras?: string[];
     /** Hosts to allow as origins for child browsing contexts such as iframes. */
-    frameExtras?:  string[];
+    frameExtras?: string[];
 };
 
 const EMPTY_EXTRAS: CspExtras = { connectExtras: [], mediaExtras: [] };
@@ -38,7 +38,7 @@ export function buildCspContent(
     extras: CspExtras = EMPTY_EXTRAS,
     options: { includeHeaderOnlyDirectives?: boolean } = {},
 ): string {
-    const style  = ["'self'", "'unsafe-inline'", ...(extras.styleExtras  ?? [])].join(" ");
+    const style = ["'self'", "'unsafe-inline'", ...(extras.styleExtras ?? [])].join(" ");
     const script = ["'self'", ...(extras.scriptExtras ?? [])].join(" ");
 
     const parts = [
@@ -50,7 +50,9 @@ export function buildCspContent(
         "form-action 'self'",
         "object-src 'none'",
     ];
-    if (options.includeHeaderOnlyDirectives !== false) parts.push("frame-ancestors 'none'");
+    if (options.includeHeaderOnlyDirectives !== false) {
+        parts.push("frame-ancestors 'none'");
+    }
     if (extras.connectExtras.length) {
         parts.push(`connect-src 'self' ${extras.connectExtras.join(" ")}`);
     }

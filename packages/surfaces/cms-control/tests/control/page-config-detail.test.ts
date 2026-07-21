@@ -50,10 +50,7 @@ describe("GET /api/page/configDetail", () => {
     test("redirects to pages admin when id is missing", async () => {
         const { cms } = cmsWithPage(page);
 
-        const response = await getConfigDetail(
-            new Request("http://localhost/cms/api/page/configDetail"),
-            cms as any,
-        );
+        const response = await getConfigDetail(new Request("http://localhost/cms/api/page/configDetail"), cms as any);
 
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe("/cms/admin/pages");

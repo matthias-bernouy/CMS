@@ -12,16 +12,18 @@ describe("reconstructSource (pull)", () => {
             urn: "urn:test",
             id: "test",
             meta: { name: "Test Source", description: "Test data", icon: "database" },
-            endpoints: [{
-                endpointId: "list",
-                method: "GET",
-                targetUrl: "https://api.example.com/items",
-                params: [
-                    { name: "q", in: "query", type: "string", required: true, description: "Search query" },
-                    { name: "limit", in: "query", type: "number", required: false },
-                ],
-                output: [{ status: "200" }],
-            }],
+            endpoints: [
+                {
+                    endpointId: "list",
+                    method: "GET",
+                    targetUrl: "https://api.example.com/items",
+                    params: [
+                        { name: "q", in: "query", type: "string", required: true, description: "Search query" },
+                        { name: "limit", in: "query", type: "number", required: false },
+                    ],
+                    output: [{ status: "200" }],
+                },
+            ],
         });
 
         expect(source.urn).toBe("urn:test");
@@ -48,31 +50,48 @@ describe("pullIntegrations", () => {
     test("writes generated bloc artifacts under .p9r/generated/blocs", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-int-pull-"));
         const blocSource = {
-            "manifest.json": encode(JSON.stringify({
-                "default-tag": "demo-card",
-                bloc: "./Bloc.ts",
-                meta: { title: "Demo card" },
-            })),
+            "manifest.json": encode(
+                JSON.stringify({
+                    "default-tag": "demo-card",
+                    bloc: "./Bloc.ts",
+                    meta: { title: "Demo card" },
+                }),
+            ),
             "Bloc.ts": encode("export class DemoCard extends HTMLElement {}\n"),
         };
 
-        await withFetch(async (url) => {
-            if (url.endsWith("/api/integrations/installations")) return Response.json([{ id: "demo" }]);
-            if (url.includes("/api/integrations/installations?id=demo")) return Response.json(demoDetail());
-            if (url.endsWith("/api/bloc/list")) return Response.json([{ id: "demo-card", group: "Generated" }]);
-            if (url.includes("/api/bloc/source?tag=demo-card")) return Response.json({ source: blocSource });
-            return new Response("not found", { status: 404 });
-        }, async () => {
-            const result = await pullIntegrations(new URL("http://cms.test/"), "token", siteDir);
+        await withFetch(
+            async (url) => {
+                if (url.endsWith("/api/integrations/installations")) {
+                    return Response.json([{ id: "demo" }]);
+                }
+                if (url.includes("/api/integrations/installations?id=demo")) {
+                    return Response.json(demoDetail());
+                }
+                if (url.endsWith("/api/bloc/list")) {
+                    return Response.json([{ id: "demo-card", group: "Generated" }]);
+                }
+                if (url.includes("/api/bloc/source?tag=demo-card")) {
+                    return Response.json({ source: blocSource });
+                }
+                return new Response("not found", { status: 404 });
+            },
+            async () => {
+                const result = await pullIntegrations(new URL("http://cms.test/"), "token", siteDir);
 
-            expect(result).toEqual({ pulled: ["demo"], failed: [] });
-            expect(JSON.parse(readFileSync(join(siteDir, "integrations", "demo.json"), "utf-8"))).toMatchObject({
-                kind: "demo",
-                answers: { id: "main" },
-            });
-            expect(readFileSync(join(siteDir, ".p9r", "generated", "blocs", "Generated", "demo-card", "manifest.json"), "utf-8"))
-                .toContain(`"default-tag":"demo-card"`);
-        });
+                expect(result).toEqual({ pulled: ["demo"], failed: [] });
+                expect(JSON.parse(readFileSync(join(siteDir, "integrations", "demo.json"), "utf-8"))).toMatchObject({
+                    kind: "demo",
+                    answers: { id: "main" },
+                });
+                expect(
+                    readFileSync(
+                        join(siteDir, ".p9r", "generated", "blocs", "Generated", "demo-card", "manifest.json"),
+                        "utf-8",
+                    ),
+                ).toContain(`"default-tag":"demo-card"`);
+            },
+        );
     });
 });
 
@@ -80,25 +99,39 @@ describe("pullBlocs", () => {
     test("skips blocs already owned by generated integration artifacts", async () => {
         const siteDir = mkdtempSync(join(tmpdir(), "p9r-bloc-pull-"));
         mkdirSync(join(siteDir, ".p9r", "generated"), { recursive: true });
-        writeFileSync(join(siteDir, ".p9r", "generated", "integration-installations.json"), JSON.stringify([{
-            id: "demo",
-            artifacts: [{ type: "bloc", id: "demo-card", action: "created" }],
-        }]));
+        writeFileSync(
+            join(siteDir, ".p9r", "generated", "integration-installations.json"),
+            JSON.stringify([
+                {
+                    id: "demo",
+                    artifacts: [{ type: "bloc", id: "demo-card", action: "created" }],
+                },
+            ]),
+        );
 
-        await withFetch(async (url) => {
-            if (url.endsWith("/api/bloc/list")) return Response.json([{ id: "demo-card", group: "Generated" }]);
-            if (url.includes("/api/bloc/source")) throw new Error("generated bloc source should not be fetched by pullBlocs");
-            return new Response("not found", { status: 404 });
-        }, async () => {
-            const result = await pullBlocs(new URL("http://cms.test/"), "token", siteDir);
+        await withFetch(
+            async (url) => {
+                if (url.endsWith("/api/bloc/list")) {
+                    return Response.json([{ id: "demo-card", group: "Generated" }]);
+                }
+                if (url.includes("/api/bloc/source")) {
+                    throw new Error("generated bloc source should not be fetched by pullBlocs");
+                }
+                return new Response("not found", { status: 404 });
+            },
+            async () => {
+                const result = await pullBlocs(new URL("http://cms.test/"), "token", siteDir);
 
-            expect(result.pulled).toEqual([]);
-            expect(result.failed).toEqual([]);
-            expect(result.skipped).toEqual([{
-                tag: "demo-card",
-                reason: "generated by an integration; use `p9r pull --type=integrations`",
-            }]);
-        });
+                expect(result.pulled).toEqual([]);
+                expect(result.failed).toEqual([]);
+                expect(result.skipped).toEqual([
+                    {
+                        tag: "demo-card",
+                        reason: "generated by an integration; use `p9r pull --type=integrations`",
+                    },
+                ]);
+            },
+        );
     });
 });
 

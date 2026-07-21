@@ -17,13 +17,17 @@ export const text = (e: Element | null) => (e?.textContent ?? "").replace(/\s+/g
 
 export async function waitFor(predicate: () => boolean, tries = 50): Promise<void> {
     for (let i = 0; i < tries; i++) {
-        if (predicate()) return;
+        if (predicate()) {
+            return;
+        }
         await new Promise((r) => setTimeout(r, 0));
     }
 }
 
 export async function settle(rounds = 8): Promise<void> {
-    for (let i = 0; i < rounds; i++) await new Promise((r) => setTimeout(r, 0));
+    for (let i = 0; i < rounds; i++) {
+        await new Promise((r) => setTimeout(r, 0));
+    }
 }
 
 export function res(status: number, body: string): Response {

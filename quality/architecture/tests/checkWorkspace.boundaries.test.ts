@@ -13,11 +13,13 @@ describe("workspace package boundaries", () => {
             "packages/features/domain/src/index.ts": "export const publicValue = true;\n",
             "packages/features/domain/src/private.ts": "export const privateValue = true;\n",
             "packages/surfaces/web/package.json": manifest("@fixture/web", {
-                dependencies: { "@fixture/domain": "workspace:*" }, exports: { ".": "./src/index.ts" },
+                dependencies: { "@fixture/domain": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
             }),
             "packages/surfaces/web/src/index.ts": [
                 "export { privateValue } from '@fixture/domain/private';",
-                "export { privateValue as deep } from '../../../features/domain/src/private';", "",
+                "export { privateValue as deep } from '../../../features/domain/src/private';",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
@@ -34,13 +36,15 @@ describe("workspace package boundaries", () => {
             "packages/features/domain/src/private.ts": "export type Private = string;\n",
             "packages/features/domain/src/lazy-private.ts": "export const lazyPrivate = true;\n",
             "packages/surfaces/web/package.json": manifest("@fixture/web", {
-                dependencies: { "@fixture/domain": "workspace:*" }, exports: { ".": "./src/index.ts" },
+                dependencies: { "@fixture/domain": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
             }),
             "packages/surfaces/web/src/index.ts": [
                 "type Private = import('@fixture/domain/private').Private;",
                 "import DomainModule = require('../../../features/domain/src/index');",
                 "void import('@fixture/domain/lazy-private', { with: { type: 'json' } });",
-                "export type Combined = Private & typeof DomainModule;", "",
+                "export type Combined = Private & typeof DomainModule;",
+                "",
             ].join("\n"),
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
@@ -58,9 +62,13 @@ describe("workspace package boundaries", () => {
             "packages/foundation/base/package.json": manifest("@fixture/base", {
                 exports: { ".": "./src/index.ts" },
             }),
-            "packages/foundation/base/tsconfig.json": `${JSON.stringify({
-                compilerOptions: { baseUrl: ".", paths: { "domain-private/*": ["../../features/domain/src/*"] } },
-            }, null, 2)}\n`,
+            "packages/foundation/base/tsconfig.json": `${JSON.stringify(
+                {
+                    compilerOptions: { baseUrl: ".", paths: { "domain-private/*": ["../../features/domain/src/*"] } },
+                },
+                null,
+                2,
+            )}\n`,
             "packages/foundation/base/src/index.ts": "export { privateValue } from 'domain-private/private';\n",
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });

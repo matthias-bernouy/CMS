@@ -2,19 +2,25 @@ import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../src/components/admin/Resources/Dashboards/types";
 import { runDashboardWidgetAction } from "../../src/components/admin/Resources/Dashboards/DashboardViewActions";
-import { executeDashboardAction, executeDashboardTableAction } from "../../src/components/admin/Resources/Dashboards/runtime/actions";
+import {
+    executeDashboardAction,
+    executeDashboardTableAction,
+} from "../../src/components/admin/Resources/Dashboards/runtime/actions";
 
 const realFetch = globalThis.fetch;
 
 if (!customElements.get("p9r-toast-stack")) {
-    customElements.define("p9r-toast-stack", class extends HTMLElement {
-        push(message: string): HTMLElement {
-            const toast = document.createElement("p9r-toast");
-            toast.textContent = message;
-            this.append(toast);
-            return toast;
-        }
-    });
+    customElements.define(
+        "p9r-toast-stack",
+        class extends HTMLElement {
+            push(message: string): HTMLElement {
+                const toast = document.createElement("p9r-toast");
+                toast.textContent = message;
+                this.append(toast);
+                return toast;
+            }
+        },
+    );
 }
 
 afterEach(() => {
@@ -35,7 +41,12 @@ describe("dashboard table actions", () => {
             });
         }) as typeof fetch;
 
-        const result = await executeDashboardTableAction(group(), dashboard(), "exportSubscriptions", "subscriptionsTable");
+        const result = await executeDashboardTableAction(
+            group(),
+            dashboard(),
+            "exportSubscriptions",
+            "subscriptionsTable",
+        );
 
         expect(requests).toHaveLength(1);
         expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/newsletter/exportSubscriptions");
@@ -59,20 +70,31 @@ describe("dashboard table actions", () => {
         }) as typeof fetch;
         const opened: Array<{ collection: string; row: string }> = [];
 
-        await runDashboardWidgetAction({
-            group: deliveryGroup(),
-            dashboard: deliveryDashboard(),
-            detail: { collection: "createShipmentForm", row: "__new__" },
-            drafts: new Map(),
-            render() { throw new Error("render should not run"); },
-            reload() { throw new Error("reload should not run"); },
-            clearDetail() { throw new Error("clearDetail should not run"); },
-            openDetail(collection, row) { opened.push({ collection, row }); },
-        }, {
-            action: "createShipment",
-            resource: { modeCollection: "CCC" },
-            fields: { recipientName: "Ada Lovelace" },
-        });
+        await runDashboardWidgetAction(
+            {
+                group: deliveryGroup(),
+                dashboard: deliveryDashboard(),
+                detail: { collection: "createShipmentForm", row: "__new__" },
+                drafts: new Map(),
+                render() {
+                    throw new Error("render should not run");
+                },
+                reload() {
+                    throw new Error("reload should not run");
+                },
+                clearDetail() {
+                    throw new Error("clearDetail should not run");
+                },
+                openDetail(collection, row) {
+                    opened.push({ collection, row });
+                },
+            },
+            {
+                action: "createShipment",
+                resource: { modeCollection: "CCC" },
+                fields: { recipientName: "Ada Lovelace" },
+            },
+        );
 
         expect(requests).toHaveLength(1);
         expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/delivery/createShipment");
@@ -92,19 +114,30 @@ describe("dashboard table actions", () => {
         }) as typeof fetch;
         let renderCount = 0;
 
-        await runDashboardWidgetAction({
-            group: tableActionGroup(),
-            dashboard: tableActionDashboard(),
-            detail: null,
-            drafts: new Map(),
-            render() { renderCount++; },
-            reload() { throw new Error("reload should not run"); },
-            clearDetail() { throw new Error("clearDetail should not run"); },
-            openDetail() { throw new Error("openDetail should not run"); },
-        }, {
-            action: "clearQueue",
-            widget: "queueTable",
-        });
+        await runDashboardWidgetAction(
+            {
+                group: tableActionGroup(),
+                dashboard: tableActionDashboard(),
+                detail: null,
+                drafts: new Map(),
+                render() {
+                    renderCount++;
+                },
+                reload() {
+                    throw new Error("reload should not run");
+                },
+                clearDetail() {
+                    throw new Error("clearDetail should not run");
+                },
+                openDetail() {
+                    throw new Error("openDetail should not run");
+                },
+            },
+            {
+                action: "clearQueue",
+                widget: "queueTable",
+            },
+        );
 
         expect(requests).toHaveLength(1);
         expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/newsletter/clearQueue");
@@ -123,23 +156,34 @@ describe("dashboard table actions", () => {
         }) as typeof fetch;
         let renderCount = 0;
 
-        await runDashboardWidgetAction({
-            group: emailerGroup(),
-            dashboard: emailerDashboard(),
-            detail: null,
-            drafts: new Map(),
-            render() { renderCount++; },
-            reload() { throw new Error("reload should not run"); },
-            clearDetail() { throw new Error("clearDetail should not run"); },
-            openDetail() { throw new Error("openDetail should not run"); },
-        }, {
-            action: "saveSettings",
-            detail: true,
-            widget: "emailerSettings",
-            row: "",
-            resource: { provider: "supabase", smtpHost: "smtp.old.test" },
-            fields: { smtpHost: "smtp.saved.test" },
-        });
+        await runDashboardWidgetAction(
+            {
+                group: emailerGroup(),
+                dashboard: emailerDashboard(),
+                detail: null,
+                drafts: new Map(),
+                render() {
+                    renderCount++;
+                },
+                reload() {
+                    throw new Error("reload should not run");
+                },
+                clearDetail() {
+                    throw new Error("clearDetail should not run");
+                },
+                openDetail() {
+                    throw new Error("openDetail should not run");
+                },
+            },
+            {
+                action: "saveSettings",
+                detail: true,
+                widget: "emailerSettings",
+                row: "",
+                resource: { provider: "supabase", smtpHost: "smtp.old.test" },
+                fields: { smtpHost: "smtp.saved.test" },
+            },
+        );
 
         expect(requests).toHaveLength(1);
         expect(requests[0]!.url).toBe("http://localhost:4999/.cms/sources/emailer/updateSettings");
@@ -173,27 +217,39 @@ describe("dashboard table actions", () => {
     });
 
     test("reloads CMS definitions after an endpoint invalidates the schema", async () => {
-        globalThis.fetch = (async () => new Response(JSON.stringify({ id: "shipment-1" }), {
-            status: 201,
-            headers: { "content-type": "application/json" },
-        })) as unknown as typeof fetch;
+        globalThis.fetch = (async () =>
+            new Response(JSON.stringify({ id: "shipment-1" }), {
+                status: 201,
+                headers: { "content-type": "application/json" },
+            })) as unknown as typeof fetch;
         let reloadDefinitions = 0;
 
-        await runDashboardWidgetAction({
-            group: schemaInvalidatingDeliveryGroup(),
-            dashboard: deliveryDashboard(),
-            detail: { collection: "createShipmentForm", row: "__new__" },
-            drafts: new Map(),
-            render() { throw new Error("render should not run"); },
-            async reloadDefinitions() { reloadDefinitions++; },
-            reload() { throw new Error("reload should not run"); },
-            clearDetail() { throw new Error("clearDetail should not run"); },
-            openDetail() {},
-        }, {
-            action: "createShipment",
-            resource: { modeCollection: "CCC" },
-            fields: { recipientName: "Ada Lovelace" },
-        });
+        await runDashboardWidgetAction(
+            {
+                group: schemaInvalidatingDeliveryGroup(),
+                dashboard: deliveryDashboard(),
+                detail: { collection: "createShipmentForm", row: "__new__" },
+                drafts: new Map(),
+                render() {
+                    throw new Error("render should not run");
+                },
+                async reloadDefinitions() {
+                    reloadDefinitions++;
+                },
+                reload() {
+                    throw new Error("reload should not run");
+                },
+                clearDetail() {
+                    throw new Error("clearDetail should not run");
+                },
+                openDetail() {},
+            },
+            {
+                action: "createShipment",
+                resource: { modeCollection: "CCC" },
+                fields: { recipientName: "Ada Lovelace" },
+            },
+        );
 
         expect(reloadDefinitions).toBe(1);
     });
@@ -207,28 +263,46 @@ describe("dashboard table actions", () => {
         }) as typeof fetch;
         const commerce = tableActionGroup();
         const stripe: DashboardSourceGroup = {
-            source: { urn: "urn:stripe-connect", id: "stripe-connect", name: "Stripe", endpointCount: 1, dashboardCount: 0, readonly: false },
-            endpoints: [{ endpointId: "stageStripeDisputeEvidence", method: "POST", targetUrl: "https://stripe.test/disputes/evidence", params: [] }],
+            source: {
+                urn: "urn:stripe-connect",
+                id: "stripe-connect",
+                name: "Stripe",
+                endpointCount: 1,
+                dashboardCount: 0,
+                readonly: false,
+            },
+            endpoints: [
+                {
+                    endpointId: "stageStripeDisputeEvidence",
+                    method: "POST",
+                    targetUrl: "https://stripe.test/disputes/evidence",
+                    params: [],
+                },
+            ],
             dashboards: [],
         };
         const composed: DashboardDto = {
             id: "payments-disputes",
             source: "newsletter",
-            views: [{
-                widget: "w-detail",
-                id: "disputeDetail",
-                source: { sourceId: "stripe-connect", endpoint: "getStripeDispute" },
-                actions: [{
-                    id: "stageEvidence",
-                    label: "Stage evidence",
-                    endpoint: {
-                        sourceId: "stripe-connect",
-                        endpoint: "stageStripeDisputeEvidence",
-                        body: { disputeId: "$resource.id" },
-                    },
-                }],
-                main: [{ id: "state", title: "State", fields: [] }],
-            }],
+            views: [
+                {
+                    widget: "w-detail",
+                    id: "disputeDetail",
+                    source: { sourceId: "stripe-connect", endpoint: "getStripeDispute" },
+                    actions: [
+                        {
+                            id: "stageEvidence",
+                            label: "Stage evidence",
+                            endpoint: {
+                                sourceId: "stripe-connect",
+                                endpoint: "stageStripeDisputeEvidence",
+                                body: { disputeId: "$resource.id" },
+                            },
+                        },
+                    ],
+                    main: [{ id: "state", title: "State", fields: [] }],
+                },
+            ],
         };
 
         await executeDashboardAction(
@@ -348,9 +422,7 @@ function deliveryDashboard(): DashboardDto {
                     {
                         id: "recipient",
                         title: "Recipient",
-                        fields: [
-                            { id: "recipientName", label: "Recipient", path: "recipientName", type: "text" },
-                        ],
+                        fields: [{ id: "recipientName", label: "Recipient", path: "recipientName", type: "text" }],
                     },
                 ],
             },
@@ -419,9 +491,7 @@ function emailerDashboard(): DashboardDto {
                     {
                         id: "provider",
                         title: "Provider",
-                        fields: [
-                            { id: "smtpHost", label: "SMTP host", path: "smtpHost", type: "text" },
-                        ],
+                        fields: [{ id: "smtpHost", label: "SMTP host", path: "smtpHost", type: "text" }],
                     },
                 ],
             },
@@ -462,11 +532,13 @@ function tableActionDashboard(): DashboardDto {
                 source: { endpoint: "listQueue", itemsPath: "items" },
                 rowKey: "id",
                 columns: [{ id: "id", label: "ID", path: "id", primary: true }],
-                actions: [{
-                    id: "clearQueue",
-                    label: "Clear queue",
-                    endpoint: { endpoint: "clearQueue" },
-                }],
+                actions: [
+                    {
+                        id: "clearQueue",
+                        label: "Clear queue",
+                        endpoint: { endpoint: "clearQueue" },
+                    },
+                ],
             },
         ],
     };

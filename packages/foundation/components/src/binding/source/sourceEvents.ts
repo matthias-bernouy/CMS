@@ -22,7 +22,9 @@ export function sourceTrigger(source: Element): SourceTrigger {
 export function listenSourceEvents(source: Element, callbacks: SourceEventCallbacks): () => void {
     const doc = source.ownerDocument;
     const reloadEvents = [RELOAD_EVENT, ...namedReloadEvents(source)];
-    for (const eventName of reloadEvents) doc.addEventListener(eventName, callbacks.onReload);
+    for (const eventName of reloadEvents) {
+        doc.addEventListener(eventName, callbacks.onReload);
+    }
 
     const trigger = sourceTrigger(source);
     if (trigger === "submit" || trigger === "change") {
@@ -31,7 +33,9 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
         const listener = trigger === "submit" ? callbacks.onSubmit : callbacks.onChange;
         form?.addEventListener(eventName, listener as EventListener);
         return () => {
-            for (const eventName of reloadEvents) doc.removeEventListener(eventName, callbacks.onReload);
+            for (const eventName of reloadEvents) {
+                doc.removeEventListener(eventName, callbacks.onReload);
+            }
             form?.removeEventListener(eventName, listener as EventListener);
         };
     }
@@ -42,14 +46,16 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
         callbacks.onReactiveUrlChange,
     );
     return () => {
-        for (const eventName of reloadEvents) doc.removeEventListener(eventName, callbacks.onReload);
+        for (const eventName of reloadEvents) {
+            doc.removeEventListener(eventName, callbacks.onReload);
+        }
         stopUrlListeners();
     };
 }
 
 function asOwnerForm(source: Element): HTMLFormElement | null {
     const ctor = source.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
-    return typeof ctor === "function" && source instanceof ctor ? source as HTMLFormElement : null;
+    return typeof ctor === "function" && source instanceof ctor ? (source as HTMLFormElement) : null;
 }
 
 function namedReloadEvents(source: Element): string[] {

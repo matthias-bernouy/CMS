@@ -13,15 +13,11 @@ export default async function getTags(req: Request, cms: ControlCms) {
     const resource = url.searchParams.get("resource");
 
     if (resource !== "pages" && resource !== "templates") {
-        return new Response(
-            `Invalid resource "${resource}". Expected "pages" or "templates".`,
-            { status: 400 },
-        );
+        return new Response(`Invalid resource "${resource}". Expected "pages" or "templates".`, { status: 400 });
     }
 
-    const result = resource === "pages"
-        ? await cms.repository.getTagCounts()
-        : await cms.repository.getCategoryCounts(resource);
+    const result =
+        resource === "pages" ? await cms.repository.getTagCounts() : await cms.repository.getCategoryCounts(resource);
 
     return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json" },

@@ -1,7 +1,12 @@
 import type { Source, SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
 import { makeEndpointUrn } from "@bernouy/cms-sources";
 import type { FunctionRepository } from "../interfaces/FunctionRepository";
-import { functionAsEndpoint, functionsAsSource, SYSTEM_FUNCTIONS_SOURCE_ID, SYSTEM_FUNCTIONS_SOURCE_URN } from "./projection";
+import {
+    functionAsEndpoint,
+    functionsAsSource,
+    SYSTEM_FUNCTIONS_SOURCE_ID,
+    SYSTEM_FUNCTIONS_SOURCE_URN,
+} from "./projection";
 
 export class FunctionSourceRepository implements SourceRepository {
     constructor(private readonly functions: FunctionRepository) {}
@@ -19,7 +24,9 @@ export class FunctionSourceRepository implements SourceRepository {
     }
 
     async getSource(urn: string): Promise<Source | null> {
-        if (urn !== SYSTEM_FUNCTIONS_SOURCE_URN) return null;
+        if (urn !== SYSTEM_FUNCTIONS_SOURCE_URN) {
+            return null;
+        }
         return functionsAsSource(await this.functions.getAllFunctions());
     }
 
@@ -29,7 +36,9 @@ export class FunctionSourceRepository implements SourceRepository {
 
     async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         const suffix = `urn:${SYSTEM_FUNCTIONS_SOURCE_ID}:`;
-        if (!urn.startsWith(suffix)) return null;
+        if (!urn.startsWith(suffix)) {
+            return null;
+        }
         const id = urn.slice(suffix.length);
         const fn = await this.functions.getFunction(id);
         return fn ? functionAsEndpoint(fn) : null;

@@ -7,19 +7,11 @@ import "../../Controls/Fields/Toggle/Toggle";
 import "../../Controls/Fields/SegmentedControl/SegmentedControl";
 import "../../Controls/Pickers/PageLink/PageLink";
 import { type SettingControl } from "@bernouy/cms-content/editor";
-import type {
-    DataScope,
-    EditableState,
-    SettingSection,
-    TextCapability,
-} from "@bernouy/cms-content/editor";
+import type { DataScope, EditableState, SettingSection, TextCapability } from "@bernouy/cms-content/editor";
 import type { EditorDataSource } from "../../../runtime";
 import { EndpointSettingController } from "./internals/endpointSetting";
 import { renderFieldLabel, SettingControlRenderer } from "./internals/settingControls";
-import {
-    attributesForSettingValue,
-    visibleSettings,
-} from "./internals/settingState";
+import { attributesForSettingValue, visibleSettings } from "./internals/settingState";
 import { renderTextCapability } from "./internals/textCapability";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
@@ -95,9 +87,9 @@ export class SettingsView extends HTMLElement {
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
 
-        const visibleSections = sections.filter(section => mode === "settings"
-            ? section.kind === "self"
-            : section.kind === "surcharge");
+        const visibleSections = sections.filter((section) =>
+            mode === "settings" ? section.kind === "self" : section.kind === "surcharge",
+        );
 
         const shouldRenderText = mode === "settings" && textCapability;
         const shouldRenderStates = mode === "settings" && states.length > 0;
@@ -105,22 +97,22 @@ export class SettingsView extends HTMLElement {
         if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
             const empty = document.createElement("div");
             empty.className = "empty";
-            empty.textContent = sections.length === 0 && !textCapability
-                ? "Select an editable element"
-                : mode === "settings"
-                ? "No settings"
-                : "No overrides";
+            empty.textContent =
+                sections.length === 0 && !textCapability
+                    ? "Select an editable element"
+                    : mode === "settings"
+                      ? "No settings"
+                      : "No overrides";
             view.append(empty);
             return;
         }
 
         if (shouldRenderText) {
-            view.append(renderTextCapability(
-                textCapability,
-                textValue,
-                dataScopes,
-                (value, format) => this._emitContentChange(value, format),
-            ));
+            view.append(
+                renderTextCapability(textCapability, textValue, dataScopes, (value, format) =>
+                    this._emitContentChange(value, format),
+                ),
+            );
         }
 
         if (shouldRenderStates) {
@@ -152,11 +144,13 @@ export class SettingsView extends HTMLElement {
 
             button.append(label, description);
             button.addEventListener("click", () => {
-                this.dispatchEvent(new CustomEvent<SettingsViewStateToggleDetail>(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
-                    bubbles: true,
-                    composed: true,
-                    detail: { state },
-                }));
+                this.dispatchEvent(
+                    new CustomEvent<SettingsViewStateToggleDetail>(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
+                        bubbles: true,
+                        composed: true,
+                        detail: { state },
+                    }),
+                );
             });
             section.append(button);
         }
@@ -185,23 +179,30 @@ export class SettingsView extends HTMLElement {
         return element;
     }
 
-    private _emitSettingChange(setting: SettingControl, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+    private _emitSettingChange(
+        setting: SettingControl,
+        value: string | boolean,
+        attributes?: SettingsViewAttributeChanges,
+    ): void {
         const changes = attributes ?? attributesForSettingValue(setting, value);
-        this.dispatchEvent(new CustomEvent<SettingsViewSettingChangeDetail>(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: changes ? { setting, value, attributes: changes } : { setting, value },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<SettingsViewSettingChangeDetail>(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: changes ? { setting, value, attributes: changes } : { setting, value },
+            }),
+        );
     }
 
     private _emitContentChange(value: string, format: "text" | "html"): void {
-        this.dispatchEvent(new CustomEvent<SettingsViewContentChangeDetail>(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: { value, format },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<SettingsViewContentChangeDetail>(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: { value, format },
+            }),
+        );
     }
-
 }
 
 if (!customElements.get("cms-editor-v2-settings-view")) {

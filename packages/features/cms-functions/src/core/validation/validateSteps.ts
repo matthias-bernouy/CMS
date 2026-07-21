@@ -1,9 +1,4 @@
-import type {
-    FunctionAssert,
-    FunctionCall,
-    FunctionForEach,
-    FunctionStep,
-} from "../../interfaces/FunctionDefinition";
+import type { FunctionAssert, FunctionCall, FunctionForEach, FunctionStep } from "../../interfaces/FunctionDefinition";
 import { MAX_FUNCTION_LOOP_ITEMS } from "../execution/limits";
 import { isId } from "./ids";
 import { validateCall } from "./validateCall";
@@ -45,7 +40,13 @@ async function validateCallStep(
 ): Promise<number> {
     validateStepId(step.id, path, state);
     validateReferences(step.call, `${path}.call`, state, inLoop);
-    const endpoint = await validateCall(state.fn, step.call, `${path}.call`, state.options.sources ?? null, state.errors);
+    const endpoint = await validateCall(
+        state.fn,
+        step.call,
+        `${path}.call`,
+        state.options.sources ?? null,
+        state.errors,
+    );
     if (isId(step.id)) {
         state.stepShapes.set(step.id, endpoint ? endpointOutputShape(endpoint) : null);
         state.knownStepIds.add(step.id);
@@ -61,7 +62,9 @@ async function validateForEachStep(
     inLoop: boolean,
 ): Promise<number> {
     validateStepId(id, path, state);
-    if (inLoop) state.errors.push(`${path}.forEach must not be nested`);
+    if (inLoop) {
+        state.errors.push(`${path}.forEach must not be nested`);
+    }
     validateReferences(loop.items, `${path}.forEach.items`, state, inLoop);
     if (!Number.isInteger(loop.max) || loop.max < 1 || loop.max > MAX_FUNCTION_LOOP_ITEMS) {
         state.errors.push(`${path}.forEach.max must be an integer between 1 and ${MAX_FUNCTION_LOOP_ITEMS}`);
@@ -76,19 +79,23 @@ async function validateForEachStep(
         knownStepIds: new Set(state.knownStepIds),
         stepShapes: new Map(state.stepShapes),
     };
-    const childCallCount = !inLoop && Array.isArray(loop.steps) && loop.steps.length
-        ? await validateSteps(loop.steps, `${path}.forEach.steps`, childState, true)
-        : 0;
-    if (!inLoop && loop.yield !== undefined) validateReferences(loop.yield, `${path}.forEach.yield`, childState, true);
+    const childCallCount =
+        !inLoop && Array.isArray(loop.steps) && loop.steps.length
+            ? await validateSteps(loop.steps, `${path}.forEach.steps`, childState, true)
+            : 0;
+    if (!inLoop && loop.yield !== undefined) {
+        validateReferences(loop.yield, `${path}.forEach.yield`, childState, true);
+    }
 
     const errorState: ValidationState = {
         ...state,
         knownStepIds: new Set(state.knownStepIds),
         stepShapes: new Map(state.stepShapes),
     };
-    const errorCallCount = !inLoop && Array.isArray(loop.onError) && loop.onError.length
-        ? await validateSteps(loop.onError, `${path}.forEach.onError`, errorState, true)
-        : 0;
+    const errorCallCount =
+        !inLoop && Array.isArray(loop.onError) && loop.onError.length
+            ? await validateSteps(loop.onError, `${path}.forEach.onError`, errorState, true)
+            : 0;
     if (!inLoop && loop.errorYield !== undefined) {
         validateReferences(loop.errorYield, `${path}.forEach.errorYield`, errorState, true);
     }
@@ -132,7 +139,9 @@ function validateStepId(id: string, path: string, state: ValidationState): void 
         state.errors.push(`${path}.id must be a simple id`);
         return;
     }
-    if (state.stepIds.has(id)) state.errors.push(`duplicate step id "${id}"`);
+    if (state.stepIds.has(id)) {
+        state.errors.push(`duplicate step id "${id}"`);
+    }
     state.stepIds.add(id);
 }
 

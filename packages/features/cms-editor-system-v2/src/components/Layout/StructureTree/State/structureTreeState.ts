@@ -19,7 +19,7 @@ export class StructureTreeState {
     pendingConditionEditor: Editor | null = null;
     readonly dragDrop: StructureDragDropState = {
         draggedNode: null,
-        dropRow:     null,
+        dropRow: null,
     };
     readonly collapsedTargets = new Set<StructureTreeKey>();
     readonly expandedBadgeTargets = new Set<StructureTreeKey>();

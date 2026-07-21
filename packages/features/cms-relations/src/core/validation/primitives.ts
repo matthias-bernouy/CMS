@@ -32,11 +32,15 @@ export function validateRequiredPath(path: string, value: string | undefined, er
 }
 
 export function validatePath(path: string, value: string | undefined, errors: string[]): void {
-    if (value !== undefined && value !== "" && !SAFE_PATH.test(value)) errors.push(`${path} must be a safe dotted path`);
+    if (value !== undefined && value !== "" && !SAFE_PATH.test(value)) {
+        errors.push(`${path} must be a safe dotted path`);
+    }
 }
 
 export function validateId(path: string, value: string | undefined, errors: string[]): void {
-    if (value !== undefined && value !== "" && !SIMPLE_ID.test(value)) errors.push(`${path} must be a simple id`);
+    if (value !== undefined && value !== "" && !SIMPLE_ID.test(value)) {
+        errors.push(`${path} must be a simple id`);
+    }
 }
 
 export function validateRequiredId(path: string, value: string | undefined, errors: string[]): void {
@@ -48,7 +52,9 @@ export function validateRequiredId(path: string, value: string | undefined, erro
 }
 
 export function validateEnum(path: string, value: unknown, values: readonly string[], errors: string[]): void {
-    if (!values.includes(String(value))) errors.push(`${path} must be ${values.join("|")}`);
+    if (!values.includes(String(value))) {
+        errors.push(`${path} must be ${values.join("|")}`);
+    }
 }
 
 export function validateEndpointRefShape(ref: RelationEndpointRef | undefined, path: string, errors: string[]): void {

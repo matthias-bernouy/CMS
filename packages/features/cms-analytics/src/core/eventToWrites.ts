@@ -20,7 +20,7 @@ export type RollupUpsert = {
 };
 
 /** Whether an event counts toward views/visitors. Bots are excluded (V1). PURE. */
-export const isCountedEvent = (event: AnalyticsEvent): boolean => event.device !== 'bot';
+export const isCountedEvent = (event: AnalyticsEvent): boolean => event.device !== "bot";
 
 /**
  * Page-view event → its rollup upserts. PURE.
@@ -28,22 +28,30 @@ export const isCountedEvent = (event: AnalyticsEvent): boolean => event.device !
  * Plus, on same-origin internal navigation (fromPath set and ≠ path): flow|edge|from>to.
  */
 export function eventToWrites(event: AnalyticsEvent): RollupUpsert[] {
-    if (!isCountedEvent(event)) return [];
+    if (!isCountedEvent(event)) {
+        return [];
+    }
     const bucket = truncateToHour(event.ts);
     const tk = hourKey(event.ts);
     const pv = (dim: string, key: string, extra?: Partial<RollupUpsert>): RollupUpsert => ({
-        id: rollupId('pv', dim, key, tk), metric: 'pv', dim, key, bucket, count: 1, ...extra,
+        id: rollupId("pv", dim, key, tk),
+        metric: "pv",
+        dim,
+        key,
+        bucket,
+        count: 1,
+        ...extra,
     });
     const writes: RollupUpsert[] = [
-        pv('all', '_', { msSum: event.durationMs, msMax: event.durationMs }),
-        pv('path', event.path),
-        pv('status', String(event.status)),
-        pv('device', event.device),
-        pv('browser', event.browser),
+        pv("all", "_", { msSum: event.durationMs, msMax: event.durationMs }),
+        pv("path", event.path),
+        pv("status", String(event.status)),
+        pv("device", event.device),
+        pv("browser", event.browser),
     ];
     if (event.fromPath && event.fromPath !== event.path) {
         const key = `${event.fromPath}>${event.path}`;
-        writes.push({ id: rollupId('flow', 'edge', key, tk), metric: 'flow', dim: 'edge', key, bucket, count: 1 });
+        writes.push({ id: rollupId("flow", "edge", key, tk), metric: "flow", dim: "edge", key, bucket, count: 1 });
     }
     return writes;
 }

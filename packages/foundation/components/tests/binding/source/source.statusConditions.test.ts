@@ -7,7 +7,9 @@ afterEach(resetDom);
 
 function deferredResponse(status: number, body: string) {
     let release!: () => void;
-    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const gate = new Promise<void>((resolve) => {
+        release = resolve;
+    });
     globalThis.fetch = (async () => {
         await gate;
         return res(status, body);
@@ -99,8 +101,12 @@ describe("Source — source status conditions", () => {
 
     test("explicit source status conditions can target an outer nested source", async () => {
         globalThis.fetch = (async (url: string) => {
-            if (url === "/outer") return res(200, JSON.stringify({ innerUrl: "/inner" }));
-            if (url === "/inner") return res(200, JSON.stringify({ name: "Nested" }));
+            if (url === "/outer") {
+                return res(200, JSON.stringify({ innerUrl: "/inner" }));
+            }
+            if (url === "/inner") {
+                return res(200, JSON.stringify({ name: "Nested" }));
+            }
             return res(404, "");
         }) as unknown as typeof fetch;
         const root = el(`

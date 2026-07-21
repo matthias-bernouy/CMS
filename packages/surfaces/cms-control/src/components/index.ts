@@ -47,12 +47,14 @@ import {
 } from "@bernouy/components";
 
 function define(tag: string, constructor: CustomElementConstructor) {
-    if (!customElements.get(tag)) customElements.define(tag, constructor);
+    if (!customElements.get(tag)) {
+        customElements.define(tag, constructor);
+    }
 }
 
 define(CMS_BINDING_CORE_TAG, BindingCore);
 setBindingFilters({
-    json: (value) => value === undefined ? undefined : JSON.stringify(value),
+    json: (value) => (value === undefined ? undefined : JSON.stringify(value)),
 });
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
@@ -97,44 +99,44 @@ define("p9r-line-chart", LineChart);
 define("p9r-bar-list", BarList);
 define("p9r-range-tabs", RangeTabs);
 
-import "./globals"
+import "./globals";
 
 // Admin
-import "./admin/AdminLayout/AdminLayout"
-import "./admin/ConfirmForm/ConfirmForm"
-import "./admin/CredentialSelect/CredentialSelect"
-import "./admin/EmptyState/EmptyState"
-import "./admin/EndpointsInput/EndpointsInput"
-import "./admin/EventToast/EventToast"
-import "@bernouy/cms-auth/components"
-import "./admin/ProviderActions/ProviderActions"
-import "./admin/RoleSelect/RoleSelect"
-import "./admin/RoleEditor/RoleEditor"
-import "./admin/UserActions/UserActions"
-import "./admin/Tokens/TokenCreate"
-import "./admin/Secrets/Secrets"
-import "./admin/SettingsSections/SettingsSections"
-import "./admin/ShellDetail/ShellDetail"
-import "./admin/Theme/ThemeEditor"
-import "./admin/Theme/ThemeNav"
-import "./admin/Resources/Dashboards/DashboardNav"
-import "./admin/Resources/Dashboards/DashboardView"
-import "./admin/Resources/Functions/FunctionDetail"
-import "./admin/Resources/Functions/FunctionCreate"
-import "./admin/Resources/Integrations/IntegrationBrowser"
-import "./admin/Resources/Triggers/TriggersAdmin"
-import "./admin/Resources/Triggers/TriggerCreate"
+import "./admin/AdminLayout/AdminLayout";
+import "./admin/ConfirmForm/ConfirmForm";
+import "./admin/CredentialSelect/CredentialSelect";
+import "./admin/EmptyState/EmptyState";
+import "./admin/EndpointsInput/EndpointsInput";
+import "./admin/EventToast/EventToast";
+import "@bernouy/cms-auth/components";
+import "./admin/ProviderActions/ProviderActions";
+import "./admin/RoleSelect/RoleSelect";
+import "./admin/RoleEditor/RoleEditor";
+import "./admin/UserActions/UserActions";
+import "./admin/Tokens/TokenCreate";
+import "./admin/Secrets/Secrets";
+import "./admin/SettingsSections/SettingsSections";
+import "./admin/ShellDetail/ShellDetail";
+import "./admin/Theme/ThemeEditor";
+import "./admin/Theme/ThemeNav";
+import "./admin/Resources/Dashboards/DashboardNav";
+import "./admin/Resources/Dashboards/DashboardView";
+import "./admin/Resources/Functions/FunctionDetail";
+import "./admin/Resources/Functions/FunctionCreate";
+import "./admin/Resources/Integrations/IntegrationBrowser";
+import "./admin/Resources/Triggers/TriggersAdmin";
+import "./admin/Resources/Triggers/TriggerCreate";
 
 // Editor
-import "./editorSystemV2/bootstrap"
+import "./editorSystemV2/bootstrap";
 
 // Medias
-import "./media/CardMedia/CardMedia"
-import "./media/CropSystem/CropSystem"
-import "./media/DetailMedia/DetailMedia"
-import "./media/GridMedia/GridMedia"
-import "./media/MediaAdmin/MediaAdmin"
-import "./media/MediaCenter/MediaCenter"
+import "./media/CardMedia/CardMedia";
+import "./media/CropSystem/CropSystem";
+import "./media/DetailMedia/DetailMedia";
+import "./media/GridMedia/GridMedia";
+import "./media/MediaAdmin/MediaAdmin";
+import "./media/MediaCenter/MediaCenter";
 
 // Form
 import "./form/MediaInput/MediaInput";

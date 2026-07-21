@@ -1,7 +1,12 @@
 import { describe, test, expect } from "bun:test";
 import {
-    ValidatingRolesRepository, InMemoryRolesRepository, RoleValidationError,
-    ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, cmsPermission,
+    ValidatingRolesRepository,
+    InMemoryRolesRepository,
+    RoleValidationError,
+    ADMIN_ROLE,
+    PUBLIC_ROLE,
+    USER_ROLE,
+    cmsPermission,
 } from "@bernouy/cms-permissions";
 
 const repo = () => new ValidatingRolesRepository(new InMemoryRolesRepository());
@@ -14,23 +19,29 @@ describe("ValidatingRolesRepository", () => {
     });
 
     test("the virtual admin super-role can never be stored", async () => {
-        await expect(repo().upsert({ id: ADMIN_ROLE, label: "Admin", grants: [] }))
-            .rejects.toBeInstanceOf(RoleValidationError);
+        await expect(repo().upsert({ id: ADMIN_ROLE, label: "Admin", grants: [] })).rejects.toBeInstanceOf(
+            RoleValidationError,
+        );
     });
 
     test("a malformed id is rejected at the seam (direct upsert, no upsertRole)", async () => {
-        await expect(repo().upsert({ id: "Bad Id!", label: "x", grants: [] }))
-            .rejects.toThrow(/id/);
+        await expect(repo().upsert({ id: "Bad Id!", label: "x", grants: [] })).rejects.toThrow(/id/);
     });
 
     test("an out-of-catalogue CMS grant is rejected at the seam", async () => {
-        await expect(repo().upsert({ id: "editor", label: "x", grants: [{ permission: "urn:cms:nope:write" }] }))
-            .rejects.toThrow(/unknown CMS permission/);
+        await expect(
+            repo().upsert({ id: "editor", label: "x", grants: [{ permission: "urn:cms:nope:write" }] }),
+        ).rejects.toThrow(/unknown CMS permission/);
     });
 
     test("conditional grants are rejected at the seam", async () => {
-        await expect(repo().upsert({ id: "editor", label: "x", grants: [{ permission: cmsPermission("users", "view"), condition: { only: "me" } }] }))
-            .rejects.toThrow(/conditional grants/);
+        await expect(
+            repo().upsert({
+                id: "editor",
+                label: "x",
+                grants: [{ permission: cmsPermission("users", "view"), condition: { only: "me" } }],
+            }),
+        ).rejects.toThrow(/conditional grants/);
     });
 
     test("a gateway-endpoint grant (non urn:cms:*) passes through", async () => {
@@ -49,7 +60,12 @@ describe("ValidatingRolesRepository", () => {
 
     test("direct upserts preserve built-in role metadata", async () => {
         const r = repo();
-        await r.upsert({ id: USER_ROLE, label: "Renamed", builtin: false, grants: [{ permission: cmsPermission("files", "view") }] });
+        await r.upsert({
+            id: USER_ROLE,
+            label: "Renamed",
+            builtin: false,
+            grants: [{ permission: cmsPermission("files", "view") }],
+        });
         await r.upsert({ id: PUBLIC_ROLE, label: "Everyone", grants: [{ permission: "urn:shop:getCart" }] });
 
         expect(await r.get(USER_ROLE)).toMatchObject({ id: USER_ROLE, label: "User", builtin: true });

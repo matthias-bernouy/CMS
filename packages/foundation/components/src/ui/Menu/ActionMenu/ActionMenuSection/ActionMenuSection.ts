@@ -10,20 +10,30 @@ export class ActionMenuSection extends Component {
         this._label = this.shadowRoot?.querySelector("[data-label]") ?? null;
     }
 
-    static get observedAttributes(): string[] { return ["label"]; }
+    static get observedAttributes(): string[] {
+        return ["label"];
+    }
 
     override connectedCallback(): void {
         upgradeProperty(this, "label");
         this.sync();
     }
 
-    attributeChangedCallback(): void { this.sync(); }
+    attributeChangedCallback(): void {
+        this.sync();
+    }
 
-    get label(): string { return this.getAttribute("label") ?? ""; }
-    set label(value: string) { value ? this.setAttribute("label", value) : this.removeAttribute("label"); }
+    get label(): string {
+        return this.getAttribute("label") ?? "";
+    }
+    set label(value: string) {
+        value ? this.setAttribute("label", value) : this.removeAttribute("label");
+    }
 
     private sync(): void {
-        if (!this._label) return;
+        if (!this._label) {
+            return;
+        }
         this._label.textContent = this.label;
         this._label.hidden = !this.label;
     }

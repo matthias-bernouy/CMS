@@ -15,25 +15,41 @@ export type RuntimeVars = {
 };
 
 export function valueAt(value: unknown, path: string | undefined): unknown {
-    if (!path) return value;
+    if (!path) {
+        return value;
+    }
     const segments = dashboardPathSegments(path);
-    if (!segments) return undefined;
+    if (!segments) {
+        return undefined;
+    }
     return segments.reduce((current, part) => {
-        if (current === null || current === undefined) return undefined;
-        if (Array.isArray(current) && /^\d+$/.test(part)) return current[Number(part)];
-        if (typeof current !== "object") return undefined;
-        if (!Object.hasOwn(current, part)) return undefined;
+        if (current === null || current === undefined) {
+            return undefined;
+        }
+        if (Array.isArray(current) && /^\d+$/.test(part)) {
+            return current[Number(part)];
+        }
+        if (typeof current !== "object") {
+            return undefined;
+        }
+        if (!Object.hasOwn(current, part)) {
+            return undefined;
+        }
         return (current as Record<string, unknown>)[part];
     }, value);
 }
 
 export function setValueAt(target: Record<string, unknown>, path: string, value: unknown): boolean {
     const parts = dashboardPathSegments(path);
-    if (!parts) return false;
+    if (!parts) {
+        return false;
+    }
     let current = target;
     for (const part of parts.slice(0, -1)) {
         const existing = Object.hasOwn(current, part) ? current[part] : undefined;
-        if (!existing || typeof existing !== "object" || Array.isArray(existing)) current[part] = {};
+        if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
+            current[part] = {};
+        }
         current = current[part] as Record<string, unknown>;
     }
     current[parts.at(-1)!] = value;
@@ -42,9 +58,15 @@ export function setValueAt(target: Record<string, unknown>, path: string, value:
 
 export function textAt(value: unknown, path: string | undefined, fallback = ""): string {
     const found = valueAt(value, path);
-    if (found === null || found === undefined) return fallback;
-    if (typeof found === "string") return found;
-    if (typeof found === "number" || typeof found === "boolean") return String(found);
+    if (found === null || found === undefined) {
+        return fallback;
+    }
+    if (typeof found === "string") {
+        return found;
+    }
+    if (typeof found === "number" || typeof found === "boolean") {
+        return String(found);
+    }
     return fallback;
 }
 
@@ -54,16 +76,36 @@ export function arrayAt(value: unknown, path: string | undefined): unknown[] {
 }
 
 export function resolveExpression(expression: string, vars: RuntimeVars): unknown {
-    if (expression === "$search") return undefined;
-    if (expression.startsWith("$selection.")) return valueAt(vars.selection, expression.slice("$selection.".length));
-    if (expression.startsWith("$resource.")) return valueAt(vars.resource, expression.slice("$resource.".length));
-    if (expression.startsWith("$field.")) return valueAt(vars.fields, expression.slice("$field.".length));
-    if (expression.startsWith("$filter.")) return valueAt(vars.filters, expression.slice("$filter.".length));
-    if (expression.startsWith("$media.")) return valueAt(vars.media, expression.slice("$media.".length));
-    if (expression === "$result") return vars.result;
-    if (expression.startsWith("$result.")) return valueAt(vars.result, expression.slice("$result.".length));
-    if (expression === "$value") return vars.value;
-    if (expression.startsWith("$value.")) return valueAt(vars.value, expression.slice("$value.".length));
+    if (expression === "$search") {
+        return undefined;
+    }
+    if (expression.startsWith("$selection.")) {
+        return valueAt(vars.selection, expression.slice("$selection.".length));
+    }
+    if (expression.startsWith("$resource.")) {
+        return valueAt(vars.resource, expression.slice("$resource.".length));
+    }
+    if (expression.startsWith("$field.")) {
+        return valueAt(vars.fields, expression.slice("$field.".length));
+    }
+    if (expression.startsWith("$filter.")) {
+        return valueAt(vars.filters, expression.slice("$filter.".length));
+    }
+    if (expression.startsWith("$media.")) {
+        return valueAt(vars.media, expression.slice("$media.".length));
+    }
+    if (expression === "$result") {
+        return vars.result;
+    }
+    if (expression.startsWith("$result.")) {
+        return valueAt(vars.result, expression.slice("$result.".length));
+    }
+    if (expression === "$value") {
+        return vars.value;
+    }
+    if (expression.startsWith("$value.")) {
+        return valueAt(vars.value, expression.slice("$value.".length));
+    }
     return expression;
 }
 
@@ -71,39 +113,52 @@ export function matchesDashboardVisibility(
     rule: DashboardVisibilityRule | undefined,
     vars: Pick<RuntimeVars, "fields" | "resource">,
 ): boolean {
-    return evaluateDashboardVisibility(rule, expression => resolveExpression(expression, vars));
+    return evaluateDashboardVisibility(rule, (expression) => resolveExpression(expression, vars));
 }
 
 export function resolveParams(params: Record<string, string> | undefined, vars: RuntimeVars): Record<string, string> {
     const out: Record<string, string> = {};
     for (const [key, expression] of Object.entries(params ?? {})) {
         const value = resolveExpression(expression, vars);
-        if (value === undefined || value === null || value === "") continue;
+        if (value === undefined || value === null || value === "") {
+            continue;
+        }
         out[key] = String(value);
     }
     return out;
 }
 
-export function resolveBody(body: Record<string, string> | undefined, vars: RuntimeVars): Record<string, unknown> | undefined {
-    if (!body) return undefined;
+export function resolveBody(
+    body: Record<string, string> | undefined,
+    vars: RuntimeVars,
+): Record<string, unknown> | undefined {
+    if (!body) {
+        return undefined;
+    }
     const out: Record<string, unknown> = {};
     for (const [key, expression] of Object.entries(body)) {
         const value = resolveExpression(expression, vars);
-        if (value === undefined) continue;
+        if (value === undefined) {
+            continue;
+        }
         setBodyValue(out, key, value);
     }
     return out;
 }
 
 function setBodyValue(target: Record<string, unknown>, path: string, value: unknown): void {
-    if (!setValueAt(target, path, value)) throw new Error(`Unsafe dashboard body path "${path}"`);
+    if (!setValueAt(target, path, value)) {
+        throw new Error(`Unsafe dashboard body path "${path}"`);
+    }
 }
 
 export function pathLabel(path: string): string {
-    return path
-        .split(".")
-        .filter(Boolean)
-        .at(-1)
-        ?.replace(/[_-]+/g, " ")
-        .replace(/([a-z0-9])([A-Z])/g, "$1 $2") ?? path;
+    return (
+        path
+            .split(".")
+            .filter(Boolean)
+            .at(-1)
+            ?.replace(/[_-]+/g, " ")
+            .replace(/([a-z0-9])([A-Z])/g, "$1 $2") ?? path
+    );
 }

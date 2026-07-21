@@ -1,9 +1,4 @@
-import {
-    CMS_BINDING_ATTRIBUTES,
-    isCmsSourceTrigger,
-    parseSource,
-    parseSourceBody,
-} from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, isCmsSourceTrigger, parseSource, parseSourceBody } from "@bernouy/cms-content/editor";
 import type { EditorStructureNode } from "../../../../runtime";
 import type { EditorDataSource } from "../../../../runtime";
 import {
@@ -29,7 +24,7 @@ export function openStructureSourcePicker(node: EditorStructureNode, context: St
     picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, context.onSelect);
     picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, context.onRemove);
     picker.open(context.dataSources, node.label, {
-        canRemove:      node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
+        canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
         initialBinding: sourceBindingForNode(node),
     });
 }
@@ -41,11 +36,11 @@ export function sourceBindingForNode(node: EditorStructureNode): DataSourcePicke
     const method = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
     return source
         ? {
-            url: source.url,
-            ...(source.alias ? { alias: source.alias } : {}),
-            ...(method ? { method: method as DataSourcePickerSourceBinding["method"] } : {}),
-            ...(body ? { body: body as DataSourcePickerSourceBinding["body"] } : {}),
-            ...(isCmsSourceTrigger(trigger) && trigger !== "auto" ? { trigger } : {}),
-        }
+              url: source.url,
+              ...(source.alias ? { alias: source.alias } : {}),
+              ...(method ? { method: method as DataSourcePickerSourceBinding["method"] } : {}),
+              ...(body ? { body: body as DataSourcePickerSourceBinding["body"] } : {}),
+              ...(isCmsSourceTrigger(trigger) && trigger !== "auto" ? { trigger } : {}),
+          }
         : null;
 }

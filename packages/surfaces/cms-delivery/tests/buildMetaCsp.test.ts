@@ -32,12 +32,11 @@ describe("buildMetaCsp", () => {
         const { document, head } = makeHead();
         buildMetaCsp(document, head, {
             connectExtras: ["https://api.example.com"],
-            mediaExtras:   ["https://cdn.example.com"],
-            frameExtras:   ["https://frame.example.com"],
+            mediaExtras: ["https://cdn.example.com"],
+            frameExtras: ["https://frame.example.com"],
         });
 
-        const content = head.querySelector('meta[http-equiv="Content-Security-Policy"]')
-            ?.getAttribute("content") ?? "";
+        const content = head.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") ?? "";
         expect(content).toContain("connect-src 'self' https://api.example.com");
         expect(content).toContain("media-src 'self' https://cdn.example.com");
         expect(content).toContain("frame-src 'self' https://frame.example.com");

@@ -1,9 +1,4 @@
-import {
-    claimEvidenceRows,
-    claimEvents,
-    claimReturnEvents,
-    claimRow,
-} from "./fixtures";
+import { claimEvidenceRows, claimEvents, claimReturnEvents, claimRow } from "./fixtures";
 
 export function expectedClaimDetail(): Record<string, unknown> {
     return {
@@ -32,7 +27,7 @@ export function expectedClaimDetail(): Record<string, unknown> {
         version: 3,
         createdAt: "2026-07-17T08:00:00.000Z",
         updatedAt: "2026-07-20T08:00:00.000Z",
-        events: claimEvents.map(event => ({
+        events: claimEvents.map((event) => ({
             id: event.id,
             claimId: event.claim_id,
             eventType: event.event_type,
@@ -42,7 +37,7 @@ export function expectedClaimDetail(): Record<string, unknown> {
             data: event.data,
             createdAt: event.created_at,
         })),
-        evidence: claimEvidenceRows.map(evidence => ({
+        evidence: claimEvidenceRows.map((evidence) => ({
             id: evidence.id,
             claimId: evidence.claim_id,
             submittedByKind: evidence.submitted_by_kind,
@@ -54,7 +49,7 @@ export function expectedClaimDetail(): Record<string, unknown> {
             metadata: evidence.metadata,
             createdAt: evidence.created_at,
         })),
-        returnEvents: claimReturnEvents.map(event => ({
+        returnEvents: claimReturnEvents.map((event) => ({
             id: event.id,
             providerEventId: event.provider_event_id,
             providerReference: event.provider_reference,

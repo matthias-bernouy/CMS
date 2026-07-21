@@ -1,4 +1,4 @@
-import MissingParam from 'cms-control/errors/Http/MissingParam';
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 export type PageCreateDto = {
     title: string;
@@ -12,7 +12,11 @@ export type PageCreateDto = {
  */
 export function parsePageCreateDto(body: Record<string, unknown>): PageCreateDto {
     const { title, path } = body;
-    if (!title) throw new MissingParam('title');
-    if (!path)  throw new MissingParam('path');
+    if (!title) {
+        throw new MissingParam("title");
+    }
+    if (!path) {
+        throw new MissingParam("path");
+    }
     return { title: String(title), path: String(path) };
 }

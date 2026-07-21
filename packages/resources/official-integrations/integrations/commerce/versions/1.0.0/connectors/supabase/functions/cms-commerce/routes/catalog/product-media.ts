@@ -73,7 +73,9 @@ async function attachUploadedImage(request: Request, replacedMediaId: number | n
 
 async function rpcRecord(name: string, body: JsonRecord): Promise<JsonRecord> {
     const result = await rpc(name, body);
-    if (!isRecord(result)) throw new HttpError(502, `${name} returned an invalid response`);
+    if (!isRecord(result)) {
+        throw new HttpError(502, `${name} returned an invalid response`);
+    }
     return result;
 }
 
@@ -91,7 +93,9 @@ function resultResponse(result: JsonRecord): Response {
 
 function copyHeader(source: Response, target: Headers, name: string, fallback?: string): void {
     const value = source.headers.get(name) ?? fallback;
-    if (value) target.set(name, value);
+    if (value) {
+        target.set(name, value);
+    }
 }
 
 function camelKey(value: string): string {

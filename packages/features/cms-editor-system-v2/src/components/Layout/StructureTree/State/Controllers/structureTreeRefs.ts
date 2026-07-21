@@ -21,7 +21,9 @@ export class StructureTreeRefs {
 
     get scrollContainer(): HTMLElement {
         const panelBody = this.host.parentElement?.shadowRoot?.querySelector<HTMLElement>(".panel-body");
-        if (panelBody) return panelBody;
+        if (panelBody) {
+            return panelBody;
+        }
         return this.host;
     }
 

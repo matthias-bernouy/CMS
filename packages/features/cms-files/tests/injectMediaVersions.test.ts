@@ -7,12 +7,25 @@ import { manifestKey } from "@bernouy/cms-files";
 
 /** Files metadata stub: id → contentHash. A missing id resolves to `null`; a
  *  present id with `undefined` hash resolves to a file with no contentHash. */
-const stubFiles = (hashes: Record<string, string | undefined>): CmsFilesMetadataRepository => ({
-    async getItem(id: string): Promise<FilesItem | null> {
-        if (!(id in hashes)) return null;
-        return { id, type: "file", name: "x", parentId: null, size: 1, mimeType: "image/png", contentHash: hashes[id], createdAt: new Date(), updatedAt: new Date() };
-    },
-}) as unknown as CmsFilesMetadataRepository;
+const stubFiles = (hashes: Record<string, string | undefined>): CmsFilesMetadataRepository =>
+    ({
+        async getItem(id: string): Promise<FilesItem | null> {
+            if (!(id in hashes)) {
+                return null;
+            }
+            return {
+                id,
+                type: "file",
+                name: "x",
+                parentId: null,
+                size: 1,
+                mimeType: "image/png",
+                contentHash: hashes[id],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+        },
+    }) as unknown as CmsFilesMetadataRepository;
 
 async function render(bodyHtml: string, files: CmsFilesMetadataRepository | undefined): Promise<string> {
     const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body>${bodyHtml}</body></html>`);
@@ -61,10 +74,18 @@ describe("injectMediaVersions", () => {
 
     test("in-place update keeps the id and bumps the rendered ?v (the whole point)", async () => {
         const meta = new InMemoryCmsFilesMetadata();
-        const f = await meta.createFile({ name: "logo.png", parentId: null, size: 2, mimeType: "image/png", contentHash: "hash-v1" });
+        const f = await meta.createFile({
+            name: "logo.png",
+            parentId: null,
+            size: 2,
+            mimeType: "image/png",
+            contentHash: "hash-v1",
+        });
 
         const renderedSrc = async (): Promise<string> => {
-            const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${f.id}"></body></html>`);
+            const { document } = parseHTML(
+                `<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${f.id}"></body></html>`,
+            );
             await injectMediaVersions(document as unknown as Document, { files: meta });
             return document.querySelector("img")!.getAttribute("src")!;
         };
@@ -74,7 +95,7 @@ describe("injectMediaVersions", () => {
 
         // replace the bytes IN PLACE — same id, new hash
         const updated = await meta.updateFileContent(f.id, { size: 9, mimeType: "image/png", contentHash: "hash-v2" });
-        expect(updated?.id).toBe(f.id);            // id is unchanged
+        expect(updated?.id).toBe(f.id); // id is unchanged
         expect(updated?.contentHash).toBe("hash-v2");
 
         // after: SAME id, new ?v → the immutable cache busts, content URL stayed clean
@@ -83,7 +104,22 @@ describe("injectMediaVersions", () => {
 
     test("dedupes lookups across repeated ids (same id, two imgs)", async () => {
         let calls = 0;
-        const counting = { async getItem(id: string) { calls++; return { id, type: "file", contentHash: "h", name: "x", parentId: null, size: 1, mimeType: "image/png", createdAt: new Date(), updatedAt: new Date() } as FilesItem; } } as unknown as CmsFilesMetadataRepository;
+        const counting = {
+            async getItem(id: string) {
+                calls++;
+                return {
+                    id,
+                    type: "file",
+                    contentHash: "h",
+                    name: "x",
+                    parentId: null,
+                    size: 1,
+                    mimeType: "image/png",
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                } as FilesItem;
+            },
+        } as unknown as CmsFilesMetadataRepository;
         const out = await render(`<img src="/.cms/files/by-id/same"><img src="/.cms/files/by-id/same">`, counting);
         expect(calls).toBe(1);
         expect([...out.matchAll(/\?v=h/g)]).toHaveLength(2);
@@ -95,14 +131,30 @@ describe("injectMediaVersions — responsive expansion (B3b)", () => {
         const files = new InMemoryCmsFilesMetadata();
         const variantStore = new InMemoryCmsFilesBlob();
         const f = await files.createFile({ name: "hero", parentId: null, size: 9, mimeType: mime, contentHash: "h9" });
-        if (withManifest) await variantStore.put(manifestKey("h9"), new TextEncoder().encode(JSON.stringify({ format: "webp", widths: [320, 640], intrinsic: { width: 640, height: 480 } })));
+        if (withManifest) {
+            await variantStore.put(
+                manifestKey("h9"),
+                new TextEncoder().encode(
+                    JSON.stringify({ format: "webp", widths: [320, 640], intrinsic: { width: 640, height: 480 } }),
+                ),
+            );
+        }
         return { files, variantStore, id: f.id };
     }
     async function run(id: string, files: InMemoryCmsFilesMetadata, variantStore?: InMemoryCmsFilesBlob) {
-        const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${id}"></body></html>`);
+        const { document } = parseHTML(
+            `<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${id}"></body></html>`,
+        );
         const unoptimized = await injectMediaVersions(document as unknown as Document, { files, variantStore });
         const img = document.querySelector("img")!;
-        return { unoptimized, src: img.getAttribute("src"), srcset: img.getAttribute("srcset"), sizes: img.getAttribute("sizes"), width: img.getAttribute("width"), height: img.getAttribute("height") };
+        return {
+            unoptimized,
+            src: img.getAttribute("src"),
+            srcset: img.getAttribute("srcset"),
+            sizes: img.getAttribute("sizes"),
+            width: img.getAttribute("width"),
+            height: img.getAttribute("height"),
+        };
     }
 
     test("a raster image with a ready manifest expands to a srcset (variant URLs carry ?v); original stays the src; intrinsic w/h reserve the box", async () => {

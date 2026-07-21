@@ -16,7 +16,9 @@ export class PageStateSync {
     private readonly onChange = () => this.write();
     private readonly onState = () => this.reflect();
     private readonly onChildren = () => {
-        if (this.reflectTimer) clearTimeout(this.reflectTimer);
+        if (this.reflectTimer) {
+            clearTimeout(this.reflectTimer);
+        }
         this.reflectTimer = setTimeout(() => this.reflect(), 0);
     };
 
@@ -44,48 +46,72 @@ export class PageStateSync {
         this.el.ownerDocument.removeEventListener(STATE_CHANGE_EVENT, this.onState);
         this.childObserver?.disconnect();
         this.childObserver = null;
-        if (this.timer) clearTimeout(this.timer);
-        if (this.reflectTimer) clearTimeout(this.reflectTimer);
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+        if (this.reflectTimer) {
+            clearTimeout(this.reflectTimer);
+        }
         this.timer = this.reflectTimer = null;
     }
 
     private reflect(): void {
-        if (this.timer) return;
+        if (this.timer) {
+            return;
+        }
         const v = currentState(this.key, this.el.ownerDocument);
         const el = this.el as HTMLInputElement;
         if (el.type === "checkbox") {
             const checked = v !== "" && v === (el.value || "true");
-            if (el.checked !== checked) this.set(() => { el.checked = checked; });
+            if (el.checked !== checked) {
+                this.set(() => {
+                    el.checked = checked;
+                });
+            }
         } else if (el.value !== v) {
-            this.set(() => { el.value = v; });
+            this.set(() => {
+                el.value = v;
+            });
         }
         this.last = this.currentValue();
     }
 
     private set(apply: () => void): void {
         this.reflecting = true;
-        try { apply(); } finally { this.reflecting = false; }
+        try {
+            apply();
+        } finally {
+            this.reflecting = false;
+        }
     }
 
     private currentValue(): string {
         const el = this.el as HTMLInputElement;
-        return el.type === "checkbox" ? (el.checked ? el.value || "true" : "") : el.value ?? "";
+        return el.type === "checkbox" ? (el.checked ? el.value || "true" : "") : (el.value ?? "");
     }
 
     private schedule(): void {
-        if (this.reflecting) return;
-        if (this.timer) clearTimeout(this.timer);
+        if (this.reflecting) {
+            return;
+        }
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
         this.timer = setTimeout(() => this.write(), DEBOUNCE_MS);
     }
 
     private write(): void {
-        if (this.reflecting) return;
+        if (this.reflecting) {
+            return;
+        }
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = null;
         }
         const value = this.currentValue();
-        if (value === this.last) return;
+        if (value === this.last) {
+            return;
+        }
         this.last = value;
         setState(this.key, value, this.el.ownerDocument);
     }

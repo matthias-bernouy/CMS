@@ -12,14 +12,20 @@ export async function readJsonOrFormBody(req: Request): Promise<Record<string, u
     }
 
     const form = await req.formData().catch(() => null);
-    if (!form) throw new InvalidParam("body", "valid form data expected.");
+    if (!form) {
+        throw new InvalidParam("body", "valid form data expected.");
+    }
 
     const body: Record<string, unknown> = {};
     for (const [key, value] of form.entries()) {
         const current = body[key];
-        if (current === undefined) body[key] = value;
-        else if (Array.isArray(current)) current.push(value);
-        else body[key] = [current, value];
+        if (current === undefined) {
+            body[key] = value;
+        } else if (Array.isArray(current)) {
+            current.push(value);
+        } else {
+            body[key] = [current, value];
+        }
     }
     return body;
 }

@@ -18,7 +18,11 @@ const OPERATORS: Array<{ value: CmsConditionFieldOperator; label: string; needsV
     { value: "notEmpty", label: "is not empty", needsValue: false },
 ];
 
-export function renderFieldMode(fields: ConditionFieldOption[], draft: FieldConditionDraft, onChange: (render: boolean) => void): HTMLElement {
+export function renderFieldMode(
+    fields: ConditionFieldOption[],
+    draft: FieldConditionDraft,
+    onChange: (render: boolean) => void,
+): HTMLElement {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
     if (fields.length === 0) {
@@ -26,7 +30,9 @@ export function renderFieldMode(fields: ConditionFieldOption[], draft: FieldCond
         return root;
     }
     root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
-    if (operatorNeedsValue(draft.operator)) root.append(valueInput(draft, onChange));
+    if (operatorNeedsValue(draft.operator)) {
+        root.append(valueInput(draft, onChange));
+    }
     return root;
 }
 
@@ -38,7 +44,11 @@ export function defaultFieldDraft(fields: ConditionFieldOption[]): FieldConditio
     return { path: fields[0]?.path ?? "", operator: "truthy", value: "" };
 }
 
-function fieldSelect(fields: ConditionFieldOption[], draft: FieldConditionDraft, onChange: (render: boolean) => void): HTMLElement {
+function fieldSelect(
+    fields: ConditionFieldOption[],
+    draft: FieldConditionDraft,
+    onChange: (render: boolean) => void,
+): HTMLElement {
     const select = document.createElement("select");
     select.className = "field-path";
     for (const field of fields) {
@@ -47,7 +57,10 @@ function fieldSelect(fields: ConditionFieldOption[], draft: FieldConditionDraft,
         option.textContent = `${field.scopeLabel}: ${field.path}`;
         select.append(option);
     }
-    select.selectedIndex = Math.max(0, fields.findIndex(field => field.path === draft.path));
+    select.selectedIndex = Math.max(
+        0,
+        fields.findIndex((field) => field.path === draft.path),
+    );
     select.addEventListener("change", () => {
         draft.path = select.options.item(select.selectedIndex)?.value ?? "";
         onChange(false);
@@ -64,7 +77,10 @@ function operatorSelect(draft: FieldConditionDraft, onChange: (render: boolean) 
         option.textContent = operator.label;
         select.append(option);
     }
-    select.selectedIndex = Math.max(0, OPERATORS.findIndex(operator => operator.value === draft.operator));
+    select.selectedIndex = Math.max(
+        0,
+        OPERATORS.findIndex((operator) => operator.value === draft.operator),
+    );
     select.addEventListener("change", () => {
         draft.operator = (select.options.item(select.selectedIndex)?.value ?? "truthy") as CmsConditionFieldOperator;
         onChange(true);
@@ -85,7 +101,7 @@ function valueInput(draft: FieldConditionDraft, onChange: (render: boolean) => v
 }
 
 function operatorNeedsValue(operator: CmsConditionFieldOperator): boolean {
-    return OPERATORS.find(candidate => candidate.value === operator)?.needsValue === true;
+    return OPERATORS.find((candidate) => candidate.value === operator)?.needsValue === true;
 }
 
 function control(labelText: string, controlElement: HTMLElement): HTMLElement {
@@ -99,10 +115,18 @@ function control(labelText: string, controlElement: HTMLElement): HTMLElement {
 
 function parseValue(value: string): CmsConditionLiteral {
     const trimmed = value.trim();
-    if (trimmed === "true") return true;
-    if (trimmed === "false") return false;
-    if (trimmed === "null") return null;
-    if (trimmed && Number.isFinite(Number(trimmed))) return Number(trimmed);
+    if (trimmed === "true") {
+        return true;
+    }
+    if (trimmed === "false") {
+        return false;
+    }
+    if (trimmed === "null") {
+        return null;
+    }
+    if (trimmed && Number.isFinite(Number(trimmed))) {
+        return Number(trimmed);
+    }
     return trimmed;
 }
 

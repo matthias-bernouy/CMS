@@ -1,12 +1,7 @@
 import type { DataField, DataScope } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
-import {
-    defaultRepeatAlias,
-    repeatArrayOptions,
-    visibleRepeatOptions,
-    type RepeatOption,
-} from "./repeatOptions";
+import { defaultRepeatAlias, repeatArrayOptions, visibleRepeatOptions, type RepeatOption } from "./repeatOptions";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
@@ -44,7 +39,9 @@ export class RepeatPicker extends HTMLElement {
     open(scopes: DataScope[], contextLabel?: string): void {
         this._options = repeatArrayOptions(scopes);
         this._activeOption = null;
-        this.subtitle.textContent = contextLabel ? `Choose an array to repeat ${contextLabel}.` : "Choose an array to repeat.";
+        this.subtitle.textContent = contextLabel
+            ? `Choose an array to repeat ${contextLabel}.`
+            : "Choose an array to repeat.";
         this.search.value = "";
         this.backdrop.hidden = false;
         this._render();
@@ -175,7 +172,9 @@ export class RepeatPicker extends HTMLElement {
         const list = document.createElement("ul");
         list.className = "fields";
 
-        for (const field of fields) list.append(this._renderField(field, 0));
+        for (const field of fields) {
+            list.append(this._renderField(field, 0));
+        }
 
         if (list.children.length === 0) {
             const empty = document.createElement("p");
@@ -203,7 +202,9 @@ export class RepeatPicker extends HTMLElement {
         if (field.children?.length) {
             const children = document.createElement("ul");
             children.className = "field-children";
-            for (const child of field.children) children.append(this._renderField(child, depth + 1));
+            for (const child of field.children) {
+                children.append(this._renderField(child, depth + 1));
+            }
             item.append(children);
         }
 
@@ -212,16 +213,20 @@ export class RepeatPicker extends HTMLElement {
 
     private _select(option: RepeatOption, alias = defaultRepeatAlias(option.path)): void {
         const cleanAlias = alias.trim();
-        if (!cleanAlias) return;
+        if (!cleanAlias) {
+            return;
+        }
 
-        this.dispatchEvent(new CustomEvent<RepeatPickerSelectDetail>(REPEAT_PICKER_SELECT_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: {
-                path: option.path,
-                alias: cleanAlias,
-            },
-        }));
+        this.dispatchEvent(
+            new CustomEvent<RepeatPickerSelectDetail>(REPEAT_PICKER_SELECT_EVENT, {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    path: option.path,
+                    alias: cleanAlias,
+                },
+            }),
+        );
         this.close();
     }
 
@@ -230,7 +235,9 @@ export class RepeatPicker extends HTMLElement {
     }
 
     private readonly _onBackdropClick = (event: Event): void => {
-        if (event.target === this.backdrop) this.close();
+        if (event.target === this.backdrop) {
+            this.close();
+        }
     };
 
     private readonly _onSearchInput = (): void => {
@@ -239,7 +246,9 @@ export class RepeatPicker extends HTMLElement {
     };
 
     private readonly _onKeydown = (event: KeyboardEvent): void => {
-        if (!this.backdrop.hidden && event.key === "Escape") this.close();
+        if (!this.backdrop.hidden && event.key === "Escape") {
+            this.close();
+        }
     };
 
     private get backdrop(): HTMLElement {

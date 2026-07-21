@@ -4,7 +4,10 @@ export function aliasKey(alias: IdentityAlias): string {
     return JSON.stringify([alias.authority, alias.kind, typeof alias.value, normalizeNumber(alias.value)]);
 }
 
-export function subjectAuthorityKey(subjectId: IdentitySubjectId, alias: Pick<IdentityAlias, "authority" | "kind">): string {
+export function subjectAuthorityKey(
+    subjectId: IdentitySubjectId,
+    alias: Pick<IdentityAlias, "authority" | "kind">,
+): string {
     return JSON.stringify([subjectId, alias.authority, alias.kind]);
 }
 

@@ -6,10 +6,10 @@ import { detectConflict, type PushState } from "../shared/state";
 export type RemoteFile = { id: string; size: number };
 
 export type ClassifiedFile = {
-    file:     LocalFile;
+    file: LocalFile;
     /** Remote item id when the path already exists, else null. */
     remoteId: string | null;
-    status:   PageStatus;
+    status: PageStatus;
 };
 
 /**
@@ -21,10 +21,10 @@ export type ClassifiedFile = {
  * `--force` overwrites regardless. Local change detection is exact (sha256).
  */
 export function classifyFiles(
-    local:        LocalFile[],
+    local: LocalFile[],
     remoteByPath: Map<string, RemoteFile>,
-    state:        PushState,
-    forceAll:     boolean,
+    state: PushState,
+    forceAll: boolean,
 ): ClassifiedFile[] {
     const out: ClassifiedFile[] = [];
 

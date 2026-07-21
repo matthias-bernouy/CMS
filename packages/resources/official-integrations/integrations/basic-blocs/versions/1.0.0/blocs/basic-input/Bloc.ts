@@ -81,7 +81,9 @@ class BasicInput extends HTMLElement {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.sync();
+        if (this.isConnected) {
+            this.sync();
+        }
     }
 
     formResetCallback() {
@@ -96,9 +98,7 @@ class BasicInput extends HTMLElement {
         return this.serializeValue();
     }
     set value(value) {
-        this.input.value = this.dayFirstDate
-            ? formatDayFirstDate(value)
-            : value == null ? "" : String(value);
+        this.input.value = this.dayFirstDate ? formatDayFirstDate(value) : value == null ? "" : String(value);
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
     }
@@ -134,27 +134,26 @@ class BasicInput extends HTMLElement {
         const wasDayFirstDate = this.dayFirstDate;
         this.dayFirstDate = type === "date" && this.getAttribute("date-format") === "day-month-year";
         this.input.type = this.dayFirstDate ? "text" : type === "datetime" ? "datetime-local" : type;
-        if (this.dayFirstDate) this.input.inputMode = "numeric";
-        else this.input.removeAttribute("inputmode");
-        for (const name of [
-            "autocomplete",
-            "max",
-            "maxlength",
-            "min",
-            "minlength",
-            "pattern",
-            "placeholder",
-            "step",
-        ]) {
-            const value = this.getAttribute(name);
-            if (value === null) this.input.removeAttribute(name);
-            else this.input.setAttribute(name, value);
+        if (this.dayFirstDate) {
+            this.input.inputMode = "numeric";
+        } else {
+            this.input.removeAttribute("inputmode");
         }
-        for (const name of ["disabled", "readonly", "required"])
+        for (const name of ["autocomplete", "max", "maxlength", "min", "minlength", "pattern", "placeholder", "step"]) {
+            const value = this.getAttribute(name);
+            if (value === null) {
+                this.input.removeAttribute(name);
+            } else {
+                this.input.setAttribute(name, value);
+            }
+        }
+        for (const name of ["disabled", "readonly", "required"]) {
             this.input.toggleAttribute(name, this.hasAttribute(name));
+        }
         const value = this.getAttribute("value");
-        if (value !== null && (wasDayFirstDate !== this.dayFirstDate || value !== this.value))
+        if (value !== null && (wasDayFirstDate !== this.dayFirstDate || value !== this.value)) {
             this.input.value = this.dayFirstDate ? formatDayFirstDate(value) : value;
+        }
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
     }
@@ -167,41 +166,34 @@ class BasicInput extends HTMLElement {
             ["text-color", "--cms-input-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.fieldElement.style.setProperty(property, value);
-            else this.fieldElement.style.removeProperty(property);
+            if (value) {
+                this.fieldElement.style.setProperty(property, value);
+            } else {
+                this.fieldElement.style.removeProperty(property);
+            }
         }
     }
 
     syncValidity() {
-        const serializedDate = this.dayFirstDate && this.input.value
-            ? parseDayFirstDate(this.input.value)
-            : null;
+        const serializedDate = this.dayFirstDate && this.input.value ? parseDayFirstDate(this.input.value) : null;
         const invalidFormattedDate = this.dayFirstDate && Boolean(this.input.value) && !serializedDate;
-        const belowMinimum = serializedDate && this.getAttribute("min")
-            ? serializedDate < this.getAttribute("min")
-            : false;
-        const aboveMaximum = serializedDate && this.getAttribute("max")
-            ? serializedDate > this.getAttribute("max")
-            : false;
+        const belowMinimum =
+            serializedDate && this.getAttribute("min") ? serializedDate < this.getAttribute("min") : false;
+        const aboveMaximum =
+            serializedDate && this.getAttribute("max") ? serializedDate > this.getAttribute("max") : false;
 
-        const dateValidationMessage = invalidFormattedDate || belowMinimum || aboveMaximum
-            ? this.getAttribute("invalid-date-message") || "Enter a valid date in DD/MM/YYYY format."
-            : "";
+        const dateValidationMessage =
+            invalidFormattedDate || belowMinimum || aboveMaximum
+                ? this.getAttribute("invalid-date-message") || "Enter a valid date in DD/MM/YYYY format."
+                : "";
 
-        if (this.disabled || (this.input.validity.valid && !dateValidationMessage))
+        if (this.disabled || (this.input.validity.valid && !dateValidationMessage)) {
             this.internals.setValidity({});
-        else if (dateValidationMessage)
-            this.internals.setValidity(
-                { customError: true },
-                dateValidationMessage,
-                this.input,
-            );
-        else
-            this.internals.setValidity(
-                this.input.validity,
-                this.input.validationMessage,
-                this.input,
-            );
+        } else if (dateValidationMessage) {
+            this.internals.setValidity({ customError: true }, dateValidationMessage, this.input);
+        } else {
+            this.internals.setValidity(this.input.validity, this.input.validationMessage, this.input);
+        }
         this.errorElement.textContent = this.showValidation
             ? dateValidationMessage || this.input.validationMessage || ""
             : "";
@@ -211,22 +203,18 @@ class BasicInput extends HTMLElement {
     onInput = () => {
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
-        this.dispatchEvent(
-            new Event("input", { bubbles: true, composed: true }),
-        );
+        this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     };
     onChange = () => {
         this.internals.setFormValue(this.disabled ? null : this.serializeValue());
         this.syncValidity();
-        this.dispatchEvent(
-            new Event("change", { bubbles: true, composed: true }),
-        );
+        this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     };
     onInvalid = () => {
         this.showValidation = true;
         this.syncValidity();
     };
-    onKeydown = event => {
+    onKeydown = (event) => {
         if (
             event.key !== "Enter" ||
             event.isComposing ||
@@ -237,16 +225,22 @@ class BasicInput extends HTMLElement {
             event.shiftKey ||
             this.disabled ||
             this.hasAttribute("readonly")
-        ) return;
+        ) {
+            return;
+        }
 
         const form = this.internals.form || this.closest("form");
-        if (!form) return;
+        if (!form) {
+            return;
+        }
         event.preventDefault();
         form.requestSubmit();
     };
 
     serializeValue() {
-        if (!this.dayFirstDate || !this.input.value) return this.input.value;
+        if (!this.dayFirstDate || !this.input.value) {
+            return this.input.value;
+        }
         return parseDayFirstDate(this.input.value) || this.input.value;
     }
 }
@@ -259,12 +253,12 @@ function formatDayFirstDate(value) {
 
 function parseDayFirstDate(value) {
     const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(value).trim());
-    if (!match) return null;
+    if (!match) {
+        return null;
+    }
     const isoDate = `${match[3]}-${match[2]}-${match[1]}`;
     const date = new Date(`${isoDate}T00:00:00Z`);
-    return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== isoDate
-        ? null
-        : isoDate;
+    return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== isoDate ? null : isoDate;
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", BasicInput);

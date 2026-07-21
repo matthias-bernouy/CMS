@@ -11,10 +11,14 @@ import { deleteUserCompletely } from "@bernouy/cms-auth";
  *  client redirects to logout afterwards to clear it. */
 export default async function deleteOwnAccount(req: Request, cms: ControlCms) {
     const subject = await cms.auth.getSubject(req);
-    if (!subject) throw new MissingParam("session");
+    if (!subject) {
+        throw new MissingParam("session");
+    }
 
     const user = await cms.users.getBySub(subject.identifier);
-    if (!user) throw new InvalidParam("session", "unknown user");
+    if (!user) {
+        throw new InvalidParam("session", "unknown user");
+    }
     if (await isLastAdmin(cms.users, subject.identifier)) {
         throw new HttpError(403, "You are the last admin — promote another admin first to delete your account.");
     }

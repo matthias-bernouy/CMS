@@ -5,7 +5,6 @@ import type { BlobInput, CmsFilesBlobStore } from "cms-files/interfaces/CmsFiles
  * the file id; no persistence. Mirrors `LocalFsCmsFilesBlob` semantics.
  */
 export class InMemoryCmsFilesBlob implements CmsFilesBlobStore {
-
     private _blobs = new Map<string, Uint8Array>();
 
     async put(key: string, data: BlobInput): Promise<{ size: number }> {
@@ -16,9 +15,14 @@ export class InMemoryCmsFilesBlob implements CmsFilesBlobStore {
 
     async get(key: string): Promise<ReadableStream<Uint8Array> | null> {
         const bytes = this._blobs.get(key);
-        if (bytes === undefined) return null;
+        if (bytes === undefined) {
+            return null;
+        }
         return new ReadableStream<Uint8Array>({
-            start(controller) { controller.enqueue(bytes); controller.close(); },
+            start(controller) {
+                controller.enqueue(bytes);
+                controller.close();
+            },
         });
     }
 

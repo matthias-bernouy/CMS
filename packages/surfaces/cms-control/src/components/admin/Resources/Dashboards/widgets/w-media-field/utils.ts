@@ -1,5 +1,7 @@
 export function numberData(value: string | undefined): number | null {
-    if (value === undefined) return null;
+    if (value === undefined) {
+        return null;
+    }
     const number = Number(value);
     return Number.isInteger(number) ? number : null;
 }

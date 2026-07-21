@@ -1,7 +1,4 @@
-import type {
-    IntegrationArtifactResult,
-    IntegrationImportDeps,
-} from "../../../interfaces/IntegrationImport";
+import type { IntegrationArtifactResult, IntegrationImportDeps } from "../../../interfaces/IntegrationImport";
 import { IntegrationRuntimeError } from "../../errors";
 
 export type ArtifactRestorer = () => Promise<void>;
@@ -16,14 +13,14 @@ export async function deleteArtifact(
             return deleteAndRestore(
                 () => deps.sources.getSource(id),
                 () => deps.sources.deleteSource(id),
-                previous => deps.sources.createSource(previous),
+                (previous) => deps.sources.createSource(previous),
             );
         case "function": {
             const repository = deps.functions ?? missingRepository("function");
             return deleteAndRestore(
                 () => repository.getFunction(id),
                 () => repository.deleteFunction(id),
-                previous => repository.createFunction(previous),
+                (previous) => repository.createFunction(previous),
             );
         }
         case "trigger": {
@@ -31,7 +28,7 @@ export async function deleteArtifact(
             return deleteAndRestore(
                 () => repository.getTrigger(id),
                 () => repository.deleteTrigger(id),
-                previous => repository.createTrigger(previous),
+                (previous) => repository.createTrigger(previous),
             );
         }
         case "dashboard": {
@@ -39,7 +36,7 @@ export async function deleteArtifact(
             return deleteAndRestore(
                 () => repository.getDashboard(id),
                 () => repository.deleteDashboard(id),
-                previous => repository.createDashboard(previous),
+                (previous) => repository.createDashboard(previous),
             );
         }
         case "sourceOverlay": {
@@ -47,7 +44,7 @@ export async function deleteArtifact(
             return deleteAndRestore(
                 () => repository.getOverlay(id),
                 () => repository.deleteOverlay(id),
-                previous => repository.upsertOverlay(previous),
+                (previous) => repository.upsertOverlay(previous),
             );
         }
         case "relation": {
@@ -55,7 +52,7 @@ export async function deleteArtifact(
             return deleteAndRestore(
                 () => repository.getRelation(id),
                 () => repository.deleteRelation(id),
-                previous => repository.createRelation(previous),
+                (previous) => repository.createRelation(previous),
             );
         }
         case "dashboardRelation": {
@@ -63,7 +60,7 @@ export async function deleteArtifact(
             return deleteAndRestore(
                 () => repository.getDashboardRelationProjection(id),
                 () => repository.deleteDashboardRelationProjection(id),
-                previous => repository.createDashboardRelationProjection(previous),
+                (previous) => repository.createDashboardRelationProjection(previous),
             );
         }
         case "bloc":
@@ -89,9 +86,13 @@ async function deleteAndRestore<T>(
     create: (previous: T) => Promise<unknown>,
 ): Promise<ArtifactRestorer | null> {
     const previous = await get();
-    if (!previous || !await remove()) return null;
+    if (!previous || !(await remove())) {
+        return null;
+    }
     return async () => {
-        if (!await get()) await create(previous);
+        if (!(await get())) {
+            await create(previous);
+        }
     };
 }
 

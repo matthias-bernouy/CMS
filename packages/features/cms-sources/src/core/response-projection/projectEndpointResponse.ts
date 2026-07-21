@@ -34,7 +34,9 @@ export async function projectEndpointResponse(
     if (!output?.length) {
         if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
             reportLegacyContract(endpoint, upstream, output === undefined ? "missing_output" : "empty_output", options);
-            if (request.method === "HEAD") return discardBody(upstream);
+            if (request.method === "HEAD") {
+                return discardBody(upstream);
+            }
             return passthrough(upstream);
         }
 
@@ -48,30 +50,33 @@ export async function projectEndpointResponse(
         );
     }
 
-    const declared = output.find(candidate => candidate.status === String(upstream.status))
-        ?? output.find(candidate => candidate.status === "default");
+    const declared =
+        output.find((candidate) => candidate.status === String(upstream.status)) ??
+        output.find((candidate) => candidate.status === "default");
     if (!declared) {
         if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
             reportLegacyContract(endpoint, upstream, "unmatched_status", options);
-            if (request.method === "HEAD") return discardBody(upstream);
+            if (request.method === "HEAD") {
+                return discardBody(upstream);
+            }
             return passthrough(upstream);
         }
         await cancelBody(upstream.body);
-        return projectionFailure(
-            endpoint.urn,
-            upstream.status,
-            request.method === "HEAD",
-            "unmatched_status",
-            options,
-        );
+        return projectionFailure(endpoint.urn, upstream.status, request.method === "HEAD", "unmatched_status", options);
     }
 
-    if (request.method === "HEAD") return discardBody(upstream);
+    if (request.method === "HEAD") {
+        return discardBody(upstream);
+    }
 
     // File contracts stay streaming and media-type permissive during C14.
-    if (endpoint.responseKind === "file") return passthrough(upstream);
+    if (endpoint.responseKind === "file") {
+        return passthrough(upstream);
+    }
 
-    if (!declared.body) return discardBody(upstream);
+    if (!declared.body) {
+        return discardBody(upstream);
+    }
 
     if (!isJsonMediaType(upstream.headers.get("content-type"))) {
         await cancelBody(upstream.body);
@@ -103,7 +108,9 @@ export async function projectEndpointResponse(
         try {
             attachProjectedTriggerResponseBody(response, parsed.value, projected.value, declared.triggerBody);
         } catch (error) {
-            if (!(error instanceof DataShapeProjectionError)) throw error;
+            if (!(error instanceof DataShapeProjectionError)) {
+                throw error;
+            }
             return projectionFailure(endpoint.urn, upstream.status, false, "type_mismatch", options, {
                 path: "$trigger",
                 expectedType: declared.triggerBody.type,
@@ -165,13 +172,16 @@ function reportLegacyContract(
 }
 
 function isJsonMediaType(contentType: string | null): boolean {
-    if (!contentType) return false;
+    if (!contentType) {
+        return false;
+    }
     const mediaType = contentType.split(";", 1)[0]!.trim().toLowerCase();
-    return mediaType === "application/json"
-        || (/^[^\s/;]+\/[^\s/;]+\+json$/).test(mediaType);
+    return mediaType === "application/json" || /^[^\s/;]+\/[^\s/;]+\+json$/.test(mediaType);
 }
 
 async function cancelBody(body: ReadableStream<Uint8Array> | null): Promise<void> {
-    if (!body) return;
+    if (!body) {
+        return;
+    }
     await body.cancel().catch(() => undefined);
 }

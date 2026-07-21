@@ -3,8 +3,12 @@ import { Combobox, P9rSelect } from "@bernouy/components";
 import "../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
 import { WIDGET_FIELD_CHANGE_EVENT } from "../../src/components/admin/Resources/Dashboards/widgets/shared";
 
-if (!customElements.get("p9r-combobox")) customElements.define("p9r-combobox", Combobox);
-if (!customElements.get("p9r-select")) customElements.define("p9r-select", P9rSelect);
+if (!customElements.get("p9r-combobox")) {
+    customElements.define("p9r-combobox", Combobox);
+}
+if (!customElements.get("p9r-select")) {
+    customElements.define("p9r-select", P9rSelect);
+}
 
 const realFetch = globalThis.fetch;
 
@@ -16,36 +20,54 @@ afterEach(() => {
 describe("dashboard detail reorderable list", () => {
     test("keeps the edited input focused while its value changes", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute("data-config-json", JSON.stringify({
-            widget: "w-detail",
-            id: "fieldDetail",
-            source: { endpoint: "field" },
-            main: [{
-                id: "options",
-                title: "Allowed values",
-                fields: [{
-                    id: "options",
-                    label: "Allowed values",
-                    path: "options",
-                    type: "reorderable-list",
-                    itemKey: "id",
-                    positionPath: "order.position",
-                    fields: [
-                        { id: "value", label: "Value", path: "value", required: true },
-                        { id: "label", label: "Label", path: "metadata.label", required: true },
-                        { id: "required", label: "Required", path: "required", type: "checkbox" },
-                    ],
-                }],
-            }],
-        }));
-        detail.setAttribute("data-source-json", JSON.stringify({
-            options: [{ id: "agency", value: "agency", metadata: { label: "Agency" }, required: false, order: { position: 0 } }],
-        }));
+        detail.setAttribute(
+            "data-config-json",
+            JSON.stringify({
+                widget: "w-detail",
+                id: "fieldDetail",
+                source: { endpoint: "field" },
+                main: [
+                    {
+                        id: "options",
+                        title: "Allowed values",
+                        fields: [
+                            {
+                                id: "options",
+                                label: "Allowed values",
+                                path: "options",
+                                type: "reorderable-list",
+                                itemKey: "id",
+                                positionPath: "order.position",
+                                fields: [
+                                    { id: "value", label: "Value", path: "value", required: true },
+                                    { id: "label", label: "Label", path: "metadata.label", required: true },
+                                    { id: "required", label: "Required", path: "required", type: "checkbox" },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            }),
+        );
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({
+                options: [
+                    {
+                        id: "agency",
+                        value: "agency",
+                        metadata: { label: "Agency" },
+                        required: false,
+                        order: { position: 0 },
+                    },
+                ],
+            }),
+        );
         document.body.append(detail);
         await Promise.resolve();
 
         const changes: Array<{ rowKey: string; field: string; value: unknown }> = [];
-        detail.addEventListener(WIDGET_FIELD_CHANGE_EVENT, event => {
+        detail.addEventListener(WIDGET_FIELD_CHANGE_EVENT, (event) => {
             changes.push((event as CustomEvent<{ rowKey: string; field: string; value: unknown }>).detail);
         });
         const list = detail.shadowRoot!.querySelector<HTMLElement>("cms-dashboard-w-reorderable-list")!;
@@ -60,18 +82,36 @@ describe("dashboard detail reorderable list", () => {
         expect(renderedList.shadowRoot!.querySelector("[data-item-path='metadata.label']")).toBe(input);
         expect(renderedList.shadowRoot!.activeElement).toBe(input);
         expect(initialSnapshot.items[0]).toEqual({
-            id: "agency", value: "agency", metadata: { label: "Agency" }, required: false, order: { position: 0 },
+            id: "agency",
+            value: "agency",
+            metadata: { label: "Agency" },
+            required: false,
+            order: { position: 0 },
         });
         expect(changes.at(-1)).toEqual({
             rowKey: "",
             field: "options",
-            value: [{ id: "agency", value: "agency", metadata: { label: "Agency updated" }, required: false, order: { position: 0 } }],
+            value: [
+                {
+                    id: "agency",
+                    value: "agency",
+                    metadata: { label: "Agency updated" },
+                    required: false,
+                    order: { position: 0 },
+                },
+            ],
         });
 
         const checkbox = list.shadowRoot!.querySelector<HTMLInputElement>("input[type='checkbox']")!;
         checkbox.click();
         expect(changes.at(-1)?.value).toEqual([
-            { id: "agency", value: "agency", metadata: { label: "Agency updated" }, required: true, order: { position: 0 } },
+            {
+                id: "agency",
+                value: "agency",
+                metadata: { label: "Agency updated" },
+                required: true,
+                order: { position: 0 },
+            },
         ]);
     });
 
@@ -89,59 +129,75 @@ describe("dashboard detail reorderable list", () => {
         }) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute("data-config-json", JSON.stringify({
-            widget: "w-detail",
-            id: "categoryDetail",
-            source: { endpoint: "category" },
-            main: [{
-                id: "metadata",
-                title: "Product metadata",
-                fields: [{
-                    id: "categoryFields",
-                    label: "Product metadata",
-                    path: "categoryFields",
-                    type: "reorderable-list",
-                    itemKey: "fieldKey",
-                    fields: [
-                        {
-                            id: "fieldKey",
-                            label: "Product metadata",
-                            path: "fieldKey",
-                            type: "combobox",
-                            lookup: {
-                                endpoint: "entityCustomFields",
-                                params: { entityType: "product" },
-                                itemsPath: "items",
-                                valuePath: "key",
-                                labelPath: "label",
+        detail.setAttribute(
+            "data-config-json",
+            JSON.stringify({
+                widget: "w-detail",
+                id: "categoryDetail",
+                source: { endpoint: "category" },
+                main: [
+                    {
+                        id: "metadata",
+                        title: "Product metadata",
+                        fields: [
+                            {
+                                id: "categoryFields",
+                                label: "Product metadata",
+                                path: "categoryFields",
+                                type: "reorderable-list",
+                                itemKey: "fieldKey",
+                                fields: [
+                                    {
+                                        id: "fieldKey",
+                                        label: "Product metadata",
+                                        path: "fieldKey",
+                                        type: "combobox",
+                                        lookup: {
+                                            endpoint: "entityCustomFields",
+                                            params: { entityType: "product" },
+                                            itemsPath: "items",
+                                            valuePath: "key",
+                                            labelPath: "label",
+                                        },
+                                    },
+                                    {
+                                        id: "operator",
+                                        label: "Operator",
+                                        path: "operator",
+                                        type: "select",
+                                        options: [
+                                            { value: "eq", label: "Equals" },
+                                            { value: "in", label: "Contains" },
+                                        ],
+                                    },
+                                ],
                             },
-                        },
-                        {
-                            id: "operator",
-                            label: "Operator",
-                            path: "operator",
-                            type: "select",
-                            options: [{ value: "eq", label: "Equals" }, { value: "in", label: "Contains" }],
-                        },
-                    ],
-                }],
-            }],
-        }));
-        detail.setAttribute("data-source-json", JSON.stringify({
-            id: 2,
-            categoryFields: [{ fieldKey: "grip", operator: "eq" }],
-        }));
+                        ],
+                    },
+                ],
+            }),
+        );
+        detail.setAttribute(
+            "data-source-json",
+            JSON.stringify({
+                id: 2,
+                categoryFields: [{ fieldKey: "grip", operator: "eq" }],
+            }),
+        );
         detail.setAttribute("data-source-id", "commerce");
         const changes: Array<{ value: unknown }> = [];
-        detail.addEventListener(WIDGET_FIELD_CHANGE_EVENT, event => {
+        detail.addEventListener(WIDGET_FIELD_CHANGE_EVENT, (event) => {
             changes.push((event as CustomEvent<{ value: unknown }>).detail);
         });
 
         document.body.append(detail);
-        await waitFor(() => Boolean(
-            detail.shadowRoot!.querySelector<HTMLElement>("cms-dashboard-w-reorderable-list")
-                ?.shadowRoot?.querySelector("p9r-combobox option[value='weight']"),
-        ));
+        await waitFor(() =>
+            Boolean(
+                detail
+                    .shadowRoot!.querySelector<HTMLElement>("cms-dashboard-w-reorderable-list")
+                    ?.shadowRoot?.querySelector("p9r-combobox option[value='weight']"),
+            ),
+        );
 
         const list = detail.shadowRoot!.querySelector("cms-dashboard-w-reorderable-list")!;
         const combobox = list.shadowRoot!.querySelector<HTMLElement & { value: string }>("p9r-combobox")!;
@@ -159,8 +215,10 @@ describe("dashboard detail reorderable list", () => {
 
 async function waitFor(predicate: () => boolean): Promise<void> {
     for (let attempt = 0; attempt < 40; attempt += 1) {
-        if (predicate()) return;
-        await new Promise(resolve => setTimeout(resolve, 5));
+        if (predicate()) {
+            return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5));
     }
     throw new Error("condition was not met");
 }

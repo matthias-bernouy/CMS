@@ -10,4 +10,6 @@ export { loadCurrentLines, runFileSizeCheck } from "./runner";
 
 import { runFileSizeCheck } from "./runner";
 
-if (import.meta.main) await runFileSizeCheck();
+if (import.meta.main) {
+    await runFileSizeCheck();
+}

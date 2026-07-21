@@ -1,8 +1,5 @@
 import { MIN_SCHEDULED_FUNCTION_INTERVAL_MS } from "../execution/limits";
-import {
-    DEFAULT_SCHEDULED_FUNCTION_LOGGER,
-    runScheduledSystemFunctionOnce,
-} from "./runOnce";
+import { DEFAULT_SCHEDULED_FUNCTION_LOGGER, runScheduledSystemFunctionOnce } from "./runOnce";
 import type {
     ScheduledFunctionLogger,
     ScheduledFunctionRunContext,
@@ -22,7 +19,7 @@ type JobState = {
 
 const DEFAULT_SCHEDULED_FUNCTION_TIMER: ScheduledFunctionTimer = {
     set: (callback, delayMs) => setTimeout(callback, delayMs),
-    clear: handle => clearTimeout(handle as ReturnType<typeof setTimeout>),
+    clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
 };
 
 export function startScheduledSystemFunctions(
@@ -36,7 +33,9 @@ export function startScheduledSystemFunctions(
     let stopped = false;
 
     function schedule(state: JobState, delayMs: number): void {
-        if (stopped) return;
+        if (stopped) {
+            return;
+        }
         state.timer = timer.set(() => {
             state.timer = undefined;
             void run(state)
@@ -77,11 +76,15 @@ export function startScheduledSystemFunctions(
         states.set(job.functionId, { job, sequence: 0 });
     }
     try {
-        for (const state of states.values()) schedule(state, state.job.initialDelayMs ?? 0);
+        for (const state of states.values()) {
+            schedule(state, state.job.initialDelayMs ?? 0);
+        }
     } catch (error) {
         stopped = true;
         for (const state of states.values()) {
-            if (state.timer !== undefined) timer.clear(state.timer);
+            if (state.timer !== undefined) {
+                timer.clear(state.timer);
+            }
             state.timer = undefined;
         }
         throw error;
@@ -90,16 +93,20 @@ export function startScheduledSystemFunctions(
     return {
         async runNow(functionId) {
             const state = states.get(functionId);
-            if (!state) throw new Error(`scheduled system function job not found: ${functionId}`);
+            if (!state) {
+                throw new Error(`scheduled system function job not found: ${functionId}`);
+            }
             return run(state);
         },
         async stop() {
             stopped = true;
             for (const state of states.values()) {
-                if (state.timer !== undefined) timer.clear(state.timer);
+                if (state.timer !== undefined) {
+                    timer.clear(state.timer);
+                }
                 state.timer = undefined;
             }
-            await Promise.all(Array.from(states.values(), state => state.running).filter(Boolean));
+            await Promise.all(Array.from(states.values(), (state) => state.running).filter(Boolean));
         },
     };
 }
@@ -113,7 +120,9 @@ function logUnexpectedFailure(logger: ScheduledFunctionLogger, functionId: strin
 }
 
 function assertJob(job: ScheduledSystemFunctionJob, states: Map<string, JobState>): void {
-    if (!job.functionId.trim()) throw new Error("scheduled system function id is required");
+    if (!job.functionId.trim()) {
+        throw new Error("scheduled system function id is required");
+    }
     if (!Number.isSafeInteger(job.intervalMs) || job.intervalMs < MIN_SCHEDULED_FUNCTION_INTERVAL_MS) {
         throw new Error(
             `scheduled system function ${job.functionId} interval must be at least ${MIN_SCHEDULED_FUNCTION_INTERVAL_MS}ms`,
@@ -122,7 +131,9 @@ function assertJob(job: ScheduledSystemFunctionJob, states: Map<string, JobState
     if (job.initialDelayMs !== undefined && (!Number.isSafeInteger(job.initialDelayMs) || job.initialDelayMs < 0)) {
         throw new Error(`scheduled system function ${job.functionId} initial delay must be a non-negative integer`);
     }
-    if (states.has(job.functionId)) throw new Error(`duplicate scheduled system function job: ${job.functionId}`);
+    if (states.has(job.functionId)) {
+        throw new Error(`duplicate scheduled system function job: ${job.functionId}`);
+    }
 }
 
 export { runScheduledSystemFunctionOnce } from "./runOnce";

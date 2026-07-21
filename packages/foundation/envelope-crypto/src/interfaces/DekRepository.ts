@@ -5,8 +5,8 @@
  * `wrapped` is provider-opaque. Storage MUST round-trip it untouched.
  */
 export type DekRecord = {
-    scopeId:   string;
-    wrapped:   string;
+    scopeId: string;
+    wrapped: string;
     createdAt: Date;
     rotatedAt: Date | null;
 };

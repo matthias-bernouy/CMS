@@ -12,21 +12,20 @@ import type { BlobInput, CmsFilesBlobStore } from "cms-files/interfaces/CmsFiles
  * the metadata store's `collectionPrefix`.
  */
 export type S3CmsFilesBlobConfig = {
-    bucket:          string;
-    accessKeyId:     string;
+    bucket: string;
+    accessKeyId: string;
     secretAccessKey: string;
     /** AWS region (e.g. `eu-west-3`) or the provider's region token (`gra`, `auto`). */
-    region?:         string;
+    region?: string;
     /** Endpoint for non-AWS providers (OVH `s3.gra.io.cloud.ovh.net`, R2, MinIO…). Omit for AWS. */
-    endpoint?:       string;
+    endpoint?: string;
     /** Some providers (MinIO, path-style buckets) need path-style addressing. */
     virtualHostedStyle?: boolean;
     /** Key prefix prepended to every object — per-tenant isolation in a shared bucket. */
-    prefix?:         string;
+    prefix?: string;
 };
 
 export class S3CmsFilesBlob implements CmsFilesBlobStore {
-
     private readonly _client: S3Client;
     private readonly _prefix: string;
 
@@ -55,7 +54,9 @@ export class S3CmsFilesBlob implements CmsFilesBlobStore {
     }
 
     private _key(key: string): string {
-        if (!key || key.includes("..")) throw new Error(`invalid blob key "${key}"`);
+        if (!key || key.includes("..")) {
+            throw new Error(`invalid blob key "${key}"`);
+        }
         return this._prefix + key;
     }
 }

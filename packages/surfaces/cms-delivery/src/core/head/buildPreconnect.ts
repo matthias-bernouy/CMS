@@ -4,9 +4,6 @@
  * external dependencies per page. Kept as a dedicated entry point so the
  * renderer pipeline stays stable when we wire this up.
  */
-export function buildPreconnect(
-    _document: Document,
-    _head: HTMLElement,
-): void {
+export function buildPreconnect(_document: Document, _head: HTMLElement): void {
     // Intentionally empty — see file header.
 }

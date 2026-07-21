@@ -11,7 +11,9 @@ export async function withMethod(
     method: string,
     handler: () => Promise<Response>,
 ): Promise<Response> {
-    if (request.method !== method) return methodNotAllowed(`${method}, OPTIONS`);
+    if (request.method !== method) {
+        return methodNotAllowed(`${method}, OPTIONS`);
+    }
     return handler();
 }
 
@@ -37,7 +39,9 @@ export function json(data: unknown, status = 200): Response {
 }
 
 export function handleError(error: unknown): Response {
-    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error instanceof HttpError) {
+        return json({ error: error.message }, error.status);
+    }
     console.error(error);
     return json({ error: "internal error" }, 500);
 }

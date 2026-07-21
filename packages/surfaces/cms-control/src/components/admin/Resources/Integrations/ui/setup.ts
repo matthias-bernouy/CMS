@@ -20,7 +20,9 @@ export function renderSetup(
     renderSummary(shell.querySelector<HTMLElement>("[data-summary]")!, summaryRows(definition));
     host.query<HTMLElement>("[data-detail-view]").replaceChildren(shell);
     renderFields(host.query("[data-fields]"), host.query("[data-field-template]"), definition);
-    if (options.answers) applyAnswers(host.query("[data-fields]"), options.answers);
+    if (options.answers) {
+        applyAnswers(host.query("[data-fields]"), options.answers);
+    }
 }
 
 export function renderImporting(
@@ -40,18 +42,25 @@ function summaryRows(definition: IntegrationDefinition): Array<{ label: string; 
     return [
         { label: "Integration", value: definition.label },
         { label: "Identifier", value: definition.kind },
-        { label: "Resources", value: rows.filter(row => !["Secret", "Connector"].includes(row.type)).length },
-        { label: "Secrets", value: rows.filter(row => row.type === "Secret").length },
-        { label: "Connectors", value: rows.filter(row => row.type === "Connector").length },
+        { label: "Resources", value: rows.filter((row) => !["Secret", "Connector"].includes(row.type)).length },
+        { label: "Secrets", value: rows.filter((row) => row.type === "Secret").length },
+        { label: "Connectors", value: rows.filter((row) => row.type === "Connector").length },
     ];
 }
 
 function applyAnswers(root: ParentNode, answers: Record<string, unknown>): void {
     for (const [name, value] of Object.entries(answers)) {
-        const element = root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${cssEscape(name)}"]`);
-        if (!element) continue;
-        if (element instanceof HTMLInputElement && element.type === "checkbox") element.checked = value === true;
-        else element.value = value == null ? "" : typeof value === "string" ? value : JSON.stringify(value);
+        const element = root.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+            `[name="${cssEscape(name)}"]`,
+        );
+        if (!element) {
+            continue;
+        }
+        if (element instanceof HTMLInputElement && element.type === "checkbox") {
+            element.checked = value === true;
+        } else {
+            element.value = value == null ? "" : typeof value === "string" ? value : JSON.stringify(value);
+        }
     }
 }
 

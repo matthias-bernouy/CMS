@@ -22,17 +22,18 @@ describe("ValidatingCmsFilesMetadata", () => {
     });
 
     test("a nameless file is rejected too", async () => {
-        await expect(repo().createFile({ name: "", parentId: null, size: 3, mimeType: "text/plain" }))
-            .rejects.toBeInstanceOf(FileValidationError);
+        await expect(
+            repo().createFile({ name: "", parentId: null, size: 3, mimeType: "text/plain" }),
+        ).rejects.toBeInstanceOf(FileValidationError);
     });
 
     test("path-like or traversal item names are rejected", async () => {
         const bad = ["a/b", "a\\b", "..", ".", "a..b", "nul\0byte"];
         for (const name of bad) {
-            await expect(repo().createFolder({ name, parentId: null }))
-                .rejects.toBeInstanceOf(FileValidationError);
-            await expect(repo().createFile({ name, parentId: null, size: 1, mimeType: "text/plain" }))
-                .rejects.toBeInstanceOf(FileValidationError);
+            await expect(repo().createFolder({ name, parentId: null })).rejects.toBeInstanceOf(FileValidationError);
+            await expect(
+                repo().createFile({ name, parentId: null, size: 1, mimeType: "text/plain" }),
+            ).rejects.toBeInstanceOf(FileValidationError);
         }
     });
 

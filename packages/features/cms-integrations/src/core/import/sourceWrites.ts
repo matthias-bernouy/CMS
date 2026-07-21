@@ -39,21 +39,21 @@ export async function writeSourcesWithRollback<T>(
                 artifacts.push({ type: "source", id: write.source.urn, action: "created" });
             }
         }
-        return operation ? await operation(artifacts) : artifacts as T;
+        return operation ? await operation(artifacts) : (artifacts as T);
     } catch (error) {
         await rollbackSources(sourceRepository, completed);
         throw error;
     }
 }
 
-async function rollbackSources(
-    sourceRepository: SourceRepository,
-    completed: IntegrationSourceWrite[],
-): Promise<void> {
+async function rollbackSources(sourceRepository: SourceRepository, completed: IntegrationSourceWrite[]): Promise<void> {
     for (const write of completed.reverse()) {
         try {
-            if (write.previous) await sourceRepository.updateSource(write.previous);
-            else await sourceRepository.deleteSource(write.source.urn);
+            if (write.previous) {
+                await sourceRepository.updateSource(write.previous);
+            } else {
+                await sourceRepository.deleteSource(write.source.urn);
+            }
         } catch {
             // Best-effort rollback: keep restoring remaining sources.
         }

@@ -17,10 +17,9 @@ export type MongoSourceRepositoryConfig = {
     collectionPrefix?: string;
 };
 
-type SourceDoc = Omit<Source, "urn"> & { _id: string };   // _id = urn
+type SourceDoc = Omit<Source, "urn"> & { _id: string }; // _id = urn
 
 export class MongoSourceRepository implements SourceRepository {
-
     private readonly _prefix: string;
 
     constructor(
@@ -46,7 +45,9 @@ export class MongoSourceRepository implements SourceRepository {
         try {
             await this.sources.insertOne(toDoc(source) as OptionalUnlessRequiredId<SourceDoc>);
         } catch (e) {
-            if (isDuplicateKey(e)) throw new DuplicateSourceError(source.urn);
+            if (isDuplicateKey(e)) {
+                throw new DuplicateSourceError(source.urn);
+            }
             throw e;
         }
         return structuredClone(source);
@@ -58,11 +59,7 @@ export class MongoSourceRepository implements SourceRepository {
         // `_id` (= urn) is the filter, so the key is immutable and the replacement
         // must not carry it (`WithoutId`) — hence `rest`, the source minus its urn.
         const { urn, ...rest } = source;
-        const doc = await this.sources.findOneAndReplace(
-            { _id: urn },
-            rest,
-            { returnDocument: "after" },
-        );
+        const doc = await this.sources.findOneAndReplace({ _id: urn }, rest, { returnDocument: "after" });
         return fromDoc(doc);
     }
 
@@ -77,13 +74,13 @@ export class MongoSourceRepository implements SourceRepository {
 
     async getAllSources(): Promise<Source[]> {
         const docs = await this.sources.find().toArray();
-        return docs.map(d => fromDoc(d)!);
+        return docs.map((d) => fromDoc(d)!);
     }
 
     async getEndpoint(urn: string): Promise<SourceEndpoint | null> {
         const doc = await this.sources.findOne({ "endpoints.urn": urn });
-        const endpoint = doc?.endpoints.find(e => e.urn === urn);
-        return endpoint ? structuredClone(endpoint) : null;   // defensive clone, like the in-memory impl
+        const endpoint = doc?.endpoints.find((e) => e.urn === urn);
+        return endpoint ? structuredClone(endpoint) : null; // defensive clone, like the in-memory impl
     }
 }
 
@@ -93,7 +90,9 @@ function toDoc(source: Source): SourceDoc {
 }
 
 function fromDoc(doc: SourceDoc | null): Source | null {
-    if (!doc) return null;
+    if (!doc) {
+        return null;
+    }
     const { _id, ...rest } = doc;
     return { urn: _id, ...rest };
 }

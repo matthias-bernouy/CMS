@@ -1,7 +1,4 @@
-import type {
-    FunctionRepository,
-    FunctionUserContext,
-} from "@bernouy/cms-functions";
+import type { FunctionRepository, FunctionUserContext } from "@bernouy/cms-functions";
 import type { ExecutorDeps, SourceEndpoint, SourceRepository } from "@bernouy/cms-sources";
 import type { TriggerEventPhase, TriggerFailureMode, TriggerRecord } from "../interfaces/TriggerDefinition";
 import type { TriggerRepository } from "../interfaces/TriggerRepository";
@@ -46,18 +43,25 @@ export async function runTriggers(options: RunTriggersOptions): Promise<RunTrigg
 }
 
 export function effectiveFailureMode(trigger: TriggerRecord, phase: TriggerEventPhase): TriggerFailureMode {
-    if (trigger.mode === "async") return "ignore";
-    if (trigger.failureMode) return trigger.failureMode;
+    if (trigger.mode === "async") {
+        return "ignore";
+    }
+    if (trigger.failureMode) {
+        return trigger.failureMode;
+    }
     return phase === "request" ? "block" : "ignore";
 }
 
 function triggerFailureResponse(trigger: TriggerRecord, error: string): Response {
-    return new Response(JSON.stringify({
-        error: "Trigger failed",
-        trigger: trigger.id,
-        detail: error,
-    }), {
-        status: 502,
-        headers: { "content-type": "application/json" },
-    });
+    return new Response(
+        JSON.stringify({
+            error: "Trigger failed",
+            trigger: trigger.id,
+            detail: error,
+        }),
+        {
+            status: 502,
+            headers: { "content-type": "application/json" },
+        },
+    );
 }

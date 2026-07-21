@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../harness";
+import { expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../harness";
 
 installCommerceTestEnvironment();
 
@@ -57,10 +53,10 @@ describe("commerce cart routes", () => {
     });
 
     test("maps item removal from query parameters", async () => {
-        const response = await requestCommerce(
-            "/me/cart/item?offerId=91&expectedVersion=5&buyerCmsUserId=spoofed",
-            { method: "DELETE", userId },
-        );
+        const response = await requestCommerce("/me/cart/item?offerId=91&expectedVersion=5&buyerCmsUserId=spoofed", {
+            method: "DELETE",
+            userId,
+        });
 
         expect(response.status).toBe(200);
         expect(expectSingleRpc("remove_cart_item").body).toEqual({

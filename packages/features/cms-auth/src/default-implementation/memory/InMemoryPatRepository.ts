@@ -9,17 +9,16 @@ import { mintPatToken, hashPatToken } from "cms-auth/core/patToken";
  * column is the unique lookup key).
  */
 export class InMemoryPatRepository implements PatRepository {
-
-    private _byId     = new Map<string, Pat>();
+    private _byId = new Map<string, Pat>();
     private _idByHash = new Map<string, string>();
 
     async create(input: NewPat): Promise<{ token: string; pat: Pat }> {
         const token = mintPatToken();
         const pat: Pat = {
-            id:        randomUUIDv7(),
-            sub:       input.sub,
-            name:      input.name,
-            scopes:    input.scopes ?? [],
+            id: randomUUIDv7(),
+            sub: input.sub,
+            name: input.name,
+            scopes: input.scopes ?? [],
             createdAt: new Date(),
             expiresAt: input.expiresAt ?? null,
         };
@@ -31,21 +30,31 @@ export class InMemoryPatRepository implements PatRepository {
     async verify(token: string): Promise<PatPrincipal | null> {
         const id = this._idByHash.get(hashPatToken(token));
         const pat = id ? this._byId.get(id) : undefined;
-        if (!pat) return null;
-        if (pat.expiresAt && pat.expiresAt.getTime() <= Date.now()) return null;
+        if (!pat) {
+            return null;
+        }
+        if (pat.expiresAt && pat.expiresAt.getTime() <= Date.now()) {
+            return null;
+        }
         pat.lastUsedAt = new Date();
         return { sub: pat.sub, scopes: [...pat.scopes] };
     }
 
     async list(sub: string): Promise<Pat[]> {
-        return [...this._byId.values()].filter(p => p.sub === sub).map(p => ({ ...p }));
+        return [...this._byId.values()].filter((p) => p.sub === sub).map((p) => ({ ...p }));
     }
 
     async revoke(sub: string, id: string): Promise<boolean> {
         const pat = this._byId.get(id);
-        if (!pat || pat.sub !== sub) return false;
+        if (!pat || pat.sub !== sub) {
+            return false;
+        }
         this._byId.delete(id);
-        for (const [h, pid] of this._idByHash) if (pid === id) this._idByHash.delete(h);
+        for (const [h, pid] of this._idByHash) {
+            if (pid === id) {
+                this._idByHash.delete(h);
+            }
+        }
         return true;
     }
 }

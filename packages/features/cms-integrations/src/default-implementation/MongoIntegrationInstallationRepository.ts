@@ -1,9 +1,7 @@
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import { DuplicateIntegrationInstallationError } from "../core/errors";
 import { trimIntegrationRuns } from "../core/installation/runRetention";
-import type {
-    IntegrationInstallation,
-} from "../interfaces/IntegrationInstallation";
+import type { IntegrationInstallation } from "../interfaces/IntegrationInstallation";
 import type {
     IntegrationInstallationCreate,
     IntegrationInstallationRepository,
@@ -55,9 +53,13 @@ export class MongoIntegrationInstallationRepository implements IntegrationInstal
             runs: trimIntegrationRuns(input.runs ?? []),
         };
         try {
-            await this.installations.insertOne(toDoc(installation) as OptionalUnlessRequiredId<IntegrationInstallationDoc>);
+            await this.installations.insertOne(
+                toDoc(installation) as OptionalUnlessRequiredId<IntegrationInstallationDoc>,
+            );
         } catch (error) {
-            if (isDuplicateKey(error)) throw new DuplicateIntegrationInstallationError(installation.id);
+            if (isDuplicateKey(error)) {
+                throw new DuplicateIntegrationInstallationError(installation.id);
+            }
             throw error;
         }
         return structuredClone(installation);

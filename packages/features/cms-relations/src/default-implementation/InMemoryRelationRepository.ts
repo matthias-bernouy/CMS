@@ -8,13 +8,17 @@ export class InMemoryRelationRepository implements RelationRepository {
     private readonly dashboardRelationProjections = new Map<string, DashboardRelationProjection>();
 
     async createRelation(relation: CmsRelation): Promise<CmsRelation> {
-        if (this.relations.has(relation.id)) throw new DuplicateRelationError(relation.id);
+        if (this.relations.has(relation.id)) {
+            throw new DuplicateRelationError(relation.id);
+        }
         this.relations.set(relation.id, structuredClone(relation));
         return structuredClone(relation);
     }
 
     async updateRelation(relation: CmsRelation): Promise<CmsRelation | null> {
-        if (!this.relations.has(relation.id)) return null;
+        if (!this.relations.has(relation.id)) {
+            return null;
+        }
         this.relations.set(relation.id, structuredClone(relation));
         return structuredClone(relation);
     }
@@ -30,24 +34,32 @@ export class InMemoryRelationRepository implements RelationRepository {
 
     async getRelationsForSource(sourceId: string): Promise<CmsRelation[]> {
         return Array.from(this.relations.values())
-            .filter(relation => relation.from.sourceId === sourceId || relation.to.sourceId === sourceId)
-            .map(relation => structuredClone(relation));
+            .filter((relation) => relation.from.sourceId === sourceId || relation.to.sourceId === sourceId)
+            .map((relation) => structuredClone(relation));
     }
 
     async getAllRelations(): Promise<CmsRelation[]> {
-        return Array.from(this.relations.values(), relation => structuredClone(relation));
+        return Array.from(this.relations.values(), (relation) => structuredClone(relation));
     }
 
-    async createDashboardRelationProjection(projection: DashboardRelationProjection): Promise<DashboardRelationProjection> {
+    async createDashboardRelationProjection(
+        projection: DashboardRelationProjection,
+    ): Promise<DashboardRelationProjection> {
         const id = dashboardRelationProjectionId(projection);
-        if (this.dashboardRelationProjections.has(id)) throw new DuplicateDashboardRelationProjectionError(id);
+        if (this.dashboardRelationProjections.has(id)) {
+            throw new DuplicateDashboardRelationProjectionError(id);
+        }
         this.dashboardRelationProjections.set(id, structuredClone(projection));
         return structuredClone(projection);
     }
 
-    async updateDashboardRelationProjection(projection: DashboardRelationProjection): Promise<DashboardRelationProjection | null> {
+    async updateDashboardRelationProjection(
+        projection: DashboardRelationProjection,
+    ): Promise<DashboardRelationProjection | null> {
         const id = dashboardRelationProjectionId(projection);
-        if (!this.dashboardRelationProjections.has(id)) return null;
+        if (!this.dashboardRelationProjections.has(id)) {
+            return null;
+        }
         this.dashboardRelationProjections.set(id, structuredClone(projection));
         return structuredClone(projection);
     }
@@ -63,11 +75,11 @@ export class InMemoryRelationRepository implements RelationRepository {
 
     async getDashboardRelationProjectionsForDashboard(dashboardId: string): Promise<DashboardRelationProjection[]> {
         return Array.from(this.dashboardRelationProjections.values())
-            .filter(projection => projection.dashboardId === dashboardId)
-            .map(projection => structuredClone(projection));
+            .filter((projection) => projection.dashboardId === dashboardId)
+            .map((projection) => structuredClone(projection));
     }
 
     async getAllDashboardRelationProjections(): Promise<DashboardRelationProjection[]> {
-        return Array.from(this.dashboardRelationProjections.values(), projection => structuredClone(projection));
+        return Array.from(this.dashboardRelationProjections.values(), (projection) => structuredClone(projection));
     }
 }

@@ -12,18 +12,26 @@ import { secretRefGlobalPattern } from "cms-secrets/core/secretRef";
  * a literal `${KEY}` on the wire by silently passing it through.
  */
 export async function resolveSecretRefs(input: string, secrets: SecretStore): Promise<string> {
-    if (!input.includes("${")) return input;
+    if (!input.includes("${")) {
+        return input;
+    }
 
     const pattern = secretRefGlobalPattern();
     const refs = [...input.matchAll(pattern)];
-    if (refs.length === 0) return input;
+    if (refs.length === 0) {
+        return input;
+    }
 
     const cache = new Map<string, string>();
     for (const m of refs) {
         const key = m[1] as string;
-        if (cache.has(key)) continue;
+        if (cache.has(key)) {
+            continue;
+        }
         const value = await secrets.get(key);
-        if (value === null) throw new SecretNotFound(key);
+        if (value === null) {
+            throw new SecretNotFound(key);
+        }
         cache.set(key, value);
     }
 

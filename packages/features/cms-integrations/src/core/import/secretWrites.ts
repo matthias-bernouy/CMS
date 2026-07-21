@@ -34,8 +34,11 @@ export async function writeSecretsWithRollback<T>(
     } catch (error) {
         for (const previous of previousValues.reverse()) {
             try {
-                if (previous.value === null) await secretsStore.delete(previous.key);
-                else await secretsStore.set(previous.key, previous.value);
+                if (previous.value === null) {
+                    await secretsStore.delete(previous.key);
+                } else {
+                    await secretsStore.set(previous.key, previous.value);
+                }
             } catch {
                 // Best-effort rollback: keep restoring remaining secrets.
             }
@@ -46,5 +49,7 @@ export async function writeSecretsWithRollback<T>(
 
 function assertSecretKey(key: string): void {
     const error = secretKeyError(key);
-    if (error) throw new IntegrationInputError("secrets", error);
+    if (error) {
+        throw new IntegrationInputError("secrets", error);
+    }
 }

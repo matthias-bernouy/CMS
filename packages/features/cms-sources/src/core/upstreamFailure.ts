@@ -13,9 +13,7 @@ export function safeUpstreamFailureResponse(
     correlationId: string,
     options: SafeUpstreamFailureResponseOptions = {},
 ): Response {
-    const body = options.omitBody
-        ? null
-        : JSON.stringify({ error: "Upstream request failed", correlationId });
+    const body = options.omitBody ? null : JSON.stringify({ error: "Upstream request failed", correlationId });
     return new Response(body, {
         status: 502,
         headers: {

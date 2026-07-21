@@ -86,7 +86,7 @@ describe("lookup — `value` reserved word", () => {
 });
 
 describe("lookup — `.` is the current context itself", () => {
-    test("returns the implicit value (used by cms-repeat=\".\")", () => {
+    test('returns the implicit value (used by cms-repeat=".")', () => {
         expect(lookup({ value: [1, 2, 3] }, ".")).toEqual({ found: true, value: [1, 2, 3] });
     });
     test("`.` reads the nearest frame's value, not the parent's", () => {
@@ -100,7 +100,9 @@ describe("lookup — arrays (documented behaviour)", () => {
     });
 
     test("numeric index into an array", () => {
-        expect(lookup({ value: { items: [{ name: "a" }, { name: "b" }] } }, "items.1.name"))
-            .toEqual({ found: true, value: "b" });
+        expect(lookup({ value: { items: [{ name: "a" }, { name: "b" }] } }, "items.1.name")).toEqual({
+            found: true,
+            value: "b",
+        });
     });
 });

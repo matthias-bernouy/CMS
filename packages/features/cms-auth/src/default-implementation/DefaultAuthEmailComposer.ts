@@ -3,9 +3,7 @@ import type { OutboundEmail } from "cms-auth/interfaces/Emailer";
 
 export class DefaultAuthEmailComposer implements AuthEmailComposer {
     async compose(input: AuthEmailComposeInput): Promise<OutboundEmail> {
-        return input.kind === "email_verification"
-            ? verificationEmail(input)
-            : passwordResetEmail(input);
+        return input.kind === "email_verification" ? verificationEmail(input) : passwordResetEmail(input);
     }
 }
 
@@ -52,7 +50,7 @@ function simpleHtml(title: string, cta: string, actionUrl: string, expiresAt: Da
     return [
         "<!doctype html>",
         "<html>",
-        "<body style=\"margin:0;padding:24px;font-family:Arial,sans-serif;color:#111827;background:#ffffff\">",
+        '<body style="margin:0;padding:24px;font-family:Arial,sans-serif;color:#111827;background:#ffffff">',
         `<h1 style=\"font-size:20px;line-height:1.3;margin:0 0 16px\">${safeTitle}</h1>`,
         `<p style=\"font-size:14px;line-height:1.5;margin:0 0 24px\">Use the link below to continue.</p>`,
         `<p style=\"margin:0 0 24px\"><a href=\"${safeUrl}\" style=\"display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:10px 14px;border-radius:4px;font-size:14px\">${safeCta}</a></p>`,
@@ -64,9 +62,5 @@ function simpleHtml(title: string, cta: string, actionUrl: string, expiresAt: Da
 }
 
 function esc(value: string): string {
-    return value
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
+    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }

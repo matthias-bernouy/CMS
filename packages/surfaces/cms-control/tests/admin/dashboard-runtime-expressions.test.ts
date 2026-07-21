@@ -5,19 +5,24 @@ afterEach(() => delete (Object.prototype as Record<string, unknown>).dashboardPo
 
 describe("dashboard runtime expressions", () => {
     test("resolves dotted action body paths into nested objects", () => {
-        expect(resolveBody({
-            displayName: "$field.displayName",
-            "metadata.company": "$field.company",
-            "metadata.employeeCount": "$field.employeeCount",
-            "profile.locale": "fr-FR",
-            missing: "$field.missing",
-        }, {
-            fields: {
-                displayName: "Ada",
-                company: "Bernouy",
-                employeeCount: 12,
-            },
-        })).toEqual({
+        expect(
+            resolveBody(
+                {
+                    displayName: "$field.displayName",
+                    "metadata.company": "$field.company",
+                    "metadata.employeeCount": "$field.employeeCount",
+                    "profile.locale": "fr-FR",
+                    missing: "$field.missing",
+                },
+                {
+                    fields: {
+                        displayName: "Ada",
+                        company: "Bernouy",
+                        employeeCount: 12,
+                    },
+                },
+            ),
+        ).toEqual({
             displayName: "Ada",
             metadata: {
                 company: "Bernouy",
@@ -33,10 +38,15 @@ describe("dashboard runtime expressions", () => {
         const prototype = Object.prototype as Record<string, unknown>;
         delete prototype.dashboardPolluted;
 
-        expect(() => resolveBody({
-            "safe.value": "kept",
-            "__proto__.dashboardPolluted": "blocked",
-        }, {})).toThrow('Unsafe dashboard body path "__proto__.dashboardPolluted"');
+        expect(() =>
+            resolveBody(
+                {
+                    "safe.value": "kept",
+                    "__proto__.dashboardPolluted": "blocked",
+                },
+                {},
+            ),
+        ).toThrow('Unsafe dashboard body path "__proto__.dashboardPolluted"');
 
         expect(prototype.dashboardPolluted).toBeUndefined();
         expect(valueAt({}, "__proto__.dashboardPolluted")).toBeUndefined();

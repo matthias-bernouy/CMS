@@ -9,12 +9,18 @@ export async function executeAdminFunction(
     payload: Record<string, unknown>,
 ): Promise<Response> {
     const repository = cms.functions;
-    if (!repository) return new Response("functions not configured", { status: 501 });
+    if (!repository) {
+        return new Response("functions not configured", { status: 501 });
+    }
     const id = typeof payload.id === "string" ? payload.id.trim() : "";
-    if (!id) throw new MissingParam("id");
+    if (!id) {
+        throw new MissingParam("id");
+    }
 
     const fn = await repository.getFunction(id);
-    if (!fn) return new Response("function not found", { status: 404 });
+    if (!fn) {
+        return new Response("function not found", { status: 404 });
+    }
     const params = parseParams(payload.params);
     const init: RequestInit = {
         method: fn.method,
@@ -35,12 +41,20 @@ export async function executeAdminFunction(
 }
 
 function parseParams(value: unknown): Record<string, string> {
-    if (value === undefined) return {};
-    if (!isRecord(value)) throw new InvalidParam("params", "must be an object.");
+    if (value === undefined) {
+        return {};
+    }
+    if (!isRecord(value)) {
+        throw new InvalidParam("params", "must be an object.");
+    }
     const params: Record<string, string> = {};
     for (const [key, raw] of Object.entries(value)) {
-        if (raw === undefined || raw === null) continue;
-        if (typeof raw === "object") throw new InvalidParam(`params.${key}`, "must be a scalar value.");
+        if (raw === undefined || raw === null) {
+            continue;
+        }
+        if (typeof raw === "object") {
+            throw new InvalidParam(`params.${key}`, "must be a scalar value.");
+        }
         params[key] = String(raw);
     }
     return params;
@@ -48,7 +62,9 @@ function parseParams(value: unknown): Record<string, string> {
 
 function executionUrl(request: Request, id: string, params: Record<string, string>): string {
     const url = new URL(`/functions/${encodeURIComponent(id)}`, new URL(request.url).origin);
-    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.set(key, value);
+    }
     return url.toString();
 }
 

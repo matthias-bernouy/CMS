@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    capturedFetches,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { capturedFetches, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { useEvidenceResponder } from "./fixtures";
 import { activeClaimRow, evidenceRow } from "./raw";
 
@@ -60,65 +56,62 @@ describe("commerce claim evidence access boundaries", () => {
         useEvidenceResponder({
             claim: { ...activeClaimRow, buyer_cms_user_id: "another-buyer" },
         });
-        const denied = await requestCommerce(
-            `/me/order/claim/evidence?claimId=${activeClaimRow.id}`,
-            { method: "POST", userId: "buyer-evidence-17" },
-        );
+        const denied = await requestCommerce(`/me/order/claim/evidence?claimId=${activeClaimRow.id}`, {
+            method: "POST",
+            userId: "buyer-evidence-17",
+        });
         expect(await summary(denied)).toEqual({
-            status: 404, body: { error: "claim not found" }, allow: null,
+            status: 404,
+            body: { error: "claim not found" },
+            allow: null,
         });
 
         useEvidenceResponder();
         const before = capturedFetches().length;
-        const malformed = await requestCommerce(
-            `/me/order/claim/evidence?claimId=${activeClaimRow.id}`,
-            { method: "POST", userId: "buyer-evidence-17" },
-        );
+        const malformed = await requestCommerce(`/me/order/claim/evidence?claimId=${activeClaimRow.id}`, {
+            method: "POST",
+            userId: "buyer-evidence-17",
+        });
         expect(await summary(malformed)).toEqual({
             status: 400,
             body: { error: "claim evidence upload must use multipart/form-data" },
             allow: null,
         });
-        expect(resources(capturedFetches().slice(before))).toEqual([
-            "get_claim_evidence_upload_context",
-        ]);
+        expect(resources(capturedFetches().slice(before))).toEqual(["get_claim_evidence_upload_context"]);
     });
 
     test("requires upload identity before database work", async () => {
-        const response = await requestCommerce(
-            `/me/order/claim/evidence?claimId=${activeClaimRow.id}`,
-            { method: "POST" },
-        );
+        const response = await requestCommerce(`/me/order/claim/evidence?claimId=${activeClaimRow.id}`, {
+            method: "POST",
+        });
 
         expect(await summary(response)).toEqual({
-            status: 401, body: { error: "missing CMS user id" }, allow: null,
+            status: 401,
+            body: { error: "missing CMS user id" },
+            allow: null,
         });
         expect(capturedFetches()).toHaveLength(0);
     });
 
     test("preserves download evidence-before-identity precedence", async () => {
         useEvidenceResponder({ evidence: null });
-        const missing = await requestCommerce(
-            `/me/order/claim/evidence?evidenceId=${evidenceRow.id}`,
-        );
+        const missing = await requestCommerce(`/me/order/claim/evidence?evidenceId=${evidenceRow.id}`);
         expect(await summary(missing)).toEqual({
-            status: 404, body: { error: "claim evidence not found" }, allow: null,
+            status: 404,
+            body: { error: "claim evidence not found" },
+            allow: null,
         });
-        expect(resources(capturedFetches())).toEqual([
-            "get_claim_evidence_download_context",
-        ]);
+        expect(resources(capturedFetches())).toEqual(["get_claim_evidence_download_context"]);
 
         useEvidenceResponder();
         const before = capturedFetches().length;
-        const noIdentity = await requestCommerce(
-            `/me/order/claim/evidence?evidenceId=${evidenceRow.id}`,
-        );
+        const noIdentity = await requestCommerce(`/me/order/claim/evidence?evidenceId=${evidenceRow.id}`);
         expect(await summary(noIdentity)).toEqual({
-            status: 401, body: { error: "missing CMS user id" }, allow: null,
+            status: 401,
+            body: { error: "missing CMS user id" },
+            allow: null,
         });
-        expect(resources(capturedFetches().slice(before))).toEqual([
-            "get_claim_evidence_download_context",
-        ]);
+        expect(resources(capturedFetches().slice(before))).toEqual(["get_claim_evidence_download_context"]);
     });
 });
 
@@ -129,13 +122,11 @@ async function summary(response: Response): Promise<{
 }> {
     return {
         status: response.status,
-        body: response.headers.get("content-type")?.includes("json")
-            ? await response.json()
-            : await response.text(),
+        body: response.headers.get("content-type")?.includes("json") ? await response.json() : await response.text(),
         allow: response.headers.get("allow"),
     };
 }
 
 function resources(calls: Array<{ url: string }>): string[] {
-    return calls.map(call => new URL(call.url).pathname.split("/").at(-1)!);
+    return calls.map((call) => new URL(call.url).pathname.split("/").at(-1)!);
 }

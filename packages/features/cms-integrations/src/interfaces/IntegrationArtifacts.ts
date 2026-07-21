@@ -1,9 +1,6 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { FunctionDto } from "@bernouy/cms-functions";
-import type {
-    CmsRelation,
-    DashboardRelationProjection,
-} from "@bernouy/cms-relations";
+import type { CmsRelation, DashboardRelationProjection } from "@bernouy/cms-relations";
 import type { SourceDto, SourceOverlay } from "@bernouy/cms-sources";
 import type { TriggerDto } from "@bernouy/cms-triggers";
 

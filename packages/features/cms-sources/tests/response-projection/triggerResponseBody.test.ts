@@ -10,25 +10,27 @@ const endpoint: SourceEndpoint = {
     urn: "urn:test:private-response",
     method: "POST",
     targetUrl: "https://api.example.test/command",
-    output: [{
-        status: "200",
-        body: {
-            type: "object",
-            properties: { id: { type: "string" } },
-            required: ["id"],
-        },
-        triggerBody: {
-            type: "object",
-            properties: {
-                authorization: {
-                    type: "object",
-                    properties: { token: { type: "string" } },
-                    required: ["token"],
-                },
+    output: [
+        {
+            status: "200",
+            body: {
+                type: "object",
+                properties: { id: { type: "string" } },
+                required: ["id"],
             },
-            required: ["authorization"],
+            triggerBody: {
+                type: "object",
+                properties: {
+                    authorization: {
+                        type: "object",
+                        properties: { token: { type: "string" } },
+                        required: ["token"],
+                    },
+                },
+                required: ["authorization"],
+            },
         },
-    }],
+    ],
 };
 
 describe("trigger response body projection", () => {
@@ -53,7 +55,11 @@ describe("trigger response body projection", () => {
             endpoint,
             new Request("http://local.test/source", { method: "POST" }),
             jsonResponse({ id: "public-id", authorization: {} }),
-            { reportResponseProjectionEvent: reported => { event = reported; } },
+            {
+                reportResponseProjectionEvent: (reported) => {
+                    event = reported;
+                },
+            },
         );
 
         expect(response.status).toBe(502);
@@ -70,13 +76,15 @@ describe("trigger response body projection", () => {
         const response = await projectEndpointResponse(
             {
                 ...endpoint,
-                output: [{
-                    ...endpoint.output![0]!,
-                    triggerBody: {
-                        type: "object",
-                        properties: { unsafe: { type: "array" } },
+                output: [
+                    {
+                        ...endpoint.output![0]!,
+                        triggerBody: {
+                            type: "object",
+                            properties: { unsafe: { type: "array" } },
+                        },
                     },
-                }],
+                ],
             },
             new Request("http://local.test/source", { method: "POST" }),
             jsonResponse({ id: "public-id", unsafe: [{ secret: "unbounded" }] }),

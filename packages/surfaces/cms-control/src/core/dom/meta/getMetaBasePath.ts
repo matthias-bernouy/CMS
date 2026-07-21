@@ -9,7 +9,9 @@
  */
 export function getMetaBasePath(): string {
     const meta = document.querySelector('meta[name="basePath"]');
-    const content = meta?.getAttribute('content') ?? "";
-    if (!content || content === "/") return "";
+    const content = meta?.getAttribute("content") ?? "";
+    if (!content || content === "/") {
+        return "";
+    }
     return content.replace(/\/+$/, "");
 }

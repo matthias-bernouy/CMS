@@ -22,28 +22,30 @@ import {
 
 export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
     const runner = delivery.runner;
-    runner.group(CMS_SOURCES_ROUTE, proxyRunner => {
+    runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
         const prefix = sourcesPrefix(runner.basePath);
         const sourceDeps = {
             ...(delivery.sourceResolveSecret ? { resolveSecret: delivery.sourceResolveSecret } : {}),
             ...(delivery.identities ? { identities: delivery.identities } : {}),
             resolveContext: (request: Request) => resolveDeliverySourceContext(delivery, request),
         };
-        const proxiedSources = delivery.sources && delivery.functions
-            ? withFunctionsSource(delivery.sources, delivery.functions)
-            : delivery.sources;
-        const interceptEndpoint = delivery.triggers && delivery.functions && delivery.sources
-            ? createTriggerInterceptor({
-                triggers: delivery.triggers,
-                functions: delivery.functions,
-                sources: delivery.sources,
-                deps: sourceDeps,
-                resolveUser: async request => {
-                    const subject = await resolveDeliverySubject(delivery, request);
-                    return subject ? { id: subject.identifier, role: subject.role } : {};
-                },
-            })
-            : undefined;
+        const proxiedSources =
+            delivery.sources && delivery.functions
+                ? withFunctionsSource(delivery.sources, delivery.functions)
+                : delivery.sources;
+        const interceptEndpoint =
+            delivery.triggers && delivery.functions && delivery.sources
+                ? createTriggerInterceptor({
+                      triggers: delivery.triggers,
+                      functions: delivery.functions,
+                      sources: delivery.sources,
+                      deps: sourceDeps,
+                      resolveUser: async (request) => {
+                          const subject = await resolveDeliverySubject(delivery, request);
+                          return subject ? { id: subject.identifier, role: subject.role } : {};
+                      },
+                  })
+                : undefined;
         const deps = {
             ...sourceDeps,
             executeSystemEndpoint: (endpoint: SourceEndpoint, request: Request) =>
@@ -53,8 +55,9 @@ export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
             ...(interceptEndpoint ? { interceptEndpoint } : {}),
         };
         for (const method of SOURCE_PROXY_METHODS) {
-            proxyRunner.setDefaultEndpoint(method, request =>
-                handleSourceRequest(proxiedSources, request, { prefix, deps }));
+            proxyRunner.setDefaultEndpoint(method, (request) =>
+                handleSourceRequest(proxiedSources, request, { prefix, deps }),
+            );
         }
     });
 }
@@ -74,9 +77,11 @@ async function executeSystemEndpoint(
             functions: delivery.functions,
             sources: delivery.sources,
             deps: sourceDeps,
-            resolveUser: async () => subject ? { id: subject.identifier, role: subject.role } : {},
+            resolveUser: async () => (subject ? { id: subject.identifier, role: subject.role } : {}),
         });
     }
-    if (delivery.auth) return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request);
+    if (delivery.auth) {
+        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request);
+    }
     return new Response("system source executor not configured", { status: 501 });
 }

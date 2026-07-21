@@ -15,13 +15,19 @@ import {
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 export function roleGatewayAccessMode(roleId: string): SourceEndpointAccessMode {
-    if (roleId === PUBLIC_ROLE) return "public";
-    if (roleId === USER_ROLE) return "auth";
+    if (roleId === PUBLIC_ROLE) {
+        return "public";
+    }
+    if (roleId === USER_ROLE) {
+        return "auth";
+    }
     return "admin";
 }
 
 export function roleCanBeGrantedEndpoint(roleId: string, endpoint: SourceEndpoint): boolean {
-    if (roleId === ADMIN_ROLE) return true;
+    if (roleId === ADMIN_ROLE) {
+        return true;
+    }
     return sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), roleGatewayAccessMode(roleId));
 }
 
@@ -37,9 +43,13 @@ export async function getGatewayEndpoint(
     sources: SourceRepository | null,
     permission: string,
 ): Promise<SourceEndpoint | null> {
-    if (!sources || !isGatewayPermission(permission)) return null;
+    if (!sources || !isGatewayPermission(permission)) {
+        return null;
+    }
     const parsed = parseUrn(permission);
-    if (!parsed?.endpoint) return null;
+    if (!parsed?.endpoint) {
+        return null;
+    }
     if (sources.getEndpointForAuthorization) {
         return sources.getEndpointForAuthorization(permission);
     }
@@ -53,8 +63,12 @@ export async function assertGatewayGrantsWithinAccess(
 ): Promise<void> {
     for (const grant of grants) {
         const endpoint = await getGatewayEndpoint(sources, grant.permission);
-        if (!endpoint) continue;
-        if (roleCanBeGrantedEndpoint(roleId, endpoint)) continue;
+        if (!endpoint) {
+            continue;
+        }
+        if (roleCanBeGrantedEndpoint(roleId, endpoint)) {
+            continue;
+        }
         throw new InvalidParam("grants", `role "${roleId}" cannot be granted ${grant.permission}`);
     }
 }

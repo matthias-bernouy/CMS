@@ -38,11 +38,8 @@ export function withFunctionExecutionErrorContext(
     error: FunctionExecutionError,
     context: FunctionExecutionErrorContext,
 ): FunctionExecutionError {
-    return new FunctionExecutionError(
-        error.message,
-        error.status,
-        error.details,
-        error.correlationId,
-        { ...context, ...error.context },
-    );
+    return new FunctionExecutionError(error.message, error.status, error.details, error.correlationId, {
+        ...context,
+        ...error.context,
+    });
 }

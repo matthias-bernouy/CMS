@@ -3,13 +3,7 @@ import { projectStrictDataShape, type DataShape } from "@bernouy/cms-sources";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { installCommerceTestEnvironment, requestCommerce } from "../../harness";
-import {
-    adminCategory,
-    adminSourceCategory,
-    publicCategory,
-    publicSourceCategory,
-    rootCategory,
-} from "./expected";
+import { adminCategory, adminSourceCategory, publicCategory, publicSourceCategory, rootCategory } from "./expected";
 import { rootCategoryRow, useCategoryResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
@@ -46,7 +40,7 @@ describe("commerce category detail contracts", () => {
         useCategoryResponder({ parent: null });
 
         const response = await requestCommerce("/admin/category?id=9");
-        const body = await response.json() as Record<string, unknown>;
+        const body = (await response.json()) as Record<string, unknown>;
 
         expect(response.status).toBe(200);
         expect(body).toEqual({ ...adminCategory, parent: null });
@@ -56,28 +50,25 @@ describe("commerce category detail contracts", () => {
         const definition = JSON.parse(await readFile(definitionPath, "utf8"));
         const endpoints = definition.artifacts.find((artifact: any) => artifact.source).source.endpoints;
 
-        expect(projectStrictDataShape(
-            publicCategory,
-            responseBody(endpoints, "category"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual(publicSourceCategory);
-        expect(projectStrictDataShape(
-            adminCategory,
-            responseBody(endpoints, "manageCategory"),
-            "response",
-            { enforceRequired: false },
-        )).toEqual(adminSourceCategory);
+        expect(
+            projectStrictDataShape(publicCategory, responseBody(endpoints, "category"), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(publicSourceCategory);
+        expect(
+            projectStrictDataShape(adminCategory, responseBody(endpoints, "manageCategory"), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(adminSourceCategory);
     });
 });
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../../integrations/commerce/versions/1.0.0/definition.json");
 
 function responseBody(endpoints: any[], endpointId: string): DataShape {
-    const body = endpoints.find(endpoint => endpoint.endpointId === endpointId)?.output?.[0]?.body;
-    if (!body) throw new Error(`Missing response contract for ${endpointId}`);
+    const body = endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.output?.[0]?.body;
+    if (!body) {
+        throw new Error(`Missing response contract for ${endpointId}`);
+    }
     return body;
 }

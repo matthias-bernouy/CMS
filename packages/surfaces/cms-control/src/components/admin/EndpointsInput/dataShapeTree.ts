@@ -18,42 +18,52 @@ export function makeDataShapeTree(
     onChange: () => void,
     labels?: { define?: string; remove?: string; root?: string },
 ): { element: HTMLElement; read: () => DataShape | undefined } {
-    const defineLabel = labels?.define ?? '+ Define request body';
-    const removeLabel = labels?.remove ?? 'Remove body';
-    const rootLabel = labels?.root ?? 'Root type';
+    const defineLabel = labels?.define ?? "+ Define request body";
+    const removeLabel = labels?.remove ?? "Remove body";
+    const rootLabel = labels?.root ?? "Root type";
 
-    const element = document.createElement('div');
-    element.className = 'ep-tree';
+    const element = document.createElement("div");
+    element.className = "ep-tree";
     let root: NodeHandle | null = null;
 
     const showEmpty = () => {
         root = null;
-        const define = document.createElement('button');
-        define.type = 'button';
-        define.className = 'ep-add-param';
-        define.dataset.role = 'define-body';
+        const define = document.createElement("button");
+        define.type = "button";
+        define.className = "ep-add-param";
+        define.dataset.role = "define-body";
         define.textContent = defineLabel;
-        define.addEventListener('click', () => { showTree({ type: 'object' }); onChange(); });
+        define.addEventListener("click", () => {
+            showTree({ type: "object" });
+            onChange();
+        });
         element.replaceChildren(define);
     };
 
     const showTree = (s: DataShape) => {
         root = makeNode(s, onChange, 0);
-        const head = document.createElement('div');
-        head.className = 'ep-root-head';
-        const label = document.createElement('span');
-        label.className = 'ep-meta';
+        const head = document.createElement("div");
+        head.className = "ep-root-head";
+        const label = document.createElement("span");
+        label.className = "ep-meta";
         label.textContent = rootLabel;
         head.append(label, root.typeEl);
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'ep-remove-body';
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "ep-remove-body";
         remove.textContent = removeLabel;
-        remove.addEventListener('click', () => { showEmpty(); onChange(); });
+        remove.addEventListener("click", () => {
+            showEmpty();
+            onChange();
+        });
         element.replaceChildren(head, root.childrenEl, remove);
     };
 
-    if (seed) showTree(seed); else showEmpty();
+    if (seed) {
+        showTree(seed);
+    } else {
+        showEmpty();
+    }
 
     return { element, read: () => root?.read() };
 }

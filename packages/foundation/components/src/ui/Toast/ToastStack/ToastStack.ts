@@ -1,8 +1,8 @@
 import { Component } from "@bernouy/components/base";
 import { Toast, type ToastType } from "../Toast/Toast";
 
-import template from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import template from "./template.html" with { type: "text" };
+import css from "./style.css" with { type: "text" };
 
 export type ToastOptions = {
     type?: ToastType;
@@ -10,21 +10,26 @@ export type ToastOptions = {
 };
 
 export class ToastStack extends Component {
-
     constructor() {
         super({ css, template: template as unknown as string });
     }
 
     override connectedCallback() {
-        if (!this.hasAttribute('popover')) this.setAttribute('popover', 'manual');
-        try { (this as any).showPopover?.(); } catch { /* already shown */ }
+        if (!this.hasAttribute("popover")) {
+            this.setAttribute("popover", "manual");
+        }
+        try {
+            (this as any).showPopover?.();
+        } catch {
+            /* already shown */
+        }
     }
 
     push(message: string, options: ToastOptions = {}): Toast {
-        const toast = document.createElement('p9r-toast') as Toast;
-        toast.setAttribute('type', options.type ?? 'info');
+        const toast = document.createElement("p9r-toast") as Toast;
+        toast.setAttribute("type", options.type ?? "info");
         if (options.duration !== undefined) {
-            toast.setAttribute('duration', String(options.duration));
+            toast.setAttribute("duration", String(options.duration));
         }
         toast.textContent = message;
         this.appendChild(toast);
@@ -32,14 +37,17 @@ export class ToastStack extends Component {
     }
 }
 
-
 let _stack: ToastStack | null = null;
 
 function ensureStack(): ToastStack {
-    if (_stack && _stack.isConnected) return _stack;
-    _stack = document.querySelector('p9r-toast-stack') as ToastStack | null;
-    if (_stack) return _stack;
-    _stack = document.createElement('p9r-toast-stack') as ToastStack;
+    if (_stack && _stack.isConnected) {
+        return _stack;
+    }
+    _stack = document.querySelector("p9r-toast-stack") as ToastStack | null;
+    if (_stack) {
+        return _stack;
+    }
+    _stack = document.createElement("p9r-toast-stack") as ToastStack;
     document.body.appendChild(_stack);
     return _stack;
 }

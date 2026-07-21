@@ -52,5 +52,7 @@ export function emitWidgetEvent<T>(host: HTMLElement, type: string, detail: T): 
 
 export function setText(root: ParentNode, selector: string, value: string): void {
     const element = root.querySelector<HTMLElement>(selector);
-    if (element) element.textContent = value;
+    if (element) {
+        element.textContent = value;
+    }
 }

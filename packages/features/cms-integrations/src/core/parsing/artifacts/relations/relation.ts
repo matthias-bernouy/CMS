@@ -36,19 +36,27 @@ export function parseDashboardRelationProjectionTemplate(
         relationId: requiredText(value.relationId, `${name}.relationId`),
         dashboardId: requiredText(value.dashboardId, `${name}.dashboardId`),
         viewId: requiredText(value.viewId, `${name}.viewId`),
-        ...(text(value.placement) ? { placement: text(value.placement)! as DashboardRelationProjection["placement"] } : {}),
+        ...(text(value.placement)
+            ? { placement: text(value.placement)! as DashboardRelationProjection["placement"] }
+            : {}),
         ...(text(value.sectionId) ? { sectionId: text(value.sectionId)! } : {}),
         ...(text(value.title) ? { title: text(value.title)! } : {}),
         widget: requiredText(value.widget, `${name}.widget`) as DashboardRelationProjection["widget"],
         ...(typeof value.pageSize === "number" ? { pageSize: value.pageSize } : {}),
         ...(text(value.rowKey) ? { rowKey: text(value.rowKey)! } : {}),
-        ...(value.columns !== undefined ? { columns: parseRelationDashboardColumns(value.columns, `${name}.columns`) } : {}),
-        ...(value.actions !== undefined ? { actions: parseRelationDashboardActions(value.actions, `${name}.actions`) } : {}),
+        ...(value.columns !== undefined
+            ? { columns: parseRelationDashboardColumns(value.columns, `${name}.columns`) }
+            : {}),
+        ...(value.actions !== undefined
+            ? { actions: parseRelationDashboardActions(value.actions, `${name}.actions`) }
+            : {}),
     };
 }
 
 function parseRelationSide(value: unknown, name: string): RelationSide {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     return {
         sourceId: requiredText(value.sourceId, `${name}.sourceId`),
         ...(text(value.label) ? { label: text(value.label)! } : {}),
@@ -57,15 +65,23 @@ function parseRelationSide(value: unknown, name: string): RelationSide {
 }
 
 function parseRelationCardinality(value: unknown, name: string): CmsRelation["cardinality"] {
-    if ((RELATION_CARDINALITIES as readonly unknown[]).includes(value)) return value as CmsRelation["cardinality"];
+    if ((RELATION_CARDINALITIES as readonly unknown[]).includes(value)) {
+        return value as CmsRelation["cardinality"];
+    }
     throw new IntegrationInputError(name, `must be ${RELATION_CARDINALITIES.join("|")}`);
 }
 
 function parseRelationBinding(value: unknown, name: string): RelationBinding {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     const kind = text(value.kind);
-    if (kind === "reference") return parseReferenceRelationBinding(value, name);
-    if (kind === "linkTable") return parseLinkTableRelationBinding(value, name);
+    if (kind === "reference") {
+        return parseReferenceRelationBinding(value, name);
+    }
+    if (kind === "linkTable") {
+        return parseLinkTableRelationBinding(value, name);
+    }
     throw new IntegrationInputError(`${name}.kind`, "must be reference or linkTable");
 }
 
@@ -93,7 +109,9 @@ function parseLinkTableRelationBinding(value: Record<string, unknown>, name: str
 }
 
 function parseLinkTableTarget(value: unknown, name: string): NonNullable<LinkTableRelationBinding["target"]> {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     return {
         sourceId: requiredText(value.sourceId, `${name}.sourceId`),
         endpointId: requiredText(value.endpointId, `${name}.endpointId`),
@@ -105,7 +123,9 @@ function parseLinkTableTarget(value: unknown, name: string): NonNullable<LinkTab
 }
 
 function parseRelationEndpointRef(value: unknown, name: string): RelationEndpointRef {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     return {
         sourceId: requiredText(value.sourceId, `${name}.sourceId`),
         endpointId: requiredText(value.endpointId, `${name}.endpointId`),
@@ -113,7 +133,9 @@ function parseRelationEndpointRef(value: unknown, name: string): RelationEndpoin
 }
 
 function parseRelationPage(value: unknown, name: string): RelationPageContract {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
     return {
         itemsPath: requiredText(value.itemsPath, `${name}.itemsPath`),
         ...(text(value.totalPath) ? { totalPath: text(value.totalPath)! } : {}),
@@ -127,9 +149,13 @@ function parseRelationPage(value: unknown, name: string): RelationPageContract {
 }
 
 function parseRelationDashboardColumns(value: unknown, name: string): RelationDashboardColumn[] {
-    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    if (!Array.isArray(value)) {
+        throw new IntegrationInputError(name, "must be an array");
+    }
     return value.map((entry, index) => {
-        if (!isRecord(entry)) throw new IntegrationInputError(`${name}.${index}`, "must be an object");
+        if (!isRecord(entry)) {
+            throw new IntegrationInputError(`${name}.${index}`, "must be an object");
+        }
         return {
             id: requiredText(entry.id, `${name}.${index}.id`),
             label: requiredText(entry.label, `${name}.${index}.label`),

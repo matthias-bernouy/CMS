@@ -27,9 +27,7 @@ export async function executeBuyerTracking(
         request: options.request ?? buyerTrackingRequest(),
         responder,
         sources: await fulfillmentContextSources(),
-        user: options.user === null
-            ? undefined
-            : options.user ?? { id: buyerId, role: "user" },
+        user: options.user === null ? undefined : (options.user ?? { id: buyerId, role: "user" }),
     });
 }
 
@@ -41,26 +39,22 @@ export async function executeFulfillmentFunction(options: {
     user?: User;
 }): Promise<{ response: Response; calls: CapturedCall[] }> {
     const calls: CapturedCall[] = [];
-    const response = await executeFunction(
-        await loadFulfillmentFunction(options.functionId),
-        options.request,
-        {
-            sources: options.sources,
-            user: options.user,
-            deps: {
-                fetchImpl: async (input, init) => {
-                    const outgoing = new Request(input, init);
-                    calls.push({
-                        url: new URL(outgoing.url),
-                        method: outgoing.method,
-                        body: await requestBody(outgoing),
-                        userId: outgoing.headers.get("x-cms-user-id"),
-                    });
-                    return await options.responder(outgoing);
-                },
+    const response = await executeFunction(await loadFulfillmentFunction(options.functionId), options.request, {
+        sources: options.sources,
+        user: options.user,
+        deps: {
+            fetchImpl: async (input, init) => {
+                const outgoing = new Request(input, init);
+                calls.push({
+                    url: new URL(outgoing.url),
+                    method: outgoing.method,
+                    body: await requestBody(outgoing),
+                    userId: outgoing.headers.get("x-cms-user-id"),
+                });
+                return await options.responder(outgoing);
             },
         },
-    );
+    });
     return { response, calls };
 }
 
@@ -69,13 +63,10 @@ export async function loadBuyerTrackingFunction() {
 }
 
 export async function loadFulfillmentFunction(functionId: string) {
-    const definition = await new FsIntegrationDefinitionRepository(
-        OFFICIAL_INTEGRATIONS_ROOT,
-    ).get("commerce-mondial-relay-fulfillment");
-    const artifact = definition?.artifacts?.find(item =>
-        item.type === "function"
-        && item.function.id === functionId
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get(
+        "commerce-mondial-relay-fulfillment",
     );
+    const artifact = definition?.artifacts?.find((item) => item.type === "function" && item.function.id === functionId);
     if (!artifact || artifact.type !== "function") {
         throw new Error(`${functionId} function not found`);
     }
@@ -84,17 +75,11 @@ export async function loadFulfillmentFunction(functionId: string) {
     return fn;
 }
 
-export function buyerTrackingRequest(
-    orderId: string | number = 42,
-): Request {
-    return new Request(
-        `https://cms.test/functions/getShipmentForOrder?orderId=${orderId}`,
-    );
+export function buyerTrackingRequest(orderId: string | number = 42): Request {
+    return new Request(`https://cms.test/functions/getShipmentForOrder?orderId=${orderId}`);
 }
 
-export async function expectGenericFailure(
-    response: Response,
-): Promise<void> {
+export async function expectGenericFailure(response: Response): Promise<void> {
     expect(response.status).toBe(502);
     const body = await response.json();
     expect(body).toEqual({
@@ -106,7 +91,9 @@ export async function expectGenericFailure(
 }
 
 async function requestBody(request: Request): Promise<unknown> {
-    if (request.body === null) return undefined;
+    if (request.body === null) {
+        return undefined;
+    }
     return await request.clone().json();
 }
 
@@ -121,7 +108,9 @@ function resolveDependencySources(value: unknown): void {
         });
         return;
     }
-    if (!isRecord(value)) return;
+    if (!isRecord(value)) {
+        return;
+    }
     for (const [key, nested] of Object.entries(value)) {
         if (typeof nested === "string") {
             value[key] = resolveDependencySource(nested);
@@ -138,6 +127,5 @@ function resolveDependencySource(value: string): string {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === "object"
-        && !Array.isArray(value);
+    return value !== null && typeof value === "object" && !Array.isArray(value);
 }

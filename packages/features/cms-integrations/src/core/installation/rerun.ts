@@ -13,20 +13,33 @@ import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "./secretRefs";
 import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
-import type { IntegrationImportDeps, IntegrationImportDto, IntegrationImportResult } from "../../interfaces/IntegrationImport";
+import type {
+    IntegrationImportDeps,
+    IntegrationImportDto,
+    IntegrationImportResult,
+} from "../../interfaces/IntegrationImport";
 import type { IntegrationInstallation, IntegrationRun } from "../../interfaces/IntegrationInstallation";
-import type { RunIntegrationInstallationRerunRequest, RunIntegrationInstallationResult } from "./runIntegrationInstallation";
+import type {
+    RunIntegrationInstallationRerunRequest,
+    RunIntegrationInstallationResult,
+} from "./runIntegrationInstallation";
 
-export async function runRerun(request: RunIntegrationInstallationRerunRequest): Promise<RunIntegrationInstallationResult> {
+export async function runRerun(
+    request: RunIntegrationInstallationRerunRequest,
+): Promise<RunIntegrationInstallationResult> {
     const installation = await request.installations.get(request.integrationId);
-    if (!installation) throw new MissingIntegrationInstallationError(request.integrationId);
+    if (!installation) {
+        throw new MissingIntegrationInstallationError(request.integrationId);
+    }
 
     const siteIntegrations = [
         ...(request.siteIntegrations ?? []),
         ...(installation.definitionSnapshot ? [installation.definitionSnapshot] : []),
     ];
     const definition = findIntegration(installation.id, siteIntegrations);
-    if (!definition) throw new IntegrationInputError("kind", `unknown integration "${installation.id}"`);
+    if (!definition) {
+        throw new IntegrationInputError("kind", `unknown integration "${installation.id}"`);
+    }
 
     const pending = { ...installation, status: "pending" as const, updatedAt: new Date() };
     await request.installations.replace(pending);
@@ -59,7 +72,8 @@ async function runRerunImport(
         definition,
         dto.answers,
         dto.options,
-        async result => commitSuccessfulRerun(request, installation, definition, dto, secretInputs, startedAt, result),
+        async (result) =>
+            commitSuccessfulRerun(request, installation, definition, dto, secretInputs, startedAt, result),
     );
     return { ...importResult, ...committed };
 }
@@ -108,15 +122,20 @@ async function buildRerunDto(
     const rawAnswers = isRecord(body.answers)
         ? { ...installation.answersSnapshot, ...rerunAnswerOverrides(definition, installation, body.answers) }
         : { ...installation.answersSnapshot };
-    const missing = definition.inputs.filter(input => isSensitiveInput(input) && !hasAnswer(rawAnswers[input.name]));
-    const restored = await Promise.all(missing.map(input => restoreSecretAnswer(deps, installation, input.name)));
-    for (const [name, value] of restored) rawAnswers[name] = value;
+    const missing = definition.inputs.filter((input) => isSensitiveInput(input) && !hasAnswer(rawAnswers[input.name]));
+    const restored = await Promise.all(missing.map((input) => restoreSecretAnswer(deps, installation, input.name)));
+    for (const [name, value] of restored) {
+        rawAnswers[name] = value;
+    }
     const rawOptions = isRecord(body.options) ? body.options : {};
-    return parseIntegrationImportDto({
-        kind: installation.id,
-        answers: rawAnswers,
-        options: { ...rawOptions, force: true },
-    }, siteIntegrations);
+    return parseIntegrationImportDto(
+        {
+            kind: installation.id,
+            answers: rawAnswers,
+            options: { ...rawOptions, force: true },
+        },
+        siteIntegrations,
+    );
 }
 
 async function restoreSecretAnswer(
@@ -125,9 +144,13 @@ async function restoreSecretAnswer(
     inputName: string,
 ): Promise<readonly [string, string]> {
     const key = installation.secretRefs[inputName];
-    if (!key) throw new IntegrationInputError(`answers.${inputName}`, "secret must be provided");
+    if (!key) {
+        throw new IntegrationInputError(`answers.${inputName}`, "secret must be provided");
+    }
     const value = await deps.secrets.get(key);
-    if (!value) throw new IntegrationInputError(`answers.${inputName}`, "stored secret is missing");
+    if (!value) {
+        throw new IntegrationInputError(`answers.${inputName}`, "stored secret is missing");
+    }
     return [inputName, value] as const;
 }
 
@@ -138,7 +161,7 @@ function rerunAnswerOverrides(
 ): Record<string, unknown> {
     const overrides = { ...answers };
     if (Object.prototype.hasOwnProperty.call(overrides, "id")) {
-        const hasIdentityInput = definition.inputs.some(input => input.name === "id");
+        const hasIdentityInput = definition.inputs.some((input) => input.name === "id");
         if (hasIdentityInput && !sameAnswer(overrides.id, installation.answersSnapshot.id)) {
             throw new IntegrationInputError("answers.id", "cannot be changed on rerun");
         }

@@ -9,11 +9,7 @@ import {
     type CmsRelation,
 } from "@bernouy/cms-relations";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import {
-    offersSource,
-    productOffersProjection,
-    productOffersRelation,
-} from "./helpers/relationFixtures";
+import { offersSource, productOffersProjection, productOffersRelation } from "./helpers/relationFixtures";
 
 describe("@bernouy/cms-relations validation", () => {
     test("validates that many relations declare bounded pagination", () => {
@@ -68,6 +64,8 @@ describe("@bernouy/cms-relations validation", () => {
 
         const invalid = productOffersRelation();
         invalid.page!.offsetParam = "after";
-        expect(await validateRelationSources(invalid, sources)).toContain('product-offers.page.after is not declared by endpoint "urn:offers:offers"');
+        expect(await validateRelationSources(invalid, sources)).toContain(
+            'product-offers.page.after is not declared by endpoint "urn:offers:offers"',
+        );
     });
 });

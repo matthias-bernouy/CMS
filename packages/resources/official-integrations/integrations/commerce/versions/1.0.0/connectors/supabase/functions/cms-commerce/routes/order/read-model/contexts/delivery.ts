@@ -7,47 +7,38 @@ import type { JsonRecord } from "../../../../core/types.ts";
 
 const deliverySetupFunction = "get_order_delivery_setup_context";
 const deliverySelectionFunction = "get_order_delivery_selection_context";
-const setupOrderFields = [
-    "public_id", "buyer_cms_user_id", "status", "version",
-] as const;
+const setupOrderFields = ["public_id", "buyer_cms_user_id", "status", "version"] as const;
 const setupAuthorizationFields = [
-    "buyer_cms_user_id", "status", "order_version", "seller_cms_user_id",
-    "currency", "merchandise_subtotal_minor_amount", "shipping_address",
+    "buyer_cms_user_id",
+    "status",
+    "order_version",
+    "seller_cms_user_id",
+    "currency",
+    "merchandise_subtotal_minor_amount",
+    "shipping_address",
 ] as const;
-const selectionFields = [
-    "public_id", "buyer_cms_user_id", "delivery_quote_id",
-] as const;
+const selectionFields = ["public_id", "buyer_cms_user_id", "delivery_quote_id"] as const;
 
-export async function getOrderDeliverySetupContext(
-    request: Request,
-): Promise<Response> {
-    const [context, actor] =
-        await loadDeliveryContext(request, deliverySetupFunction);
+export async function getOrderDeliverySetupContext(request: Request): Promise<Response> {
+    const [context, actor] = await loadDeliveryContext(request, deliverySetupFunction);
     if (context.state === "seller_unavailable") {
-        throw new HttpError(
-            409,
-            "protected delivery requires a C2C user seller",
-        );
+        throw new HttpError(409, "protected delivery requires a C2C user seller");
     }
-    if (context.state !== "ok") throw invalidResponse(deliverySetupFunction);
+    if (context.state !== "ok") {
+        throw invalidResponse(deliverySetupFunction);
+    }
     return json(projectDeliverySetupContext(context.context, actor));
 }
 
-export async function getOrderDeliverySelectionContext(
-    request: Request,
-): Promise<Response> {
-    const [context, actor] =
-        await loadDeliveryContext(request, deliverySelectionFunction);
+export async function getOrderDeliverySelectionContext(request: Request): Promise<Response> {
+    const [context, actor] = await loadDeliveryContext(request, deliverySelectionFunction);
     if (context.state !== "ok") {
         throw invalidResponse(deliverySelectionFunction);
     }
     return json(projectDeliverySelectionContext(context.context, actor));
 }
 
-async function loadDeliveryContext(
-    request: Request,
-    functionName: string,
-): Promise<[JsonRecord, string]> {
+async function loadDeliveryContext(request: Request, functionName: string): Promise<[JsonRecord, string]> {
     const selector = new URL(request.url).searchParams.get("orderId");
     const orderId = integer(selector, "orderId", true)!;
     const actor = cmsUserId(request);
@@ -67,26 +58,24 @@ async function loadDeliveryContext(
     return [value, actor];
 }
 
-function projectDeliverySetupContext(
-    value: unknown,
-    actor: string,
-): JsonRecord {
-    if (!isRecord(value)) throw invalidResponse(deliverySetupFunction);
+function projectDeliverySetupContext(value: unknown, actor: string): JsonRecord {
+    if (!isRecord(value)) {
+        throw invalidResponse(deliverySetupFunction);
+    }
     const order = value.order;
     const authorization = value.authorization;
     if (
-        !hasFields(order, setupOrderFields)
-        || typeof order.public_id !== "string"
-        || order.buyer_cms_user_id !== actor
-        || typeof order.status !== "string"
-        || !Number.isSafeInteger(order.version)
-        || (authorization !== null && !validSetupAuthorization(authorization))
-        || (authorization === null) === (order.status === "awaiting_quote")
-        || (authorization !== null && (
-            authorization.buyer_cms_user_id !== order.buyer_cms_user_id
-            || authorization.status !== order.status
-            || authorization.order_version !== order.version
-        ))
+        !hasFields(order, setupOrderFields) ||
+        typeof order.public_id !== "string" ||
+        order.buyer_cms_user_id !== actor ||
+        typeof order.status !== "string" ||
+        !Number.isSafeInteger(order.version) ||
+        (authorization !== null && !validSetupAuthorization(authorization)) ||
+        (authorization === null) === (order.status === "awaiting_quote") ||
+        (authorization !== null &&
+            (authorization.buyer_cms_user_id !== order.buyer_cms_user_id ||
+                authorization.status !== order.status ||
+                authorization.order_version !== order.version))
     ) {
         throw invalidResponse(deliverySetupFunction);
     }
@@ -97,40 +86,40 @@ function projectDeliverySetupContext(
             status: order.status,
             version: order.version,
         },
-        authorization: authorization === null ? null : {
-            buyerCmsUserId: authorization.buyer_cms_user_id,
-            status: authorization.status,
-            orderVersion: authorization.order_version,
-            sellerCmsUserId: authorization.seller_cms_user_id,
-            currency: authorization.currency,
-            merchandiseSubtotalMinorAmount:
-                authorization.merchandise_subtotal_minor_amount,
-            shippingAddress: camelize(authorization.shipping_address),
-        },
+        authorization:
+            authorization === null
+                ? null
+                : {
+                      buyerCmsUserId: authorization.buyer_cms_user_id,
+                      status: authorization.status,
+                      orderVersion: authorization.order_version,
+                      sellerCmsUserId: authorization.seller_cms_user_id,
+                      currency: authorization.currency,
+                      merchandiseSubtotalMinorAmount: authorization.merchandise_subtotal_minor_amount,
+                      shippingAddress: camelize(authorization.shipping_address),
+                  },
     };
 }
 
 function validSetupAuthorization(value: unknown): value is JsonRecord {
-    return hasFields(value, setupAuthorizationFields)
-        && typeof value.buyer_cms_user_id === "string"
-        && typeof value.status === "string"
-        && Number.isSafeInteger(value.order_version)
-        && typeof value.seller_cms_user_id === "string"
-        && typeof value.currency === "string"
-        && Number.isSafeInteger(value.merchandise_subtotal_minor_amount)
-        && isRecord(value.shipping_address);
+    return (
+        hasFields(value, setupAuthorizationFields) &&
+        typeof value.buyer_cms_user_id === "string" &&
+        typeof value.status === "string" &&
+        Number.isSafeInteger(value.order_version) &&
+        typeof value.seller_cms_user_id === "string" &&
+        typeof value.currency === "string" &&
+        Number.isSafeInteger(value.merchandise_subtotal_minor_amount) &&
+        isRecord(value.shipping_address)
+    );
 }
 
-function projectDeliverySelectionContext(
-    value: unknown,
-    actor: string,
-): JsonRecord {
+function projectDeliverySelectionContext(value: unknown, actor: string): JsonRecord {
     if (
-        !hasFields(value, selectionFields)
-        || typeof value.public_id !== "string"
-        || value.buyer_cms_user_id !== actor
-        || (value.delivery_quote_id !== null
-            && typeof value.delivery_quote_id !== "string")
+        !hasFields(value, selectionFields) ||
+        typeof value.public_id !== "string" ||
+        value.buyer_cms_user_id !== actor ||
+        (value.delivery_quote_id !== null && typeof value.delivery_quote_id !== "string")
     ) {
         throw invalidResponse(deliverySelectionFunction);
     }
@@ -141,11 +130,8 @@ function projectDeliverySelectionContext(
     };
 }
 
-function hasFields(
-    value: unknown,
-    fields: readonly string[],
-): value is JsonRecord {
-    return isRecord(value) && fields.every(field => Object.hasOwn(value, field));
+function hasFields(value: unknown, fields: readonly string[]): value is JsonRecord {
+    return isRecord(value) && fields.every((field) => Object.hasOwn(value, field));
 }
 
 function invalidResponse(functionName: string): HttpError {

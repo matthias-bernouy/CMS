@@ -15,10 +15,12 @@ export type MongoPatConfig = { collectionPrefix?: string };
 type PatDoc = Omit<Pat, "id"> & { _id: string; hash: string };
 
 export class MongoPatRepository implements PatRepository {
-
     private readonly _prefix: string;
 
-    constructor(private readonly db: Db, config: MongoPatConfig = {}) {
+    constructor(
+        private readonly db: Db,
+        config: MongoPatConfig = {},
+    ) {
         this._prefix = config.collectionPrefix ?? "";
     }
 
@@ -33,11 +35,11 @@ export class MongoPatRepository implements PatRepository {
     async create(input: NewPat): Promise<{ token: string; pat: Pat }> {
         const token = mintPatToken();
         const doc: PatDoc = {
-            _id:       randomUUIDv7(),
-            hash:      hashPatToken(token),
-            sub:       input.sub,
-            name:      input.name,
-            scopes:    input.scopes ?? [],
+            _id: randomUUIDv7(),
+            hash: hashPatToken(token),
+            sub: input.sub,
+            name: input.name,
+            scopes: input.scopes ?? [],
             createdAt: new Date(),
             expiresAt: input.expiresAt ?? null,
         };
@@ -54,7 +56,9 @@ export class MongoPatRepository implements PatRepository {
             { $set: { lastUsedAt: now } },
             { returnDocument: "after" },
         );
-        if (!doc) return null;
+        if (!doc) {
+            return null;
+        }
         return { sub: doc.sub, scopes: [...doc.scopes] };
     }
 

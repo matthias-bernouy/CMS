@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    expectSingleRpc,
-    installCommerceTestEnvironment,
-    requestCommerce,
-} from "../../../harness";
+import { expectSingleRpc, installCommerceTestEnvironment, requestCommerce } from "../../../harness";
 import { buyerId, firstOrderPublicId, sellerUserId } from "../fixtures/raw";
 import { useCompleteOrderResponder } from "../fixtures/responder";
 
@@ -19,8 +15,10 @@ describe("commerce order detail read-model inputs", () => {
 
         expect(response.status).toBe(200);
         expect(expectSingleRpc("get_order_detail_read_model").body).toEqual({
-            p_scope: "buyer", p_cms_user_id: buyerId,
-            p_id: null, p_public_id: firstOrderPublicId,
+            p_scope: "buyer",
+            p_cms_user_id: buyerId,
+            p_id: null,
+            p_public_id: firstOrderPublicId,
         });
     });
 
@@ -31,8 +29,10 @@ describe("commerce order detail read-model inputs", () => {
 
         expect(response.status).toBe(200);
         expect(expectSingleRpc("get_order_detail_read_model").body).toEqual({
-            p_scope: "seller", p_cms_user_id: sellerUserId,
-            p_id: 42, p_public_id: null,
+            p_scope: "seller",
+            p_cms_user_id: sellerUserId,
+            p_id: 42,
+            p_public_id: null,
         });
     });
 
@@ -43,8 +43,10 @@ describe("commerce order detail read-model inputs", () => {
 
         expect(response.status).toBe(200);
         expect(expectSingleRpc("get_order_detail_read_model").body).toEqual({
-            p_scope: "admin", p_cms_user_id: null,
-            p_id: 42, p_public_id: null,
+            p_scope: "admin",
+            p_cms_user_id: null,
+            p_id: 42,
+            p_public_id: null,
         });
     });
 });

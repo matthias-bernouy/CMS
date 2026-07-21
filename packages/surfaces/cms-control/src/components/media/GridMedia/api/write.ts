@@ -4,9 +4,9 @@ export async function renameItem(id: string, label: string): Promise<boolean> {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id);
     const res = await fetch(url.toString(), {
-        method:  "PATCH",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ name: label }),
+        body: JSON.stringify({ name: label }),
     });
     return res.ok;
 }
@@ -23,9 +23,9 @@ export async function deleteItem(id: string): Promise<boolean> {
 
 export async function createFolder(label: string, parent: string | null): Promise<boolean> {
     const res = await fetch(`${filesBase()}/folder`, {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ name: label, parentId: parent }),
+        body: JSON.stringify({ name: label, parentId: parent }),
     });
     return res.ok;
 }
@@ -45,10 +45,14 @@ export function localPreview(id: string): string | undefined {
 export async function uploadFiles(files: FileList, folder: string | null): Promise<void> {
     for (let i = 0; i < files.length; i++) {
         const file = files.item(i);
-        if (!file) continue;
+        if (!file) {
+            continue;
+        }
         const form = new FormData();
         form.append("file", file);
-        if (folder) form.append("parentId", folder);
+        if (folder) {
+            form.append("parentId", folder);
+        }
         const res = await fetch(`${filesBase()}/upload`, { method: "POST", body: form });
         if (res.ok) {
             const item = (await res.json()) as FilesItem;
@@ -69,7 +73,9 @@ export async function replaceFileContent(id: string, file: File): Promise<boolea
     form.append("file", file);
     form.append("id", id);
     const res = await fetch(`${filesBase()}/content`, { method: "PUT", body: form });
-    if (res.ok) _localPreview.set(id, URL.createObjectURL(file));
+    if (res.ok) {
+        _localPreview.set(id, URL.createObjectURL(file));
+    }
     return res.ok;
 }
 
@@ -79,15 +85,21 @@ export async function replaceFileContent(id: string, file: File): Promise<boolea
  */
 export async function saveItemMetadata(id: string, data: Record<string, string>): Promise<boolean> {
     const patch: { name?: string; parentId?: string } = {};
-    if (typeof data["label"] === "string") patch.name = data["label"];
-    if (typeof data["parent"] === "string") patch.parentId = data["parent"];
-    if (Object.keys(patch).length === 0) return true;
+    if (typeof data["label"] === "string") {
+        patch.name = data["label"];
+    }
+    if (typeof data["parent"] === "string") {
+        patch.parentId = data["parent"];
+    }
+    if (Object.keys(patch).length === 0) {
+        return true;
+    }
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id);
     const res = await fetch(url.toString(), {
-        method:  "PATCH",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(patch),
+        body: JSON.stringify(patch),
     });
     return res.ok;
 }

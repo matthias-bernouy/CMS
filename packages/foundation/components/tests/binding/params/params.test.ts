@@ -1,13 +1,22 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import {
-    currentParams, currentState, hasParamTokens, hasStateTokens,
-    PARAMS_CHANGE_EVENT, resolveParams, resolveState,
-    setParam, setState, STATE_CHANGE_EVENT,
+    currentParams,
+    currentState,
+    hasParamTokens,
+    hasStateTokens,
+    PARAMS_CHANGE_EVENT,
+    resolveParams,
+    resolveState,
+    setParam,
+    setState,
+    STATE_CHANGE_EVENT,
 } from "../../../src/binding/params";
 
 // happy-dom does not reflect history.replaceState into `location`, but DOES
 // honour `location.href = …`. Use href to set up state; reset it between tests.
-afterEach(() => { location.href = "http://localhost/"; });
+afterEach(() => {
+    location.href = "http://localhost/";
+});
 
 describe("hasParamTokens", () => {
     test("detects #{...}", () => {
@@ -63,7 +72,9 @@ describe("local page state", () => {
 
     test("setState writes local state without changing the address bar", () => {
         let fired = 0;
-        const onChange = () => { fired++; };
+        const onChange = () => {
+            fired++;
+        };
         document.addEventListener(STATE_CHANGE_EVENT, onChange);
         location.href = "http://localhost/admin/pages?search=old";
 
@@ -80,9 +91,12 @@ describe("setParam (via replaceState — asserted through a spy, since happy-dom
     test("calls replaceState with the new param and fires the change event", () => {
         const urls: string[] = [];
         const orig = history.replaceState;
-        history.replaceState = ((_s: unknown, _t: unknown, url: string) => urls.push(url)) as typeof history.replaceState;
+        history.replaceState = ((_s: unknown, _t: unknown, url: string) =>
+            urls.push(url)) as typeof history.replaceState;
         let fired = 0;
-        const onChange = () => { fired++; };
+        const onChange = () => {
+            fired++;
+        };
         document.addEventListener(PARAMS_CHANGE_EVENT, onChange);
 
         location.href = "http://localhost/admin/pages";
@@ -98,7 +112,8 @@ describe("setParam (via replaceState — asserted through a spy, since happy-dom
     test("empty value removes the param from the written URL", () => {
         const urls: string[] = [];
         const orig = history.replaceState;
-        history.replaceState = ((_s: unknown, _t: unknown, url: string) => urls.push(url)) as typeof history.replaceState;
+        history.replaceState = ((_s: unknown, _t: unknown, url: string) =>
+            urls.push(url)) as typeof history.replaceState;
 
         location.href = "http://localhost/admin/pages?tag=news";
         setParam("tag", "");

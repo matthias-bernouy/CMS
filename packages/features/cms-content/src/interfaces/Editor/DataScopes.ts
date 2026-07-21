@@ -1,13 +1,6 @@
 export type DataExpression = string;
 
-export type DataFieldType =
-    | "string"
-    | "number"
-    | "boolean"
-    | "date"
-    | "object"
-    | "array"
-    | "unknown";
+export type DataFieldType = "string" | "number" | "boolean" | "date" | "object" | "array" | "unknown";
 
 export type DataField = {
     path: DataExpression;

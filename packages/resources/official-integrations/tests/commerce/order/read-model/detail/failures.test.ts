@@ -22,7 +22,8 @@ describe("commerce order and sale detail failures", () => {
             });
 
             expect({ status: response.status, body: await response.json() }).toEqual({
-                status: 502, body: { error: message },
+                status: 502,
+                body: { error: message },
             });
             expect(capturedFetches().slice(before)).toHaveLength(1);
         }
@@ -40,7 +41,9 @@ describe("commerce order and sale detail failures", () => {
             const response = await requestCommerce(route, options);
 
             expect({ route, status: response.status, body: await response.json() }).toEqual({
-                route, status: 502, body: { error: message },
+                route,
+                status: 502,
+                body: { error: message },
             });
         }
     });

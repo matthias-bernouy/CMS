@@ -10,14 +10,13 @@ import { compress, sendCompressed } from "@bernouy/http-runner";
  * set to "same-origin".
  */
 function getCoop(headers: Headers): string | null {
-    return headers.get("Cross-Origin-Opener-Policy")
-        ?? headers.get("Cross-Origin-Opener-Policy-Report-Only");
+    return headers.get("Cross-Origin-Opener-Policy") ?? headers.get("Cross-Origin-Opener-Policy-Report-Only");
 }
 
 describe("security headers on every compressed response", () => {
     const cases: { enc: string; accept: string }[] = [
-        { enc: "br",       accept: "br" },
-        { enc: "gzip",     accept: "gzip" },
+        { enc: "br", accept: "br" },
+        { enc: "gzip", accept: "gzip" },
         { enc: "identity", accept: "" },
     ];
 
@@ -69,4 +68,3 @@ describe("CSP is only emitted on HTML responses", () => {
         expect(res.headers.get("Content-Security-Policy-Report-Only")).toBe(null);
     });
 });
-

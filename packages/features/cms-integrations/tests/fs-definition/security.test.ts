@@ -61,8 +61,9 @@ describe("filesystem integration repository confinement", () => {
         writeFileSync(outsideAsset, "<svg></svg>");
         symlinkSync(outsideAsset, join(assetRoot, "icon.svg"), "file");
 
-        await expect(assetFixture.repository.getAsset("demo", undefined, "assets/icon.svg"))
-            .rejects.toThrow(/escapes integration asset root/);
+        await expect(assetFixture.repository.getAsset("demo", undefined, "assets/icon.svg")).rejects.toThrow(
+            /escapes integration asset root/,
+        );
     });
 
     test("rejects bloc and view symlinks that resolve outside the version", async () => {
@@ -112,7 +113,9 @@ function createFixture(options: { createVersion?: boolean } = {}): Fixture {
         path: "versions/1.0.0",
         definition: "versions/1.0.0/definition.json",
     });
-    if (options.createVersion !== false) writeDefinition(fixture.definitionPath);
+    if (options.createVersion !== false) {
+        writeDefinition(fixture.definitionPath);
+    }
     return fixture;
 }
 

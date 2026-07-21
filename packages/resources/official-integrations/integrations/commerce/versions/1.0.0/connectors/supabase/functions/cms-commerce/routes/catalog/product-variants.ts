@@ -19,8 +19,13 @@ export async function listProductVariants(request: Request): Promise<Response> {
         limit: String(limit),
         offset: String(offset),
     });
-    const query = url.searchParams.get("q")?.trim().replace(/[,*()]/g, " ");
-    if (query) params.set("or", `(title.ilike.*${query}*,sku.ilike.*${query}*)`);
+    const query = url.searchParams
+        .get("q")
+        ?.trim()
+        .replace(/[,*()]/g, " ");
+    if (query) {
+        params.set("or", `(title.ilike.*${query}*,sku.ilike.*${query}*)`);
+    }
     const { rows, total } = await listRows(`product_variants?${params.toString()}`);
     return json({ items: camelize(rows), total, limit, offset });
 }

@@ -20,7 +20,9 @@ import {
 export function validateRelation(relation: CmsRelation): string[] {
     const errors: string[] = [];
     validateRequiredId("relation.id", relation.id, errors);
-    if (relation.label !== undefined && !relation.label.trim()) errors.push("relation.label must be non-empty when provided");
+    if (relation.label !== undefined && !relation.label.trim()) {
+        errors.push("relation.label must be non-empty when provided");
+    }
     validateSide(relation.from, "relation.from", errors);
     validateSide(relation.to, "relation.to", errors);
     if (!(RELATION_CARDINALITIES as readonly string[]).includes(relation.cardinality)) {
@@ -37,7 +39,9 @@ function validateSide(side: RelationSide, path: string, errors: string[]): void 
         return;
     }
     validateRequiredId(`${path}.sourceId`, side.sourceId, errors);
-    if (side.label !== undefined && !side.label.trim()) errors.push(`${path}.label must be non-empty when provided`);
+    if (side.label !== undefined && !side.label.trim()) {
+        errors.push(`${path}.label must be non-empty when provided`);
+    }
     validatePath(`${path}.idPath`, side.idPath, errors);
 }
 
@@ -46,8 +50,12 @@ function validateBinding(binding: RelationBinding, path: string, errors: string[
         errors.push(`${path} must be an object`);
         return;
     }
-    if (binding.kind === "reference") return validateReferenceBinding(binding, path, errors);
-    if (binding.kind === "linkTable") return validateLinkTableBinding(binding, path, errors);
+    if (binding.kind === "reference") {
+        return validateReferenceBinding(binding, path, errors);
+    }
+    if (binding.kind === "linkTable") {
+        return validateLinkTableBinding(binding, path, errors);
+    }
     errors.push(`${path}.kind must be reference or linkTable`);
 }
 
@@ -69,7 +77,9 @@ function validateLinkTableBinding(binding: LinkTableRelationBinding, path: strin
     validateRequiredId(`${path}.toIdParam`, binding.toIdParam, errors);
     validateRequiredPath(`${path}.itemsPath`, binding.itemsPath, errors);
     validateRequiredPath(`${path}.targetIdPath`, binding.targetIdPath, errors);
-    if (!binding.target) return;
+    if (!binding.target) {
+        return;
+    }
     validateRequiredId(`${path}.target.sourceId`, binding.target.sourceId, errors);
     validateRequiredId(`${path}.target.endpointId`, binding.target.endpointId, errors);
     validateRequiredId(`${path}.target.idParam`, binding.target.idParam, errors);
@@ -81,7 +91,9 @@ function validateLinkTableBinding(binding: LinkTableRelationBinding, path: strin
 function validatePage(relation: CmsRelation, errors: string[]): void {
     const page = relation.page;
     if (relation.cardinality === "one") {
-        if (page) errors.push("relation.page is only supported for many relations");
+        if (page) {
+            errors.push("relation.page is only supported for many relations");
+        }
         return;
     }
     if (!page) {
@@ -94,9 +106,15 @@ function validatePage(relation: CmsRelation, errors: string[]): void {
     validateId("relation.page.offsetParam", page.offsetParam, errors);
     validateId("relation.page.cursorParam", page.cursorParam, errors);
     validatePath("relation.page.nextCursorPath", page.nextCursorPath, errors);
-    if (!page.limitParam) errors.push("relation.page.limitParam is required for many relations");
-    if (page.offsetParam && page.cursorParam) errors.push("relation.page must not declare both offsetParam and cursorParam");
-    if (page.cursorParam && !page.nextCursorPath) errors.push("relation.page.nextCursorPath is required when cursorParam is used");
+    if (!page.limitParam) {
+        errors.push("relation.page.limitParam is required for many relations");
+    }
+    if (page.offsetParam && page.cursorParam) {
+        errors.push("relation.page must not declare both offsetParam and cursorParam");
+    }
+    if (page.cursorParam && !page.nextCursorPath) {
+        errors.push("relation.page.nextCursorPath is required when cursorParam is used");
+    }
     validateLimit("relation.page.defaultLimit", page.defaultLimit, errors);
     validateLimit("relation.page.maxLimit", page.maxLimit, errors);
     if (page.defaultLimit !== undefined && page.maxLimit !== undefined && page.defaultLimit > page.maxLimit) {
@@ -105,7 +123,9 @@ function validatePage(relation: CmsRelation, errors: string[]): void {
 }
 
 function validateLimit(path: string, value: number | undefined, errors: string[]): void {
-    if (value === undefined) return;
+    if (value === undefined) {
+        return;
+    }
     if (!Number.isInteger(value) || value < 1 || value > MAX_RELATION_LIMIT) {
         errors.push(`${path} must be an integer between 1 and ${MAX_RELATION_LIMIT}`);
     }

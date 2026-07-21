@@ -30,11 +30,11 @@ export class MongoSourceOverlayRepository implements SourceOverlayRepository {
     }
 
     async getOverlaysForSource(sourceId: string): Promise<SourceOverlay[]> {
-        return (await this.overlays.find({ sourceId }).toArray()).map(doc => fromDoc(doc)!);
+        return (await this.overlays.find({ sourceId }).toArray()).map((doc) => fromDoc(doc)!);
     }
 
     async getAllOverlays(): Promise<SourceOverlay[]> {
-        return (await this.overlays.find().toArray()).map(doc => fromDoc(doc)!);
+        return (await this.overlays.find().toArray()).map((doc) => fromDoc(doc)!);
     }
 
     async upsertOverlay(overlay: SourceOverlay): Promise<SourceOverlay> {
@@ -57,7 +57,9 @@ function toDoc(overlay: SourceOverlay): SourceOverlayDoc {
 }
 
 function fromDoc(doc: SourceOverlayDoc | null): SourceOverlay | null {
-    if (!doc) return null;
+    if (!doc) {
+        return null;
+    }
     const { _id, ...rest } = doc;
     return { id: _id, ...rest };
 }

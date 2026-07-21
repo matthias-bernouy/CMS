@@ -60,6 +60,4 @@ export {
     isSafeDashboardExpression,
     isSafeDashboardPath,
 } from "../core/dashboardPaths";
-export {
-    applyDashboardSourceOverlays,
-} from "../core/sourceOverlayDashboard";
+export { applyDashboardSourceOverlays } from "../core/sourceOverlayDashboard";

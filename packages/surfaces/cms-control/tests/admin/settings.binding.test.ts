@@ -18,42 +18,46 @@ describe("admin settings binding", () => {
             if (href.includes("/api/system/settings")) {
                 return json({
                     site: {
-                        name:        "Demo",
-                        host:        "https://example.com",
-                        favicon:     "",
-                        language:    "",
-                        notFound:    { path: "" },
-                        forbidden:   { path: "" },
+                        name: "Demo",
+                        host: "https://example.com",
+                        favicon: "",
+                        language: "",
+                        notFound: { path: "" },
+                        forbidden: { path: "" },
                         serverError: { path: "" },
-                        login:       { path: "" },
-                        theme:       "",
+                        login: { path: "" },
+                        theme: "",
                     },
                     editor: { layoutCategory: "" },
                     security: {},
                     email: {
-                        enabled:   true,
+                        enabled: true,
                         transport: "smtp",
                         fromEmail: "",
-                        fromName:  "",
-                        replyTo:   "",
-                        smtp:      {
-                            host:              "",
-                            port:              587,
-                            secure:            false,
-                            username:          "",
+                        fromName: "",
+                        replyTo: "",
+                        smtp: {
+                            host: "",
+                            port: 587,
+                            secure: false,
+                            username: "",
                             passwordSecretRef: "",
                         },
                         templates: {
                             emailVerification: { subject: "", html: "" },
-                            passwordReset:     { subject: "", html: "" },
+                            passwordReset: { subject: "", html: "" },
                         },
                     },
-                    pages:            [{ path: "/404", title: "Not found" }],
+                    pages: [{ path: "/404", title: "Not found" }],
                     layoutCategories: ["Layouts"],
                 });
             }
-            if (href.includes("/api/identity/providers")) return json([]);
-            if (href.includes("/api/secrets")) return json([]);
+            if (href.includes("/api/identity/providers")) {
+                return json([]);
+            }
+            if (href.includes("/api/secrets")) {
+                return json([]);
+            }
             return json({});
         }) as typeof fetch;
 
@@ -78,8 +82,12 @@ describe("admin settings binding", () => {
         expect(document.querySelector("p9r-select[name='site.forbidden'] option[value='/404']")).not.toBeNull();
         expect(document.querySelector("p9r-select[name='site.serverError'] option[value='/404']")).not.toBeNull();
         expect(document.querySelector("p9r-select[name='site.login'] option[value='/404']")).not.toBeNull();
-        expect(document.querySelector("p9r-select[name='site.notFound']")?.getAttribute("label")).toBe("Not Found page");
-        expect(document.querySelector("p9r-select[name='site.serverError']")?.getAttribute("label")).toBe("Internal Server Error page");
+        expect(document.querySelector("p9r-select[name='site.notFound']")?.getAttribute("label")).toBe(
+            "Not Found page",
+        );
+        expect(document.querySelector("p9r-select[name='site.serverError']")?.getAttribute("label")).toBe(
+            "Internal Server Error page",
+        );
 
         const settingsNav = document.querySelector("cms-settings-nav");
         const general = settingsNav?.shadowRoot?.querySelector<HTMLElement>("[data-settings-section='general']");
@@ -122,8 +130,9 @@ describe("admin settings binding", () => {
         expect(document.body.textContent).toContain("Connector providers");
         expect(document.body.textContent).toContain("Access token configured");
         expect(document.body.textContent).toContain("server-side secret store");
-        expect(document.querySelector("p9r-input[name='projectRef']")?.getAttribute("value"))
-            .toBe("abcdefghijklmnopqrst");
+        expect(document.querySelector("p9r-input[name='projectRef']")?.getAttribute("value")).toBe(
+            "abcdefghijklmnopqrst",
+        );
         const token = document.querySelector<HTMLElement>("p9r-input[name='accessToken']");
         expect(token?.getAttribute("type")).toBe("password");
         expect(token?.getAttribute("value")).toBeNull();
@@ -139,41 +148,43 @@ describe("admin settings binding", () => {
             if (href.includes("/api/system/settings")) {
                 return json({
                     site: {
-                        name:        "Demo",
-                        host:        "https://example.com",
-                        favicon:     "",
-                        language:    "",
-                        notFound:    { path: "" },
-                        forbidden:   { path: "" },
+                        name: "Demo",
+                        host: "https://example.com",
+                        favicon: "",
+                        language: "",
+                        notFound: { path: "" },
+                        forbidden: { path: "" },
                         serverError: { path: "" },
-                        login:       { path: "" },
-                        theme:       "",
+                        login: { path: "" },
+                        theme: "",
                     },
                     editor: { layoutCategory: "" },
                     security: {},
                     email: {
-                        enabled:   true,
+                        enabled: true,
                         transport: "smtp",
                         fromEmail: "no-reply@example.com",
-                        fromName:  "Demo",
-                        replyTo:   "",
-                        smtp:      {
-                            host:              "smtp.protonmail.ch",
-                            port:              587,
-                            secure:            true,
-                            username:          "matthias@bernouy.fr",
+                        fromName: "Demo",
+                        replyTo: "",
+                        smtp: {
+                            host: "smtp.protonmail.ch",
+                            port: 587,
+                            secure: true,
+                            username: "matthias@bernouy.fr",
                             passwordSecretRef: secretRef,
                         },
                         templates: {
                             emailVerification: { subject: "", html: "" },
-                            passwordReset:     { subject: "", html: "" },
+                            passwordReset: { subject: "", html: "" },
                         },
                     },
-                    pages:            [],
+                    pages: [],
                     layoutCategories: [],
                 });
             }
-            if (href.includes("/api/secrets")) return json(["PROTON_SMTP_TOKEN"]);
+            if (href.includes("/api/secrets")) {
+                return json(["PROTON_SMTP_TOKEN"]);
+            }
             return json({});
         }) as typeof fetch;
 
@@ -185,11 +196,16 @@ describe("admin settings binding", () => {
             </cms-binding-core>
         `;
 
-        await waitFor(() => document
-            .querySelector("cms-credential-select[name='email.smtp.passwordSecretRef']")
-            ?.getAttribute("value") === secretRef);
+        await waitFor(
+            () =>
+                document
+                    .querySelector("cms-credential-select[name='email.smtp.passwordSecretRef']")
+                    ?.getAttribute("value") === secretRef,
+        );
 
-        const picker = document.querySelector<HTMLElement>("cms-credential-select[name='email.smtp.passwordSecretRef']");
+        const picker = document.querySelector<HTMLElement>(
+            "cms-credential-select[name='email.smtp.passwordSecretRef']",
+        );
         expect(picker?.shadowRoot?.querySelector(".value")?.textContent).toBe("PROTON_SMTP_TOKEN");
         expect((picker?.shadowRoot?.querySelector(".clear-btn") as HTMLElement | null)?.style.display).toBe("flex");
     });
@@ -197,7 +213,9 @@ describe("admin settings binding", () => {
     test("renders secret creation from the detail header modal", async () => {
         globalThis.fetch = (async (url: string | URL | Request) => {
             const href = String(url);
-            if (href.includes("/api/secrets")) return json([]);
+            if (href.includes("/api/secrets")) {
+                return json([]);
+            }
             return json({});
         }) as typeof fetch;
 
@@ -233,7 +251,9 @@ function json(data: unknown): Response {
 
 async function waitFor(predicate: () => boolean, tries = 50): Promise<void> {
     for (let i = 0; i < tries; i++) {
-        if (predicate()) return;
+        if (predicate()) {
+            return;
+        }
         await new Promise((resolve) => setTimeout(resolve, 0));
     }
 }

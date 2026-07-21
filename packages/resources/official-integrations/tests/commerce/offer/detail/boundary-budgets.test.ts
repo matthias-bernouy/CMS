@@ -7,11 +7,7 @@ import {
     supabaseUrl,
 } from "../../harness";
 import { nullOfferDetail } from "./expected";
-import {
-    managedOfferResponse,
-    managedOfferState,
-    useFullOfferDetailResponder,
-} from "./fixtures";
+import { managedOfferResponse, managedOfferState, useFullOfferDetailResponder } from "./fixtures";
 
 installCommerceTestEnvironment();
 
@@ -27,7 +23,7 @@ describe("commerce optimized offer detail boundary budgets", () => {
 
         expect({ seller: seller.status, admin: admin.status }).toEqual({ seller: 404, admin: 404 });
         expect(calls).toHaveLength(2);
-        expect(calls.map(call => call.body)).toEqual([
+        expect(calls.map((call) => call.body)).toEqual([
             { p_scope: "self", p_offer_id: 404, p_slug: null, p_cms_user_id: null },
             { p_scope: "admin", p_offer_id: 404, p_slug: null, p_cms_user_id: null },
         ]);
@@ -73,9 +69,11 @@ describe("commerce optimized offer detail boundary budgets", () => {
         const calls = managedCalls();
 
         expect({ seller: seller.status, admin: admin.status }).toEqual({ seller: 200, admin: 200 });
-        expect(calls.map(call => call.body)).toEqual([
+        expect(calls.map((call) => call.body)).toEqual([
             {
-                p_scope: "self", p_offer_id: null, p_slug: "camera-offer",
+                p_scope: "self",
+                p_offer_id: null,
+                p_slug: "camera-offer",
                 p_cms_user_id: "seller-user-123",
             },
             { p_scope: "admin", p_offer_id: 91, p_slug: null, p_cms_user_id: null },

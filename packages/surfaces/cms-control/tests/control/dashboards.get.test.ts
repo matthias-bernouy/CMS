@@ -17,7 +17,7 @@ describe("GET /api/dashboards", () => {
         const dashboards = new InMemoryDashboardRepository();
         await sources.createSource({
             urn: "urn:commerce",
-            meta: { name: "Commerce", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
+            meta: { name: "Commerce", icon: "database", svg: '<svg viewBox="0 0 24 24"></svg>' },
             endpoints: [
                 {
                     urn: "urn:commerce:listOrders",
@@ -30,13 +30,15 @@ describe("GET /api/dashboards", () => {
             id: "orders",
             meta: { name: "Orders" },
             source: "commerce",
-            views: [{
-                widget: "w-table",
-                id: "ordersTable",
-                source: { endpoint: "listOrders", itemsPath: "items" },
-                rowKey: "id",
-                columns: [{ id: "id", label: "ID", path: "id" }],
-            }],
+            views: [
+                {
+                    widget: "w-table",
+                    id: "ordersTable",
+                    source: { endpoint: "listOrders", itemsPath: "items" },
+                    rowKey: "id",
+                    columns: [{ id: "id", label: "ID", path: "id" }],
+                },
+            ],
         });
 
         const body = await (await listDashboards(list(), { sources, dashboards } as any)).json();
@@ -46,7 +48,7 @@ describe("GET /api/dashboards", () => {
             id: "commerce",
             name: "Commerce",
             icon: "database",
-            svg: "<svg viewBox=\"0 0 24 24\"></svg>",
+            svg: '<svg viewBox="0 0 24 24"></svg>',
             endpointCount: 1,
             dashboardCount: 1,
             readonly: false,
@@ -82,10 +84,12 @@ describe("GET /api/dashboards", () => {
             return: {},
         });
 
-        const body = await (await listDashboards(list(), {
-            sources: withFunctionsSource(baseSources, functions),
-            dashboards,
-        } as any)).json();
+        const body = await (
+            await listDashboards(list(), {
+                sources: withFunctionsSource(baseSources, functions),
+                dashboards,
+            } as any)
+        ).json();
 
         expect(body.map((group: any) => group.source.id)).not.toContain("system-functions");
     });

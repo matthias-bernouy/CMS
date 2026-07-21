@@ -15,7 +15,9 @@ export class BasicStack extends Component {
     }
 
     attributeChangedCallback() {
-        if (this.isConnected) this.syncColors();
+        if (this.isConnected) {
+            this.syncColors();
+        }
     }
 
     syncColors() {
@@ -24,8 +26,11 @@ export class BasicStack extends Component {
             ["text-color", "--basic-stack-color"],
         ]) {
             const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
+            if (value) {
+                this.style.setProperty(property, value);
+            } else {
+                this.style.removeProperty(property);
+            }
         }
     }
 }

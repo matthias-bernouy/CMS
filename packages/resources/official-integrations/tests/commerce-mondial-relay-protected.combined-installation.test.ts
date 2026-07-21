@@ -54,7 +54,11 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
             secrets: new InMemorySecretStore(),
             installations,
             connectorDeployers: [deployer],
-            blocs: { async importBloc(artifact) { return { id: artifact.tag, action: "created" }; } },
+            blocs: {
+                async importBloc(artifact) {
+                    return { id: artifact.tag, action: "created" };
+                },
+            },
         };
 
         await install("basic-blocs", {}, definitions, deps, installations);
@@ -64,35 +68,54 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
         await install("stripe-connect", stripeAnswers(), definitions, deps, installations);
         await install("commerce-mondial-relay-delivery", {}, definitions, deps, installations);
         await install("commerce-mondial-relay-fulfillment", {}, definitions, deps, installations);
-        await install("commerce-stripe-payments", {
-            sellerTermsVersion: "seller-terms-2026-07-13",
-            sellerTermsHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        }, definitions, deps, installations);
+        await install(
+            "commerce-stripe-payments",
+            {
+                sellerTermsVersion: "seller-terms-2026-07-13",
+                sellerTermsHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            },
+            definitions,
+            deps,
+            installations,
+        );
 
         expect(deployments).toEqual(["user-account", "commerce", "mondial-relay", "stripe-connect"]);
-        expect((await sources.getAllSources()).map(source => source.urn).sort()).toEqual([
-            "urn:accounts", "urn:commerce", "urn:delivery", "urn:stripe-connect",
+        expect((await sources.getAllSources()).map((source) => source.urn).sort()).toEqual([
+            "urn:accounts",
+            "urn:commerce",
+            "urn:delivery",
+            "urn:stripe-connect",
         ]);
-        for (const source of await sources.getAllSources()) expect(validateSource(source)).toEqual([]);
+        for (const source of await sources.getAllSources()) {
+            expect(validateSource(source)).toEqual([]);
+        }
 
-        const functionIds = (await functions.getAllFunctions()).map(fn => fn.id);
-        expect(functionIds).toEqual(expect.arrayContaining([
-            "setRelayPointForOrder",
-            "getRelayPointForOrder",
-            "createShipmentForMySale",
-            "createClaimReturnShipmentForMyPurchase",
-            "reconcileMondialRelayFulfillments",
-            "createPaymentForOrder",
-            "reconcileProtectedPaymentSystems",
-        ]));
+        const functionIds = (await functions.getAllFunctions()).map((fn) => fn.id);
+        expect(functionIds).toEqual(
+            expect.arrayContaining([
+                "setRelayPointForOrder",
+                "getRelayPointForOrder",
+                "createShipmentForMySale",
+                "createClaimReturnShipmentForMyPurchase",
+                "reconcileMondialRelayFulfillments",
+                "createPaymentForOrder",
+                "reconcileProtectedPaymentSystems",
+            ]),
+        );
         for (const fn of await functions.getAllFunctions()) {
             expect(await validateFunction(fn, { sources })).toEqual([]);
         }
-        for (const trigger of await triggers.getAllTriggers()) expect(validateTrigger(trigger)).toEqual([]);
-        for (const kind of kinds) expect((await installations.get(kind))?.status).toBe("success");
+        for (const trigger of await triggers.getAllTriggers()) {
+            expect(validateTrigger(trigger)).toEqual([]);
+        }
+        for (const kind of kinds) {
+            expect((await installations.get(kind))?.status).toBe("success");
+        }
 
-        const deliveryLink = definitions.find(definition => definition.kind === "commerce-mondial-relay-delivery");
-        const fulfillmentLink = definitions.find(definition => definition.kind === "commerce-mondial-relay-fulfillment");
+        const deliveryLink = definitions.find((definition) => definition.kind === "commerce-mondial-relay-delivery");
+        const fulfillmentLink = definitions.find(
+            (definition) => definition.kind === "commerce-mondial-relay-fulfillment",
+        );
         const serialized = JSON.stringify([deliveryLink, fulfillmentLink]);
         expect(serialized).toContain("lockOrderFinancialTerms");
         expect(serialized).toContain("resolveDeliveryQuote");
@@ -104,15 +127,19 @@ describe("Commerce protected Mondial Relay and Stripe combined installation", ()
 
 async function definitionsForGraph(): Promise<IntegrationDefinition[]> {
     const repository = new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
-    return await Promise.all(kinds.map(async kind => {
-        const definition = await repository.get(kind);
-        if (!definition) throw new Error(`${kind} definition not found`);
-        return definition;
-    }));
+    return await Promise.all(
+        kinds.map(async (kind) => {
+            const definition = await repository.get(kind);
+            if (!definition) {
+                throw new Error(`${kind} definition not found`);
+            }
+            return definition;
+        }),
+    );
 }
 
 async function install(
-    kind: typeof kinds[number],
+    kind: (typeof kinds)[number],
     answers: Record<string, IntegrationAnswerValue>,
     definitions: IntegrationDefinition[],
     deps: IntegrationImportDeps,

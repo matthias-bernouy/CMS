@@ -21,11 +21,17 @@ describe("commerce protected C2C policy strict Source contract", () => {
         const raw = await response.json();
 
         expect(response.status).toBe(200);
-        expect(projectStrictDataShape(raw, await sourceShape(), "response", {
-            enforceRequired: false,
-        })).toEqual(expectedC2cSourceResponse(expectedC2cPolicyResponse({
-            feePolicy: publishedFee,
-        })));
+        expect(
+            projectStrictDataShape(raw, await sourceShape(), "response", {
+                enforceRequired: false,
+            }),
+        ).toEqual(
+            expectedC2cSourceResponse(
+                expectedC2cPolicyResponse({
+                    feePolicy: publishedFee,
+                }),
+            ),
+        );
     });
 
     test("records the current draft publishedAt null mismatch separately from performance", async () => {
@@ -33,23 +39,24 @@ describe("commerce protected C2C policy strict Source contract", () => {
         const raw = await (await requestCommerce("/admin/c2c-policies")).json();
         const shape = await sourceShape();
 
-        expect(() => projectStrictDataShape(raw, shape, "response", {
-            enforceRequired: false,
-        })).toThrow();
+        expect(() =>
+            projectStrictDataShape(raw, shape, "response", {
+                enforceRequired: false,
+            }),
+        ).toThrow();
     });
 });
 
-const definitionPath = resolve(
-    import.meta.dir,
-    "../../../../../integrations/commerce/versions/1.0.0/definition.json",
-);
+const definitionPath = resolve(import.meta.dir, "../../../../../integrations/commerce/versions/1.0.0/definition.json");
 
 async function sourceShape(): Promise<DataShape> {
     const definition = JSON.parse(await readFile(definitionPath, "utf8"));
     const endpoint = definition.artifacts
-        .find((artifact: any) => artifact.source)?.source?.endpoints
-        .find((candidate: any) => candidate.endpointId === "c2cPolicies");
+        .find((artifact: any) => artifact.source)
+        ?.source?.endpoints.find((candidate: any) => candidate.endpointId === "c2cPolicies");
     const shape = endpoint?.output?.find((output: any) => output.status === "200")?.body;
-    if (!shape) throw new Error("Missing c2cPolicies 200 output shape");
+    if (!shape) {
+        throw new Error("Missing c2cPolicies 200 output shape");
+    }
     return shape;
 }

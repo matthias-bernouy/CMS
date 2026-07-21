@@ -22,7 +22,9 @@ export class DetailRequestCoordinator {
     }
 
     syncScope(scopeKey: string): void {
-        if (this.scopeKey === scopeKey) return;
+        if (this.scopeKey === scopeKey) {
+            return;
+        }
         this.clear();
         this.scopeKey = scopeKey;
     }
@@ -58,10 +60,14 @@ export class DetailRequestCoordinator {
 
     cancel(consumer: DetailRequestConsumer): void {
         const keys = this.consumerKeys.get(consumer);
-        if (!keys) return;
+        if (!keys) {
+            return;
+        }
         for (const key of keys) {
             const request = this.inFlight.get(key);
-            if (!request) continue;
+            if (!request) {
+                continue;
+            }
             request.consumers.delete(consumer);
             if (request.consumers.size === 0) {
                 request.controller.abort();
@@ -72,7 +78,9 @@ export class DetailRequestCoordinator {
     }
 
     clear(): void {
-        for (const request of this.inFlight.values()) request.controller.abort();
+        for (const request of this.inFlight.values()) {
+            request.controller.abort();
+        }
         this.inFlight.clear();
         this.consumerKeys.clear();
     }
@@ -85,12 +93,16 @@ export class DetailRequestCoordinator {
     }
 
     private finish(key: string, request: InFlightRequest): void {
-        if (this.inFlight.get(key) !== request) return;
+        if (this.inFlight.get(key) !== request) {
+            return;
+        }
         this.inFlight.delete(key);
         for (const consumer of request.consumers) {
             const keys = this.consumerKeys.get(consumer);
             keys?.delete(key);
-            if (keys?.size === 0) this.consumerKeys.delete(consumer);
+            if (keys?.size === 0) {
+                this.consumerKeys.delete(consumer);
+            }
         }
     }
 }
@@ -104,7 +116,9 @@ export class DetailRequestTargets {
 
     consumer(key: string): DetailRequestConsumer {
         const existing = this.consumers.get(key);
-        if (existing) return existing;
+        if (existing) {
+            return existing;
+        }
         const consumer = this.requests.createConsumer();
         this.consumers.set(key, consumer);
         return consumer;
@@ -114,7 +128,9 @@ export class DetailRequestTargets {
         const generation = (this.generations.get(key) ?? 0) + 1;
         this.generations.set(key, generation);
         const consumer = this.consumers.get(key);
-        if (consumer) this.requests.cancel(consumer);
+        if (consumer) {
+            this.requests.cancel(consumer);
+        }
         return generation;
     }
 
@@ -123,7 +139,9 @@ export class DetailRequestTargets {
     }
 
     clear(): void {
-        for (const consumer of this.consumers.values()) this.requests.cancel(consumer);
+        for (const consumer of this.consumers.values()) {
+            this.requests.cancel(consumer);
+        }
         this.consumers.clear();
         this.generations.clear();
     }

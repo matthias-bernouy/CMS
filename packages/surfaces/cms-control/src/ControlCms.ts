@@ -141,7 +141,10 @@ export class ControlCms {
         return this.state.integrationInstallations;
     }
 
-    get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined {
+    get integrationConnectorDeployers():
+        | IntegrationConnectorDeployer[]
+        | Record<string, IntegrationConnectorDeployer>
+        | undefined {
         return this.state.configuration.integrationConnectorDeployers;
     }
 
@@ -161,61 +164,77 @@ export class ControlCms {
     }
 
     get filesMetadata(): CmsFilesMetadataRepository {
-        if (!this.state.filesMetadata) throw new Error("files metadata backend not configured");
+        if (!this.state.filesMetadata) {
+            throw new Error("files metadata backend not configured");
+        }
         return this.state.filesMetadata;
     }
 
     get filesBlob(): CmsFilesBlobStore {
-        if (!this.state.filesBlob) throw new Error("files blob backend not configured");
+        if (!this.state.filesBlob) {
+            throw new Error("files blob backend not configured");
+        }
         return this.state.filesBlob;
     }
 
     get users(): UsersRepository<CMS_ROLES> {
-        if (!this.state.users) throw new Error("users repository not configured");
+        if (!this.state.users) {
+            throw new Error("users repository not configured");
+        }
         return this.state.users;
     }
 
     get identityProviders(): IdentityProviderRepository {
-        if (!this.state.identityProviders) throw new Error("identity providers repository not configured");
+        if (!this.state.identityProviders) {
+            throw new Error("identity providers repository not configured");
+        }
         return this.state.identityProviders;
     }
 
     get pats(): PatRepository {
-        if (!this.state.pats) throw new Error("PAT repository not configured");
+        if (!this.state.pats) {
+            throw new Error("PAT repository not configured");
+        }
         return this.state.pats;
     }
 
     get credentials(): LocalCredentialStore {
-        if (!this.state.credentials) throw new Error("local credential store not configured");
+        if (!this.state.credentials) {
+            throw new Error("local credential store not configured");
+        }
         return this.state.credentials;
     }
 
     get publicAuth(): PublicAuthRoutesConfig<CMS_ROLES> {
-        if (!this.state.configuration.publicAuth) throw new Error("public auth not configured");
+        if (!this.state.configuration.publicAuth) {
+            throw new Error("public auth not configured");
+        }
         return this.state.configuration.publicAuth;
     }
 
     get integrationInstallations(): IntegrationInstallationRepository {
-        if (!this.state.integrationInstallations) throw new Error("integration installations repository not configured");
+        if (!this.state.integrationInstallations) {
+            throw new Error("integration installations repository not configured");
+        }
         return this.state.integrationInstallations;
     }
 
     get sources(): SourceRepository {
-        if (!this.state.sources) throw new Error("sources repository not configured");
+        if (!this.state.sources) {
+            throw new Error("sources repository not configured");
+        }
         const overlaySources = this.state.sourceOverlays
-            ? new SourceOverlaySourceRepository(
-                this.state.sources,
-                this.state.sourceOverlays,
-                { deps: this.sourceExecutorDeps },
-            )
+            ? new SourceOverlaySourceRepository(this.state.sources, this.state.sourceOverlays, {
+                  deps: this.sourceExecutorDeps,
+              })
             : this.state.sources;
-        return this.state.functions
-            ? withFunctionsSource(overlaySources, this.state.functions)
-            : overlaySources;
+        return this.state.functions ? withFunctionsSource(overlaySources, this.state.functions) : overlaySources;
     }
 
     get analytics(): AnalyticsStore {
-        if (!this.state.analytics) throw new Error("analytics store not configured");
+        if (!this.state.analytics) {
+            throw new Error("analytics store not configured");
+        }
         return this.state.analytics;
     }
 

@@ -32,24 +32,30 @@ describe("Mongo identity persistence", () => {
         const collection = new FakeIdentityCollection("identical");
         const identities = createService(collection);
 
-        await expect(identities.bind("subject-1", {
-            authority: "commerce",
-            kind: "user",
-            value: 184,
-        })).resolves.toBeUndefined();
-        expect(await identities.resolve({ authority: "commerce", kind: "user", value: 184 }, "cms"))
-            .toBe("subject-1");
+        await expect(
+            identities.bind("subject-1", {
+                authority: "commerce",
+                kind: "user",
+                value: 184,
+            }),
+        ).resolves.toBeUndefined();
+        expect(await identities.resolve({ authority: "commerce", kind: "user", value: 184 }, "cms")).toBe("subject-1");
     });
 
     test("returns an opaque conflict after a conflicting duplicate-key race", async () => {
         const collection = new FakeIdentityCollection("conflicting");
         const identities = createService(collection);
 
-        const error = await identities.bind("subject-1", {
-            authority: "private-provider",
-            kind: "user",
-            value: "private-alias",
-        }).then(() => null, caught => caught);
+        const error = await identities
+            .bind("subject-1", {
+                authority: "private-provider",
+                kind: "user",
+                value: "private-alias",
+            })
+            .then(
+                () => null,
+                (caught) => caught,
+            );
 
         expect(error).toBeInstanceOf(IdentityAliasConflictError);
         expect(error.message).toBe("Identity alias conflicts with an existing binding");
@@ -71,7 +77,9 @@ class FakeIdentityCollection {
 
     async createIndex(index: Record<string, number>, options: { unique?: boolean }): Promise<string> {
         const key = Object.keys(index)[0];
-        if (!key) throw new Error("An index key is required");
+        if (!key) {
+            throw new Error("An index key is required");
+        }
         this.indexes.push({ key, unique: options.unique === true });
         return key;
     }
@@ -81,27 +89,35 @@ class FakeIdentityCollection {
         update: { $setOnInsert: IdentityDoc },
         _options: { upsert?: boolean },
     ): Promise<void> {
-        if (this.docs.some(doc => matches(doc, filter))) return;
+        if (this.docs.some((doc) => matches(doc, filter))) {
+            return;
+        }
 
         const candidate = structuredClone(update.$setOnInsert);
         if (this.duplicateRace) {
             const race = this.duplicateRace;
             this.duplicateRace = undefined;
-            this.docs.push(race === "identical"
-                ? candidate
-                : { ...candidate, value: "competing-alias", aliasKey: "competing-key" });
+            this.docs.push(
+                race === "identical"
+                    ? candidate
+                    : { ...candidate, value: "competing-alias", aliasKey: "competing-key" },
+            );
             throw duplicateKeyError();
         }
 
-        if (this.docs.some(doc => doc.aliasKey === candidate.aliasKey
-            || doc.subjectAuthorityKey === candidate.subjectAuthorityKey)) {
+        if (
+            this.docs.some(
+                (doc) =>
+                    doc.aliasKey === candidate.aliasKey || doc.subjectAuthorityKey === candidate.subjectAuthorityKey,
+            )
+        ) {
             throw duplicateKeyError();
         }
         this.docs.push(candidate);
     }
 
     async findOne(filter: IdentityFilter): Promise<IdentityDoc | null> {
-        return this.docs.find(doc => matches(doc, filter)) ?? null;
+        return this.docs.find((doc) => matches(doc, filter)) ?? null;
     }
 }
 

@@ -45,11 +45,7 @@ export class ShellRenderSyncCommands {
     }
 
     syncViewport(): void {
-        syncViewport(
-            this.context.refs.canvas,
-            this.context.refs.topBar,
-            this.context.state.viewport,
-        );
+        syncViewport(this.context.refs.canvas, this.context.refs.topBar, this.context.state.viewport);
     }
 
     syncEditorMode(): void {

@@ -27,13 +27,13 @@ export class LocalFsIntegrationInstallationRepository implements IntegrationInst
     }
 
     async get(id: string): Promise<IntegrationInstallation | null> {
-        const found = (await this.readAll()).find(installation => installation.id === id);
+        const found = (await this.readAll()).find((installation) => installation.id === id);
         return found ? copyInstallation(found) : null;
     }
 
     async create(input: IntegrationInstallationCreate): Promise<IntegrationInstallation> {
         const installations = await this.readAll();
-        if (installations.some(installation => installation.id === input.id)) {
+        if (installations.some((installation) => installation.id === input.id)) {
             throw new DuplicateIntegrationInstallationError(input.id);
         }
         const now = new Date();
@@ -60,19 +60,28 @@ export class LocalFsIntegrationInstallationRepository implements IntegrationInst
             updatedAt: new Date(installation.updatedAt),
             runs: trimRuns(installation.runs),
         };
-        const index = installations.findIndex(candidate => candidate.id === installation.id);
-        if (index >= 0) installations[index] = next;
-        else installations.push(next);
+        const index = installations.findIndex((candidate) => candidate.id === installation.id);
+        if (index >= 0) {
+            installations[index] = next;
+        } else {
+            installations.push(next);
+        }
         await this.writeAll(installations);
         await this.writeImport(next);
         return copyInstallation(next);
     }
 
     private async readAll(): Promise<IntegrationInstallation[]> {
-        if (!existsSync(this.file)) return [];
+        if (!existsSync(this.file)) {
+            return [];
+        }
         const parsed = JSON.parse(await readFile(this.file, "utf-8")) as unknown;
-        if (!Array.isArray(parsed)) return [];
-        return parsed.map(reviveInstallation).filter((installation): installation is IntegrationInstallation => installation !== null);
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+        return parsed
+            .map(reviveInstallation)
+            .filter((installation): installation is IntegrationInstallation => installation !== null);
     }
 
     private async writeAll(installations: IntegrationInstallation[]): Promise<void> {
@@ -82,23 +91,35 @@ export class LocalFsIntegrationInstallationRepository implements IntegrationInst
 
     private async writeImport(installation: IntegrationInstallation): Promise<void> {
         await mkdir(this.importsDir, { recursive: true });
-        await writeFile(join(this.importsDir, `${slug(installation.id)}.json`), `${JSON.stringify({
-            kind: installation.id,
-            ...(installation.definitionSnapshot ? { definition: installation.definitionSnapshot } : {}),
-            answers: installation.answersSnapshot ?? {},
-        }, null, 4)}\n`, "utf-8");
+        await writeFile(
+            join(this.importsDir, `${slug(installation.id)}.json`),
+            `${JSON.stringify(
+                {
+                    kind: installation.id,
+                    ...(installation.definitionSnapshot ? { definition: installation.definitionSnapshot } : {}),
+                    answers: installation.answersSnapshot ?? {},
+                },
+                null,
+                4,
+            )}\n`,
+            "utf-8",
+        );
     }
 }
 
 function reviveInstallation(value: unknown): IntegrationInstallation | null {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
     const record = value as IntegrationInstallation;
-    if (typeof record.id !== "string") return null;
+    if (typeof record.id !== "string") {
+        return null;
+    }
     return {
         ...record,
         createdAt: new Date(record.createdAt),
         updatedAt: new Date(record.updatedAt),
-        runs: (record.runs ?? []).map(run => ({
+        runs: (record.runs ?? []).map((run) => ({
             ...run,
             startedAt: new Date(run.startedAt),
             finishedAt: new Date(run.finishedAt),
@@ -115,5 +136,10 @@ function copyInstallation(installation: IntegrationInstallation): IntegrationIns
 }
 
 function slug(value: string): string {
-    return value.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "integration";
+    return (
+        value
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]+/g, "-")
+            .replace(/^-+|-+$/g, "") || "integration"
+    );
 }

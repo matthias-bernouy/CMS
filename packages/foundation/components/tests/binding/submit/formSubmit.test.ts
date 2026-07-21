@@ -25,7 +25,9 @@ describe("formSubmit", () => {
 
         expect(serialized.kind).toBe("json");
         expect(serialized.data).toEqual({ title: "Hello", tags: ["a", "b"] });
-        if (serialized.kind === "json") expect(JSON.parse(serialized.body)).toEqual(serialized.data);
+        if (serialized.kind === "json") {
+            expect(JSON.parse(serialized.body)).toEqual(serialized.data);
+        }
     });
 
     test("adds body fields to non-GET JSON without replacing real controls", () => {
@@ -53,7 +55,9 @@ describe("formSubmit", () => {
             active: true,
             count: 2,
         });
-        if (serialized.kind === "json") expect(JSON.parse(serialized.body)).toEqual(serialized.data);
+        if (serialized.kind === "json") {
+            expect(JSON.parse(serialized.body)).toEqual(serialized.data);
+        }
     });
 
     test("serializes GET forms into the query string", () => {
@@ -88,16 +92,16 @@ describe("formSubmit", () => {
         const target = form(`<form><input type="file" name="photos" multiple></form>`);
         const input = target.querySelector<HTMLInputElement>("input")!;
         Object.defineProperty(input, "files", {
-            value: [
-                new File(["a"], "a.jpg", { type: "image/jpeg" }),
-                new File(["b"], "b.jpg", { type: "image/jpeg" }),
-            ],
+            value: [new File(["a"], "a.jpg", { type: "image/jpeg" }), new File(["b"], "b.jpg", { type: "image/jpeg" })],
         });
 
         const serialized = serializeForm(target, { url: "/api/upload", method: "POST" });
 
         expect(serialized.kind).toBe("formData");
-        expect(Array.from(serialized.formData.getAll("photos")).map(file => (file as File).name)).toEqual(["a.jpg", "b.jpg"]);
+        expect(Array.from(serialized.formData.getAll("photos")).map((file) => (file as File).name)).toEqual([
+            "a.jpg",
+            "b.jpg",
+        ]);
     });
 
     test("adds body fields to multipart FormData", () => {
@@ -134,7 +138,9 @@ describe("formSubmit", () => {
         expect(requestBody).toBe(JSON.stringify({ email: "ada@example.com" }));
         expect(result).toMatchObject({ ok: true, status: 201, statusText: "Created", body: { ok: true }, message: "" });
 
-        globalThis.fetch = (async () => { throw new Error("offline"); }) as unknown as typeof fetch;
+        globalThis.fetch = (async () => {
+            throw new Error("offline");
+        }) as unknown as typeof fetch;
         const failed = await submitForm(target, { url: "/api/users", method: "POST" });
         expect(failed).toMatchObject({ ok: false, status: 0, statusText: "Network Error", message: "offline" });
     });
@@ -143,7 +149,9 @@ describe("formSubmit", () => {
         const target = form(`<form><input name="q" value="fallback"></form>`);
         const NativeFormData = globalThis.FormData;
         class EmptyFormData extends NativeFormData {
-            constructor() { super(); }
+            constructor() {
+                super();
+            }
         }
         globalThis.FormData = EmptyFormData as typeof FormData;
         try {
@@ -165,7 +173,9 @@ describe("formSubmit", () => {
         target.append(control);
         const NativeFormData = globalThis.FormData;
         class EmptyFormData extends NativeFormData {
-            constructor() { super(); }
+            constructor() {
+                super();
+            }
         }
         globalThis.FormData = EmptyFormData as typeof FormData;
         try {
@@ -174,7 +184,9 @@ describe("formSubmit", () => {
             expect(entries[0]?.[0]).toBe("file");
             const file: unknown = entries[0]?.[1];
             expect(file).toBeInstanceOf(File);
-            if (!(file instanceof File)) throw new Error("expected file entry");
+            if (!(file instanceof File)) {
+                throw new Error("expected file entry");
+            }
             expect(file.name).toBe("avatar.png");
         } finally {
             globalThis.FormData = NativeFormData;
@@ -188,7 +200,9 @@ describe("formSubmit", () => {
         control.value = ["attacking", "defensive"];
         const NativeFormData = globalThis.FormData;
         class EmptyFormData extends NativeFormData {
-            constructor() { super(); }
+            constructor() {
+                super();
+            }
         }
         globalThis.FormData = EmptyFormData as typeof FormData;
         try {
@@ -215,7 +229,9 @@ describe("formSubmit", () => {
         control.uncheckedValue = "false";
         const NativeFormData = globalThis.FormData;
         class EmptyFormData extends NativeFormData {
-            constructor() { super(); }
+            constructor() {
+                super();
+            }
         }
         globalThis.FormData = EmptyFormData as typeof FormData;
         try {

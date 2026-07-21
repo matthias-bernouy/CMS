@@ -5,15 +5,16 @@ export const DASHBOARD_VISIBILITY_MAX_DEPTH = 10;
 export const DASHBOARD_VISIBILITY_MAX_NODES = 500;
 
 export function isDashboardVisibilityExpression(value: unknown): value is string {
-    return typeof value === "string"
-        && isSafeDashboardExpression(value, ["field", "resource"], true);
+    return typeof value === "string" && isSafeDashboardExpression(value, ["field", "resource"], true);
 }
 
 export function evaluateDashboardVisibility(
     rule: DashboardVisibilityRule | undefined,
     resolve: (expression: string) => unknown,
 ): boolean {
-    if (rule === undefined) return true;
+    if (rule === undefined) {
+        return true;
+    }
     const result = evaluateRule(rule, resolve, 0, { nodes: 0 });
     return result.valid && result.matches;
 }
@@ -26,20 +27,31 @@ function evaluateRule(
     depth: number,
     budget: { nodes: number },
 ): VisibilityEvaluation {
-    if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) return invalid();
-    if (!isRecord(value)) return invalid();
+    if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
+        return invalid();
+    }
+    if (!isRecord(value)) {
+        return invalid();
+    }
 
     const hasAll = Object.hasOwn(value, "all");
     const hasAny = Object.hasOwn(value, "any");
-    const hasCondition = Object.hasOwn(value, "value") || Object.hasOwn(value, "equals") || Object.hasOwn(value, "notEquals");
+    const hasCondition =
+        Object.hasOwn(value, "value") || Object.hasOwn(value, "equals") || Object.hasOwn(value, "notEquals");
     if (hasAll || hasAny) {
-        if (hasAll === hasAny || hasCondition || Object.keys(value).length !== 1) return invalid();
+        if (hasAll === hasAny || hasCondition || Object.keys(value).length !== 1) {
+            return invalid();
+        }
         const rules = hasAll ? value.all : value.any;
-        if (!Array.isArray(rules) || rules.length === 0) return invalid();
+        if (!Array.isArray(rules) || rules.length === 0) {
+            return invalid();
+        }
         let matches = hasAll;
         for (const entry of rules) {
             const result = evaluateRule(entry, resolve, depth + 1, budget);
-            if (!result.valid) return invalid();
+            if (!result.valid) {
+                return invalid();
+            }
             matches = hasAll ? matches && result.matches : matches || result.matches;
         }
         return { valid: true, matches };
@@ -47,11 +59,21 @@ function evaluateRule(
 
     const hasEquals = Object.hasOwn(value, "equals");
     const hasNotEquals = Object.hasOwn(value, "notEquals");
-    if (!isDashboardVisibilityExpression(value.value) || hasEquals === hasNotEquals || Object.keys(value).length !== 2) return invalid();
+    if (
+        !isDashboardVisibilityExpression(value.value) ||
+        hasEquals === hasNotEquals ||
+        Object.keys(value).length !== 2
+    ) {
+        return invalid();
+    }
     const expected = hasEquals ? value.equals : value.notEquals;
-    if (!isVisibilityValue(expected)) return invalid();
+    if (!isVisibilityValue(expected)) {
+        return invalid();
+    }
     const actual = resolve(value.value);
-    if (actual === undefined) return { valid: true, matches: false };
+    if (actual === undefined) {
+        return { valid: true, matches: false };
+    }
     return { valid: true, matches: hasEquals ? actual === expected : actual !== expected };
 }
 
@@ -60,10 +82,12 @@ function invalid(): VisibilityEvaluation {
 }
 
 function isVisibilityValue(value: unknown): value is string | number | boolean | null {
-    return value === null
-        || typeof value === "string"
-        || typeof value === "boolean"
-        || (typeof value === "number" && Number.isFinite(value));
+    return (
+        value === null ||
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
+    );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

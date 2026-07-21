@@ -18,12 +18,15 @@ export function checkExportFilesDeclared(
         for (const file of pkg.sourceFiles) {
             const exportFile = toRelativePath(join(pkg.root, "src", "exports"), file);
             const extension = extname(exportFile);
-            if (exportFile.startsWith("../") || !CODE_EXTENSIONS.has(extension)) continue;
+            if (exportFile.startsWith("../") || !CODE_EXTENSIONS.has(extension)) {
+                continue;
+            }
             const name = exportFile.slice(0, -extension.length);
-            const subpath = name === "index" ? "."
-                : name.endsWith("/index") ? `./${name.slice(0, -"/index".length)}`
-                    : `./${name}`;
-            if (isDeclaredExport(pkg.manifest.exports, subpath)) continue;
+            const subpath =
+                name === "index" ? "." : name.endsWith("/index") ? `./${name.slice(0, -"/index".length)}` : `./${name}`;
+            if (isDeclaredExport(pkg.manifest.exports, subpath)) {
+                continue;
+            }
             violations.push({
                 kind: "undeclared-subpath",
                 file: `${pkg.relativeRoot}/src/exports/${exportFile}`,
@@ -42,9 +45,13 @@ export function checkImportedWorkspaceSubpath(
     rootDir: string,
 ): void {
     const parsed = parseWorkspaceSpecifier(imported.specifier, packageByName);
-    if (!parsed) return;
+    if (!parsed) {
+        return;
+    }
     const exportedSubpath = parsed.subpath ? `./${parsed.subpath}` : ".";
-    if (isDeclaredExport(parsed.pkg.manifest.exports, exportedSubpath)) return;
+    if (isDeclaredExport(parsed.pkg.manifest.exports, exportedSubpath)) {
+        return;
+    }
     violations.push({
         kind: "undeclared-subpath",
         file: toRelativePath(rootDir, file),
@@ -67,7 +74,9 @@ export function checkImportedLayer(
     if (aliases.length > 0) {
         for (const targetPath of aliases) {
             const target = packageByRoot.find((pkg) => isPathInside(targetPath, pkg.root));
-            if (!target || layerRank(owner.layer) >= layerRank(target.layer)) continue;
+            if (!target || layerRank(owner.layer) >= layerRank(target.layer)) {
+                continue;
+            }
             violations.push({
                 kind: "reversed-layer-dependency",
                 file: toRelativePath(rootDir, file),
@@ -78,7 +87,9 @@ export function checkImportedLayer(
         return;
     }
     const parsed = parseWorkspaceSpecifier(imported.specifier, packageByName);
-    if (!parsed || layerRank(owner.layer) >= layerRank(parsed.pkg.layer)) return;
+    if (!parsed || layerRank(owner.layer) >= layerRank(parsed.pkg.layer)) {
+        return;
+    }
     violations.push({
         kind: "reversed-layer-dependency",
         file: toRelativePath(rootDir, file),
@@ -98,14 +109,20 @@ export function checkCrossPackageSourceImport(
 ): void {
     const specifier = imported.specifier.replaceAll("\\", "/");
     const targetPaths = resolvePackageAliasImports(owner, imported.specifier, sourceFiles);
-    if (targetPaths.length === 0 && specifier.startsWith(".")) targetPaths.push(resolve(dirname(file), specifier));
-    else if (targetPaths.length === 0 && isAbsolute(specifier)) targetPaths.push(normalize(specifier));
-    else if (/(?:^|\/)packages\/(?:foundation|features|resources|surfaces|runtimes)\/[^/]+\/src(?:\/|$)/.test(specifier)) {
+    if (targetPaths.length === 0 && specifier.startsWith(".")) {
+        targetPaths.push(resolve(dirname(file), specifier));
+    } else if (targetPaths.length === 0 && isAbsolute(specifier)) {
+        targetPaths.push(normalize(specifier));
+    } else if (
+        /(?:^|\/)packages\/(?:foundation|features|resources|surfaces|runtimes)\/[^/]+\/src(?:\/|$)/.test(specifier)
+    ) {
         targetPaths.push(resolve(rootDir, specifier));
     }
     for (const targetPath of targetPaths) {
         const target = packageByRoot.find((pkg) => isPathInside(targetPath, pkg.root));
-        if (!target || target.name === owner.name || !isPathInside(targetPath, join(target.root, "src"))) continue;
+        if (!target || target.name === owner.name || !isPathInside(targetPath, join(target.root, "src"))) {
+            continue;
+        }
         violations.push({
             kind: "cross-package-source-import",
             file: toRelativePath(rootDir, file),

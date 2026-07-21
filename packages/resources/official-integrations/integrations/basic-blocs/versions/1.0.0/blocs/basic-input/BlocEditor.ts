@@ -1,9 +1,4 @@
-import {
-    Editor,
-    registerEditor,
-    type ColorSetting,
-    type SettingSection,
-} from "@bernouy/cms-content/editor";
+import { Editor, registerEditor, type ColorSetting, type SettingSection } from "@bernouy/cms-content/editor";
 
 const color = (label: string, attribute: string): ColorSetting => ({
     type: "color",
@@ -54,15 +49,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "placeholder",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "text",
-                                "email",
-                                "password",
-                                "tel",
-                                "search",
-                                "url",
-                                "number",
-                            ],
+                            equals: ["text", "email", "password", "tel", "search", "url", "number"],
                         },
                     },
                     {
@@ -110,12 +97,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "min",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "number",
-                                "date",
-                                "time",
-                                "datetime-local",
-                            ],
+                            equals: ["number", "date", "time", "datetime-local"],
                         },
                     },
                     {
@@ -124,12 +106,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "max",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "number",
-                                "date",
-                                "time",
-                                "datetime-local",
-                            ],
+                            equals: ["number", "date", "time", "datetime-local"],
                         },
                     },
                     {
@@ -138,12 +115,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "step",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "number",
-                                "date",
-                                "time",
-                                "datetime-local",
-                            ],
+                            equals: ["number", "date", "time", "datetime-local"],
                         },
                     },
                     {
@@ -152,14 +124,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "minlength",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "text",
-                                "email",
-                                "password",
-                                "tel",
-                                "search",
-                                "url",
-                            ],
+                            equals: ["text", "email", "password", "tel", "search", "url"],
                         },
                     },
                     {
@@ -168,14 +133,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "maxlength",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "text",
-                                "email",
-                                "password",
-                                "tel",
-                                "search",
-                                "url",
-                            ],
+                            equals: ["text", "email", "password", "tel", "search", "url"],
                         },
                     },
                     {
@@ -184,14 +142,7 @@ export class BasicInputEditor extends Editor {
                         attribute: "pattern",
                         visibleWhen: {
                             attribute: "type",
-                            equals: [
-                                "text",
-                                "email",
-                                "password",
-                                "tel",
-                                "search",
-                                "url",
-                            ],
+                            equals: ["text", "email", "password", "tel", "search", "url"],
                         },
                     },
                 ],

@@ -21,7 +21,6 @@ export type ValidateBlocResult = {
     errors: string[];
 };
 
-
 /**
  * Bloc-specific tag check: format-valid custom-element name AND not in a
  * system-reserved prefix. Returns `null` when the tag is acceptable, an
@@ -47,13 +46,14 @@ export function validateBlocTag(tag: string): string | null {
 export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const errors: string[] = [];
 
-    const tagError = input.native || isNativeBlocTag(input.tag)
-        ? validateNativeBlocTag(input.tag)
-        : validateBlocTag(input.tag);
-    if (tagError) errors.push(tagError);
+    const tagError =
+        input.native || isNativeBlocTag(input.tag) ? validateNativeBlocTag(input.tag) : validateBlocTag(input.tag);
+    if (tagError) {
+        errors.push(tagError);
+    }
 
     if (input.viewSource) {
-        errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc",       input.tag));
+        errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc", input.tag));
         errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
     }
     if (input.editorSource) {
@@ -104,7 +104,9 @@ export function isNativeBlocTag(tag: string): boolean {
 }
 
 function validateNativeBlocTag(tag: string): string | null {
-    if (isNativeBlocTag(tag)) return null;
+    if (isNativeBlocTag(tag)) {
+        return null;
+    }
     return `Invalid native tag "${tag}" — must be one of: ${[...NATIVE_BLOC_TAGS].join(", ")}.`;
 }
 
@@ -126,7 +128,9 @@ function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: 
     let expectedSeen = 0;
     while ((match = re.exec(source)) !== null) {
         const literal = match[1]!;
-        if (literal === "BE5_TAG_TO_BE_REPLACED") continue;
+        if (literal === "BE5_TAG_TO_BE_REPLACED") {
+            continue;
+        }
         if (literal === expectedTag) {
             expectedSeen++;
             if (expectedSeen > 1) {
@@ -157,11 +161,11 @@ function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: 
  */
 function checkNoLocationMutation(source: string, fileLabel: string): string[] {
     const PATTERNS: { name: string; re: RegExp }[] = [
-        { name: "location.href = …",         re: /\blocation\s*\.\s*href\s*=/g },
-        { name: "window.location.href = …",  re: /\bwindow\s*\.\s*location\s*\.\s*href\s*=/g },
-        { name: "location.assign(…)",        re: /\blocation\s*\.\s*assign\s*\(/g },
-        { name: "location.replace(…)",       re: /\blocation\s*\.\s*replace\s*\(/g },
-        { name: "window.location = …",       re: /\bwindow\s*\.\s*location\s*=(?!=)/g },
+        { name: "location.href = …", re: /\blocation\s*\.\s*href\s*=/g },
+        { name: "window.location.href = …", re: /\bwindow\s*\.\s*location\s*\.\s*href\s*=/g },
+        { name: "location.assign(…)", re: /\blocation\s*\.\s*assign\s*\(/g },
+        { name: "location.replace(…)", re: /\blocation\s*\.\s*replace\s*\(/g },
+        { name: "window.location = …", re: /\bwindow\s*\.\s*location\s*=(?!=)/g },
     ];
     const errors: string[] = [];
     for (const { name, re } of PATTERNS) {

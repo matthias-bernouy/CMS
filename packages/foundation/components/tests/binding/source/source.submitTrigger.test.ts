@@ -131,12 +131,20 @@ describe("Source — submit trigger", () => {
             </form>
         `) as HTMLFormElement;
         document.body.append(root);
-        document.body.addEventListener("cms-source:success", event => {
-            events.source = (event as CustomEvent<FormSubmitResult>).detail;
-        }, { once: true });
-        document.body.addEventListener("form:success", event => {
-            events.form = (event as CustomEvent<FormSubmitResult>).detail;
-        }, { once: true });
+        document.body.addEventListener(
+            "cms-source:success",
+            (event) => {
+                events.source = (event as CustomEvent<FormSubmitResult>).detail;
+            },
+            { once: true },
+        );
+        document.body.addEventListener(
+            "form:success",
+            (event) => {
+                events.form = (event as CustomEvent<FormSubmitResult>).detail;
+            },
+            { once: true },
+        );
         const input = root.querySelector("input")!;
         input.value = "ada@example.com";
         input.focus();
@@ -208,9 +216,9 @@ describe("Source — submit trigger", () => {
         location.href = "http://localhost/?returnTo=%2Fdashboard";
         setState("auth.token", "abc123");
         const body = JSON.stringify({
-            email:    { from: "raw", value: "bound@example.com" },
+            email: { from: "raw", value: "bound@example.com" },
             returnTo: { from: "queryParam", name: "returnTo" },
-            token:    { from: "state", name: "auth.token" },
+            token: { from: "state", name: "auth.token" },
             remember: { from: "raw", value: true },
         });
 
@@ -230,12 +238,14 @@ describe("Source — submit trigger", () => {
 
         const captured = request as unknown as { url: string; init?: RequestInit };
         expect(captured.url).toBe("http://localhost/api/login?returnTo=%2Fdashboard");
-        expect(captured.init?.body).toBe(JSON.stringify({
-            email: "ada@example.com",
-            returnTo: "/dashboard",
-            token: "abc123",
-            remember: true,
-        }));
+        expect(captured.init?.body).toBe(
+            JSON.stringify({
+                email: "ada@example.com",
+                returnTo: "/dashboard",
+                token: "abc123",
+                remember: true,
+            }),
+        );
         runtime.stop();
     });
 
@@ -299,11 +309,14 @@ describe("Source — submit trigger", () => {
         let request: { url: string; init?: RequestInit } | null = null;
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
             if (url === "/settings") {
-                return new Response(JSON.stringify({
-                    site: { name: "Demo" },
-                    email: { enabled: true },
-                    pages: [{ path: "/404", title: "Not found" }],
-                }), { headers: { "content-type": "application/json" } });
+                return new Response(
+                    JSON.stringify({
+                        site: { name: "Demo" },
+                        email: { enabled: true },
+                        pages: [{ path: "/404", title: "Not found" }],
+                    }),
+                    { headers: { "content-type": "application/json" } },
+                );
             }
             request = { url, init };
             return new Response(JSON.stringify({ id: "saved" }), {
@@ -348,11 +361,13 @@ describe("Source — submit trigger", () => {
         const captured = request as unknown as { url: string; init?: RequestInit };
         expect(event.defaultPrevented).toBe(true);
         expect(captured.url).toBe("http://localhost/api/settings");
-        expect(captured.init?.body).toBe(JSON.stringify({
-            "site.name": "Demo",
-            "site.notFound": "/404",
-            "email.enabled": "true",
-        }));
+        expect(captured.init?.body).toBe(
+            JSON.stringify({
+                "site.name": "Demo",
+                "site.notFound": "/404",
+                "email.enabled": "true",
+            }),
+        );
         runtime.stop();
     });
 
@@ -401,10 +416,12 @@ describe("Source — submit trigger", () => {
         subscribed.dispatchEvent(new Event("change", { bubbles: true }));
         await waitFor(() => submittedBody !== undefined);
 
-        expect(submittedBody).toBe(JSON.stringify({
-            email: "seller+2@example.com",
-            subscribed: "true",
-        }));
+        expect(submittedBody).toBe(
+            JSON.stringify({
+                email: "seller+2@example.com",
+                subscribed: "true",
+            }),
+        );
         runtime.stop();
     });
 
@@ -445,10 +462,12 @@ describe("Source — submit trigger", () => {
         expect(event.defaultPrevented).toBe(true);
         expect(captured.url).toBe("http://localhost/.cms/auth/login?returnTo=%2Fdashboard");
         expect(captured.init?.method).toBe("POST");
-        expect(captured.init?.body).toBe(JSON.stringify({
-            email: "ada@example.com",
-            password: "password-1",
-        }));
+        expect(captured.init?.body).toBe(
+            JSON.stringify({
+                email: "ada@example.com",
+                password: "password-1",
+            }),
+        );
         runtime.stop();
     });
 });

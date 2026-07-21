@@ -25,7 +25,9 @@ describe("mondial-relay-picker 1.0.0", () => {
         try {
             const input = picker.shadowRoot?.querySelector<HTMLInputElement>("[name='postalCode']");
             expect(input).not.toBeNull();
-            if (!input) throw new Error("expected the picker postal-code input");
+            if (!input) {
+                throw new Error("expected the picker postal-code input");
+            }
 
             expect(input.value).toBe("");
             expect(input.validationMessage).toBe("Le code postal est obligatoire.");
@@ -36,7 +38,7 @@ describe("mondial-relay-picker 1.0.0", () => {
             expect(input.validationMessage).toBe("");
 
             let requestedUrl: URL | undefined;
-            picker.requestJson = async url => {
+            picker.requestJson = async (url) => {
                 requestedUrl = new URL(url);
                 return { items: [] };
             };

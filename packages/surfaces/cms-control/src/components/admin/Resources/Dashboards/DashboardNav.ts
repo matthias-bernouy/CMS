@@ -57,7 +57,9 @@ export class DashboardNav extends Component {
     private readBoundGroups(): void {
         const target = this.shadowRoot!.querySelector<HTMLElement>("[data-nav-groups-json]");
         const next = parseGroups(target?.dataset.navGroupsJson ?? "");
-        if (!next) return;
+        if (!next) {
+            return;
+        }
         this.groups = next;
         this.selectedSource ||= defaultDashboardSource(this.groups);
         this.ensureDashboardSelection();
@@ -80,14 +82,14 @@ export class DashboardNav extends Component {
             this.selectedDashboard = "";
             return;
         }
-        if (!group.dashboards.some(dashboard => dashboard.id === this.selectedDashboard)) {
+        if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
             this.selectedDashboard = group.dashboards[0]?.id ?? "";
         }
     }
 
     private render(): void {
         const menu = this.query<HTMLElement>("w13c-lateral-menu");
-        menu.querySelectorAll("[data-generated]").forEach(element => element.remove());
+        menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
 
         if (!this.groups.length) {
             const empty = document.createElement("span");
@@ -107,7 +109,12 @@ export class DashboardNav extends Component {
 
             if (group.source.id === this.selectedSource && group.dashboards.length > 1) {
                 for (const dashboard of group.dashboards) {
-                    const dashboardItem = this.createItem(dashboard.meta?.name ?? dashboard.id, dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+                    const dashboardItem = this.createItem(
+                        dashboard.meta?.name ?? dashboard.id,
+                        dashboard.meta?.svg,
+                        dashboard.meta?.icon,
+                        "layout",
+                    );
                     dashboardItem.classList.add("dashboard-item");
                     dashboardItem.dataset.generated = "true";
                     dashboardItem.dataset.source = group.source.id;
@@ -121,7 +128,7 @@ export class DashboardNav extends Component {
 
     private renderExample(): void {
         const menu = this.query<HTMLElement>("w13c-lateral-menu");
-        menu.querySelectorAll("[data-generated]").forEach(element => element.remove());
+        menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
 
         const sourceItem = this.createItem("Example source", undefined, "database", "database");
         sourceItem.dataset.generated = "true";
@@ -135,7 +142,12 @@ export class DashboardNav extends Component {
         menu.append(dashboardItem);
     }
 
-    private createItem(label: string, svg: string | undefined, icon: string | undefined, fallback: "database" | "layout"): HTMLElement {
+    private createItem(
+        label: string,
+        svg: string | undefined,
+        icon: string | undefined,
+        fallback: "database" | "layout",
+    ): HTMLElement {
         const item = document.createElement("w13c-lateral-menu-item");
         appendIconSlot(item, svg, icon, fallback);
         item.append(document.createTextNode(label));
@@ -143,7 +155,7 @@ export class DashboardNav extends Component {
     }
 
     private activeGroup(): DashboardSourceGroup | null {
-        return this.groups.find(group => group.source.id === this.selectedSource) ?? null;
+        return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
     }
 
     private selection(): DashboardSelection {
@@ -157,7 +169,10 @@ export class DashboardNav extends Component {
     }
 
     private isExampleMode(): boolean {
-        return this.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
+        return (
+            this.hasAttribute("example") ||
+            window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example")
+        );
     }
 
     private onClick = (event: Event): void => {
@@ -168,7 +183,9 @@ export class DashboardNav extends Component {
             return;
         }
         const sourceButton = target?.closest<HTMLElement>("[data-source]");
-        if (sourceButton?.dataset.source) this.select(sourceButton.dataset.source);
+        if (sourceButton?.dataset.source) {
+            this.select(sourceButton.dataset.source);
+        }
     };
 
     private onPopState = (): void => {
@@ -190,13 +207,17 @@ export class DashboardNav extends Component {
     }
 }
 
-if (!customElements.get("cms-dashboards-nav")) customElements.define("cms-dashboards-nav", DashboardNav);
+if (!customElements.get("cms-dashboards-nav")) {
+    customElements.define("cms-dashboards-nav", DashboardNav);
+}
 
 function parseGroups(value: string): DashboardSourceGroup[] | null {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
     try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : null;
+        return Array.isArray(parsed) ? (parsed as DashboardSourceGroup[]) : null;
     } catch {
         return null;
     }

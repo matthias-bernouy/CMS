@@ -1,11 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { executeFunction, type CmsFunction } from "@bernouy/cms-functions";
-import {
-    InMemorySourceRepository,
-    makeEndpointUrn,
-    makeSourceUrn,
-} from "@bernouy/cms-sources";
+import { InMemorySourceRepository, makeEndpointUrn, makeSourceUrn } from "@bernouy/cms-sources";
 
 describe("function identity resolution", () => {
     test("translates an opaque user id and forwards the original caller context", async () => {
@@ -13,51 +9,57 @@ describe("function identity resolution", () => {
         await sources.createSource({
             urn: makeSourceUrn("commerce"),
             identityAuthority: "commerce",
-            endpoints: [{
-                urn: makeEndpointUrn("commerce", "getOrder"),
-                method: "GET",
-                targetUrl: "https://commerce.test/order",
-                output: [{
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            sellerId: {
-                                type: "number",
-                                semantic: { kind: "user-id", authority: "commerce" },
+            endpoints: [
+                {
+                    urn: makeEndpointUrn("commerce", "getOrder"),
+                    method: "GET",
+                    targetUrl: "https://commerce.test/order",
+                    output: [
+                        {
+                            status: "200",
+                            body: {
+                                type: "object",
+                                properties: {
+                                    sellerId: {
+                                        type: "number",
+                                        semantic: { kind: "user-id", authority: "commerce" },
+                                    },
+                                    total: { type: "number" },
+                                },
                             },
-                            total: { type: "number" },
                         },
-                    },
-                }],
-            }],
+                    ],
+                },
+            ],
         });
         await sources.createSource({
             urn: makeSourceUrn("stripe-connect"),
             identityAuthority: "stripe-connect",
-            endpoints: [{
-                urn: makeEndpointUrn("stripe-connect", "createPayment"),
-                method: "POST",
-                targetUrl: "https://stripe.test/payment",
-                headers: [
-                    { name: "x-user-id", source: { from: "computed", ref: "userID" } },
-                    { name: "x-user-role", source: { from: "computed", ref: "userRole" } },
-                ],
-                input: {
-                    body: {
-                        type: "object",
-                        properties: {
-                            sellerId: {
-                                type: "string",
-                                semantic: { kind: "user-id", authority: "stripe-connect" },
+            endpoints: [
+                {
+                    urn: makeEndpointUrn("stripe-connect", "createPayment"),
+                    method: "POST",
+                    targetUrl: "https://stripe.test/payment",
+                    headers: [
+                        { name: "x-user-id", source: { from: "computed", ref: "userID" } },
+                        { name: "x-user-role", source: { from: "computed", ref: "userRole" } },
+                    ],
+                    input: {
+                        body: {
+                            type: "object",
+                            properties: {
+                                sellerId: {
+                                    type: "string",
+                                    semantic: { kind: "user-id", authority: "stripe-connect" },
+                                },
+                                amount: { type: "number" },
                             },
-                            amount: { type: "number" },
+                            required: ["sellerId", "amount"],
                         },
-                        required: ["sellerId", "amount"],
                     },
+                    output: [{ status: "200", body: { type: "object" } }],
                 },
-                output: [{ status: "200", body: { type: "object" } }],
-            }],
+            ],
         });
 
         const identities = new InMemoryIdentityService();
@@ -84,24 +86,28 @@ describe("function identity resolution", () => {
             return: { body: "$steps.payment" },
         };
 
-        const response = await executeFunction(fn, new Request("https://cms.test/function", {
-            method: "POST",
-        }), {
-            sources,
-            identities,
-            user: { id: "subject-buyer", role: "user" },
-            deps: {
+        const response = await executeFunction(
+            fn,
+            new Request("https://cms.test/function", {
+                method: "POST",
+            }),
+            {
+                sources,
                 identities,
-                fetchImpl: async (request, init) => {
-                    const upstream = new Request(request, init);
-                    if (upstream.url.startsWith("https://commerce.test")) {
-                        return Response.json({ sellerId: 184, total: 2500 });
-                    }
-                    paymentRequest = upstream;
-                    return Response.json({ paymentId: 1 });
+                user: { id: "subject-buyer", role: "user" },
+                deps: {
+                    identities,
+                    fetchImpl: async (request, init) => {
+                        const upstream = new Request(request, init);
+                        if (upstream.url.startsWith("https://commerce.test")) {
+                            return Response.json({ sellerId: 184, total: 2500 });
+                        }
+                        paymentRequest = upstream;
+                        return Response.json({ paymentId: 1 });
+                    },
                 },
             },
-        });
+        );
 
         expect(response.status).toBe(200);
         expect(paymentRequest).not.toBeNull();
@@ -115,53 +121,59 @@ describe("function identity resolution", () => {
         await sources.createSource({
             urn: makeSourceUrn("commerce"),
             identityAuthority: "commerce",
-            endpoints: [{
-                urn: makeEndpointUrn("commerce", "listReleases"),
-                method: "GET",
-                targetUrl: "https://commerce.test/releases",
-                output: [{
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            releases: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        sellerId: {
-                                            type: "number",
-                                            semantic: { kind: "user-id", authority: "commerce" },
+            endpoints: [
+                {
+                    urn: makeEndpointUrn("commerce", "listReleases"),
+                    method: "GET",
+                    targetUrl: "https://commerce.test/releases",
+                    output: [
+                        {
+                            status: "200",
+                            body: {
+                                type: "object",
+                                properties: {
+                                    releases: {
+                                        type: "array",
+                                        items: {
+                                            type: "object",
+                                            properties: {
+                                                sellerId: {
+                                                    type: "number",
+                                                    semantic: { kind: "user-id", authority: "commerce" },
+                                                },
+                                            },
                                         },
                                     },
                                 },
                             },
                         },
-                    },
-                }],
-            }],
+                    ],
+                },
+            ],
         });
         await sources.createSource({
             urn: makeSourceUrn("stripe-connect"),
             identityAuthority: "stripe-connect",
-            endpoints: [{
-                urn: makeEndpointUrn("stripe-connect", "configureSeller"),
-                method: "POST",
-                targetUrl: "https://stripe.test/seller",
-                input: {
-                    body: {
-                        type: "object",
-                        properties: {
-                            userId: {
-                                type: "string",
-                                semantic: { kind: "user-id", authority: "stripe-connect" },
+            endpoints: [
+                {
+                    urn: makeEndpointUrn("stripe-connect", "configureSeller"),
+                    method: "POST",
+                    targetUrl: "https://stripe.test/seller",
+                    input: {
+                        body: {
+                            type: "object",
+                            properties: {
+                                userId: {
+                                    type: "string",
+                                    semantic: { kind: "user-id", authority: "stripe-connect" },
+                                },
                             },
+                            required: ["userId"],
                         },
-                        required: ["userId"],
                     },
+                    output: [{ status: "200", body: { type: "object" } }],
                 },
-                output: [{ status: "200", body: { type: "object" } }],
-            }],
+            ],
         });
 
         const identities = new InMemoryIdentityService();
@@ -182,37 +194,43 @@ describe("function identity resolution", () => {
                     forEach: {
                         items: "$steps.batch.releases",
                         max: 5,
-                        steps: [{
-                            id: "seller",
-                            call: {
-                                source: "stripe-connect",
-                                endpoint: "configureSeller",
-                                body: { userId: "$item.sellerId" },
+                        steps: [
+                            {
+                                id: "seller",
+                                call: {
+                                    source: "stripe-connect",
+                                    endpoint: "configureSeller",
+                                    body: { userId: "$item.sellerId" },
+                                },
                             },
-                        }],
+                        ],
                     },
                 },
             ],
             return: { body: "$steps.configured" },
         };
 
-        const response = await executeFunction(fn, new Request("https://cms.test/function", {
-            method: "POST",
-        }), {
-            sources,
-            identities,
-            deps: {
+        const response = await executeFunction(
+            fn,
+            new Request("https://cms.test/function", {
+                method: "POST",
+            }),
+            {
+                sources,
                 identities,
-                fetchImpl: async (input, init) => {
-                    const request = new Request(input, init);
-                    if (request.url.startsWith("https://commerce.test")) {
-                        return Response.json({ releases: [{ sellerId: 184 }] });
-                    }
-                    sellerRequests.push(request);
-                    return Response.json({ configured: true });
+                deps: {
+                    identities,
+                    fetchImpl: async (input, init) => {
+                        const request = new Request(input, init);
+                        if (request.url.startsWith("https://commerce.test")) {
+                            return Response.json({ releases: [{ sellerId: 184 }] });
+                        }
+                        sellerRequests.push(request);
+                        return Response.json({ configured: true });
+                    },
                 },
             },
-        });
+        );
 
         expect(response.status).toBe(200);
         expect(sellerRequests).toHaveLength(1);

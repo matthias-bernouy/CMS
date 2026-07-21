@@ -8,62 +8,129 @@ import type { JsonRecord } from "../../core/types.ts";
 export async function createC2cPolicyRevision(request: Request): Promise<Response> {
     const body = await readJsonObject(request);
     const allowedFields = new Set([
-        "expectedSettingsVersion", "name", "shippingBeneficiary",
-        "buyerFeeBasis", "buyerFeeRateBps", "buyerFeeFixedAmount",
-        "buyerFeeMinimumAmount", "buyerFeeMaximumAmount", "buyerFeeRefundPolicy",
-        "sellerFeeBasis", "sellerFeeRateBps", "sellerFeeFixedAmount",
-        "sellerFeeMinimumAmount", "sellerFeeMaximumAmount", "sellerFeeRefundPolicy",
-        "costEstimatesConfigured", "estimatedStripeCostAmount", "estimatedCarrierCostAmount",
-        "platformRiskReserveContributionAmount", "configuredMinimumMarginAmount",
-        "subsidyOverride", "subsidyReason", "subsidyMaximumDeficitAmount",
-        "paymentWindowMinutes", "sellerHandoffHours", "scanGraceHours", "claimWindowHours",
-        "sellerResponseHours", "returnShipHours", "financeReviewThresholdAmount",
-        "dualApprovalThresholdAmount", "sellerReserveRateBps", "payoutDelayDays",
-        "sellerReserveLiabilityDays", "orderTransferLimitAmount", "velocityLimitAmount",
-        "highValueReviewAmount", "claimRatioReviewBps", "chargebackRatioReviewBps",
+        "expectedSettingsVersion",
+        "name",
+        "shippingBeneficiary",
+        "buyerFeeBasis",
+        "buyerFeeRateBps",
+        "buyerFeeFixedAmount",
+        "buyerFeeMinimumAmount",
+        "buyerFeeMaximumAmount",
+        "buyerFeeRefundPolicy",
+        "sellerFeeBasis",
+        "sellerFeeRateBps",
+        "sellerFeeFixedAmount",
+        "sellerFeeMinimumAmount",
+        "sellerFeeMaximumAmount",
+        "sellerFeeRefundPolicy",
+        "costEstimatesConfigured",
+        "estimatedStripeCostAmount",
+        "estimatedCarrierCostAmount",
+        "platformRiskReserveContributionAmount",
+        "configuredMinimumMarginAmount",
+        "subsidyOverride",
+        "subsidyReason",
+        "subsidyMaximumDeficitAmount",
+        "paymentWindowMinutes",
+        "sellerHandoffHours",
+        "scanGraceHours",
+        "claimWindowHours",
+        "sellerResponseHours",
+        "returnShipHours",
+        "financeReviewThresholdAmount",
+        "dualApprovalThresholdAmount",
+        "sellerReserveRateBps",
+        "payoutDelayDays",
+        "sellerReserveLiabilityDays",
+        "orderTransferLimitAmount",
+        "velocityLimitAmount",
+        "highValueReviewAmount",
+        "claimRatioReviewBps",
+        "chargebackRatioReviewBps",
     ]);
-    const unexpected = Object.keys(body).find(key => !allowedFields.has(key));
-    if (unexpected) throw new HttpError(400, `${unexpected} is not allowed in a protected C2C policy revision`);
+    const unexpected = Object.keys(body).find((key) => !allowedFields.has(key));
+    if (unexpected) {
+        throw new HttpError(400, `${unexpected} is not allowed in a protected C2C policy revision`);
+    }
     const payload: JsonRecord = {};
     const requiredTextFields = [
-        "name", "shippingBeneficiary", "buyerFeeBasis", "buyerFeeRefundPolicy",
-        "sellerFeeBasis", "sellerFeeRefundPolicy",
+        "name",
+        "shippingBeneficiary",
+        "buyerFeeBasis",
+        "buyerFeeRefundPolicy",
+        "sellerFeeBasis",
+        "sellerFeeRefundPolicy",
     ];
     for (const field of requiredTextFields) {
         const value = text(body[field]);
-        if (!value) throw new HttpError(400, `${field} is required`);
+        if (!value) {
+            throw new HttpError(400, `${field} is required`);
+        }
         payload[field] = value;
     }
     assertAllowedValue(payload.shippingBeneficiary, "shippingBeneficiary", ["platform", "seller"]);
     assertAllowedValue(payload.buyerFeeBasis, "buyerFeeBasis", ["merchandise", "merchandise_and_shipping"]);
     assertAllowedValue(payload.sellerFeeBasis, "sellerFeeBasis", ["merchandise", "merchandise_and_shipping"]);
-    assertAllowedValue(payload.buyerFeeRefundPolicy, "buyerFeeRefundPolicy", ["always", "never", "proportional", "resolution_defined"]);
+    assertAllowedValue(payload.buyerFeeRefundPolicy, "buyerFeeRefundPolicy", [
+        "always",
+        "never",
+        "proportional",
+        "resolution_defined",
+    ]);
     assertAllowedValue(payload.sellerFeeRefundPolicy, "sellerFeeRefundPolicy", ["never"]);
     const optionalTextFields = ["subsidyReason"];
     for (const field of optionalTextFields) {
         const value = text(body[field]);
-        if (value !== undefined) payload[field] = value;
+        if (value !== undefined) {
+            payload[field] = value;
+        }
     }
     const requiredIntegerFields = [
-        "buyerFeeRateBps", "buyerFeeFixedAmount", "sellerFeeRateBps", "sellerFeeFixedAmount",
-        "estimatedStripeCostAmount", "estimatedCarrierCostAmount",
-        "platformRiskReserveContributionAmount", "configuredMinimumMarginAmount",
-        "paymentWindowMinutes", "sellerHandoffHours", "scanGraceHours", "claimWindowHours",
-        "sellerResponseHours", "returnShipHours", "financeReviewThresholdAmount",
-        "dualApprovalThresholdAmount", "sellerReserveRateBps", "payoutDelayDays",
-        "sellerReserveLiabilityDays", "orderTransferLimitAmount", "velocityLimitAmount",
-        "highValueReviewAmount", "claimRatioReviewBps", "chargebackRatioReviewBps",
+        "buyerFeeRateBps",
+        "buyerFeeFixedAmount",
+        "sellerFeeRateBps",
+        "sellerFeeFixedAmount",
+        "estimatedStripeCostAmount",
+        "estimatedCarrierCostAmount",
+        "platformRiskReserveContributionAmount",
+        "configuredMinimumMarginAmount",
+        "paymentWindowMinutes",
+        "sellerHandoffHours",
+        "scanGraceHours",
+        "claimWindowHours",
+        "sellerResponseHours",
+        "returnShipHours",
+        "financeReviewThresholdAmount",
+        "dualApprovalThresholdAmount",
+        "sellerReserveRateBps",
+        "payoutDelayDays",
+        "sellerReserveLiabilityDays",
+        "orderTransferLimitAmount",
+        "velocityLimitAmount",
+        "highValueReviewAmount",
+        "claimRatioReviewBps",
+        "chargebackRatioReviewBps",
     ];
     for (const field of requiredIntegerFields) {
         payload[field] = integer(body[field], field, true)!;
     }
-    for (const field of ["buyerFeeMinimumAmount", "buyerFeeMaximumAmount", "sellerFeeMinimumAmount", "sellerFeeMaximumAmount", "subsidyMaximumDeficitAmount"]) {
+    for (const field of [
+        "buyerFeeMinimumAmount",
+        "buyerFeeMaximumAmount",
+        "sellerFeeMinimumAmount",
+        "sellerFeeMaximumAmount",
+        "subsidyMaximumDeficitAmount",
+    ]) {
         const value = integer(body[field], field);
-        if (value !== undefined) payload[field] = value;
+        if (value !== undefined) {
+            payload[field] = value;
+        }
     }
     for (const field of ["costEstimatesConfigured", "subsidyOverride"]) {
         const value = booleanValue(body[field], field);
-        if (value === undefined) throw new HttpError(400, `${field} is required`);
+        if (value === undefined) {
+            throw new HttpError(400, `${field} is required`);
+        }
         payload[field] = value;
     }
     assertIntegerRanges(payload);
@@ -104,12 +171,20 @@ function assertIntegerRanges(payload: JsonRecord): void {
         }
     }
     const nonNegativeFields = [
-        "buyerFeeFixedAmount", "buyerFeeMinimumAmount", "buyerFeeMaximumAmount",
-        "sellerFeeFixedAmount", "sellerFeeMinimumAmount", "sellerFeeMaximumAmount",
-        "estimatedStripeCostAmount", "estimatedCarrierCostAmount",
-        "platformRiskReserveContributionAmount", "configuredMinimumMarginAmount",
-        "subsidyMaximumDeficitAmount", "financeReviewThresholdAmount",
-        "dualApprovalThresholdAmount", "highValueReviewAmount",
+        "buyerFeeFixedAmount",
+        "buyerFeeMinimumAmount",
+        "buyerFeeMaximumAmount",
+        "sellerFeeFixedAmount",
+        "sellerFeeMinimumAmount",
+        "sellerFeeMaximumAmount",
+        "estimatedStripeCostAmount",
+        "estimatedCarrierCostAmount",
+        "platformRiskReserveContributionAmount",
+        "configuredMinimumMarginAmount",
+        "subsidyMaximumDeficitAmount",
+        "financeReviewThresholdAmount",
+        "dualApprovalThresholdAmount",
+        "highValueReviewAmount",
     ];
     for (const field of nonNegativeFields) {
         const value = payload[field];

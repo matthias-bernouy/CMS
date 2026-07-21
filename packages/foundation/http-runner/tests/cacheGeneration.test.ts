@@ -11,12 +11,14 @@ class TestCache implements Cache {
 
     get(key: string): CacheEntry | null {
         this.getCalls++;
-        return this.bypass ? null : this.store.get(key) ?? null;
+        return this.bypass ? null : (this.store.get(key) ?? null);
     }
 
     set(key: string, entry: CacheEntry): void {
         this.setCalls++;
-        if (!this.bypass) this.store.set(key, entry);
+        if (!this.bypass) {
+            this.store.set(key, entry);
+        }
     }
 
     delete(key: string): void {
@@ -25,14 +27,18 @@ class TestCache implements Cache {
 
     deleteMatching(predicate: (key: string) => boolean): void {
         for (const key of this.store.keys()) {
-            if (predicate(key)) this.store.delete(key);
+            if (predicate(key)) {
+                this.store.delete(key);
+            }
         }
     }
 }
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
     let resolve!: () => void;
-    const promise = new Promise<void>((done) => { resolve = done; });
+    const promise = new Promise<void>((done) => {
+        resolve = done;
+    });
     return { promise, resolve };
 }
 
@@ -43,11 +49,13 @@ describe("getOrGenerateEntryAsync single-flight", () => {
         const generated = compress("shared", "text/plain");
         let generateCalls = 0;
 
-        const wave = Array.from({ length: 32 }, () => getOrGenerateEntryAsync("same", cache, async () => {
-            generateCalls++;
-            await gate.promise;
-            return generated;
-        }));
+        const wave = Array.from({ length: 32 }, () =>
+            getOrGenerateEntryAsync("same", cache, async () => {
+                generateCalls++;
+                await gate.promise;
+                return generated;
+            }),
+        );
 
         await Promise.resolve();
         expect(generateCalls).toBe(1);
@@ -120,11 +128,13 @@ describe("getOrGenerateEntryAsync single-flight", () => {
 
         const runWave = async (body: string): Promise<void> => {
             const gate = deferred();
-            const wave = Array.from({ length: 16 }, () => getOrGenerateEntryAsync("bypass", cache, async () => {
-                generateCalls++;
-                await gate.promise;
-                return compress(body, "text/plain");
-            }));
+            const wave = Array.from({ length: 16 }, () =>
+                getOrGenerateEntryAsync("bypass", cache, async () => {
+                    generateCalls++;
+                    await gate.promise;
+                    return compress(body, "text/plain");
+                }),
+            );
             await Promise.resolve();
             gate.resolve();
             await Promise.all(wave);

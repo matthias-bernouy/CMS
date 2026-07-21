@@ -9,16 +9,18 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
             kind: "bloc-pack",
             label: "Bloc pack",
             inputs: [],
-            artifacts: [{
-                type: "bloc",
-                bloc: {
-                    tag: "  demo-card  ",
-                    name: "  Demo card  ",
-                    group: "  Demo  ",
-                    viewJS,
-                    editorJS,
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "  demo-card  ",
+                        name: "  Demo card  ",
+                        group: "  Demo  ",
+                        viewJS,
+                        editorJS,
+                    },
                 },
-            }],
+            ],
         });
 
         expect(definition.artifacts?.[0]).toEqual({
@@ -38,15 +40,17 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
             kind: "native-bloc-pack",
             label: "Native bloc pack",
             inputs: [],
-            artifacts: [{
-                type: "bloc",
-                bloc: {
-                    tag: "native-image",
-                    name: "Native image",
-                    viewJS: "  \n\t",
-                    editorJS: null,
+            artifacts: [
+                {
+                    type: "bloc",
+                    bloc: {
+                        tag: "native-image",
+                        name: "Native image",
+                        viewJS: "  \n\t",
+                        editorJS: null,
+                    },
                 },
-            }],
+            ],
         });
 
         expect(definition.artifacts?.[0]).toMatchObject({
@@ -83,15 +87,17 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
                             endpointId: "offerFields",
                             map: { options: "choices" },
                         },
-                        fields: [{
-                            id: "offerStatus",
-                            label: "Offer status",
-                            type: "string",
-                            options: [
-                                { value: "pending", label: "Pending" },
-                                { value: "active", label: "Active" },
-                            ],
-                        }],
+                        fields: [
+                            {
+                                id: "offerStatus",
+                                label: "Offer status",
+                                type: "string",
+                                options: [
+                                    { value: "pending", label: "Pending" },
+                                    { value: "active", label: "Active" },
+                                ],
+                            },
+                        ],
                     },
                 },
                 {
@@ -120,23 +126,25 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
             ],
         });
 
-        expect(definition.artifacts?.map(artifact => artifact.type)).toEqual([
+        expect(definition.artifacts?.map((artifact) => artifact.type)).toEqual([
             "trigger",
             "sourceOverlay",
             "relation",
             "dashboardRelation",
         ]);
-        expect(definition.artifacts?.find(artifact => artifact.type === "sourceOverlay")).toMatchObject({
+        expect(definition.artifacts?.find((artifact) => artifact.type === "sourceOverlay")).toMatchObject({
             type: "sourceOverlay",
             overlay: {
                 fieldSource: { endpointId: "offerFields", map: { options: "choices" } },
-                fields: [{
-                    id: "offerStatus",
-                    options: [
-                        { value: "pending", label: "Pending" },
-                        { value: "active", label: "Active" },
-                    ],
-                }],
+                fields: [
+                    {
+                        id: "offerStatus",
+                        options: [
+                            { value: "pending", label: "Pending" },
+                            { value: "active", label: "Active" },
+                        ],
+                    },
+                ],
             },
         });
     });
@@ -145,10 +153,12 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
         const visibleWhen = {
             all: [
                 { value: "$resource.status", equals: "draft" },
-                { any: [
-                    { value: "$field.mode", equals: "advanced" },
-                    { value: "$field.locale", notEquals: "fr" },
-                ] },
+                {
+                    any: [
+                        { value: "$field.mode", equals: "advanced" },
+                        { value: "$field.locale", notEquals: "fr" },
+                    ],
+                },
             ],
         };
         const definition = parseIntegrationDefinition(visibilityDefinition(visibleWhen));
@@ -157,14 +167,12 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
         expect(artifact).toMatchObject({
             type: "dashboard",
             dashboard: {
-                views: [{
-                    actions: [{ visibleWhen }],
-                    main: [{ fields: [
-                        { id: "mode" },
-                        { id: "locale" },
-                        { id: "note", visibleWhen },
-                    ] }],
-                }],
+                views: [
+                    {
+                        actions: [{ visibleWhen }],
+                        main: [{ fields: [{ id: "mode" }, { id: "locale" }, { id: "note", visibleWhen }] }],
+                    },
+                ],
             },
         });
     });
@@ -190,24 +198,30 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
     });
 
     test("rejects unsupported source overlay dashboard field types", () => {
-        expect(() => parseIntegrationDefinition({
-            kind: "invalid-overlay-field",
-            label: "Invalid overlay field",
-            inputs: [],
-            artifacts: [{
-                type: "sourceOverlay",
-                overlay: {
-                    id: "invalid-overlay-field",
-                    sourceId: "products",
-                    fields: [],
-                    dashboardFields: [{
-                        viewId: "productDetail",
-                        fieldId: "title",
-                        field: { type: "script" },
-                    }],
-                },
-            }],
-        })).toThrow(/field\.type.*must be text\|number\|checkbox/);
+        expect(() =>
+            parseIntegrationDefinition({
+                kind: "invalid-overlay-field",
+                label: "Invalid overlay field",
+                inputs: [],
+                artifacts: [
+                    {
+                        type: "sourceOverlay",
+                        overlay: {
+                            id: "invalid-overlay-field",
+                            sourceId: "products",
+                            fields: [],
+                            dashboardFields: [
+                                {
+                                    viewId: "productDetail",
+                                    fieldId: "title",
+                                    field: { type: "script" },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            }),
+        ).toThrow(/field\.type.*must be text\|number\|checkbox/);
     });
 
     test("normalizes supported source overlay dashboard field types", () => {
@@ -215,19 +229,23 @@ describe("@bernouy/cms-integrations artifact parsing", () => {
             kind: "normalized-overlay-field",
             label: "Normalized overlay field",
             inputs: [],
-            artifacts: [{
-                type: "sourceOverlay",
-                overlay: {
-                    id: "normalized-overlay-field",
-                    sourceId: "products",
-                    fields: [],
-                    dashboardFields: [{
-                        viewId: "productDetail",
-                        fieldId: "price",
-                        field: { type: " number " },
-                    }],
+            artifacts: [
+                {
+                    type: "sourceOverlay",
+                    overlay: {
+                        id: "normalized-overlay-field",
+                        sourceId: "products",
+                        fields: [],
+                        dashboardFields: [
+                            {
+                                viewId: "productDetail",
+                                fieldId: "price",
+                                field: { type: " number " },
+                            },
+                        ],
+                    },
                 },
-            }],
+            ],
         });
 
         expect(definition.artifacts?.[0]).toMatchObject({
@@ -241,33 +259,41 @@ function visibilityDefinition(visibleWhen: unknown) {
         kind: "conditional-dashboard",
         label: "Conditional dashboard",
         inputs: [],
-        artifacts: [{
-            type: "dashboard",
-            dashboard: {
-                id: "settings",
-                source: "settings",
-                views: [{
-                    widget: "w-detail",
-                    id: "settingsDetail",
-                    source: { endpoint: "setting" },
-                    actions: [{ id: "save", label: "Save", endpoint: { endpoint: "save" }, visibleWhen }],
-                    main: [{
-                        id: "general",
-                        title: "General",
-                        fields: [
-                            { id: "mode", label: "Mode", path: "mode", type: "text" },
-                            { id: "locale", label: "Locale", path: "locale", type: "text" },
-                            { id: "note", label: "Note", path: "note", type: "text", visibleWhen },
-                        ],
-                    }],
-                }],
+        artifacts: [
+            {
+                type: "dashboard",
+                dashboard: {
+                    id: "settings",
+                    source: "settings",
+                    views: [
+                        {
+                            widget: "w-detail",
+                            id: "settingsDetail",
+                            source: { endpoint: "setting" },
+                            actions: [{ id: "save", label: "Save", endpoint: { endpoint: "save" }, visibleWhen }],
+                            main: [
+                                {
+                                    id: "general",
+                                    title: "General",
+                                    fields: [
+                                        { id: "mode", label: "Mode", path: "mode", type: "text" },
+                                        { id: "locale", label: "Locale", path: "locale", type: "text" },
+                                        { id: "note", label: "Note", path: "note", type: "text", visibleWhen },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
             },
-        }],
+        ],
     };
 }
 
 function deepVisibilityRule(): unknown {
     let rule: unknown = { value: "$field.mode", equals: "advanced" };
-    for (let index = 0; index < 10; index++) rule = { all: [rule] };
+    for (let index = 0; index < 10; index++) {
+        rule = { all: [rule] };
+    }
     return rule;
 }

@@ -1,27 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import {
-    connectStatus,
-    offerResult,
-    sellerCmsUserId,
-    sellerTermsHash,
-    sellerTermsVersion,
-} from "./fixtures";
-import {
-    executeSellerPrice,
-    loadSellerPriceFunction,
-    sellerPriceRequest,
-} from "./harness";
+import { connectStatus, offerResult, sellerCmsUserId, sellerTermsHash, sellerTermsVersion } from "./fixtures";
+import { executeSellerPrice, loadSellerPriceFunction, sellerPriceRequest } from "./harness";
 import { sellerPriceResponder } from "./responders";
 
 describe("Commerce Stripe seller price contracts", () => {
     test("preserves the exact public contract and downstream payloads", async () => {
-        const { response, calls, identities } = await executeSellerPrice(
-            sellerPriceResponder(),
-        );
+        const { response, calls, identities } = await executeSellerPrice(sellerPriceResponder());
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual(offerResult);
-        expect(calls.map(call => [call.method, call.url.pathname])).toEqual([
+        expect(calls.map((call) => [call.method, call.url.pathname])).toEqual([
             ["GET", "/seller"],
             ["GET", "/status"],
             ["POST", "/enrollment"],
@@ -44,23 +32,18 @@ describe("Commerce Stripe seller price contracts", () => {
             amount: 12_000,
             expectedVersion: 3,
         });
-        expect(calls.map(call => call.cmsUserId)).toEqual([
-            sellerCmsUserId,
-            null,
-            null,
-            sellerCmsUserId,
-        ]);
-        expect(calls.map(call => call.stripeUserId)).toEqual([
-            null,
-            sellerCmsUserId,
-            sellerCmsUserId,
-            null,
-        ]);
-        expect(await identities.resolve({
-            authority: "commerce",
-            kind: "user",
-            value: 184,
-        }, "cms")).toBe(sellerCmsUserId);
+        expect(calls.map((call) => call.cmsUserId)).toEqual([sellerCmsUserId, null, null, sellerCmsUserId]);
+        expect(calls.map((call) => call.stripeUserId)).toEqual([null, sellerCmsUserId, sellerCmsUserId, null]);
+        expect(
+            await identities.resolve(
+                {
+                    authority: "commerce",
+                    kind: "user",
+                    value: 184,
+                },
+                "cms",
+            ),
+        ).toBe(sellerCmsUserId);
     });
 
     test("preserves authenticated POST input and output declarations", async () => {
@@ -72,12 +55,14 @@ describe("Commerce Stripe seller price contracts", () => {
             type: "object",
             required: ["offerId", "amount", "expectedVersion"],
         });
-        expect(fn.output).toEqual(expect.arrayContaining([
-            expect.objectContaining({ status: "200" }),
-            expect.objectContaining({ status: "400" }),
-            expect.objectContaining({ status: "403" }),
-            expect.objectContaining({ status: "409" }),
-        ]));
+        expect(fn.output).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ status: "200" }),
+                expect.objectContaining({ status: "400" }),
+                expect.objectContaining({ status: "403" }),
+                expect.objectContaining({ status: "409" }),
+            ]),
+        );
     });
 
     test("preserves omitted optional enrollment fields when already enrolled", async () => {

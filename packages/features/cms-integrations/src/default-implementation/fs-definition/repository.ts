@@ -29,13 +29,13 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
 
     constructor(config: string | FsIntegrationDefinitionRepositoryConfig) {
         this.root = typeof config === "string" ? config : config.root;
-        this.defaultChannel = typeof config === "string" ? "stable" : config.defaultChannel ?? "stable";
+        this.defaultChannel = typeof config === "string" ? "stable" : (config.defaultChannel ?? "stable");
     }
 
     async list(): Promise<IntegrationDefinitionSummary[]> {
         const indexes = await this.readIndexes();
         return indexes
-            .map(index => ({
+            .map((index) => ({
                 kind: index.kind,
                 label: index.label,
                 ...(index.schema ? { schema: index.schema } : {}),
@@ -44,7 +44,7 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
                 ...(index.description ? { description: index.description } : {}),
                 ...(index.stable ? { stable: index.stable } : {}),
                 ...(index.latest ? { latest: index.latest } : {}),
-                versions: index.versions.map(version => version.version),
+                versions: index.versions.map((version) => version.version),
             }))
             .sort((a, b) => a.kind.localeCompare(b.kind));
     }
@@ -59,9 +59,13 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
 
     async get(kind: string, version?: string): Promise<IntegrationDefinition | null> {
         const index = await this.readIndexOrNull(kind);
-        if (!index) return null;
+        if (!index) {
+            return null;
+        }
         const entry = resolveVersion(index, version, this.defaultChannel);
-        if (!entry) return null;
+        if (!entry) {
+            return null;
+        }
 
         const kindRoot = await this.resolveKindRoot(index.kind);
         const versionRoot = await resolveExistingPathWithin(kindRoot, "version", entry.path);
@@ -70,19 +74,27 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         const parsed = JSON.parse(await readFile(definitionPath, "utf-8"));
         const definition = parseIntegrationDefinition(parsed);
         if (definition.kind !== index.kind) {
-            throw new Error(`${definitionPath}: definition kind "${definition.kind}" does not match index kind "${index.kind}"`);
+            throw new Error(
+                `${definitionPath}: definition kind "${definition.kind}" does not match index kind "${index.kind}"`,
+            );
         }
         if (definition.version !== entry.version) {
-            throw new Error(`${definitionPath}: definition version "${definition.version ?? ""}" does not match index version "${entry.version}"`);
+            throw new Error(
+                `${definitionPath}: definition version "${definition.version ?? ""}" does not match index version "${entry.version}"`,
+            );
         }
         return await hydrateVersionAssets(definition, versionRoot);
     }
 
     async getAsset(kind: string, version: string | undefined, path: string): Promise<IntegrationAsset | null> {
         const index = await this.readIndexOrNull(kind);
-        if (!index) return null;
+        if (!index) {
+            return null;
+        }
         const entry = resolveVersion(index, version, this.defaultChannel);
-        if (!entry) return null;
+        if (!entry) {
+            return null;
+        }
         const versionRoot = await resolveExistingPathWithin(
             await this.resolveKindRoot(index.kind),
             "version",
@@ -93,9 +105,9 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
 
     private async readIndexes(): Promise<IntegrationDefinitionIndex[]> {
         const entries = await readdir(this.root, { withFileTypes: true });
-        const indexes = await Promise.all(entries
-            .filter(entry => entry.isDirectory())
-            .map(entry => this.readIndexOrNull(entry.name)));
+        const indexes = await Promise.all(
+            entries.filter((entry) => entry.isDirectory()).map((entry) => this.readIndexOrNull(entry.name)),
+        );
         return indexes.filter((index): index is IntegrationDefinitionIndex => index !== null);
     }
 
@@ -103,7 +115,9 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         try {
             return await this.readIndex(kind);
         } catch (e) {
-            if (isNodeError(e) && e.code === "ENOENT") return null;
+            if (isNodeError(e) && e.code === "ENOENT") {
+                return null;
+            }
             throw e;
         }
     }

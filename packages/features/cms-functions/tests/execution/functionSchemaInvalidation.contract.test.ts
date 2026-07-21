@@ -32,7 +32,9 @@ describe("function source schema invalidation contract", () => {
         const overlayRepository = await overlaySources(fetchImpl);
         const sources = withFunctionsSource(overlayRepository, new InMemoryFunctionRepository());
 
-        expect(await overlayRepository.getEndpoint(TARGET_ENDPOINT.urn)).toEqual(enrichedEndpoint("legacyCode", "Legacy code"));
+        expect(await overlayRepository.getEndpoint(TARGET_ENDPOINT.urn)).toEqual(
+            enrichedEndpoint("legacyCode", "Legacy code"),
+        );
         expect(fieldSourceCalls).toBe(1);
 
         const response = await executeFunction(refreshFunction(), new Request("https://cms.test/refresh"), {
@@ -42,7 +44,9 @@ describe("function source schema invalidation contract", () => {
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ schemaRevision: 2 });
-        expect(await overlayRepository.getEndpoint(TARGET_ENDPOINT.urn)).toEqual(enrichedEndpoint("freshCode", "Fresh code"));
+        expect(await overlayRepository.getEndpoint(TARGET_ENDPOINT.urn)).toEqual(
+            enrichedEndpoint("freshCode", "Fresh code"),
+        );
         expect(fieldSourceCalls).toBe(2);
     });
 });
@@ -51,10 +55,12 @@ const TARGET_ENDPOINT: SourceEndpoint = {
     urn: "urn:catalog:getProduct",
     method: "GET",
     targetUrl: "https://catalog.example/product",
-    output: [{
-        status: "200",
-        body: { type: "object", properties: { id: { type: "string" } } },
-    }],
+    output: [
+        {
+            status: "200",
+            body: { type: "object", properties: { id: { type: "string" } } },
+        },
+    ],
 };
 
 async function overlaySources(fetchImpl: typeof fetch): Promise<SourceOverlaySourceRepository> {
@@ -62,24 +68,30 @@ async function overlaySources(fetchImpl: typeof fetch): Promise<SourceOverlaySou
     const overlays = new InMemorySourceOverlayRepository();
     await inner.createSource({
         urn: "urn:catalog",
-        endpoints: [TARGET_ENDPOINT, {
-            urn: "urn:catalog:listFields",
-            method: "GET",
-            targetUrl: "https://catalog.example/fields",
-            output: [{ status: "200", body: { type: "object" } }],
-        }, {
-            urn: "urn:catalog:refreshSchema",
-            method: "POST",
-            targetUrl: "https://catalog.example/refresh-schema",
-            effects: { invalidatesSchema: true },
-            output: [{
-                status: "200",
-                body: {
-                    type: "object",
-                    properties: { schemaRevision: { type: "number" } },
-                },
-            }],
-        }],
+        endpoints: [
+            TARGET_ENDPOINT,
+            {
+                urn: "urn:catalog:listFields",
+                method: "GET",
+                targetUrl: "https://catalog.example/fields",
+                output: [{ status: "200", body: { type: "object" } }],
+            },
+            {
+                urn: "urn:catalog:refreshSchema",
+                method: "POST",
+                targetUrl: "https://catalog.example/refresh-schema",
+                effects: { invalidatesSchema: true },
+                output: [
+                    {
+                        status: "200",
+                        body: {
+                            type: "object",
+                            properties: { schemaRevision: { type: "number" } },
+                        },
+                    },
+                ],
+            },
+        ],
     });
     await overlays.upsertOverlay({
         id: "catalog-fields",
@@ -95,10 +107,12 @@ function refreshFunction(): CmsFunction {
     return {
         id: "refreshCatalogSchema",
         method: "POST",
-        steps: [{
-            id: "refresh",
-            call: { source: "catalog", endpoint: "refreshSchema" },
-        }],
+        steps: [
+            {
+                id: "refresh",
+                call: { source: "catalog", endpoint: "refreshSchema" },
+            },
+        ],
         return: { body: "$steps.refresh" },
     };
 }
@@ -106,18 +120,20 @@ function refreshFunction(): CmsFunction {
 function enrichedEndpoint(fieldId: string, label: string): SourceEndpoint {
     return {
         ...TARGET_ENDPOINT,
-        output: [{
-            status: "200",
-            body: {
-                type: "object",
-                properties: {
-                    id: { type: "string" },
-                    metadata: {
-                        type: "object",
-                        properties: { [fieldId]: { type: "string", title: label } },
+        output: [
+            {
+                status: "200",
+                body: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string" },
+                        metadata: {
+                            type: "object",
+                            properties: { [fieldId]: { type: "string", title: label } },
+                        },
                     },
                 },
             },
-        }],
+        ],
     };
 }

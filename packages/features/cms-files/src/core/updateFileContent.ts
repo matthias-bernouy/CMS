@@ -21,14 +21,16 @@ export async function updateFileContent(
     file: File,
 ): Promise<FileItem | null> {
     const cur = await metadata.getItem(id);
-    if (!cur || cur.type !== "file") return null;
+    if (!cur || cur.type !== "file") {
+        return null;
+    }
 
     validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
     await blob.put(id, bytes);
     return metadata.updateFileContent(id, {
-        size:        file.size,
-        mimeType:    file.type || "application/octet-stream",
+        size: file.size,
+        mimeType: file.type || "application/octet-stream",
         contentHash: sha256Hex(bytes),
     });
 }

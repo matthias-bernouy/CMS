@@ -60,7 +60,7 @@ describe("InMemoryUsersRepository.list", () => {
     test("filters by role", async () => {
         const { users, total } = await (await seeded()).list({ role: "user" });
         expect(total).toBe(2);
-        expect(users.every(u => u.role === "user")).toBe(true);
+        expect(users.every((u) => u.role === "user")).toBe(true);
     });
 
     test("search is an EXACT (case-insensitive) email match, not substring", async () => {

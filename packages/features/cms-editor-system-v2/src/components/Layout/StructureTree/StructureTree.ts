@@ -13,12 +13,9 @@ import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
 const template = document.createElement("template");
-template.innerHTML = `<style>${[
-    componentCss,
-    sourceStatesCss,
-    badgesCss,
-    contextCss,
-].map(css => String(css)).join("\n")}</style>${String(templateHtml)}`;
+template.innerHTML = `<style>${[componentCss, sourceStatesCss, badgesCss, contextCss]
+    .map((css) => String(css))
+    .join("\n")}</style>${String(templateHtml)}`;
 
 export type { DefaultTemplateSelection } from "./Pickers/structurePickerGroups";
 export type {

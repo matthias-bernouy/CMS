@@ -6,12 +6,17 @@ import { renderPlaceholder } from "./resources";
 
 export function renderDetail(host: IntegrationBrowserHost): void {
     const root = host.query<HTMLElement>("[data-detail-view]");
-    const installation = host.installations.find(item => item.id === host.selectedIntegrationId);
-    if (!installation) return;
+    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
+    if (!installation) {
+        return;
+    }
     const definition = definitionFor(host, installation);
     const shell = cloneElement("detail-shell");
     const content = shell.querySelector("template")!.content;
-    shell.setAttribute("cms-source", `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
+    shell.setAttribute(
+        "cms-source",
+        `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`,
+    );
     text(content, "[data-title]", installation.label);
     text(content, "[data-description]", definition?.description ?? "No description.");
     content.querySelector<HTMLElement>("[data-run-sync]")!.dataset.integrationId = installation.id;

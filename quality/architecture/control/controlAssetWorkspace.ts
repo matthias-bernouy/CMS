@@ -19,15 +19,13 @@ export async function prepareControlAssetWorkspace(
     await linkInstalledDependencies(rootDir, temporaryRoot, temporaryComponents, temporaryControl);
 }
 
-export async function runControlAssetRecipes(
-    temporaryComponents: string,
-    temporaryControl: string,
-): Promise<void> {
+export async function runControlAssetRecipes(temporaryComponents: string, temporaryControl: string): Promise<void> {
     await runBunRecipe(["run", "build"], temporaryComponents, "@bernouy/components build recipe");
-    await runBunRecipe([
-        resolve(import.meta.dir, "runControlPrebuild.ts"),
-        join(temporaryControl, "src/prebuildControl.ts"),
-    ], temporaryControl, "@bernouy/cms-control prebuild recipe");
+    await runBunRecipe(
+        [resolve(import.meta.dir, "runControlPrebuild.ts"), join(temporaryControl, "src/prebuildControl.ts")],
+        temporaryControl,
+        "@bernouy/cms-control prebuild recipe",
+    );
 }
 
 async function copyWorkspaceTree(sourceRoot: string, targetRoot: string): Promise<void> {
@@ -57,19 +55,25 @@ async function linkInstalledDependencies(
     for (const layer of ["foundation", "features"]) {
         const sourceLayer = resolve(rootDir, "packages", layer);
         for (const entry of await readdir(sourceLayer, { withFileTypes: true })) {
-            if (!entry.isDirectory()) continue;
-            mirrors.push(mirrorNodeModules(
-                join(sourceLayer, entry.name, "node_modules"),
-                join(temporaryRoot, "packages", layer, entry.name, "node_modules"),
-                overrides,
-            ));
+            if (!entry.isDirectory()) {
+                continue;
+            }
+            mirrors.push(
+                mirrorNodeModules(
+                    join(sourceLayer, entry.name, "node_modules"),
+                    join(temporaryRoot, "packages", layer, entry.name, "node_modules"),
+                    overrides,
+                ),
+            );
         }
     }
-    mirrors.push(mirrorNodeModules(
-        resolve(rootDir, "packages/surfaces/cms-control/node_modules"),
-        join(temporaryControl, "node_modules"),
-        overrides,
-    ));
+    mirrors.push(
+        mirrorNodeModules(
+            resolve(rootDir, "packages/surfaces/cms-control/node_modules"),
+            join(temporaryControl, "node_modules"),
+            overrides,
+        ),
+    );
     await Promise.all(mirrors);
 }
 
@@ -81,14 +85,22 @@ async function temporaryWorkspacePackages(temporaryRoot: string): Promise<Map<st
         try {
             entries = await readdir(layerRoot, { withFileTypes: true });
         } catch (error) {
-            if (isMissingPathError(error)) continue;
+            if (isMissingPathError(error)) {
+                continue;
+            }
             throw error;
         }
         for (const entry of entries) {
-            if (!entry.isDirectory()) continue;
+            if (!entry.isDirectory()) {
+                continue;
+            }
             const packageRoot = join(layerRoot, entry.name);
-            const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")) as { name?: unknown };
-            if (typeof manifest.name === "string") packages.set(manifest.name, packageRoot);
+            const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")) as {
+                name?: unknown;
+            };
+            if (typeof manifest.name === "string") {
+                packages.set(manifest.name, packageRoot);
+            }
         }
     }
     return packages;
@@ -103,7 +115,9 @@ async function mirrorNodeModules(
     try {
         entries = await readdir(sourceRoot, { withFileTypes: true });
     } catch (error) {
-        if (isMissingPathError(error)) return;
+        if (isMissingPathError(error)) {
+            return;
+        }
         throw error;
     }
     await mkdir(targetRoot, { recursive: true });
@@ -140,7 +154,9 @@ async function runBunRecipe(args: string[], cwd: string, label: string): Promise
         new Response(process.stdout).text(),
         new Response(process.stderr).text(),
     ]);
-    if (exitCode === 0) return;
+    if (exitCode === 0) {
+        return;
+    }
     const details = [stderr.trim(), stdout.trim()].filter(Boolean).join("\n");
     throw new Error(`${label} failed with exit code ${exitCode}${details ? `:\n${details}` : ""}`);
 }

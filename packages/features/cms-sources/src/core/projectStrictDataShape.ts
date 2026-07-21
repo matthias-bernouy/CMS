@@ -13,11 +13,17 @@ export function projectStrictDataShape(
     options: StrictDataShapeProjectionOptions = {},
 ): unknown {
     if (value === null) {
-        if (shape.nullable === true) return null;
+        if (shape.nullable === true) {
+            return null;
+        }
         throw new DataShapeProjectionError(`${path} must be a ${shape.type}`);
     }
-    if (shape.type === "object") return projectObject(value, shape, path, options);
-    if (shape.type === "array") return projectArray(value, shape, path, options);
+    if (shape.type === "object") {
+        return projectObject(value, shape, path, options);
+    }
+    if (shape.type === "array") {
+        return projectArray(value, shape, path, options);
+    }
     if (typeof value !== shape.type || (shape.type === "number" && !Number.isFinite(value))) {
         throw new DataShapeProjectionError(`${path} must be a ${shape.type}`);
     }
@@ -30,7 +36,9 @@ function projectObject(
     path: string,
     options: StrictDataShapeProjectionOptions,
 ): unknown {
-    if (!isRecord(value)) throw new DataShapeProjectionError(`${path} must be an object`);
+    if (!isRecord(value)) {
+        throw new DataShapeProjectionError(`${path} must be an object`);
+    }
     const required = new Set(shape.required ?? []);
     if (options.enforceRequired !== false) {
         for (const key of required) {
@@ -39,14 +47,15 @@ function projectObject(
             }
         }
     }
-    if (!shape.properties) return value;
+    if (!shape.properties) {
+        return value;
+    }
 
-    return Object.fromEntries(Object.entries(shape.properties)
-        .filter(([key]) => Object.hasOwn(value, key) && value[key] !== undefined)
-        .map(([key, child]) => [
-            key,
-            projectStrictDataShape(value[key], child, `${path}.${key}`, options),
-        ]));
+    return Object.fromEntries(
+        Object.entries(shape.properties)
+            .filter(([key]) => Object.hasOwn(value, key) && value[key] !== undefined)
+            .map(([key, child]) => [key, projectStrictDataShape(value[key], child, `${path}.${key}`, options)]),
+    );
 }
 
 function projectArray(
@@ -55,8 +64,12 @@ function projectArray(
     path: string,
     options: StrictDataShapeProjectionOptions,
 ): unknown {
-    if (!Array.isArray(value)) throw new DataShapeProjectionError(`${path} must be an array`);
-    if (!shape.items) return value;
+    if (!Array.isArray(value)) {
+        throw new DataShapeProjectionError(`${path} must be an array`);
+    }
+    if (!shape.items) {
+        return value;
+    }
     return value.map((item, index) => projectStrictDataShape(item, shape.items!, `${path}.${index}`, options));
 }
 

@@ -13,7 +13,7 @@ describe("root export boundary", () => {
             target: "browser",
             write: false,
         });
-        const bundledRoot = await build.outputs[0]?.text() ?? "";
+        const bundledRoot = (await build.outputs[0]?.text()) ?? "";
 
         expect(manifest.exports["."]).toBe("./src/exports/index.ts");
         expect(build.success).toBeTrue();

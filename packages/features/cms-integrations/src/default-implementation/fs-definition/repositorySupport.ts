@@ -11,18 +11,28 @@ export function resolveVersion(
     requestedVersion: string | undefined,
     defaultChannel: "stable" | "latest",
 ): IntegrationDefinitionVersion | null {
-    if (requestedVersion) return index.versions.find(version => version.version === requestedVersion) ?? null;
+    if (requestedVersion) {
+        return index.versions.find((version) => version.version === requestedVersion) ?? null;
+    }
     const target = index[defaultChannel] ?? index.stable ?? index.latest;
-    if (!target) return index.versions[0] ?? null;
-    return index.versions.find(version => version.version === target) ?? null;
+    if (!target) {
+        return index.versions[0] ?? null;
+    }
+    return index.versions.find((version) => version.version === target) ?? null;
 }
 
 export function parseIntegrationDefinitionIndex(value: unknown, source: string): IntegrationDefinitionIndex {
-    if (!isRecord(value)) throw new Error(`${source}: integration index must be an object`);
+    if (!isRecord(value)) {
+        throw new Error(`${source}: integration index must be an object`);
+    }
     const kind = text(value.kind);
     const label = text(value.label);
-    if (!kind) throw new Error(`${source}: kind is required`);
-    if (!label) throw new Error(`${source}: label is required`);
+    if (!kind) {
+        throw new Error(`${source}: kind is required`);
+    }
+    if (!label) {
+        throw new Error(`${source}: label is required`);
+    }
     if (!Array.isArray(value.versions) || value.versions.length === 0) {
         throw new Error(`${source}: versions must be a non-empty array`);
     }
@@ -54,11 +64,7 @@ export function safeJoinWithin(root: string, boundary: string, ...parts: string[
     return target;
 }
 
-export async function resolveExistingPathWithin(
-    root: string,
-    boundary: string,
-    ...parts: string[]
-): Promise<string> {
+export async function resolveExistingPathWithin(root: string, boundary: string, ...parts: string[]): Promise<string> {
     const canonicalRoot = await realpath(root);
     const target = await realpath(safeJoinWithin(canonicalRoot, boundary, ...parts));
     assertPathWithin(canonicalRoot, target, boundary, parts.join("/"));
@@ -77,13 +83,21 @@ export function isNodeError(value: unknown): value is NodeJS.ErrnoException {
 }
 
 function parseVersion(value: unknown, source: string): IntegrationDefinitionVersion {
-    if (!isRecord(value)) throw new Error(`${source} must be an object`);
+    if (!isRecord(value)) {
+        throw new Error(`${source} must be an object`);
+    }
     const version = text(value.version);
     const path = text(value.path);
     const definition = text(value.definition);
-    if (!version) throw new Error(`${source}.version is required`);
-    if (!path) throw new Error(`${source}.path is required`);
-    if (!definition) throw new Error(`${source}.definition is required`);
+    if (!version) {
+        throw new Error(`${source}.version is required`);
+    }
+    if (!path) {
+        throw new Error(`${source}.path is required`);
+    }
+    if (!definition) {
+        throw new Error(`${source}.definition is required`);
+    }
     return { version, path, definition };
 }
 
