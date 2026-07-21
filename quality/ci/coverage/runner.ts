@@ -1,18 +1,18 @@
 import { appendFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { parseBaseline, validateBaseline } from "./baseline";
-import { compareCoverageBaselines } from "./comparison";
-import { coverageReport, discoverPackages, measurePackage } from "./measurement";
+import { parseBaseline, validateBaseline } from "./measurement/baseline";
+import { coverageReport, discoverPackages, measurePackage } from "./measurement/measurement";
 import { BASELINE_PATH, REPORT_DIRECTORY, REPOSITORY_ROOT } from "./paths";
-import { assertBaselineUpdateAllowed, resolveCoverageReference } from "./policy";
-import { compareWithReference } from "./regression";
+import { compareCoverageBaselines } from "./policy/comparison";
+import { assertBaselineUpdateAllowed, resolveCoverageReference } from "./policy/policy";
+import { compareWithReference } from "./policy/regression";
 import type { CoverageBaseline, PackageCoverage } from "./types";
 
 function parseArguments(): boolean {
     const updateBaseline = process.argv.includes("--update");
     if (process.argv.some((argument) => argument.startsWith("--") && argument !== "--update")) {
-        throw new Error("Usage: bun run quality/ci/coverage-ratchet.ts [--update]");
+        throw new Error("Usage: bun run quality/ci/coverage/ratchet.ts [--update]");
     }
     return updateBaseline;
 }

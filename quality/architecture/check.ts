@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
-import { checkWorkspaceArchitecture, formatArchitectureViolations } from "./checkWorkspace";
-import { repositoryArchitectureOptions } from "./repositoryPolicy";
+import { checkWorkspaceArchitecture, formatArchitectureViolations } from "./core/checkWorkspace";
+import { repositoryArchitectureOptions } from "./repository/repositoryPolicy";
 
 export async function checkRepositoryArchitecture(rootDir: string): Promise<void> {
     const violations = await checkWorkspaceArchitecture(repositoryArchitectureOptions(rootDir));

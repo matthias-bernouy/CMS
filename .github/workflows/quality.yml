@@ -36,10 +36,10 @@ jobs:
 
       - name: Check workspace architecture
         run: bun run check:architecture
-      - name: Ratchet handwritten file sizes
+      - name: Ratchet repository shape
         env:
-          FILE_SIZE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: bun run check:file-size
+          REPOSITORY_SHAPE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bun run check:repository-shape
 
       - name: Typecheck project references
         run: bun run typecheck
@@ -50,7 +50,7 @@ jobs:
         run: bunx tsc --project quality/ci/tsconfig.json
 
       - name: Verify deterministic build and clean worktree
-        run: bash quality/ci/deterministic-build.sh
+        run: bash quality/ci/determinism/deterministic-build.sh
 
   tests:
     name: Tests (${{ matrix.name }})
@@ -108,7 +108,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Reject high-severity dependency vulnerabilities
-        run: bun run quality/ci/audit.ts
+        run: bun run quality/ci/audit/audit.ts
 
       - name: Install pinned gitleaks
         env:
@@ -124,7 +124,7 @@ jobs:
         run: >-
           "$RUNNER_TEMP/gitleaks" git
           --no-banner --no-color --redact
-          --gitleaks-ignore-path quality/ci/gitleaks-baseline.txt
+          --gitleaks-ignore-path quality/ci/audit/gitleaks-baseline.txt
           .
 
   coverage:
@@ -145,7 +145,7 @@ jobs:
       - name: Check coverage against the package baseline
         env:
           COVERAGE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: bun run quality/ci/coverage-ratchet.ts
+        run: bun run quality/ci/coverage/ratchet.ts
 
       - name: Upload coverage report
         if: always()

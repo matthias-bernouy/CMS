@@ -65,6 +65,17 @@ dependencies are allowed only through the published package exports.
   such as schemas may be exempt. Exceptions must use a narrow path or category
   and state their reason in the enforcing quality policy.
 
+## Directory Shape
+
+- Keep each directory near seven immediate entries and never above eight files
+  and subdirectories combined.
+- Group entries by responsibility before a directory reaches the hard limit.
+  Do not create vague catch-all folders solely to satisfy the count.
+- Existing wider directories are legacy debt: they may shrink but must not gain
+  immediate entries. While still above eight, each lower count becomes the new
+  ceiling on the next baseline.
+- Generated trees may be exempt only through a narrow, documented policy rule.
+
 ## Commands
 
 Use Bun commands from the workspace root unless a package says otherwise:

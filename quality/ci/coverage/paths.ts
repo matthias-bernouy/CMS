@@ -1,7 +1,7 @@
 import { relative, resolve, sep } from "node:path";
 
 export const REPOSITORY_ROOT = resolve(import.meta.dir, "../../..");
-export const BASELINE_PATH = resolve(import.meta.dir, "../coverage-baseline.json");
+export const BASELINE_PATH = resolve(import.meta.dir, "baseline.json");
 export const REPORT_DIRECTORY = resolve(REPOSITORY_ROOT, "coverage");
 
 const SOURCE_EXTENSIONS = new Set([".cjs", ".js", ".jsx", ".mjs", ".ts", ".tsx"]);

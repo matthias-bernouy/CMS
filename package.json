@@ -15,7 +15,9 @@
     "scripts": {
         "build": "bun run build.ts",
         "check:architecture": "bun run quality/architecture/check.ts",
-        "check:file-size": "bun run quality/ci/file-size-ratchet.ts",
+        "check:directory-fanout": "bun run quality/ci/repository-shape/directory-fanout/ratchet.ts",
+        "check:file-size": "bun run quality/ci/repository-shape/file-size/ratchet.ts",
+        "check:repository-shape": "bun run quality/ci/repository-shape/check.ts",
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test"
