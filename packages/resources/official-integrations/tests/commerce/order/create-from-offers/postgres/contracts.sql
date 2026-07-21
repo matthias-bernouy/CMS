@@ -7,7 +7,9 @@ declare
     v_order commerce.orders%rowtype;
     v_line commerce.order_lines%rowtype;
     v_event commerce.order_events%rowtype;
+    v_group commerce.checkout_groups%rowtype;
     v_proposal_id bigint;
+    v_expected_hash text;
     v_result jsonb;
 begin
     select * into strict v_offer from commerce.offers
@@ -28,14 +30,30 @@ begin
     where buyer_cms_user_id = 'order-create-single-buyer';
     select * into strict v_line from commerce.order_lines where order_id = v_order.id;
     select * into strict v_event from commerce.order_events where order_id = v_order.id;
+    select * into strict v_group from commerce.checkout_groups
+    where id = v_order.checkout_group_id;
+    v_expected_hash := md5(jsonb_build_object(
+        'items', jsonb_build_array(jsonb_build_object(
+            'offerId', v_offer.id, 'quantity', 2
+        )),
+        'shippingAddress', '{"city":"Paris","line1":null}'::jsonb,
+        'billingAddress', '{"city":"Lyon"}'::jsonb,
+        'metadata', '{}'::jsonb
+    )::text);
 
     if v_result is distinct from to_jsonb(v_order)
         || jsonb_build_object('idempotent_replay', false)
        or v_order.subtotal_amount <> 24690 or v_order.total_amount <> 24690
+       or v_order.status <> 'awaiting_quote' or v_order.currency <> 'eur'
+       or v_order.shipping_amount <> 0 or v_order.delivery_quoted_at is not null
+       or v_order.archived_at is not null or v_order.version <> 1
+       or v_order.metadata <> '{}'::jsonb or v_order.request_hash <> v_expected_hash
        or v_order.shipping_address <> '{"city":"Paris","line1":null}'::jsonb
        or v_order.billing_address <> '{"city":"Lyon"}'::jsonb
-       or (select count(*) from commerce.checkout_groups
-           where id = v_order.checkout_group_id) <> 1 then
+       or v_group.buyer_cms_user_id <> 'order-create-single-buyer'
+       or v_group.source_cart_id is not null
+       or v_group.idempotency_key <> 'order-create-single-key'
+       or v_group.request_hash <> v_expected_hash then
         raise exception 'order creation: one-line order contract changed: %', v_result;
     end if;
 
@@ -120,6 +138,8 @@ begin
            join commerce.sellers seller on seller.id = line.seller_id
            where line.order_id = v_order.id and (
                line.quantity <> 1 or line.inventory_reserved <> 1
+               or line.variant_id is not null or line.sku is not null
+               or line.accepted_proposal_id is not null
                or line.unit_amount <> offer.accepted_price_amount
                or line.total_amount <> offer.accepted_price_amount
                or line.product_snapshot <> jsonb_build_object(

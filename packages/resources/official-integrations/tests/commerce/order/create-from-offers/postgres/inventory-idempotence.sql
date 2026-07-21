@@ -19,7 +19,6 @@ begin
           is distinct from row(2, 'available'::text, 21) then
         raise exception 'order creation: partial inventory semantics changed';
     end if;
-
     perform commerce.create_order_from_offers(
         'order-create-exact-buyer', 'order-create-exact-key',
         jsonb_build_array(jsonb_build_object('offerId', v_exact, 'quantity', 2))
@@ -34,7 +33,6 @@ begin
           is distinct from row(2, 'available'::text, 22) then
         raise exception 'order creation: exact inventory semantics changed';
     end if;
-
     perform commerce.create_order_from_offers(
         'order-create-unlimited-buyer', 'order-create-unlimited-key',
         jsonb_build_array(jsonb_build_object('offerId', v_unlimited, 'quantity', 1000))
@@ -51,7 +49,33 @@ begin
     end if;
 end;
 $inventory$;
-
+do $axisless_variant$
+declare
+    v_offer commerce.offers%rowtype := (select offer from commerce.offers offer
+        where slug = 'order-create-axisless-variant');
+    v_variant commerce.product_variants%rowtype := (select variant
+        from commerce.product_variants variant where id = v_offer.variant_id);
+    v_order_id bigint;
+    v_line commerce.order_lines%rowtype;
+begin
+    perform commerce.create_order_from_offers(
+        'order-create-axisless-buyer', 'order-create-axisless-key',
+        jsonb_build_array(jsonb_build_object('offerId', v_offer.id, 'quantity', 1))
+    );
+    select id into strict v_order_id from commerce.orders
+    where buyer_cms_user_id = 'order-create-axisless-buyer';
+    select * into strict v_line from commerce.order_lines where order_id = v_order_id;
+    if v_line.variant_id is distinct from v_variant.id
+       or v_line.sku is not null or v_line.accepted_proposal_id is not null
+       or v_line.variant_snapshot is distinct from jsonb_build_object(
+           'id', v_variant.id, 'sku', null, 'title', 'Axisless Choice',
+           'combinationKey', null, 'options', '[]'::jsonb
+       ) then
+        raise exception 'order creation: axisless variant null contract changed: %',
+            to_jsonb(v_line);
+    end if;
+end;
+$axisless_variant$;
 do $idempotence$
 declare
     v_a bigint := (select id from commerce.offers where slug = 'order-create-idempotency-a');
@@ -87,7 +111,6 @@ begin
        or (select count(*) from commerce.order_events where order_id = v_order.id) <> 1 then
         raise exception 'order creation: reordered replay contract changed';
     end if;
-
     perform pg_temp.expect_order_creation_error(
         'order-create-idempotency-buyer', 'order-create-shared-key',
         jsonb_build_array(
@@ -107,7 +130,31 @@ begin
             raise;
         end if;
     end;
-
+    begin
+        perform commerce.create_order_from_offers(
+            'order-create-idempotency-buyer', 'order-create-shared-key', v_items,
+            '{"city":"Paris"}'::jsonb, '{"city":"Nice"}'::jsonb
+        );
+        raise exception 'test: changed billing address unexpectedly replayed';
+    exception when others then
+        if sqlerrm = 'test: changed billing address unexpectedly replayed'
+           or sqlerrm <> 'conflict: idempotency key was already used for a different order' then
+            raise;
+        end if;
+    end;
+    begin
+        perform commerce.create_order_from_offers(
+            'order-create-idempotency-buyer', 'order-create-shared-key', v_items,
+            '{"city":"Paris"}'::jsonb, '{"city":"Lyon"}'::jsonb,
+            '{"unexpected":true}'::jsonb
+        );
+        raise exception 'test: changed metadata unexpectedly replayed';
+    exception when others then
+        if sqlerrm = 'test: changed metadata unexpectedly replayed'
+           or sqlerrm <> 'conflict: idempotency key was already used for a different order' then
+            raise;
+        end if;
+    end;
     perform commerce.create_order_from_offers(
         'order-create-idempotency-other-buyer', 'order-create-shared-key', v_items,
         '{"city":"Paris"}'::jsonb, '{"city":"Lyon"}'::jsonb

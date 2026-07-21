@@ -22,7 +22,9 @@ values
     ('order-create-concurrency-stock-product', 'Concurrency Stock', 'active', 'public'),
     ('order-create-concurrency-low-product', 'Concurrency Low', 'active', 'public'),
     ('order-create-concurrency-high-product', 'Concurrency High', 'active', 'public'),
-    ('order-create-concurrency-idem-product', 'Concurrency Idempotency', 'active', 'public');
+    ('order-create-concurrency-idem-product', 'Concurrency Idempotency', 'active', 'public'),
+    ('order-create-total-product', 'Maximum Total', 'active', 'public'),
+    ('order-create-axisless-variant-product', 'Axisless Variant', 'active', 'public');
 
 insert into commerce.products (slug, title, status, visibility)
 select 'order-create-bulk-product-' || lpad(number::text, 3, '0'),
@@ -35,6 +37,10 @@ insert into commerce.product_variants (
 select id, 'ORDER-CREATE-SINGLE-SKU', 'Medium Blue', 'active',
        'size=m&color=blue', true
 from commerce.products where slug = 'order-create-single-product';
+
+insert into commerce.product_variants (product_id, sku, title, status)
+select id, null, 'Axisless Choice', 'active'
+from commerce.products where slug = 'order-create-axisless-variant-product';
 
 insert into commerce.product_variant_axes (product_id, key, label, position)
 select id, axis.key, axis.label, axis.position
@@ -86,7 +92,9 @@ from (values
     (10, 'order-create-concurrency-stock', 'order-create-concurrency-stock-product', 'Concurrency Stock', 2900, 'eur', 'available', 1, 29, false),
     (11, 'order-create-concurrency-low', 'order-create-concurrency-low-product', 'Concurrency Low', 3000, 'eur', 'available', 3, 30, false),
     (12, 'order-create-concurrency-high', 'order-create-concurrency-high-product', 'Concurrency High', 3100, 'eur', 'available', 3, 31, false),
-    (13, 'order-create-concurrency-idem', 'order-create-concurrency-idem-product', 'Concurrency Idempotency', 3200, 'eur', 'available', 2, 32, false)
+    (13, 'order-create-concurrency-idem', 'order-create-concurrency-idem-product', 'Concurrency Idempotency', 3200, 'eur', 'available', 2, 32, false),
+    (14, 'order-create-total', 'order-create-total-product', 'Maximum Total', 9007199254740991, 'eur', 'available', 2, 34, false),
+    (15, 'order-create-axisless-variant', 'order-create-axisless-variant-product', 'Axisless Variant', 3300, 'eur', 'available', 2, 35, true)
 ) spec(position, slug, product_slug, title, amount, currency, availability,
        quantity_available, revision, has_variant)
 join commerce.sellers seller on seller.slug = 'order-create-seller'

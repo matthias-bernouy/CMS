@@ -13,6 +13,7 @@ declare
     v_cart jsonb;
     v_checkout jsonb;
     v_replay jsonb;
+    v_expected jsonb;
     v_version integer;
     v_group_id uuid;
 begin
@@ -86,14 +87,22 @@ begin
         '{"city":"Paris"}'::jsonb, '{}'::jsonb, '{}'::jsonb
     );
     v_group_id := (v_checkout->>'checkout_group_id')::uuid;
-    if (v_checkout->>'idempotent_replay')::boolean
-        or jsonb_array_length(v_checkout->'orders') <> 2 then
+    select jsonb_build_object(
+        'checkout_group_id', v_group_id,
+        'orders', jsonb_agg((to_jsonb(order_row) - 'request_hash') order by order_row.id),
+        'idempotent_replay', false
+    ) into v_expected
+    from commerce.orders order_row where checkout_group_id = v_group_id;
+    if v_checkout is distinct from v_expected then
         raise exception 'cart smoke: invalid checkout %', v_checkout;
     end if;
     if (select count(*) from commerce.orders where checkout_group_id = v_group_id) <> 2
         or (select count(distinct seller_id) from commerce.orders where checkout_group_id = v_group_id) <> 2
         or (select count(*) from commerce.checkout_groups where buyer_cms_user_id = 'cart-buyer') <> 1
         or (select count(distinct idempotency_key) from commerce.orders where checkout_group_id = v_group_id) <> 1
+        or exists (select 1 from commerce.orders where checkout_group_id = v_group_id and version <> 2)
+        or (select source_cart_id from commerce.checkout_groups where id = v_group_id)
+           is distinct from (select id from commerce.carts where buyer_cms_user_id = 'cart-buyer')
         or (select status from commerce.carts where buyer_cms_user_id = 'cart-buyer') <> 'converted'
         or (select unit_amount from commerce.order_lines where offer_id = v_offer_a) <> 1100
         or (select quantity_available from commerce.offers where id = v_offer_a) <> 3
@@ -105,9 +114,11 @@ begin
         'cart-buyer', 'cart-checkout', v_version,
         '{"city":"Paris"}'::jsonb, '{}'::jsonb, '{}'::jsonb
     );
-    if not (v_replay->>'idempotent_replay')::boolean
-        or jsonb_array_length(v_replay->'orders') <> 2
-        or (select count(*) from commerce.orders where checkout_group_id = v_group_id) <> 2 then
+    v_expected := jsonb_set(v_expected, '{idempotent_replay}', 'true'::jsonb);
+    if v_replay is distinct from v_expected
+       or (select count(*) from commerce.orders where checkout_group_id = v_group_id) <> 2
+       or exists (select 1 from commerce.orders where checkout_group_id = v_group_id and version <> 2)
+       or (select count(*) from commerce.checkout_groups where buyer_cms_user_id = 'cart-buyer') <> 1 then
         raise exception 'cart smoke: idempotent replay failed %', v_replay;
     end if;
 end;
