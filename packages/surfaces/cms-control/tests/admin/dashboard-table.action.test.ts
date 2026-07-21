@@ -196,7 +196,7 @@ describe("dashboard table actions", () => {
             Response.json({
                 provider: "supabase",
                 smtpHost: "smtp.saved.test",
-            })) as typeof fetch;
+            })) as unknown as typeof fetch;
         const reloaded: Array<{ collection: string; row: string }> = [];
 
         await runDashboardWidgetAction(
