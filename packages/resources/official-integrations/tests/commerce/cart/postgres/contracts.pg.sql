@@ -12,11 +12,13 @@ begin
             ('commerce.checkout_group_result(uuid,boolean)',
                 's', false, 'jsonb', true),
             ('commerce.validate_order_creation_batches(text,jsonb,boolean,text,boolean)',
-                's', true, 'record', false),
+                's', true, 'record', true),
             ('commerce.insert_order_batch_lines_and_reserve_inventory(jsonb,jsonb)',
-                'v', false, 'void', false),
-            ('commerce.create_checkout_orders(uuid,bigint,text,text,text,jsonb,jsonb,jsonb,jsonb,jsonb)',
-                'v', false, 'void', false)
+                'v', false, 'void', true),
+            ('commerce.assert_order_address_sizes(jsonb,jsonb)',
+                'i', false, 'void', true),
+            ('commerce.create_checkout_orders(uuid,text,text,text,jsonb,jsonb,jsonb,jsonb,jsonb)',
+                'v', false, 'void', true)
         ) expected(signature, volatility, returns_set, return_type, required)
     loop
         v_function := to_regprocedure(v_contract.signature);

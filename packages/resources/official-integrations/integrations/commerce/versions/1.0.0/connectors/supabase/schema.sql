@@ -6701,18 +6701,14 @@ from commerce.orders
 where checkout_group_id = p_checkout_group_id;
 $$;
 
-create or replace function commerce.validate_order_creation_lines(
+create or replace function commerce.validate_order_creation_batches(
     p_buyer_cms_user_id text,
     p_items jsonb,
     p_require_verified_seller boolean,
-    p_mode text
+    p_mode text,
+    p_split_by_seller boolean
 )
-returns table (
-    error_message text,
-    order_seller_id bigint,
-    order_currency text,
-    order_subtotal numeric
-)
+returns table (error_message text, order_summaries jsonb)
 language plpgsql
 stable
 security invoker
@@ -6772,6 +6768,17 @@ begin
             seller.verification_status as seller_verification_status,
             seller.kind as seller_kind,
             offer.currency,
+            case when p_split_by_seller then
+                dense_rank() over (order by offer.seller_id)::integer
+            else 1 end as batch_position,
+            case when p_split_by_seller then
+                row_number() over (
+                    partition by offer.seller_id order by offer.id, input.position
+                )::integer
+            else input.position end as line_position,
+            case when p_split_by_seller then
+                count(*) over (partition by offer.seller_id)::integer
+            else count(*) over ()::integer end as batch_item_count,
             first_value(offer.seller_id) over input_order as first_seller_id,
             first_value(offer.currency) over input_order as first_currency,
             sum(offer.accepted_price_amount::numeric * input.quantity)
@@ -6792,12 +6799,15 @@ begin
                 rows between unbounded preceding and unbounded following
             ),
             cumulative_order as (
+                partition by case when p_split_by_seller then offer.seller_id else 0 end
                 order by input.position
                 rows between unbounded preceding and current row
             )
     ),
     evaluated as materialized (
         select context.*, case
+            when p_split_by_seller and context.batch_item_count > 100 then
+                'validation: order items must contain between 1 and 100 entries'
             when context.quantity is null or context.quantity <= 0 then
                 'validation: quantity must be positive'
             when context.publication_status <> 'active'
@@ -6830,9 +6840,11 @@ begin
                 format('conflict: seller for offer %s is not allowed to sell', context.offer_id)
             when p_mode = 'ecommerce' and context.seller_kind = 'user' then
                 'conflict: marketplace offers are disabled'
-            when context.seller_id <> context.first_seller_id then
+            when not p_split_by_seller
+              and context.seller_id <> context.first_seller_id then
                 'conflict: one order cannot contain multiple sellers'
-            when context.currency <> context.first_currency then
+            when not p_split_by_seller
+              and context.currency <> context.first_currency then
                 'conflict: one order cannot contain multiple currencies'
             when context.cumulative_subtotal > 9007199254740991 then
                 'validation: order total exceeds the supported maximum'
@@ -6842,18 +6854,65 @@ begin
     )
     select
         (select item.validation_error from evaluated item
-         where item.validation_error is not null order by item.position limit 1),
-        (select item.first_seller_id from evaluated item
-         order by item.position desc limit 1),
-        (select item.first_currency from evaluated item
-         order by item.position desc limit 1),
-        (select item.cumulative_subtotal from evaluated item
-         order by item.position desc limit 1);
+         where item.validation_error is not null
+         order by item.batch_position, item.line_position limit 1),
+        (select jsonb_agg(jsonb_build_object(
+            'sellerId', summary.seller_id,
+            'currency', summary.currency,
+            'subtotal', summary.subtotal,
+            'itemCount', summary.item_count,
+            'error', summary.error_message
+        ) order by summary.batch_position)
+        from (
+            select
+                item.batch_position,
+                case when p_split_by_seller then min(item.seller_id)
+                    else min(item.first_seller_id) end as seller_id,
+                case when p_split_by_seller then min(item.currency)
+                    else min(item.first_currency) end as currency,
+                max(item.cumulative_subtotal) as subtotal,
+                max(item.batch_item_count) as item_count,
+                (jsonb_agg(item.validation_error order by item.line_position)
+                    filter (where item.validation_error is not null))->>0 as error_message
+            from evaluated item
+            group by item.batch_position
+        ) summary);
 end;
 $$;
 
-create or replace function commerce.insert_order_lines_and_reserve_inventory(
-    p_order_id bigint,
+create or replace function commerce.validate_order_creation_lines(
+    p_buyer_cms_user_id text,
+    p_items jsonb,
+    p_require_verified_seller boolean,
+    p_mode text
+)
+returns table (
+    error_message text,
+    order_seller_id bigint,
+    order_currency text,
+    order_subtotal numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $$
+begin
+    return query
+    select
+        plan.error_message,
+        (plan.order_summaries->0->>'sellerId')::bigint,
+        plan.order_summaries->0->>'currency',
+        (plan.order_summaries->0->>'subtotal')::numeric
+    from commerce.validate_order_creation_batches(
+        p_buyer_cms_user_id, p_items,
+        p_require_verified_seller, p_mode, false
+    ) plan;
+end;
+$$;
+
+create or replace function commerce.insert_order_batch_lines_and_reserve_inventory(
+    p_order_ids jsonb,
     p_items jsonb
 )
 returns void
@@ -6875,6 +6934,14 @@ begin
             (item.value->>'offerId')::bigint as offer_id,
             (item.value->>'quantity')::integer as quantity
         from jsonb_array_elements(p_items) with ordinality item(value, ordinality)
+    ),
+    order_input as materialized (
+        select
+            item.ordinality::integer as position,
+            order_row.id as order_id,
+            order_row.seller_id
+        from jsonb_array_elements(p_order_ids) with ordinality item(value, ordinality)
+        join commerce.orders order_row on order_row.id = (item.value#>>'{}')::bigint
     ),
     variant_options as (
         select selection.product_id, selection.variant_id,
@@ -6906,7 +6973,7 @@ begin
         order by proposal.offer_id, proposal.decided_at desc nulls last, proposal.id desc
     )
     select
-        p_order_id,
+        order_input.order_id,
         offer.seller_id,
         offer.id,
         product.id,
@@ -6946,13 +7013,14 @@ begin
         )
     from input
     join commerce.offers offer on offer.id = input.offer_id
+    join order_input on order_input.seller_id = offer.seller_id
     join commerce.products product on product.id = offer.product_id
     join commerce.sellers seller on seller.id = offer.seller_id
     left join commerce.product_variants variant on variant.id = offer.variant_id
     left join variant_options options
       on options.product_id = offer.product_id and options.variant_id = offer.variant_id
     left join accepted_proposals proposal on proposal.offer_id = offer.id
-    order by input.position;
+    order by order_input.position, input.position;
 
     update commerce.offers offer
     set quantity_available = offer.quantity_available - input.quantity,
@@ -6970,6 +7038,28 @@ begin
 end;
 $$;
 
+create or replace function commerce.insert_order_lines_and_reserve_inventory(
+    p_order_id bigint,
+    p_items jsonb
+)
+returns void
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+begin
+    perform commerce.insert_order_batch_lines_and_reserve_inventory(
+        jsonb_build_array(p_order_id), p_items
+    );
+end;
+$$;
+
+revoke execute on function commerce.validate_order_creation_batches(
+    text, jsonb, boolean, text, boolean
+) from public, anon, authenticated;
+revoke execute on function commerce.insert_order_batch_lines_and_reserve_inventory(jsonb, jsonb)
+from public, anon, authenticated;
 revoke execute on function commerce.validate_order_creation_lines(text, jsonb, boolean, text)
 from public, anon, authenticated;
 revoke execute on function commerce.insert_order_lines_and_reserve_inventory(bigint, jsonb)
@@ -6978,6 +7068,102 @@ grant execute on function commerce.validate_order_creation_lines(text, jsonb, bo
 to service_role;
 grant execute on function commerce.insert_order_lines_and_reserve_inventory(bigint, jsonb)
 to service_role;
+grant execute on function commerce.validate_order_creation_batches(
+    text, jsonb, boolean, text, boolean
+) to service_role;
+grant execute on function commerce.insert_order_batch_lines_and_reserve_inventory(jsonb, jsonb)
+to service_role;
+
+create or replace function commerce.create_checkout_orders(
+    p_checkout_group_id uuid,
+    p_buyer_cms_user_id text,
+    p_idempotency_key text,
+    p_request_hash text,
+    p_shipping_address jsonb,
+    p_billing_address jsonb,
+    p_metadata jsonb,
+    p_order_summaries jsonb,
+    p_items jsonb
+)
+returns void
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+    v_order_ids jsonb;
+begin
+    with recursive order_plan as materialized (
+        select item.ordinality::integer as position, item.value as summary
+        from jsonb_array_elements(p_order_summaries) with ordinality item(value, ordinality)
+    ),
+    allocated as (
+        select
+            plan.position,
+            plan.summary,
+            nextval(pg_get_serial_sequence('commerce.orders', 'id')::regclass) as order_id
+        from order_plan plan
+        where plan.position = 1
+        union all
+        select
+            plan.position,
+            plan.summary,
+            nextval(pg_get_serial_sequence('commerce.orders', 'id')::regclass)
+        from allocated previous
+        join order_plan plan on plan.position = previous.position + 1
+    )
+    insert into commerce.orders (
+        id, order_number, checkout_group_id, seller_id, buyer_cms_user_id,
+        currency, subtotal_amount, total_amount,
+        shipping_address, billing_address, metadata,
+        idempotency_key, request_hash, version
+    )
+    select
+        allocated.order_id,
+        'CO-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 24)),
+        p_checkout_group_id,
+        (allocated.summary->>'sellerId')::bigint,
+        p_buyer_cms_user_id,
+        allocated.summary->>'currency',
+        (allocated.summary->>'subtotal')::bigint,
+        (allocated.summary->>'subtotal')::bigint,
+        p_shipping_address,
+        p_billing_address,
+        p_metadata,
+        p_idempotency_key,
+        p_request_hash,
+        2
+    from allocated
+    order by allocated.position;
+
+    select jsonb_agg(order_row.id order by order_row.seller_id)
+    into v_order_ids
+    from commerce.orders order_row
+    where order_row.checkout_group_id = p_checkout_group_id;
+
+    perform commerce.insert_order_batch_lines_and_reserve_inventory(
+        v_order_ids, p_items
+    );
+
+    insert into commerce.order_events (
+        order_id, event_type, actor_kind, actor_id, previous_status, next_status
+    )
+    select
+        order_row.id, 'order_created', 'buyer',
+        p_buyer_cms_user_id, null, 'awaiting_quote'
+    from commerce.orders order_row
+    where order_row.checkout_group_id = p_checkout_group_id
+    order by order_row.id;
+end;
+$$;
+
+revoke execute on function commerce.create_checkout_orders(
+    uuid, text, text, text, jsonb, jsonb, jsonb, jsonb, jsonb
+) from public, anon, authenticated;
+grant execute on function commerce.create_checkout_orders(
+    uuid, text, text, text, jsonb, jsonb, jsonb, jsonb, jsonb
+) to service_role;
 
 create or replace function commerce.create_order_from_offers(
     p_buyer_cms_user_id text,
@@ -7120,6 +7306,37 @@ begin
 end;
 $$;
 
+create or replace function commerce.assert_order_address_sizes(
+    p_shipping_address jsonb,
+    p_billing_address jsonb
+)
+returns void
+language plpgsql
+immutable
+security invoker
+set search_path = ''
+as $$
+begin
+    if pg_column_size(p_shipping_address) > 65536 then
+        raise check_violation using
+            message = 'new row for relation "orders" violates check constraint "orders_shipping_address_size"',
+            schema = 'commerce', table = 'orders',
+            constraint = 'orders_shipping_address_size';
+    end if;
+    if pg_column_size(p_billing_address) > 65536 then
+        raise check_violation using
+            message = 'new row for relation "orders" violates check constraint "orders_billing_address_size"',
+            schema = 'commerce', table = 'orders',
+            constraint = 'orders_billing_address_size';
+    end if;
+end;
+$$;
+
+revoke execute on function commerce.assert_order_address_sizes(jsonb, jsonb)
+from public, anon, authenticated;
+grant execute on function commerce.assert_order_address_sizes(jsonb, jsonb)
+to service_role;
+
 create or replace function commerce.checkout_cart(
     p_buyer_cms_user_id text,
     p_idempotency_key text,
@@ -7133,15 +7350,13 @@ language plpgsql
 set search_path = ''
 as $$
 declare
+    v_settings commerce.settings%rowtype;
     v_cart commerce.carts%rowtype;
     v_group commerce.checkout_groups%rowtype;
     v_items jsonb;
     v_request_hash text;
-    v_seller_id bigint;
-    v_seller_items jsonb;
-    v_order_result jsonb;
-    v_order_id bigint;
-    v_temporary_group_id uuid;
+    v_error_message text;
+    v_order_summaries jsonb;
     v_currency_count integer;
 begin
     if p_buyer_cms_user_id is null or length(btrim(p_buyer_cms_user_id)) = 0 then
@@ -7199,6 +7414,48 @@ begin
         end if;
         return commerce.checkout_group_result(v_group.id, true);
     end if;
+    select * into v_settings
+    from commerce.settings where id = 'default' for share;
+    perform seller.id
+    from commerce.sellers seller
+    where seller.id in (
+        select offer.seller_id
+        from commerce.offers offer
+        join commerce.cart_items item on item.offer_id = offer.id
+        where item.cart_id = v_cart.id
+    )
+    order by seller.id
+    for share;
+    perform product.id
+    from commerce.products product
+    where product.id in (
+        select offer.product_id
+        from commerce.offers offer
+        join commerce.cart_items item on item.offer_id = offer.id
+        where item.cart_id = v_cart.id
+    )
+    order by product.id
+    for share;
+    perform variant.id
+    from commerce.product_variants variant
+    where variant.id in (
+        select offer.variant_id
+        from commerce.offers offer
+        join commerce.cart_items item on item.offer_id = offer.id
+        where item.cart_id = v_cart.id and offer.variant_id is not null
+    )
+    order by variant.id
+    for share;
+    perform state.code
+    from commerce.offer_workflow_states state
+    where state.code in (
+        select offer.workflow_state
+        from commerce.offers offer
+        join commerce.cart_items item on item.offer_id = offer.id
+        where item.cart_id = v_cart.id
+    )
+    order by state.code
+    for share;
     perform offer.id
     from commerce.offers offer
     join commerce.cart_items item on item.offer_id = offer.id
@@ -7217,39 +7474,40 @@ begin
     ) values (
         p_buyer_cms_user_id, v_cart.id, p_idempotency_key, v_request_hash
     ) returning * into v_group;
-    for v_seller_id in
-        select distinct offer.seller_id
-        from commerce.offers offer
-        join commerce.cart_items item on item.offer_id = offer.id
-        where item.cart_id = v_cart.id
-        order by offer.seller_id
-    loop
-        select jsonb_agg(jsonb_build_object(
-            'offerId', item.offer_id,
-            'quantity', item.quantity
-        ) order by item.offer_id)
-        into v_seller_items
-        from commerce.cart_items item
-        join commerce.offers offer on offer.id = item.offer_id
-        where item.cart_id = v_cart.id and offer.seller_id = v_seller_id;
-        v_order_result := commerce.create_order_from_offers(
-            p_buyer_cms_user_id,
-            'cart:' || v_group.id::text || ':' || v_seller_id::text,
-            v_seller_items,
-            coalesce(p_shipping_address, '{}'::jsonb),
-            coalesce(p_billing_address, '{}'::jsonb),
-            coalesce(p_metadata, '{}'::jsonb)
-        );
-        v_order_id := (v_order_result->>'id')::bigint;
-        v_temporary_group_id := (v_order_result->>'checkout_group_id')::uuid;
-        update commerce.orders
-        set checkout_group_id = v_group.id,
-            idempotency_key = p_idempotency_key,
-            request_hash = v_request_hash
-        where id = v_order_id;
-        delete from commerce.checkout_groups
-        where id = v_temporary_group_id and id <> v_group.id;
-    end loop;
+    select validation.error_message, validation.order_summaries
+    into strict v_error_message, v_order_summaries
+    from commerce.validate_order_creation_batches(
+        p_buyer_cms_user_id,
+        v_items,
+        v_settings.require_verified_seller,
+        v_settings.mode,
+        true
+    ) validation;
+    if (v_order_summaries->0->>'itemCount')::integer > 100 then
+        raise exception 'validation: order items must contain between 1 and 100 entries';
+    end if;
+    perform commerce.assert_custom_fields('order', coalesce(p_metadata, '{}'::jsonb), 'self');
+    if v_order_summaries->0->>'error' is not null then
+        raise exception '%', v_order_summaries->0->>'error';
+    end if;
+    perform commerce.assert_order_address_sizes(
+        coalesce(p_shipping_address, '{}'::jsonb),
+        coalesce(p_billing_address, '{}'::jsonb)
+    );
+    if v_error_message is not null then
+        raise exception '%', v_error_message;
+    end if;
+    perform commerce.create_checkout_orders(
+        v_group.id,
+        p_buyer_cms_user_id,
+        p_idempotency_key,
+        v_request_hash,
+        coalesce(p_shipping_address, '{}'::jsonb),
+        coalesce(p_billing_address, '{}'::jsonb),
+        coalesce(p_metadata, '{}'::jsonb),
+        v_order_summaries,
+        v_items
+    );
     update commerce.carts
     set status = 'converted', converted_at = now()
     where id = v_cart.id;
