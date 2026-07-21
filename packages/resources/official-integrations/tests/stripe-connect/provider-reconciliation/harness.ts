@@ -16,10 +16,21 @@ export type TerminalReconciliationSeed = {
     disputeProjectionKey: string;
 };
 
+export type OperationRecoveryKind = "transfer" | "reversal" | "refund";
+
+export type TerminalOperationRecoverySeed = {
+    kind: OperationRecoveryKind;
+    paymentId: number;
+    operationId: number;
+    artifactId: number;
+    providerObjectId: string;
+};
+
 export type ProviderReconciliationHarness = {
     rest: {
         readonly postgrestRequests: PostgrestRequestRecord[];
         readonly stripeRequests: Array<{ method: string; pathname: string }>;
+        seedTerminalOperationRecovery(kind: OperationRecoveryKind): TerminalOperationRecoverySeed;
         seedTerminalReconciliationPage(runKey: string): TerminalReconciliationSeed;
         removeTerminalReconciliationDispute(disputeRowId: number): void;
         seedPaymentProjection(paymentId: number, key: string): void;
