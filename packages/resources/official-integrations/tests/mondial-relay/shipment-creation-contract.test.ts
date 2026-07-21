@@ -18,7 +18,8 @@ describe("Mondial Relay shipment creation database contracts", () => {
         expect(definition).toContain("v_existing.raw_request is distinct from v_candidate.raw_request");
         expect(definition).toContain("from delivery.delivery_quotes");
         expect(definition).toContain("from delivery.relay_selections");
-        expect(definition).toContain("shipment creation lease expired before a provider outcome was attached");
+        expect(definition).toContain("return delivery.shipment_creation_result('creating', v_existing);");
+        expect(definition).not.toContain("creation_manual_review_at = p_observed_at");
         expect(definition).toContain("shipment reservation does not match validated quote context");
         expect(definition).not.toContain("http_");
         expect(schema).toContain(
