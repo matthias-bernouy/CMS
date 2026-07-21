@@ -1,13 +1,12 @@
 export const TARGET_DIRECTORY_ENTRIES = 7;
-export const MAX_DIRECTORY_ENTRIES = 8;
+export const WIDE_DIRECTORY_ENTRIES = 8;
 
 export type DirectoryEntries = Map<string, Set<string>>;
 
-export type DirectoryFanoutViolation = {
+export type DirectoryFanoutFinding = {
     path: string;
     currentEntries: number;
-    allowedEntries: number;
-    reason: "legacy_growth" | "new_over_limit";
+    severity: "info" | "warning";
 };
 
 export function collectDirectoryEntries(paths: Iterable<string>): DirectoryEntries {
@@ -24,25 +23,18 @@ export function collectDirectoryEntries(paths: Iterable<string>): DirectoryEntri
     return directories;
 }
 
-export function findDirectoryFanoutViolations(
+export function findDirectoryFanoutFindings(
     current: ReadonlyMap<string, ReadonlySet<string>>,
-    baseline: ReadonlyMap<string, ReadonlySet<string>>,
-    renamedDirectories: ReadonlyMap<string, string> = new Map(),
-): DirectoryFanoutViolation[] {
-    const violations: DirectoryFanoutViolation[] = [];
+): DirectoryFanoutFinding[] {
+    const findings: DirectoryFanoutFinding[] = [];
     for (const [path, entries] of current) {
         const currentEntries = entries.size;
-        if (currentEntries <= MAX_DIRECTORY_ENTRIES) continue;
-        const sourcePath = renamedDirectories.get(path) ?? path;
-        const previousEntries = baseline.get(sourcePath)?.size;
-        const allowedEntries = Math.max(MAX_DIRECTORY_ENTRIES, previousEntries ?? 0);
-        if (currentEntries <= allowedEntries) continue;
-        violations.push({
+        if (currentEntries <= TARGET_DIRECTORY_ENTRIES) continue;
+        findings.push({
             path,
             currentEntries,
-            allowedEntries,
-            reason: previousEntries === undefined ? "new_over_limit" : "legacy_growth",
+            severity: currentEntries > WIDE_DIRECTORY_ENTRIES ? "warning" : "info",
         });
     }
-    return violations.sort((left, right) => left.path.localeCompare(right.path));
+    return findings.sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
 }

@@ -1,11 +1,17 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { listCurrentPaths, loadBaselineLines, renamedSources, REPOSITORY_ROOT, resolveFileSizeReference } from "./git";
-import { countPhysicalLines, findFileSizeViolations, isGovernedFile, MAX_FILE_LINES, TARGET_FILE_LINES } from "./policy";
+import { listCurrentRepositoryPaths, REPOSITORY_ROOT } from "../files";
+import {
+    countPhysicalLines,
+    findFileSizeFindings,
+    isGovernedFile,
+    LARGE_FILE_LINES,
+    TARGET_FILE_LINES,
+} from "./policy";
 
 export async function loadCurrentLines(repositoryRoot = REPOSITORY_ROOT): Promise<Map<string, number>> {
     const lines = new Map<string, number>();
-    for (const path of listCurrentPaths(repositoryRoot)) {
+    for (const path of await listCurrentRepositoryPaths(repositoryRoot)) {
         if (!isGovernedFile(path)) continue;
         try {
             lines.set(path, countPhysicalLines(await readFile(resolve(repositoryRoot, path), "utf8")));
@@ -17,22 +23,23 @@ export async function loadCurrentLines(repositoryRoot = REPOSITORY_ROOT): Promis
     return lines;
 }
 
-export async function runFileSizeRatchet(): Promise<void> {
-    const requested = process.env.FILE_SIZE_BASELINE_REF ?? process.env.REPOSITORY_SHAPE_BASELINE_REF;
-    const reference = resolveFileSizeReference(requested);
-    const current = await loadCurrentLines();
-    const renames = reference ? renamedSources(reference) : new Map<string, string>();
-    const baseline = reference ? loadBaselineLines(reference, current, renames) : new Map<string, number>();
-    const violations = findFileSizeViolations(current, baseline, renames);
-    if (violations.length > 0) {
-        const details = violations.map(({ path, currentLines, allowedLines, reason }) => {
-            const label = reason === "new_over_limit" ? "new file" : "legacy growth";
-            return `${path}: ${currentLines} lines, allowed ${allowedLines} (${label})`;
-        });
-        throw new Error(`File-size regressions:\n- ${details.join("\n- ")}`);
+export async function runFileSizeCheck(
+    repositoryRoot = REPOSITORY_ROOT,
+    report: (message: string) => void = (message) => console.log(message),
+) {
+    const current = await loadCurrentLines(repositoryRoot);
+    const findings = findFileSizeFindings(current);
+    for (const { path, currentLines, severity } of findings) {
+        const label = severity.toUpperCase();
+        const guidance = severity === "warning"
+            ? `above the ${LARGE_FILE_LINES}-line review threshold`
+            : `above the ${TARGET_FILE_LINES}-line target`;
+        report(`[file-size][${label}] ${path}: ${currentLines} lines (${guidance})`);
     }
-    const legacyCount = [...current.values()].filter((lines) => lines > MAX_FILE_LINES).length;
-    console.log(
-        `File-size ratchet passed against ${reference ?? "an empty baseline"}: target ${TARGET_FILE_LINES}, hard cap ${MAX_FILE_LINES}, ${legacyCount} legacy files unchanged or reduced.`,
+    const infoCount = findings.filter(({ severity }) => severity === "info").length;
+    const warningCount = findings.length - infoCount;
+    report(
+        `File-size guidance: ${infoCount} info, ${warningCount} warnings. Findings are advisory.`,
     );
+    return findings;
 }

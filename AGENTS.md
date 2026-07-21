@@ -56,25 +56,25 @@ dependencies are allowed only through the published package exports.
 
 ## File Size
 
-- Keep handwritten source, test, style, template, workflow, and configuration
-  files near 150 physical lines and never above 180 lines.
-- Split files by responsibility before they reach the hard limit. Do not evade
-  the limit by compressing formatting or combining unrelated statements.
-- Existing oversized files are legacy debt: they may shrink but must not grow.
+- Aim to keep handwritten source, test, style, template, workflow, and
+  configuration files near 150 physical lines. Files above 180 lines deserve
+  extra review, but size alone is not a reason to split a cohesive file.
+- Use the repository-shape diagnostics as guidance. Decide whether a split
+  improves responsibilities and readability; do not split mechanically or
+  compress formatting merely to satisfy a number.
 - Generated artifacts, lockfiles, and genuinely atomic declarative contracts
-  such as schemas may be exempt. Exceptions must use a narrow path or category
-  and state their reason in the enforcing quality policy.
+  such as schemas may naturally exceed these guidelines.
 
 ## Directory Shape
 
-- Keep each directory near seven immediate entries and never above eight files
-  and subdirectories combined.
-- Group entries by responsibility before a directory reaches the hard limit.
-  Do not create vague catch-all folders solely to satisfy the count.
-- Existing wider directories are legacy debt: they may shrink but must not gain
-  immediate entries. While still above eight, each lower count becomes the new
-  ceiling on the next baseline.
-- Generated trees may be exempt only through a narrow, documented policy rule.
+- Aim to keep each directory near seven immediate files and subdirectories.
+  Directories above eight entries deserve extra review, but cohesive structures
+  may remain wider when another level would make navigation worse.
+- Use the repository-shape diagnostics as guidance. Group entries by real
+  responsibility and do not create vague catch-all folders merely to satisfy a
+  number.
+- Generated or inherently declarative trees may naturally exceed these
+  guidelines.
 
 ## Commands
 

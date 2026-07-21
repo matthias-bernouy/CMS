@@ -1,5 +1,5 @@
-import { runDirectoryFanoutRatchet } from "./directory-fanout/runner";
-import { runFileSizeRatchet } from "./file-size/runner";
+import { runDirectoryFanoutCheck } from "./directory-fanout/runner";
+import { runFileSizeCheck } from "./file-size/runner";
 
-await runFileSizeRatchet();
-await runDirectoryFanoutRatchet();
+await runFileSizeCheck();
+await runDirectoryFanoutCheck();

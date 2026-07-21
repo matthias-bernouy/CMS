@@ -41,8 +41,8 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun install --frozen-lockfile",
         "bun run check:architecture",
         "bun run check:repository-shape",
-        "runDirectoryFanoutRatchet",
-        "runFileSizeRatchet",
+        "runDirectoryFanoutCheck",
+        "runFileSizeCheck",
         "bun run typecheck",
         "bunx tsc --project quality/architecture/tsconfig.json",
         "bunx tsc --project quality/ci/tsconfig.json",
@@ -72,9 +72,8 @@ test("quality workflow keeps every G0 check visible", async () => {
     expect(workflow).toContain(
         "COVERAGE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}",
     );
-    expect(workflow).toContain(
-        "REPOSITORY_SHAPE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}",
-    );
+    expect(workflow).not.toContain("REPOSITORY_SHAPE_BASELINE_REF");
+    expect(workflow).not.toContain("continue-on-error");
     expect(workflow).toContain("name: Quality gate");
     expect(workflow).toContain("path: coverage/");
 });

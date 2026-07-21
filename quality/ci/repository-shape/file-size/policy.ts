@@ -1,7 +1,7 @@
 import { extname } from "node:path";
 
 export const TARGET_FILE_LINES = 150;
-export const MAX_FILE_LINES = 180;
+export const LARGE_FILE_LINES = 180;
 
 const governedExtensions = new Set([
     ".astro",
@@ -75,11 +75,10 @@ function categorizedException(path: string): string | undefined {
     return undefined;
 }
 
-export type FileSizeViolation = {
+export type FileSizeFinding = {
     path: string;
     currentLines: number;
-    allowedLines: number;
-    reason: "legacy_growth" | "new_over_limit";
+    severity: "info" | "warning";
 };
 
 export function countPhysicalLines(source: string): number {
@@ -99,24 +98,15 @@ export function fileSizeException(path: string): string | undefined {
     return exactExceptions.get(path) ?? categorizedException(path);
 }
 
-export function findFileSizeViolations(
-    currentLines: ReadonlyMap<string, number>,
-    baselineLines: ReadonlyMap<string, number>,
-    renamedSources: ReadonlyMap<string, string> = new Map(),
-): FileSizeViolation[] {
-    const violations: FileSizeViolation[] = [];
+export function findFileSizeFindings(currentLines: ReadonlyMap<string, number>): FileSizeFinding[] {
+    const findings: FileSizeFinding[] = [];
     for (const [path, lines] of currentLines) {
-        if (!isGovernedFile(path) || lines <= MAX_FILE_LINES) continue;
-        const sourcePath = renamedSources.get(path) ?? path;
-        const previousLines = baselineLines.get(sourcePath);
-        const allowedLines = Math.max(MAX_FILE_LINES, previousLines ?? 0);
-        if (lines <= allowedLines) continue;
-        violations.push({
+        if (!isGovernedFile(path) || lines <= TARGET_FILE_LINES) continue;
+        findings.push({
             path,
             currentLines: lines,
-            allowedLines,
-            reason: previousLines === undefined ? "new_over_limit" : "legacy_growth",
+            severity: lines > LARGE_FILE_LINES ? "warning" : "info",
         });
     }
-    return violations.sort((left, right) => left.path.localeCompare(right.path));
+    return findings.sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
 }

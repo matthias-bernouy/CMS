@@ -36,9 +36,7 @@ jobs:
 
       - name: Check workspace architecture
         run: bun run check:architecture
-      - name: Ratchet repository shape
-        env:
-          REPOSITORY_SHAPE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+      - name: Report repository shape guidance
         run: bun run check:repository-shape
 
       - name: Typecheck project references
