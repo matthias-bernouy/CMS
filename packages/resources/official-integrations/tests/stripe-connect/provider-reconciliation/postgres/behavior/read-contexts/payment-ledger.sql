@@ -1,3 +1,4 @@
+-- Payment-local aggregate read contract.
 select provider_reconciliation_test.cleanup();
 
 do $payment_ledger$
