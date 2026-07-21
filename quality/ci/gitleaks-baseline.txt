@@ -1,0 +1,27 @@
+# Exact fingerprints of 25 historical test-fixture false positives found by gitleaks v8.30.1.
+# This file contains no secret values. New findings must remain fatal.
+b17e8a64c229dbd31ae51f3e5b0fb76c69507222:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1427
+b17e8a64c229dbd31ae51f3e5b0fb76c69507222:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1434
+14610432e0d2b7e527f3071c7355deb942130fd6:packages/resources/official-integrations/tests/mondial-relay.1.0.0.source.test.ts:generic-api-key:2244
+5538a118741d56340eb910466aa1c76c820da705:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3817
+5538a118741d56340eb910466aa1c76c820da705:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3900
+5538a118741d56340eb910466aa1c76c820da705:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3909
+5538a118741d56340eb910466aa1c76c820da705:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3934
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/mondial-relay.1.0.0.source.test.ts:generic-api-key:2244
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1427
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1434
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3817
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3900
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3909
+0d7213e1e3598f3b78f63a91c0645ce0a2ad664e:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3934
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/mondial-relay.1.0.0.source.test.ts:generic-api-key:2241
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1426
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1433
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3817
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3900
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3909
+01715e3f8737991c905b66dab5eacd262c4df737:packages/resources/official-integrations/tests/stripe-connect.1.0.0.source.test.ts:generic-api-key:3934
+564da2dedd64e205509a14412ce5a6263a4e33ec:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1426
+564da2dedd64e205509a14412ce5a6263a4e33ec:packages/resources/official-integrations/tests/commerce-stripe-payments.1.0.0.test.ts:generic-api-key:1433
+d28457e3218a69e845be06a5d52671f7d521b39c:tests/CDN.ts:generic-api-key:52
+973271987e80c0d83e0d2844cc0520ab36bd39f0:tests/CDN.ts:generic-api-key:60

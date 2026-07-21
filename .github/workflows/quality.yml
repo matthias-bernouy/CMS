@@ -1,0 +1,220 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUN_VERSION: 1.3.14
+  # gitleaks v8.30.1 linux_x64 release archive; keep version and digest together.
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+
+jobs:
+  static-quality:
+    name: Architecture, types, and deterministic build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Bootstrap components
+        run: bun run --cwd packages/foundation/components build
+
+      - name: Check workspace architecture
+        run: bun run check:architecture
+
+      - name: Typecheck project references
+        run: bun run typecheck
+
+      - name: Typecheck architecture policy scripts
+        run: bunx tsc --project quality/architecture/tsconfig.json
+
+      - name: Typecheck CI policy scripts
+        run: bunx tsc --project quality/ci/tsconfig.json
+
+      - name: Build all packages (first pass)
+        run: bun run build
+
+      - name: Record first build manifest
+        run: bun run quality/ci/build-manifest.ts "$RUNNER_TEMP/build-first.json"
+
+      - name: Clean generated outputs
+        run: bun run clean
+
+      - name: Build all packages (second pass)
+        run: bun run build
+
+      - name: Require byte-identical build outputs
+        run: |
+          bun run quality/ci/build-manifest.ts "$RUNNER_TEMP/build-second.json"
+          diff --unified "$RUNNER_TEMP/build-first.json" "$RUNNER_TEMP/build-second.json"
+
+      - name: Reject generated or tracked-file drift
+        run: |
+          git diff --exit-code
+          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/worktree-status"
+          test ! -s "$RUNNER_TEMP/worktree-status"
+
+  tests:
+    name: Tests (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: foundation
+            path: packages/foundation
+          - name: features
+            path: packages/features
+          - name: resources
+            path: packages/resources
+          - name: surfaces
+            path: packages/surfaces
+          - name: runtimes
+            path: packages/runtimes
+          - name: infrastructure
+            path: infra
+          - name: CI tooling
+            path: quality
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Bootstrap components
+        run: bun run --cwd packages/foundation/components build
+
+      - name: Verify Docker Compose for infrastructure tests
+        if: matrix.name == 'infrastructure'
+        run: docker compose version
+
+      - name: Run tests
+        env:
+          TEST_PATH: ${{ matrix.path }}
+        run: bun test "$TEST_PATH" --pass-with-no-tests
+
+  dependency-security:
+    name: Dependency and secret security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Bootstrap components
+        run: bun run --cwd packages/foundation/components build
+
+      - name: Reject high-severity dependency vulnerabilities
+        run: bun run quality/ci/audit.ts
+
+      - name: Install pinned gitleaks
+        env:
+          GITLEAKS_ARCHIVE: ${{ runner.temp }}/gitleaks.tar.gz
+        run: |
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --output "$GITLEAKS_ARCHIVE" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_ARCHIVE_SHA256}  ${GITLEAKS_ARCHIVE}" | sha256sum --check --strict
+          tar --extract --gzip --file "$GITLEAKS_ARCHIVE" --directory "$RUNNER_TEMP" gitleaks
+
+      - name: Scan Git history for secrets
+        run: >-
+          "$RUNNER_TEMP/gitleaks" git
+          --no-banner --no-color --redact
+          --gitleaks-ignore-path quality/ci/gitleaks-baseline.txt
+          .
+
+  coverage:
+    name: Per-package coverage ratchet
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Bootstrap components
+        run: bun run --cwd packages/foundation/components build
+
+      - name: Check coverage against the package baseline
+        env:
+          COVERAGE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bun run quality/ci/coverage-ratchet.ts
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: per-package-coverage
+          path: coverage/
+          if-no-files-found: warn
+          retention-days: 14
+
+  quality-gate:
+    name: Quality gate
+    if: always()
+    needs:
+      - static-quality
+      - tests
+      - dependency-security
+      - coverage
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every quality job
+        env:
+          STATIC_RESULT: ${{ needs.static-quality.result }}
+          TEST_RESULT: ${{ needs.tests.result }}
+          SECURITY_RESULT: ${{ needs.dependency-security.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+        run: |
+          test "$STATIC_RESULT" = success
+          test "$TEST_RESULT" = success
+          test "$SECURITY_RESULT" = success
+          test "$COVERAGE_RESULT" = success

@@ -7,6 +7,7 @@ dist/
 
 # Stale top-level build artifacts (pre-monorepo build.ts)
 build/
+/coverage/
 
 # Environment + secrets
 .env
