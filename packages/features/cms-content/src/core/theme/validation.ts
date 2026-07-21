@@ -1,4 +1,4 @@
-import { ContentValidationError } from "cms-content/core/errors";
+import { ContentValidationError } from "cms-content/core/validation/errors";
 import { allTokens } from "cms-content/core/theme/tokens";
 import type { ThemeSettings } from "cms-content/interfaces/theme";
 

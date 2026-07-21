@@ -1,5 +1,5 @@
 import type { TPage } from "cms-content/interfaces/pages";
-import { ContentValidationError } from "cms-content/core/errors";
+import { ContentValidationError } from "cms-content/core/validation/errors";
 import { isValidPathFormat } from "cms-content/core/validation/predicates";
 import {
     validateLabel,

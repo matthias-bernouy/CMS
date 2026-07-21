@@ -1,4 +1,4 @@
-import { ContentValidationError } from "cms-content/core/errors";
+import { ContentValidationError } from "cms-content/core/validation/errors";
 import { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
 
 /**

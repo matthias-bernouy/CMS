@@ -59,16 +59,16 @@ export type {
     ContentSlot,
     ContentSlotAccept,
     MediaAccept,
-} from "./ContentSlots";
-export type { TextCapability } from "./TextCapability";
-export type { EditorStructureMode } from "./StructureMode";
-export type { EditableState, EditableStateSession } from "./EditableState";
+} from "./document/ContentSlots";
+export type { TextCapability } from "./document/TextCapability";
+export type { EditorStructureMode } from "./document/StructureMode";
+export type { EditableState, EditableStateSession } from "./document/EditableState";
 export type {
     DataExpression,
     DataField,
     DataFieldType,
     DataScope,
-} from "./DataScopes";
+} from "./document/DataScopes";
 export type {
     EndpointPickerMethod,
     EndpointPickerSetting,
@@ -106,4 +106,4 @@ export type {
     EditorCatalogRuntime,
     EditorConstructor,
 } from "./EditorCatalog";
-export type { EditorDocument } from "./EditorDocument";
+export type { EditorDocument } from "./document/EditorDocument";

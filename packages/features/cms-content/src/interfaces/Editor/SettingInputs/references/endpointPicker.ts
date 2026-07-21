@@ -1,4 +1,4 @@
-import type { SettingMetadata } from "./base";
+import type { SettingMetadata } from "../base";
 
 export const ENDPOINT_PICKER_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] as const;
 

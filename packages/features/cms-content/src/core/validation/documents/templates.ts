@@ -1,5 +1,5 @@
 import type { TTemplate } from "cms-content/interfaces/templates";
-import { ContentValidationError } from "cms-content/core/errors";
+import { ContentValidationError } from "cms-content/core/validation/errors";
 import { isValidResourceIdentifier } from "cms-content/core/validation/predicates";
 import {
     validateLabel,

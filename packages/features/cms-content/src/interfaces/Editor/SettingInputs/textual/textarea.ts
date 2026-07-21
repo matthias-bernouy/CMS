@@ -1,4 +1,4 @@
-import type { SettingMetadata } from "./base";
+import type { SettingMetadata } from "../base";
 
 export type TextareaSetting = SettingMetadata<"textarea", string> & {
     rows?: number;

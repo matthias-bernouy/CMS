@@ -1,12 +1,12 @@
-import type { EndpointPickerSetting } from "./endpointPicker";
-import type { ColorSetting } from "./color";
-import type { PageLinkSetting } from "./pageLink";
+import type { EndpointPickerSetting } from "./references/endpointPicker";
+import type { ColorSetting } from "./choices/color";
+import type { PageLinkSetting } from "./references/pageLink";
 import type { SettingRow } from "./row";
-import type { SegmentedSetting } from "./segmented";
-import type { SelectSetting } from "./select";
-import type { TextareaSetting } from "./textarea";
-import type { TextSetting } from "./text";
-import type { ToggleSetting } from "./toggle";
+import type { SegmentedSetting } from "./choices/segmented";
+import type { SelectSetting } from "./choices/select";
+import type { TextareaSetting } from "./textual/textarea";
+import type { TextSetting } from "./textual/text";
+import type { ToggleSetting } from "./choices/toggle";
 
 export type {
     SettingAttributeChanges,
@@ -25,16 +25,16 @@ export type {
 export type {
     EndpointPickerMethod,
     EndpointPickerSetting,
-} from "./endpointPicker";
-export { ENDPOINT_PICKER_METHODS, isEndpointPickerMethod } from "./endpointPicker";
-export type { ColorSetting } from "./color";
-export type { PageLinkSetting } from "./pageLink";
+} from "./references/endpointPicker";
+export { ENDPOINT_PICKER_METHODS, isEndpointPickerMethod } from "./references/endpointPicker";
+export type { ColorSetting } from "./choices/color";
+export type { PageLinkSetting } from "./references/pageLink";
 export type { SettingRow } from "./row";
-export type { SegmentedSetting } from "./segmented";
-export type { SelectSetting } from "./select";
-export type { TextareaSetting } from "./textarea";
-export type { TextSetting } from "./text";
-export type { ToggleSetting } from "./toggle";
+export type { SegmentedSetting } from "./choices/segmented";
+export type { SelectSetting } from "./choices/select";
+export type { TextareaSetting } from "./textual/textarea";
+export type { TextSetting } from "./textual/text";
+export type { ToggleSetting } from "./choices/toggle";
 
 export type SettingControl =
     | TextSetting

@@ -9,9 +9,9 @@ import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import type { TSystem } from "cms-content/interfaces/settings";
-import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/pages";
-import { validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/templates";
-import { assertContentRefsExist } from "cms-content/core/validation/assertContentRefsExist";
+import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/documents/pages";
+import { validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/documents/templates";
+import { assertContentRefsExist } from "cms-content/core/validation/documents/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/core/validation/settings";
 
 /**

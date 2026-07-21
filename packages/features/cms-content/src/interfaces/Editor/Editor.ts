@@ -1,9 +1,9 @@
-import type { ContentSlot } from "./ContentSlots";
-import type { DataScope } from "./DataScopes";
-import type { EditableState } from "./EditableState";
+import type { ContentSlot } from "./document/ContentSlots";
+import type { DataScope } from "./document/DataScopes";
+import type { EditableState } from "./document/EditableState";
 import type { Setting } from "./SettingInputs";
-import type { EditorStructureMode } from "./StructureMode";
-import type { TextCapability } from "./TextCapability";
+import type { EditorStructureMode } from "./document/StructureMode";
+import type { TextCapability } from "./document/TextCapability";
 
 export type SettingSection = {
     kind: "self" | "surcharge";

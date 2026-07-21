@@ -1,5 +1,5 @@
 import { extractRefs } from "cms-content/core/utils/contentRefs";
-import { ContentValidationError } from "cms-content/core/errors";
+import { ContentValidationError } from "cms-content/core/validation/errors";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {

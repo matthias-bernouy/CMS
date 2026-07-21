@@ -35,8 +35,8 @@ export type {
     ValueCount,
 } from "cms-content/interfaces/CmsRepository";
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
-export { filterAndSortPages } from "cms-content/core/pagesQuery";
-export { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
+export { filterAndSortPages } from "cms-content/core/queries/pagesQuery";
+export { defaultSystem, mergeSystemUpdate } from "cms-content/core/lifecycle/system";
 export {
     allTokens,
     defaultThemeSettings,
@@ -45,10 +45,14 @@ export {
     themeSettingsFromCss,
     validateThemeSettings,
 } from "cms-content/core/theme";
-export { countValues, normalizeTags } from "cms-content/core/counts";
-export { isPublishedPage } from "cms-content/core/publication";
-export { ContentValidationError, ContentConflictError, DuplicateBlocTagError } from "cms-content/core/errors";
-export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/dependencies/pagesReferencing";
+export { countValues, normalizeTags } from "cms-content/core/queries/counts";
+export { isPublishedPage } from "cms-content/core/lifecycle/publication";
+export {
+    ContentValidationError,
+    ContentConflictError,
+    DuplicateBlocTagError,
+} from "cms-content/core/validation/errors";
+export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/queries/pagesReferencing";
 export { createBlocUsageResolver } from "cms-content/core/blocs/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
@@ -56,16 +60,23 @@ export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-co
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";
-export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/validation/assertContentRefsExist";
+export {
+    assertContentRefsExist,
+    type ContentRefsReader,
+} from "cms-content/core/validation/documents/assertContentRefsExist";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
-export { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/pages";
+export {
+    validatePagePath,
+    validatePageTitle,
+    validatePagePatch,
+} from "cms-content/core/validation/documents/pages";
 export {
     validateTemplateIdentifier,
     validateTemplateCreate,
     validateTemplatePatch,
-} from "cms-content/core/validation/templates";
+} from "cms-content/core/validation/documents/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
-export { coercePageRef, pageRefToString } from "cms-content/core/validation/pageRef";
+export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
