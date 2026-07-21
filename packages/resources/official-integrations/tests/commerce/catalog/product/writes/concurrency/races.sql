@@ -42,8 +42,3 @@ $race_contract$;
 
 select public.dblink_disconnect('matrix_race_a');
 select public.dblink_disconnect('matrix_race_b');
-
-begin;
-select commerce_product_matrix_test.cleanup();
-commit;
-drop schema commerce_product_matrix_test cascade;

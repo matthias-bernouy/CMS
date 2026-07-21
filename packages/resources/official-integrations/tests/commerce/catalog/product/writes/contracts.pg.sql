@@ -39,3 +39,5 @@ commit;
 
 \ir concurrency/barrier.sql
 \ir concurrency/races.sql
+\ir concurrency/direct-setup.sql
+\ir concurrency/direct-contracts.sql
