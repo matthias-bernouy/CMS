@@ -25,6 +25,7 @@ import { registerPaymentProjectionFailureContracts } from "./stripe-connect/paym
 import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
 import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
+import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
 import type {
     DashboardTable,
@@ -4722,6 +4723,27 @@ class StripeConnectMock {
         });
     }
 
+    seedProviderException(
+        deduplicationKey: string,
+        status: "open" | "investigating" | "resolved",
+        patch: JsonRecord = {},
+    ): number {
+        return Number(this.insertGeneric("provider_exceptions", {
+            deduplication_key: deduplicationKey,
+            payment_id: null,
+            operation_id: null,
+            exception_type: "provider_reconciliation_contract",
+            severity: "critical",
+            status,
+            message: "Provider reconciliation contract fixture",
+            details: {},
+            detected_at: "2026-07-06T12:05:00.000Z",
+            resolved_at: status === "resolved" ? "2026-07-06T12:06:00.000Z" : null,
+            resolved_by: status === "resolved" ? "admin-contract" : null,
+            ...patch,
+        }).id);
+    }
+
     removeTransientProviderTruthException(paymentId: number, paymentIntentId: string): void {
         const exceptionKey = `provider-payment-truth:${paymentId}:${paymentIntentId}`;
         const index = this.tables.provider_exceptions.findIndex(row => (
@@ -7006,6 +7028,10 @@ class StripeConnectMock {
                 rows = rows.filter(row => row[key] !== null && row[key] !== undefined);
                 continue;
             }
+            if (filter.operator === "neq") {
+                rows = rows.filter(row => !same(row[key], filter.value));
+                continue;
+            }
             if (filter.operator !== "eq") continue;
             rows = rows.filter(row => same(row[key], filter.value));
         }
@@ -7755,3 +7781,4 @@ registerPaymentProjectionFailureContracts(createPaymentProjectionHarness);
 registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
 registerProviderReconciliationContracts(createProviderReconciliationHarness);
 registerProviderReconciliationBudgets(createProviderReconciliationHarness);
+registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);

@@ -23,6 +23,12 @@ export type ProviderReconciliationHarness = {
         seedTerminalReconciliationPage(runKey: string): TerminalReconciliationSeed;
         removeTerminalReconciliationDispute(disputeRowId: number): void;
         seedPaymentProjection(paymentId: number, key: string): void;
+        seedProviderException(
+            deduplicationKey: string,
+            status: "open" | "investigating" | "resolved",
+            patch?: JsonRecord,
+        ): number;
+        rows(table: string): JsonRecord[];
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
     };
