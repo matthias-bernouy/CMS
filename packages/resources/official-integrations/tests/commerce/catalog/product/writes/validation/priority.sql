@@ -12,6 +12,74 @@ select commerce_product_matrix_test.assert_sync_error(
     'validation: variant combination keys must be unique'
 );
 
+select commerce_product_matrix_test.assert_sync_diagnostic(
+    'priority', '[{"key":"size","label":"Size","values":[
+        {"key":"s","label":"Small"},{"key":"l","label":"Large"}
+    ]}]'::jsonb, '[
+        {"key":"bad-title","title":" ","position":0,
+         "choices":[{"axisKey":"size","valueKey":"missing"}]},
+        {"key":"size:l","title":"Large","position":1,
+         "choices":[{"axisKey":"size","valueKey":"l"}]}
+    ]'::jsonb,
+    '23514',
+    'new row for relation "product_variants" violates check constraint "product_variants_title_not_blank"',
+    'product_variants_title_not_blank'
+);
+
+select commerce_product_matrix_test.assert_sync_diagnostic(
+    'priority', '[{"key":"size","label":"Size","values":[
+        {"key":"s","label":"Small"},{"key":"l","label":"Large"}
+    ]}]'::jsonb, '[
+        {"key":"bad-status","title":"Small","status":"deleted","position":0,
+         "choices":[{"axisKey":"size","valueKey":"missing"}]},
+        {"key":"size:l","title":"Large","position":1,
+         "choices":[{"axisKey":"size","valueKey":"l"}]}
+    ]'::jsonb,
+    '23514',
+    'new row for relation "product_variants" violates check constraint "product_variants_status"',
+    'product_variants_status'
+);
+
+select commerce_product_matrix_test.assert_sync_diagnostic(
+    'priority', '[{"key":"size","label":"Size","values":[
+        {"key":"s","label":"Small"},{"key":"l","label":"Large"}
+    ]}]'::jsonb, '[
+        {"key":"","title":"Small","position":0,
+         "choices":[{"axisKey":"size","valueKey":"missing"}]},
+        {"key":"size:l","title":"Large","position":1,
+         "choices":[{"axisKey":"size","valueKey":"l"}]}
+    ]'::jsonb,
+    '23514',
+    'new row for relation "product_variants" violates check constraint "product_variants_combination_key"',
+    'product_variants_combination_key'
+);
+
+select commerce_product_matrix_test.assert_sync_diagnostic(
+    'priority', '[{"key":"size","label":"Size","values":[
+        {"key":"s","label":"Small"},{"key":"l","label":"Large"}
+    ]}]'::jsonb, '[
+        {"key":"size:s","title":"Small","position":0,
+         "choices":[{"axisKey":"size","valueKey":"missing"}]},
+        {"key":"size:l","title":" ","position":1,
+         "choices":[{"axisKey":"size","valueKey":"l"}]}
+    ]'::jsonb,
+    'P0001', 'validation: variant choice is not part of the product axes', null
+);
+
+select commerce_product_matrix_test.assert_sync_diagnostic(
+    'priority', '[{"key":"size","label":"Size","values":[
+        {"key":"s","label":"Small"},{"key":"l","label":"Large"}
+    ]}]'::jsonb, '[
+        {"key":"size:s","title":" ","position":0,
+         "choices":[{"axisKey":"size","valueKey":"s"}]},
+        {"key":"size:l","title":"Large","position":1,
+         "choices":[{"axisKey":"size","valueKey":"missing"}]}
+    ]'::jsonb,
+    '23514',
+    'new row for relation "product_variants" violates check constraint "product_variants_title_not_blank"',
+    'product_variants_title_not_blank'
+);
+
 do $write_priority$
 declare
     v_product_id bigint;

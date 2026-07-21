@@ -99,34 +99,43 @@ begin
 end;
 $$;
 
-create function commerce_product_matrix_test.try_update(
+create function commerce_product_matrix_test.assert_sync_diagnostic(
     p_label text,
-    p_title text,
-    p_expected_version integer
+    p_axes jsonb,
+    p_matrix jsonb,
+    p_expected_state text,
+    p_expected_message text,
+    p_expected_constraint text
 )
-returns jsonb
+returns void
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
     v_product_id bigint;
-    v_bundle jsonb;
+    v_state text;
+    v_message text;
+    v_constraint text;
 begin
     select product_id into strict v_product_id
     from commerce_product_matrix_test.products where label = p_label;
-    v_bundle := commerce.upsert_product_read_model(v_product_id, jsonb_build_object(
-        'title', p_title,
-        'variantAxes', commerce_product_matrix_test.basic_axes(),
-        'variantMatrix', commerce_product_matrix_test.basic_matrix()
-    ), p_expected_version);
-    return jsonb_build_object('ok', true, 'product', v_bundle->'product');
-exception when others then
-    return jsonb_build_object(
-        'ok', false,
-        'sqlstate', sqlstate,
-        'message', sqlerrm
-    );
+    begin
+        perform commerce.sync_product_variant_matrix(v_product_id, p_axes, p_matrix);
+        raise exception 'matrix diagnostic: expected failure was accepted';
+    exception when others then
+        get stacked diagnostics
+            v_state = returned_sqlstate,
+            v_message = message_text,
+            v_constraint = constraint_name;
+        if v_state is distinct from p_expected_state
+            or v_message is distinct from p_expected_message
+            or nullif(v_constraint, '') is distinct from p_expected_constraint then
+            raise exception 'matrix diagnostic: expected (%, %, %), got (%, %, %)',
+                p_expected_state, p_expected_message, p_expected_constraint,
+                v_state, v_message, nullif(v_constraint, '');
+        end if;
+    end;
 end;
 $$;
 

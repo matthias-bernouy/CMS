@@ -1,5 +1,36 @@
 create extension if not exists dblink;
 
+create function commerce_product_matrix_test.try_update(
+    p_label text,
+    p_title text,
+    p_expected_version integer
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+    v_product_id bigint;
+    v_bundle jsonb;
+begin
+    select product_id into strict v_product_id
+    from commerce_product_matrix_test.products where label = p_label;
+    v_bundle := commerce.upsert_product_read_model(v_product_id, jsonb_build_object(
+        'title', p_title,
+        'variantAxes', commerce_product_matrix_test.basic_axes(),
+        'variantMatrix', commerce_product_matrix_test.basic_matrix()
+    ), p_expected_version);
+    return jsonb_build_object('ok', true, 'product', v_bundle->'product');
+exception when others then
+    return jsonb_build_object(
+        'ok', false,
+        'sqlstate', sqlstate,
+        'message', sqlerrm
+    );
+end;
+$$;
+
 create function commerce_product_matrix_test.wait_until_blocked(p_application_name text)
 returns void
 language plpgsql
