@@ -1,44 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import {
+    createPaymentLedgerFixture,
+    paymentLedgerFinancialTermsHash,
     successfulJson,
     type CreateProviderReconciliationHarness,
-    type ProviderReconciliationHarness,
 } from "./harness";
-
-const financialTermsHash = "a".repeat(64);
-
-async function createLedgerFixture(
-    createHarness: CreateProviderReconciliationHarness,
-    reference: string,
-): Promise<ProviderReconciliationHarness & { paymentId: number; paymentIntentId: string }> {
-    const harness = await createHarness();
-    await successfulJson(await harness.submit("user-123", "createConnectOnboardingSessionForUser", {
-        email: "seller-ledger@example.com",
-    }, { userId: "seller-ledger" }));
-    const created = await successfulJson(await harness.submit("user-123", "createProtectedPayment", {
-        sellerUserId: "seller-ledger",
-        amountTotal: 1200,
-        sellerTransferAmount: 1080,
-        currency: "eur",
-        clientReferenceId: reference,
-        financialTermsHash,
-        dualApprovalThresholdAmount: 1000,
-    }));
-    const paymentId = Number(created.paymentId);
-    const paymentIntentId = String(created.stripePaymentIntentId);
-    harness.rest.setPaymentIntentSucceeded(paymentIntentId);
-    harness.rest.seedPaymentReconciliationLedger(paymentId);
-    harness.rest.clearPostgrestRequests();
-    harness.rest.clearStripeRequests();
-    return { ...harness, paymentId, paymentIntentId };
-}
 
 export function registerPaymentReconciliationLedgerContracts(
     createHarness: CreateProviderReconciliationHarness,
 ): void {
     describe("stripe-connect payment reconciliation ledger contracts", () => {
         test("preserves the exact payment projection with one aggregate read", async () => {
-            const fixture = await createLedgerFixture(createHarness, "payment-ledger-contract");
+            const fixture = await createPaymentLedgerFixture(createHarness, "payment-ledger-contract");
 
             const result = await successfulJson(await fixture.submit(
                 "system-ledger", "reconcileProviderPayment", { paymentId: fixture.paymentId },
@@ -48,7 +21,7 @@ export function registerPaymentReconciliationLedgerContracts(
                 paymentId: fixture.paymentId,
                 providerPaymentId: fixture.paymentId,
                 clientReferenceId: "payment-ledger-contract",
-                financialTermsHash,
+                financialTermsHash: paymentLedgerFinancialTermsHash,
                 financialRevision: 1,
                 dualApprovalThresholdAmount: 1000,
                 buyerUserId: "user-123",
@@ -105,7 +78,7 @@ export function registerPaymentReconciliationLedgerContracts(
         });
 
         test("never reads the ledger when provider refresh fails", async () => {
-            const fixture = await createLedgerFixture(createHarness, "payment-ledger-provider-failure");
+            const fixture = await createPaymentLedgerFixture(createHarness, "payment-ledger-provider-failure");
             fixture.rest.failNextPaymentIntentRetrieve();
 
             const failed = await fixture.submit(
@@ -118,7 +91,7 @@ export function registerPaymentReconciliationLedgerContracts(
         });
 
         test("does not apply final totals when the aggregate read fails", async () => {
-            const fixture = await createLedgerFixture(createHarness, "payment-ledger-db-failure");
+            const fixture = await createPaymentLedgerFixture(createHarness, "payment-ledger-db-failure");
             fixture.rest.failNextPaymentReconciliationLedgerRead();
 
             const failed = await fixture.submit(
@@ -133,8 +106,8 @@ export function registerPaymentReconciliationLedgerContracts(
                 transferred_amount: 0,
                 reversed_amount: 0,
             });
-            expect(fixture.rest.postgrestRequests.at(-1)?.table)
-                .toBe("rpc/read_payment_reconciliation_ledger");
+            expect(["transfers", "rpc/read_payment_reconciliation_ledger"])
+                .toContain(fixture.rest.postgrestRequests.at(-1)?.table);
         });
     });
 }

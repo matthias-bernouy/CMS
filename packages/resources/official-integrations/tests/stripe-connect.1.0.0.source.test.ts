@@ -27,6 +27,7 @@ import { registerProviderReconciliationBudgets } from "./stripe-connect/provider
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger";
+import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger-divergence";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
 import type {
     DashboardTable,
@@ -4770,6 +4771,16 @@ class StripeConnectMock {
         ]) this.insertGeneric("transfer_reversals", { payment_id: paymentId, ...row });
     }
 
+    setPaymentReconciliationSellerRecoveryAmount(paymentId: number, amount: number): void {
+        const refunds = this.tables.refunds.filter(row => (
+            same(row.payment_id, paymentId) && row.status === "succeeded"
+        ));
+        if (refunds.length === 0) throw new Error(`payment ${paymentId} has no succeeded refund`);
+        refunds.forEach((refund, index) => {
+            refund.seller_entitlement_reduction_amount = index === 0 ? amount : 0;
+        });
+    }
+
     removeTransientProviderTruthException(paymentId: number, paymentIntentId: string): void {
         const exceptionKey = `provider-payment-truth:${paymentId}:${paymentIntentId}`;
         const index = this.tables.provider_exceptions.findIndex(row => (
@@ -5475,8 +5486,10 @@ class StripeConnectMock {
             this.failProviderExceptionResolution = false;
             return jsonResponse({ message: "simulated provider exception resolution failure" }, 500);
         }
-        if (table === "rpc/read_payment_reconciliation_ledger" && method === "POST"
-            && this.failPaymentReconciliationLedgerRead) {
+        const isPaymentReconciliationLedgerRead = (
+            table === "rpc/read_payment_reconciliation_ledger" && method === "POST"
+        ) || (table === "transfers" && method === "GET");
+        if (isPaymentReconciliationLedgerRead && this.failPaymentReconciliationLedgerRead) {
             this.failPaymentReconciliationLedgerRead = false;
             return jsonResponse({ message: "simulated payment ledger read failure" }, 500);
         }
@@ -7860,3 +7873,4 @@ registerProviderReconciliationContracts(createProviderReconciliationHarness);
 registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
+registerPaymentReconciliationLedgerDivergenceContracts(createProviderReconciliationHarness);

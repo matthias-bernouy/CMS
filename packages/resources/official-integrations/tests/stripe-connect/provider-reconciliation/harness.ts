@@ -32,6 +32,7 @@ export type ProviderReconciliationHarness = {
         setPaymentIntentSucceeded(paymentIntentId: string): void;
         failNextPaymentIntentRetrieve(): void;
         seedPaymentReconciliationLedger(paymentId: number): void;
+        setPaymentReconciliationSellerRecoveryAmount(paymentId: number, amount: number): void;
         failNextPaymentReconciliationLedgerRead(): void;
         rows(table: string): JsonRecord[];
         clearPostgrestRequests(): void;
@@ -47,6 +48,34 @@ export type ProviderReconciliationHarness = {
 };
 
 export type CreateProviderReconciliationHarness = () => Promise<ProviderReconciliationHarness>;
+
+export const paymentLedgerFinancialTermsHash = "a".repeat(64);
+
+export async function createPaymentLedgerFixture(
+    createHarness: CreateProviderReconciliationHarness,
+    reference: string,
+): Promise<ProviderReconciliationHarness & { paymentId: number; paymentIntentId: string }> {
+    const harness = await createHarness();
+    await successfulJson(await harness.submit("user-123", "createConnectOnboardingSessionForUser", {
+        email: "seller-ledger@example.com",
+    }, { userId: "seller-ledger" }));
+    const created = await successfulJson(await harness.submit("user-123", "createProtectedPayment", {
+        sellerUserId: "seller-ledger",
+        amountTotal: 1200,
+        sellerTransferAmount: 1080,
+        currency: "eur",
+        clientReferenceId: reference,
+        financialTermsHash: paymentLedgerFinancialTermsHash,
+        dualApprovalThresholdAmount: 1000,
+    }));
+    const paymentId = Number(created.paymentId);
+    const paymentIntentId = String(created.stripePaymentIntentId);
+    harness.rest.setPaymentIntentSucceeded(paymentIntentId);
+    harness.rest.seedPaymentReconciliationLedger(paymentId);
+    harness.rest.clearPostgrestRequests();
+    harness.rest.clearStripeRequests();
+    return { ...harness, paymentId, paymentIntentId };
+}
 
 export async function createTerminalPageFixture(
     createHarness: CreateProviderReconciliationHarness,
