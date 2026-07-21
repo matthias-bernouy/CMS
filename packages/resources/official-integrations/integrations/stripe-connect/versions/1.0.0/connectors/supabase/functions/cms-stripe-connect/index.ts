@@ -32,6 +32,7 @@ import {
 import {
     claimReconciliationProjectionBatch,
     readFinancialOperationRecoveryContext,
+    readPaymentReconciliationLocalContext,
     readPaymentReconciliationLedger,
     readProviderTransferReconciliationContext,
     readReconciliationOperations,
@@ -5559,11 +5560,14 @@ async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaym
         await reconcileProviderDisputes(current);
         await reconcileProviderRefunds(current);
         await reconcileProviderTransfers(current);
-        current = await requiredPayment(current.id);
     }
-    const refunds = await listRows<RefundRow>(
-        `refunds?payment_id=eq.${payment.id}&select=${encodeURIComponent(refundSelect)}`,
-    );
+    const localContext = await readPaymentReconciliationLocalContext(payment.id);
+    if (current.stripe_charge_id) {
+        const refreshedPayment = localContext.payment as unknown as ConnectPaymentRow | null;
+        if (!refreshedPayment) throw new HttpError(404, "payment not found");
+        current = refreshedPayment;
+    }
+    const refunds = localContext.refunds as unknown as RefundRow[];
     for (const refund of refunds) {
         if (!refund.stripe_refund_id || refund.status === "succeeded") continue;
         const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refund.stripe_refund_id)}`, { method: "GET" });
