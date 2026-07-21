@@ -136,6 +136,20 @@ export async function issueLabelAccessToken(
     });
 }
 
+export async function declareSellerHandoffRow(
+    externalOrderId: string,
+    sellerCmsUserId: string,
+): Promise<JsonRecord> {
+    return await restJson<JsonRecord>("rpc/declare_seller_handoff", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            p_external_order_id: externalOrderId,
+            p_seller_cms_user_id: sellerCmsUserId,
+        }),
+    });
+}
+
 export async function insertShipmentRecoveryEvent(row: JsonRecord): Promise<void> {
     await restJson<JsonRecord[]>("shipment_recovery_events", {
         method: "POST",

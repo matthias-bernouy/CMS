@@ -753,7 +753,10 @@ async function issueLabelAccess(request: Request): Promise<Response> {
 async function sellerHandoff(request: Request): Promise<Response> {
     requireCmsWriteRequest(request);
     const body = await readJsonObject(request);
-    return json(await declareSellerHandoff(requiredBodyText(body, "externalOrderId", 200)));
+    return json(await declareSellerHandoff(
+        requiredBodyText(body, "externalOrderId", 200),
+        request.headers.get("x-cms-user-id")?.trim() || "",
+    ));
 }
 
 async function cancelShipment(request: Request): Promise<Response> {

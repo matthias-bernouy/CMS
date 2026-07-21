@@ -1,5 +1,5 @@
 import { makeEndpointUrn, type SourceEndpoint } from "@bernouy/cms-sources";
-import { object, text } from "../../shared/shapes";
+import { computedUserHeader, object, text } from "../../shared/shapes";
 import { shipmentForExternalOrderEndpoint } from "../../shared/sources";
 
 export function sellerDeliveryEndpoints(): SourceEndpoint[] {
@@ -44,6 +44,7 @@ function declareSellerHandoff(): SourceEndpoint {
         method: "POST",
         access: { mode: "system" },
         targetUrl: "https://delivery.test/declareSellerHandoff",
+        headers: computedUserHeader(),
         input: {
             body: object(
                 { externalOrderId: text() },

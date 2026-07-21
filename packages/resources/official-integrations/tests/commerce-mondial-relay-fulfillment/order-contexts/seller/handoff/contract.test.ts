@@ -56,7 +56,7 @@ describe("seller shipment handoff contract", () => {
             },
             {
                 method: "POST", path: "/declareSellerHandoff", params: {},
-                body: { externalOrderId: orderPublicId }, userId: null,
+                body: { externalOrderId: orderPublicId }, userId: sellerId,
             },
             {
                 method: "POST", path: "/recordFulfillment", params: {},

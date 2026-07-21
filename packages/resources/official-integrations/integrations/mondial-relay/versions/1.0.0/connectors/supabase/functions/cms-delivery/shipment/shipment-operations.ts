@@ -1,20 +1,26 @@
 import { HttpError } from "../http.ts";
 import { validatedMondialRelayLabelUrl } from "../provider/label-url.ts";
-import { cancelShipmentUnscanned, insertShipmentRecoveryEvent, shipmentRowByExternalOrderId, shipmentRowById, updateShipment } from "./supabase.ts";
+import {
+    cancelShipmentUnscanned,
+    declareSellerHandoffRow,
+    insertShipmentRecoveryEvent,
+    shipmentRowById,
+    updateShipment,
+} from "./supabase.ts";
 import type { JsonRecord } from "./types.ts";
 
-export async function declareSellerHandoff(externalOrderId: string): Promise<JsonRecord> {
-    const row = await requiredShipment(externalOrderId);
-    if (row.seller_handoff_declared_at) return handoffResult(row);
-    if (row.carrier_accepted_at || !["label_ready"].includes(String(row.status))) {
-        throw new HttpError(409, "seller handoff cannot be declared for the current shipment state");
+export async function declareSellerHandoff(
+    externalOrderId: string,
+    sellerCmsUserId: string,
+): Promise<JsonRecord> {
+    if (!externalOrderId) throw new HttpError(400, "externalOrderId is required");
+    if (!sellerCmsUserId) {
+        throw new HttpError(400, "seller CMS user id is required");
     }
-    const declaredAt = new Date().toISOString();
-    const updated = await updateShipment(String(row.id), {
-        seller_handoff_declared_at: declaredAt,
-    }, String(row.status));
-    if (!updated) throw new HttpError(409, "shipment state changed while declaring seller handoff");
-    return handoffResult(updated);
+    return handoffResult(await declareSellerHandoffRow(
+        externalOrderId,
+        sellerCmsUserId,
+    ));
 }
 
 export async function cancelShipmentReservation(externalOrderId: string, trackingUntil: string): Promise<JsonRecord> {
@@ -61,13 +67,6 @@ export async function recoverUnknownShipment(
     }, "unknown");
     if (!updated) throw new HttpError(409, "shipment state changed while applying recovery");
     return shipmentResult(updated);
-}
-
-async function requiredShipment(externalOrderId: string): Promise<JsonRecord> {
-    if (!externalOrderId) throw new HttpError(400, "externalOrderId is required");
-    const row = await shipmentRowByExternalOrderId(externalOrderId);
-    if (!row) throw new HttpError(404, "shipment not found");
-    return row;
 }
 
 function handoffResult(row: JsonRecord): JsonRecord {

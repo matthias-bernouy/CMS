@@ -1574,7 +1574,8 @@
                         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/system/shipments/handoff",
                         "params": [],
                         "headers": [
-                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } }
+                            { "name": "authorization", "source": { "from": "secret", "ref": "{{secrets.cmsApiKey}}", "prefix": "Bearer " } },
+                            { "name": "x-cms-user-id", "source": { "from": "computed", "ref": "userID" } }
                         ],
                         "body": { "type": "object", "properties": { "externalOrderId": { "type": "string" } }, "required": ["externalOrderId"] },
                         "output": [

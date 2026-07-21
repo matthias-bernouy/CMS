@@ -8,22 +8,33 @@ describe("Mondial Relay seller handoff boundaries", () => {
         const database = useDatabase();
 
         await expectFailure(
-            declareSellerHandoff(""),
+            declareSellerHandoff("", "seller-42"),
             400,
             "externalOrderId is required",
         );
         expect(database.calls).toEqual([]);
     });
 
-    test("preserves the missing-shipment response after one read", async () => {
+    test("rejects an empty seller before database or provider work", async () => {
+        const database = useDatabase();
+
+        await expectFailure(
+            declareSellerHandoff("order-42", ""),
+            400,
+            "seller CMS user id is required",
+        );
+        expect(database.calls).toEqual([]);
+    });
+
+    test("preserves the missing-shipment response through one RPC", async () => {
         const database = useDatabase({ row: null });
 
         await expectFailure(
-            declareSellerHandoff("missing-order"),
+            declareSellerHandoff("missing-order", "seller-42"),
             404,
             "shipment not found",
         );
-        expect(database.calls.map(call => call.method)).toEqual(["GET"]);
+        expect(database.calls.map(call => call.method)).toEqual(["POST"]);
     });
 
     test("preserves every current-state refusal without writing", async () => {
@@ -37,49 +48,47 @@ describe("Mondial Relay seller handoff boundaries", () => {
         ]) {
             const database = useDatabase({ row });
             await expectFailure(
-                declareSellerHandoff("order-42"),
+                declareSellerHandoff("order-42", "seller-42"),
                 409,
                 "seller handoff cannot be declared for the current shipment state",
             );
-            expect(database.calls.map(call => call.method)).toEqual(["GET"]);
+            expect(database.calls.map(call => call.method)).toEqual(["POST"]);
         }
     });
 
-    test("preserves the optimistic-write race response", async () => {
-        const database = useDatabase({ patchConflict: true });
+    test("preserves the defensive mutation-conflict response", async () => {
+        const database = useDatabase({ mutationConflict: true });
 
         await expectFailure(
-            declareSellerHandoff("order-42"),
+            declareSellerHandoff("order-42", "seller-42"),
             409,
             "shipment state changed while declaring seller handoff",
         );
         expect(database.calls.map(call => call.method)).toEqual([
-            "GET", "PATCH",
+            "POST",
         ]);
     });
 
     test("redacts an unexpected database failure", async () => {
-        const database = useDatabase({ failureMethod: "GET" });
+        const database = useDatabase({ failureMethod: "POST" });
 
         await expectFailure(
-            declareSellerHandoff("order-42"),
+            declareSellerHandoff("order-42", "seller-42"),
             502,
             "Supabase Data API request failed (500)",
         );
         expect(database.calls).toHaveLength(1);
     });
 
-    test("redacts a mutation database failure after the initial read", async () => {
-        const database = useDatabase({ failureMethod: "PATCH" });
+    test("hides a shipment owned by another seller", async () => {
+        const database = useDatabase();
 
         await expectFailure(
-            declareSellerHandoff("order-42"),
-            502,
-            "Supabase Data API request failed (500)",
+            declareSellerHandoff("order-42", "seller-other"),
+            404,
+            "shipment not found",
         );
-        expect(database.calls.map(call => call.method)).toEqual([
-            "GET", "PATCH",
-        ]);
+        expect(database.calls.map(call => call.method)).toEqual(["POST"]);
     });
 });
 

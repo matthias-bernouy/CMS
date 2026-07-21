@@ -2135,6 +2135,43 @@ async function createHarness(options: {
             });
             return jsonResponse(rows, 200);
         }
+        if (url.origin === supabaseUrl
+            && url.pathname === "/rest/v1/rpc/declare_seller_handoff"
+            && method === "POST") {
+            const body = JSON.parse(requestBody) as JsonRecord;
+            const actor = String(body.p_seller_cms_user_id ?? "").trim();
+            if (!actor) {
+                return jsonResponse({
+                    message: "validation: seller CMS user id is required",
+                }, 400);
+            }
+            const row = insertedShipments.find(item =>
+                item.external_order_id === body.p_external_order_id
+                && item.seller_cms_user_id === actor
+            );
+            if (!row) {
+                return jsonResponse({
+                    message: "not_found: shipment not found",
+                }, 404);
+            }
+            if (!row.seller_handoff_declared_at) {
+                if (row.carrier_accepted_at || row.status !== "label_ready") {
+                    return jsonResponse({
+                        message: "conflict: seller handoff cannot be declared for the current shipment state",
+                    }, 409);
+                }
+                row.seller_handoff_declared_at = new Date().toISOString();
+            }
+            return jsonResponse({
+                id: row.id,
+                external_order_id: row.external_order_id,
+                expedition_number: row.expedition_number,
+                status: row.status,
+                carrier_accepted_at: row.carrier_accepted_at,
+                recipient_handoff_at: row.recipient_handoff_at,
+                seller_handoff_declared_at: row.seller_handoff_declared_at,
+            }, 200);
+        }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/rpc/cancel_shipment_unscanned" && method === "POST") {
             const body = JSON.parse(requestBody) as JsonRecord;
             const row = insertedShipments.find(item => item.external_order_id === body.p_external_order_id);
