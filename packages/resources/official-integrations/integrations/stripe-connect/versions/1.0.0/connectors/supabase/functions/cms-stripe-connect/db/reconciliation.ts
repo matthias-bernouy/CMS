@@ -31,6 +31,14 @@ export type ProviderTransferReconciliationContext = {
     local_reversed_amount: number;
 };
 
+export type FinancialOperationRecoveryContext = {
+    payment: JsonRecord | null;
+    transfer: JsonRecord | null;
+    transfer_reversal: JsonRecord | null;
+    transfer_recovery: JsonRecord | null;
+    refund: JsonRecord | null;
+};
+
 export async function readReconciliationOperations(
     limit: number,
 ): Promise<ReconciliationOperationRead[]> {
@@ -64,6 +72,21 @@ export async function readProviderTransferReconciliationContext(
     return await callRpcObject<ProviderTransferReconciliationContext>(
         "read_provider_transfer_reconciliation_context",
         { p_stripe_transfer_id: stripeTransferId },
+    );
+}
+
+export async function readFinancialOperationRecoveryContext(
+    paymentId: number,
+    operationId: number,
+    recoveryRequestId: string | null,
+): Promise<FinancialOperationRecoveryContext> {
+    return await callRpcObject<FinancialOperationRecoveryContext>(
+        "read_financial_operation_recovery_context",
+        {
+            p_payment_id: paymentId,
+            p_operation_id: operationId,
+            p_recovery_request_id: recoveryRequestId,
+        },
     );
 }
 

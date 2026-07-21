@@ -31,6 +31,7 @@ import {
 } from "./db/dashboard-reads.ts";
 import {
     claimReconciliationProjectionBatch,
+    readFinancialOperationRecoveryContext,
     readPaymentReconciliationLedger,
     readProviderTransferReconciliationContext,
     readReconciliationOperations,
@@ -2836,7 +2837,21 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
         return true;
     }
     if (!operation.payment_id) return false;
-    const payment = await requiredPayment(operation.payment_id);
+    const usesRecoveryContext = operation.operation_type === "transfer_create"
+        || operation.operation_type === "transfer_reversal_create"
+        || operation.operation_type === "refund_create";
+    const rawRecoveryRequestId = operation.request.recoveryRequestId;
+    const recoveryContext = usesRecoveryContext
+        ? await readFinancialOperationRecoveryContext(
+            operation.payment_id,
+            operation.id,
+            typeof rawRecoveryRequestId === "string" ? rawRecoveryRequestId : null,
+        )
+        : null;
+    const payment = recoveryContext
+        ? recoveryContext.payment as unknown as ConnectPaymentRow | null
+        : await requiredPayment(operation.payment_id);
+    if (!payment) throw new HttpError(404, "payment not found");
     if (operation.operation_type === "payment_intent_create") {
         let intent: StripePaymentIntent;
         if (operation.stripe_object_id) {
@@ -2872,9 +2887,7 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
         return true;
     }
     if (operation.operation_type === "transfer_create") {
-        const localTransfer = await getRowByField<TransferRow>(
-            "transfers", "operation_id", String(operation.id), transferSelect,
-        );
+        const localTransfer = recoveryContext?.transfer as unknown as TransferRow | null;
         if (localTransfer?.stripe_transfer_id && localTransfer.status === "succeeded") {
             await updateFinancialOperation(operation.id, {
                 status: "succeeded",
@@ -2895,9 +2908,7 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
         return true;
     }
     if (operation.operation_type === "transfer_reversal_create") {
-        const localReversal = await getRowByField<JsonRecord>(
-            "transfer_reversals", "operation_id", String(operation.id), "*",
-        );
+        const localReversal = recoveryContext?.transfer_reversal;
         if (localReversal?.stripe_transfer_reversal_id && localReversal.status === "succeeded") {
             await updateFinancialOperation(operation.id, {
                 status: "succeeded",
@@ -2909,17 +2920,13 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
             return true;
         }
         const recoveryRequestId = requiredOperationString(operation, "recoveryRequestId");
-        const recovery = await getRowByField<TransferRecoveryRow>(
-            "transfer_recovery_requests", "recovery_request_id", recoveryRequestId, transferRecoverySelect,
-        );
+        const recovery = recoveryContext?.transfer_recovery as unknown as TransferRecoveryRow | null;
         if (!recovery) throw new Error(`operation ${operation.id} has no Transfer recovery parent`);
         await executeTransferReversal(payment, recoveryRequestId, recovery.requested_amount, recovery.reason);
         return true;
     }
     if (operation.operation_type === "refund_create") {
-        const localRefund = await getRowByField<RefundRow>(
-            "refunds", "operation_id", String(operation.id), refundSelect,
-        );
+        const localRefund = recoveryContext?.refund as unknown as RefundRow | null;
         if (localRefund?.stripe_refund_id && ["pending", "succeeded"].includes(localRefund.status)) {
             await updateFinancialOperation(operation.id, {
                 status: localRefund.status === "succeeded" ? "succeeded" : "processing",
