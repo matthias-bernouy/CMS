@@ -58,24 +58,22 @@ begin
     from commerce.category_custom_fields where category_id = v_category_id;
     if v_keys not in (
         array['writeRaceAlpha', 'writeRaceBeta'],
-        array['writeRaceBoolean', 'writeRaceNumber'],
-        array['writeRaceAlpha', 'writeRaceBeta', 'writeRaceBoolean', 'writeRaceNumber']
+        array['writeRaceBoolean', 'writeRaceNumber']
     ) then
         raise exception 'category write concurrency: invalid final replacement %', v_keys;
     end if;
-    for v_response_keys in
-        select array_agg(field->>'fieldKey' order by field->>'fieldKey')
-        from category_write_responses, jsonb_array_elements(response->'fields') field
-        group by name
-    loop
-        if v_response_keys not in (
-            array['writeRaceAlpha', 'writeRaceBeta'],
-            array['writeRaceBoolean', 'writeRaceNumber'],
-            array['writeRaceAlpha', 'writeRaceBeta', 'writeRaceBoolean', 'writeRaceNumber']
-        ) then
-            raise exception 'category write concurrency: invalid response %', v_response_keys;
-        end if;
-    end loop;
+    select array_agg(field->>'fieldKey' order by field->>'fieldKey') into v_response_keys
+    from category_write_responses, jsonb_array_elements(response->'fields') field
+    where name = 'a';
+    if v_response_keys is distinct from array['writeRaceAlpha', 'writeRaceBeta'] then
+        raise exception 'category write concurrency: invalid response A %', v_response_keys;
+    end if;
+    select array_agg(field->>'fieldKey' order by field->>'fieldKey') into v_response_keys
+    from category_write_responses, jsonb_array_elements(response->'fields') field
+    where name = 'b';
+    if v_response_keys is distinct from array['writeRaceBoolean', 'writeRaceNumber'] then
+        raise exception 'category write concurrency: invalid response B %', v_response_keys;
+    end if;
 end;
 $$;
 
