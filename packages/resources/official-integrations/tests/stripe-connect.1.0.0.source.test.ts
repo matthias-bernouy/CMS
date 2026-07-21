@@ -28,6 +28,8 @@ import { registerProviderReconciliationContracts } from "./stripe-connect/provid
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger-divergence";
+import { registerProviderTransferContextContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/contracts";
+import { registerProviderTransferContextFailureContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/failures";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
 import type {
     DashboardTable,
@@ -4595,6 +4597,8 @@ class StripeConnectMock {
     private failPaymentProjectionEnqueue = false;
     private failProviderExceptionResolution = false;
     private failPaymentReconciliationLedgerRead = false;
+    private providerTransferContextReadsBeforeFailure: number | null = null;
+    private failProviderTransferList = false;
     private losePaymentProjectionEnqueueResponse = false;
     private failPaymentIntentRetrieve = false;
     private paymentIntentReplacementOnNextRetrieve: { paymentId: number; replacementId: string } | null = null;
@@ -4958,6 +4962,51 @@ class StripeConnectMock {
         });
     }
 
+    patchProviderTransfer(stripeTransferId: string, patch: JsonRecord): void {
+        const transfer = this.providerTransfers.find(candidate => candidate.id === stripeTransferId);
+        if (!transfer) throw new Error(`unknown provider transfer ${stripeTransferId}`);
+        Object.assign(transfer, patch);
+    }
+
+    addProviderTransfer(transferGroup: string, patch: JsonRecord = {}): string {
+        const id = `tr_external_${this.providerTransfers.length + 1}`;
+        this.providerTransfers.push({
+            id,
+            amount: 1080,
+            currency: "eur",
+            destination: "acct_external_transfer",
+            source_transaction: "ch_external_transfer",
+            transfer_group: transferGroup,
+            metadata: {},
+            amount_reversed: 0,
+            reversed: false,
+            ...patch,
+        });
+        return id;
+    }
+
+    seedLocalTransferReversal(stripeTransferId: string, amount: number, status: string): void {
+        const transfer = this.tables.transfers.find(row => row.stripe_transfer_id === stripeTransferId);
+        if (!transfer) throw new Error(`unknown local transfer ${stripeTransferId}`);
+        const operation = this.insertGeneric("financial_operations", {
+            payment_id: transfer.payment_id,
+            business_key: `seed-transfer-reversal:${stripeTransferId}:${status}:${amount}`,
+            operation_type: "transfer_reversal_create",
+            status,
+            request: {},
+            response: null,
+        });
+        this.insertGeneric("transfer_reversals", {
+            payment_id: transfer.payment_id,
+            transfer_id: transfer.id,
+            operation_id: operation.id,
+            reversal_request_id: `seed-transfer-reversal:${operation.id}`,
+            amount,
+            currency: "eur",
+            status,
+        });
+    }
+
     clearProviderRefunds(): void {
         this.providerRefunds.length = 0;
     }
@@ -5010,6 +5059,14 @@ class StripeConnectMock {
 
     failNextPaymentIntentRetrieve(): void {
         this.failPaymentIntentRetrieve = true;
+    }
+
+    failProviderTransferContextReadAfter(successfulReads: number): void {
+        this.providerTransferContextReadsBeforeFailure = successfulReads;
+    }
+
+    failNextProviderTransferList(): void {
+        this.failProviderTransferList = true;
     }
 
     seedTerminalReconciliationPage(runKey: string) {
@@ -5492,6 +5549,15 @@ class StripeConnectMock {
         if (isPaymentReconciliationLedgerRead && this.failPaymentReconciliationLedgerRead) {
             this.failPaymentReconciliationLedgerRead = false;
             return jsonResponse({ message: "simulated payment ledger read failure" }, 500);
+        }
+        const isProviderTransferContextRead = table === "rpc/read_provider_transfer_reconciliation_context"
+            || (table === "transfers" && method === "GET" && url.searchParams.has("stripe_transfer_id"));
+        if (isProviderTransferContextRead && this.providerTransferContextReadsBeforeFailure !== null) {
+            if (this.providerTransferContextReadsBeforeFailure === 0) {
+                this.providerTransferContextReadsBeforeFailure = null;
+                return jsonResponse({ message: "simulated provider transfer context read failure" }, 500);
+            }
+            this.providerTransferContextReadsBeforeFailure--;
         }
         if (table === "rpc/list_dashboard_refunds" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
@@ -6945,6 +7011,10 @@ class StripeConnectMock {
             return jsonResponse({ id: disputeId, status: "lost" });
         }
         if (url.pathname === "/v1/transfers" && method === "GET") {
+            if (this.failProviderTransferList) {
+                this.failProviderTransferList = false;
+                return jsonResponse({ error: { message: "simulated Stripe Transfer list outage" } }, 503);
+            }
             const transferGroup = url.searchParams.get("transfer_group");
             return jsonResponse({
                 data: this.providerTransfers.filter(transfer => !transferGroup || transfer.transfer_group === transferGroup),
@@ -7874,3 +7944,5 @@ registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerDivergenceContracts(createProviderReconciliationHarness);
+registerProviderTransferContextContracts(createProviderReconciliationHarness);
+registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
