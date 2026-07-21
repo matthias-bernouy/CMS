@@ -70,8 +70,10 @@ dependencies are allowed only through the published package exports.
 - Aim to keep each directory near seven immediate files and subdirectories.
   Eight entries produce an informational finding; more than eight produce a
   blocking error.
-- `bun run check:directory-fanout` and `bun run check:repository-shape` inspect
-  the current tree and exit non-zero when a directory exceeds eight entries.
+- Directory fanout checks cover each real `packages/<layer>/<package>/` root
+  (identified by its `package.json`), all descendants, and `quality/`. Repository,
+  layer-grouping, documentation, and infrastructure directories outside those
+  roots are not subject to this structural limit.
 - Group entries by a clear responsibility. Do not create vague catch-all
   folders merely to move entries below the limit.
 

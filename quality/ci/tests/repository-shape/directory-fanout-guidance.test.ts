@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test";
 import {
     collectDirectoryEntries,
+    collectScopedDirectoryEntries,
     findDirectoryFanoutFindings,
+    findDirectoryFanoutScopeRoots,
     hasBlockingDirectoryFanoutFindings,
     MAX_DIRECTORY_ENTRIES,
     TARGET_DIRECTORY_ENTRIES,
@@ -38,4 +40,30 @@ test("directory policy classifies the current tree without a Git baseline", () =
     const infoOnly = findDirectoryFanoutFindings(collectDirectoryEntries(files("review", 8)));
     expect(hasBlockingDirectoryFanoutFindings(infoOnly)).toBeFalse();
     expect(hasBlockingDirectoryFanoutFindings(findings)).toBeTrue();
+});
+
+test("scoped guidance only inspects real package trees and the quality tree", () => {
+    const paths = [
+        ...files("outside", 9),
+        "packages/features/alpha/package.json",
+        ...files("packages/features/alpha/src/wide", 9),
+        ...files("packages/features/not-a-package/wide", 9),
+        ...files("quality/ci/wide", 9),
+    ];
+
+    expect(findDirectoryFanoutScopeRoots(paths)).toEqual(["packages/features/alpha", "quality"]);
+
+    const directories = collectScopedDirectoryEntries(paths);
+    const findings = findDirectoryFanoutFindings(directories);
+
+    expect(directories.has(".")).toBeFalse();
+    expect(directories.has("packages")).toBeFalse();
+    expect(directories.has("packages/features")).toBeFalse();
+    expect(directories.has("outside")).toBeFalse();
+    expect(directories.has("packages/features/not-a-package/wide")).toBeFalse();
+    expect([...(directories.get("packages/features/alpha") ?? [])].sort()).toEqual(["package.json", "src"]);
+    expect(findings.filter(({ severity }) => severity === "error")).toEqual([
+        { path: "packages/features/alpha/src/wide", currentEntries: 9, severity: "error" },
+        { path: "quality/ci/wide", currentEntries: 9, severity: "error" },
+    ]);
 });

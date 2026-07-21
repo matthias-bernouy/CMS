@@ -39,10 +39,10 @@ async function write(repository: string, path: string, contents = "content\n"): 
 
 test("current repository scan includes untracked files and excludes ignored and deleted files", async () => {
     const repository = await createRepository();
-    await write(repository, "folder/deleted.ts");
+    await write(repository, "quality/folder/deleted.ts");
     git(repository, ["add", "--all"]);
-    await unlink(join(repository, "folder/deleted.ts"));
-    await write(repository, "folder/untracked.ts", "one\ntwo\n");
+    await unlink(join(repository, "quality/folder/deleted.ts"));
+    await write(repository, "quality/folder/untracked.ts", "one\ntwo\n");
     await write(repository, ".gitignore", "ignored/\nnode_modules\n");
     await write(repository, "ignored/output.ts");
     await symlink("missing-dependencies", join(repository, "node_modules"));
@@ -50,12 +50,12 @@ test("current repository scan includes untracked files and excludes ignored and 
     const paths = await listCurrentRepositoryPaths(repository);
     const lines = await loadCurrentLines(repository);
     const directories = await loadCurrentDirectoryEntries(repository);
-    expect(paths).toContain("folder/untracked.ts");
-    expect(paths).not.toContain("folder/deleted.ts");
+    expect(paths).toContain("quality/folder/untracked.ts");
+    expect(paths).not.toContain("quality/folder/deleted.ts");
     expect(paths).not.toContain("ignored/output.ts");
     expect(paths).not.toContain("node_modules");
-    expect(lines.get("folder/untracked.ts")).toBe(2);
-    expect([...(directories.get("folder") ?? [])]).toEqual(["untracked.ts"]);
+    expect(lines.get("quality/folder/untracked.ts")).toBe(2);
+    expect([...(directories.get("quality/folder") ?? [])]).toEqual(["untracked.ts"]);
 });
 
 test("current repository scan still fails when Git cannot inspect the workspace", async () => {
@@ -67,8 +67,10 @@ test("current repository scan still fails when Git cannot inspect the workspace"
 test("wide directories make direct and aggregate repository-shape checks fail", async () => {
     const repository = await createRepository();
     await write(repository, "large.ts", "line\n".repeat(181));
+    await write(repository, "packages/features/example/package.json", "{}\n");
     for (let index = 0; index < 9; index += 1) {
         await write(repository, `wide/entry-${index}.ts`);
+        await write(repository, `packages/features/example/wide/entry-${index}.ts`);
     }
     const messages: string[] = [];
     const report = (message: string) => messages.push(message);
@@ -79,6 +81,11 @@ test("wide directories make direct and aggregate repository-shape checks fail", 
         severity: "warning",
     });
     expect(await runDirectoryFanoutCheck(repository, report)).toContainEqual({
+        path: "packages/features/example/wide",
+        currentEntries: 9,
+        severity: "error",
+    });
+    expect(await runDirectoryFanoutCheck(repository, () => undefined)).not.toContainEqual({
         path: "wide",
         currentEntries: 9,
         severity: "error",
@@ -86,5 +93,7 @@ test("wide directories make direct and aggregate repository-shape checks fail", 
     expect(await runDirectoryFanoutCommand(repository, () => undefined)).toBe(1);
     expect(await runRepositoryShapeCheck(repository, () => undefined)).toBe(1);
     expect(messages).toContain("File-size guidance: 0 info, 1 warnings. Findings are advisory.");
-    expect(messages).toContain("Directory-fanout policy: 0 info, 1 errors. Errors are blocking.");
+    expect(messages).toContain(
+        "Directory-fanout policy (package roots and quality): 0 info, 1 errors. Errors are blocking.",
+    );
 });

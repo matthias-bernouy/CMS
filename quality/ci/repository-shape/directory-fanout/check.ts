@@ -5,6 +5,7 @@ export {
     MAX_DIRECTORY_ENTRIES,
     TARGET_DIRECTORY_ENTRIES,
 } from "./policy";
+export { collectScopedDirectoryEntries, findDirectoryFanoutScopeRoots, QUALITY_SCOPE_ROOT } from "./scope";
 export { loadCurrentDirectoryEntries, runDirectoryFanoutCheck } from "./runner";
 
 import { REPOSITORY_ROOT } from "../files";

@@ -1,13 +1,9 @@
 import { listCurrentRepositoryPaths, REPOSITORY_ROOT } from "../files";
-import {
-    collectDirectoryEntries,
-    findDirectoryFanoutFindings,
-    MAX_DIRECTORY_ENTRIES,
-    TARGET_DIRECTORY_ENTRIES,
-} from "./policy";
+import { findDirectoryFanoutFindings, MAX_DIRECTORY_ENTRIES, TARGET_DIRECTORY_ENTRIES } from "./policy";
+import { collectScopedDirectoryEntries } from "./scope";
 
 export async function loadCurrentDirectoryEntries(repositoryRoot = REPOSITORY_ROOT) {
-    return collectDirectoryEntries(await listCurrentRepositoryPaths(repositoryRoot));
+    return collectScopedDirectoryEntries(await listCurrentRepositoryPaths(repositoryRoot));
 }
 
 export async function runDirectoryFanoutCheck(
@@ -26,6 +22,8 @@ export async function runDirectoryFanoutCheck(
     }
     const infoCount = findings.filter(({ severity }) => severity === "info").length;
     const errorCount = findings.length - infoCount;
-    report(`Directory-fanout policy: ${infoCount} info, ${errorCount} errors. Errors are blocking.`);
+    report(
+        `Directory-fanout policy (package roots and quality): ${infoCount} info, ${errorCount} errors. Errors are blocking.`,
+    );
     return findings;
 }
