@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     createPaymentLedgerFixture,
     type CreateProviderReconciliationHarness,
-} from "./harness";
+} from "../harness";
 
 export function registerPaymentReconciliationLedgerDivergenceContracts(
     createHarness: CreateProviderReconciliationHarness,

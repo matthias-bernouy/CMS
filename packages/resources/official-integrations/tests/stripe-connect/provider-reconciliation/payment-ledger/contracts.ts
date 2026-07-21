@@ -4,7 +4,7 @@ import {
     paymentLedgerFinancialTermsHash,
     successfulJson,
     type CreateProviderReconciliationHarness,
-} from "./harness";
+} from "../harness";
 
 export function registerPaymentReconciliationLedgerContracts(
     createHarness: CreateProviderReconciliationHarness,
