@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 describe("production CMS composition", () => {
     test("waits for Control readiness before listening", async () => {
-        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const source = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
         const ready = source.search(/await\s+controlCms\.ready/);
         const listen = source.slice(ready).search(/controlRunner\.start\s*\(/);
 
@@ -11,43 +11,45 @@ describe("production CMS composition", () => {
     });
 
     test.failing("passes configured hosts to both listeners", async () => {
-        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const source = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
 
-        expect(source).toMatch(/controlRunner\.start\(\{\s*port:\s*CONTROL_PORT,\s*hostname:\s*CONTROL_HOST\s*\}\)/);
-        expect(source).toMatch(/deliveryRunner\.start\(\{\s*port:\s*DELIVERY_PORT,\s*hostname:\s*DELIVERY_HOST\s*\}\)/);
+        expect(source).toMatch(
+            /controlRunner\.start\(\{\s*port:\s*env\.CONTROL_PORT,\s*hostname:\s*env\.CONTROL_HOST\s*\}\)/,
+        );
+        expect(source).toMatch(
+            /deliveryRunner\.start\(\{\s*port:\s*env\.DELIVERY_PORT,\s*hostname:\s*env\.DELIVERY_HOST\s*\}\)/,
+        );
     });
 
     test("wires the encrypted secret store into Delivery gateway execution", async () => {
-        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
+        const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
 
-        expect(source).toMatch(/const\s+resolveSecret\s*=\s*createSecretResolver\s*\(\s*secrets\s*\)\s*;/);
-        expect(source).toMatch(/sourceResolveSecret\s*:\s*resolveSecret\s*,/);
+        expect(stores).toMatch(/const\s+resolveSecret\s*=\s*createSecretResolver\s*\(\s*secrets\s*\)\s*;/);
+        expect(surfaces).toMatch(/sourceResolveSecret\s*:\s*features\.resolveSecret\s*,/);
     });
 
     test("wires durable functions and triggers into Control and Delivery", async () => {
-        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
+        const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
 
-        expect(source).toMatch(/const\s+functions\s*=\s*new\s+MongoFunctionRepository\s*\(\s*db\s*\)\s*;/);
-        expect(source).toMatch(/const\s+triggers\s*=\s*new\s+MongoTriggerRepository\s*\(\s*db\s*\)\s*;/);
-        expect(source).toMatch(/const\s+relations\s*=\s*new\s+MongoRelationRepository\s*\(\s*db\s*\)\s*;/);
-        expect(source).toMatch(
-            /dashboards\s*,\s*relations\s*,\s*functions\s*,\s*triggers\s*,\s*identities\s*,\s*sourceOverlays\s*,/,
-        );
-        expect(source).toMatch(
-            /sources\s*:\s*deliverySources\s*,\s*analytics\s*,\s*functions\s*,\s*triggers\s*,\s*identities\s*,/,
-        );
-        expect(source).toMatch(/startProductionSystemFunctionWorkers\s*\(\s*\{/);
+        expect(stores).toMatch(/const\s+functions\s*=\s*new\s+MongoFunctionRepository\s*\(\s*db\s*\)\s*;/);
+        expect(stores).toMatch(/const\s+triggers\s*=\s*new\s+MongoTriggerRepository\s*\(\s*db\s*\)\s*;/);
+        expect(stores).toMatch(/const\s+relations\s*=\s*new\s+MongoRelationRepository\s*\(\s*db\s*\)\s*;/);
+        expect(surfaces).toMatch(/functions\s*:\s*features\.functions\s*,/);
+        expect(surfaces).toMatch(/triggers\s*:\s*features\.triggers\s*,/);
+        expect(surfaces).toMatch(/startProductionSystemFunctionWorkers\s*\(\s*\{/);
     });
 
     test("migrates removed operator roles before mounting the surfaces", async () => {
-        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const stores = await Bun.file(new URL("../src/runtime/stores/core.ts", import.meta.url)).text();
 
-        const migration = source.search(/await\s+migrateLegacyOperatorRoles\s*\(\s*users\s*,\s*mongoRoles\s*\)/);
-        const control = source.search(/const\s+controlCms\s*=\s*new\s+ControlCms\s*\(/);
-        const delivery = source.search(/new\s+DeliveryCms\s*\(\s*\{/);
+        const storesReady = entrypoint.search(/await\s+createCoreStores\s*\(\s*env\s*\)/);
+        const surfaces = entrypoint.search(/await\s+mountProductionSurfaces\s*\(\s*\{/);
 
-        expect(migration).toBeGreaterThan(-1);
-        expect(migration).toBeLessThan(control);
-        expect(migration).toBeLessThan(delivery);
+        expect(stores).toMatch(/await\s+migrateLegacyOperatorRoles\s*\(\s*users\s*,\s*mongoRoles\s*\)/);
+        expect(storesReady).toBeGreaterThan(-1);
+        expect(surfaces).toBeGreaterThan(storesReady);
     });
 });
