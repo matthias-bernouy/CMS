@@ -3,30 +3,13 @@ export const buyerId = "buyer-subject";
 export const orderId = 42;
 export const orderPublicId = "order-public-42";
 
-export const sellerSale = {
+export const sellerSetup = {
     id: orderId,
     publicId: orderPublicId,
-    orderNumber: "CO-42",
-    metadata: { buyerAddress: "7 Private Street" },
-    lines: [{ title: "Private purchase" }],
-    financialTerms: { financialTermsHash: "private-sale-terms" },
-};
-
-export const eligibility = {
     allowed: true,
-    reason: null,
-    orderId,
-    orderPublicId,
     sellerId,
-    buyerCmsUserId: buyerId,
-    currency: "EUR",
-    deliveryQuoteId: "quote-42",
-    merchandiseSubtotalMinorAmount: 11_000,
-    shippingAmount: 450,
-    buyerTotalAmount: 11_450,
+    metadata: { buyerAddress: "7 Private Street" },
     financialTermsHash: "terms-42",
-    paymentStatus: "succeeded",
-    fulfillmentStatus: "awaiting_shipment",
 };
 
 export const reservation = {

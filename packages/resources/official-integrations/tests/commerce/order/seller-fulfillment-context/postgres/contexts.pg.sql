@@ -8,6 +8,7 @@ begin;
 set local role service_role;
 \ir ../../read-model/postgres/baseline.fixture.sql
 \ir fixture.sql
+\ir shipment-creation.sql
 \ir contracts.sql
 
 rollback;

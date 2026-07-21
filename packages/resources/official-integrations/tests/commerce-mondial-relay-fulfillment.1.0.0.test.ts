@@ -232,28 +232,12 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
                     const url = new URL(req.url);
                     const body = req.method === "POST" ? await req.clone().json() : undefined;
                     calls.push({ url: req.url, body });
-                    if (url.pathname === "/mySale") {
+                    if (url.pathname === "/shipment-creation-seller-context") {
                         return Response.json({
-                            id: 42, publicId: "order-public-42", orderNumber: "CO-42",
-                            sellerId: "seller-subject", fulfillmentStatus: "awaiting_shipment",
-                        });
-                    }
-                    if (url.pathname === "/fulfillment-authorization") {
-                        return Response.json({
+                            id: 42,
+                            publicId: "order-public-42",
                             allowed: true,
-                            reason: null,
-                            orderId: 42,
-                            orderPublicId: "order-public-42",
                             sellerId: "seller-subject",
-                            buyerCmsUserId: "buyer-subject",
-                            currency: "eur",
-                            deliveryQuoteId: "quote-42",
-                            merchandiseSubtotalMinorAmount: 11000,
-                            shippingAmount: 450,
-                            buyerTotalAmount: 11450,
-                            financialTermsHash: "terms-42",
-                            paymentStatus: "succeeded",
-                            fulfillmentStatus: "awaiting_shipment",
                         });
                     }
                     if (url.pathname === "/reserveShipmentCreation") {
@@ -387,22 +371,12 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
                 fetchImpl: async (input, init) => {
                     const req = new Request(input, init);
                     const path = new URL(req.url).pathname;
-                    if (path === "/mySale") {
-                        return Response.json({ id: 42, publicId: "order-public-42", sellerId: "seller-subject" });
-                    }
-                    if (path === "/fulfillment-authorization") {
+                    if (path === "/shipment-creation-seller-context") {
                         return Response.json({
                             allowed: false,
-                            reason: "refund_pending",
-                            orderId: 42,
-                            orderPublicId: "order-public-42",
+                            id: 42,
+                            publicId: "order-public-42",
                             sellerId: "seller-subject",
-                            buyerCmsUserId: "buyer-subject",
-                            currency: "eur",
-                            deliveryQuoteId: "quote-42",
-                            merchandiseSubtotalMinorAmount: 11000,
-                            paymentStatus: "succeeded",
-                            fulfillmentStatus: "cancelled",
                         });
                     }
                     reachedDelivery = true;
@@ -1163,6 +1137,10 @@ async function sourcesForFulfillment(): Promise<InMemorySourceRepository> {
         }), { orderId: string() }, undefined, "system"),
         endpoint("getOrderFulfillmentSellerContext", "GET", "/seller-context", object({
             id: number(), publicId: string(), orderNumber: string(),
+        }), { orderId: string() }, undefined, "system"),
+        endpoint("getOrderShipmentCreationSellerContext", "GET", "/shipment-creation-seller-context", object({
+            id: number(), publicId: string(), allowed: boolean(),
+            sellerId: { type: "string", semantic: "user-id" },
         }), { orderId: string() }, undefined, "system"),
         endpoint("getOrderLabelSellerContext", "GET", "/label-seller-context", object({
             publicId: string(), allowed: boolean(),

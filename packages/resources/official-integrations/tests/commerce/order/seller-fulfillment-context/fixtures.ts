@@ -40,6 +40,22 @@ export const scenarios: SellerContextScenario[] = [{
         allowed: true,
         sellerCmsUserId,
     },
+}, {
+    label: "shipment creation",
+    route: `/system/order/shipment-creation/seller-context?orderId=${orderId}`,
+    rpc: "get_order_shipment_creation_seller_context",
+    database: {
+        id: orderId,
+        public_id: publicId,
+        allowed: true,
+        seller_cms_user_id: sellerCmsUserId,
+    },
+    expected: {
+        id: orderId,
+        publicId,
+        allowed: true,
+        sellerId: sellerCmsUserId,
+    },
 }];
 
 export function useRpcResult(value: unknown, status = 200): void {

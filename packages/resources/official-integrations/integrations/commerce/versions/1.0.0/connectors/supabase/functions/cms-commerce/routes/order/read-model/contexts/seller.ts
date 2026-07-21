@@ -6,8 +6,13 @@ import { rpc } from "../../../../core/rest.ts";
 import type { JsonRecord } from "../../../../core/types.ts";
 
 const fulfillmentFunction = "get_order_fulfillment_seller_context";
+const shipmentCreationFunction =
+    "get_order_shipment_creation_seller_context";
 const labelFunction = "get_order_label_seller_context";
 const fulfillmentFields = ["id", "public_id", "order_number"] as const;
+const shipmentCreationFields = [
+    "id", "public_id", "allowed", "seller_cms_user_id",
+] as const;
 const labelFields = ["public_id", "allowed", "seller_cms_user_id"] as const;
 
 export async function getOrderFulfillmentSellerContext(
@@ -26,6 +31,27 @@ export async function getOrderFulfillmentSellerContext(
         id: context.id,
         publicId: context.public_id,
         orderNumber: context.order_number,
+    });
+}
+
+export async function getOrderShipmentCreationSellerContext(
+    request: Request,
+): Promise<Response> {
+    const context = await loadSellerContext(request, shipmentCreationFunction);
+    if (
+        !hasFields(context, shipmentCreationFields)
+        || !Number.isSafeInteger(context.id)
+        || typeof context.public_id !== "string"
+        || typeof context.allowed !== "boolean"
+        || typeof context.seller_cms_user_id !== "string"
+    ) {
+        throw invalidResponse(shipmentCreationFunction);
+    }
+    return json({
+        id: context.id,
+        publicId: context.public_id,
+        allowed: context.allowed,
+        sellerId: context.seller_cms_user_id,
     });
 }
 

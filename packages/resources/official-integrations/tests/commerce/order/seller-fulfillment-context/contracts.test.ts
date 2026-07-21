@@ -62,4 +62,27 @@ describe("commerce seller fulfillment contexts", () => {
         });
         expectSingleRpc("get_order_label_seller_context");
     });
+
+    test("preserves a denied shipment-creation authorization as data", async () => {
+        useRpcResult(ok({
+            id: orderId,
+            public_id: publicId,
+            allowed: false,
+            seller_cms_user_id: sellerCmsUserId,
+            denial_reason: "must not leak",
+        }));
+
+        const response = await requestCommerce(scenarios[2]!.route, {
+            userId: sellerCmsUserId,
+        });
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({
+            id: orderId,
+            publicId,
+            allowed: false,
+            sellerId: sellerCmsUserId,
+        });
+        expectSingleRpc("get_order_shipment_creation_seller_context");
+    });
 });

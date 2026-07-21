@@ -196,27 +196,19 @@
             "id": "sale",
             "call": {
               "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "mySale",
-              "params": { "id": "$input.body.orderId" }
-            }
-          },
-          {
-            "id": "eligibility",
-            "call": {
-              "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "getOrderFulfillmentAuthorization",
-              "params": { "orderPublicId": "$steps.sale.publicId" }
+              "endpoint": "getOrderShipmentCreationSellerContext",
+              "params": { "orderId": "$input.body.orderId" }
             }
           },
           {
             "assert": {
-              "condition": { "equals": ["$steps.eligibility.sellerId", "$ctx.user.id"] },
+              "condition": { "equals": ["$steps.sale.sellerId", "$ctx.user.id"] },
               "failure": { "status": 403, "error": "Fulfillment authorization belongs to another seller" }
             }
           },
           {
             "assert": {
-              "condition": { "equals": ["$steps.eligibility.allowed", true] },
+              "condition": { "equals": ["$steps.sale.allowed", true] },
               "failure": { "status": 409, "error": "Commerce has not authorized shipment creation" }
             }
           },

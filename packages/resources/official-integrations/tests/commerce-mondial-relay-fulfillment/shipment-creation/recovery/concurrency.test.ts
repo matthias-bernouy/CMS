@@ -42,11 +42,11 @@ describe("seller shipment creation concurrent orchestration", () => {
         await expectGenericFailure(failed.response);
         expect(succeeded.calls.map(call => call.url.pathname)).toEqual(paths());
         expect(failed.calls.map(call => call.url.pathname)).toEqual(
-            paths().slice(0, 5),
+            paths().slice(0, 4),
         );
-        expect(results[0]?.calls[2]?.body).toEqual(results[1]?.calls[2]?.body);
-        expect(results[0]?.calls[4]?.body).toEqual(results[1]?.calls[4]?.body);
-        expect(results[0]?.calls[4]?.body).toEqual(expectedShipmentRequest());
+        expect(results[0]?.calls[1]?.body).toEqual(results[1]?.calls[1]?.body);
+        expect(results[0]?.calls[3]?.body).toEqual(results[1]?.calls[3]?.body);
+        expect(results[0]?.calls[3]?.body).toEqual(expectedShipmentRequest());
         expect(results.flatMap(result => result.calls).filter(
             call => call.url.pathname === "/completeShipmentCreation",
         )).toHaveLength(1);
@@ -55,7 +55,7 @@ describe("seller shipment creation concurrent orchestration", () => {
 
 function paths() {
     return [
-        "/mySale", "/fulfillmentAuthorization", "/reserveShipmentCreation",
+        "/shipmentCreationSellerContext", "/reserveShipmentCreation",
         "/resolveDeliveryQuote", "/createShipment",
         "/completeShipmentCreation",
     ];

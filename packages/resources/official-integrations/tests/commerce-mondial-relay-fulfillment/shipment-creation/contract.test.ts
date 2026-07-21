@@ -19,7 +19,7 @@ import { executeShipmentCreation, functionId } from "./harness";
 import { creationResponder } from "./responders";
 
 describe("seller shipment creation contract", () => {
-    test("preserves the exact success response and six causal boundaries", async () => {
+    test("preserves the exact success response within five causal boundaries", async () => {
         const { response, calls } = await executeShipmentCreation(
             creationResponder(),
         );
@@ -76,7 +76,7 @@ describe("seller shipment creation contract", () => {
         expect(body.fulfillment.idempotentReplay).toBe(true);
         expect(Object.hasOwn(body.fulfillment, "fulfillment")).toBe(false);
         expect(calls.map(call => call.url.pathname)).toEqual(expectedPaths());
-        expect(calls[5]?.body).toEqual(expectedCompletionRequest());
+        expect(calls[4]?.body).toEqual(expectedCompletionRequest());
     });
 
     test("keeps the authenticated POST boundary", async () => {
@@ -90,11 +90,8 @@ describe("seller shipment creation contract", () => {
 
 function expectedCalls() {
     return [{
-        method: "GET", path: "/mySale", params: { id: "42" },
-        body: undefined, userId: sellerId,
-    }, {
-        method: "GET", path: "/fulfillmentAuthorization",
-        params: { orderPublicId }, body: undefined, userId: null,
+        method: "GET", path: "/shipmentCreationSellerContext",
+        params: { orderId: "42" }, body: undefined, userId: sellerId,
     }, {
         method: "POST", path: "/reserveShipmentCreation", params: {},
         body: {
@@ -116,7 +113,7 @@ function expectedCalls() {
 
 export function expectedPaths() {
     return [
-        "/mySale", "/fulfillmentAuthorization", "/reserveShipmentCreation",
+        "/shipmentCreationSellerContext", "/reserveShipmentCreation",
         "/resolveDeliveryQuote", "/createShipment",
         "/completeShipmentCreation",
     ];

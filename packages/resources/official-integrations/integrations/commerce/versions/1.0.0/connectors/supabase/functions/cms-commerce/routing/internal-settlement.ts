@@ -24,6 +24,7 @@ import {
     getOrderDeliverySetupContext,
     getOrderFulfillmentSellerContext,
     getOrderLabelSellerContext,
+    getOrderShipmentCreationSellerContext,
 } from "../routes/order/read-model/contexts/index.ts";
 import { getOfferNegotiationContext } from "../routes/offer/contexts.ts";
 import { verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
@@ -39,6 +40,11 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     if (route === "/system/order/fulfillment/seller-context") {
         return request.method === "GET"
             ? await getOrderFulfillmentSellerContext(request)
+            : methodNotAllowed("GET");
+    }
+    if (route === "/system/order/shipment-creation/seller-context") {
+        return request.method === "GET"
+            ? await getOrderShipmentCreationSellerContext(request)
             : methodNotAllowed("GET");
     }
     if (route === "/system/order/label/seller-context") {

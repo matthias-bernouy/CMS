@@ -20,7 +20,7 @@ type Endpoint = {
 };
 
 describe("commerce seller fulfillment Source contexts", () => {
-    test("declares two exact service-only actor-scoped projections", async () => {
+    test("declares three exact service-only actor-scoped projections", async () => {
         const endpoints = await sourceEndpoints();
         const contracts = [{
             id: "getOrderFulfillmentSellerContext",
@@ -32,6 +32,11 @@ describe("commerce seller fulfillment Source contexts", () => {
             path: "/cms-commerce/system/order/label/seller-context",
             fields: ["publicId", "allowed", "sellerCmsUserId"],
             required: ["publicId", "allowed", "sellerCmsUserId"],
+        }, {
+            id: "getOrderShipmentCreationSellerContext",
+            path: "/cms-commerce/system/order/shipment-creation/seller-context",
+            fields: ["id", "publicId", "allowed", "sellerId"],
+            required: ["id", "publicId", "allowed", "sellerId"],
         }];
 
         for (const contract of contracts) {
@@ -72,9 +77,14 @@ describe("commerce seller fulfillment Source contexts", () => {
         );
         expect(label?.output?.[0]?.body?.properties
             ?.sellerCmsUserId?.semantic).toEqual({
-                kind: "user-id",
-                authority: "cms",
-            });
+            kind: "user-id",
+            authority: "cms",
+        });
+        const creation = endpoints.find(item =>
+            item.endpointId === "getOrderShipmentCreationSellerContext"
+        );
+        expect(creation?.output?.[0]?.body?.properties?.sellerId?.semantic)
+            .toEqual({ kind: "user-id", authority: "cms" });
     });
 });
 

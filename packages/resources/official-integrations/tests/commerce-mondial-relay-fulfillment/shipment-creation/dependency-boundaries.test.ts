@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { expectGenericFailure } from "../order-contexts/shared/harness";
-import { eligibility, reservation } from "./fixtures/context";
+import { reservation, sellerSetup } from "./fixtures/context";
 import { quote, shipment } from "./fixtures/delivery";
 import { fulfillment } from "./fixtures/result";
 import { executeShipmentCreation } from "./harness";
@@ -11,25 +11,24 @@ import {
 } from "./responders";
 
 describe("seller shipment creation dependency boundaries", () => {
-    test("preserves eligibility seller and allowed refusals", async () => {
+    test("preserves setup seller and allowed refusals", async () => {
         const cases: Array<[unknown, number, string]> = [[{
-            ...eligibility,
+            ...sellerSetup,
             sellerId: "another-seller",
         }, 403, "Fulfillment authorization belongs to another seller"], [{
-            ...eligibility,
+            ...sellerSetup,
             allowed: false,
-            reason: "stripe_dispute_open",
         }, 409, "Commerce has not authorized shipment creation"]];
 
         for (const [reply, status, error] of cases) {
             const { response, calls } = await executeShipmentCreation(
-                creationResponder({ eligibility: reply }),
+                creationResponder({ setup: reply }),
             );
             expect(response.status).toBe(status);
             expect(await response.json()).toEqual({ error });
-            expect(calls.map(call => call.url.pathname)).toEqual([
-                "/mySale", "/fulfillmentAuthorization",
-            ]);
+            expect(calls.map(call => call.url.pathname)).toEqual(
+                ["/shipmentCreationSellerContext"],
+            );
         }
     });
 
@@ -45,35 +44,33 @@ describe("seller shipment creation dependency boundaries", () => {
             error: "Shipment creation reservation belongs to another seller",
         });
         expect(calls.map(call => call.url.pathname)).toEqual(
-            expectedPaths(3),
+            expectedPaths(2),
         );
     });
 
     test("preserves the financial-terms projection failure", async () => {
         const { response, calls } = await executeShipmentCreation(
             creationResponder({
-                eligibility: {
-                    ...eligibility,
-                    allowed: false,
-                    reason: "financial_terms_missing",
-                    financialTermsHash: null,
-                },
+                setup: privateFailure(
+                    502,
+                    "invalid fulfillment authorization",
+                ),
             }),
         );
 
         await expectGenericFailure(response);
-        expect(calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/fulfillmentAuthorization",
-        ]);
+        expect(calls.map(call => call.url.pathname)).toEqual(
+            ["/shipmentCreationSellerContext"],
+        );
     });
 
     test("redacts failures and stops at each causal boundary", async () => {
         const cases: Array<[CreationReplies, number]> = [
-            [{ eligibility: privateFailure(500, "private eligibility") }, 2],
-            [{ reservation: privateFailure(409, "private reservation") }, 3],
-            [{ quote: privateFailure(404, "private quote") }, 4],
-            [{ shipment: privateFailure(409, "private provider") }, 5],
-            [{ fulfillment: privateFailure(500, "private completion") }, 6],
+            [{ setup: privateFailure(500, "private setup") }, 1],
+            [{ reservation: privateFailure(409, "private reservation") }, 2],
+            [{ quote: privateFailure(404, "private quote") }, 3],
+            [{ shipment: privateFailure(409, "private provider") }, 4],
+            [{ fulfillment: privateFailure(500, "private completion") }, 5],
         ];
 
         for (const [replies, count] of cases) {
@@ -89,16 +86,16 @@ describe("seller shipment creation dependency boundaries", () => {
 
     test("fails closed on malformed responses at every boundary", async () => {
         const cases: Array<[CreationReplies, number]> = [[{
-            eligibility: { ...eligibility, allowed: "yes" },
-        }, 2], [{
+            setup: { ...sellerSetup, allowed: "yes" },
+        }, 1], [{
             reservation: { ...reservation, operationId: "501" },
-        }, 3], [{
+        }, 2], [{
             quote: { ...quote, quoteId: 42 },
-        }, 4], [{
+        }, 3], [{
             shipment: { ...shipment, id: 42 },
-        }, 5], [{
+        }, 4], [{
             fulfillment: { ...fulfillment, attempts: "one" },
-        }, 6]];
+        }, 5]];
 
         for (const [replies, count] of cases) {
             const { response, calls } = await executeShipmentCreation(
@@ -114,7 +111,7 @@ describe("seller shipment creation dependency boundaries", () => {
 
 function expectedPaths(count: number): string[] {
     return [
-        "/mySale", "/fulfillmentAuthorization", "/reserveShipmentCreation",
+        "/shipmentCreationSellerContext", "/reserveShipmentCreation",
         "/resolveDeliveryQuote", "/createShipment",
         "/completeShipmentCreation",
     ].slice(0, count);

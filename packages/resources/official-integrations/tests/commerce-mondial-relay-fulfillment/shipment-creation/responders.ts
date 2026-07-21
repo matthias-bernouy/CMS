@@ -1,4 +1,4 @@
-import { eligibility, reservation, sellerSale } from "./fixtures/context";
+import { reservation, sellerSetup } from "./fixtures/context";
 import { quote, shipment } from "./fixtures/delivery";
 import { fulfillment } from "./fixtures/result";
 
@@ -6,8 +6,7 @@ type ReplyValue = unknown | Response;
 type Reply = ReplyValue | ((request: Request) => ReplyValue | Promise<ReplyValue>);
 
 export type CreationReplies = {
-    sale?: Reply;
-    eligibility?: Reply;
+    setup?: Reply;
     reservation?: Reply;
     quote?: Reply;
     shipment?: Reply;
@@ -19,11 +18,8 @@ export function creationResponder(
 ): (request: Request) => Promise<Response> {
     return async request => {
         const pathname = new URL(request.url).pathname;
-        if (pathname === "/mySale") {
-            return await response(request, replies.sale, sellerSale);
-        }
-        if (pathname === "/fulfillmentAuthorization") {
-            return await response(request, replies.eligibility, eligibility);
+        if (pathname === "/shipmentCreationSellerContext") {
+            return await response(request, replies.setup, sellerSetup);
         }
         if (pathname === "/reserveShipmentCreation") {
             return await response(request, replies.reservation, reservation);

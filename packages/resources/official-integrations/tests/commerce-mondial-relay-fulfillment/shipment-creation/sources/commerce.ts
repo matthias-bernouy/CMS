@@ -1,6 +1,5 @@
 import { makeEndpointUrn, type SourceEndpoint } from "@bernouy/cms-sources";
 import {
-    array,
     boolean,
     computedUserHeader,
     number,
@@ -9,79 +8,32 @@ import {
 } from "../../order-contexts/shared/shapes";
 
 export function creationCommerceEndpoints(): SourceEndpoint[] {
-    return [mySale(), authorization(), reserve(), complete()];
+    return [shipmentCreationContext(), reserve(), complete()];
 }
 
-function mySale(): SourceEndpoint {
+function shipmentCreationContext(): SourceEndpoint {
     return {
-        urn: makeEndpointUrn("commerce", "mySale"),
+        urn: makeEndpointUrn(
+            "commerce",
+            "getOrderShipmentCreationSellerContext",
+        ),
         method: "GET",
-        access: { mode: "auth" },
-        targetUrl: "https://commerce.test/mySale",
+        access: { mode: "system" },
+        targetUrl: "https://commerce.test/shipmentCreationSellerContext",
         headers: computedUserHeader(),
         input: {
-            params: [{ name: "id", in: "query", schema: text() }],
+            params: [{ name: "orderId", in: "query", schema: text() }],
         },
         output: [{
             status: "200",
             body: object({
                 id: number(),
                 publicId: text(),
-                orderNumber: text(),
-                metadata: object({ buyerAddress: text() }),
-                lines: array(object({ title: text() })),
-                financialTerms: object({ financialTermsHash: text() }),
-            }),
+                allowed: boolean(),
+                sellerId: text(),
+            }, ["id", "publicId", "allowed", "sellerId"]),
         }],
     };
-}
-
-function authorization(): SourceEndpoint {
-    return {
-        urn: makeEndpointUrn(
-            "commerce",
-            "getOrderFulfillmentAuthorization",
-        ),
-        method: "GET",
-        access: { mode: "system" },
-        targetUrl: "https://commerce.test/fulfillmentAuthorization",
-        input: {
-            params: [{
-                name: "orderPublicId",
-                in: "query",
-                required: true,
-                schema: text(),
-            }],
-        },
-        output: [{
-            status: "200",
-            body: authorizationShape(),
-        }],
-    };
-}
-
-function authorizationShape() {
-    const required = [
-        "allowed", "orderId", "orderPublicId", "sellerId", "currency",
-        "deliveryQuoteId", "merchandiseSubtotalMinorAmount",
-        "paymentStatus", "fulfillmentStatus",
-    ];
-    return object({
-        allowed: boolean(),
-        reason: text(true),
-        orderId: number(),
-        orderPublicId: text(),
-        sellerId: text(),
-        buyerCmsUserId: text(),
-        currency: text(),
-        deliveryQuoteId: text(),
-        merchandiseSubtotalMinorAmount: number(),
-        shippingAmount: number(),
-        buyerTotalAmount: number(),
-        financialTermsHash: text(),
-        paymentStatus: text(),
-        fulfillmentStatus: text(),
-    }, required);
 }
 
 function reserve(): SourceEndpoint {

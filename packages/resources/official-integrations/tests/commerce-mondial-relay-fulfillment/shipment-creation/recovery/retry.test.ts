@@ -51,10 +51,10 @@ describe("seller shipment creation recovery", () => {
         expect(await replay.response.json()).toEqual(replayResult);
         expect(failed.calls.map(call => call.url.pathname)).toEqual(paths());
         expect(replay.calls.map(call => call.url.pathname)).toEqual(paths());
-        expect(failed.calls[4]?.body).toEqual(expectedShipmentRequest());
-        expect(replay.calls[4]?.body).toEqual(expectedShipmentRequest());
-        expect(failed.calls[5]?.body).toEqual(expectedCompletionRequest());
-        expect(replay.calls[5]?.body).toEqual({
+        expect(failed.calls[3]?.body).toEqual(expectedShipmentRequest());
+        expect(replay.calls[3]?.body).toEqual(expectedShipmentRequest());
+        expect(failed.calls[4]?.body).toEqual(expectedCompletionRequest());
+        expect(replay.calls[4]?.body).toEqual({
             ...expectedCompletionRequest(),
             claimToken: replayClaimToken,
         });
@@ -63,7 +63,7 @@ describe("seller shipment creation recovery", () => {
 
 function paths() {
     return [
-        "/mySale", "/fulfillmentAuthorization", "/reserveShipmentCreation",
+        "/shipmentCreationSellerContext", "/reserveShipmentCreation",
         "/resolveDeliveryQuote", "/createShipment",
         "/completeShipmentCreation",
     ];

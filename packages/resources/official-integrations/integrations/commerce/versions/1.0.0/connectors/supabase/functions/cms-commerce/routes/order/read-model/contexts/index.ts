@@ -5,4 +5,5 @@ export {
 export {
     getOrderFulfillmentSellerContext,
     getOrderLabelSellerContext,
+    getOrderShipmentCreationSellerContext,
 } from "./seller.ts";

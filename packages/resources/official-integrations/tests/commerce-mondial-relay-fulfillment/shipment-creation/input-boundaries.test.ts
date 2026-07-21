@@ -46,7 +46,7 @@ describe("seller shipment creation input boundaries", () => {
         expect(calls).toEqual([]);
     });
 
-    test("forwards every historical string selector to mySale", async () => {
+    test("forwards every historical string selector to the seller setup", async () => {
         for (const [selector, forwarded] of [
             ["", null],
             ["abc", "abc"],
@@ -55,42 +55,46 @@ describe("seller shipment creation input boundaries", () => {
         ] as const) {
             const { response, calls } = await executeShipmentCreation(
                 creationResponder({
-                    sale: privateFailure(400, "invalid private selector"),
+                    setup: privateFailure(400, "invalid private selector"),
                 }),
                 { request: shipmentCreationRequest({ orderId: selector }) },
             );
 
             await expectGenericFailure(response);
             expect(calls).toHaveLength(1);
-            expect(calls[0]?.url.pathname).toBe("/mySale");
-            expect(calls[0]?.url.searchParams.get("id")).toBe(forwarded);
+            expect(calls[0]?.url.pathname).toBe(
+                "/shipmentCreationSellerContext",
+            );
+            expect(calls[0]?.url.searchParams.get("orderId")).toBe(forwarded);
         }
     });
 
     test("preserves the bodyless request as a nested Source failure", async () => {
         const { response, calls } = await executeShipmentCreation(
             creationResponder({
-                sale: privateFailure(400, "id or publicId is required"),
+                setup: privateFailure(400, "orderId is required"),
             }),
             { request: shipmentCreationRequest() },
         );
 
         await expectGenericFailure(response);
         expect(calls).toHaveLength(1);
-        expect(calls[0]?.url.pathname).toBe("/mySale");
-        expect(calls[0]?.url.searchParams.get("id")).toBeNull();
+        expect(calls[0]?.url.pathname).toBe("/shipmentCreationSellerContext");
+        expect(calls[0]?.url.searchParams.get("orderId")).toBeNull();
     });
 
     test("redacts every initial Commerce failure", async () => {
         for (const status of [400, 404, 500]) {
             const { response, calls } = await executeShipmentCreation(
                 creationResponder({
-                    sale: privateFailure(status, "private sale failure"),
+                    setup: privateFailure(status, "private setup failure"),
                 }),
             );
 
             await expectGenericFailure(response);
-            expect(calls.map(call => call.url.pathname)).toEqual(["/mySale"]);
+            expect(calls.map(call => call.url.pathname)).toEqual([
+                "/shipmentCreationSellerContext",
+            ]);
         }
     });
 });
