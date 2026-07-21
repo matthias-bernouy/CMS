@@ -14,6 +14,7 @@
     ],
     "scripts": {
         "build": "bun run build.ts",
+        "check:architecture": "bun run quality/architecture/check.ts",
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test"
