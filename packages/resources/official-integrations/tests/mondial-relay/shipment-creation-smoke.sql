@@ -73,6 +73,47 @@ declare
     retry_reservation jsonb;
     result jsonb;
 begin
+    begin
+        perform delivery.reserve_shipment_creation(
+            reservation || pg_catalog.jsonb_build_object('length_cm', 99999999999),
+            quote_check, 'fulfillment', 'order-42', 'another-buyer',
+            '2026-07-21T10:00:00Z'::timestamptz
+        );
+        raise exception 'shipment creation: binding precedence unexpectedly succeeded';
+    exception when others then
+        if sqlerrm not like 'conflict: shipment delivery quote binding is invalid%' then
+            raise;
+        end if;
+    end;
+
+    begin
+        perform delivery.reserve_shipment_creation(
+            reservation || pg_catalog.jsonb_build_object('length_cm', 99999999999),
+            pg_catalog.jsonb_set(quote_check, '{recipient,city}', '"Marseille"'),
+            'fulfillment', 'order-42', 'buyer-42',
+            '2026-07-21T10:00:00Z'::timestamptz
+        );
+        raise exception 'shipment creation: address precedence unexpectedly succeeded';
+    exception when others then
+        if sqlerrm not like 'conflict: shipment address input does not match the immutable quote snapshot%' then
+            raise;
+        end if;
+    end;
+
+    begin
+        perform delivery.reserve_shipment_creation(
+            reservation || pg_catalog.jsonb_build_object('weight_grams', 3000000000),
+            pg_catalog.jsonb_set(quote_check, '{weightGrams}', '3000000000'),
+            'fulfillment', 'order-42', 'buyer-42',
+            '2026-07-21T10:00:00Z'::timestamptz
+        );
+        raise exception 'shipment creation: financial precedence unexpectedly succeeded';
+    exception when others then
+        if sqlerrm not like 'conflict: shipment financial or relay input does not match the immutable quote%' then
+            raise;
+        end if;
+    end;
+
     divergent_reservation := reservation || jsonb_build_object(
         'id', 'shipment-divergent',
         'external_order_id', 'order-divergent',
@@ -174,9 +215,9 @@ begin
         reservation, quote_check, 'fulfillment', 'order-42', 'buyer-42',
         '2026-07-21T10:00:06Z'::timestamptz
     );
-    if result->>'outcome' <> 'stale_unknown'
-       or (select status from delivery.shipments where id = 'shipment-42') <> 'unknown' then
-        raise exception 'shipment creation: stale reservation was not quarantined';
+    if result->>'outcome' <> 'creating'
+       or (select status from delivery.shipments where id = 'shipment-42') <> 'creating' then
+        raise exception 'shipment creation: stale reservation changed inside the reserve transaction';
     end if;
 end;
 $shipment_creation$;
