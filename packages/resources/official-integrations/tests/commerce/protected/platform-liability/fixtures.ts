@@ -1,0 +1,47 @@
+export const controlResponse = {
+    liabilityRevision: 7,
+    requiredMinimumAmount: 2_250,
+    lastProviderAppliedRevision: 6,
+    lastProviderAppliedAmount: 2_000,
+    changeDirection: "increase",
+    decreaseAuthorizationId: null,
+    decreaseAuthorizedAt: null,
+    calculatedAt: "2026-07-21T08:00:00.000Z",
+};
+
+export const authorizedControlResponse = {
+    ...controlResponse,
+    requiredMinimumAmount: 1_800,
+    changeDirection: "decrease",
+    decreaseAuthorizationId: "11111111-1111-4111-8111-111111111111",
+    decreaseAuthorizedAt: "2026-07-21T08:05:00.000Z",
+};
+
+export const preparedPaymentResponse = {
+    orderId: 42,
+    orderPublicId: "22222222-2222-4222-8222-222222222222",
+    orderNumber: "ORDER-42",
+    buyerCmsUserId: "buyer-17",
+    sellerId: "seller-19",
+    currency: "EUR",
+    deliveryQuoteId: "delivery-42",
+    merchandiseSubtotalMinorAmount: 2_300,
+    shippingAmount: 200,
+    buyerTotalAmount: 2_500,
+    sellerProceedsAmount: 2_250,
+    sellerTransferReleaseAmount: 2_050,
+    sellerReserveLiabilityAmount: 200,
+    payoutDelayDays: 14,
+    sellerReserveLiabilityDays: 120,
+    dualApprovalThresholdAmount: 100_000,
+    sellerRequiredMinimumBalanceAmount: 300,
+    platformRequiredMinimumBalanceAmount: 2_250,
+    platformLiabilityRevision: 7,
+    platformPayoutDecreaseAuthorizationId: null,
+    platformPayoutChangeDirection: "increase",
+    platformRetainedAmount: 250,
+    financialTermsHash: "terms-hash-42",
+    financialRevision: 3,
+    payByAt: "2026-07-21T08:30:00.000Z",
+    protectionRequired: true,
+};

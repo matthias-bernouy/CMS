@@ -22,7 +22,7 @@ const exceptionalTestFiles = new Set([
     "catalog/schema-taxonomy-smoke.sql",
     "catalog/definition.test.ts",
     "protected/payment-cancellation-smoke.sql",
-    "protected/platform-liability-smoke.sql",
+    "protected/platform-liability/smoke.sql",
     "protected/settlement-smoke.sql",
     "protected/delivery-saga-smoke.sql",
     "protected/policies/contract.test.ts",
