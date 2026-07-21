@@ -19,6 +19,7 @@ export const REPOSITORY_ROOT = resolve(import.meta.dir, "../..");
 export const ALL_CHECKS: CheckDefinition[] = [
     { id: "architecture", label: "Workspace architecture", args: ["run", "check:architecture"] },
     { id: "repository-shape", label: "Repository shape guidance", args: ["run", "check:repository-shape"] },
+    { id: "style", label: "Code style", args: ["run", "check:style"] },
     { id: "typecheck", label: "Workspace typecheck", args: ["run", "typecheck"] },
     {
         id: "architecture-tooling",
@@ -49,10 +50,7 @@ export function createCheckExecutor(repositoryRoot = REPOSITORY_ROOT): CheckExec
     };
 }
 
-export async function runChecks(
-    checks: readonly CheckDefinition[],
-    execute: CheckExecutor,
-): Promise<CheckResult[]> {
+export async function runChecks(checks: readonly CheckDefinition[], execute: CheckExecutor): Promise<CheckResult[]> {
     const results: CheckResult[] = [];
     for (const check of checks) {
         try {
@@ -71,8 +69,12 @@ export function formatCheckResults(results: readonly CheckResult[]): string {
         const status = result.exitCode === 0 ? "PASS" : "FAIL";
         output.push(`[check:all][${status}] ${result.id} — ${result.label}`);
         output.push(`command: bun ${result.args.join(" ")}`);
-        if (result.stdout.trim()) output.push(result.stdout.trimEnd());
-        if (result.stderr.trim()) output.push(`[stderr]\n${result.stderr.trimEnd()}`);
+        if (result.stdout.trim()) {
+            output.push(result.stdout.trimEnd());
+        }
+        if (result.stderr.trim()) {
+            output.push(`[stderr]\n${result.stderr.trimEnd()}`);
+        }
     }
     const failed = results.filter(({ exitCode }) => exitCode !== 0).length;
     output.push(`[check:all][SUMMARY] ${results.length - failed} passed, ${failed} failed`);
@@ -89,4 +91,6 @@ export async function runAllChecks(
     return results.some(({ exitCode }) => exitCode !== 0) ? 1 : 0;
 }
 
-if (import.meta.main) process.exitCode = await runAllChecks();
+if (import.meta.main) {
+    process.exitCode = await runAllChecks();
+}

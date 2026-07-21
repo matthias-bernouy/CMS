@@ -1,12 +1,12 @@
 export const TARGET_DIRECTORY_ENTRIES = 7;
-export const WIDE_DIRECTORY_ENTRIES = 8;
+export const MAX_DIRECTORY_ENTRIES = 8;
 
 export type DirectoryEntries = Map<string, Set<string>>;
 
 export type DirectoryFanoutFinding = {
     path: string;
     currentEntries: number;
-    severity: "info" | "warning";
+    severity: "info" | "error";
 };
 
 export function collectDirectoryEntries(paths: Iterable<string>): DirectoryEntries {
@@ -29,12 +29,18 @@ export function findDirectoryFanoutFindings(
     const findings: DirectoryFanoutFinding[] = [];
     for (const [path, entries] of current) {
         const currentEntries = entries.size;
-        if (currentEntries <= TARGET_DIRECTORY_ENTRIES) continue;
+        if (currentEntries <= TARGET_DIRECTORY_ENTRIES) {
+            continue;
+        }
         findings.push({
             path,
             currentEntries,
-            severity: currentEntries > WIDE_DIRECTORY_ENTRIES ? "warning" : "info",
+            severity: currentEntries > MAX_DIRECTORY_ENTRIES ? "error" : "info",
         });
     }
     return findings.sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
+}
+
+export function hasBlockingDirectoryFanoutFindings(findings: readonly DirectoryFanoutFinding[]): boolean {
+    return findings.some(({ severity }) => severity === "error");
 }

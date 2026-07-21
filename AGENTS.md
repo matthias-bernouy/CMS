@@ -68,13 +68,28 @@ dependencies are allowed only through the published package exports.
 ## Directory Shape
 
 - Aim to keep each directory near seven immediate files and subdirectories.
-  Directories above eight entries deserve extra review, but cohesive structures
-  may remain wider when another level would make navigation worse.
-- Use the repository-shape diagnostics as guidance. Group entries by real
-  responsibility and do not create vague catch-all folders merely to satisfy a
-  number.
-- Generated or inherently declarative trees may naturally exceed these
-  guidelines.
+  Eight entries produce an informational finding; more than eight produce a
+  blocking error.
+- `bun run check:directory-fanout` and `bun run check:repository-shape` inspect
+  the current tree and exit non-zero when a directory exceeds eight entries.
+- Group entries by a clear responsibility. Do not create vague catch-all
+  folders merely to move entries below the limit.
+
+## Code Style
+
+- Run `bun run format` after editing JavaScript or TypeScript. It applies the
+  workspace formatter and the configured safe and unsafe style fixes; inspect
+  the resulting diff before handoff.
+- Use braces for control-flow bodies and keep executable block contents on
+  separate lines. Keep one executable statement per physical line and do not
+  add empty statements or duplicate semicolons.
+- Inline braces remain valid for object literals, destructuring, imports,
+  exports, and types. The two semicolons in a `for (;;)` header are syntax, not
+  empty statements.
+- Generated bundles and files governed by an external format may be excluded
+  narrowly in `biome.json`. A handwritten exception requires a local Biome
+  suppression with a concrete reason; do not disable a rule for an entire
+  package to avoid formatting code.
 
 ## Commands
 
@@ -83,6 +98,8 @@ Use Bun commands from the workspace root unless a package says otherwise:
 ```bash
 bun install
 bun run check:all
+bun run check:style
+bun run format
 bun run build
 bun run typecheck
 bun test
@@ -103,13 +120,10 @@ then TypeScript project references, then `@bernouy/cms-control`.
   worktree before the initial check. Do not fix findings from another worktree
   or unrelated pre-existing findings merely to make the global report cleaner.
 - Address errors introduced by the task. Review new `INFO` and `WARNING`
-  findings in the task's scope, but treat repository-shape output as guidance,
-  not as an automatic request to refactor.
-- Specific exceptions are valid when a file or directory is cohesive,
-  generated, declarative, constrained by an external format, or clearer without
-  an artificial split. Leave the structure intact when splitting would reduce
-  readability, and mention the decision in the handoff when the task introduced
-  the finding.
+  findings in the task's scope as guidance. A directory-fanout `ERROR` is
+  blocking and must be resolved.
+- A file-size finding may remain when the file is clearer without an artificial
+  split; mention that decision in the handoff when the task introduced it.
 
 ## Documentation
 

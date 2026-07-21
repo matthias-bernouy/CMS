@@ -1,0 +1,50 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "includes": [
+            "**/*.js",
+            "**/*.jsx",
+            "**/*.ts",
+            "**/*.tsx",
+            "**/*.mjs",
+            "**/*.cjs",
+            "**/*.mts",
+            "**/*.cts",
+            "!!packages/surfaces/cms-control/src/static/assets/control-components.js"
+        ]
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+        "lineWidth": 120
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "preset": "none",
+            "style": {
+                "useBlockStatements": "error"
+            }
+        }
+    },
+    "assist": {
+        "enabled": false
+    },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "always",
+            "bracketSpacing": true,
+            "quoteProperties": "preserve",
+            "quoteStyle": "double",
+            "semicolons": "always",
+            "trailingCommas": "all"
+        }
+    }
+}

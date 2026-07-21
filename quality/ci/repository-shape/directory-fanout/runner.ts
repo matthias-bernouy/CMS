@@ -2,8 +2,8 @@ import { listCurrentRepositoryPaths, REPOSITORY_ROOT } from "../files";
 import {
     collectDirectoryEntries,
     findDirectoryFanoutFindings,
+    MAX_DIRECTORY_ENTRIES,
     TARGET_DIRECTORY_ENTRIES,
-    WIDE_DIRECTORY_ENTRIES,
 } from "./policy";
 
 export async function loadCurrentDirectoryEntries(repositoryRoot = REPOSITORY_ROOT) {
@@ -18,15 +18,14 @@ export async function runDirectoryFanoutCheck(
     const findings = findDirectoryFanoutFindings(current);
     for (const { path, currentEntries, severity } of findings) {
         const label = severity.toUpperCase();
-        const guidance = severity === "warning"
-            ? `above the ${WIDE_DIRECTORY_ENTRIES}-entry review threshold`
-            : `above the ${TARGET_DIRECTORY_ENTRIES}-entry target`;
+        const guidance =
+            severity === "error"
+                ? `above the ${MAX_DIRECTORY_ENTRIES}-entry maximum`
+                : `above the ${TARGET_DIRECTORY_ENTRIES}-entry target`;
         report(`[directory-fanout][${label}] ${path}: ${currentEntries} entries (${guidance})`);
     }
     const infoCount = findings.filter(({ severity }) => severity === "info").length;
-    const warningCount = findings.length - infoCount;
-    report(
-        `Directory-fanout guidance: ${infoCount} info, ${warningCount} warnings. Findings are advisory.`,
-    );
+    const errorCount = findings.length - infoCount;
+    report(`Directory-fanout policy: ${infoCount} info, ${errorCount} errors. Errors are blocking.`);
     return findings;
 }

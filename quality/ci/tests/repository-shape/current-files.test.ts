@@ -6,8 +6,10 @@ import { listCurrentRepositoryPaths } from "../../repository-shape/files";
 import {
     loadCurrentDirectoryEntries,
     runDirectoryFanoutCheck,
+    runDirectoryFanoutCommand,
 } from "../../repository-shape/directory-fanout/check";
 import { loadCurrentLines, runFileSizeCheck } from "../../repository-shape/file-size/check";
+import { runRepositoryShapeCheck } from "../../repository-shape/check";
 
 const repositories: string[] = [];
 
@@ -17,7 +19,9 @@ afterEach(async () => {
 
 function git(repository: string, args: string[]): void {
     const result = Bun.spawnSync(["git", ...args], { cwd: repository, stdout: "pipe", stderr: "pipe" });
-    if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+    if (result.exitCode !== 0) {
+        throw new Error(result.stderr.toString());
+    }
 }
 
 async function createRepository(): Promise<string> {
@@ -51,7 +55,7 @@ test("current repository scan includes untracked files and excludes ignored and 
     expect(paths).not.toContain("ignored/output.ts");
     expect(paths).not.toContain("node_modules");
     expect(lines.get("folder/untracked.ts")).toBe(2);
-    expect([...directories.get("folder") ?? []]).toEqual(["untracked.ts"]);
+    expect([...(directories.get("folder") ?? [])]).toEqual(["untracked.ts"]);
 });
 
 test("current repository scan still fails when Git cannot inspect the workspace", async () => {
@@ -60,10 +64,12 @@ test("current repository scan still fails when Git cannot inspect the workspace"
     expect(listCurrentRepositoryPaths(directory)).rejects.toThrow("Cannot list current repository files");
 });
 
-test("repository-shape findings remain non-blocking", async () => {
+test("wide directories make direct and aggregate repository-shape checks fail", async () => {
     const repository = await createRepository();
     await write(repository, "large.ts", "line\n".repeat(181));
-    for (let index = 0; index < 9; index += 1) await write(repository, `wide/entry-${index}.ts`);
+    for (let index = 0; index < 9; index += 1) {
+        await write(repository, `wide/entry-${index}.ts`);
+    }
     const messages: string[] = [];
     const report = (message: string) => messages.push(message);
 
@@ -75,7 +81,10 @@ test("repository-shape findings remain non-blocking", async () => {
     expect(await runDirectoryFanoutCheck(repository, report)).toContainEqual({
         path: "wide",
         currentEntries: 9,
-        severity: "warning",
+        severity: "error",
     });
-    expect(messages.filter((message) => message.includes("Findings are advisory."))).toHaveLength(2);
+    expect(await runDirectoryFanoutCommand(repository, () => undefined)).toBe(1);
+    expect(await runRepositoryShapeCheck(repository, () => undefined)).toBe(1);
+    expect(messages).toContain("File-size guidance: 0 info, 1 warnings. Findings are advisory.");
+    expect(messages).toContain("Directory-fanout policy: 0 info, 1 errors. Errors are blocking.");
 });

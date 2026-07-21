@@ -18,6 +18,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
     expect(ALL_CHECKS.map(({ id }) => id)).toEqual([
         "architecture",
         "repository-shape",
+        "style",
         "typecheck",
         "architecture-tooling",
         "ci-tooling",
@@ -25,6 +26,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
     expect(ALL_CHECKS.map(({ args }) => args)).toEqual([
         ["run", "check:architecture"],
         ["run", "check:repository-shape"],
+        ["run", "check:style"],
         ["run", "typecheck"],
         ["x", "tsc", "--project", "quality/architecture/tsconfig.json"],
         ["x", "tsc", "--project", "quality/ci/tsconfig.json"],
@@ -56,7 +58,9 @@ test("check:all records executor errors and continues", async () => {
     const called: string[] = [];
     const results = await runChecks(checks, async (check) => {
         called.push(check.id);
-        if (check.id === "second") throw new Error("spawn failed");
+        if (check.id === "second") {
+            throw new Error("spawn failed");
+        }
         return { exitCode: 0, stdout: "", stderr: "" };
     });
     expect(called).toEqual(["first", "second", "third"]);
