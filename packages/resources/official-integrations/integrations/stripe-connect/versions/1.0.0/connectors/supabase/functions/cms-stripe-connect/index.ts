@@ -32,6 +32,7 @@ import {
 import {
     claimReconciliationProjectionBatch,
     readReconciliationOperations,
+    resolveProviderExceptionRow,
 } from "./db/reconciliation.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
@@ -5470,15 +5471,7 @@ async function upsertProviderException(deduplicationKey: string, values: JsonRec
 }
 
 async function resolveProviderException(deduplicationKey: string): Promise<void> {
-    const existing = await getRowByField<JsonRecord>(
-        "provider_exceptions", "deduplication_key", deduplicationKey, "*",
-    );
-    if (!existing || existing.status === "resolved") return;
-    await updateRow("provider_exceptions", Number(existing.id), {
-        status: "resolved",
-        resolved_at: new Date().toISOString(),
-        resolved_by: "provider-reconciliation",
-    });
+    await resolveProviderExceptionRow(deduplicationKey, new Date().toISOString());
 }
 
 async function requiredDispute(disputeId: string): Promise<StripeDisputeRow> {

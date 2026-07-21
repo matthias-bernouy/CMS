@@ -1,5 +1,5 @@
 import type { JsonRecord } from "../shared/types.ts";
-import { callRpcRows } from "./postgrest.ts";
+import { callRpcRows, rest, restError } from "./postgrest.ts";
 
 export type ReconciliationOperationRead = {
     operation: JsonRecord;
@@ -35,4 +35,26 @@ export async function claimReconciliationProjectionBatch(
         p_owner: owner,
         p_limit: limit,
     });
+}
+
+export async function resolveProviderExceptionRow(
+    deduplicationKey: string,
+    resolvedAt: string,
+): Promise<void> {
+    const query = new URLSearchParams();
+    query.set("deduplication_key", `eq.${deduplicationKey}`);
+    query.set("status", "neq.resolved");
+    const response = await rest(`provider_exceptions?${query.toString()}`, {
+        method: "PATCH",
+        headers: {
+            "content-type": "application/json",
+            prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+            status: "resolved",
+            resolved_at: resolvedAt,
+            resolved_by: "provider-reconciliation",
+        }),
+    });
+    if (!response.ok) throw await restError(response);
 }
