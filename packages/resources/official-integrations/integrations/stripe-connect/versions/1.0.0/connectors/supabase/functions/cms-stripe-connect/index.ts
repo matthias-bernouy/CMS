@@ -32,6 +32,7 @@ import {
 import {
     claimReconciliationProjectionBatch,
     readPaymentReconciliationLedger,
+    readProviderTransferReconciliationContext,
     readReconciliationOperations,
     resolveProviderExceptionRow,
 } from "./db/reconciliation.ts";
@@ -5633,16 +5634,14 @@ async function reconcileProviderTransfers(payment: ConnectPaymentRow): Promise<v
     for (const value of recordArrayAt(listed, "data")) {
         const transferId = stringAt(value, "id");
         if (!transferId) throw new Error("Stripe Transfer search returned an object without id");
-        const local = await getRowByField<TransferRow>("transfers", "stripe_transfer_id", transferId, transferSelect);
+        const context = await readProviderTransferReconciliationContext(transferId);
+        const local = context.transfer as unknown as TransferRow | null;
         if (!local) {
             await quarantineUntrackedProviderObject(payment, "transfer", transferId, value);
             continue;
         }
         const providerReversedAmount = numberAt(value, "amount_reversed") ?? 0;
-        const localReversalRows = await listRows<JsonRecord>(
-            `transfer_reversals?transfer_id=eq.${local.id}&status=eq.succeeded&select=amount`,
-        );
-        const localReversedAmount = localReversalRows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+        const localReversedAmount = Number(context.local_reversed_amount);
         if (providerReversedAmount !== localReversedAmount) {
             await quarantineUntrackedProviderObject(payment, "transfer_reversal", transferId, {
                 ...value,

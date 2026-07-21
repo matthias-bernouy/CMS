@@ -26,6 +26,11 @@ export type PaymentReconciliationLedgerRead = {
     seller_recovery_amount: number;
 };
 
+export type ProviderTransferReconciliationContext = {
+    transfer: JsonRecord | null;
+    local_reversed_amount: number;
+};
+
 export async function readReconciliationOperations(
     limit: number,
 ): Promise<ReconciliationOperationRead[]> {
@@ -50,6 +55,15 @@ export async function readPaymentReconciliationLedger(
     return await callRpcObject<PaymentReconciliationLedgerRead>(
         "read_payment_reconciliation_ledger",
         { p_payment_id: paymentId },
+    );
+}
+
+export async function readProviderTransferReconciliationContext(
+    stripeTransferId: string,
+): Promise<ProviderTransferReconciliationContext> {
+    return await callRpcObject<ProviderTransferReconciliationContext>(
+        "read_provider_transfer_reconciliation_context",
+        { p_stripe_transfer_id: stripeTransferId },
     );
 }
 
