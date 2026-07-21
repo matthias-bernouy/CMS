@@ -26,6 +26,12 @@ begin
        or v_product.version <> v_initial_version + 1
        or v_product.title <> v_winner_title
        or v_product.title not in ('Race winner A', 'Race winner B')
+       or (select count(*) from commerce.product_variant_axes
+           where product_id = v_product.id) <> 2
+       or (select count(*) from commerce.product_variant_axis_values
+           where product_id = v_product.id) <> 4
+       or (select count(*) from commerce.product_variant_selections
+           where product_id = v_product.id) <> 8
        or exists (
             select 1 from matrix_race_variants old
             full join commerce.product_variants current

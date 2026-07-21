@@ -26,6 +26,8 @@ begin;
 \ir fixture.sql
 set local role service_role;
 \ir validation/metadata.sql
+\ir validation/priority.sql
+\ir validation/rollback.sql
 rollback;
 
 \ir lifecycle/setup.sql
