@@ -12,6 +12,7 @@ set statement_timeout = '15s';
 \ir security.sql
 \ir behavior/apply.sql
 \ir behavior/quarantine.sql
+\ir behavior/freshness.sql
 \ir behavior/recovery.sql
 \ir behavior/validation.sql
 \ir rollback.sql

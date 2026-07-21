@@ -6905,10 +6905,7 @@ class StripeConnectMock {
         const snapshot = this.paymentProjectionSnapshot();
         if (equivalentApply) {
             this.update(payment, {
-                last_provider_sync_at: Date.parse(String(payment.last_provider_sync_at))
-                    > Date.parse(String(projection.lastProviderSyncAt))
-                    ? payment.last_provider_sync_at
-                    : projection.lastProviderSyncAt,
+                last_provider_sync_at: this.latestProviderSyncAt(payment, projection),
             });
             const failed = this.paymentProjectionEnqueueFailure(snapshot);
             if (failed) return failed;
@@ -6926,7 +6923,7 @@ class StripeConnectMock {
                 actual_stripe_charge_fee_details: projection.actualStripeChargeFeeDetails,
                 paid_at: projection.paidAt,
                 cancelled_at: projection.cancelledAt,
-                last_provider_sync_at: projection.lastProviderSyncAt,
+                last_provider_sync_at: this.latestProviderSyncAt(payment, projection),
             });
             const recovered = this.recoverProjectedPaymentReview(payment, projection.recovery);
             const projectionKey = recovered
@@ -6943,7 +6940,7 @@ class StripeConnectMock {
                 stripe_payment_intent_id: projection.stripePaymentIntentId,
                 stripe_charge_id: projection.stripeChargeId,
                 paid_at: projection.paidAt,
-                last_provider_sync_at: projection.lastProviderSyncAt,
+                last_provider_sync_at: this.latestProviderSyncAt(payment, projection),
             });
             const failed = this.paymentProjectionEnqueueFailure(snapshot);
             if (failed) return failed;
@@ -6973,6 +6970,13 @@ class StripeConnectMock {
             throw new Error("simulated lost payment projection response");
         }
         return jsonResponse({ applied: true, payment: { ...payment } });
+    }
+
+    private latestProviderSyncAt(payment: JsonRecord, projection: JsonRecord): unknown {
+        return Date.parse(String(payment.last_provider_sync_at))
+            > Date.parse(String(projection.lastProviderSyncAt))
+            ? payment.last_provider_sync_at
+            : projection.lastProviderSyncAt;
     }
 
     private isEquivalentPaymentApply(
