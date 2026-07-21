@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Identity } from "cms-auth/interfaces/UsersRepository";
 import type { LocalCredentialStore, LocalCredential, NewCredential } from "cms-auth/interfaces/LocalCredentialStore";
-import { dummyPasswordVerify } from "cms-auth/core/passwordTiming";
+import { dummyPasswordVerify } from "cms-auth/core/accounts/passwordTiming";
 
 type Record = LocalCredential & { hash: string };
 

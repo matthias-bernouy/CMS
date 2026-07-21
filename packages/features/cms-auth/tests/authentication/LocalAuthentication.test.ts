@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { SignedCookieCodec } from "@bernouy/cms-auth";
-import { LocalAuthentication } from "cms-auth/default-implementation/LocalAuthentication";
+import { LocalAuthentication } from "cms-auth/default-implementation/authentication/LocalAuthentication";
 import { localLoginHandler } from "cms-auth/http/authHandlers";
 import { SubjectResolver } from "cms-auth/core/SubjectResolver";
 import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";

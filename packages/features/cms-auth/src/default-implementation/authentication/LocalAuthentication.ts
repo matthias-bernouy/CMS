@@ -6,6 +6,7 @@ import type { PatRepository } from "cms-auth/interfaces/PatRepository";
 import type { RateLimiter } from "@bernouy/rate-limiter";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/core/cookies";
 import { privateAuthJsonResponse, privateAuthResponse } from "cms-auth/http/authResponse";
+import { readBearer, readCredentials } from "cms-auth/default-implementation/authentication/requestInput";
 
 type SessionPayload = { kind: "session"; sub: string };
 type LoginError = "invalid_credentials" | "rate_limited";
@@ -170,34 +171,3 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         return setCookie(this.cfg.cookieName, token, this._ttl, this.cfg.cookieSecure ?? false);
     }
 }
-
-async function readCredentials(req: Request): Promise<{ email?: string; password?: string; returnTo?: string }> {
-    const url = new URL(req.url);
-    let returnTo = url.searchParams.get("returnTo") ?? undefined;
-    const ct = req.headers.get("content-type") ?? "";
-
-    if (ct.includes("application/json")) {
-        const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-        return {
-            email: typeof b.email === "string" ? b.email : undefined,
-            password: typeof b.password === "string" ? b.password : undefined,
-            returnTo: typeof b.returnTo === "string" ? b.returnTo : returnTo,
-        };
-    }
-    const form = await req.formData().catch(() => null);
-    if (form) {
-        if (form.get("returnTo")) {
-            returnTo = String(form.get("returnTo"));
-        }
-        return { email: str(form.get("email")), password: str(form.get("password")), returnTo };
-    }
-    return { returnTo };
-}
-
-function readBearer(req: Request): string | null {
-    const h = req.headers.get("authorization");
-    const m = h ? /^Bearer\s+(.+)$/i.exec(h) : null;
-    return m?.[1] ?? null;
-}
-
-const str = (v: FormDataEntryValue | null): string | undefined => (typeof v === "string" && v ? v : undefined);

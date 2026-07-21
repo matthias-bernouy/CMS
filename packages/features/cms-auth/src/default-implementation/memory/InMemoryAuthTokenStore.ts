@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { AuthToken, AuthTokenPurpose, AuthTokenStore, NewAuthToken } from "cms-auth/interfaces/AuthTokenStore";
-import { hashAuthToken, mintAuthToken } from "cms-auth/core/authToken";
+import { hashAuthToken, mintAuthToken } from "cms-auth/core/tokens/authToken";
 
 type Record = AuthToken & { hash: string };
 

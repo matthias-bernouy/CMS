@@ -1,5 +1,5 @@
-import type { LocalAuthentication } from "cms-auth/default-implementation/LocalAuthentication";
-import type { OidcAuthentication } from "cms-auth/default-implementation/OidcAuthentication";
+import type { LocalAuthentication } from "cms-auth/default-implementation/authentication/LocalAuthentication";
+import type { OidcAuthentication } from "cms-auth/default-implementation/authentication/OidcAuthentication";
 import type { IdentityProviderKind, IdentityProviderRepository } from "cms-auth/interfaces/IdentityProvider";
 import { toLoginMethod } from "cms-auth/core/toLoginMethod";
 import { privateAuthJsonResponse } from "cms-auth/http/authResponse";
