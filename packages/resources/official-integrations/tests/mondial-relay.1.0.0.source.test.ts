@@ -1606,6 +1606,11 @@ describe("mondial-relay 1.0.0 source", () => {
             connectOutputType: "PdfUrl",
         });
         const body = await jsonBody(response);
+        const fetched = await jsonBody(await sourceRequest(harness, "setting", {
+            method: "GET",
+            userId: "cms-admin",
+            params: { id: "default" },
+        }));
 
         expect(response.status).toBe(200);
         expect(body).toMatchObject({
@@ -1614,6 +1619,7 @@ describe("mondial-relay 1.0.0 source", () => {
             senderPhone: "+33608138404",
             defaultWeightGrams: 750,
         });
+        expect(body).toEqual(fetched);
 
         harness.deliveryQuotes[0]!.seller_fulfillment_snapshot = {
             name: "Updated Shop", firstName: "Updated", lastName: "Shop", phone: "+33608138404",

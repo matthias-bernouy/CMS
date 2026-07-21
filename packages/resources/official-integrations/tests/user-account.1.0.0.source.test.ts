@@ -200,6 +200,7 @@ describe("user-account 1.0.0 source", () => {
             metadata: { company: ["agency"], employeeCount: 13 },
         });
         expect(adminCreated).toMatchObject({ exists: true, userId: "target-user", metadata: { company: ["agency"] } });
+        expect(adminCreated).toEqual(fetched);
         expect(listed.accounts).toEqual([expect.objectContaining({ userId: "target-user", givenName: "Admin", surname: "Target", metadata: { company: ["agency"] } })]);
         expect(fetched).toMatchObject({ exists: true, userId: "target-user", givenName: "Admin", surname: "Target", metadata: { company: ["agency"] } });
         expect(deleted).toEqual({ deleted: true, userId: "target-user" });

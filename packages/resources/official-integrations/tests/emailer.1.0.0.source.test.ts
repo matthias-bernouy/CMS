@@ -182,6 +182,7 @@ describe("emailer 1.0.0 source", () => {
             defaultFrom: "saved@example.test",
             defaultReplyTo: "reply@example.test",
         }));
+        const settingsAfterUpdate = await okJson(await sourceRequest(harness, "getSettings"));
         const afterBlankPasswordSave = await okJson(await sourceJson(harness, "updateSettings", {
             smtpHost: "smtp.saved.test",
             smtpPort: "2525",
@@ -203,7 +204,9 @@ describe("emailer 1.0.0 source", () => {
             defaultFrom: "saved@example.test",
             defaultReplyTo: "reply@example.test",
         });
+        expect(updated).toEqual(settingsAfterUpdate);
         expect(afterBlankPasswordSave).toMatchObject({ smtpPassword: "", smtpPasswordConfigured: "configured" });
+        expect(afterBlankPasswordSave).toEqual(settings);
         expect(settings).toMatchObject({ smtpHost: "smtp.saved.test", smtpPassword: "", smtpPasswordConfigured: "configured" });
         expect(harness.rest.rows("settings")[0]).toMatchObject({
             smtp_host: "smtp.saved.test",
@@ -259,8 +262,10 @@ describe("emailer 1.0.0 source", () => {
         }));
         const messages = await okJson(await sourceRequest(harness, "listMessages", { status: "sent" }));
         const archived = await okJson(await sourceJson(harness, "archiveTemplate", {}, { key: "auth.welcome" }));
+        const fetchedAfterArchive = await okJson(await sourceRequest(harness, "getTemplate", { key: "auth.welcome" }));
 
         expect(saved).toMatchObject({ key: "auth.welcome", name: "Welcome email", status: "active" });
+        expect(saved).toEqual(fetched);
         expect(created).toMatchObject({ key: "billing.receipt", name: "Receipt email", status: "draft" });
         expect(listed.items).toContainEqual(expect.objectContaining({ key: "auth.welcome" }));
         expect(String(fetched.sampleDataJson)).toContain("Ada");
@@ -274,6 +279,7 @@ describe("emailer 1.0.0 source", () => {
         expect(createdTestMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-2" });
         expect(systemMessage).toMatchObject({ status: "sent", providerMessageId: "smtp-3", idempotencyKey: "welcome-1" });
         expect(messages.total).toBe(3);
+        expect(archived).toEqual(fetchedAfterArchive);
         expect(sent).toHaveLength(3);
         expect(sent[0]).toMatchObject({
             to: ["test@example.com"],

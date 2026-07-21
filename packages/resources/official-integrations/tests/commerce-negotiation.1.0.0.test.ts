@@ -216,6 +216,16 @@ describe("commerce negotiation 1.0.0", () => {
         const realFetch = globalThis.fetch;
         let handler: ((request: Request) => Promise<Response>) | undefined;
         const requests: Request[] = [];
+        let settingsRow = {
+            id: "default",
+            minimum_ratio_bps: 8000,
+            maximum_ratio_bps: 12000,
+            proposal_ttl_hours: 72,
+            enabled: true,
+            version: 1,
+            created_at: "2026-07-12T00:00:00Z",
+            updated_at: "2026-07-12T00:00:00Z",
+        };
         const environment: Record<string, string> = {
             CMS_NEGOTIATION_API_KEY: "negotiation-key",
             SUPABASE_URL: "https://project.supabase.co",
@@ -235,16 +245,26 @@ describe("commerce negotiation 1.0.0", () => {
             if (url.pathname.endsWith("/rest/v1/settings")) {
                 expect(request.headers.get("apikey")).toBe("service-role-key");
                 expect(request.headers.get("accept-profile")).toBe("commerce_negotiation");
-                return Response.json([{
-                    id: "default",
-                    minimum_ratio_bps: 8000,
-                    maximum_ratio_bps: 12000,
-                    proposal_ttl_hours: 72,
-                    enabled: true,
-                    version: 1,
-                    created_at: "2026-07-12T00:00:00Z",
-                    updated_at: "2026-07-12T00:00:00Z",
-                }]);
+                if (request.method === "PATCH") {
+                    expect(url.searchParams.get("id")).toBe("eq.default");
+                    expect(url.searchParams.get("version")).toBe("eq.1");
+                    expect(await request.json()).toEqual({
+                        minimum_ratio_bps: 8500,
+                        maximum_ratio_bps: 11500,
+                        proposal_ttl_hours: 48,
+                        enabled: false,
+                    });
+                    settingsRow = {
+                        ...settingsRow,
+                        minimum_ratio_bps: 8500,
+                        maximum_ratio_bps: 11500,
+                        proposal_ttl_hours: 48,
+                        enabled: false,
+                        version: 2,
+                        updated_at: "2026-07-12T01:00:00Z",
+                    };
+                }
+                return Response.json([settingsRow]);
             }
             if (url.pathname.endsWith("/rest/v1/rpc/list_participant_proposals")) {
                 expect(await request.json()).toEqual({
@@ -311,6 +331,27 @@ describe("commerce negotiation 1.0.0", () => {
             ));
             expect(proposalsResponse.status).toBe(200);
             expect(await proposalsResponse.json()).toEqual({ items: [], total: 0 });
+            const updatedSettingsResponse = await handler!(new Request(
+                "https://project.supabase.co/functions/v1/cms-commerce-negotiation/admin/settings",
+                {
+                    method: "POST",
+                    headers: { authorization: "Bearer negotiation-key", "content-type": "application/json" },
+                    body: JSON.stringify({
+                        expectedVersion: 1,
+                        minimumPercent: 85,
+                        maximumPercent: 115,
+                        proposalTtlHours: 48,
+                        enabled: false,
+                    }),
+                },
+            ));
+            const fetchedSettingsResponse = await handler!(new Request(
+                "https://project.supabase.co/functions/v1/cms-commerce-negotiation/admin/settings",
+                { headers: { authorization: "Bearer negotiation-key" } },
+            ));
+            expect(updatedSettingsResponse.status).toBe(200);
+            expect(fetchedSettingsResponse.status).toBe(200);
+            expect(await updatedSettingsResponse.json()).toEqual(await fetchedSettingsResponse.json());
         } finally {
             (globalThis as { Deno?: unknown }).Deno = realDeno;
             globalThis.fetch = realFetch;
@@ -319,6 +360,8 @@ describe("commerce negotiation 1.0.0", () => {
             "/rest/v1/settings",
             "/rest/v1/settings",
             "/rest/v1/rpc/list_participant_proposals",
+            "/rest/v1/settings",
+            "/rest/v1/settings",
         ]);
         expect(requests.every(request => !new URL(request.url).pathname.includes("/cms-commerce/"))).toBe(true);
     });
