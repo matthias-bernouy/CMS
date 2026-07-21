@@ -6583,6 +6583,21 @@ class StripeConnectMock {
                 local_reversed_amount: localReversedAmount,
             }]);
         }
+        if (table === "rpc/read_financial_operation_recovery_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const copy = (row: JsonRecord | undefined): JsonRecord | null => row ? { ...row } : null;
+            return jsonResponse([{
+                payment: copy(this.tables.payments.find(row => same(row.id, body.p_payment_id))),
+                transfer: copy(this.tables.transfers.find(row => same(row.operation_id, body.p_operation_id))),
+                transfer_reversal: copy(this.tables.transfer_reversals.find(
+                    row => same(row.operation_id, body.p_operation_id),
+                )),
+                transfer_recovery: copy(this.tables.transfer_recovery_requests.find(
+                    row => row.recovery_request_id === body.p_recovery_request_id,
+                )),
+                refund: copy(this.tables.refunds.find(row => same(row.operation_id, body.p_operation_id))),
+            }]);
+        }
         if (table === "rpc/ack_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const row = this.tables.commerce_projection_outbox.find(candidate =>

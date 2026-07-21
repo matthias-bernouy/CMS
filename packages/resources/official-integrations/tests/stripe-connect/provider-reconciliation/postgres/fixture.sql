@@ -32,6 +32,11 @@ begin
         select id from stripe_connect.payments
         where client_reference_id like 'provider-reconciliation-pg-%'
     );
+    delete from stripe_connect.transfer_recovery_requests
+    where payment_id in (
+        select id from stripe_connect.payments
+        where client_reference_id like 'provider-reconciliation-pg-%'
+    );
     delete from stripe_connect.refunds
     where payment_id in (
         select id from stripe_connect.payments

@@ -10,6 +10,7 @@ begin
             ('stripe_connect.read_reconciliation_operations(integer)', 's', false),
             ('stripe_connect.read_payment_reconciliation_ledger(bigint)', 's', false),
             ('stripe_connect.read_provider_transfer_reconciliation_context(text)', 's', false),
+            ('stripe_connect.read_financial_operation_recovery_context(bigint,bigint,text)', 's', false),
             ('stripe_connect.claim_commerce_projection_outbox(text,integer)', 'v', false),
             ('stripe_connect.claim_reconciliation_projection_batch(text,integer)', 'v', true)
         ) expected(signature, volatility, jit_disabled)
@@ -74,6 +75,16 @@ exception when insufficient_privilege then
     null;
 end;
 $anon_transfer_context$;
+do $anon_operation_context$
+begin
+    perform * from stripe_connect.read_financial_operation_recovery_context(
+        -900000001, -900000001, null
+    );
+    raise exception 'provider reconciliation: anon executed operation recovery context RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$anon_operation_context$;
 reset role;
 
 set local role authenticated;
@@ -103,6 +114,16 @@ exception when insufficient_privilege then
     null;
 end;
 $authenticated_transfer_context$;
+do $authenticated_operation_context$
+begin
+    perform * from stripe_connect.read_financial_operation_recovery_context(
+        -900000001, -900000001, null
+    );
+    raise exception 'provider reconciliation: authenticated executed operation recovery context RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$authenticated_operation_context$;
 reset role;
 
 set local role service_role;
@@ -115,6 +136,10 @@ from stripe_connect.read_payment_reconciliation_ledger(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.read_provider_transfer_reconciliation_context(
     'tr_provider_reconciliation_missing'
+);
+select pg_catalog.count(*)
+from stripe_connect.read_financial_operation_recovery_context(
+    -900000001, -900000001, null
 );
 select pg_catalog.count(*)
 from stripe_connect.claim_reconciliation_projection_batch('service-role-batch-contract', 1);

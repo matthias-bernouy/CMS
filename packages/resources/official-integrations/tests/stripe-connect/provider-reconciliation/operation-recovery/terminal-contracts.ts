@@ -70,12 +70,9 @@ export function registerTerminalOperationRecoveryContracts(
                 const claimIndex = harness.rest.postgrestRequests.findIndex(request => (
                     request.table === "rpc/claim_financial_operations"
                 ));
-                const expectedLocalTable = recoveryCase.kind === "transfer" ? "transfers"
-                    : recoveryCase.kind === "reversal" ? "transfer_reversals" : "refunds";
                 const expectedAfterClaim: Array<[string, string]> = [
                     ["POST", "rpc/claim_financial_operations"],
-                    ["GET", "payments"],
-                    ["GET", expectedLocalTable],
+                    ["POST", "rpc/read_financial_operation_recovery_context"],
                     ["PATCH", "financial_operations"],
                     ...(recoveryCase.kind === "refund" ? [[
                         "POST", "rpc/enqueue_commerce_refund_projection",
