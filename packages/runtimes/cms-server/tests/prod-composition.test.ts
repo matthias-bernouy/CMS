@@ -1,6 +1,22 @@
 import { describe, expect, test } from "bun:test";
 
 describe("production CMS composition", () => {
+    test("waits for Control readiness before listening", async () => {
+        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const ready = source.indexOf("await controlCms.ready");
+        const listen = source.indexOf("controlRunner.start", ready);
+
+        expect(ready).toBeGreaterThan(-1);
+        expect(listen).toBeGreaterThan(ready);
+    });
+
+    test.failing("passes configured hosts to both listeners", async () => {
+        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+
+        expect(source).toMatch(/controlRunner\.start\(\{\s*port:\s*CONTROL_PORT,\s*hostname:\s*CONTROL_HOST\s*\}\)/);
+        expect(source).toMatch(/deliveryRunner\.start\(\{\s*port:\s*DELIVERY_PORT,\s*hostname:\s*DELIVERY_HOST\s*\}\)/);
+    });
+
     test("wires the encrypted secret store into Delivery gateway execution", async () => {
         const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
 

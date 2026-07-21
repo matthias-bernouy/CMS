@@ -1,6 +1,14 @@
 import { describe, expect, mock, test } from "bun:test";
-import { executeEndpoint } from "cms-sources/core/executeEndpoint";
+import { executeEndpoint, type ExecutorDeps } from "cms-sources/core/executeEndpoint";
 import { ep, okFetch } from "./helpers/executeEndpointFixtures";
+
+type SourceOutboundTransport = {
+    fetch(url: string, init: RequestInit): Promise<Response>;
+};
+
+type ExecutorDepsWithTransport = ExecutorDeps & {
+    transport: SourceOutboundTransport;
+};
 
 describe("executeEndpoint proxy", () => {
     test("forwards to the built upstream URL with only declared query params", async () => {
@@ -50,6 +58,32 @@ describe("executeEndpoint proxy", () => {
         expect(response.status).toBe(500);
         expect(await response.text()).toBe("targetUrl must not contain credentials");
         expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test.failing("blocks a hostname when any resolved address is loopback", async () => {
+        const resolveHost = mock(async (hostname: string) => {
+            expect(hostname).toBe("mixed-records.example.invalid");
+            return ["93.184.216.34", "127.0.0.1"];
+        });
+        const transport: SourceOutboundTransport = {
+            fetch: mock(async (url, _init) => {
+                const addresses = await resolveHost(new URL(url).hostname);
+                if (addresses.includes("127.0.0.1")) {
+                    throw new Error("resolved target contains a blocked address");
+                }
+                return Response.json({ public: true });
+            }),
+        };
+
+        const response = await executeEndpoint(ep({
+            targetUrl: "https://mixed-records.example.invalid/metadata",
+        }), new Request("http://local/x"), {
+            transport,
+        } as ExecutorDepsWithTransport);
+
+        expect(transport.fetch).toHaveBeenCalledTimes(1);
+        expect(resolveHost).toHaveBeenCalledTimes(1);
+        expect(response.status).not.toBe(200);
     });
 
     test("upstream body and failures are proxied", async () => {

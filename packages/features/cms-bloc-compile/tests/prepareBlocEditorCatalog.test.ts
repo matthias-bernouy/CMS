@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { assertValidJavaScriptArtifact, runBuild } from "../src/core/prepare_bloc";
 import { prepare_bloc } from "../src/exports";
 
@@ -100,6 +103,29 @@ describe("prepare_bloc editor catalog output", () => {
             "demo-card",
             { "../outside.js": Buffer.from("unsafe").toString("base64") },
         )).rejects.toThrow("Invalid bloc source path: ../outside.js");
+    });
+
+    test.failing("rejects imports that resolve outside the uploaded source bundle", async () => {
+        const outsideDir = await mkdtemp(join(tmpdir(), "p9r-bloc-outside-"));
+        const outsidePath = join(outsideDir, "outside.ts");
+        await Bun.write(outsidePath, 'export const marker = "OUTSIDE_BUNDLE";');
+        const view = new File([
+            `import { marker } from ${JSON.stringify(outsidePath)};`,
+            "customElements.define('demo-outside', class extends HTMLElement { static marker = marker; });",
+        ], "Bloc.ts", { type: "text/typescript" });
+
+        try {
+            await expect(prepare_bloc(
+                view,
+                null,
+                "Outside import",
+                "Security",
+                "",
+                "demo-outside",
+            )).rejects.toThrow();
+        } finally {
+            await rm(outsideDir, { recursive: true, force: true });
+        }
     });
 
     test("exposes the Light DOM Composition base to view bundles", async () => {

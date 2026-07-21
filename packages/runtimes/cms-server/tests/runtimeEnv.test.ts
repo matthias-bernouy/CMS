@@ -22,6 +22,21 @@ describe("runtime env validation", () => {
         expect(env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL).toBe("https://admin.example.com/auth/reset-password");
     });
 
+    test.failing("parses listener hosts with wildcard production defaults", () => {
+        expect(readRuntimeEnv(validEnv())).toMatchObject({
+            CONTROL_HOST:  "0.0.0.0",
+            DELIVERY_HOST: "0.0.0.0",
+        });
+        expect(readRuntimeEnv({
+            ...validEnv(),
+            CONTROL_HOST:  "127.0.0.1",
+            DELIVERY_HOST: "::1",
+        })).toMatchObject({
+            CONTROL_HOST:  "127.0.0.1",
+            DELIVERY_HOST: "::1",
+        });
+    });
+
     test("rejects invalid and duplicate ports", () => {
         expect(() => parsePort("abc", "CONTROL_PORT", 3000)).toThrow(/integer port/);
         expect(() => parsePort("65536", "CONTROL_PORT", 3000)).toThrow(/between 1 and 65535/);
