@@ -5080,6 +5080,12 @@ class StripeConnectMock {
         };
     }
 
+    removeTerminalReconciliationDispute(disputeRowId: number): void {
+        const index = this.tables.stripe_disputes.findIndex(row => same(row.id, disputeRowId));
+        if (index < 0) throw new Error(`unknown terminal reconciliation dispute ${disputeRowId}`);
+        this.tables.stripe_disputes.splice(index, 1);
+    }
+
     injectInFlightTransferBeforeNextRefundReservation(paymentId: number, amount: number): void {
         this.inFlightTransferBeforeRefund = { paymentId, amount };
     }

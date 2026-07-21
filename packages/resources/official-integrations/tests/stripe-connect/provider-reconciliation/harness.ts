@@ -21,6 +21,7 @@ export type ProviderReconciliationHarness = {
         readonly postgrestRequests: PostgrestRequestRecord[];
         readonly stripeRequests: unknown[];
         seedTerminalReconciliationPage(runKey: string): TerminalReconciliationSeed;
+        removeTerminalReconciliationDispute(disputeRowId: number): void;
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
     };

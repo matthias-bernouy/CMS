@@ -145,5 +145,16 @@ export function registerProviderReconciliationContracts(
             expect(drained.disputes).toEqual([]);
             expect(fixture.rest.stripeRequests).toEqual([]);
         });
+
+        test("keeps a missing dispute projection leased and fails closed", async () => {
+            const fixture = await createTerminalPageFixture(createHarness, "terminal-missing-dispute");
+            fixture.rest.removeTerminalReconciliationDispute(fixture.seed.disputeRowId);
+
+            const response = await fixture.run(fixture.seed.runKey, 10);
+
+            expect(response.status).toBe(500);
+            expect(await response.json()).toEqual({ error: "internal error" });
+            expect(fixture.rest.stripeRequests).toEqual([]);
+        });
     });
 }
