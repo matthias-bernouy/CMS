@@ -347,8 +347,7 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/settings"],
-            ["GET", "/rest/v1/delivery_quotes"],
-            ["POST", "/rest/v1/shipments"],
+            ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
             ["PATCH", "/rest/v1/shipments"],
         ]);
         expect(harness.providerRequests().map(request => [request.method, request.pathname])).toEqual([
@@ -356,20 +355,22 @@ describe("mondial-relay 1.0.0 source", () => {
         ]);
         expect(harness.fetchTimeline()).toEqual([
             { kind: "postgrest", method: "GET", pathname: "/rest/v1/settings" },
-            { kind: "postgrest", method: "GET", pathname: "/rest/v1/delivery_quotes" },
-            { kind: "postgrest", method: "POST", pathname: "/rest/v1/shipments" },
+            { kind: "postgrest", method: "POST", pathname: "/rest/v1/rpc/reserve_shipment_creation" },
             { kind: "provider", method: "POST", pathname: "/api/shipment" },
             { kind: "postgrest", method: "PATCH", pathname: "/rest/v1/shipments" },
         ]);
-        expect(harness.postgrestRequests()[1]?.searchParams.quote_id).toBe(`eq.mrq_${"a".repeat(64)}`);
-        expect(harness.postgrestRequests()[2]?.body).toMatchObject({
-            status: "creating",
-            external_order_id: "order-1001",
-            seller_cms_user_id: "seller-42",
-            delivery_quote_id: `mrq_${"a".repeat(64)}`,
+        expect(harness.postgrestRequests()[1]?.body).toMatchObject({
+            p_reservation: {
+                status: "creating",
+                external_order_id: "order-1001",
+                seller_cms_user_id: "seller-42",
+                delivery_quote_id: `mrq_${"a".repeat(64)}`,
+            },
         });
-        expect(harness.postgrestRequests()[2]?.body).not.toHaveProperty("expedition_number");
-        expect(harness.postgrestRequests()[3]?.body).toMatchObject({
+        expect((harness.postgrestRequests()[1]?.body as JsonRecord)?.p_reservation).not.toHaveProperty(
+            "expedition_number",
+        );
+        expect(harness.postgrestRequests()[2]?.body).toMatchObject({
             status: "label_ready",
             expedition_number: "00435394",
             tracking_number: "00435394",
@@ -752,9 +753,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(harness.insertedShipments).toHaveLength(1);
         expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/settings"],
-            ["GET", "/rest/v1/delivery_quotes"],
-            ["POST", "/rest/v1/shipments"],
-            ["GET", "/rest/v1/shipments"],
+            ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
         ]);
         expect(harness.providerRequests()).toEqual([]);
     });
@@ -771,7 +770,7 @@ describe("mondial-relay 1.0.0 source", () => {
         expect(harness.insertedShipments).toEqual([]);
         expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
             ["GET", "/rest/v1/settings"],
-            ["GET", "/rest/v1/delivery_quotes"],
+            ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
         ]);
         expect(harness.providerRequests()).toEqual([]);
     });
@@ -1674,6 +1673,41 @@ describe("mondial-relay 1.0.0 source", () => {
         });
     });
 
+    test("retries one explicit provider rejection through the same reserved shipment", async () => {
+        const harness = await createHarness({
+            connectResponses: [
+                { code: "10001", level: "Error", message: "Temporary provider rejection" },
+                { code: "0", level: "Info", message: "Success" },
+            ],
+        });
+        const first = await createShipment(harness, validShipmentBody());
+        const shipmentId = harness.insertedShipments[0]?.id;
+        const retry = await createShipment(harness, validShipmentBody());
+
+        expect(first.status).toBe(502);
+        expect(await jsonBody(first)).toEqual({
+            error: "Upstream request failed",
+            correlationId: first.headers.get("x-correlation-id"),
+        });
+        expect(retry.status).toBe(201);
+        expect(await jsonBody(retry)).toEqual({
+            ok: true,
+            id: shipmentId,
+            expeditionNumber: "00435394",
+            trackingUrl: "https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=00435394&codePostal=76930",
+            status: "label_ready",
+            createdAt: "2026-07-02T10:00:00.000Z",
+        });
+        expect(harness.connectRequestCount()).toBe(2);
+        expect(harness.insertedShipments).toHaveLength(1);
+        expect(harness.insertedShipments[0]).toMatchObject({
+            id: shipmentId,
+            status: "label_ready",
+            expedition_number: "00435394",
+            last_error: null,
+        });
+    });
+
     test("does not automatically retry an ambiguous Connect network failure", async () => {
         const harness = await createHarness({ connectNetworkError: true });
         const first = await createShipment(harness, validShipmentBody());
@@ -1735,6 +1769,35 @@ describe("mondial-relay 1.0.0 source", () => {
         });
         expect(harness.shipmentRecoveryEvents).toHaveLength(1);
         expect(harness.connectRequestCount()).toBe(1);
+    });
+
+    test("quarantines a stale in-progress creation before any second provider call", async () => {
+        const harness = await createHarness();
+        harness.insertedShipments.push({
+            id: "shipment-stale-replay",
+            external_order_id: "order-1001",
+            idempotency_key: "order-1001",
+            status: "creating",
+            provider_call_started_at: "2020-01-01T00:00:00.000Z",
+            creation_manual_review_at: null,
+            raw_request: validShipmentBody(),
+            created_at: "2020-01-01T00:00:00.000Z",
+            updated_at: "2020-01-01T00:00:00.000Z",
+        });
+
+        const response = await createShipment(harness, validShipmentBody());
+
+        expect(response.status).toBe(409);
+        expect(await jsonBody(response)).toEqual({
+            error: "shipment creation outcome is unknown and requires administrator recovery",
+        });
+        expect(harness.connectRequestCount()).toBe(0);
+        expect(harness.insertedShipments).toHaveLength(1);
+        expect(harness.insertedShipments[0]).toMatchObject({
+            status: "unknown",
+            creation_manual_review_at: expect.any(String),
+            last_error: "shipment creation lease expired before a provider outcome was attached",
+        });
     });
 
     test("moves stale creating reservations to visible manual review without retrying the provider", async () => {
@@ -1813,6 +1876,7 @@ async function createHarness(options: {
     connectStatusCode?: string;
     connectStatusLevel?: string;
     connectStatusMessage?: string;
+    connectResponses?: Array<{ code: string; level: string; message: string }>;
     trackingEventLabel?: string;
     trackingStatusCode?: string;
     cancellationRaceOnReconciliation?: "cancelled_unscanned" | "cancelled";
@@ -1916,7 +1980,12 @@ async function createHarness(options: {
             if (options.connectRedirect) {
                 return new Response(null, { status: 302, headers: { location: "http://127.0.0.1/private" } });
             }
-            return xmlResponse(connectShipmentResponse(options));
+            const configured = options.connectResponses?.[connectRequestCount - 1];
+            return xmlResponse(connectShipmentResponse(configured ? {
+                connectStatusCode: configured.code,
+                connectStatusLevel: configured.level,
+                connectStatusMessage: configured.message,
+            } : options));
         }
         if (request.url === trackingEndpoint) {
             trackingRequestXml = requestBody;
@@ -1944,6 +2013,57 @@ async function createHarness(options: {
             if (method !== "GET" && method !== "HEAD") {
                 expect(request.headers.get("content-profile")).toBe("delivery");
             }
+        }
+        if (url.origin === supabaseUrl
+            && url.pathname === "/rest/v1/rpc/reserve_shipment_creation"
+            && method === "POST") {
+            const body = JSON.parse(requestBody) as JsonRecord;
+            const reservation = body.p_reservation as JsonRecord;
+            const validationError = shipmentReservationError(body, deliveryQuotes, relaySelections);
+            if (validationError) return jsonResponse({ message: `conflict: ${validationError}` }, 409);
+            const existing = insertedShipments.find(row => row.idempotency_key === reservation.idempotency_key);
+            if (existing) {
+                if (stableJson(existing.raw_request) !== stableJson(reservation.raw_request)) {
+                    return jsonResponse({
+                        message: "conflict: idempotency key was already used with a different shipment payload",
+                    }, 409);
+                }
+                if (existing.status === "failed") {
+                    const { id: _id, idempotency_key: _key, ...retryReservation } = reservation;
+                    Object.assign(existing, retryReservation, {
+                        status: "creating",
+                        last_error: null,
+                        updated_at: "2026-07-02T10:05:00.000Z",
+                    });
+                    return jsonResponse({ outcome: "provider_required", shipment: existing }, 200);
+                }
+                if (existing.status === "creating") {
+                    const observedAt = Date.parse(String(body.p_observed_at ?? ""));
+                    const startedAt = Date.parse(String(existing.provider_call_started_at ?? ""));
+                    if (Number.isFinite(observedAt) && Number.isFinite(startedAt)
+                        && observedAt - startedAt >= 20 * 60_000) {
+                        Object.assign(existing, {
+                            status: "unknown",
+                            creation_manual_review_at: body.p_observed_at,
+                            last_error: "shipment creation lease expired before a provider outcome was attached",
+                            updated_at: "2026-07-02T10:05:00.000Z",
+                        });
+                        return jsonResponse({ outcome: "stale_unknown", shipment: existing }, 200);
+                    }
+                    return jsonResponse({ outcome: "creating", shipment: existing }, 200);
+                }
+                if (existing.status === "unknown") {
+                    return jsonResponse({ outcome: "unknown", shipment: existing }, 200);
+                }
+                return jsonResponse({ outcome: "replay", shipment: existing }, 200);
+            }
+            const stored = {
+                ...reservation,
+                created_at: "2026-07-02T10:00:00.000Z",
+                updated_at: "2026-07-02T10:00:00.000Z",
+            };
+            insertedShipments.push(stored);
+            return jsonResponse({ outcome: "provider_required", shipment: stored }, 200);
         }
         if (url.origin === supabaseUrl && url.pathname === "/rest/v1/shipments" && method === "POST") {
             const row = JSON.parse(requestBody) as JsonRecord;
@@ -2934,6 +3054,75 @@ function embeddedFields(fields: string[], prefix: string): string[] {
     if (!field) return [];
     const open = field.indexOf("(");
     return open < 0 ? [] : splitSelectFields(field.slice(open + 1, -1));
+}
+
+function stableJson(value: unknown): string {
+    if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+    if (value && typeof value === "object") {
+        const entries = Object.entries(value as JsonRecord).sort(([left], [right]) => left.localeCompare(right));
+        return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
+    }
+    return JSON.stringify(value) ?? "null";
+}
+
+function shipmentReservationError(
+    request: JsonRecord,
+    deliveryQuotes: JsonRecord[],
+    relaySelections: JsonRecord[],
+): string | null {
+    const reservation = request.p_reservation as JsonRecord;
+    const check = request.p_quote_check as JsonRecord;
+    const externalOrderId = String(check.externalOrderId ?? "");
+    const quoteId = String(reservation.delivery_quote_id ?? "");
+    const quotePurpose = String(request.p_quote_purpose ?? "");
+    const quoteExternalOrderId = String(request.p_quote_external_order_id ?? "");
+    const selectedFor = String(request.p_selected_for_cms_user_id ?? "");
+    const quote = deliveryQuotes.find(row => row.quote_id === quoteId);
+    if (!externalOrderId.startsWith("claim-return:") && !quote) {
+        return "an exact immutable delivery quote is required before shipment creation";
+    }
+    if (quoteId && (!quote
+        || quote.external_order_id !== quoteExternalOrderId
+        || quote.selected_for_cms_user_id !== selectedFor)) {
+        return "shipment delivery quote binding is invalid";
+    }
+    if (quote) {
+        const mainFulfillment = quotePurpose === "fulfillment";
+        if (mainFulfillment && quoteExternalOrderId !== externalOrderId) {
+            return "main shipment delivery quote belongs to another order";
+        }
+        if (mainFulfillment && (quote.relay_location !== check.deliveryRelayLocation
+            || quote.weight_grams !== check.weightGrams
+            || quote.merchandise_subtotal_minor_amount !== check.declaredValueMinorAmount
+            || String(quote.currency).toUpperCase() !== check.declaredCurrency)) {
+            return "shipment financial or relay input does not match the immutable quote";
+        }
+        const expectedSender = quotePurpose === "claim_return"
+            ? quote.recipient_snapshot : quote.seller_fulfillment_snapshot;
+        const expectedRecipient = quotePurpose === "claim_return"
+            ? quote.seller_fulfillment_snapshot : quote.recipient_snapshot;
+        if (!sameTestAddress(check.sender, expectedSender)
+            || !sameTestAddress(check.recipient, expectedRecipient)) {
+            return "shipment address input does not match the immutable quote snapshot";
+        }
+    } else {
+        const selection = relaySelections.find(row => row.external_order_id === externalOrderId);
+        if (selection && String(selection.relay_location) !== check.deliveryRelayLocation) {
+            return "shipment relay does not match the immutable server selection";
+        }
+    }
+    return null;
+}
+
+function sameTestAddress(actual: unknown, expected: unknown): boolean {
+    if (!actual || typeof actual !== "object" || Array.isArray(actual)
+        || !expected || typeof expected !== "object" || Array.isArray(expected)) return false;
+    const left = actual as JsonRecord;
+    const right = expected as JsonRecord;
+    return [
+        "name", "firstName", "lastName", "phone", "addressLine1", "addressLine2",
+        "addressLine3", "postalCode", "city", "country", "email",
+    ].every(field => String(left[field] ?? "").trim() === String(right[field] ?? "").trim());
 }
 
 function nullableTimestampDescending(left: unknown, right: unknown): number {
