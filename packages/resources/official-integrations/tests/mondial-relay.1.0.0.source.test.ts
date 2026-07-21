@@ -1756,11 +1756,13 @@ describe("mondial-relay 1.0.0 source", () => {
             connectOutputType: "PdfUrl",
         });
         const body = await jsonBody(response);
-        const fetched = await jsonBody(await sourceRequest(harness, "setting", {
-            method: "GET",
-            userId: "cms-admin",
-            params: { id: "default" },
-        }));
+        const fetched = await jsonBody(
+            await sourceRequest(harness, "setting", {
+                method: "GET",
+                userId: "cms-admin",
+                params: { id: "default" },
+            }),
+        );
 
         expect(response.status).toBe(200);
         expect(body).toMatchObject({

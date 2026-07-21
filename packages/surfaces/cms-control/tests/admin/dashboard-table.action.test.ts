@@ -192,26 +192,38 @@ describe("dashboard table actions", () => {
     });
 
     test("reloads a selected detail when no post-action resource contract is declared", async () => {
-        globalThis.fetch = (async () => Response.json({
-            provider: "supabase",
-            smtpHost: "smtp.saved.test",
-        })) as typeof fetch;
+        globalThis.fetch = (async () =>
+            Response.json({
+                provider: "supabase",
+                smtpHost: "smtp.saved.test",
+            })) as typeof fetch;
         const reloaded: Array<{ collection: string; row: string }> = [];
 
-        await runDashboardWidgetAction({
-            group: emailerGroup(),
-            dashboard: emailerDashboard(),
-            detail: { collection: "emailerSettings", row: "default" },
-            drafts: new Map(),
-            render() { throw new Error("render should not run"); },
-            reload(collection, row) { reloaded.push({ collection, row }); },
-            clearDetail() { throw new Error("clearDetail should not run"); },
-            openDetail() { throw new Error("openDetail should not run"); },
-        }, {
-            action: "saveSettings",
-            resource: { provider: "supabase", smtpHost: "smtp.old.test" },
-            fields: { smtpHost: "smtp.saved.test" },
-        });
+        await runDashboardWidgetAction(
+            {
+                group: emailerGroup(),
+                dashboard: emailerDashboard(),
+                detail: { collection: "emailerSettings", row: "default" },
+                drafts: new Map(),
+                render() {
+                    throw new Error("render should not run");
+                },
+                reload(collection, row) {
+                    reloaded.push({ collection, row });
+                },
+                clearDetail() {
+                    throw new Error("clearDetail should not run");
+                },
+                openDetail() {
+                    throw new Error("openDetail should not run");
+                },
+            },
+            {
+                action: "saveSettings",
+                resource: { provider: "supabase", smtpHost: "smtp.old.test" },
+                fields: { smtpHost: "smtp.saved.test" },
+            },
+        );
 
         expect(reloaded).toEqual([{ collection: "emailerSettings", row: "default" }]);
     });
