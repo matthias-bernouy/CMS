@@ -29,6 +29,10 @@ import {
     readRefundDashboardPage,
     type DisputeDashboardRead,
 } from "./db/dashboard-reads.ts";
+import {
+    claimReconciliationProjectionBatch,
+    readReconciliationOperations,
+} from "./db/reconciliation.ts";
 import { requireCmsRequest, requireDashboardAdmin } from "./http/auth.ts";
 import {
     assertAllowedKeys,
@@ -2940,17 +2944,17 @@ async function processClaimedFinancialOperation(operation: FinancialOperationRow
 }
 
 async function publicReconciliationRun(run: JsonRecord, limit: number, projectionOwner: string): Promise<JsonRecord> {
-    const operationRows = await listRows<FinancialOperationRow>(
-        `financial_operations?select=${encodeURIComponent(operationSelect)}&order=updated_at.desc&limit=${limit}`,
-    );
-    const operations = await Promise.all(operationRows.map(async operation => {
-        const payment = operation.payment_id ? await getPaymentRow(operation.payment_id) : null;
-        return publicFinancialOperation(operation, payment);
-    }));
-    const claimedProjections = await callRpcRows<CommerceProjectionOutboxRow>(
-        "claim_commerce_projection_outbox", { p_owner: projectionOwner, p_limit: limit },
-    );
-    const claimedPublic = await Promise.all(claimedProjections.map(async projection => {
+    const operationReads = await readReconciliationOperations(limit);
+    const operations = operationReads.map(read => publicFinancialOperation(
+        read.operation as unknown as FinancialOperationRow,
+        read.client_reference_id === null ? null : {
+            client_reference_id: read.client_reference_id,
+            currency: read.payment_currency ?? "",
+        },
+    ));
+    const claimedReads = await claimReconciliationProjectionBatch(projectionOwner, limit);
+    const claimedPublic = claimedReads.map(read => {
+        const projection = read.projection as unknown as CommerceProjectionOutboxRow;
         const lease = {
             projectionId: projection.id,
             projectionClaimToken: projection.claim_token,
@@ -2959,7 +2963,8 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
             causalSequence: projection.causal_sequence,
         };
         if (projection.projection_kind === "payment") {
-            const payment = await requiredPayment(projection.payment_id);
+            if (!read.payment) throw new HttpError(404, "payment not found");
+            const payment = read.payment as unknown as ConnectPaymentRow;
             return {
                 kind: "payment",
                 value: {
@@ -2970,25 +2975,27 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
             };
         }
         if (projection.projection_kind === "dispute") {
-            const dispute = await getRowByField<StripeDisputeRow>(
-                "stripe_disputes", "id", String(projection.provider_object_id), disputeSelect,
-            );
-            if (!dispute) throw new Error(`projection ${projection.id} has no Stripe dispute`);
+            if (!read.dispute) throw new Error(`projection ${projection.id} has no Stripe dispute`);
+            if (read.dispute_client_reference_id === null) throw new HttpError(404, "payment not found");
+            const dispute = read.dispute as unknown as StripeDisputeRow;
             return {
                 kind: "dispute",
                 value: {
-                    ...await publicDisputeWithContext(dispute),
+                    ...projectPublicDisputeWithContext(dispute, {
+                        clientReferenceId: read.dispute_client_reference_id,
+                        staged: read.staged_evidence,
+                        evidenceSubmissionCount: Number(read.evidence_submission_count),
+                        pendingApproval: read.pending_approval,
+                    }),
                     providerEventId: projection.projection_key,
                     ...lease,
                 },
             };
         }
         if (!projection.operation_id) throw new Error(`projection ${projection.id} has no financial operation id`);
-        const operation = await getRowByField<FinancialOperationRow>(
-            "financial_operations", "id", String(projection.operation_id), operationSelect,
-        );
-        if (!operation) throw new Error(`projection ${projection.id} has no financial operation`);
-        const payment = operation.payment_id ? await getPaymentRow(operation.payment_id) : null;
+        if (!read.financial_operation) throw new Error(`projection ${projection.id} has no financial operation`);
+        const operation = read.financial_operation as unknown as FinancialOperationRow;
+        const payment = read.operation_payment as unknown as ConnectPaymentRow | null;
         const publicOperation = publicCommerceOperation(publicFinancialOperation(operation, payment));
         if (!publicOperation) return null;
         if (projection.projection_kind === "refund") {
@@ -3015,7 +3022,7 @@ async function publicReconciliationRun(run: JsonRecord, limit: number, projectio
                 ...lease,
             },
         };
-    }));
+    });
     const paymentProjections = claimedPublic
         .filter((entry): entry is { kind: string; value: JsonRecord } => entry?.kind === "payment")
         .map(entry => entry.value);
