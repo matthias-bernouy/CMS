@@ -4591,6 +4591,7 @@ class StripeConnectMock {
     private addSellerRiskDuringNextAutomaticRestore = false;
     private loseNextPaymentCancellationResponse = false;
     private failPaymentProjectionEnqueue = false;
+    private failProviderExceptionResolution = false;
     private losePaymentProjectionEnqueueResponse = false;
     private failPaymentIntentRetrieve = false;
     private paymentIntentReplacementOnNextRetrieve: { paymentId: number; replacementId: string } | null = null;
@@ -4957,6 +4958,10 @@ class StripeConnectMock {
 
     failNextPaymentProjectionEnqueue(): void {
         this.failPaymentProjectionEnqueue = true;
+    }
+
+    failNextProviderExceptionResolution(): void {
+        this.failProviderExceptionResolution = true;
     }
 
     loseNextPaymentProjectionEnqueueResponse(): void {
@@ -5432,10 +5437,15 @@ class StripeConnectMock {
             method,
             table,
             searchParams: Array.from(url.searchParams.entries()),
-            body: method === "POST"
+            body: method === "POST" || method === "PATCH"
                 ? await request.clone().json().catch(() => null) as JsonRecord | null
                 : null,
         });
+        if (table === "provider_exceptions" && method === "PATCH"
+            && this.failProviderExceptionResolution) {
+            this.failProviderExceptionResolution = false;
+            return jsonResponse({ message: "simulated provider exception resolution failure" }, 500);
+        }
         if (table === "rpc/list_dashboard_refunds" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const rows = this.dashboardPage("refunds", body, ["refund_request_id", "stripe_refund_id"]);

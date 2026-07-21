@@ -28,6 +28,7 @@ export type ProviderReconciliationHarness = {
             status: "open" | "investigating" | "resolved",
             patch?: JsonRecord,
         ): number;
+        failNextProviderExceptionResolution(): void;
         rows(table: string): JsonRecord[];
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
