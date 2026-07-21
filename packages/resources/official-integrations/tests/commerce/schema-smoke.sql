@@ -253,19 +253,24 @@ select commerce.request_order_cancellation(
 
 do $$
 declare
+    v_order_id bigint;
     v_request_id bigint;
     v_replay jsonb;
 begin
+    select id into strict v_order_id
+    from commerce.orders
+    where buyer_cms_user_id = 'smoke-buyer-user'
+      and idempotency_key = 'smoke-checkout-key';
     select id into v_request_id
     from commerce.order_cancellation_requests
-    where order_id = :order_id;
+    where order_id = v_order_id;
     v_replay := commerce.request_order_cancellation(
-        :order_id, 'buyer', 'smoke-buyer-user', 'smoke cancellation before payment'
+        v_order_id, 'buyer', 'smoke-buyer-user', 'smoke cancellation before payment'
     );
     if (v_replay->>'id')::bigint is distinct from v_request_id then
         raise exception 'smoke: exact cancellation replay did not return the original request';
     end if;
-    if (select count(*) from commerce.order_cancellation_requests where order_id = :order_id) <> 1 then
+    if (select count(*) from commerce.order_cancellation_requests where order_id = v_order_id) <> 1 then
         raise exception 'smoke: exact cancellation replay created a duplicate request';
     end if;
     if (select quantity_available from commerce.offers where slug = 'smoke-offer') <> 5 then
