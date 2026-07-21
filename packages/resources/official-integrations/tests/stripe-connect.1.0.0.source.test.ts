@@ -19,6 +19,9 @@ import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { registerOperationAndExceptionDashboardContracts } from "./stripe-connect/operations-exceptions.contracts";
+import { registerPaymentProjectionContracts } from "./stripe-connect/payment-projection/contracts";
+import { registerPaymentProjectionFailureContracts } from "./stripe-connect/payment-projection/failures";
+import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payment-projection/replay";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
 import type {
     DashboardTable,
@@ -4583,6 +4586,10 @@ class StripeConnectMock {
     private omitMinimumBalanceOnNextUpdate = false;
     private addSellerRiskDuringNextAutomaticRestore = false;
     private loseNextPaymentCancellationResponse = false;
+    private failPaymentProjectionEnqueue = false;
+    private losePaymentProjectionEnqueueResponse = false;
+    private failPaymentIntentRetrieve = false;
+    private paymentIntentReplacementOnNextRetrieve: { paymentId: number; replacementId: string } | null = null;
     private readonly paymentIntents = new Map<string, JsonRecord>();
     private readonly providerCharges = new Map<string, JsonRecord>();
     private readonly providerBalanceTransactions = new Map<string, JsonRecord>();
@@ -4917,6 +4924,22 @@ class StripeConnectMock {
         const payment = this.tables.payments.find(row => same(row.id, paymentId));
         if (!payment) throw new Error(`unknown payment ${paymentId}`);
         this.update(payment, patch);
+    }
+
+    replacePaymentIntentDuringNextRetrieve(paymentId: number, replacementId: string): void {
+        this.paymentIntentReplacementOnNextRetrieve = { paymentId, replacementId };
+    }
+
+    failNextPaymentProjectionEnqueue(): void {
+        this.failPaymentProjectionEnqueue = true;
+    }
+
+    loseNextPaymentProjectionEnqueueResponse(): void {
+        this.losePaymentProjectionEnqueueResponse = true;
+    }
+
+    failNextPaymentIntentRetrieve(): void {
+        this.failPaymentIntentRetrieve = true;
     }
 
     injectInFlightTransferBeforeNextRefundReservation(paymentId: number, amount: number): void {
@@ -5954,6 +5977,10 @@ class StripeConnectMock {
             return jsonResponse(claimed);
         }
         if (table === "rpc/enqueue_commerce_provider_projection" && method === "POST") {
+            if (this.failPaymentProjectionEnqueue) {
+                this.failPaymentProjectionEnqueue = false;
+                return jsonResponse({ message: "simulated payment projection enqueue failure" }, 500);
+            }
             const body = JSON.parse(await request.text()) as JsonRecord;
             let projection = this.tables.commerce_projection_outbox.find(
                 row => row.projection_key === body.p_projection_key,
@@ -5980,6 +6007,10 @@ class StripeConnectMock {
                 last_intervention_by: null,
                 last_intervention_reason: null,
             });
+            if (this.losePaymentProjectionEnqueueResponse) {
+                this.losePaymentProjectionEnqueueResponse = false;
+                throw new Error("simulated lost payment projection response");
+            }
             return jsonResponse(projection);
         }
         if (table === "rpc/enqueue_commerce_refund_projection" && method === "POST") {
@@ -6578,7 +6609,19 @@ class StripeConnectMock {
         }
         if (url.pathname.startsWith("/v1/payment_intents/") && method === "GET") {
             const id = decodeURIComponent(url.pathname.slice("/v1/payment_intents/".length));
-            return jsonResponse(this.paymentIntents.get(id) ?? { id, status: "requires_payment_method", latest_charge: null });
+            if (this.failPaymentIntentRetrieve) {
+                this.failPaymentIntentRetrieve = false;
+                return jsonResponse({ error: { message: "simulated Stripe provider outage" } }, 503);
+            }
+            const intent = this.paymentIntents.get(id) ?? { id, status: "requires_payment_method", latest_charge: null };
+            const replacement = this.paymentIntentReplacementOnNextRetrieve;
+            if (replacement) {
+                this.paymentIntentReplacementOnNextRetrieve = null;
+                this.patchPaymentLedger(replacement.paymentId, {
+                    stripe_payment_intent_id: replacement.replacementId,
+                });
+            }
+            return jsonResponse(intent);
         }
         if (/^\/v1\/charges\/ch_[^/]+$/.test(url.pathname) && method === "GET") {
             const id = decodeURIComponent(url.pathname.slice("/v1/charges/".length));
@@ -7208,5 +7251,23 @@ const createDashboardReadHarness = async () => {
     };
 };
 
+const createPaymentProjectionHarness = async () => {
+    const harness = await createHarness();
+    return {
+        rest: harness.rest,
+        request: async (userId: string, endpoint: string, params: Record<string, string> = {}) =>
+            await sourceRequestWithUser(harness, userId, endpoint, params),
+        submit: async (
+            userId: string,
+            endpoint: string,
+            body: unknown,
+            params: Record<string, string> = {},
+        ) => await sourceJsonWithUser(harness, userId, endpoint, body, params),
+    };
+};
+
 registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
+registerPaymentProjectionContracts(createPaymentProjectionHarness);
+registerPaymentProjectionFailureContracts(createPaymentProjectionHarness);
+registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
