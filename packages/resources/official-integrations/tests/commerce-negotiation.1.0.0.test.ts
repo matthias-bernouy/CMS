@@ -428,7 +428,18 @@ describe("commerce negotiation 1.0.0", () => {
             );
             expect(updatedSettingsResponse.status).toBe(200);
             expect(fetchedSettingsResponse.status).toBe(200);
-            expect(await updatedSettingsResponse.json()).toEqual(await fetchedSettingsResponse.json());
+            const updatedSettings = await updatedSettingsResponse.json();
+            const fetchedSettings = await fetchedSettingsResponse.json();
+            expect(updatedSettings).toEqual({
+                minimumPercent: 85,
+                maximumPercent: 115,
+                proposalTtlHours: 48,
+                enabled: false,
+                version: 2,
+                createdAt: "2026-07-12T00:00:00Z",
+                updatedAt: "2026-07-12T01:00:00Z",
+            });
+            expect(fetchedSettings).toEqual(updatedSettings);
         } finally {
             (globalThis as { Deno?: unknown }).Deno = realDeno;
             globalThis.fetch = realFetch;
