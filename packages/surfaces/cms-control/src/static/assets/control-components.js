@@ -15457,6 +15457,7 @@ p {
     inner;
     systemSources = new Map;
     getEndpointForAuthorization;
+    invalidateSchema;
     constructor(inner, systemSources = []) {
       this.inner = inner;
       for (const source of systemSources) {
@@ -15472,6 +15473,9 @@ p {
           }
           return inner.getEndpointForAuthorization(urn);
         };
+      }
+      if (inner.invalidateSchema) {
+        this.invalidateSchema = (scope) => inner.invalidateSchema(scope);
       }
     }
     async createSource(source) {
@@ -15512,11 +15516,119 @@ p {
         throw new SourceValidationError("urn", message);
     }
   }
+  // ../../features/cms-sources/src/core/endpointHeaders.ts
+  function hasComputedParams(endpoint) {
+    return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
+  }
+  function hasComputedHeaders(endpoint) {
+    return (endpoint.headers ?? []).some((header) => header.source.from === "computed");
+  }
+
+  // ../../features/cms-sources/src/core/SourceOverlaySchemaCache.ts
+  var DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS = 60000;
+
+  class SourceOverlaySchemaCache {
+    entries = new Map;
+    pending = new Map;
+    ttlMs;
+    now;
+    invalidationRevision = 0;
+    constructor(options = {}) {
+      const ttlMs = options.ttlMs ?? DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS;
+      if (!Number.isFinite(ttlMs) || ttlMs < 0) {
+        throw new RangeError("source overlay schema cache ttlMs must be a finite non-negative number");
+      }
+      this.ttlMs = ttlMs;
+      this.now = options.now ?? Date.now;
+    }
+    async getOrLoad(source, overlay, load) {
+      const fingerprint = await schemaFingerprint(source, overlay);
+      if (!fingerprint)
+        return await load();
+      const key = `${overlay.sourceId}:${overlay.id}:${fingerprint}`;
+      const now = this.now();
+      this.purgeExpired(now);
+      const cached = this.entries.get(key);
+      if (cached)
+        return structuredClone(cached.fields);
+      const active = this.pending.get(key);
+      if (active)
+        return cloneNullableFields(await active.promise);
+      const invalidationRevision = this.invalidationRevision;
+      const promise = load();
+      const pending = { sourceId: overlay.sourceId, overlayId: overlay.id, promise };
+      this.pending.set(key, pending);
+      try {
+        const fields = await promise;
+        if (fields !== null && this.ttlMs > 0 && invalidationRevision === this.invalidationRevision) {
+          this.entries.set(key, {
+            sourceId: overlay.sourceId,
+            overlayId: overlay.id,
+            expiresAt: this.now() + this.ttlMs,
+            fields: structuredClone(fields)
+          });
+        }
+        return cloneNullableFields(fields);
+      } finally {
+        if (this.pending.get(key) === pending)
+          this.pending.delete(key);
+      }
+    }
+    invalidate(selector = {}) {
+      this.invalidationRevision += 1;
+      deleteMatching(this.entries, selector);
+      deleteMatching(this.pending, selector);
+    }
+    purgeExpired(now) {
+      for (const [key, entry] of this.entries) {
+        if (entry.expiresAt <= now)
+          this.entries.delete(key);
+      }
+    }
+  }
+  async function schemaFingerprint(source, overlay) {
+    const endpointId = overlay.fieldSource?.endpointId;
+    if (!endpointId)
+      return null;
+    const endpoint = source.endpoints.find((candidate) => parseUrn(candidate.urn)?.endpoint === endpointId);
+    if (!endpoint || endpoint.method !== "GET" || endpoint.effects !== undefined || hasComputedParams(endpoint) || hasComputedHeaders(endpoint))
+      return null;
+    const revision = canonicalJson({
+      source: { urn: source.urn, fieldSourceEndpoint: endpoint },
+      overlay
+    });
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(revision));
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+  function canonicalJson(value) {
+    if (value === null || typeof value !== "object")
+      return JSON.stringify(value) ?? "null";
+    if (Array.isArray(value))
+      return `[${value.map(canonicalJson).join(",")}]`;
+    const entries = Object.entries(value).filter(([, entry]) => entry !== undefined).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+    return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
+  }
+  function cloneNullableFields(fields) {
+    return fields === null ? null : structuredClone(fields);
+  }
+  function deleteMatching(entries, selector) {
+    for (const [key, entry] of entries) {
+      if (selector.sourceId !== undefined && selector.sourceId !== entry.sourceId)
+        continue;
+      if (selector.overlayId !== undefined && selector.overlayId !== entry.overlayId)
+        continue;
+      entries.delete(key);
+    }
+  }
+
   // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
   var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
 
   // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
   var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
+
+  // ../../features/cms-sources/src/core/sourceOverlay.ts
+  var sharedSchemaCaches = new WeakMap;
   // ../../features/cms-dashboards/src/core/dashboardPaths.ts
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
   var EXPRESSION = /^\$([A-Za-z]+)(?:\.(.+))?$/;
