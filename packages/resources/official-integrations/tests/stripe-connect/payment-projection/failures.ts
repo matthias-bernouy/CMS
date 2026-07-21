@@ -30,7 +30,7 @@ export function registerPaymentProjectionFailureContracts(
             ]);
         });
 
-        test("recovers an enqueue refusal without treating partial state as a contract", async () => {
+        test("rolls back and recovers when the projection enqueue fails", async () => {
             const fixture = await createPaymentProjectionFixture(createHarness, "projection-enqueue-failure");
             fixture.rest.setPaymentIntentSucceeded(fixture.paymentIntentId);
             const initialProjectionCount = fixture.rest.rows("commerce_projection_outbox").length;
@@ -41,6 +41,14 @@ export function registerPaymentProjectionFailureContracts(
 
             expect(failed.status).toBe(502);
             expect(await failed.json()).toEqual({ error: "simulated payment projection enqueue failure" });
+            expect(fixture.rest.rows("payments")).toEqual([
+                expect.objectContaining({
+                    id: fixture.paymentId,
+                    payment_status: "created",
+                    stripe_charge_id: null,
+                    actual_stripe_processing_fee_amount: 0,
+                }),
+            ]);
             expect(fixture.rest.rows("commerce_projection_outbox")).toHaveLength(initialProjectionCount);
 
             fixture.resetRequests();
@@ -115,6 +123,12 @@ export function registerPaymentProjectionFailureContracts(
                     settlement_status: "manual_review",
                 }),
             ]);
+            expect(fixture.rest.postgrestRequests.map(request => [request.method, request.table])).toEqual([
+                ["GET", "payments"],
+                ["POST", "rpc/apply_payment_provider_projection"],
+                ["POST", "rpc/apply_payment_provider_projection"],
+            ]);
+            expect(fixture.rest.stripeRequests).toHaveLength(1);
         });
     });
 }

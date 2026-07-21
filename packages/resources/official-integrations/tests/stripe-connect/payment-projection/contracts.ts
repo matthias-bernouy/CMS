@@ -32,9 +32,7 @@ export function registerPaymentProjectionContracts(
             expect(JSON.stringify(body)).not.toContain("clientSecret");
             expect(postgrestCalls(fixture)).toEqual([
                 ["GET", "payments"],
-                ["GET", "payments"],
-                ["PATCH", "payments"],
-                ["POST", "rpc/enqueue_commerce_provider_projection"],
+                ["POST", "rpc/apply_payment_provider_projection"],
             ]);
             expect(fixture.rest.stripeRequests.map(request => [request.method, request.pathname])).toEqual([
                 ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
@@ -59,9 +57,7 @@ export function registerPaymentProjectionContracts(
             });
             expect(postgrestCalls(fixture)).toEqual([
                 ["GET", "payments"],
-                ["GET", "payments"],
-                ["PATCH", "payments"],
-                ["POST", "rpc/enqueue_commerce_provider_projection"],
+                ["POST", "rpc/apply_payment_provider_projection"],
             ]);
             expect(fixture.rest.stripeRequests.map(request => [request.method, request.pathname])).toEqual([
                 ["GET", `/v1/payment_intents/${fixture.paymentIntentId}`],
@@ -117,11 +113,7 @@ export function registerPaymentProjectionContracts(
             ]);
             expect(postgrestCalls(fixture)).toEqual([
                 ["GET", "payments"],
-                ["GET", "payments"],
-                ["PATCH", "payments"],
-                ["POST", "rpc/enqueue_commerce_provider_projection"],
-                ["POST", "provider_exceptions"],
-                ["POST", "payment_events"],
+                ["POST", "rpc/apply_payment_provider_projection"],
             ]);
         });
     });
