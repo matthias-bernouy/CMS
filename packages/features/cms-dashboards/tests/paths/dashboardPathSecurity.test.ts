@@ -5,8 +5,8 @@ import {
     isSafeDashboardPath,
     validateDashboard,
     type Dashboard,
-    type DashboardEmbeddedLookupRef,
 } from "@bernouy/cms-dashboards";
+import { lookup } from "./lookupFixture";
 
 describe("dashboard data path security", () => {
     test("accepts ordinary dotted paths and rejects prototype segments", () => {
@@ -175,13 +175,3 @@ describe("dashboard data path security", () => {
         );
     });
 });
-
-function lookup(selected: DashboardEmbeddedLookupRef["selected"]): DashboardEmbeddedLookupRef {
-    return {
-        endpoint: "options",
-        itemsPath: "items",
-        valuePath: "id",
-        labelPath: "label",
-        selected,
-    };
-}

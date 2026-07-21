@@ -8,6 +8,7 @@ import {
     type DashboardAction,
     type DashboardVisibilityRule,
 } from "@bernouy/cms-dashboards";
+import { detailDashboard, wrapVisibilityRule } from "./visibilityFixtures";
 
 describe("dashboard visibility", () => {
     test("validates nested field and resource expressions on detail fields and actions", () => {
@@ -64,7 +65,10 @@ describe("dashboard visibility", () => {
     });
 
     test("bounds recursive depth and total rule count", () => {
-        const tooDeep = wrap({ value: "$field.mode", equals: "advanced" }, DASHBOARD_VISIBILITY_MAX_DEPTH);
+        const tooDeep = wrapVisibilityRule(
+            { value: "$field.mode", equals: "advanced" },
+            DASHBOARD_VISIBILITY_MAX_DEPTH,
+        );
         const tooWide: DashboardVisibilityRule = {
             all: Array.from({ length: DASHBOARD_VISIBILITY_MAX_NODES }, () => ({
                 value: "$field.mode",
@@ -127,7 +131,10 @@ describe("dashboard visibility", () => {
                 {
                     any: [
                         { value: "$field.mode", equals: "advanced" },
-                        wrap({ value: "$field.mode", equals: "advanced" }, DASHBOARD_VISIBILITY_MAX_DEPTH),
+                        wrapVisibilityRule(
+                            { value: "$field.mode", equals: "advanced" },
+                            DASHBOARD_VISIBILITY_MAX_DEPTH,
+                        ),
                     ],
                 },
                 resolve,
@@ -145,37 +152,3 @@ describe("dashboard visibility", () => {
         ).toBe(false);
     });
 });
-
-function detailDashboard(visibleWhen: DashboardVisibilityRule): Dashboard {
-    return {
-        id: "settings",
-        source: "settings",
-        views: [
-            {
-                widget: "w-detail",
-                id: "settingsDetail",
-                source: { endpoint: "setting" },
-                actions: [{ id: "save", label: "Save", endpoint: { endpoint: "save" } }],
-                main: [
-                    {
-                        id: "general",
-                        title: "General",
-                        fields: [
-                            { id: "mode", label: "Mode", path: "mode", type: "text" },
-                            { id: "locale", label: "Locale", path: "locale", type: "text" },
-                            { id: "note", label: "Note", path: "note", type: "text", visibleWhen },
-                        ],
-                    },
-                ],
-            },
-        ],
-    };
-}
-
-function wrap(rule: DashboardVisibilityRule, count: number): DashboardVisibilityRule {
-    let result = rule;
-    for (let index = 0; index < count; index++) {
-        result = { all: [result] };
-    }
-    return result;
-}
