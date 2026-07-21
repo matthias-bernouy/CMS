@@ -9,6 +9,8 @@ declare
     v_product_id bigint;
     v_axes text[];
     v_variants text[];
+    v_generated_count integer;
+    v_archived_count integer;
 begin
     select product_id into v_product_id
     from commerce_product_matrix_test.products where label = 'direct-race';
@@ -16,14 +18,28 @@ begin
     from commerce.product_variant_axes where product_id = v_product_id;
     select array_agg(combination_key order by combination_key) into v_variants
     from commerce.product_variants
+    where product_id = v_product_id
+      and generated_from_axes
+      and status = 'active';
+    select count(*), count(*) filter (where status = 'archived')
+    into v_generated_count, v_archived_count
+    from commerce.product_variants
     where product_id = v_product_id and generated_from_axes;
 
     if (select count(*) from matrix_direct_results where result->>'ok' = 'true') <> 2
-       or v_axes not in (
-            array['size'], array['color'], array['color', 'size']
-       ) or v_variants not in (
-            array['size:s'], array['color:red'], array['color:red', 'size:s']
-       ) or (select count(*) from commerce.product_variant_selections
+       or not (
+            (v_axes = array['size'] and v_variants = array['size:s'])
+            or (v_axes = array['color'] and v_variants = array['color:red'])
+       )
+       or v_generated_count <> 2
+       or v_archived_count <> 1
+       or (select count(*) from commerce.product_variants
+           where product_id = v_product_id and generated_from_axes
+             and status = 'active' and version = 1) <> 1
+       or (select count(*) from commerce.product_variants
+           where product_id = v_product_id and generated_from_axes
+             and status = 'archived' and version = 2) <> 1
+       or (select count(*) from commerce.product_variant_selections
              where product_id = v_product_id) <> cardinality(v_variants)
        or exists (
             select 1
@@ -35,7 +51,8 @@ begin
               on axis.id = selection.axis_id
             where variant.product_id = v_product_id
               and variant.generated_from_axes
-              and split_part(variant.combination_key, ':', 1) <> axis.key
+              and variant.status = 'active'
+              and split_part(variant.combination_key, ':', 1) is distinct from axis.key
        ) then
         raise exception 'matrix direct race: incoherent result %, %, %',
             v_axes, v_variants, (select jsonb_agg(result) from matrix_direct_results);
