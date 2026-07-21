@@ -3335,70 +3335,7 @@ async function applyPaymentIntent(
         actorId: string;
     },
 ): Promise<ConnectPaymentRow> {
-    // Provider calls deliberately run outside database locks. Re-read the
-    // projection before attaching their response so a slow create/confirm
-    // response cannot overwrite a cancellation that completed meanwhile.
-    payment = await getPaymentRow(payment.id) ?? payment;
-    if (payment.payment_status === "cancelled" && intent.status !== "canceled") {
-        intent = await retrievePaymentIntent(payment.stripe_payment_intent_id ?? intent.id);
-    }
-    const paymentStatus = paymentStatusFromStripe(intent);
-    const expectedPaymentIntentId = payment.stripe_payment_intent_id ?? options.expectedPaymentIntentId;
-    if (paymentStatus === "succeeded") {
-        intent = await hydrateSucceededPaymentIntentProviderTruth(intent);
-        const mismatches = providerPaymentTruthMismatches(payment, intent, expectedPaymentIntentId);
-        if (mismatches.length) {
-            return await quarantineProviderPaymentTruth(payment, intent, mismatches, options);
-        }
-    }
-    const charge = paymentStatus === "succeeded" && isRecord(intent.latest_charge) ? intent.latest_charge : null;
-    const chargeBalanceTransaction = charge && isRecord(charge.balance_transaction)
-        ? charge.balance_transaction : null;
-    const chargeFee = chargeBalanceTransaction ? numberAt(chargeBalanceTransaction, "fee") ?? 0 : 0;
-    let updated = await updatePayment(payment.id, {
-        payment_status: paymentStatus,
-        stripe_payment_intent_id: expectedPaymentIntentId ?? intent.id,
-        stripe_charge_id: paymentStatus === "succeeded" ? chargeId(intent) ?? payment.stripe_charge_id : payment.stripe_charge_id,
-        stripe_charge_balance_transaction_id: chargeBalanceTransaction
-            ? stringAt(chargeBalanceTransaction, "id") : payment.stripe_charge_balance_transaction_id,
-        actual_stripe_charge_fee_amount: paymentStatus === "succeeded"
-            ? chargeFee : payment.actual_stripe_charge_fee_amount,
-        actual_stripe_processing_fee_amount: paymentStatus === "succeeded"
-            ? chargeFee + payment.actual_stripe_refund_fee_amount
-            : payment.actual_stripe_processing_fee_amount,
-        actual_stripe_charge_net_amount: chargeBalanceTransaction
-            ? numberAt(chargeBalanceTransaction, "net") : payment.actual_stripe_charge_net_amount,
-        actual_stripe_fee_currency: chargeBalanceTransaction
-            ? stringAt(chargeBalanceTransaction, "currency").toLowerCase()
-            : payment.actual_stripe_fee_currency,
-        actual_stripe_charge_fee_details: chargeBalanceTransaction
-            ? recordArrayAt(chargeBalanceTransaction, "fee_details")
-            : payment.actual_stripe_charge_fee_details,
-        paid_at: paymentStatus === "succeeded" ? payment.paid_at ?? new Date().toISOString() : payment.paid_at,
-        cancelled_at: paymentStatus === "cancelled" ? payment.cancelled_at ?? new Date().toISOString() : payment.cancelled_at,
-        last_provider_sync_at: new Date().toISOString(),
-    }) ?? payment;
-    if (isTransientBalanceTransactionExpansionReview(payment) && paymentStatus === "succeeded") {
-        updated = await recoverTransientProviderTruthReview(updated, intent, options) ?? updated;
-    }
-    const projectionState = await digest(JSON.stringify({
-        paymentStatus: updated.payment_status,
-        settlementStatus: updated.settlement_status,
-        disputeStatus: updated.dispute_status,
-        manualReviewReason: updated.manual_review_reason,
-        chargeId: updated.stripe_charge_id,
-        balanceTransactionId: updated.stripe_charge_balance_transaction_id,
-        refundedAmount: updated.refunded_amount,
-        transferredAmount: updated.transferred_amount,
-        reversedAmount: updated.reversed_amount,
-    }));
-    await enqueueCommerceProviderProjection(
-        updated.id,
-        `payment:${updated.id}:${options.actorId}:${paymentStatus}:${updated.stripe_charge_id ?? "none"}:${projectionState}`,
-        "payment",
-        String(updated.id),
-    );
-    return updated;
+    return await projectPaymentIntent(payment, intent, options);
 }
 
 const transientBalanceTransactionExpansionReviewReason =
@@ -3409,40 +3346,129 @@ function isTransientBalanceTransactionExpansionReview(payment: ConnectPaymentRow
         && payment.manual_review_reason === transientBalanceTransactionExpansionReviewReason;
 }
 
-async function recoverTransientProviderTruthReview(
+async function projectPaymentIntent(
     payment: ConnectPaymentRow,
     intent: StripePaymentIntent,
+    options: {
+        expectedPaymentIntentId?: string;
+        actorKind: ProviderTruthActorKind;
+        actorId: string;
+    },
+    forcedMismatches?: string[],
+): Promise<ConnectPaymentRow> {
+    while (true) {
+        // Provider calls deliberately remain outside the atomic database RPC.
+        // Only a cancellation which won while Stripe was in flight requires a
+        // fresh provider read, matching the historical race handling.
+        if (!forcedMismatches && payment.payment_status === "cancelled" && intent.status !== "canceled") {
+            intent = await retrievePaymentIntent(payment.stripe_payment_intent_id ?? intent.id);
+        }
+        const paymentStatus = paymentStatusFromStripe(intent);
+        const expectedPaymentIntentId = payment.stripe_payment_intent_id ?? options.expectedPaymentIntentId;
+        if (!forcedMismatches && paymentStatus === "succeeded") {
+            intent = await hydrateSucceededPaymentIntentProviderTruth(intent);
+        }
+        const mismatches = forcedMismatches ?? (paymentStatus === "succeeded"
+            ? providerPaymentTruthMismatches(payment, intent, expectedPaymentIntentId)
+            : []);
+        const projection = mismatches.length
+            ? await buildQuarantinePaymentProjection(payment, intent, mismatches, options)
+            : await buildAppliedPaymentProjection(payment, intent, paymentStatus, expectedPaymentIntentId, options);
+        const result = await callRpcObject<JsonRecord>("apply_payment_provider_projection", {
+            p_payment_id: payment.id,
+            p_expected_payment: payment,
+            p_projection: projection,
+        });
+        if (typeof result.applied !== "boolean" || !isRecord(result.payment)) {
+            throw new HttpError(502, "payment provider projection returned an invalid response");
+        }
+        payment = result.payment as ConnectPaymentRow;
+        if (result.applied) return payment;
+    }
+}
+
+async function buildAppliedPaymentProjection(
+    payment: ConnectPaymentRow,
+    intent: StripePaymentIntent,
+    paymentStatus: string,
+    expectedPaymentIntentId: string | undefined,
     options: { actorKind: ProviderTruthActorKind; actorId: string },
-): Promise<ConnectPaymentRow | null> {
-    const charge = isRecord(intent.latest_charge) ? intent.latest_charge : null;
-    const balanceTransaction = charge && isRecord(charge.balance_transaction)
-        ? charge.balance_transaction : null;
-    if (!charge || !balanceTransaction) return null;
-    const exceptionKey = `provider-payment-truth:${payment.id}:${intent.id}`;
-    await upsertProviderException(exceptionKey, {
-        payment_id: payment.id,
-        operation_id: null,
-        exception_type: "provider_payment_truth_mismatch",
-        severity: "critical",
-        status: "open",
-        message: transientBalanceTransactionExpansionReviewReason,
-        details: {
+): Promise<JsonRecord> {
+    const charge = paymentStatus === "succeeded" && isRecord(intent.latest_charge) ? intent.latest_charge : null;
+    const balanceTransaction = charge && isRecord(charge.balance_transaction) ? charge.balance_transaction : null;
+    const chargeFee = balanceTransaction ? numberAt(balanceTransaction, "fee") ?? 0 : 0;
+    const projected: ConnectPaymentRow = {
+        ...payment,
+        payment_status: paymentStatus,
+        stripe_payment_intent_id: expectedPaymentIntentId ?? intent.id,
+        stripe_charge_id: paymentStatus === "succeeded" ? chargeId(intent) ?? payment.stripe_charge_id : payment.stripe_charge_id,
+        stripe_charge_balance_transaction_id: balanceTransaction
+            ? stringAt(balanceTransaction, "id") : payment.stripe_charge_balance_transaction_id,
+        actual_stripe_charge_fee_amount: paymentStatus === "succeeded"
+            ? chargeFee : payment.actual_stripe_charge_fee_amount,
+        actual_stripe_processing_fee_amount: paymentStatus === "succeeded"
+            ? chargeFee + payment.actual_stripe_refund_fee_amount
+            : payment.actual_stripe_processing_fee_amount,
+        actual_stripe_charge_net_amount: balanceTransaction
+            ? numberAt(balanceTransaction, "net") : payment.actual_stripe_charge_net_amount,
+        actual_stripe_fee_currency: balanceTransaction
+            ? stringAt(balanceTransaction, "currency").toLowerCase() : payment.actual_stripe_fee_currency,
+        actual_stripe_charge_fee_details: balanceTransaction
+            ? recordArrayAt(balanceTransaction, "fee_details") : payment.actual_stripe_charge_fee_details,
+        paid_at: paymentStatus === "succeeded" ? payment.paid_at ?? new Date().toISOString() : payment.paid_at,
+        cancelled_at: paymentStatus === "cancelled" ? payment.cancelled_at ?? new Date().toISOString() : payment.cancelled_at,
+        last_provider_sync_at: new Date().toISOString(),
+    };
+    const recovery = isTransientBalanceTransactionExpansionReview(payment) && paymentStatus === "succeeded"
+        && charge && balanceTransaction
+        ? {
+            exceptionKey: `provider-payment-truth:${payment.id}:${intent.id}`,
             paymentIntentId: intent.id,
             chargeId: stringAt(charge, "id"),
-            mismatches: ["charge_balance_transaction_expansion"],
-        },
-    });
-    const result = await callRpcObject<JsonRecord>("recover_transient_provider_truth_review", {
-        p_payment_id: payment.id,
-        p_payment_intent_id: intent.id,
-        p_charge_id: stringAt(charge, "id"),
-        p_balance_transaction_id: stringAt(balanceTransaction, "id"),
-        p_actor_kind: options.actorKind,
-        p_actor_id: options.actorId,
-    });
-    return result.recovered === true && isRecord(result.payment)
-        ? result.payment as ConnectPaymentRow
+            balanceTransactionId: stringAt(balanceTransaction, "id"),
+            actorKind: options.actorKind,
+            actorId: options.actorId,
+        }
         : null;
+    return {
+        kind: "apply",
+        paymentStatus: projected.payment_status,
+        stripePaymentIntentId: projected.stripe_payment_intent_id,
+        stripeChargeId: projected.stripe_charge_id,
+        stripeChargeBalanceTransactionId: projected.stripe_charge_balance_transaction_id,
+        actualStripeChargeFeeAmount: projected.actual_stripe_charge_fee_amount,
+        actualStripeProcessingFeeAmount: projected.actual_stripe_processing_fee_amount,
+        actualStripeChargeNetAmount: projected.actual_stripe_charge_net_amount,
+        actualStripeFeeCurrency: projected.actual_stripe_fee_currency,
+        actualStripeChargeFeeDetails: projected.actual_stripe_charge_fee_details,
+        paidAt: projected.paid_at,
+        cancelledAt: projected.cancelled_at,
+        lastProviderSyncAt: projected.last_provider_sync_at,
+        projectionKey: await paymentProjectionKey(projected, options.actorId, paymentStatus),
+        recoveredProjectionKey: recovery
+            ? await paymentProjectionKey({ ...projected, settlement_status: "held", manual_review_reason: null }, options.actorId, paymentStatus)
+            : null,
+        recovery,
+    };
+}
+
+async function paymentProjectionKey(
+    payment: ConnectPaymentRow,
+    actorId: string,
+    paymentStatus: string,
+): Promise<string> {
+    const projectionState = await digest(JSON.stringify({
+        paymentStatus: payment.payment_status,
+        settlementStatus: payment.settlement_status,
+        disputeStatus: payment.dispute_status,
+        manualReviewReason: payment.manual_review_reason,
+        chargeId: payment.stripe_charge_id,
+        balanceTransactionId: payment.stripe_charge_balance_transaction_id,
+        refundedAmount: payment.refunded_amount,
+        transferredAmount: payment.transferred_amount,
+        reversedAmount: payment.reversed_amount,
+    }));
+    return `payment:${payment.id}:${actorId}:${paymentStatus}:${payment.stripe_charge_id ?? "none"}:${projectionState}`;
 }
 
 function providerPaymentTruthMismatches(
@@ -3513,43 +3539,36 @@ async function quarantineProviderPaymentTruth(
     mismatches: string[],
     options: { actorKind: ProviderTruthActorKind; actorId: string },
 ): Promise<ConnectPaymentRow> {
+    return await projectPaymentIntent(payment, intent, options, mismatches);
+}
+
+async function buildQuarantinePaymentProjection(
+    payment: ConnectPaymentRow,
+    intent: StripePaymentIntent,
+    mismatches: string[],
+    options: { actorKind: ProviderTruthActorKind; actorId: string },
+): Promise<JsonRecord> {
     const reason = `Stripe payment provider truth mismatch: ${mismatches.join(", ")}`;
-    const updated = await updatePayment(payment.id, {
-        payment_status: "failed",
-        settlement_status: "manual_review",
-        manual_review_reason: reason,
-        stripe_payment_intent_id: payment.stripe_payment_intent_id ?? (intent.id === "missing" ? null : intent.id),
-        stripe_charge_id: payment.stripe_charge_id ?? chargeId(intent),
-        paid_at: null,
-        last_provider_sync_at: new Date().toISOString(),
-    }) ?? payment;
-    await enqueueCommerceProviderProjection(
-        updated.id,
-        `payment:${updated.id}:${options.actorId}:quarantine:${await digest(JSON.stringify(mismatches))}`,
-        "payment",
-        String(updated.id),
-    );
     const details = {
         paymentIntentId: intent.id,
         chargeId: chargeId(intent),
         mismatches,
     };
-    await upsertProviderException(`provider-payment-truth:${payment.id}:${intent.id}`, {
-        payment_id: payment.id,
-        exception_type: "provider_payment_truth_mismatch",
-        severity: "critical",
-        status: "open",
-        message: reason,
+    return {
+        kind: "quarantine",
+        paymentStatus: "failed",
+        settlementStatus: "manual_review",
+        manualReviewReason: reason,
+        stripePaymentIntentId: payment.stripe_payment_intent_id ?? (intent.id === "missing" ? null : intent.id),
+        stripeChargeId: payment.stripe_charge_id ?? chargeId(intent),
+        paidAt: null,
+        lastProviderSyncAt: new Date().toISOString(),
+        projectionKey: `payment:${payment.id}:${options.actorId}:quarantine:${await digest(JSON.stringify(mismatches))}`,
+        exceptionKey: `provider-payment-truth:${payment.id}:${intent.id}`,
+        actorKind: options.actorKind,
+        actorId: options.actorId,
         details,
-    });
-    await insertPaymentEvent(
-        payment.id,
-        "provider_payment_truth_mismatch",
-        options.actorKind,
-        options.actorId,
-        details,
-    ).catch(() => null);
-    return updated;
+    };
 }
 
 async function paymentClientSecret(payment: ConnectPaymentRow): Promise<string> {
