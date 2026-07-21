@@ -129,6 +129,20 @@ begin
             v_result;
     end if;
 
+    v_result := stripe_connect.apply_payment_provider_projection(
+        v_payment_id, v_initial,
+        payment_projection_test.apply_projection(
+            v_payment_id, v_projection_key, '2026-07-21 08:02:00+00'
+        )
+    );
+    v_payment := payment_projection_test.snapshot(v_payment_id);
+    if v_result is distinct from pg_catalog.jsonb_build_object(
+        'applied', true, 'payment', v_payment
+    ) or (v_payment->>'last_provider_sync_at')::timestamptz
+            <> '2026-07-21 08:04:00+00'::timestamptz then
+        raise exception 'payment projection: freshness regressed: %', v_result;
+    end if;
+
     v_before_business_change := v_payment;
     update stripe_connect.payments
     set refunded_amount = 1

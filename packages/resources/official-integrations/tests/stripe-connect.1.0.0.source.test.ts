@@ -6905,7 +6905,10 @@ class StripeConnectMock {
         const snapshot = this.paymentProjectionSnapshot();
         if (equivalentApply) {
             this.update(payment, {
-                last_provider_sync_at: projection.lastProviderSyncAt,
+                last_provider_sync_at: Date.parse(String(payment.last_provider_sync_at))
+                    > Date.parse(String(projection.lastProviderSyncAt))
+                    ? payment.last_provider_sync_at
+                    : projection.lastProviderSyncAt,
             });
             const failed = this.paymentProjectionEnqueueFailure(snapshot);
             if (failed) return failed;
