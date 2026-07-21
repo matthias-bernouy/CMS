@@ -1,3 +1,4 @@
+-- Preserve the complete contribution matrix while the aggregate becomes incremental.
 select commerce_liability_test.seed_order('contribution-provisional', 10000);
 select commerce_liability_test.seed_order('contribution-fresh', 20000);
 select commerce_liability_test.seed_order('contribution-expired', 30000);

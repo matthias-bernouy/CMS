@@ -462,10 +462,9 @@ describe("protected C2C financial policy contract", () => {
         const schema = await readFile(resolve(integrationRoot, "connectors/supabase/schema.sql"), "utf8");
         const absent = functionSql(schema, "record_absent_order_payment_cancellation", "record_order_payment_projection");
         const prepare = functionSql(schema, "prepare_protected_payment", "ensure_payment_cancellation_request");
-        const aggregate = functionSql(
-            schema,
-            "refresh_platform_payout_liability",
-            "authorize_platform_payout_liability_decrease",
+        const aggregate = schema.slice(
+            schema.indexOf("create or replace view commerce.platform_payout_order_contribution_projection"),
+            schema.indexOf("create or replace function commerce.authorize_platform_payout_liability_decrease("),
         );
 
         expect(absent).toContain("absent provider truth cannot finalize an order with a payment attempt");

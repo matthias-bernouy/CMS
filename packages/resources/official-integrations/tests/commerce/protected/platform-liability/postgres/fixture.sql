@@ -62,6 +62,48 @@ begin
 end;
 $$;
 
+create function commerce_liability_test.assert_cache_parity()
+returns void
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+    v_cached_total bigint;
+    v_control_total bigint;
+    v_mismatch_count bigint;
+begin
+    select count(*) into v_mismatch_count
+    from commerce.platform_payout_order_contribution_projection expected
+    full join commerce.platform_payout_order_contributions cached
+        on cached.order_id = expected.order_id
+    where expected.order_id is null
+       or cached.order_id is null
+       or (cached.seller_liability_amount,
+            cached.risk_reserve_liability_amount,
+            cached.next_reconciliation_at) is distinct from (
+                expected.seller_liability_amount,
+                expected.risk_reserve_liability_amount,
+                expected.next_reconciliation_at
+            );
+    select coalesce(sum(cached.seller_liability_amount
+        + cached.risk_reserve_liability_amount), 0)::bigint
+    into v_cached_total
+    from commerce.platform_payout_order_contributions cached;
+    select control.required_minimum_amount into v_control_total
+    from commerce.platform_payout_liability_controls control
+    where control.control_key = 'default';
+    if v_mismatch_count <> 0
+       or v_cached_total is distinct from v_control_total
+       or not coalesce((select state.initialized
+            from commerce.platform_payout_liability_cache_state state
+            where state.control_key = 'default'), false) then
+        raise exception 'platform liability: cache parity failed: mismatches %, cache %, control %',
+            v_mismatch_count, v_cached_total, v_control_total;
+    end if;
+end;
+$$;
+
 select commerce.create_c2c_policy_revision(
     jsonb_build_object(
         'name', 'Liability contract policy',
@@ -93,4 +135,6 @@ insert into commerce.sellers (
 grant usage on schema commerce_liability_test to service_role;
 grant select, insert on commerce_liability_test.orders to service_role;
 grant execute on function commerce_liability_test.seed_order(text, bigint, boolean)
+to service_role;
+grant execute on function commerce_liability_test.assert_cache_parity()
 to service_role;

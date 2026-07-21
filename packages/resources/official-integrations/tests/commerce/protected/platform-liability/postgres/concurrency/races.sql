@@ -80,5 +80,15 @@ begin
 end;
 $concurrent_deltas$;
 
+select commerce_liability_test.assert_cache_parity();
+
+do $concurrent_queue$
+begin
+    if exists (select 1 from commerce.platform_payout_liability_pending_orders) then
+        raise exception 'platform liability: concurrent refresh left pending work';
+    end if;
+end;
+$concurrent_queue$;
+
 select public.dblink_disconnect('liability_race_a');
 select public.dblink_disconnect('liability_race_b');

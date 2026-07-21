@@ -11,7 +11,7 @@ rollback;
 begin;
 \ir fixture.sql
 set local role service_role;
-\ir contributions.sql
+\ir implementation/contributions.sql
 rollback;
 
 begin;
@@ -30,6 +30,43 @@ begin;
 \ir fixture.sql
 set local role service_role;
 \ir rollback.sql
+rollback;
+
+begin;
+\ir fixture.sql
+set local role service_role;
+\ir implementation/cache.sql
+rollback;
+
+begin;
+\ir fixture.sql
+set local role service_role;
+\ir implementation/dirty.sql
+rollback;
+
+begin;
+\ir fixture.sql
+set local track_functions = 'all';
+set local role service_role;
+\ir implementation/batching/settlements.sql
+rollback;
+
+begin;
+\ir fixture.sql
+set local track_functions = 'all';
+set local role service_role;
+\ir implementation/batching/payments.sql
+rollback;
+
+begin;
+\ir fixture.sql
+set local track_functions = 'all';
+set local role service_role;
+\ir implementation/batching/disputes.sql
+rollback;
+
+begin;
+\ir implementation/security.sql
 rollback;
 
 begin;

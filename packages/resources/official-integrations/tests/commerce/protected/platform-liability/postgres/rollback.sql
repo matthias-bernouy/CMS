@@ -5,6 +5,12 @@ declare
     v_order_id bigint;
     v_control_before jsonb;
     v_control_after jsonb;
+    v_contributions_before jsonb;
+    v_contributions_after jsonb;
+    v_pending_before jsonb;
+    v_pending_after jsonb;
+    v_cache_state_before jsonb;
+    v_cache_state_after jsonb;
     v_settlement_before jsonb;
     v_settlement_after jsonb;
     v_revisions_before jsonb;
@@ -21,6 +27,15 @@ begin
     select coalesce(jsonb_agg(to_jsonb(revision) order by liability_revision), '[]')
     into v_revisions_before
     from commerce.platform_payout_liability_revisions revision;
+    select coalesce(jsonb_agg(to_jsonb(contribution) order by order_id), '[]')
+    into v_contributions_before
+    from commerce.platform_payout_order_contributions contribution;
+    select coalesce(jsonb_agg(to_jsonb(pending) order by event_id), '[]')
+    into v_pending_before
+    from commerce.platform_payout_liability_pending_orders pending;
+    select to_jsonb(state) into v_cache_state_before
+    from commerce.platform_payout_liability_cache_state state
+    where control_key = 'default';
     v_revision := (v_control_before->>'liability_revision')::bigint;
 
     begin
@@ -49,9 +64,21 @@ begin
     select coalesce(jsonb_agg(to_jsonb(revision) order by liability_revision), '[]')
     into v_revisions_after
     from commerce.platform_payout_liability_revisions revision;
+    select coalesce(jsonb_agg(to_jsonb(contribution) order by order_id), '[]')
+    into v_contributions_after
+    from commerce.platform_payout_order_contributions contribution;
+    select coalesce(jsonb_agg(to_jsonb(pending) order by event_id), '[]')
+    into v_pending_after
+    from commerce.platform_payout_liability_pending_orders pending;
+    select to_jsonb(state) into v_cache_state_after
+    from commerce.platform_payout_liability_cache_state state
+    where control_key = 'default';
     if v_control_after is distinct from v_control_before
        or v_settlement_after is distinct from v_settlement_before
-       or v_revisions_after is distinct from v_revisions_before then
+       or v_revisions_after is distinct from v_revisions_before
+       or v_contributions_after is distinct from v_contributions_before
+       or v_pending_after is distinct from v_pending_before
+       or v_cache_state_after is distinct from v_cache_state_before then
         raise exception 'platform liability: subtransaction rollback leaked state';
     end if;
 end;
