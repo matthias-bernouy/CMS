@@ -101,6 +101,11 @@ begin
         'checkout-limits-order-buyer', 'checkout-limits-order-key',
         format('conflict: offer %s is not sellable', v_offer_a)
     );
+    perform pg_temp.expect_checkout_error(
+        'checkout-limits-order-buyer', 'checkout-limits-metadata-key',
+        'validation: unknown custom field unknown for order',
+        '{"unknown":true}'::jsonb
+    );
 
     insert into commerce.offers (
         seller_id, product_id, slug, title, condition_code,
