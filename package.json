@@ -15,6 +15,7 @@
     "scripts": {
         "build": "bun run build.ts",
         "check:architecture": "bun run quality/architecture/check.ts",
+        "check:file-size": "bun run quality/ci/file-size-ratchet.ts",
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test"

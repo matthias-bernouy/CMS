@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: read
-
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -19,7 +18,6 @@ env:
   # gitleaks v8.30.1 linux_x64 release archive; keep version and digest together.
   GITLEAKS_VERSION: 8.30.1
   GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-
 jobs:
   static-quality:
     name: Architecture, types, and deterministic build
@@ -28,52 +26,31 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up workspace
+        uses: ./.github/actions/setup-workspace
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Bootstrap components
-        run: bun run --cwd packages/foundation/components build
-
       - name: Check workspace architecture
         run: bun run check:architecture
+      - name: Ratchet handwritten file sizes
+        env:
+          FILE_SIZE_BASELINE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bun run check:file-size
 
       - name: Typecheck project references
         run: bun run typecheck
-
       - name: Typecheck architecture policy scripts
         run: bunx tsc --project quality/architecture/tsconfig.json
 
       - name: Typecheck CI policy scripts
         run: bunx tsc --project quality/ci/tsconfig.json
 
-      - name: Build all packages (first pass)
-        run: bun run build
-
-      - name: Record first build manifest
-        run: bun run quality/ci/build-manifest.ts "$RUNNER_TEMP/build-first.json"
-
-      - name: Clean generated outputs
-        run: bun run clean
-
-      - name: Build all packages (second pass)
-        run: bun run build
-
-      - name: Require byte-identical build outputs
-        run: |
-          bun run quality/ci/build-manifest.ts "$RUNNER_TEMP/build-second.json"
-          diff --unified "$RUNNER_TEMP/build-first.json" "$RUNNER_TEMP/build-second.json"
-
-      - name: Reject generated or tracked-file drift
-        run: |
-          git diff --exit-code
-          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/worktree-status"
-          test ! -s "$RUNNER_TEMP/worktree-status"
+      - name: Verify deterministic build and clean worktree
+        run: bash quality/ci/deterministic-build.sh
 
   tests:
     name: Tests (${{ matrix.name }})
@@ -101,16 +78,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up workspace
+        uses: ./.github/actions/setup-workspace
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Bootstrap components
-        run: bun run --cwd packages/foundation/components build
 
       - name: Verify Docker Compose for infrastructure tests
         if: matrix.name == 'infrastructure'
@@ -131,16 +102,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up workspace
+        uses: ./.github/actions/setup-workspace
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Bootstrap components
-        run: bun run --cwd packages/foundation/components build
 
       - name: Reject high-severity dependency vulnerabilities
         run: bun run quality/ci/audit.ts
@@ -172,16 +137,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up workspace
+        uses: ./.github/actions/setup-workspace
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Bootstrap components
-        run: bun run --cwd packages/foundation/components build
 
       - name: Check coverage against the package baseline
         env:

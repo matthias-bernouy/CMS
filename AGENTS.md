@@ -54,6 +54,17 @@ dependencies are allowed only through the published package exports.
 - `interfaces/` files define contracts and types. Keep executable logic in
   `core/`, `default-implementation/`, `http/`, or surface code.
 
+## File Size
+
+- Keep handwritten source, test, style, template, workflow, and configuration
+  files near 150 physical lines and never above 180 lines.
+- Split files by responsibility before they reach the hard limit. Do not evade
+  the limit by compressing formatting or combining unrelated statements.
+- Existing oversized files are legacy debt: they may shrink but must not grow.
+- Generated artifacts, lockfiles, and genuinely atomic declarative contracts
+  such as schemas may be exempt. Exceptions must use a narrow path or category
+  and state their reason in the enforcing quality policy.
+
 ## Commands
 
 Use Bun commands from the workspace root unless a package says otherwise:
