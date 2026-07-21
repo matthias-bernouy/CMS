@@ -9,7 +9,7 @@ import {
     type DashboardRelationProjection,
     type RelationRepository,
 } from "@bernouy/cms-relations";
-import { isDashboardRelationProjection, isRelation } from "./relationShapes";
+import { isDashboardRelationProjection, isRelation } from "../relationShapes";
 
 const GENERATED_RELATIONS_FILE = ".p9r/generated/relations.json";
 const GENERATED_DASHBOARD_RELATION_PROJECTIONS_FILE = ".p9r/generated/dashboard-relation-projections.json";

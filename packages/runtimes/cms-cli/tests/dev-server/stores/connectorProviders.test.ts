@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsIntegrationConnectorProviderRepository } from "cms-cli/dev-server/connectorProviders";
+import { LocalFsIntegrationConnectorProviderRepository } from "cms-cli/dev-server/stores/connectorProviders";
 
 describe("LocalFsIntegrationConnectorProviderRepository", () => {
     test("persists non-secret provider settings with an atomic file replacement", async () => {

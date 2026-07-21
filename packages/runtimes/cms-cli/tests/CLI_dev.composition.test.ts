@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 async function source(): Promise<string> {
-    return Bun.file(new URL("../src/CLI_dev.ts", import.meta.url)).text();
+    return Bun.file(new URL("../src/commands/dev/servers.ts", import.meta.url)).text();
 }
 
 describe("local CMS listener composition", () => {

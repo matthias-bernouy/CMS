@@ -1,12 +1,12 @@
 import { existsSync } from "node:fs";
-import { getAccessToken } from "./credentials";
-import { loadPushConfig } from "./push/shared/config";
-import { confirm } from "./push/shared/recap";
-import { pullBlocs } from "./push/blocs/pull";
-import { pullPages } from "./push/pages/pull";
-import { pullTemplates } from "./push/templates/pull";
-import { pullSystem } from "./push/system/pull";
-import { pullIntegrations } from "./push/integrations/pull";
+import { getAccessToken } from "../credentials";
+import { loadPushConfig } from "../push/shared/config";
+import { confirm } from "../push/shared/recap";
+import { pullBlocs } from "../push/blocs/pull";
+import { pullPages } from "../push/pages/pull";
+import { pullTemplates } from "../push/templates/pull";
+import { pullSystem } from "../push/system/pull";
+import { pullIntegrations } from "../push/integrations/pull";
 
 type Flags = { force: boolean; yes: boolean; type: string };
 

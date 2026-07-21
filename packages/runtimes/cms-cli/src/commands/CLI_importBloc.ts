@@ -1,5 +1,5 @@
-import { getAccessToken } from "./credentials";
-import { runBlocs, type RunBlocsFlags } from "./push/blocs/run";
+import { getAccessToken } from "../credentials";
+import { runBlocs, type RunBlocsFlags } from "../push/blocs/run";
 
 function parseFlags(args: string[]): RunBlocsFlags {
     const flags: RunBlocsFlags = { dryRun: false, force: false, yes: false, only: null };

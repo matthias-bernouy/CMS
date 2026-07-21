@@ -1,4 +1,4 @@
-import type { BuiltBloc } from "cms-cli/dev-server/build";
+import type { BuiltBloc } from "cms-cli/dev-server/build/index";
 import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
 
 export type RemoteBlocItem = {

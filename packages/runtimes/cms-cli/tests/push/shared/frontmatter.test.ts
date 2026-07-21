@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseFrontmatter } from "cms-cli/push/shared/frontmatter";
+import { parseFrontmatter } from "cms-cli/push/shared/frontmatter/frontmatter";
 
 describe("parseFrontmatter", () => {
     test("returns empty frontmatter + raw body when no header is present", () => {

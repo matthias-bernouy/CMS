@@ -61,9 +61,9 @@ describe("runBlocs", () => {
 
 describe("CLI_push bloc stage wiring", () => {
     test("uses the normal blocs stage instead of the legacy import implementation", () => {
-        const source = readFileSync(new URL("../../src/CLI_push.ts", import.meta.url), "utf-8");
+        const source = readFileSync(new URL("../../src/commands/CLI_push.ts", import.meta.url), "utf-8");
 
-        expect(source).toMatch(/import\s*\{\s*runBlocs\s*\}\s*from\s*["']\.\/push\/blocs\/run["']\s*;/);
+        expect(source).toMatch(/import\s*\{\s*runBlocs\s*\}\s*from\s*["']\.\.\/push\/blocs\/run["']\s*;/);
         expect(source).toMatch(
             /case\s+["']blocs["']\s*:\s*return\s+runBlocs\s*\(\s*adminBase\s*,\s*token\s*,\s*flags\s*\)\s*;/,
         );

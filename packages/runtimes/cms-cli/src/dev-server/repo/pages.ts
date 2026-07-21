@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import type { TPage, PageMeta, PagesQuery } from "@bernouy/cms-content";
 import { filterAndSortPages } from "@bernouy/cms-content";
 import { scanPages } from "cms-cli/push/pages/scan";
-import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
+import { serializeFrontmatter } from "cms-cli/push/shared/frontmatter/frontmatterWrite";
 
 /**
  * Filesystem-backed page store. IDs are the URL path itself (`/about`, `/`)

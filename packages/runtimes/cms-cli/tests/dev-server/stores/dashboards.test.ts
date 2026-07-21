@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsDashboardRepository } from "cms-cli/dev-server/dashboards";
+import { LocalFsDashboardRepository } from "cms-cli/dev-server/stores/dashboards";
 import type { Dashboard } from "@bernouy/cms-dashboards";
 
 describe("LocalFsDashboardRepository", () => {

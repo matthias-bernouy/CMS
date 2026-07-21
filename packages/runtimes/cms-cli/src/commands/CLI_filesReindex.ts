@@ -1,5 +1,5 @@
 import { LocalFsCmsFiles } from "@bernouy/cms-files";
-import { loadPushConfig } from "./push/shared/config";
+import { loadPushConfig } from "../push/shared/config";
 
 /**
  * `p9r files reindex` — the explicit, on-demand reconcile of the media tree.

@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsFunctionRepository } from "cms-cli/dev-server/functions";
+import { LocalFsFunctionRepository } from "cms-cli/dev-server/stores/functions";
 import type { CmsFunction } from "@bernouy/cms-functions";
 
 describe("LocalFsFunctionRepository", () => {

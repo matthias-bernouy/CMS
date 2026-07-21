@@ -1,7 +1,7 @@
 import type { CmsRepository, BlocListItemResponse, PageLink, PagesQuery } from "@bernouy/cms-content";
 import { countValues, isPublishedPage, normalizeTags } from "@bernouy/cms-content";
 import type { TBloc, TPage, TSystem, TTemplate } from "@bernouy/cms-content";
-import type { BuiltBloc } from "../build";
+import type { BuiltBloc } from "../build/index";
 import { PagesStore } from "./pages";
 import { TemplatesStore } from "./templates";
 import { SystemStore } from "./system";

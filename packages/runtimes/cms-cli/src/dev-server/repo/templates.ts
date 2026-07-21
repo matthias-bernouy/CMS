@@ -3,7 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { TTemplate } from "@bernouy/cms-content";
 import { scanTemplates } from "cms-cli/push/templates/scan";
-import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
+import { serializeFrontmatter } from "cms-cli/push/shared/frontmatter/frontmatterWrite";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
 
 const FROZEN_DATE = new Date(0);

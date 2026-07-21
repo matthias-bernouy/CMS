@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { chmod, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsEnvSecretStore } from "cms-cli/dev-server/secrets";
+import { LocalFsEnvSecretStore } from "cms-cli/dev-server/stores/secrets";
 
 describe("LocalFsEnvSecretStore", () => {
     test("writes secrets to site/.env and reads them back", async () => {

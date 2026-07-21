@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
+import { serializeFrontmatter } from "cms-cli/push/shared/frontmatter/frontmatterWrite";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
 import { safeJoin } from "cms-cli/push/shared/safeJoin";
 

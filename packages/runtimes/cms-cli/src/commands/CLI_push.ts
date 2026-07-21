@@ -1,10 +1,10 @@
-import { getAccessToken } from "./credentials";
-import { runPages } from "./push/pages/run";
-import { runTemplates } from "./push/templates/run";
-import { runSystem } from "./push/system/run";
-import { runFiles } from "./push/files/run";
-import { runIntegrations } from "./push/integrations/run";
-import { runBlocs } from "./push/blocs/run";
+import { getAccessToken } from "../credentials";
+import { runPages } from "../push/pages/run";
+import { runTemplates } from "../push/templates/run";
+import { runSystem } from "../push/system/run";
+import { runFiles } from "../push/files/run";
+import { runIntegrations } from "../push/integrations/run";
+import { runBlocs } from "../push/blocs/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string; only: Set<string> | null };
 

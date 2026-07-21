@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { GENERATED_INTEGRATION_INSTALLATIONS_FILE, SITE_INTEGRATIONS_DIR } from "./integrations";
+import { GENERATED_INTEGRATION_INSTALLATIONS_FILE, SITE_INTEGRATIONS_DIR } from "../integrations";
 import {
     DuplicateIntegrationInstallationError,
     type IntegrationInstallation,

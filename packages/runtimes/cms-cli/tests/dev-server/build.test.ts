@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildDevBloc } from "cms-cli/dev-server/build";
+import { buildDevBloc } from "cms-cli/dev-server/build/index";
 import type { DevBloc } from "cms-cli/dev-server/scan";
 
 function tmpBloc(files: Record<string, string>): string {

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { LocalFsIntegrationInstallationRepository } from "cms-cli/dev-server/integrationInstallations";
+import { LocalFsIntegrationInstallationRepository } from "cms-cli/dev-server/stores/integrationInstallations";
 import type { IntegrationRun } from "@bernouy/cms-integrations";
 
 describe("LocalFsIntegrationInstallationRepository", () => {

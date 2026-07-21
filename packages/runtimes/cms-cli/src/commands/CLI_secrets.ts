@@ -1,6 +1,6 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { getAccessToken } from "./credentials";
+import { getAccessToken } from "../credentials";
 
 /**
  * `p9r secrets template` — emits a `.env.example`-style file from the
