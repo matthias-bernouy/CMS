@@ -6440,6 +6440,19 @@ class StripeConnectMock {
                 ),
             }]);
         }
+        if (table === "rpc/read_provider_transfer_reconciliation_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const transfer = this.tables.transfers.find(row => (
+                row.stripe_transfer_id === body.p_stripe_transfer_id
+            ));
+            const localReversedAmount = transfer ? this.tables.transfer_reversals
+                .filter(row => same(row.transfer_id, transfer.id) && row.status === "succeeded")
+                .reduce((sum, row) => sum + Number(row.amount ?? 0), 0) : 0;
+            return jsonResponse([{
+                transfer: transfer ? { ...transfer } : null,
+                local_reversed_amount: localReversedAmount,
+            }]);
+        }
         if (table === "rpc/ack_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const row = this.tables.commerce_projection_outbox.find(candidate =>

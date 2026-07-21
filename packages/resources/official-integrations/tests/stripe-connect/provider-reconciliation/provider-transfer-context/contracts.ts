@@ -52,8 +52,7 @@ export function registerProviderTransferContextContracts(
                 .toEqual([
                     ["GET", "payments"],
                     ["POST", "rpc/apply_payment_provider_projection"],
-                    ["GET", "transfers"],
-                    ["GET", "transfer_reversals"],
+                    ["POST", "rpc/read_provider_transfer_reconciliation_context"],
                     ["PATCH", "transfers"],
                     ["GET", "payments"],
                     ["GET", "refunds"],
@@ -122,10 +121,9 @@ export function registerProviderTransferContextContracts(
                     }),
                 }),
             }));
-            expect(fixture.rest.postgrestRequests.slice(2, 7).map(request => [request.method, request.table]))
+            expect(fixture.rest.postgrestRequests.slice(2, 6).map(request => [request.method, request.table]))
                 .toEqual([
-                    ["GET", "transfers"],
-                    ["GET", "transfer_reversals"],
+                    ["POST", "rpc/read_provider_transfer_reconciliation_context"],
                     ["POST", "rpc/mark_payment_manual_review"],
                     ["POST", "provider_exceptions"],
                     ["PATCH", "transfers"],

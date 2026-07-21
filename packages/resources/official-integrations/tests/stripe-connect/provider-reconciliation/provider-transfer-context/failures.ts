@@ -50,7 +50,7 @@ export function registerProviderTransferContextFailureContracts(
                 .toEqual([
                     ["GET", "payments"],
                     ["POST", "rpc/apply_payment_provider_projection"],
-                    ["GET", "transfers"],
+                    ["POST", "rpc/read_provider_transfer_reconciliation_context"],
                 ]);
             expect(fixture.rest.rows("transfers")[0]).toMatchObject({
                 status: "succeeded",
@@ -84,10 +84,9 @@ export function registerProviderTransferContextFailureContracts(
             expect(transfers[1]?.provider_snapshot).not.toMatchObject({ reconciliation_marker: "second" });
             expect(fixture.rest.postgrestRequests.slice(2).map(request => [request.method, request.table]))
                 .toEqual([
-                    ["GET", "transfers"],
-                    ["GET", "transfer_reversals"],
+                    ["POST", "rpc/read_provider_transfer_reconciliation_context"],
                     ["PATCH", "transfers"],
-                    ["GET", "transfers"],
+                    ["POST", "rpc/read_provider_transfer_reconciliation_context"],
                 ]);
         });
     });
