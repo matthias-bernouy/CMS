@@ -15,6 +15,18 @@ begin
     );
     delete from stripe_connect.commerce_projection_outbox
     where projection_key like 'provider-reconciliation-pg-%';
+    delete from stripe_connect.irreversible_dispute_action_approvals
+    where dispute_id in (
+        select id from stripe_connect.stripe_disputes
+        where stripe_dispute_id like 'dp_provider_reconciliation_pg_%'
+    );
+    delete from stripe_connect.stripe_dispute_evidence
+    where dispute_id in (
+        select id from stripe_connect.stripe_disputes
+        where stripe_dispute_id like 'dp_provider_reconciliation_pg_%'
+    );
+    delete from stripe_connect.stripe_disputes
+    where stripe_dispute_id like 'dp_provider_reconciliation_pg_%';
     delete from stripe_connect.financial_operations
     where business_key like 'provider-reconciliation-pg-%';
     delete from stripe_connect.payments

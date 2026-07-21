@@ -6203,41 +6203,75 @@ class StripeConnectMock {
             });
             return jsonResponse(projection);
         }
-        if (table === "rpc/claim_commerce_projection_outbox" && method === "POST") {
+        if (table === "rpc/read_reconciliation_operations" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const limit = Number(body.p_limit ?? 50);
-            const eligible = this.tables.commerce_projection_outbox
-                .filter(row => (["pending", "retry"].includes(String(row.projection_status))
-                        && (!row.next_attempt_at || Date.parse(String(row.next_attempt_at)) <= Date.now()))
-                    || (row.projection_status === "leased"
-                        && Date.parse(String(row.claimed_at ?? "")) <= Date.now() - 5 * 60_000))
-                .filter(row => !(row.projection_kind === "refund" && row.recovery_key
-                    && this.tables.commerce_projection_outbox.some(predecessor =>
-                        predecessor.recovery_key === row.recovery_key
-                        && predecessor.projection_kind === "reversal"
-                        && Number(predecessor.causal_sequence) < Number(row.causal_sequence)
-                        && predecessor.projection_status !== "succeeded"
-                    )))
-                .filter(row => !(row.projection_kind === "refund"
-                    && this.tables.commerce_projection_outbox.some(predecessor =>
-                        same(predecessor.operation_id, row.operation_id)
-                        && predecessor.projection_kind === "refund"
-                        && Number(predecessor.causal_sequence) < Number(row.causal_sequence)
-                        && predecessor.projection_status !== "succeeded"
-                    )))
-                .sort((left, right) => String(left.created_at).localeCompare(String(right.created_at))
-                    || Number(left.causal_sequence) - Number(right.causal_sequence)
-                    || Number(left.id) - Number(right.id))
-                .slice(0, limit)
-                .map(row => this.update(row, {
-                    projection_status: "leased",
-                    claim_owner: body.p_owner,
-                    claim_token: `claim-${row.id}-${Number(row.attempt_count ?? 0) + 1}`,
-                    claimed_at: new Date().toISOString(),
-                    attempt_count: Number(row.attempt_count ?? 0) + 1,
-                    last_error: null,
-                }));
-            return jsonResponse(eligible);
+            const operations = [...this.tables.financial_operations]
+                .sort((left, right) => String(right.updated_at).localeCompare(String(left.updated_at)))
+                .slice(0, limit);
+            return jsonResponse(operations.map(operation => {
+                const payment = this.tables.payments.find(row => same(row.id, operation.payment_id));
+                return {
+                    operation,
+                    client_reference_id: payment?.client_reference_id ?? null,
+                    payment_currency: payment?.currency ?? null,
+                };
+            }));
+        }
+        if (table === "rpc/claim_commerce_projection_outbox" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            return jsonResponse(this.claimCommerceProjectionOutbox(body));
+        }
+        if (table === "rpc/claim_reconciliation_projection_batch" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const claimed = this.claimCommerceProjectionOutbox(body);
+            return jsonResponse(claimed.map(projection => {
+                const payment = this.tables.payments.find(row => same(row.id, projection.payment_id)) ?? null;
+                const operation = this.tables.financial_operations.find(
+                    row => same(row.id, projection.operation_id),
+                ) ?? null;
+                const operationPayment = operation
+                    ? this.tables.payments.find(row => same(row.id, operation.payment_id)) ?? null
+                    : null;
+                const providerObjectId = String(projection.provider_object_id ?? "");
+                const dispute = projection.projection_kind === "dispute" && /^[1-9][0-9]*$/.test(providerObjectId)
+                    ? this.tables.stripe_disputes.find(row => same(row.id, providerObjectId)) ?? null
+                    : null;
+                const disputePayment = dispute
+                    ? this.tables.payments.find(row => same(row.id, dispute.payment_id)) ?? null
+                    : null;
+                const evidence = dispute ? this.tables.stripe_dispute_evidence
+                    .filter(row => same(row.dispute_id, dispute.id))
+                    .sort((left, right) => String(right.staged_at).localeCompare(String(left.staged_at))) : [];
+                const pendingApproval = dispute ? this.tables.irreversible_dispute_action_approvals
+                    .filter(row => same(row.dispute_id, dispute.id)
+                        && row.status === "pending_second_approval")
+                    .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0]
+                    ?? null : null;
+                const staged = evidence[0];
+                return {
+                    projection,
+                    payment,
+                    financial_operation: operation,
+                    operation_payment: operationPayment,
+                    dispute,
+                    dispute_client_reference_id: disputePayment?.client_reference_id ?? null,
+                    staged_evidence: staged ? {
+                        evidence_operation_id: staged.evidence_operation_id,
+                        staged_at: staged.staged_at,
+                        submitted_at: staged.submitted_at,
+                    } : null,
+                    evidence_submission_count: evidence.filter(row => row.submitted_at).length,
+                    pending_approval: pendingApproval ? {
+                        action_type: pendingApproval.action_type,
+                        status: pendingApproval.status,
+                        first_actor_id: pendingApproval.first_actor_id,
+                        first_approved_at: pendingApproval.first_approved_at,
+                        second_actor_id: pendingApproval.second_actor_id,
+                        second_approved_at: pendingApproval.second_approved_at,
+                    } : null,
+                };
+            }));
         }
         if (table === "rpc/ack_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
@@ -6990,6 +7024,41 @@ class StripeConnectMock {
         }
         const limit = Number(url.searchParams.get("limit") ?? rows.length);
         return rows.slice(0, Number.isSafeInteger(limit) && limit >= 0 ? limit : rows.length);
+    }
+
+    private claimCommerceProjectionOutbox(body: JsonRecord): JsonRecord[] {
+        const limit = Number(body.p_limit ?? 50);
+        return this.tables.commerce_projection_outbox
+            .filter(row => (["pending", "retry"].includes(String(row.projection_status))
+                    && (!row.next_attempt_at || Date.parse(String(row.next_attempt_at)) <= Date.now()))
+                || (row.projection_status === "leased"
+                    && Date.parse(String(row.claimed_at ?? "")) <= Date.now() - 5 * 60_000))
+            .filter(row => !(row.projection_kind === "refund" && row.recovery_key
+                && this.tables.commerce_projection_outbox.some(predecessor =>
+                    predecessor.recovery_key === row.recovery_key
+                    && predecessor.projection_kind === "reversal"
+                    && Number(predecessor.causal_sequence) < Number(row.causal_sequence)
+                    && predecessor.projection_status !== "succeeded"
+                )))
+            .filter(row => !(row.projection_kind === "refund"
+                && this.tables.commerce_projection_outbox.some(predecessor =>
+                    same(predecessor.operation_id, row.operation_id)
+                    && predecessor.projection_kind === "refund"
+                    && Number(predecessor.causal_sequence) < Number(row.causal_sequence)
+                    && predecessor.projection_status !== "succeeded"
+                )))
+            .sort((left, right) => String(left.created_at).localeCompare(String(right.created_at))
+                || Number(left.causal_sequence) - Number(right.causal_sequence)
+                || Number(left.id) - Number(right.id))
+            .slice(0, limit)
+            .map(row => this.update(row, {
+                projection_status: "leased",
+                claim_owner: body.p_owner,
+                claim_token: `claim-${row.id}-${Number(row.attempt_count ?? 0) + 1}`,
+                claimed_at: new Date().toISOString(),
+                attempt_count: Number(row.attempt_count ?? 0) + 1,
+                last_error: null,
+            }));
     }
 
     private upsertAccount(value: JsonRecord): JsonRecord {

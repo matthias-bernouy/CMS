@@ -10,7 +10,9 @@ set statement_timeout = '15s';
 
 \ir fixture.sql
 \ir security.sql
+\ir behavior/read-operations.sql
 \ir behavior/order-and-limit.sql
+\ir behavior/batch-hydration.sql
 \ir behavior/missing-references.sql
 \ir behavior/retry-and-lease.sql
 \ir behavior/causality.sql

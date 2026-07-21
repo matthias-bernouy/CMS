@@ -19,20 +19,29 @@ create temporary table provider_reconciliation_install_fingerprint
 on commit preserve rows
 as
 select
+    procedure.oid::pg_catalog.regprocedure::text as signature,
     pg_catalog.pg_get_functiondef(procedure.oid) as definition,
     procedure.proacl::text as acl,
     procedure.proconfig::text as configuration,
     procedure.prosecdef as security_definer
 from pg_catalog.pg_proc procedure
-where procedure.oid = pg_catalog.to_regprocedure(
-    'stripe_connect.claim_commerce_projection_outbox(text,integer)'
+where procedure.oid in (
+    pg_catalog.to_regprocedure(
+        'stripe_connect.read_reconciliation_operations(integer)'
+    ),
+    pg_catalog.to_regprocedure(
+        'stripe_connect.claim_commerce_projection_outbox(text,integer)'
+    ),
+    pg_catalog.to_regprocedure(
+        'stripe_connect.claim_reconciliation_projection_batch(text,integer)'
+    )
 );
 
 do $fresh_install$
 begin
     if (select pg_catalog.count(*)
-        from provider_reconciliation_install_fingerprint) <> 1 then
-        raise exception 'provider reconciliation: fresh install omitted claim RPC';
+        from provider_reconciliation_install_fingerprint) <> 3 then
+        raise exception 'provider reconciliation: fresh install omitted RPCs';
     end if;
 end;
 $fresh_install$;
@@ -40,21 +49,19 @@ $fresh_install$;
 \ir ../../../../integrations/stripe-connect/versions/1.0.0/connectors/supabase/schema.sql
 
 do $reapply$
-declare
-    target oid := pg_catalog.to_regprocedure(
-        'stripe_connect.claim_commerce_projection_outbox(text,integer)'
-    );
 begin
-    if target is null or not exists (
+    if exists (
         select 1
         from provider_reconciliation_install_fingerprint fingerprint
-        join pg_catalog.pg_proc procedure on procedure.oid = target
-        where fingerprint.definition = pg_catalog.pg_get_functiondef(target)
-          and fingerprint.acl is not distinct from procedure.proacl::text
-          and fingerprint.configuration is not distinct from procedure.proconfig::text
-          and fingerprint.security_definer is not distinct from procedure.prosecdef
+        left join pg_catalog.pg_proc procedure
+            on procedure.oid = pg_catalog.to_regprocedure(fingerprint.signature)
+        where procedure.oid is null
+           or fingerprint.definition is distinct from pg_catalog.pg_get_functiondef(procedure.oid)
+           or fingerprint.acl is distinct from procedure.proacl::text
+           or fingerprint.configuration is distinct from procedure.proconfig::text
+           or fingerprint.security_definer is distinct from procedure.prosecdef
     ) then
-        raise exception 'provider reconciliation: schema reapply changed claim RPC';
+        raise exception 'provider reconciliation: schema reapply changed RPCs';
     end if;
 end;
 $reapply$;

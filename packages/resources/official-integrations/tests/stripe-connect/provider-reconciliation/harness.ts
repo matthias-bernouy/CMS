@@ -22,6 +22,7 @@ export type ProviderReconciliationHarness = {
         readonly stripeRequests: unknown[];
         seedTerminalReconciliationPage(runKey: string): TerminalReconciliationSeed;
         removeTerminalReconciliationDispute(disputeRowId: number): void;
+        seedPaymentProjection(paymentId: number, key: string): void;
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
     };
@@ -54,17 +55,4 @@ export function postgrestCalls(
     harness: ProviderReconciliationHarness,
 ): Array<[string, string]> {
     return harness.rest.postgrestRequests.map(request => [request.method, request.table]);
-}
-
-export function terminalPageBaselineDbCalls(options: {
-    operationsWithPayment: number;
-    paymentProjections: number;
-    operationProjections: number;
-    disputeProjections: number;
-}): number {
-    return 3
-        + options.operationsWithPayment
-        + options.paymentProjections
-        + (2 * options.operationProjections)
-        + (4 * options.disputeProjections);
 }

@@ -39,10 +39,10 @@ security invoker
 set search_path = ''
 as $$
     select coalesce(
-        pg_catalog.jsonb_agg(pg_catalog.to_jsonb(claimed) order by claimed.id),
+        pg_catalog.jsonb_agg(claimed.projection order by claimed.projection->>'id'),
         '[]'::jsonb
     )
-    from stripe_connect.claim_commerce_projection_outbox(p_owner, p_limit) claimed
+    from stripe_connect.claim_reconciliation_projection_batch(p_owner, p_limit) claimed
 $$;
 
 create function provider_reconciliation_test.wait_until_blocked(
