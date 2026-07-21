@@ -1,4 +1,4 @@
-import type { DashboardAction } from "@bernouy/cms-dashboards";
+import { isSafeDashboardExpression, type DashboardAction } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../values";
 import { requiredText } from "../common";
@@ -49,9 +49,24 @@ export function parseSelection(value: Record<string, unknown>): { opens?: string
 }
 
 function parseActionAfter(value: Record<string, unknown>, name: string): NonNullable<DashboardAction["after"]> {
+    const hasOpens = Object.hasOwn(value, "opens");
+    const hasResource = Object.hasOwn(value, "resource");
+    const opens = hasOpens ? requiredText(value.opens, `${name}.opens`) : undefined;
+    const row = text(value.row);
+    const resource = hasResource ? requiredText(value.resource, `${name}.resource`) : undefined;
+    if (row && !opens) {
+        throw new IntegrationInputError(`${name}.row`, "requires opens");
+    }
+    if (!hasOpens && !hasResource) {
+        throw new IntegrationInputError(name, "must declare opens or resource");
+    }
+    if (resource && !isSafeDashboardExpression(resource, ["result"])) {
+        throw new IntegrationInputError(`${name}.resource`, "must be a safe $result expression");
+    }
     return {
-        opens: requiredText(value.opens, `${name}.opens`),
-        ...(text(value.row) ? { row: text(value.row)! } : {}),
+        ...(opens ? { opens } : {}),
+        ...(row ? { row } : {}),
+        ...(resource ? { resource } : {}),
     };
 }
 

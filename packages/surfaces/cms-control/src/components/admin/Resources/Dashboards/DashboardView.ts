@@ -14,7 +14,7 @@ import {
 } from "./api";
 import { runDashboardMediaAction, runDashboardWidgetAction } from "./DashboardViewActions";
 import { runDashboardLookupCreate } from "./DashboardViewLookups";
-import { detailKey, type DetailSelection } from "./domain";
+import { detailKey, DetailResourceState, type DetailSelection, validDetailSelection } from "./domain";
 import { isDashboardExampleMode } from "./mode";
 import { renderDashboardShell, renderExampleShell } from "./rendering";
 import { configureDashboardBindingFilters } from "./runtime/bindingFilters";
@@ -40,6 +40,8 @@ export class DashboardView extends Component {
     private detailSelection: DetailSelection | null = null;
     private readonly tabState = new Map<string, number>();
     private readonly drafts = new Map<string, Record<string, unknown>>();
+    private readonly detailResource = new DetailResourceState();
+    private definitionsReloadGeneration = 0;
     private observer: MutationObserver | null = null;
 
     constructor() {
@@ -71,6 +73,8 @@ export class DashboardView extends Component {
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
         this.observer?.disconnect();
         this.observer = null;
+        this.definitionsReloadGeneration += 1;
+        this.detailResource.clear();
     }
 
     private startBoundSource(): void {
@@ -98,16 +102,34 @@ export class DashboardView extends Component {
         this.render();
     }
 
-    private ensureDashboardSelection(): void {
+    private ensureDashboardSelection(invalidateActions = true): void {
+        const clearDetailResource = (): void => {
+            if (invalidateActions) {
+                this.detailResource.clear();
+            } else {
+                this.detailResource.clearResource();
+            }
+        };
         const group = this.activeGroup();
         if (!group) {
+            clearDetailResource();
             this.selectedDashboard = "";
             this.detailSelection = null;
             return;
         }
         if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
+            clearDetailResource();
             this.selectedDashboard = group.dashboards[0]?.id ?? "";
             this.detailSelection = null;
+            return;
+        }
+        const dashboard = group.dashboards.find((candidate) => candidate.id === this.selectedDashboard)!;
+        if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
+            clearDetailResource();
+            this.detailSelection = null;
+            if (!this.isExampleMode()) {
+                replaceSelectionUrl(this.selection());
+            }
         }
     }
 
@@ -116,13 +138,16 @@ export class DashboardView extends Component {
             renderExampleShell(this.shadowRoot!, this.detailSelection?.row ?? null);
             return;
         }
+        const group = this.activeGroup();
+        const dashboard = this.activeDashboard();
         renderDashboardShell(
             this.shadowRoot!,
-            this.activeGroup(),
-            this.activeDashboard(),
+            group,
+            dashboard,
             this.detailSelection,
             this.tabState,
             this.drafts,
+            dashboard ? this.detailResource.current(dashboard.source, dashboard.id, this.detailSelection) : null,
         );
     }
 
@@ -144,6 +169,7 @@ export class DashboardView extends Component {
     }
 
     private syncFromSelection(selection: DashboardSelection): void {
+        this.detailResource.clear();
         this.selectedSource = selection.source;
         this.selectedDashboard = selection.dashboard;
         this.detailSelection =
@@ -162,6 +188,7 @@ export class DashboardView extends Component {
     private onSelection = (event: CustomEvent<DashboardSelection>): void => this.syncSelectionAndRender(event.detail);
     private onPopState = (): void => this.syncSelectionAndRender(currentSelection());
     private onWidgetRowSelect = (event: CustomEvent<WidgetRowSelectDetail>): void => {
+        this.detailResource.clear();
         this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
         if (!this.isExampleMode()) {
             pushSelectionUrl(this.selection());
@@ -170,6 +197,7 @@ export class DashboardView extends Component {
     };
 
     private onWidgetBack = (): void => {
+        this.detailResource.clear();
         this.detailSelection = null;
         if (!this.isExampleMode()) {
             replaceSelectionUrl(this.selection());
@@ -183,6 +211,7 @@ export class DashboardView extends Component {
             return;
         }
         if (event.detail.target) {
+            this.detailResource.clear();
             this.detailSelection = { collection: event.detail.target, row: "__new__" };
             if (!this.isExampleMode()) {
                 pushSelectionUrl(this.selection());
@@ -236,11 +265,28 @@ export class DashboardView extends Component {
             reload: (collection: string, row: string) => this.reloadDetail(collection, row),
             clearDetail: () => this.clearDetail(),
             openDetail: (collection: string, row: string) => this.openDetail(collection, row),
+            setDetailResource: (collection: string, row: string, resource: unknown) =>
+                this.setDetailResource(collection, row, resource),
+            actionCoordinator: this.detailResource,
         };
     }
 
     private openDetail(collection: string, row: string): void {
-        this.detailSelection = { collection, row };
+        const dashboard = this.activeDashboard();
+        const detail = { collection, row };
+        if (!dashboard || !validDetailSelection(dashboard, detail)) {
+            this.detailResource.clearResource();
+            this.detailSelection = null;
+            if (!this.isExampleMode()) {
+                replaceSelectionUrl(this.selection());
+            }
+            this.render();
+            return;
+        }
+        if (!this.detailResource.matches(dashboard.source, dashboard.id, collection, row)) {
+            this.detailResource.clearResource();
+        }
+        this.detailSelection = detail;
         if (!this.isExampleMode()) {
             replaceSelectionUrl(this.selection());
         }
@@ -248,6 +294,7 @@ export class DashboardView extends Component {
     }
 
     private clearDetail(): void {
+        this.detailResource.clearResource();
         this.detailSelection = null;
         if (!this.isExampleMode()) {
             replaceSelectionUrl(this.selection());
@@ -260,14 +307,30 @@ export class DashboardView extends Component {
         if (!dashboard) {
             return;
         }
+        if (this.detailResource.clearResource()) {
+            this.render();
+            return;
+        }
         document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
 
     private async reloadDefinitions(): Promise<void> {
-        this.groups = await fetchDashboards();
+        const generation = ++this.definitionsReloadGeneration;
+        const groups = await fetchDashboards();
+        if (generation !== this.definitionsReloadGeneration) {
+            return;
+        }
+        this.detailResource.clearResource();
+        this.groups = groups;
         this.selectedSource ||= defaultDashboardSource(this.groups);
-        this.ensureDashboardSelection();
-        this.render();
+        this.ensureDashboardSelection(false);
+    }
+
+    private setDetailResource(collection: string, row: string, resource: unknown): void {
+        const dashboard = this.activeDashboard();
+        if (dashboard) {
+            this.detailResource.set(dashboard.source, dashboard.id, collection, row, resource);
+        }
     }
 }
 

@@ -1845,6 +1845,9 @@
                                         "locale": "$field.locale",
                                         "timezone": "$field.timezone"
                                     }
+                                },
+                                "after": {
+                                    "resource": "$result"
                                 }
                             },
                             {

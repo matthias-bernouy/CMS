@@ -1,5 +1,6 @@
 import type { Source } from "@bernouy/cms-sources";
 import type { DashboardAction, DashboardDto, DashboardWidget } from "../../interfaces/Dashboard";
+import { isSafeDashboardExpression } from "../dashboardPaths";
 import { validateEndpointRef } from "./endpointRefs";
 import { isSafeDownloadFilename, isSafeActionAfterExpression, validateRequiredId, validateVisibility } from "./shared";
 
@@ -52,22 +53,45 @@ export function validateAction(
         if (!action.endpoint) {
             errors.push(`${path}.after requires endpoint`);
         }
-        validateActionAfter(action.after, `${path}.after`, dashboard, errors);
+        validateActionAfter(action, `${path}.after`, dashboard, errors, visibilityFieldIds !== undefined);
     }
 }
 
 function validateActionAfter(
-    after: NonNullable<DashboardAction["after"]>,
+    action: DashboardAction,
     path: string,
     dashboard: DashboardDto,
     errors: string[],
+    detailAction: boolean,
 ): void {
-    validateRequiredId(`${path}.opens`, after.opens, errors);
-    if (after.opens && !findWidget(dashboard.views, after.opens)) {
-        errors.push(`${path}.opens references unknown widget "${after.opens}"`);
+    const after = action.after!;
+    const hasOpens = after.opens !== undefined;
+    const hasResource = after.resource !== undefined;
+    if (!hasOpens && !hasResource) {
+        errors.push(`${path} must declare opens or resource`);
+    }
+    if (hasOpens) {
+        validateRequiredId(`${path}.opens`, after.opens, errors);
+        if (after.opens && !findWidget(dashboard.views, after.opens)) {
+            errors.push(`${path}.opens references unknown widget "${after.opens}"`);
+        }
     }
     if (after.row !== undefined) {
+        if (!hasOpens) {
+            errors.push(`${path}.row requires opens`);
+        }
         validateActionAfterExpression(`${path}.row`, after.row, errors);
+    }
+    if (hasResource) {
+        if (typeof after.resource !== "string" || !isSafeDashboardExpression(after.resource, ["result"])) {
+            errors.push(`${path}.resource must be a safe $result expression`);
+        }
+        if (!hasOpens && !detailAction) {
+            errors.push(`${path}.resource requires after.opens on collection actions`);
+        }
+        if (action.download !== undefined) {
+            errors.push(`${path}.resource is not supported with download`);
+        }
     }
 }
 

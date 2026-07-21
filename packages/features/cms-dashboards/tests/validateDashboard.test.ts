@@ -332,6 +332,74 @@ describe("validateDashboard", () => {
         );
     });
 
+    test("accepts result resources for the current or a newly opened detail", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+
+        for (const after of [
+            { resource: "$result" },
+            { resource: "$result.item" },
+            { opens: "productDetail", row: "$result.item.id", resource: "$result.item" },
+        ]) {
+            detail.actions![0]!.after = after as never;
+            expect(validateDashboard(dashboard, { source })).toEqual([]);
+        }
+    });
+
+    test("rejects incomplete post-action result resource contracts", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+
+        for (const [after, error] of [
+            [{}, "views.1.actions.0.after must declare opens or resource"],
+            [{ row: "$result.id" }, "views.1.actions.0.after.row requires opens"],
+        ] as const) {
+            detail.actions![0]!.after = after as never;
+            expect(validateDashboard(dashboard, { source })).toContain(error);
+        }
+    });
+
+    test("only accepts safe result expressions for post-action resources", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+
+        for (const resource of [
+            "$field.item",
+            "$selection.item",
+            "$result.__proto__.item",
+            "$result.constructor.item",
+            "$result.item.prototype",
+        ]) {
+            detail.actions![0]!.after = { resource } as never;
+            expect(validateDashboard(dashboard, { source })).toContain(
+                "views.1.actions.0.after.resource must be a safe $result expression",
+            );
+        }
+    });
+
+    test("requires an opened detail for collection resources and rejects download resources", () => {
+        const dashboard = validDashboard();
+        const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+        table.actions = [
+            {
+                id: "refresh",
+                label: "Refresh",
+                endpoint: { endpoint: "listProducts" },
+                after: { resource: "$result" },
+            } as never,
+        ];
+        detail.actions![0]!.download = { filename: "product.json" };
+        detail.actions![0]!.after = { resource: "$result" } as never;
+
+        expect(validateDashboard(dashboard, { source })).toEqual(
+            expect.arrayContaining([
+                "views.0.actions.0.after.resource requires after.opens on collection actions",
+                "views.1.actions.0.after.resource is not supported with download",
+            ]),
+        );
+    });
+
     test("rejects invalid binding expressions", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;

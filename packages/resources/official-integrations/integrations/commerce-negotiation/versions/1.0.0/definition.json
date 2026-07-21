@@ -683,6 +683,9 @@
                                         "proposalTtlHours": "$field.proposalTtlHours",
                                         "enabled": "$field.enabled"
                                     }
+                                },
+                                "after": {
+                                    "resource": "$result"
                                 }
                             }
                         ],

@@ -1,18 +1,16 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DashboardRuntimeWidget, DetailSelection, RenderContext, RuntimeDetailWidget } from "../domain";
-import "./../widgets/w-section/WSection";
-import "./../widgets/w-table/WTable";
-import "./../widgets/w-navigation-list/WNavigationList";
-import "./../widgets/w-detail/WDetail";
-import { detailReloadEvent } from "./reload";
-import { relationDetailSectionElement } from "./mountRelations";
+import type { DashboardRuntimeWidget, DetailSelection, RenderContext } from "../../domain";
+import "../../widgets/w-navigation-list/WNavigationList";
+import "../../widgets/w-section/WSection";
+import "../../widgets/w-table/WTable";
+import { detailElement } from "./detail";
 import {
     appendSourceContent,
     jsonAttr,
     navigationItemsTemplate,
     sourceWrapper,
     tableRowsTemplate,
-} from "./mountSource";
+} from "../mountSource";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -130,34 +128,6 @@ function navigationListElement(
     const element = document.createElement("cms-dashboard-w-navigation-list");
     element.setAttribute("data-config-json", jsonAttr(widget));
     element.append(navigationItemsTemplate(widget));
-    appendSourceContent(wrapper, element);
-    return wrapper;
-}
-
-function detailElement(
-    widget: RuntimeDetailWidget,
-    context: RenderContext,
-    detail: DetailSelection | null,
-): HTMLElement {
-    const rowKey = detail?.row ?? "";
-    const wrapper = sourceWrapper(
-        context.dashboard.source,
-        widget.source,
-        { selection: { id: rowKey } },
-        "dashboardData",
-    );
-    wrapper.setAttribute(
-        "cms-reload-on",
-        detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey),
-    );
-    const element = document.createElement("cms-dashboard-w-detail");
-    element.setAttribute("data-config-json", jsonAttr(widget));
-    element.setAttribute("data-source-json", "{{ dashboardData | json }}");
-    element.setAttribute("data-row-key", rowKey);
-    element.setAttribute("data-source-id", context.dashboard.source);
-    for (const relationWidget of widget.relationWidgets ?? []) {
-        element.append(relationDetailSectionElement(relationWidget));
-    }
     appendSourceContent(wrapper, element);
     return wrapper;
 }

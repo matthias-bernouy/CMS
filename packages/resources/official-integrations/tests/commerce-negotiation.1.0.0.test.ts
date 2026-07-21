@@ -118,6 +118,13 @@ describe("commerce negotiation 1.0.0", () => {
         expect(settings).toBeTruthy();
         expect(validateDashboard(proposals!, { source })).toEqual([]);
         expect(validateDashboard(settings!, { source })).toEqual([]);
+        const settingsDetail = settings?.views.find((view) => view.id === "negotiationSettings");
+        if (settingsDetail?.widget !== "w-detail") {
+            throw new Error("negotiation settings detail not installed");
+        }
+        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
+            resource: "$result",
+        });
         expect(deployment?.dataApiSchemas).toEqual(["commerce_negotiation"]);
         expect(deployment?.functions[0]?.name).toBe("cms-commerce-negotiation");
         expect(deployment?.functions[0]?.secrets).not.toHaveProperty("CMS_COMMERCE_API_KEY");

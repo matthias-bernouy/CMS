@@ -2424,6 +2424,9 @@
                                         "connectOutputFormat": "$field.connectOutputFormat",
                                         "connectOutputType": "$field.connectOutputType"
                                     }
+                                },
+                                "after": {
+                                    "resource": "$result"
                                 }
                             }
                         ],

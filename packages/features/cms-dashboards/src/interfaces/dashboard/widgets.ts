@@ -23,8 +23,9 @@ export type DashboardAction = {
     };
     selection?: { opens?: string };
     after?: {
-        opens: string;
+        opens?: string;
         row?: DashboardExpr;
+        resource?: DashboardExpr;
     };
     confirm?: string;
     visibleWhen?: DashboardVisibilityRule;

@@ -13,6 +13,39 @@ describe("@bernouy/cms-integrations declarative imports", () => {
         expect(definition.artifacts?.[1]).toEqual(EXPECTED_DELIVERY_DASHBOARD);
     });
 
+    test("parses safe post-action result resource contracts", () => {
+        for (const after of [
+            { resource: "$result" },
+            { resource: "$result.item" },
+            { opens: "shipmentDetail", row: "$result.item.id", resource: "$result.item" },
+        ]) {
+            const definition = parseIntegrationDefinition(deliveryDefinitionWithAfter(after));
+            const dashboard = definition.artifacts?.[1];
+            if (dashboard?.type !== "dashboard") {
+                throw new Error("dashboard artifact not parsed");
+            }
+            const detail = dashboard.dashboard.views[0];
+            if (detail?.widget !== "w-detail") {
+                throw new Error("detail widget not parsed");
+            }
+            expect(detail.actions?.[0]?.after).toEqual(after);
+        }
+    });
+
+    test("rejects malformed post-action result resource contracts", () => {
+        for (const [after, error] of [
+            [{}, /after.*must declare opens or resource/],
+            [{ row: "$result.id" }, /after\.row.*requires opens/],
+            [{ resource: "$field.item" }, /after\.resource.*safe \$result expression/],
+            [{ resource: "$selection.item" }, /after\.resource.*safe \$result expression/],
+            [{ resource: "$result.__proto__.item" }, /after\.resource.*safe \$result expression/],
+            [{ resource: "$result.constructor.item" }, /after\.resource.*safe \$result expression/],
+            [{ resource: "$result.item.prototype" }, /after\.resource.*safe \$result expression/],
+        ] as const) {
+            expect(() => parseIntegrationDefinition(deliveryDefinitionWithAfter(after))).toThrow(error);
+        }
+    });
+
     test("parses local selections and rejects legacy lookup hydration refs", () => {
         const parsed = parseIntegrationDefinition(overlayLookupDefinition("$resource.relayPoint"));
         expect(parsed.artifacts?.[0]).toMatchObject({
@@ -146,6 +179,12 @@ function overlayLookupDefinition(selected: unknown) {
             },
         ],
     };
+}
+
+function deliveryDefinitionWithAfter(after: unknown) {
+    const definition = structuredClone(DELIVERY_DEFINITION) as any;
+    definition.artifacts[1].dashboard.views[0].actions[0].after = after;
+    return definition;
 }
 
 function dashboardArtifact(id: string, source: string) {

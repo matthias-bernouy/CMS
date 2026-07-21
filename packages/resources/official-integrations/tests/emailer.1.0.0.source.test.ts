@@ -87,6 +87,22 @@ describe("emailer 1.0.0 source", () => {
         expect(validateDashboard(templatesDashboard!, { source })).toEqual([]);
         expect(validateDashboard(settingsDashboard!, { source })).toEqual([]);
         expect(validateDashboard(campaignsDashboard!, { source: broadcastSource })).toEqual([]);
+        const templateDetail = templatesDashboard?.views.find((view) => view.id === "templateDetail");
+        const settingsDetail = settingsDashboard?.views.find((view) => view.id === "emailerSettings");
+        if (templateDetail?.widget !== "w-detail" || settingsDetail?.widget !== "w-detail") {
+            throw new Error("emailer details not installed");
+        }
+        expect(templateDetail.actions?.find((action) => action.id === "saveTemplate")?.after).toEqual({
+            opens: "templateDetail",
+            row: "$result.key",
+            resource: "$result",
+        });
+        expect(templateDetail.actions?.find((action) => action.id === "archiveTemplate")?.after).toEqual({
+            resource: "$result",
+        });
+        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
+            resource: "$result",
+        });
         const dashboardJson = JSON.stringify(templatesDashboard);
         const settingsJson = JSON.stringify(settingsDashboard);
         expect(dashboardJson).toContain("newTemplate");

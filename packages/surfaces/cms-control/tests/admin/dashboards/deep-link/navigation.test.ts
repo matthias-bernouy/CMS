@@ -1,25 +1,9 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { DashboardNav } from "cms-control/components/admin/Resources/Dashboards/DashboardNav";
 import { DashboardView } from "cms-control/components/admin/Resources/Dashboards/DashboardView";
-
-const selectedDashboard = "commerce-configuration";
-const groups = [
-    {
-        source: {
-            urn: "urn:commerce",
-            id: "commerce",
-            name: "Commerce",
-            endpointCount: 1,
-            dashboardCount: 2,
-            readonly: false,
-        },
-        endpoints: [],
-        dashboards: [
-            { id: "commerce-products", source: "commerce", meta: { name: "Products" }, views: [] },
-            { id: selectedDashboard, source: "commerce", meta: { name: "Settings" }, views: [] },
-        ],
-    },
-];
+import { DASHBOARD_SELECTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/api";
+import { DetailResourceState } from "cms-control/components/admin/Resources/Dashboards/domain";
+import { groups, selectedDashboard } from "./fixtures";
 
 describe("dashboard deep links", () => {
     beforeEach(() => {
@@ -44,6 +28,24 @@ describe("dashboard deep links", () => {
             expect(selectionOf(component)).toBe(selectedDashboard);
             component.remove();
         }
+    });
+
+    test("invalidates pending action resources on navigation and disconnect", () => {
+        const component = new DashboardView();
+        document.body.append(component);
+        const resources = (component as unknown as { detailResource: DetailResourceState }).detailResource;
+        const finishNavigation = resources.beginAction();
+
+        window.dispatchEvent(
+            new CustomEvent(DASHBOARD_SELECTION_EVENT, {
+                detail: { source: "commerce", dashboard: selectedDashboard },
+            }),
+        );
+
+        expect(finishNavigation()).toBe("stale");
+        const finishDisconnect = resources.beginAction();
+        component.remove();
+        expect(finishDisconnect()).toBe("stale");
     });
 });
 

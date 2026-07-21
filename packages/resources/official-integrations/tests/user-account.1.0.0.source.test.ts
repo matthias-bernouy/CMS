@@ -196,6 +196,13 @@ describe("user-account 1.0.0 source", () => {
         const accountAvatarStyle = decodeBlocSource(accountAvatar, "style.css");
 
         expect(missing).toMatchObject({ exists: false, userId: "user-123" });
+        const accountDetailView = dashboard?.views.find((view) => view.id === "accountDetail");
+        if (accountDetailView?.widget !== "w-detail") {
+            throw new Error("user account detail not installed");
+        }
+        expect(accountDetailView.actions?.find((action) => action.id === "saveAccount")?.after).toEqual({
+            resource: "$result",
+        });
         expect(source?.meta).toMatchObject({
             icon: "assets/user-personal-information.svg",
             svg: expect.stringContaining("<svg"),

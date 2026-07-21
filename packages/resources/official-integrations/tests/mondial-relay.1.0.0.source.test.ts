@@ -244,6 +244,13 @@ describe("mondial-relay 1.0.0 source", () => {
         const tableActions = shipmentsTable?.actions as JsonRecord[] | undefined;
         expect(tableActions?.map((action) => action.id)).toEqual(["openSettings"]);
         expect(tableActions?.[0]).toMatchObject({ selection: { opens: "settingsDetail" } });
+        const settingsDetail = dashboard?.views.find((view) => view.id === "settingsDetail");
+        if (settingsDetail?.widget !== "w-detail") {
+            throw new Error("delivery settings detail not installed");
+        }
+        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
+            resource: "$result",
+        });
         const dashboardJson = JSON.stringify(dashboard);
         expect(dashboardJson).toContain("recoverUnknownShipment");
         expect(dashboardJson).not.toContain("createShipmentForm");

@@ -972,7 +972,8 @@
                                 },
                                 "after": {
                                     "opens": "templateDetail",
-                                    "row": "$result.key"
+                                    "row": "$result.key",
+                                    "resource": "$result"
                                 }
                             },
                             {
@@ -998,6 +999,9 @@
                                     "params": {
                                         "key": "$resource.key"
                                     }
+                                },
+                                "after": {
+                                    "resource": "$result"
                                 }
                             }
                         ],
@@ -1267,6 +1271,9 @@
                                         "defaultFrom": "$field.defaultFrom",
                                         "defaultReplyTo": "$field.defaultReplyTo"
                                     }
+                                },
+                                "after": {
+                                    "resource": "$result"
                                 }
                             }
                         ]

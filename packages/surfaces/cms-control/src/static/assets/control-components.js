@@ -15476,7 +15476,98 @@ p {
 </main>
 `;
 
-  // src/components/admin/Resources/Dashboards/domain.ts
+  // src/components/admin/Resources/Dashboards/domain/detailResource.ts
+  class DetailResourceState {
+    value = null;
+    generation = 0;
+    batch = null;
+    current(sourceId, dashboardId, detail) {
+      if (!this.value) {
+        return null;
+      }
+      const matchesDashboard = this.value.sourceId === sourceId && this.value.dashboardId === dashboardId;
+      const matchesDetail = detail ? this.value.collection === detail.collection && this.value.row === detail.row : this.value.row === "";
+      if (!matchesDashboard || !matchesDetail) {
+        this.clear();
+        return null;
+      }
+      return this.value;
+    }
+    set(sourceId, dashboardId, collection, row, resource) {
+      if (resource === undefined || resource === null) {
+        this.clearResource();
+        return;
+      }
+      this.value = { sourceId, dashboardId, collection, row, resource };
+    }
+    matches(sourceId, dashboardId, collection, row) {
+      return this.value?.sourceId === sourceId && this.value.dashboardId === dashboardId && this.value.collection === collection && this.value.row === row;
+    }
+    clear() {
+      const hadValue = this.clearResource();
+      this.generation += 1;
+      return hadValue;
+    }
+    clearResource() {
+      const hadValue = this.value !== null;
+      this.value = null;
+      return hadValue;
+    }
+    beginAction() {
+      let batch = this.batch;
+      if (!batch || batch.generation !== this.generation) {
+        batch = { active: 0, generation: this.generation, overlapped: false };
+        this.batch = batch;
+      } else if (batch.active > 0) {
+        batch.overlapped = true;
+      }
+      batch.active += 1;
+      let finished = false;
+      return () => {
+        if (finished) {
+          return "stale";
+        }
+        finished = true;
+        batch.active -= 1;
+        const isCurrent = batch.generation === this.generation;
+        const isLast = batch.active === 0;
+        if (isLast && this.batch === batch) {
+          this.batch = null;
+        }
+        if (!isCurrent) {
+          return "stale";
+        }
+        if (!batch.overlapped) {
+          return "reuse";
+        }
+        return "reload";
+      };
+    }
+  }
+  // src/components/admin/Resources/Dashboards/domain/relations.ts
+  function relationWidgetsFor(dashboard, detail, projections) {
+    return projections.filter((projection) => projection.dashboardId === dashboard.id && projection.viewId === detail.collection && projection.widget === "table").map((projection) => ({
+      widget: "w-relation-table",
+      id: projection.sectionId ?? `${projection.relationId}Relation`,
+      ...projection.title ? { title: projection.title } : {},
+      placement: projection.placement === "side" ? "aside" : "main",
+      relationId: projection.relationId,
+      fromId: detail.row,
+      ...projection.pageSize ? { pageSize: projection.pageSize } : {},
+      rowKey: projection.rowKey ?? "id",
+      columns: projection.columns?.length ? projection.columns : [
+        {
+          id: "id",
+          label: "ID",
+          path: projection.rowKey ?? "id",
+          primary: true
+        }
+      ],
+      ...projection.actions?.length ? { actions: projection.actions } : {}
+    }));
+  }
+
+  // src/components/admin/Resources/Dashboards/domain/selection.ts
   function widgetsForSelection(dashboard, detail, projections = []) {
     if (!detail) {
       return mainWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
@@ -15486,6 +15577,9 @@ p {
   }
   function detailKey(collection, row) {
     return `${collection}:${row}`;
+  }
+  function validDetailSelection(dashboard, detail) {
+    return detail && detailWidgetsFor(dashboard.views, detail.collection).length ? detail : null;
   }
   function mainWidgetsFor(widgets, detailTargets) {
     return widgets.flatMap((widget) => {
@@ -15558,28 +15652,6 @@ p {
   function isDetailWidget(widget) {
     return widget.widget === "w-detail";
   }
-  function relationWidgetsFor(dashboard, detail, projections) {
-    return projections.filter((projection) => projection.dashboardId === dashboard.id && projection.viewId === detail.collection && projection.widget === "table").map((projection) => ({
-      widget: "w-relation-table",
-      id: projection.sectionId ?? `${projection.relationId}Relation`,
-      ...projection.title ? { title: projection.title } : {},
-      placement: projection.placement === "side" ? "aside" : "main",
-      relationId: projection.relationId,
-      fromId: detail.row,
-      ...projection.pageSize ? { pageSize: projection.pageSize } : {},
-      rowKey: projection.rowKey ?? "id",
-      columns: projection.columns?.length ? projection.columns : [
-        {
-          id: "id",
-          label: "ID",
-          path: projection.rowKey ?? "id",
-          primary: true
-        }
-      ],
-      ...projection.actions?.length ? { actions: projection.actions } : {}
-    }));
-  }
-
   // ../../features/cms-dashboards/src/interfaces/dashboard/limits.ts
   var DASHBOARD_MAX_OPTIONS = 256;
   var DASHBOARD_MAX_NESTED_FIELDS = 64;
@@ -16656,66 +16728,68 @@ p {
     return item.id;
   }
 
-  // src/components/admin/Resources/Dashboards/DashboardViewActions.ts
-  async function runDashboardWidgetAction(context, action) {
-    const { group, dashboard, detail } = context;
-    if (!group || !dashboard) {
+  // src/components/admin/Resources/Dashboards/DashboardViewActions/outcome.ts
+  function once(finish) {
+    let completion;
+    return () => completion ??= finish?.() ?? "reuse";
+  }
+  function postActionResource(after, result) {
+    if (!after?.resource) {
+      return { found: false };
+    }
+    const value = resolveExpression(after.resource, { result });
+    return value === undefined ? { found: false } : { found: true, value };
+  }
+  function postActionResourceTarget(declaredAfter, after, actionDetail, detail, actionId, result, resource) {
+    if (declaredAfter?.opens) {
+      return after;
+    }
+    if (!actionDetail || actionId.startsWith("delete")) {
+      return null;
+    }
+    if (detail?.row !== "__new__") {
+      return actionDetail;
+    }
+    const row = postActionCreatedId(result, resource);
+    return row ? { collection: detail.collection, row } : null;
+  }
+  function renderResourceTarget(context, target, after, detail) {
+    if (after || detail?.row === "__new__") {
+      context.openDetail(target.collection, target.row);
       return;
     }
-    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
-    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
-    try {
-      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
-        ...context.drafts.get(key) ?? {},
-        ...action.fields ?? {}
-      }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group]);
-      if (actionDetail) {
-        context.drafts.delete(key);
-      }
-      if (result.invalidatesSchema && context.reloadDefinitions) {
-        try {
-          await context.reloadDefinitions();
-        } catch {
-          ku(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
-        }
-      }
-      if (result.kind === "download") {
-        downloadBlob(result.blob, result.filename);
-        ku(`${action.action} downloaded`, { type: "success" });
-        return;
-      }
-      ku(`${action.action} completed`, { type: "success" });
-      const after = result.kind === "value" ? afterTarget(result.after, result.value, actionDetail) : null;
-      if (after) {
-        context.openDetail(after.collection, after.row);
-      } else if (!detail) {
-        context.render();
-      } else if (action.action.startsWith("delete")) {
-        context.clearDetail();
-      } else if (detail.row === "__new__" && createdId(result.value)) {
-        context.openDetail(detail.collection, createdId(result.value));
-      } else {
-        context.reload(detail.collection, detail.row);
-      }
-    } catch (error) {
-      ku(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+    context.render();
+  }
+  function runPostActionFallback(context, after, detail, actionId, result, resource) {
+    const created = postActionCreatedId(result, resource);
+    if (after) {
+      context.openDetail(after.collection, after.row);
+    } else if (!detail) {
+      context.render();
+    } else if (actionId.startsWith("delete")) {
+      context.clearDetail();
+    } else if (detail.row === "__new__" && created) {
+      context.openDetail(detail.collection, created);
+    } else {
+      context.reload(detail.collection, detail.row);
     }
   }
-  function downloadBlob(blob, filename) {
-    if (typeof URL.createObjectURL !== "function") {
-      throw new Error("Downloads are not supported in this browser");
+  function changesPostActionSelection(after, detail, actionId, result, resource) {
+    if (after) {
+      return !detail || after.collection !== detail.collection || after.row !== detail.row;
     }
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.hidden = true;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    if (typeof URL.revokeObjectURL === "function") {
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    return Boolean(detail && (actionId.startsWith("delete") || detail.row === "__new__" && postActionCreatedId(result, resource) !== null));
+  }
+  function afterTarget(after, result, detail) {
+    if (!after?.opens) {
+      return null;
     }
+    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
+      result,
+      ...detail ? { selection: { id: detail.row } } : {}
+    });
+    const row = stringValue(rowValue);
+    return row ? { collection: after.opens, row } : null;
   }
   function createdId(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -16730,16 +16804,8 @@ p {
     }
     return null;
   }
-  function afterTarget(after, result, detail) {
-    if (!after?.opens) {
-      return null;
-    }
-    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
-      result,
-      ...detail ? { selection: { id: detail.row } } : {}
-    });
-    const row = stringValue(rowValue);
-    return row ? { collection: after.opens, row } : null;
+  function postActionCreatedId(result, resource) {
+    return createdId(result) ?? (resource.found ? createdId(resource.value) : null);
   }
   function stringValue(value) {
     if (value === null || value === undefined) {
@@ -16753,6 +16819,8 @@ p {
     }
     return "";
   }
+
+  // src/components/admin/Resources/Dashboards/DashboardViewActions/media.ts
   async function runDashboardMediaAction(context, media) {
     const { group, dashboard, detail } = context;
     if (!group || !dashboard || !detail) {
@@ -16772,6 +16840,88 @@ p {
     const draft = { ...drafts.get(key) ?? {} };
     delete draft[field];
     Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
+  }
+
+  // src/components/admin/Resources/Dashboards/DashboardViewActions/index.ts
+  async function runDashboardWidgetAction(context, action) {
+    const { group, dashboard, detail } = context;
+    if (!group || !dashboard) {
+      return;
+    }
+    const actionDetail = detail ?? (action.detail && action.widget ? { collection: action.widget, row: action.row ?? "" } : null);
+    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
+    const finishAction = once(context.actionCoordinator?.beginAction());
+    try {
+      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, {
+        ...context.drafts.get(key) ?? {},
+        ...action.fields ?? {}
+      }, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group]);
+      if (actionDetail) {
+        context.drafts.delete(key);
+      }
+      let definitionsReloaded = false;
+      if (result.invalidatesSchema && context.reloadDefinitions) {
+        try {
+          await context.reloadDefinitions();
+          definitionsReloaded = true;
+        } catch {
+          ku(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
+        }
+      }
+      const completion = finishAction();
+      if (result.kind === "download") {
+        downloadBlob(result.blob, result.filename);
+        ku(`${action.action} downloaded`, { type: "success" });
+        if (definitionsReloaded) {
+          context.render();
+        }
+        return;
+      }
+      ku(`${action.action} completed`, { type: "success" });
+      const after = afterTarget(result.after, result.value, actionDetail);
+      const resource = postActionResource(result.after, result.value);
+      if (completion === "stale") {
+        if (definitionsReloaded) {
+          context.render();
+        }
+        return;
+      }
+      const target = postActionResourceTarget(result.after, after, actionDetail, detail, action.action, result.value, resource);
+      if (completion === "reuse" && !result.invalidatesSchema && resource.found && resource.value !== null && target && context.setDetailResource) {
+        context.setDetailResource(target.collection, target.row, resource.value);
+        renderResourceTarget(context, target, after, detail);
+        return;
+      }
+      if (definitionsReloaded) {
+        const restoresExplicitTarget = completion === "reload" && after !== null;
+        if (restoresExplicitTarget || changesPostActionSelection(after, detail, action.action, result.value, resource)) {
+          runPostActionFallback(context, after, detail, action.action, result.value, resource);
+        } else {
+          context.render();
+        }
+        return;
+      }
+      runPostActionFallback(context, after, detail, action.action, result.value, resource);
+    } catch (error) {
+      finishAction();
+      ku(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+    }
+  }
+  function downloadBlob(blob, filename) {
+    if (typeof URL.createObjectURL !== "function") {
+      throw new Error("Downloads are not supported in this browser");
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    if (typeof URL.revokeObjectURL === "function") {
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
   }
 
   // src/components/admin/Resources/Dashboards/runtime/lookups/create.ts
@@ -21063,7 +21213,43 @@ slot { display: contents; }
     return `${url.pathname}${url.search}`;
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/mount.ts
+  // src/components/admin/Resources/Dashboards/runtime/mount/detail.ts
+  function detailElement2(widget, context, detail) {
+    const rowKey = detail?.row ?? "";
+    const directResource = matchingDetailResource(widget, context, rowKey);
+    if (directResource) {
+      return detailContent(widget, context, rowKey, directResource);
+    }
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData");
+    wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
+    const element = detailContent(widget, context, rowKey);
+    element.setAttribute("data-source-json", "{{ dashboardData | json }}");
+    appendSourceContent(wrapper, element);
+    return wrapper;
+  }
+  function detailContent(widget, context, rowKey, directResource = null) {
+    const element = document.createElement("cms-dashboard-w-detail");
+    const config = directResource === null ? widget : {
+      ...widget,
+      source: { ...widget.source, itemPath: undefined }
+    };
+    element.setAttribute("data-config-json", jsonAttr(config));
+    if (directResource !== null) {
+      element.setAttribute("data-source-json", jsonAttr(directResource.resource));
+    }
+    element.setAttribute("data-row-key", rowKey);
+    element.setAttribute("data-source-id", context.dashboard.source);
+    for (const relationWidget of widget.relationWidgets ?? []) {
+      element.append(relationDetailSectionElement(relationWidget));
+    }
+    return element;
+  }
+  function matchingDetailResource(widget, context, row) {
+    const resource = context.detailResource;
+    return resource && resource.resource !== null && resource.resource !== undefined && resource.sourceId === context.dashboard.source && resource.dashboardId === context.dashboard.id && resource.collection === widget.id && resource.row === row ? resource : null;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mount/index.ts
   function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
     const core = document.createElement("cms-binding-core");
     core.className = "dashboard-widget-binding";
@@ -21142,24 +21328,9 @@ slot { display: contents; }
     appendSourceContent(wrapper, element);
     return wrapper;
   }
-  function detailElement2(widget, context, detail) {
-    const rowKey = detail?.row ?? "";
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData");
-    wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
-    const element = document.createElement("cms-dashboard-w-detail");
-    element.setAttribute("data-config-json", jsonAttr(widget));
-    element.setAttribute("data-source-json", "{{ dashboardData | json }}");
-    element.setAttribute("data-row-key", rowKey);
-    element.setAttribute("data-source-id", context.dashboard.source);
-    for (const relationWidget of widget.relationWidgets ?? []) {
-      element.append(relationDetailSectionElement(relationWidget));
-    }
-    appendSourceContent(wrapper, element);
-    return wrapper;
-  }
 
   // src/components/admin/Resources/Dashboards/rendering.ts
-  function renderDashboardShell(root, group, dashboard, detail, tabState, drafts) {
+  function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, detailResource = null) {
     query2(root, "[data-empty]").hidden = Boolean(group);
     query2(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
     query2(root, "[data-dashboard-head]").hidden = !dashboard;
@@ -21175,7 +21346,7 @@ slot { display: contents; }
       selectedRows.set(detail.collection, detail.row);
     }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query2(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
+    mountDashboardWidgets(query2(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts, detailResource }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
     query2(root, "[data-empty]").hidden = true;
@@ -21199,6 +21370,8 @@ slot { display: contents; }
     detailSelection = null;
     tabState = new Map;
     drafts = new Map;
+    detailResource = new DetailResourceState;
+    definitionsReloadGeneration = 0;
     observer = null;
     constructor() {
       super({ css: style_default6, template: template_default7 });
@@ -21228,6 +21401,8 @@ slot { display: contents; }
       window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
       this.observer?.disconnect();
       this.observer = null;
+      this.definitionsReloadGeneration += 1;
+      this.detailResource.clear();
     }
     startBoundSource() {
       if (this.isExampleMode()) {
@@ -21252,16 +21427,34 @@ slot { display: contents; }
       this.ensureDashboardSelection();
       this.render();
     }
-    ensureDashboardSelection() {
+    ensureDashboardSelection(invalidateActions = true) {
+      const clearDetailResource = () => {
+        if (invalidateActions) {
+          this.detailResource.clear();
+        } else {
+          this.detailResource.clearResource();
+        }
+      };
       const group = this.activeGroup();
       if (!group) {
+        clearDetailResource();
         this.selectedDashboard = "";
         this.detailSelection = null;
         return;
       }
-      if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
+      if (!group.dashboards.some((dashboard2) => dashboard2.id === this.selectedDashboard)) {
+        clearDetailResource();
         this.selectedDashboard = group.dashboards[0]?.id ?? "";
         this.detailSelection = null;
+        return;
+      }
+      const dashboard = group.dashboards.find((candidate) => candidate.id === this.selectedDashboard);
+      if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
+        clearDetailResource();
+        this.detailSelection = null;
+        if (!this.isExampleMode()) {
+          replaceSelectionUrl(this.selection());
+        }
       }
     }
     render() {
@@ -21269,7 +21462,9 @@ slot { display: contents; }
         renderExampleShell(this.shadowRoot, this.detailSelection?.row ?? null);
         return;
       }
-      renderDashboardShell(this.shadowRoot, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState, this.drafts);
+      const group = this.activeGroup();
+      const dashboard = this.activeDashboard();
+      renderDashboardShell(this.shadowRoot, group, dashboard, this.detailSelection, this.tabState, this.drafts, dashboard ? this.detailResource.current(dashboard.source, dashboard.id, this.detailSelection) : null);
     }
     activeGroup() {
       return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
@@ -21288,6 +21483,7 @@ slot { display: contents; }
       };
     }
     syncFromSelection(selection) {
+      this.detailResource.clear();
       this.selectedSource = selection.source;
       this.selectedDashboard = selection.dashboard;
       this.detailSelection = selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
@@ -21303,6 +21499,7 @@ slot { display: contents; }
     onSelection = (event) => this.syncSelectionAndRender(event.detail);
     onPopState = () => this.syncSelectionAndRender(currentSelection());
     onWidgetRowSelect = (event) => {
+      this.detailResource.clear();
       this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
       if (!this.isExampleMode()) {
         pushSelectionUrl(this.selection());
@@ -21310,6 +21507,7 @@ slot { display: contents; }
       this.render();
     };
     onWidgetBack = () => {
+      this.detailResource.clear();
       this.detailSelection = null;
       if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
@@ -21322,6 +21520,7 @@ slot { display: contents; }
         return;
       }
       if (event.detail.target) {
+        this.detailResource.clear();
         this.detailSelection = { collection: event.detail.target, row: "__new__" };
         if (!this.isExampleMode()) {
           pushSelectionUrl(this.selection());
@@ -21370,17 +21569,34 @@ slot { display: contents; }
         reloadDefinitions: () => this.reloadDefinitions(),
         reload: (collection, row) => this.reloadDetail(collection, row),
         clearDetail: () => this.clearDetail(),
-        openDetail: (collection, row) => this.openDetail(collection, row)
+        openDetail: (collection, row) => this.openDetail(collection, row),
+        setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),
+        actionCoordinator: this.detailResource
       };
     }
     openDetail(collection, row) {
-      this.detailSelection = { collection, row };
+      const dashboard = this.activeDashboard();
+      const detail = { collection, row };
+      if (!dashboard || !validDetailSelection(dashboard, detail)) {
+        this.detailResource.clearResource();
+        this.detailSelection = null;
+        if (!this.isExampleMode()) {
+          replaceSelectionUrl(this.selection());
+        }
+        this.render();
+        return;
+      }
+      if (!this.detailResource.matches(dashboard.source, dashboard.id, collection, row)) {
+        this.detailResource.clearResource();
+      }
+      this.detailSelection = detail;
       if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
       }
       this.render();
     }
     clearDetail() {
+      this.detailResource.clearResource();
       this.detailSelection = null;
       if (!this.isExampleMode()) {
         replaceSelectionUrl(this.selection());
@@ -21392,13 +21608,28 @@ slot { display: contents; }
       if (!dashboard) {
         return;
       }
+      if (this.detailResource.clearResource()) {
+        this.render();
+        return;
+      }
       document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
     async reloadDefinitions() {
-      this.groups = await fetchDashboards();
+      const generation = ++this.definitionsReloadGeneration;
+      const groups = await fetchDashboards();
+      if (generation !== this.definitionsReloadGeneration) {
+        return;
+      }
+      this.detailResource.clearResource();
+      this.groups = groups;
       this.selectedSource ||= defaultDashboardSource(this.groups);
-      this.ensureDashboardSelection();
-      this.render();
+      this.ensureDashboardSelection(false);
+    }
+    setDetailResource(collection, row, resource) {
+      const dashboard = this.activeDashboard();
+      if (dashboard) {
+        this.detailResource.set(dashboard.source, dashboard.id, collection, row, resource);
+      }
     }
   }
   if (!customElements.get("cms-dashboards-admin")) {
