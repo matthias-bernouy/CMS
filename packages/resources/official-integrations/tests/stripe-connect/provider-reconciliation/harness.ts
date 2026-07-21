@@ -51,6 +51,7 @@ export type ProviderReconciliationHarness = {
         seedPaymentReconciliationLedger(paymentId: number): void;
         setPaymentReconciliationSellerRecoveryAmount(paymentId: number, amount: number): void;
         failNextPaymentReconciliationLedgerRead(): void;
+        failNextPaymentReconciliationLocalContextRead(): void;
         rows(table: string): JsonRecord[];
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;

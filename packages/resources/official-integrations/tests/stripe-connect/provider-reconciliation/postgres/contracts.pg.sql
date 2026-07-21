@@ -12,6 +12,7 @@ set statement_timeout = '15s';
 \ir security.sql
 \ir behavior/read-operations.sql
 \ir behavior/read-contexts/payment-ledger.sql
+\ir behavior/read-contexts/payment-local.sql
 \ir behavior/read-contexts/provider-transfer.sql
 \ir behavior/read-contexts/operation-recovery.sql
 \ir behavior/order-and-limit.sql

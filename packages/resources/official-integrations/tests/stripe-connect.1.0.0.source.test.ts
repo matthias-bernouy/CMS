@@ -29,6 +29,7 @@ import { registerProviderExceptionResolutionContracts } from "./stripe-connect/p
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
 import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
+import { registerStalePaymentLocalContextFailureContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context-failures";
 import { registerProviderTransferContextContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/contracts";
 import { registerProviderTransferContextFailureContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/failures";
 import { registerTerminalOperationRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/terminal-contracts";
@@ -4603,6 +4604,7 @@ class StripeConnectMock {
     private failPaymentProjectionEnqueue = false;
     private failProviderExceptionResolution = false;
     private failPaymentReconciliationLedgerRead = false;
+    private failPaymentReconciliationLocalContextRead = false;
     private providerTransferContextReadsBeforeFailure: number | null = null;
     private failProviderTransferList = false;
     private losePaymentProjectionEnqueueResponse = false;
@@ -5057,6 +5059,10 @@ class StripeConnectMock {
 
     failNextPaymentReconciliationLedgerRead(): void {
         this.failPaymentReconciliationLedgerRead = true;
+    }
+
+    failNextPaymentReconciliationLocalContextRead(): void {
+        this.failPaymentReconciliationLocalContextRead = true;
     }
 
     loseNextPaymentProjectionEnqueueResponse(): void {
@@ -5677,6 +5683,11 @@ class StripeConnectMock {
         if (isPaymentReconciliationLedgerRead && this.failPaymentReconciliationLedgerRead) {
             this.failPaymentReconciliationLedgerRead = false;
             return jsonResponse({ message: "simulated payment ledger read failure" }, 500);
+        }
+        if (table === "rpc/read_payment_reconciliation_local_context" && method === "POST"
+            && this.failPaymentReconciliationLocalContextRead) {
+            this.failPaymentReconciliationLocalContextRead = false;
+            return jsonResponse({ message: "simulated payment reconciliation local context read failure" }, 500);
         }
         const isProviderTransferContextRead = table === "rpc/read_provider_transfer_reconciliation_context"
             || (table === "transfers" && method === "GET" && url.searchParams.has("stripe_transfer_id"));
@@ -6569,6 +6580,19 @@ class StripeConnectMock {
                 seller_recovery_amount: succeededRefunds.reduce(
                     (sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0,
                 ),
+            }]);
+        }
+        if (table === "rpc/read_payment_reconciliation_local_context" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const paymentId = Number(body.p_payment_id);
+            const payment = this.tables.payments.find(row => same(row.id, paymentId));
+            const refunds = this.tables.refunds
+                .filter(row => same(row.payment_id, paymentId))
+                .sort((left, right) => Number(left.id) - Number(right.id))
+                .map(row => ({ ...row }));
+            return jsonResponse([{
+                payment: payment ? { ...payment } : null,
+                refunds,
             }]);
         }
         if (table === "rpc/read_provider_transfer_reconciliation_context" && method === "POST") {
@@ -8104,6 +8128,7 @@ registerProviderExceptionResolutionContracts(createProviderReconciliationHarness
 registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerDivergenceContracts(createProviderReconciliationHarness);
 registerStalePaymentLocalContextContracts(createProviderReconciliationHarness);
+registerStalePaymentLocalContextFailureContracts(createProviderReconciliationHarness);
 registerProviderTransferContextContracts(createProviderReconciliationHarness);
 registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
 registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);

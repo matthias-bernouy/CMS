@@ -69,7 +69,7 @@ export function registerStalePaymentLocalContextContracts(
                 .toEqual([
                     ["GET", "payments"],
                     ["POST", "rpc/apply_payment_provider_projection"],
-                    ["GET", "refunds"],
+                    ["POST", "rpc/read_payment_reconciliation_local_context"],
                     ["POST", "rpc/read_payment_reconciliation_ledger"],
                     ["PATCH", "payments"],
                 ]);
@@ -128,6 +128,9 @@ export function registerStalePaymentLocalContextContracts(
             const ledgerIndex = databaseCalls.findIndex(call => (
                 call[0] === "POST" && call[1] === "rpc/read_payment_reconciliation_ledger"
             ));
+            expect(databaseCalls.filter(call => (
+                call[1] === "rpc/read_payment_reconciliation_local_context"
+            ))).toEqual([["POST", "rpc/read_payment_reconciliation_local_context"]]);
             expect(refundPatches).toHaveLength(2);
             expect(refundPatches.every(index => index < ledgerIndex)).toBe(true);
             expect(databaseCalls.slice(-2)).toEqual([

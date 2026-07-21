@@ -9,6 +9,7 @@ begin
         select * from (values
             ('stripe_connect.read_reconciliation_operations(integer)', 's', false),
             ('stripe_connect.read_payment_reconciliation_ledger(bigint)', 's', false),
+            ('stripe_connect.read_payment_reconciliation_local_context(bigint)', 's', false),
             ('stripe_connect.read_provider_transfer_reconciliation_context(text)', 's', false),
             ('stripe_connect.read_financial_operation_recovery_context(bigint,bigint,text)', 's', false),
             ('stripe_connect.claim_commerce_projection_outbox(text,integer)', 'v', false),
@@ -65,6 +66,14 @@ exception when insufficient_privilege then
     null;
 end;
 $anon_ledger$;
+do $anon_payment_local_context$
+begin
+    perform * from stripe_connect.read_payment_reconciliation_local_context(-900000001);
+    raise exception 'provider reconciliation: anon executed payment local context RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$anon_payment_local_context$;
 do $anon_transfer_context$
 begin
     perform * from stripe_connect.read_provider_transfer_reconciliation_context(
@@ -104,6 +113,14 @@ exception when insufficient_privilege then
     null;
 end;
 $authenticated_ledger$;
+do $authenticated_payment_local_context$
+begin
+    perform * from stripe_connect.read_payment_reconciliation_local_context(-900000001);
+    raise exception 'provider reconciliation: authenticated executed payment local context RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$authenticated_payment_local_context$;
 do $authenticated_transfer_context$
 begin
     perform * from stripe_connect.read_provider_transfer_reconciliation_context(
@@ -133,6 +150,8 @@ select pg_catalog.count(*)
 from stripe_connect.read_reconciliation_operations(1);
 select pg_catalog.count(*)
 from stripe_connect.read_payment_reconciliation_ledger(-900000001);
+select pg_catalog.count(*)
+from stripe_connect.read_payment_reconciliation_local_context(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.read_provider_transfer_reconciliation_context(
     'tr_provider_reconciliation_missing'

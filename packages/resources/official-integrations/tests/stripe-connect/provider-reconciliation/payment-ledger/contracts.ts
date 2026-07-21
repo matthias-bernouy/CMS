@@ -70,8 +70,7 @@ export function registerPaymentReconciliationLedgerContracts(
                 .toEqual([
                     ["GET", "payments"],
                     ["POST", "rpc/apply_payment_provider_projection"],
-                    ["GET", "payments"],
-                    ["GET", "refunds"],
+                    ["POST", "rpc/read_payment_reconciliation_local_context"],
                     ["POST", "rpc/read_payment_reconciliation_ledger"],
                     ["PATCH", "payments"],
                 ]);
