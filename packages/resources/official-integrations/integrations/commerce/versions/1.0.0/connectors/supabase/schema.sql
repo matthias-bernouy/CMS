@@ -6701,6 +6701,284 @@ from commerce.orders
 where checkout_group_id = p_checkout_group_id;
 $$;
 
+create or replace function commerce.validate_order_creation_lines(
+    p_buyer_cms_user_id text,
+    p_items jsonb,
+    p_require_verified_seller boolean,
+    p_mode text
+)
+returns table (
+    error_message text,
+    order_seller_id bigint,
+    order_currency text,
+    order_subtotal numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $$
+begin
+    return query
+    with input as materialized (
+        select
+            item.ordinality::integer as position,
+            (item.value->>'offerId')::bigint as offer_id,
+            (item.value->>'quantity')::integer as quantity
+        from jsonb_array_elements(p_items) with ordinality item(value, ordinality)
+    ),
+    axis_counts as (
+        select axis.product_id, count(*)::integer as axis_count
+        from commerce.product_variant_axes axis
+        where axis.product_id in (
+            select offer.product_id
+            from commerce.offers offer join input on input.offer_id = offer.id
+        )
+        group by axis.product_id
+    ),
+    selection_counts as (
+        select selection.product_id, selection.variant_id,
+               count(distinct selection.axis_id)::integer as selection_count
+        from commerce.product_variant_selections selection
+        where selection.variant_id in (
+            select offer.variant_id
+            from commerce.offers offer join input on input.offer_id = offer.id
+            where offer.variant_id is not null
+        )
+        group by selection.product_id, selection.variant_id
+    ),
+    context as materialized (
+        select
+            input.position,
+            input.quantity,
+            offer.id as offer_id,
+            offer.seller_id,
+            offer.product_id,
+            offer.variant_id,
+            offer.quantity_available,
+            offer.publication_status,
+            workflow.phase as workflow_phase,
+            workflow.enabled as workflow_enabled,
+            offer.availability,
+            offer.accepted_price_amount,
+            product.status as product_status,
+            product.visibility as product_visibility,
+            coalesce(axis.axis_count, 0) as axis_count,
+            variant.product_id as variant_product_id,
+            variant.status as variant_status,
+            variant.combination_key as variant_combination_key,
+            coalesce(selection.selection_count, 0) as selection_count,
+            seller.cms_user_id as seller_cms_user_id,
+            seller.verification_status as seller_verification_status,
+            seller.kind as seller_kind,
+            offer.currency,
+            first_value(offer.seller_id) over input_order as first_seller_id,
+            first_value(offer.currency) over input_order as first_currency,
+            sum(offer.accepted_price_amount::numeric * input.quantity)
+                over cumulative_order as cumulative_subtotal
+        from input
+        join commerce.offers offer on offer.id = input.offer_id
+        join commerce.products product on product.id = offer.product_id
+        join commerce.sellers seller on seller.id = offer.seller_id
+        join commerce.offer_workflow_states workflow on workflow.code = offer.workflow_state
+        left join commerce.product_variants variant on variant.id = offer.variant_id
+        left join axis_counts axis on axis.product_id = offer.product_id
+        left join selection_counts selection
+          on selection.product_id = offer.product_id
+         and selection.variant_id = offer.variant_id
+        window
+            input_order as (
+                order by input.position
+                rows between unbounded preceding and unbounded following
+            ),
+            cumulative_order as (
+                order by input.position
+                rows between unbounded preceding and current row
+            )
+    ),
+    evaluated as materialized (
+        select context.*, case
+            when context.quantity is null or context.quantity <= 0 then
+                'validation: quantity must be positive'
+            when context.publication_status <> 'active'
+              or context.workflow_phase <> 'ready'
+              or not context.workflow_enabled
+              or context.availability = 'unavailable'
+              or context.accepted_price_amount is null then
+                format('conflict: offer %s is not sellable', context.offer_id)
+            when context.quantity_available is not null
+              and context.quantity_available < context.quantity then
+                format('conflict: insufficient quantity for offer %s', context.offer_id)
+            when context.product_status <> 'active'
+              or context.product_visibility <> 'public' then
+                format('conflict: product for offer %s is not sellable', context.offer_id)
+            when context.axis_count > 0 and context.variant_id is null then
+                'validation: a product variant is required when the product has variant axes'
+            when context.variant_id is not null and (
+                context.variant_product_id is distinct from context.product_id
+                or context.variant_status is distinct from 'active'
+                or (context.axis_count > 0 and context.variant_combination_key is null)
+            ) then 'validation: an active product variant is required'
+            when context.axis_count > 0
+              and context.selection_count <> context.axis_count then
+                'validation: the product variant does not select every variant axis'
+            when context.seller_cms_user_id = p_buyer_cms_user_id then
+                'forbidden: buyers cannot purchase their own offer'
+            when context.seller_verification_status in ('rejected', 'suspended')
+              or (p_require_verified_seller
+                and context.seller_verification_status <> 'verified') then
+                format('conflict: seller for offer %s is not allowed to sell', context.offer_id)
+            when p_mode = 'ecommerce' and context.seller_kind = 'user' then
+                'conflict: marketplace offers are disabled'
+            when context.seller_id <> context.first_seller_id then
+                'conflict: one order cannot contain multiple sellers'
+            when context.currency <> context.first_currency then
+                'conflict: one order cannot contain multiple currencies'
+            when context.cumulative_subtotal > 9007199254740991 then
+                'validation: order total exceeds the supported maximum'
+            else null
+        end as validation_error
+        from context
+    )
+    select
+        (select item.validation_error from evaluated item
+         where item.validation_error is not null order by item.position limit 1),
+        (select item.first_seller_id from evaluated item
+         order by item.position desc limit 1),
+        (select item.first_currency from evaluated item
+         order by item.position desc limit 1),
+        (select item.cumulative_subtotal from evaluated item
+         order by item.position desc limit 1);
+end;
+$$;
+
+create or replace function commerce.insert_order_lines_and_reserve_inventory(
+    p_order_id bigint,
+    p_items jsonb
+)
+returns void
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+begin
+    insert into commerce.order_lines (
+        order_id, seller_id, offer_id, product_id, variant_id, accepted_proposal_id,
+        title, sku, quantity, inventory_reserved, availability_before,
+        inventory_revision_before, unit_amount, total_amount,
+        product_snapshot, variant_snapshot, offer_snapshot, seller_snapshot
+    )
+    with input as materialized (
+        select
+            item.ordinality::integer as position,
+            (item.value->>'offerId')::bigint as offer_id,
+            (item.value->>'quantity')::integer as quantity
+        from jsonb_array_elements(p_items) with ordinality item(value, ordinality)
+    ),
+    variant_options as (
+        select selection.product_id, selection.variant_id,
+               jsonb_agg(jsonb_build_object(
+                   'axisKey', axis.key,
+                   'axisLabel', axis.label,
+                   'valueKey', axis_value.key,
+                   'valueLabel', axis_value.label
+               ) order by axis.position, axis.id) as options
+        from commerce.product_variant_selections selection
+        join commerce.product_variant_axes axis
+          on axis.product_id = selection.product_id and axis.id = selection.axis_id
+        join commerce.product_variant_axis_values axis_value
+          on axis_value.product_id = selection.product_id
+         and axis_value.axis_id = selection.axis_id
+         and axis_value.id = selection.value_id
+        where selection.variant_id in (
+            select offer.variant_id
+            from commerce.offers offer join input on input.offer_id = offer.id
+            where offer.variant_id is not null
+        )
+        group by selection.product_id, selection.variant_id
+    ),
+    accepted_proposals as (
+        select distinct on (proposal.offer_id) proposal.offer_id, proposal.id
+        from commerce.offer_price_proposals proposal
+        join input on input.offer_id = proposal.offer_id
+        where proposal.status = 'accepted'
+        order by proposal.offer_id, proposal.decided_at desc nulls last, proposal.id desc
+    )
+    select
+        p_order_id,
+        offer.seller_id,
+        offer.id,
+        product.id,
+        offer.variant_id,
+        proposal.id,
+        offer.title,
+        variant.sku,
+        input.quantity,
+        case when offer.quantity_available is null then 0 else input.quantity end,
+        case when offer.quantity_available is null then null else offer.availability end,
+        case when offer.quantity_available is null then null else offer.inventory_revision end,
+        offer.accepted_price_amount,
+        offer.accepted_price_amount * input.quantity,
+        jsonb_build_object(
+            'id', product.id, 'slug', product.slug, 'title', product.title
+        ),
+        case when offer.variant_id is null then null else jsonb_build_object(
+            'id', variant.id,
+            'sku', variant.sku,
+            'title', variant.title,
+            'combinationKey', variant.combination_key,
+            'options', coalesce(options.options, '[]'::jsonb)
+        ) end,
+        jsonb_build_object(
+            'id', offer.id,
+            'slug', offer.slug,
+            'title', offer.title,
+            'conditionCode', offer.condition_code,
+            'acceptedPriceAmount', offer.accepted_price_amount,
+            'currency', offer.currency
+        ),
+        jsonb_build_object(
+            'id', seller.id,
+            'kind', seller.kind,
+            'slug', seller.slug,
+            'displayName', seller.display_name
+        )
+    from input
+    join commerce.offers offer on offer.id = input.offer_id
+    join commerce.products product on product.id = offer.product_id
+    join commerce.sellers seller on seller.id = offer.seller_id
+    left join commerce.product_variants variant on variant.id = offer.variant_id
+    left join variant_options options
+      on options.product_id = offer.product_id and options.variant_id = offer.variant_id
+    left join accepted_proposals proposal on proposal.offer_id = offer.id
+    order by input.position;
+
+    update commerce.offers offer
+    set quantity_available = offer.quantity_available - input.quantity,
+        availability = case
+            when offer.quantity_available - input.quantity = 0 then 'unavailable'
+            else offer.availability
+        end
+    from (
+        select (item->>'offerId')::bigint as offer_id,
+               (item->>'quantity')::integer as quantity
+        from jsonb_array_elements(p_items) item
+    ) input
+    where offer.id = input.offer_id
+      and offer.quantity_available is not null;
+end;
+$$;
+
+revoke execute on function commerce.validate_order_creation_lines(text, jsonb, boolean, text)
+from public, anon, authenticated;
+revoke execute on function commerce.insert_order_lines_and_reserve_inventory(bigint, jsonb)
+from public, anon, authenticated;
+grant execute on function commerce.validate_order_creation_lines(text, jsonb, boolean, text)
+to service_role;
+grant execute on function commerce.insert_order_lines_and_reserve_inventory(bigint, jsonb)
+to service_role;
+
 create or replace function commerce.create_order_from_offers(
     p_buyer_cms_user_id text,
     p_idempotency_key text,
@@ -6717,16 +6995,11 @@ declare
     v_settings commerce.settings%rowtype;
     v_existing commerce.orders%rowtype;
     v_order commerce.orders%rowtype;
-    v_offer commerce.offers%rowtype;
-    v_product commerce.products%rowtype;
-    v_variant commerce.product_variants%rowtype;
-    v_seller commerce.sellers%rowtype;
-    v_proposal_id bigint;
-    v_item jsonb;
     v_canonical_items jsonb;
     v_request_hash text;
     v_offer_ids bigint[];
-    v_quantity integer;
+    v_offer_count integer;
+    v_error_message text;
     v_seller_id bigint;
     v_currency text;
     v_subtotal numeric := 0;
@@ -6808,57 +7081,23 @@ begin
     order by state.code
     for share of state;
     perform id from commerce.offers where id = any(v_offer_ids) order by id for update;
-    if (select count(*) from commerce.offers where id = any(v_offer_ids)) <> cardinality(v_offer_ids) then
+    get diagnostics v_offer_count = row_count;
+    if v_offer_count <> cardinality(v_offer_ids) then
         raise exception 'not_found: offer';
     end if;
 
-    for v_item in select value from jsonb_array_elements(p_items)
-    loop
-        v_quantity := nullif(v_item->>'quantity', '')::integer;
-        if v_quantity is null or v_quantity <= 0 then raise exception 'validation: quantity must be positive'; end if;
-        select * into v_offer from commerce.offers where id = (v_item->>'offerId')::bigint;
-        if v_offer.publication_status <> 'active'
-            or not exists (
-                select 1 from commerce.offer_workflow_states
-                where code = v_offer.workflow_state and phase = 'ready' and enabled
-            )
-            or v_offer.availability = 'unavailable' or v_offer.accepted_price_amount is null then
-            raise exception 'conflict: offer % is not sellable', v_offer.id;
-        end if;
-        if v_offer.quantity_available is not null and v_offer.quantity_available < v_quantity then
-            raise exception 'conflict: insufficient quantity for offer %', v_offer.id;
-        end if;
-        if not exists (
-            select 1 from commerce.products
-            where id = v_offer.product_id and status = 'active' and visibility = 'public'
-        ) then
-            raise exception 'conflict: product for offer % is not sellable', v_offer.id;
-        end if;
-        perform commerce.assert_product_variant_ready(v_offer.product_id, v_offer.variant_id);
-        select * into v_seller from commerce.sellers where id = v_offer.seller_id;
-        if v_seller.cms_user_id = p_buyer_cms_user_id then
-            raise exception 'forbidden: buyers cannot purchase their own offer';
-        end if;
-        if v_seller.verification_status in ('rejected', 'suspended')
-            or (v_settings.require_verified_seller and v_seller.verification_status <> 'verified') then
-            raise exception 'conflict: seller for offer % is not allowed to sell', v_offer.id;
-        end if;
-        if v_settings.mode = 'ecommerce' and v_seller.kind = 'user' then
-            raise exception 'conflict: marketplace offers are disabled';
-        end if;
-        if v_seller_id is null then
-            v_seller_id := v_offer.seller_id;
-            v_currency := v_offer.currency;
-        elsif v_seller_id <> v_offer.seller_id then
-            raise exception 'conflict: one order cannot contain multiple sellers';
-        elsif v_currency <> v_offer.currency then
-            raise exception 'conflict: one order cannot contain multiple currencies';
-        end if;
-        v_subtotal := v_subtotal + (v_offer.accepted_price_amount * v_quantity);
-        if v_subtotal > 9007199254740991 then
-            raise exception 'validation: order total exceeds the supported maximum';
-        end if;
-    end loop;
+    select validation.error_message, validation.order_seller_id,
+           validation.order_currency, validation.order_subtotal
+    into strict v_error_message, v_seller_id, v_currency, v_subtotal
+    from commerce.validate_order_creation_lines(
+        p_buyer_cms_user_id,
+        p_items,
+        v_settings.require_verified_seller,
+        v_settings.mode
+    ) validation;
+    if v_error_message is not null then
+        raise exception '%', v_error_message;
+    end if;
 
     insert into commerce.orders (
         order_number, seller_id, buyer_cms_user_id, currency,
@@ -6872,84 +7111,7 @@ begin
         p_idempotency_key, v_request_hash
     ) returning * into v_order;
 
-    for v_item in select value from jsonb_array_elements(p_items)
-    loop
-        v_quantity := (v_item->>'quantity')::integer;
-        select * into v_offer from commerce.offers where id = (v_item->>'offerId')::bigint;
-        select * into v_product from commerce.products where id = v_offer.product_id;
-        if v_offer.variant_id is not null then
-            select * into v_variant from commerce.product_variants where id = v_offer.variant_id;
-        else
-            v_variant := null;
-        end if;
-        select * into v_seller from commerce.sellers where id = v_offer.seller_id;
-        select id into v_proposal_id from commerce.offer_price_proposals
-        where offer_id = v_offer.id and status = 'accepted'
-        order by decided_at desc nulls last, id desc limit 1;
-
-        insert into commerce.order_lines (
-            order_id, seller_id, offer_id, product_id, variant_id, accepted_proposal_id,
-            title, sku, quantity, inventory_reserved, availability_before, inventory_revision_before,
-            unit_amount, total_amount,
-            product_snapshot, variant_snapshot, offer_snapshot, seller_snapshot
-        ) values (
-            v_order.id, v_offer.seller_id, v_offer.id, v_product.id, v_offer.variant_id, v_proposal_id,
-            v_offer.title, v_variant.sku, v_quantity,
-            case when v_offer.quantity_available is null then 0 else v_quantity end,
-            case when v_offer.quantity_available is null then null else v_offer.availability end,
-            case when v_offer.quantity_available is null then null else v_offer.inventory_revision end,
-            v_offer.accepted_price_amount,
-            v_offer.accepted_price_amount * v_quantity,
-            jsonb_build_object(
-                'id', v_product.id,
-                'slug', v_product.slug,
-                'title', v_product.title
-            ),
-            case when v_offer.variant_id is null then null else jsonb_build_object(
-                'id', v_variant.id,
-                'sku', v_variant.sku,
-                'title', v_variant.title,
-                'combinationKey', v_variant.combination_key,
-                'options', coalesce((
-                    select jsonb_agg(jsonb_build_object(
-                        'axisKey', axis.key,
-                        'axisLabel', axis.label,
-                        'valueKey', axis_value.key,
-                        'valueLabel', axis_value.label
-                    ) order by axis.position, axis.id)
-                    from commerce.product_variant_selections selection
-                    join commerce.product_variant_axes axis
-                      on axis.product_id = selection.product_id and axis.id = selection.axis_id
-                    join commerce.product_variant_axis_values axis_value
-                      on axis_value.product_id = selection.product_id
-                     and axis_value.axis_id = selection.axis_id
-                     and axis_value.id = selection.value_id
-                    where selection.product_id = v_product.id
-                      and selection.variant_id = v_variant.id
-                ), '[]'::jsonb)
-            ) end,
-            jsonb_build_object(
-                'id', v_offer.id,
-                'slug', v_offer.slug,
-                'title', v_offer.title,
-                'conditionCode', v_offer.condition_code,
-                'acceptedPriceAmount', v_offer.accepted_price_amount,
-                'currency', v_offer.currency
-            ),
-            jsonb_build_object(
-                'id', v_seller.id,
-                'kind', v_seller.kind,
-                'slug', v_seller.slug,
-                'displayName', v_seller.display_name
-            )
-        );
-        if v_offer.quantity_available is not null then
-            update commerce.offers
-            set quantity_available = quantity_available - v_quantity,
-                availability = case when quantity_available - v_quantity = 0 then 'unavailable' else availability end
-            where id = v_offer.id;
-        end if;
-    end loop;
+    perform commerce.insert_order_lines_and_reserve_inventory(v_order.id, p_items);
 
     insert into commerce.order_events (
         order_id, event_type, actor_kind, actor_id, previous_status, next_status
