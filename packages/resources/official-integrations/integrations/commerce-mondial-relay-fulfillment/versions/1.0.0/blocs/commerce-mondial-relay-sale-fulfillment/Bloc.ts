@@ -1,6 +1,8 @@
 import { Component } from "@bernouy/components/base";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
+import { errorMessage, headers, isRecord, safeCmsLabelUrl } from "./helpers";
+import { renderFulfillment, syncFulfillmentPresentation } from "./presentation";
 
 export class CommerceMondialRelaySaleFulfillment extends Component {
     static observedAttributes = [
@@ -11,6 +13,7 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
 
     constructor() {
         super({ css, template });
+        this.projection = null;
     }
 
     connectedCallback() {
@@ -54,8 +57,7 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
             `/.cms/sources/system-functions/getShipmentForMySale?orderId=${encodeURIComponent(this.orderId)}`,
         );
         const shipments = Array.isArray(result.shipments) ? result.shipments : [];
-        this.render(result, shipments[0] ?? null);
-        this.show("content");
+        this.showProjection(result, shipments[0] ?? null);
     }
 
     async createShipment() {
@@ -64,11 +66,11 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
         this.createButton.setAttribute("disabled", "");
         this.setStatus("Création du bordereau…", false);
         try {
-            await this.request("/.cms/sources/system-functions/createShipmentForMySale", {
+            const result = await this.request("/.cms/sources/system-functions/createShipmentForMySale", {
                 method: "POST",
                 body: JSON.stringify({ orderId: this.orderId }),
             });
-            await this.load();
+            await this.showMutation(result);
         } finally {
             this.createButton.removeAttribute("loading");
             this.createButton.removeAttribute("disabled");
@@ -105,11 +107,11 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
         this.handoffButton.setAttribute("loading", "");
         this.handoffButton.setAttribute("disabled", "");
         try {
-            await this.request("/.cms/sources/system-functions/declareShipmentHandoffForMySale", {
+            const result = await this.request("/.cms/sources/system-functions/declareShipmentHandoffForMySale", {
                 method: "POST",
                 body: JSON.stringify({ orderId: this.orderId }),
             });
-            await this.load();
+            await this.showMutation(result);
             this.dispatchEvent(new CustomEvent("commerce-fulfillment:updated", {
                 bubbles: true,
                 composed: true,
@@ -122,92 +124,35 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     }
 
     render(result, shipment) {
-        this.orderNumber.textContent = String(result.orderNumber || result.orderPublicId || "Vente");
-        const status = String(shipment?.status || "");
-        this.content.dataset.shipmentStatus = status;
-        const handoffDeclared = Boolean(shipment?.sellerHandoffDeclaredAt);
-        const carrierAccepted = Boolean(shipment?.carrierAcceptedAt);
-        const awaitingCarrierScan = status === "label_ready" && handoffDeclared && !carrierAccepted;
-        this.content.dataset.awaitingCarrierScan = String(awaitingCarrierScan);
-        this.status.textContent = awaitingCarrierScan ? "Dépôt déclaré" : statusLabel(status);
-        this.expedition.textContent = String(shipment?.expeditionNumber || "—");
-        this.latest.textContent = publicEventLabel(shipment?.latestEventLabel, status);
-        this.createButton.textContent = this.text(
-            status === "failed" ? "retry-label" : "create-label",
-            status === "failed" ? "Réessayer" : "Créer le bordereau",
-        );
-        this.createButton.hidden = Boolean(shipment) && status !== "failed";
-        this.labelButton.textContent = handoffDeclared
-            ? this.text("redownload-label", "Retélécharger l’étiquette")
-            : this.text("label-label", "Télécharger l’étiquette");
-        this.labelButton.hidden = !shipment || status !== "label_ready" || carrierAccepted;
-        this.handoffButton.textContent = this.text("handoff-label", "J’ai déposé le colis");
-        this.handoffButton.hidden = status !== "label_ready" || handoffDeclared || carrierAccepted;
-        this.syncLink(this.trackingLink, shipment?.trackingUrl, this.text("tracking-label", "Suivre le colis"));
-        if (awaitingCarrierScan) this.latest.textContent = "En attente du premier scan Mondial Relay.";
-        this.setStatus("", false);
+        renderFulfillment(this, result, shipment);
     }
 
-    syncLink(element, value, label) {
-        const url = safeHttpUrl(value);
-        element.hidden = !url;
-        element.textContent = label;
-        if (url) {
-            element.setAttribute("href", url);
-            element.setAttribute("target", "_blank");
-            element.setAttribute("rel", "noopener noreferrer");
-        } else {
-            element.removeAttribute("href");
+    showProjection(result, shipment) {
+        this.projection = { ...result, shipments: shipment ? [shipment] : [] };
+        this.render(this.projection, shipment);
+        this.show("content");
+    }
+
+    async showMutation(result) {
+        if (!this.projection) {
+            await this.load();
+            return;
         }
+        const returnedShipment = isRecord(result.shipment) ? result.shipment : null;
+        if (!returnedShipment) throw new Error("Réponse invalide du service de livraison.");
+        const previousShipment = Array.isArray(this.projection.shipments)
+            && isRecord(this.projection.shipments[0]) ? this.projection.shipments[0] : {};
+        const shipment = { ...previousShipment, ...returnedShipment };
+        const projection = {
+            ...this.projection,
+            ...(result.orderId !== undefined ? { orderId: result.orderId } : {}),
+            ...(result.orderPublicId !== undefined ? { orderPublicId: result.orderPublicId } : {}),
+        };
+        this.showProjection(projection, shipment);
     }
 
     syncPresentation() {
-        this.titleElement.textContent = this.text("title", "Expédition de la vente");
-        this.copyElement.textContent = this.text("copy", "Prépare le bordereau, puis suis l’acheminement du colis.");
-        const status = this.content.dataset.shipmentStatus || "";
-        this.createButton.textContent = this.text(
-            status === "failed" ? "retry-label" : "create-label",
-            status === "failed" ? "Réessayer" : "Créer le bordereau",
-        );
-        const handoffDeclared = this.content.dataset.awaitingCarrierScan === "true";
-        this.labelButton.textContent = handoffDeclared
-            ? this.text("redownload-label", "Retélécharger l’étiquette")
-            : this.text("label-label", "Télécharger l’étiquette");
-        this.handoffButton.textContent = this.text("handoff-label", "J’ai déposé le colis");
-        this.trackingLink.textContent = this.text("tracking-label", "Suivre le colis");
-        for (const [attribute, property] of [
-            ["accent-color", "--fulfillment-accent"],
-            ["background-color", "--fulfillment-background"],
-            ["border-color", "--fulfillment-border"],
-            ["text-color", "--fulfillment-text"],
-        ]) {
-            const value = this.getAttribute(attribute)?.trim();
-            if (value) this.style.setProperty(property, value);
-            else this.style.removeProperty(property);
-        }
-        const accent = this.getAttribute("accent-color")?.trim() || "var(--secondary-base)";
-        const background = this.getAttribute("background-color")?.trim() || "var(--bg-surface)";
-        const border = this.getAttribute("border-color")?.trim() || "var(--border-subtle)";
-        const text = this.getAttribute("text-color")?.trim() || "var(--text-main)";
-        const buttonText = this.getAttribute("button-text-color")?.trim() || "var(--secondary-contrasted)";
-        for (const card of this.root.querySelectorAll("basic-card")) {
-            card.setAttribute("background-color", background);
-            card.setAttribute("border-color", border);
-            card.setAttribute("text-color", text);
-        }
-        this.createButton.setAttribute("accent-color", accent);
-        this.createButton.setAttribute("background-color", accent);
-        this.createButton.setAttribute("border-color", accent);
-        this.createButton.setAttribute("text-color", buttonText);
-        this.handoffButton.setAttribute("accent-color", accent);
-        this.handoffButton.setAttribute("background-color", accent);
-        this.handoffButton.setAttribute("border-color", accent);
-        this.handoffButton.setAttribute("text-color", buttonText);
-        for (const button of [this.labelButton, this.trackingLink]) {
-            button.setAttribute("accent-color", accent);
-            button.setAttribute("border-color", accent);
-            button.setAttribute("text-color", accent);
-        }
+        syncFulfillmentPresentation(this);
     }
 
     async request(path, init = {}) {
@@ -268,66 +213,6 @@ export class CommerceMondialRelaySaleFulfillment extends Component {
     get handoffButton() { return this.root.querySelector("[data-handoff]"); }
     get trackingLink() { return this.root.querySelector("[data-tracking-link]"); }
     get message() { return this.root.querySelector("[data-message]"); }
-}
-
-function safeHttpUrl(value) {
-    try {
-        const url = new URL(String(value || ""));
-        return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : "";
-    } catch {
-        return "";
-    }
-}
-
-function safeCmsLabelUrl(value) {
-    try {
-        const url = new URL(String(value || ""), location.origin);
-        return url.origin === location.origin && url.pathname.startsWith("/.cms/sources/") ? url.toString() : "";
-    } catch {
-        return "";
-    }
-}
-
-function statusLabel(value) {
-    return ({
-        creating: "Création en cours", created: "Expédition créée", label_ready: "Bordereau prêt",
-        carrier_accepted: "Pris en charge par le transporteur", in_transit: "En cours d’acheminement",
-        arrived_at_pickup_point: "Arrivé au point relais", available_for_pickup: "Disponible au point relais",
-        collected_by_recipient: "Retiré par le destinataire", incident: "Incident de livraison", lost: "Colis perdu",
-        pickup_expired: "Délai de retrait expiré", returning_to_sender: "Retour à l’expéditeur en cours",
-        returned_to_sender: "Retourné à l’expéditeur",
-        cancelled: "Annulée", failed: "Création échouée", unknown: "Vérification nécessaire",
-    })[value] || "Prête à préparer";
-}
-
-function statusCopy(value) {
-    if (value === "in_transit") return "Le colis est en cours d’acheminement.";
-    if (value === "arrived_at_pickup_point") return "Le colis est arrivé au point relais, mais n’a pas encore été retiré.";
-    if (value === "available_for_pickup") return "Le colis est disponible au point relais.";
-    if (value === "collected_by_recipient") return "Le transporteur confirme le retrait par le destinataire.";
-    if (value === "failed") return "La création de l’expédition a échoué et peut être relancée.";
-    if (value === "unknown") return "L’expédition doit être vérifiée avant une nouvelle tentative.";
-    return value ? "Le bordereau d’expédition est disponible." : "Crée le bordereau lorsque le colis est prêt.";
-}
-
-function errorMessage(error) {
-    const message = error instanceof Error ? error.message : String(error || "");
-    return isFrenchUserMessage(message)
-        ? message
-        : "Le service de livraison est momentanément indisponible. Réessaie dans quelques instants.";
-}
-
-function publicEventLabel(value, status) {
-    const label = String(value || "").trim();
-    return isFrenchUserMessage(label) ? label : statusCopy(status);
-}
-
-function isFrenchUserMessage(value) {
-    return Boolean(value) && /[àâçéèêëîïôùûüÿœ]|\b(?:le|la|les|un|une|des|du|de|au|aux|est|sont|colis|vente|expédition|bordereau|livraison|transporteur|relais|identifiant|statut|réponse)\b/i.test(value);
-}
-
-function headers(value) {
-    return value ? Object.fromEntries(new Headers(value).entries()) : {};
 }
 
 customElements.define("BE5_TAG_TO_BE_REPLACED", CommerceMondialRelaySaleFulfillment);

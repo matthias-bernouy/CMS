@@ -16,6 +16,7 @@ import {
     type Source,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
+import { declaredBlocViewSources } from "./helpers/blocArtifactSource";
 
 const string = (): DataShape => ({ type: "string" });
 const number = (): DataShape => ({ type: "number" });
@@ -83,18 +84,19 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
         expect(serialized).toContain("recordOrderFulfillment");
         expect(serialized).toContain("recipientHandoffAt");
 
-        expect(blocs[0]?.viewJS).toContain("requestShipmentLabelForMySale");
-        expect(blocs[0]?.viewJS).toContain("declareShipmentHandoffForMySale");
-        expect(blocs[0]?.viewJS).not.toContain("shipment?.labelUrl");
-        expect(blocs[0]?.viewJS).not.toContain("location.assign");
-        expect(blocs[0]?.viewJS).toContain('document.createElement("a")');
-        expect(blocs[0]?.viewJS).toContain("noopener noreferrer");
-        expect(blocs[0]?.viewJS).toContain("dataset.shipmentStatus");
-        expect(blocs[0]?.viewJS).toContain('"Dépôt déclaré"');
-        expect(blocs[0]?.viewJS).toContain('"Retélécharger l’étiquette"');
-        expect(blocs[0]?.viewJS).toContain('"J’ai déposé le colis"');
-        expect(blocs[0]?.viewJS).toContain('new CustomEvent("commerce-fulfillment:updated"');
-        expect(blocs[0]?.viewJS).not.toContain("content.dataset.status");
+        const viewSources = declaredBlocViewSources(blocs[0] ?? {});
+        expect(viewSources).toContain("requestShipmentLabelForMySale");
+        expect(viewSources).toContain("declareShipmentHandoffForMySale");
+        expect(viewSources).not.toContain("shipment?.labelUrl");
+        expect(viewSources).not.toContain("location.assign");
+        expect(viewSources).toContain('document.createElement("a")');
+        expect(viewSources).toContain("noopener noreferrer");
+        expect(viewSources).toContain("dataset.shipmentStatus");
+        expect(viewSources).toContain('"Dépôt déclaré"');
+        expect(viewSources).toContain('"Retélécharger l’étiquette"');
+        expect(viewSources).toContain('"J’ai déposé le colis"');
+        expect(viewSources).toContain('new CustomEvent("commerce-fulfillment:updated"');
+        expect(viewSources).not.toContain("content.dataset.status");
         const importedTemplate = atob(blocs[0]?.source?.["template.html"] ?? "");
         expect(importedTemplate).toContain("data-label");
         expect(importedTemplate).toContain("data-handoff");

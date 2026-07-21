@@ -22,6 +22,7 @@ describe("seller fulfillment UI mutation contracts", () => {
         await bloc.load();
         await bloc.createShipment();
 
+        expect(calls.map(call => call.path)).toEqual([readPath, createPath]);
         expect(calls.find(call => call.path === createPath)).toEqual({
             path: createPath,
             method: "POST",
@@ -72,6 +73,7 @@ describe("seller fulfillment UI mutation contracts", () => {
         await bloc.load();
         await bloc.declareHandoff();
 
+        expect(calls.map(call => call.path)).toEqual([readPath, handoffPath]);
         expect(calls.find(call => call.path === handoffPath)).toEqual({
             path: handoffPath,
             method: "POST",
