@@ -28,6 +28,7 @@ import { registerProviderReconciliationContracts } from "./stripe-connect/provid
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
 import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/contracts";
 import { registerPaymentReconciliationLedgerDivergenceContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/divergence";
+import { registerStalePaymentLocalContextContracts } from "./stripe-connect/provider-reconciliation/payment-ledger/stale-local-context";
 import { registerProviderTransferContextContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/contracts";
 import { registerProviderTransferContextFailureContracts } from "./stripe-connect/provider-reconciliation/provider-transfer-context/failures";
 import { registerTerminalOperationRecoveryContracts } from "./stripe-connect/provider-reconciliation/operation-recovery/terminal-contracts";
@@ -8102,6 +8103,7 @@ registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
 registerPaymentReconciliationLedgerDivergenceContracts(createProviderReconciliationHarness);
+registerStalePaymentLocalContextContracts(createProviderReconciliationHarness);
 registerProviderTransferContextContracts(createProviderReconciliationHarness);
 registerProviderTransferContextFailureContracts(createProviderReconciliationHarness);
 registerTerminalOperationRecoveryContracts(createProviderReconciliationHarness);

@@ -41,6 +41,7 @@ export type ProviderReconciliationHarness = {
         ): number;
         failNextProviderExceptionResolution(): void;
         setPaymentIntentSucceeded(paymentIntentId: string): void;
+        setNextRefundStatus(status: "succeeded" | "pending" | "failed"): void;
         failNextPaymentIntentRetrieve(): void;
         patchProviderTransfer(stripeTransferId: string, patch: JsonRecord): void;
         addProviderTransfer(transferGroup: string, patch?: JsonRecord): string;
