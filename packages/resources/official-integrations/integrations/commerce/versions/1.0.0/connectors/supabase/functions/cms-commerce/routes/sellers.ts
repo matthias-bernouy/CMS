@@ -6,11 +6,18 @@ import { listRows, one, rpc } from "../core/rest.ts";
 
 const sellerSelect = "id,kind,cms_user_id,slug,display_name,verification_status,verified_at,verified_by,metadata,version,created_at,updated_at";
 const selfSellerSelect = "id,kind,cms_user_id,slug,display_name,verification_status,verified_at,metadata,version,created_at,updated_at";
+const sellerIdentitySelect = "id,cms_user_id";
 
 export async function getMySeller(request: Request): Promise<Response> {
     const row = await one("sellers", { cms_user_id: cmsUserId(request) }, selfSellerSelect);
     if (!row) return json({ exists: false });
     return json({ exists: true, ...(camelize(row) as Record<string, unknown>) });
+}
+
+export async function getCurrentSellerIdentity(request: Request): Promise<Response> {
+    const row = await one("sellers", { cms_user_id: cmsUserId(request) }, sellerIdentitySelect);
+    if (!row) return json({ exists: false });
+    return json({ exists: true, id: row.id, cmsUserId: row.cms_user_id });
 }
 
 export async function registerMySeller(request: Request): Promise<Response> {

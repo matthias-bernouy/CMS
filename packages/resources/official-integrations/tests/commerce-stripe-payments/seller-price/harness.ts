@@ -47,6 +47,7 @@ export async function executeSellerPrice(
                 : options.user ?? { id: sellerCmsUserId, role: "user" },
             deps: {
                 identities,
+                resolveSecret: async () => "seller-price-cms-api-key",
                 fetchImpl: async (input, init) => {
                     const request = new Request(input, init);
                     calls.push({

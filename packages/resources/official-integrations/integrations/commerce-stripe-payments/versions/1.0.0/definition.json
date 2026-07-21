@@ -279,7 +279,7 @@
                     { "status": "409", "body": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] } }
                 ],
                 "steps": [
-                    { "id": "seller", "call": { "source": "{{dependencies.commerce.sourceId}}", "endpoint": "mySeller" } },
+                    { "id": "seller", "call": { "source": "{{dependencies.commerce.sourceId}}", "endpoint": "getCurrentSellerIdentity" } },
                     {
                         "id": "connect",
                         "call": {

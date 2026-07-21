@@ -27,11 +27,14 @@ import {
     getOrderShipmentCreationSellerContext,
 } from "../routes/order/read-model/contexts/index.ts";
 import { getOfferNegotiationContext } from "../routes/offer/contexts.ts";
-import { verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
+import { getCurrentSellerIdentity, verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
 import { getOrderPaymentContext, getProtectedCheckoutSellerContext, getProtectedPaymentSellerContext } from "../routes/orders.ts";
 
 export async function handleInternalSettlementRoute(route: string, request: Request): Promise<Response | null> {
     if (route === "/system/seller/payout-eligibility") return post(request, verifyPendingSellerPayoutEligibility);
+    if (route === "/system/seller/identity") {
+        return request.method === "GET" ? await getCurrentSellerIdentity(request) : methodNotAllowed("GET");
+    }
     if (route === "/system/protected-checkout/seller-context") return post(request, getProtectedCheckoutSellerContext);
     if (route === "/system/protected-payment/seller-context") return post(request, getProtectedPaymentSellerContext);
     if (route === "/system/order/payment-context") {

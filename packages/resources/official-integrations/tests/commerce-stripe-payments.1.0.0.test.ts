@@ -21,6 +21,7 @@ import { InMemoryTriggerRepository, validateTrigger } from "@bernouy/cms-trigger
 
 const SELLER_TERMS_VERSION = "seller-terms-2026-07-13";
 const SELLER_TERMS_HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const resolveCmsApiKey = async () => "commerce-cms-api-key";
 
 describe("commerce-stripe-payments 1.0.0", () => {
     test("imports and creates a payment from trusted order data with the canonical CMS seller identity", async () => {
@@ -1593,7 +1594,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async () => { throw new Error("strict input must reject before calls"); } },
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async () => { throw new Error("strict input must reject before calls"); } },
         });
         expect(untrustedContactEmail.status).toBe(400);
 
@@ -1606,7 +1607,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) {
@@ -1630,7 +1631,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) return Response.json(connectStatus());
@@ -1656,7 +1657,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) {
@@ -1698,7 +1699,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) {
@@ -1732,7 +1733,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) {
@@ -1768,7 +1769,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) return Response.json(connectStatus());
@@ -1799,7 +1800,7 @@ describe("commerce-stripe-payments 1.0.0", () => {
             },
         ), {
             sources, identities, user: { id: "seller-subject", role: "user" },
-            deps: { identities, fetchImpl: async (input, init) => {
+            deps: { identities, resolveSecret: resolveCmsApiKey, fetchImpl: async (input, init) => {
                 const request = new Request(input, init);
                 if (request.url.startsWith("https://commerce.test/seller")) return Response.json(seller);
                 if (request.url.startsWith("https://stripe.test/status")) return Response.json(connectStatus());
@@ -2035,6 +2036,38 @@ function commerceSource(): Source {
                     exists: { type: "boolean" }, id: { type: "number" }, cmsUserId: { type: "string" },
                     verificationStatus: { type: "string" }, version: { type: "number" },
                 } } }],
+            },
+            {
+                urn: makeEndpointUrn("commerce", "getCurrentSellerIdentity"),
+                method: "GET",
+                access: { mode: "system" },
+                targetUrl: "https://commerce.test/seller",
+                headers: [{
+                    name: "authorization",
+                    source: {
+                        from: "secret",
+                        ref: "{{secrets.cmsApiKey}}",
+                        prefix: "Bearer ",
+                    },
+                }, {
+                    name: "x-cms-user-id",
+                    source: { from: "computed", ref: "userID" },
+                }],
+                effects: {
+                    identityBindings: [{ kind: "user", responsePath: "id" }],
+                },
+                input: { params: [] },
+                output: [{ status: "200", body: {
+                    type: "object",
+                    properties: {
+                        exists: { type: "boolean" },
+                        id: {
+                            type: "number",
+                            semantic: { kind: "user-id", authority: "commerce" },
+                        },
+                        cmsUserId: { type: "string" },
+                    },
+                } }],
             },
             {
                 urn: makeEndpointUrn("commerce", "reviewSeller"), method: "POST", targetUrl: "https://commerce.test/seller/review",

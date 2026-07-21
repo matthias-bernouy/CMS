@@ -12,7 +12,7 @@ import {
 } from "./shapes";
 
 export function commerceEndpoints(): SourceEndpoint[] {
-    return [mySeller(), submitPrice()];
+    return [mySeller(), currentSellerIdentity(), submitPrice()];
 }
 
 function mySeller(): SourceEndpoint {
@@ -43,6 +43,35 @@ function mySeller(): SourceEndpoint {
             version: number(),
             createdAt: text(),
             updatedAt: text(),
+        }) }],
+    };
+}
+
+function currentSellerIdentity(): SourceEndpoint {
+    return {
+        urn: makeEndpointUrn("commerce", "getCurrentSellerIdentity"),
+        method: "GET",
+        access: { mode: "system" },
+        targetUrl: "https://commerce.test/seller",
+        headers: [{
+            name: "authorization",
+            source: {
+                from: "secret",
+                ref: "{{secrets.cmsApiKey}}",
+                prefix: "Bearer ",
+            },
+        }, computedHeader("x-cms-user-id")],
+        effects: {
+            identityBindings: [{ kind: "user", responsePath: "id" }],
+        },
+        input: { params: [] },
+        output: [{ status: "200", body: object({
+            exists: { type: "boolean" },
+            id: {
+                type: "number",
+                semantic: { kind: "user-id", authority: "commerce" },
+            },
+            cmsUserId: text(),
         }) }],
     };
 }

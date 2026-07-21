@@ -74,7 +74,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-sale-detail",
             "commerce-offer-price-form",
         ]);
-        expect(endpointUrns).toHaveLength(155);
+        expect(endpointUrns).toHaveLength(156);
         expect(endpointUrns).not.toEqual(expect.arrayContaining([
             "urn:commerce:variants",
             "urn:commerce:variant",
