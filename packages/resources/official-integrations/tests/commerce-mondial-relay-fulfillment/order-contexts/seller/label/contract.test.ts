@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadFulfillmentFunction } from "../../shared/harness";
 import {
+    labelAuthorization,
     labelCapability,
     orderPublicId,
     sellerId,
@@ -41,7 +42,20 @@ describe("seller shipment label contract", () => {
         const { response, calls } = await executeSellerFunction(
             functionId,
             sellerPostRequest(functionId, { orderId: "42" }),
-            sellerResponder({ capability }),
+            sellerResponder({
+                authorization: {
+                    publicId: orderPublicId,
+                    allowed: labelAuthorization.allowed,
+                    sellerCmsUserId: sellerId,
+                    shippingAddress: {
+                        recipient: "Private Buyer",
+                        line1: "7 Private Street",
+                    },
+                    financialTerms: { hash: "private-financial-hash" },
+                    providerReference: labelAuthorization.providerReference,
+                },
+                capability,
+            }),
         );
 
         expect(response.status).toBe(200);
@@ -71,12 +85,7 @@ describe("seller shipment label contract", () => {
             body: call.body,
             userId: call.userId,
         }))).toEqual([{
-            target: "/mySale?id=42",
-            method: "GET",
-            body: undefined,
-            userId: sellerId,
-        }, {
-            target: `/labelAuthorization?orderPublicId=${orderPublicId}`,
+            target: "/labelSellerContext?orderId=42",
             method: "GET",
             body: undefined,
             userId: sellerId,
@@ -115,7 +124,7 @@ describe("seller shipment label contract", () => {
         ));
 
         expect(mintCount).toBe(2);
-        expect(executions.map(({ calls }) => calls.length)).toEqual([3, 3]);
+        expect(executions.map(({ calls }) => calls.length)).toEqual([2, 2]);
         expect(bodies).toEqual([
             {
                 labelUrl: "/.cms/sources/delivery/label?token=fresh-token-1",

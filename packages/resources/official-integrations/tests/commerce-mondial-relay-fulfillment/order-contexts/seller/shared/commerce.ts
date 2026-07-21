@@ -8,21 +8,18 @@ import {
 } from "../../shared/shapes";
 
 export function sellerCommerceEndpoints(): SourceEndpoint[] {
-    return [mySale(), labelAuthorization(), recordFulfillment()];
+    return [sellerContext(), labelSellerContext(), recordFulfillment()];
 }
 
-function mySale(): SourceEndpoint {
+function sellerContext(): SourceEndpoint {
     return {
-        urn: makeEndpointUrn("commerce", "mySale"),
+        urn: makeEndpointUrn("commerce", "getOrderFulfillmentSellerContext"),
         method: "GET",
-        access: { mode: "auth" },
-        targetUrl: "https://commerce.test/mySale",
+        access: { mode: "system" },
+        targetUrl: "https://commerce.test/sellerContext",
         headers: computedUserHeader(),
         input: {
-            params: [
-                { name: "id", in: "query", schema: text() },
-                { name: "publicId", in: "query", schema: text() },
-            ],
+            params: [{ name: "orderId", in: "query", schema: text() }],
         },
         output: [{
             status: "200",
@@ -30,46 +27,32 @@ function mySale(): SourceEndpoint {
                 id: number(),
                 publicId: text(),
                 orderNumber: text(),
-                shippingAddress: object(),
-                metadata: object(),
-                lines: { type: "array", items: object() },
-                financialTerms: object(),
             }),
         }],
     };
 }
 
-function labelAuthorization(): SourceEndpoint {
+function labelSellerContext(): SourceEndpoint {
     return {
-        urn: makeEndpointUrn("commerce", "getOrderLabelAuthorization"),
+        urn: makeEndpointUrn("commerce", "getOrderLabelSellerContext"),
         method: "GET",
         access: { mode: "system" },
-        targetUrl: "https://commerce.test/labelAuthorization",
+        targetUrl: "https://commerce.test/labelSellerContext",
         headers: computedUserHeader(),
         input: {
             params: [{
-                name: "orderPublicId",
+                name: "orderId",
                 in: "query",
-                required: true,
                 schema: text(),
             }],
         },
         output: [{
             status: "200",
             body: object({
+                publicId: text(),
                 allowed: boolean(),
-                orderId: number(),
-                orderPublicId: text(),
                 sellerCmsUserId: text(),
-                fulfillmentStatus: text(),
-                providerReference: text(true),
-            }, [
-                "allowed",
-                "orderId",
-                "orderPublicId",
-                "sellerCmsUserId",
-                "fulfillmentStatus",
-            ]),
+            }, ["publicId", "allowed", "sellerCmsUserId"]),
         }],
     };
 }

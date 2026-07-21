@@ -22,7 +22,9 @@ import { getClaimReturnAuthorization, recordClaimReturnDelivery } from "../route
 import {
     getOrderDeliverySelectionContext,
     getOrderDeliverySetupContext,
-} from "../routes/order/read-model/contexts.ts";
+    getOrderFulfillmentSellerContext,
+    getOrderLabelSellerContext,
+} from "../routes/order/read-model/contexts/index.ts";
 import { getOfferNegotiationContext } from "../routes/offer/contexts.ts";
 import { verifyPendingSellerPayoutEligibility } from "../routes/sellers.ts";
 import { getOrderPaymentContext, getProtectedCheckoutSellerContext, getProtectedPaymentSellerContext } from "../routes/orders.ts";
@@ -33,6 +35,16 @@ export async function handleInternalSettlementRoute(route: string, request: Requ
     if (route === "/system/protected-payment/seller-context") return post(request, getProtectedPaymentSellerContext);
     if (route === "/system/order/payment-context") {
         return request.method === "GET" ? await getOrderPaymentContext(request) : methodNotAllowed("GET");
+    }
+    if (route === "/system/order/fulfillment/seller-context") {
+        return request.method === "GET"
+            ? await getOrderFulfillmentSellerContext(request)
+            : methodNotAllowed("GET");
+    }
+    if (route === "/system/order/label/seller-context") {
+        return request.method === "GET"
+            ? await getOrderLabelSellerContext(request)
+            : methodNotAllowed("GET");
     }
     if (route === "/system/offer/negotiation-context") {
         return request.method === "GET" ? await getOfferNegotiationContext(request) : methodNotAllowed("GET");

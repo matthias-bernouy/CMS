@@ -123,8 +123,8 @@
             "id": "sale",
             "call": {
               "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "mySale",
-              "params": { "id": "$input.params.orderId" }
+              "endpoint": "getOrderFulfillmentSellerContext",
+              "params": { "orderId": "$input.params.orderId" }
             }
           },
           {
@@ -342,26 +342,18 @@
         "output": [{ "status": "200", "body": { "type": "object" } }],
         "steps": [
           {
-            "id": "sale",
+            "id": "labelContext",
             "call": {
               "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "mySale",
-              "params": { "id": "$input.body.orderId" }
-            }
-          },
-          {
-            "id": "labelAuthorization",
-            "call": {
-              "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "getOrderLabelAuthorization",
-              "params": { "orderPublicId": "$steps.sale.publicId" }
+              "endpoint": "getOrderLabelSellerContext",
+              "params": { "orderId": "$input.body.orderId" }
             }
           },
           {
             "assert": {
               "condition": { "all": [
-                { "equals": ["$steps.labelAuthorization.allowed", true] },
-                { "equals": ["$steps.labelAuthorization.sellerCmsUserId", "$ctx.user.id"] }
+                { "equals": ["$steps.labelContext.allowed", true] },
+                { "equals": ["$steps.labelContext.sellerCmsUserId", "$ctx.user.id"] }
               ] },
               "failure": { "status": 409, "error": "Commerce has not authorized label access" }
             }
@@ -372,7 +364,7 @@
               "source": "{{dependencies.delivery.sourceId}}",
               "endpoint": "issueLabelAccess",
               "body": {
-                "externalOrderId": "$steps.sale.publicId",
+                "externalOrderId": "$steps.labelContext.publicId",
                 "sellerCmsUserId": "$ctx.user.id"
               }
             }
@@ -410,8 +402,8 @@
             "id": "sale",
             "call": {
               "source": "{{dependencies.commerce.sourceId}}",
-              "endpoint": "mySale",
-              "params": { "id": "$input.body.orderId" }
+              "endpoint": "getOrderFulfillmentSellerContext",
+              "params": { "orderId": "$input.body.orderId" }
             }
           },
           {

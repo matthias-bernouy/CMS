@@ -74,7 +74,7 @@ describe("commerce 1.0.0 contract", () => {
             "commerce-sale-detail",
             "commerce-offer-price-form",
         ]);
-        expect(endpointUrns).toHaveLength(152);
+        expect(endpointUrns).toHaveLength(154);
         expect(endpointUrns).not.toEqual(expect.arrayContaining([
             "urn:commerce:variants",
             "urn:commerce:variant",
@@ -96,6 +96,8 @@ describe("commerce 1.0.0 contract", () => {
             "urn:commerce:getOfferNegotiationContext": `${supabaseUrl}/functions/v1/cms-commerce/system/offer/negotiation-context`,
             "urn:commerce:getPaymentOrderContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/payment-context`,
             "urn:commerce:getOrderFulfillmentBuyerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/payment-context`,
+            "urn:commerce:getOrderFulfillmentSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/fulfillment/seller-context`,
+            "urn:commerce:getOrderLabelSellerContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/label/seller-context`,
             "urn:commerce:getOrderDeliverySetupContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-setup-context`,
             "urn:commerce:getOrderDeliverySelectionContext": `${supabaseUrl}/functions/v1/cms-commerce/system/order/delivery-selection-context`,
             "urn:commerce:createOrder": `${supabaseUrl}/functions/v1/cms-commerce/me/orders`,

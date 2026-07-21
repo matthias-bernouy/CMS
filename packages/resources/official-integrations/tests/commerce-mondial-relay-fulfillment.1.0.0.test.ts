@@ -166,7 +166,7 @@ describe("commerce-mondial-relay-fulfillment 1.0.0", () => {
             {
                 functionId: "getShipmentForMySale",
                 userId: "seller-subject",
-                ownershipPath: "/mySale",
+                ownershipPath: "/seller-context",
                 ownership: {
                     id: 42,
                     publicId: "order-public-42",
@@ -1160,6 +1160,13 @@ async function sourcesForFulfillment(): Promise<InMemorySourceRepository> {
     const commerce = makeSource("commerce", [
         endpoint("getOrderFulfillmentBuyerContext", "GET", "/system/order/payment-context", object({
             id: number(), publicId: string(), buyerCmsUserId: string(),
+        }), { orderId: string() }, undefined, "system"),
+        endpoint("getOrderFulfillmentSellerContext", "GET", "/seller-context", object({
+            id: number(), publicId: string(), orderNumber: string(),
+        }), { orderId: string() }, undefined, "system"),
+        endpoint("getOrderLabelSellerContext", "GET", "/label-seller-context", object({
+            publicId: string(), allowed: boolean(),
+            sellerCmsUserId: { type: "string", semantic: "user-id" },
         }), { orderId: string() }, undefined, "system"),
         endpoint("mySale", "GET", "/mySale", object({
             id: number(), publicId: string(), orderNumber: string(),

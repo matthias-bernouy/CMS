@@ -40,7 +40,7 @@ describe("seller shipment read contract", () => {
             Object.fromEntries(call.url.searchParams),
             call.userId,
         ])).toEqual([
-            ["GET", "/mySale", { id: "42" }, sellerId],
+            ["GET", "/sellerContext", { orderId: "42" }, sellerId],
             ["GET", "/shipmentForExternalOrder", {
                 externalOrderId: orderPublicId,
             }, null],
@@ -72,7 +72,7 @@ describe("seller shipment read contract", () => {
             shipments: [],
         });
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/shipmentForExternalOrder",
+            "/sellerContext", "/shipmentForExternalOrder",
         ]);
     });
 
@@ -104,7 +104,7 @@ describe("seller shipment read contract", () => {
         expect(second.response.status).toBe(200);
         for (const calls of [first.calls, second.calls]) {
             expect(calls.map(call => call.url.pathname)).toEqual([
-                "/mySale", "/shipmentForExternalOrder",
+                "/sellerContext", "/shipmentForExternalOrder",
             ]);
         }
     });

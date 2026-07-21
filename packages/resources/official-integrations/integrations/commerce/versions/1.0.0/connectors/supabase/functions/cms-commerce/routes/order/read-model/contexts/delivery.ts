@@ -1,9 +1,9 @@
-import { cmsUserId } from "../../../core/auth.ts";
-import { HttpError } from "../../../core/errors.ts";
-import { json } from "../../../core/http.ts";
-import { camelize, integer, isRecord } from "../../../core/records.ts";
-import { rpc } from "../../../core/rest.ts";
-import type { JsonRecord } from "../../../core/types.ts";
+import { cmsUserId } from "../../../../core/auth.ts";
+import { HttpError } from "../../../../core/errors.ts";
+import { json } from "../../../../core/http.ts";
+import { camelize, integer, isRecord } from "../../../../core/records.ts";
+import { rpc } from "../../../../core/rest.ts";
+import type { JsonRecord } from "../../../../core/types.ts";
 
 const deliverySetupFunction = "get_order_delivery_setup_context";
 const deliverySelectionFunction = "get_order_delivery_selection_context";
@@ -14,9 +14,13 @@ const setupAuthorizationFields = [
     "buyer_cms_user_id", "status", "order_version", "seller_cms_user_id",
     "currency", "merchandise_subtotal_minor_amount", "shipping_address",
 ] as const;
-const selectionFields = ["public_id", "buyer_cms_user_id", "delivery_quote_id"] as const;
+const selectionFields = [
+    "public_id", "buyer_cms_user_id", "delivery_quote_id",
+] as const;
 
-export async function getOrderDeliverySetupContext(request: Request): Promise<Response> {
+export async function getOrderDeliverySetupContext(
+    request: Request,
+): Promise<Response> {
     const [context, actor] =
         await loadDeliveryContext(request, deliverySetupFunction);
     if (context.state === "seller_unavailable") {
@@ -29,10 +33,14 @@ export async function getOrderDeliverySetupContext(request: Request): Promise<Re
     return json(projectDeliverySetupContext(context.context, actor));
 }
 
-export async function getOrderDeliverySelectionContext(request: Request): Promise<Response> {
+export async function getOrderDeliverySelectionContext(
+    request: Request,
+): Promise<Response> {
     const [context, actor] =
         await loadDeliveryContext(request, deliverySelectionFunction);
-    if (context.state !== "ok") throw invalidResponse(deliverySelectionFunction);
+    if (context.state !== "ok") {
+        throw invalidResponse(deliverySelectionFunction);
+    }
     return json(projectDeliverySelectionContext(context.context, actor));
 }
 
@@ -53,11 +61,16 @@ async function loadDeliveryContext(
     if (value.state === "identity_required") {
         throw new HttpError(401, "missing CMS user id");
     }
-    if (value.state === "not_found") throw new HttpError(404, "order not found");
+    if (value.state === "not_found") {
+        throw new HttpError(404, "order not found");
+    }
     return [value, actor];
 }
 
-function projectDeliverySetupContext(value: unknown, actor: string): JsonRecord {
+function projectDeliverySetupContext(
+    value: unknown,
+    actor: string,
+): JsonRecord {
     if (!isRecord(value)) throw invalidResponse(deliverySetupFunction);
     const order = value.order;
     const authorization = value.authorization;
@@ -128,7 +141,10 @@ function projectDeliverySelectionContext(
     };
 }
 
-function hasFields(value: unknown, fields: readonly string[]): value is JsonRecord {
+function hasFields(
+    value: unknown,
+    fields: readonly string[],
+): value is JsonRecord {
     return isRecord(value) && fields.every(field => Object.hasOwn(value, field));
 }
 

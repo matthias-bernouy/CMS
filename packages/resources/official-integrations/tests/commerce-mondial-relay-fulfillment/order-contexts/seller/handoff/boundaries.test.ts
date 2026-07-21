@@ -43,7 +43,7 @@ describe("seller shipment handoff boundaries", () => {
                 functionId, incoming, sellerResponder({ sale: upstream }),
             );
             await expectGenericFailure(result.response);
-            expect(result.calls.map(call => call.url.pathname)).toEqual(["/mySale"]);
+            expect(result.calls.map(call => call.url.pathname)).toEqual(["/sellerContext"]);
         }
     });
 
@@ -61,7 +61,7 @@ describe("seller shipment handoff boundaries", () => {
 
         await expectGenericFailure(result.response);
         expect(result.calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/declareSellerHandoff",
+            "/sellerContext", "/declareSellerHandoff",
         ]);
         expect(result.calls[1]?.body).toEqual({});
     });
@@ -79,7 +79,7 @@ describe("seller shipment handoff boundaries", () => {
 
             await expectGenericFailure(result.response);
             expect(result.calls.map(call => call.url.pathname)).toEqual([
-                "/mySale", "/declareSellerHandoff",
+                "/sellerContext", "/declareSellerHandoff",
             ]);
         }
     });
@@ -172,7 +172,7 @@ function expectedEventId(): string {
 }
 
 function expectedPaths(): string[] {
-    return ["/mySale", "/declareSellerHandoff", "/recordFulfillment"];
+    return ["/sellerContext", "/declareSellerHandoff", "/recordFulfillment"];
 }
 
 function withoutUndefined(value: Record<string, unknown>) {

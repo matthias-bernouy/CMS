@@ -61,8 +61,8 @@ describe("seller shipment label boundaries", () => {
             );
             await expectGenericFailure(response);
             expect(calls).toHaveLength(1);
-            expect(calls[0]?.url.pathname).toBe("/mySale");
-            expect(calls[0]?.url.searchParams.get("id")).toBe(selector);
+            expect(calls[0]?.url.pathname).toBe("/labelSellerContext");
+            expect(calls[0]?.url.searchParams.get("orderId")).toBe(selector);
         }
     });
 
@@ -96,8 +96,7 @@ describe("seller shipment label boundaries", () => {
                 error: "Commerce has not authorized label access",
             });
             expect(calls.map(call => call.url.pathname)).toEqual([
-                "/mySale",
-                "/labelAuthorization",
+                "/labelSellerContext",
             ]);
         }
     });
@@ -105,10 +104,10 @@ describe("seller shipment label boundaries", () => {
     test("redacts dependency errors and stops at their failing boundary", async () => {
         const cases: Array<[SellerReplies, number]> = [
             [{ sale: privateFailure(404) }, 1],
-            [{ authorization: privateFailure(500) }, 2],
-            [{ capability: privateFailure(404) }, 3],
-            [{ capability: privateFailure(409) }, 3],
-            [{ capability: privateFailure(500) }, 3],
+            [{ authorization: privateFailure(500) }, 1],
+            [{ capability: privateFailure(404) }, 2],
+            [{ capability: privateFailure(409) }, 2],
+            [{ capability: privateFailure(500) }, 2],
         ];
         for (const [replies, expectedCalls] of cases) {
             const { response, calls } = await executeSellerFunction(
@@ -126,11 +125,10 @@ describe("seller shipment label boundaries", () => {
             headers: { "content-type": "application/json" },
         });
         const cases: Array<[SellerReplies, number]> = [
-            [{ sale: {} }, 1],
             [{ sale: { publicId: 42 } }, 1],
             [{ sale: invalidJson }, 1],
-            [{ authorization: { ...labelAuthorization, allowed: "yes" } }, 2],
-            [{ capability: { token: 42, expiresAt: "later" } }, 3],
+            [{ authorization: { ...labelAuthorization, allowed: "yes" } }, 1],
+            [{ capability: { token: 42, expiresAt: "later" } }, 2],
         ];
         for (const [replies, expectedCalls] of cases) {
             const { response, calls } = await executeSellerFunction(
@@ -151,7 +149,7 @@ describe("seller shipment label boundaries", () => {
         expect(await denied.response.json()).toEqual({
             error: "Commerce has not authorized label access",
         });
-        expect(denied.calls).toHaveLength(2);
+        expect(denied.calls).toHaveLength(1);
 
         const incompleteCapabilities: Array<[unknown, unknown]> = [
             [{}, { labelUrl: "/.cms/sources/delivery/label?token=" }],
@@ -169,7 +167,7 @@ describe("seller shipment label boundaries", () => {
             );
             expect(result.response.status).toBe(200);
             expect(await result.response.json()).toEqual(body);
-            expect(result.calls).toHaveLength(3);
+            expect(result.calls).toHaveLength(2);
         }
     });
 });

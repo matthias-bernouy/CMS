@@ -39,8 +39,8 @@ describe("seller shipment read boundaries", () => {
             const { response, calls } = await execute(request, responder);
 
             await expectGenericFailure(response);
-            expect(calls.map(call => call.url.pathname)).toEqual(["/mySale"]);
-            expect(calls[0]?.url.searchParams.get("id")).toBe(orderId || null);
+            expect(calls.map(call => call.url.pathname)).toEqual(["/sellerContext"]);
+            expect(calls[0]?.url.searchParams.get("orderId")).toBe(orderId || null);
         }
     });
 
@@ -53,10 +53,10 @@ describe("seller shipment read boundaries", () => {
         const delivery = await executeRead(sellerResponder({ shipments: failure() }));
 
         await expectGenericFailure(commerce.response);
-        expect(commerce.calls.map(call => call.url.pathname)).toEqual(["/mySale"]);
+        expect(commerce.calls.map(call => call.url.pathname)).toEqual(["/sellerContext"]);
         await expectGenericFailure(delivery.response);
         expect(delivery.calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/shipmentForExternalOrder",
+            "/sellerContext", "/shipmentForExternalOrder",
         ]);
     });
 
@@ -85,7 +85,7 @@ describe("seller shipment read boundaries", () => {
         expect(withoutNumber.orderId).toBe(sellerSale.id);
         await expectGenericFailure(missingPublicId.response);
         expect(missingPublicId.calls.map(call => call.url.pathname)).toEqual([
-            "/mySale",
+            "/sellerContext",
         ]);
     });
 
@@ -100,11 +100,11 @@ describe("seller shipment read boundaries", () => {
 
         await expectGenericFailure(malformedSale.response);
         expect(malformedSale.calls.map(call => call.url.pathname)).toEqual([
-            "/mySale",
+            "/sellerContext",
         ]);
         await expectGenericFailure(malformedItems.response);
         expect(malformedItems.calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/shipmentForExternalOrder",
+            "/sellerContext", "/shipmentForExternalOrder",
         ]);
         expect(missingItems.response.status).toBe(400);
         expect(await missingItems.response.json()).toEqual({
@@ -120,7 +120,7 @@ describe("seller shipment read boundaries", () => {
         expect(response.status).toBe(403);
         expect(await response.json()).toEqual({ error: "Forbidden" });
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/shipmentForExternalOrder",
+            "/sellerContext", "/shipmentForExternalOrder",
         ]);
     });
 
@@ -137,7 +137,7 @@ describe("seller shipment read boundaries", () => {
             error: 'forEach "details" exceeds max items',
         });
         expect(calls.map(call => call.url.pathname)).toEqual([
-            "/mySale", "/shipmentForExternalOrder",
+            "/sellerContext", "/shipmentForExternalOrder",
         ]);
     });
 });
