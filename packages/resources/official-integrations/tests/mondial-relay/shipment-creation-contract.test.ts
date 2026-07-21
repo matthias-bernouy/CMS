@@ -19,6 +19,7 @@ describe("Mondial Relay shipment creation database contracts", () => {
         expect(definition).toContain("from delivery.delivery_quotes");
         expect(definition).toContain("from delivery.relay_selections");
         expect(definition).toContain("shipment creation lease expired before a provider outcome was attached");
+        expect(definition).toContain("shipment reservation does not match validated quote context");
         expect(definition).not.toContain("http_");
         expect(schema).toContain(
             "revoke execute on function delivery.reserve_shipment_creation(jsonb, jsonb, text, text, text, timestamptz)\n"
@@ -28,6 +29,16 @@ describe("Mondial Relay shipment creation database contracts", () => {
             "grant execute on function delivery.reserve_shipment_creation(jsonb, jsonb, text, text, text, timestamptz)\n"
             + "    to service_role;",
         );
+    });
+
+    test("preserves omitted optional columns while retrying a failed reservation", async () => {
+        const schema = await Bun.file(schemaUrl).text();
+        const definition = sqlFunction(schema, "delivery.retry_shipment_creation");
+
+        expect(definition).toContain(
+            "jsonb_populate_record(v_existing, p_reservation)",
+        );
+        expect(definition).toContain("where shipment.id = p_existing_id and shipment.status = 'failed'");
     });
 });
 

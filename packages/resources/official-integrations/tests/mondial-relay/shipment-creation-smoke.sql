@@ -69,8 +69,30 @@ declare
         'sender', '{"name":"Seller Name","firstName":"Seller","lastName":"Name","phone":"+33611111111","addressLine1":"2 rue Seller","addressLine2":"","addressLine3":"","postalCode":"69001","city":"Lyon","country":"FR","email":"seller@example.test"}'::jsonb,
         'recipient', '{"name":"Buyer Name","firstName":"Buyer","lastName":"Name","phone":"+33600000000","addressLine1":"1 rue Buyer","addressLine2":"","addressLine3":"","postalCode":"75001","city":"Paris","country":"FR","email":"buyer@example.test"}'::jsonb
     );
+    divergent_reservation jsonb;
+    retry_reservation jsonb;
     result jsonb;
 begin
+    divergent_reservation := reservation || jsonb_build_object(
+        'id', 'shipment-divergent',
+        'external_order_id', 'order-divergent',
+        'idempotency_key', 'order-divergent',
+        'declared_value_minor_amount', 1,
+        'sender_name', 'Wrong Seller',
+        'recipient_name', 'Wrong Buyer'
+    );
+    begin
+        perform delivery.reserve_shipment_creation(
+            divergent_reservation, quote_check, 'fulfillment', 'order-42', 'buyer-42',
+            '2026-07-21T10:00:00Z'::timestamptz
+        );
+        raise exception 'shipment creation: divergent reservation unexpectedly succeeded';
+    exception when others then
+        if sqlerrm not like 'conflict: shipment reservation does not match validated quote context%' then
+            raise;
+        end if;
+    end;
+
     result := delivery.reserve_shipment_creation(
         reservation, quote_check, 'fulfillment', 'order-42', 'buyer-42',
         '2026-07-21T10:00:01Z'::timestamptz
@@ -117,14 +139,31 @@ begin
         end if;
     end;
 
-    update delivery.shipments set status = 'failed', last_error = 'retry-safe rejection'
+    update delivery.shipments set
+        status = 'failed', last_error = 'retry-safe rejection',
+        sender_email = 'preserved-sender@example.test',
+        sender_phone = '+33699999999',
+        sender_address_line2 = 'Preserved sender detail',
+        instructions = 'Preserved instructions',
+        created_by = 'preserved-actor'
     where id = 'shipment-42';
+    retry_reservation := reservation - array[
+        'sender_email', 'sender_phone', 'sender_address_line2', 'instructions', 'created_by'
+    ];
     result := delivery.reserve_shipment_creation(
-        reservation, quote_check, 'fulfillment', 'order-42', 'buyer-42',
+        retry_reservation, quote_check, 'fulfillment', 'order-42', 'buyer-42',
         '2026-07-21T10:00:05Z'::timestamptz
     );
     if result->>'outcome' <> 'provider_required'
-       or (select status from delivery.shipments where id = 'shipment-42') <> 'creating' then
+       or not exists (
+            select 1 from delivery.shipments
+            where id = 'shipment-42' and status = 'creating'
+              and sender_email = 'preserved-sender@example.test'
+              and sender_phone = '+33699999999'
+              and sender_address_line2 = 'Preserved sender detail'
+              and instructions = 'Preserved instructions'
+              and created_by = 'preserved-actor'
+       ) then
         raise exception 'shipment creation: failed retry was not acquired';
     end if;
 
