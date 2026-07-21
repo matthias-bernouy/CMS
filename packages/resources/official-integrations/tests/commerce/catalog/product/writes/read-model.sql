@@ -1,4 +1,5 @@
 \set ON_ERROR_STOP on
+-- Baseline read-model and optimistic-locking contract.
 begin;
 set local role service_role;
 do $$

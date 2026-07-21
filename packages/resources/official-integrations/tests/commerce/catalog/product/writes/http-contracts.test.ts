@@ -6,9 +6,9 @@ import {
     jsonResponse,
     requestCommerce,
     setRestResponder,
-} from "../../harness";
-import { adminProduct } from "./expected";
-import { useProductResponder } from "./fixtures";
+} from "../../../harness";
+import { adminProduct } from "../expected";
+import { useProductResponder } from "../fixtures";
 
 installCommerceTestEnvironment();
 
