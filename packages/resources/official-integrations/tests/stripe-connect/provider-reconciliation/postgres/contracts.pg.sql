@@ -11,6 +11,7 @@ set statement_timeout = '15s';
 \ir fixture.sql
 \ir security.sql
 \ir behavior/read-operations.sql
+\ir behavior/payment-ledger.sql
 \ir behavior/order-and-limit.sql
 \ir behavior/batch-hydration.sql
 \ir behavior/missing-references.sql

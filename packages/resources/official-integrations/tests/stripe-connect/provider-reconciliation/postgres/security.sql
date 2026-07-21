@@ -8,6 +8,7 @@ begin
     for contract in
         select * from (values
             ('stripe_connect.read_reconciliation_operations(integer)', 's', false),
+            ('stripe_connect.read_payment_reconciliation_ledger(bigint)', 's', false),
             ('stripe_connect.claim_commerce_projection_outbox(text,integer)', 'v', false),
             ('stripe_connect.claim_reconciliation_projection_batch(text,integer)', 'v', true)
         ) expected(signature, volatility, jit_disabled)
@@ -54,6 +55,14 @@ exception when insufficient_privilege then
     null;
 end;
 $anon$;
+do $anon_ledger$
+begin
+    perform * from stripe_connect.read_payment_reconciliation_ledger(-900000001);
+    raise exception 'provider reconciliation: anon executed payment ledger RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$anon_ledger$;
 reset role;
 
 set local role authenticated;
@@ -65,6 +74,14 @@ exception when insufficient_privilege then
     null;
 end;
 $authenticated$;
+do $authenticated_ledger$
+begin
+    perform * from stripe_connect.read_payment_reconciliation_ledger(-900000001);
+    raise exception 'provider reconciliation: authenticated executed payment ledger RPC';
+exception when insufficient_privilege then
+    null;
+end;
+$authenticated_ledger$;
 reset role;
 
 set local role service_role;
@@ -72,6 +89,8 @@ select pg_catalog.count(*)
 from stripe_connect.claim_commerce_projection_outbox('service-role-contract', 1);
 select pg_catalog.count(*)
 from stripe_connect.read_reconciliation_operations(1);
+select pg_catalog.count(*)
+from stripe_connect.read_payment_reconciliation_ledger(-900000001);
 select pg_catalog.count(*)
 from stripe_connect.claim_reconciliation_projection_batch('service-role-batch-contract', 1);
 reset role;

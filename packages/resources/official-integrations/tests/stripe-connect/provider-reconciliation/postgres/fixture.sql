@@ -27,6 +27,21 @@ begin
     );
     delete from stripe_connect.stripe_disputes
     where stripe_dispute_id like 'dp_provider_reconciliation_pg_%';
+    delete from stripe_connect.transfer_reversals
+    where payment_id in (
+        select id from stripe_connect.payments
+        where client_reference_id like 'provider-reconciliation-pg-%'
+    );
+    delete from stripe_connect.refunds
+    where payment_id in (
+        select id from stripe_connect.payments
+        where client_reference_id like 'provider-reconciliation-pg-%'
+    );
+    delete from stripe_connect.transfers
+    where payment_id in (
+        select id from stripe_connect.payments
+        where client_reference_id like 'provider-reconciliation-pg-%'
+    );
     delete from stripe_connect.financial_operations
     where business_key like 'provider-reconciliation-pg-%';
     delete from stripe_connect.payments
@@ -91,7 +106,9 @@ declare
     v_suffix text := pg_catalog.lower(pg_catalog.btrim(p_case));
 begin
     if v_suffix !~ '^[a-z0-9-]+$'
-       or p_operation_type not in ('transfer_reversal_create', 'refund_create') then
+       or p_operation_type not in (
+            'transfer_create', 'transfer_reversal_create', 'refund_create'
+       ) then
         raise exception 'provider reconciliation fixture: invalid operation';
     end if;
     insert into stripe_connect.financial_operations (

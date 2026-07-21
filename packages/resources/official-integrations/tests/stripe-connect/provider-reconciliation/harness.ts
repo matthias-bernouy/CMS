@@ -19,7 +19,7 @@ export type TerminalReconciliationSeed = {
 export type ProviderReconciliationHarness = {
     rest: {
         readonly postgrestRequests: PostgrestRequestRecord[];
-        readonly stripeRequests: unknown[];
+        readonly stripeRequests: Array<{ method: string; pathname: string }>;
         seedTerminalReconciliationPage(runKey: string): TerminalReconciliationSeed;
         removeTerminalReconciliationDispute(disputeRowId: number): void;
         seedPaymentProjection(paymentId: number, key: string): void;
@@ -29,11 +29,21 @@ export type ProviderReconciliationHarness = {
             patch?: JsonRecord,
         ): number;
         failNextProviderExceptionResolution(): void;
+        setPaymentIntentSucceeded(paymentIntentId: string): void;
+        failNextPaymentIntentRetrieve(): void;
+        seedPaymentReconciliationLedger(paymentId: number): void;
+        failNextPaymentReconciliationLedgerRead(): void;
         rows(table: string): JsonRecord[];
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
     };
     run(runKey: string, limit?: number): Promise<Response>;
+    submit(
+        userId: string,
+        endpoint: string,
+        body: unknown,
+        params?: Record<string, string>,
+    ): Promise<Response>;
 };
 
 export type CreateProviderReconciliationHarness = () => Promise<ProviderReconciliationHarness>;

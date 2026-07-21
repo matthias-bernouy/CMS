@@ -26,6 +26,7 @@ import { registerPaymentProjectionReplayContracts } from "./stripe-connect/payme
 import { registerProviderReconciliationBudgets } from "./stripe-connect/provider-reconciliation/budgets";
 import { registerProviderReconciliationContracts } from "./stripe-connect/provider-reconciliation/contracts";
 import { registerProviderExceptionResolutionContracts } from "./stripe-connect/provider-reconciliation/exception-resolution";
+import { registerPaymentReconciliationLedgerContracts } from "./stripe-connect/provider-reconciliation/payment-ledger";
 import { registerRefundAndDisputeDashboardContracts } from "./stripe-connect/refunds-disputes.contracts";
 import type {
     DashboardTable,
@@ -4592,6 +4593,7 @@ class StripeConnectMock {
     private loseNextPaymentCancellationResponse = false;
     private failPaymentProjectionEnqueue = false;
     private failProviderExceptionResolution = false;
+    private failPaymentReconciliationLedgerRead = false;
     private losePaymentProjectionEnqueueResponse = false;
     private failPaymentIntentRetrieve = false;
     private paymentIntentReplacementOnNextRetrieve: { paymentId: number; replacementId: string } | null = null;
@@ -4743,6 +4745,29 @@ class StripeConnectMock {
             resolved_by: status === "resolved" ? "admin-contract" : null,
             ...patch,
         }).id);
+    }
+
+    seedPaymentReconciliationLedger(paymentId: number): void {
+        for (const row of [
+            { amount: 120, seller_entitlement_reduction_amount: 70, status: "succeeded" },
+            { amount: 80, seller_entitlement_reduction_amount: 50, status: "succeeded" },
+            { amount: 400, seller_entitlement_reduction_amount: 400, status: "pending" },
+        ]) this.insertGeneric("refunds", {
+            payment_id: paymentId,
+            stripe_refund_id: null,
+            ...row,
+        });
+        for (const row of [
+            { amount: 400, status: "succeeded" },
+            { amount: 300, status: "partially_reversed" },
+            { amount: 200, status: "reversed" },
+            { amount: 600, status: "reserved" },
+        ]) this.insertGeneric("transfers", { payment_id: paymentId, ...row });
+        for (const row of [
+            { amount: 125, status: "succeeded" },
+            { amount: 75, status: "succeeded" },
+            { amount: 500, status: "failed" },
+        ]) this.insertGeneric("transfer_reversals", { payment_id: paymentId, ...row });
     }
 
     removeTransientProviderTruthException(paymentId: number, paymentIntentId: string): void {
@@ -4962,6 +4987,10 @@ class StripeConnectMock {
 
     failNextProviderExceptionResolution(): void {
         this.failProviderExceptionResolution = true;
+    }
+
+    failNextPaymentReconciliationLedgerRead(): void {
+        this.failPaymentReconciliationLedgerRead = true;
     }
 
     loseNextPaymentProjectionEnqueueResponse(): void {
@@ -5445,6 +5474,11 @@ class StripeConnectMock {
             && this.failProviderExceptionResolution) {
             this.failProviderExceptionResolution = false;
             return jsonResponse({ message: "simulated provider exception resolution failure" }, 500);
+        }
+        if (table === "rpc/read_payment_reconciliation_ledger" && method === "POST"
+            && this.failPaymentReconciliationLedgerRead) {
+            this.failPaymentReconciliationLedgerRead = false;
+            return jsonResponse({ message: "simulated payment ledger read failure" }, 500);
         }
         if (table === "rpc/list_dashboard_refunds" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
@@ -6305,6 +6339,28 @@ class StripeConnectMock {
                 };
             }));
         }
+        if (table === "rpc/read_payment_reconciliation_ledger" && method === "POST") {
+            const body = JSON.parse(await request.text()) as JsonRecord;
+            const paymentId = Number(body.p_payment_id);
+            const succeededRefunds = this.tables.refunds.filter(row => (
+                same(row.payment_id, paymentId) && row.status === "succeeded"
+            ));
+            return jsonResponse([{
+                refunded_amount: succeededRefunds.reduce(
+                    (sum, row) => sum + Number(row.amount ?? 0), 0,
+                ),
+                transferred_amount: this.tables.transfers
+                    .filter(row => same(row.payment_id, paymentId)
+                        && ["succeeded", "partially_reversed", "reversed"].includes(String(row.status)))
+                    .reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+                reversed_amount: this.tables.transfer_reversals
+                    .filter(row => same(row.payment_id, paymentId) && row.status === "succeeded")
+                    .reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+                seller_recovery_amount: succeededRefunds.reduce(
+                    (sum, row) => sum + Number(row.seller_entitlement_reduction_amount ?? 0), 0,
+                ),
+            }]);
+        }
         if (table === "rpc/ack_commerce_projection_outbox" && method === "POST") {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const row = this.tables.commerce_projection_outbox.find(candidate =>
@@ -7040,6 +7096,11 @@ class StripeConnectMock {
             }
             if (filter.operator === "neq") {
                 rows = rows.filter(row => !same(row[key], filter.value));
+                continue;
+            }
+            if (filter.operator === "in") {
+                const values = filter.value.replace(/^\(|\)$/g, "").split(",");
+                rows = rows.filter(row => values.some(value => same(row[key], value)));
                 continue;
             }
             if (filter.operator !== "eq") continue;
@@ -7781,6 +7842,12 @@ const createProviderReconciliationHarness = async () => {
             "runProviderReconciliation",
             { runKey, limit },
         ),
+        submit: async (
+            userId: string,
+            endpoint: string,
+            body: unknown,
+            params: Record<string, string> = {},
+        ) => await sourceJsonWithUser(harness, userId, endpoint, body, params),
     };
 };
 
@@ -7792,3 +7859,4 @@ registerPaymentProjectionReplayContracts(createPaymentProjectionHarness);
 registerProviderReconciliationContracts(createProviderReconciliationHarness);
 registerProviderReconciliationBudgets(createProviderReconciliationHarness);
 registerProviderExceptionResolutionContracts(createProviderReconciliationHarness);
+registerPaymentReconciliationLedgerContracts(createProviderReconciliationHarness);
