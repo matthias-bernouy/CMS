@@ -39,6 +39,7 @@ declare
     v_seller_b bigint;
     v_offer_a bigint;
     v_offer_b bigint;
+    v_cart_id bigint;
     v_large jsonb := jsonb_build_object('value', repeat('x', 65536));
 begin
     insert into commerce.products (slug, title, status, visibility)
@@ -100,6 +101,28 @@ begin
            and (quantity_available <> 5 or version <> 1)) then
         raise exception 'checkout address limits: rejected checkout mutated state';
     end if;
+
+    insert into commerce.carts (buyer_cms_user_id, status, currency, version)
+    values ('checkout-address-first-error-buyer', 'open', 'eur', 1)
+    returning id into v_cart_id;
+    insert into commerce.cart_items (
+        cart_id, offer_id, quantity, unit_amount_at_add, offer_version_at_add
+    ) values (v_cart_id, v_offer_a, 1, 1000, 1),
+             (v_cart_id, v_offer_b, 1, 2000, 1);
+    update commerce.offers set availability = 'unavailable' where id = v_offer_a;
+    begin
+        perform commerce.checkout_cart(
+            'checkout-address-first-error-buyer', 'checkout-address-first-error-key',
+            1, v_large, '{}'::jsonb, '{}'::jsonb
+        );
+        raise exception 'test: checkout unexpectedly succeeded';
+    exception when others then
+        if sqlerrm = 'test: checkout unexpectedly succeeded'
+           or sqlstate <> 'P0001'
+           or sqlerrm <> format('conflict: offer %s is not sellable', v_offer_a) then
+            raise;
+        end if;
+    end;
 end;
 $checkout_address_limits$;
 
