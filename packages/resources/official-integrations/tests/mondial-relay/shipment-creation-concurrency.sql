@@ -22,10 +22,11 @@ insert into delivery.delivery_quotes (
 
 create function delivery_shipment_creation_test.reserve()
 returns jsonb
-language sql
+language plpgsql
 set search_path = ''
 as $$
-    select delivery.reserve_shipment_creation(
+begin
+    return delivery.reserve_shipment_creation(
         jsonb_build_object(
             'id', 'shipment-concurrency',
             'external_order_id', 'order-43',
@@ -56,7 +57,10 @@ as $$
             'recipient', '{"name":"Buyer","firstName":"Buyer","lastName":"Name","phone":"+33600000000","addressLine1":"1 rue Buyer","addressLine2":"","addressLine3":"","postalCode":"75001","city":"Paris","country":"FR","email":"buyer@example.test"}'::jsonb
         ),
         'fulfillment', 'order-43', 'buyer-43', '2026-07-21T10:00:01Z'::timestamptz
-    )
+    );
+exception when others then
+    return pg_catalog.jsonb_build_object('error', sqlerrm);
+end;
 $$;
 
 create function delivery_shipment_creation_test.delay_insert()
@@ -73,6 +77,23 @@ $$;
 create trigger shipment_creation_concurrency_probe
 before insert on delivery.shipments
 for each row execute function delivery_shipment_creation_test.delay_insert();
+
+create function delivery_shipment_creation_test.delay_retry()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+    if old.idempotency_key = 'order-43' and old.status = 'failed' and new.status = 'creating' then
+        perform pg_catalog.pg_sleep(0.3);
+    end if;
+    return new;
+end;
+$$;
+
+create trigger shipment_retry_concurrency_probe
+before update on delivery.shipments
+for each row execute function delivery_shipment_creation_test.delay_retry();
 
 grant usage on schema delivery_shipment_creation_test to service_role;
 grant execute on function delivery_shipment_creation_test.reserve() to service_role;
@@ -110,7 +131,43 @@ $concurrency$;
 
 select dblink_disconnect('shipment_creation_a');
 select dblink_disconnect('shipment_creation_b');
+select dblink_connect('shipment_creation_a', 'dbname=' || current_database());
+select dblink_connect('shipment_creation_b', 'dbname=' || current_database());
+select dblink_exec('shipment_creation_a', 'set role service_role');
+select dblink_exec('shipment_creation_b', 'set role service_role');
+truncate shipment_creation_results;
+update delivery.shipments set status = 'failed', last_error = 'retry-safe rejection'
+where idempotency_key = 'order-43';
+select dblink_send_query(
+    'shipment_creation_a',
+    'select delivery_shipment_creation_test.reserve() as result'
+);
+select pg_catalog.pg_sleep(0.05);
+select dblink_send_query(
+    'shipment_creation_b',
+    'select delivery_shipment_creation_test.reserve() as result'
+);
+insert into shipment_creation_results
+select result from dblink_get_result('shipment_creation_a') as response(result jsonb);
+insert into shipment_creation_results
+select result from dblink_get_result('shipment_creation_b') as response(result jsonb);
+
+do $retry_concurrency$
+begin
+    if (select count(*) from shipment_creation_results where result->>'outcome' = 'provider_required') <> 1
+       or (select count(*) from shipment_creation_results
+           where result->>'error' = 'conflict: shipment creation is already being retried') <> 1
+       or (select status from delivery.shipments where idempotency_key = 'order-43') <> 'creating' then
+        raise exception 'shipment creation: concurrent retry outcomes changed: %',
+            (select jsonb_agg(result) from shipment_creation_results);
+    end if;
+end;
+$retry_concurrency$;
+
+select dblink_disconnect('shipment_creation_a');
+select dblink_disconnect('shipment_creation_b');
 drop trigger shipment_creation_concurrency_probe on delivery.shipments;
+drop trigger shipment_retry_concurrency_probe on delivery.shipments;
 drop schema delivery_shipment_creation_test cascade;
 delete from delivery.shipments where idempotency_key = 'order-43';
 delete from delivery.delivery_quotes where external_order_id = 'order-43';
