@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, setSystemTime, test } from "bun:test";
 import {
     importIntegration,
     type IntegrationBlocArtifact,
@@ -68,6 +68,7 @@ let edgeHandler: EdgeHandler | undefined;
 globalThis.fetch = ((input, init) => activeFetch(input, init)) as typeof fetch;
 
 afterAll(() => {
+    setSystemTime();
     globalThis.fetch = realFetch;
     (globalThis as { Deno?: unknown }).Deno = realDeno;
 });
@@ -1773,17 +1774,7 @@ describe("mondial-relay 1.0.0 source", () => {
 
     test("quarantines a stale in-progress creation before any second provider call", async () => {
         const harness = await createHarness();
-        harness.insertedShipments.push({
-            id: "shipment-stale-replay",
-            external_order_id: "order-1001",
-            idempotency_key: "order-1001",
-            status: "creating",
-            provider_call_started_at: "2020-01-01T00:00:00.000Z",
-            creation_manual_review_at: null,
-            raw_request: validShipmentBody(),
-            created_at: "2020-01-01T00:00:00.000Z",
-            updated_at: "2020-01-01T00:00:00.000Z",
-        });
+        harness.insertedShipments.push(inProgressShipment("2020-01-01T00:00:00.000Z"));
 
         const response = await createShipment(harness, validShipmentBody());
 
@@ -1798,6 +1789,71 @@ describe("mondial-relay 1.0.0 source", () => {
             creation_manual_review_at: expect.any(String),
             last_error: "shipment creation lease expired before a provider outcome was attached",
         });
+    });
+
+    test("keeps the Edge-clock creation lease boundary and recovery failure behavior", async () => {
+        const now = new Date("2026-07-21T12:00:00.000Z");
+        setSystemTime(now);
+        try {
+            const live = await createHarness();
+            live.insertedShipments.push(inProgressShipment(
+                new Date(now.getTime() - 20 * 60_000 + 1).toISOString(),
+            ));
+            const liveResponse = await createShipment(live, validShipmentBody());
+            expect(liveResponse.status).toBe(409);
+            expect(await jsonBody(liveResponse)).toEqual({
+                error: "shipment creation is already in progress",
+            });
+            expect(live.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+                ["GET", "/rest/v1/settings"],
+                ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
+            ]);
+            expect(live.insertedShipments[0]?.status).toBe("creating");
+
+            const stale = await createHarness();
+            stale.insertedShipments.push(inProgressShipment(
+                new Date(now.getTime() - 20 * 60_000).toISOString(),
+            ));
+            const staleResponse = await createShipment(stale, validShipmentBody());
+            expect(staleResponse.status).toBe(409);
+            expect(await jsonBody(staleResponse)).toEqual({
+                error: "shipment creation outcome is unknown and requires administrator recovery",
+            });
+            expect(stale.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+                ["GET", "/rest/v1/settings"],
+                ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
+                ["PATCH", "/rest/v1/shipments"],
+            ]);
+            expect(stale.insertedShipments[0]).toMatchObject({
+                status: "unknown",
+                creation_manual_review_at: now.toISOString(),
+                last_error: "shipment creation lease expired before a provider outcome was attached",
+            });
+            expect(stale.providerRequests()).toEqual([]);
+
+            for (const option of ["miss", "failure"] as const) {
+                const harness = await createHarness(option === "miss"
+                    ? { shipmentLeasePatchMiss: true }
+                    : { shipmentLeasePatchFailure: true });
+                harness.insertedShipments.push(inProgressShipment(
+                    new Date(now.getTime() - 20 * 60_000).toISOString(),
+                ));
+                const response = await createShipment(harness, validShipmentBody());
+                expect(response.status).toBe(409);
+                expect(await jsonBody(response)).toEqual({
+                    error: "shipment creation outcome is unknown and requires administrator recovery",
+                });
+                expect(harness.insertedShipments[0]?.status).toBe("creating");
+                expect(harness.postgrestRequests().map(request => [request.method, request.pathname])).toEqual([
+                    ["GET", "/rest/v1/settings"],
+                    ["POST", "/rest/v1/rpc/reserve_shipment_creation"],
+                    ["PATCH", "/rest/v1/shipments"],
+                ]);
+                expect(harness.providerRequests()).toEqual([]);
+            }
+        } finally {
+            setSystemTime();
+        }
     });
 
     test("moves stale creating reservations to visible manual review without retrying the provider", async () => {
@@ -1884,6 +1940,8 @@ async function createHarness(options: {
     labelUrl?: string;
     labelContentType?: string;
     labelRedirect?: boolean;
+    shipmentLeasePatchMiss?: boolean;
+    shipmentLeasePatchFailure?: boolean;
 } = {}) {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
@@ -2038,18 +2096,6 @@ async function createHarness(options: {
                     return jsonResponse({ outcome: "provider_required", shipment: existing }, 200);
                 }
                 if (existing.status === "creating") {
-                    const observedAt = Date.parse(String(body.p_observed_at ?? ""));
-                    const startedAt = Date.parse(String(existing.provider_call_started_at ?? ""));
-                    if (Number.isFinite(observedAt) && Number.isFinite(startedAt)
-                        && observedAt - startedAt >= 20 * 60_000) {
-                        Object.assign(existing, {
-                            status: "unknown",
-                            creation_manual_review_at: body.p_observed_at,
-                            last_error: "shipment creation lease expired before a provider outcome was attached",
-                            updated_at: "2026-07-02T10:05:00.000Z",
-                        });
-                        return jsonResponse({ outcome: "stale_unknown", shipment: existing }, 200);
-                    }
                     return jsonResponse({ outcome: "creating", shipment: existing }, 200);
                 }
                 if (existing.status === "unknown") {
@@ -2083,6 +2129,13 @@ async function createHarness(options: {
             const patch = JSON.parse(requestBody) as JsonRecord;
             const id = url.searchParams.get("id")?.replace(/^eq\./, "");
             const status = url.searchParams.get("status")?.replace(/^eq\./, "");
+            const isShipmentLeaseExpiry = status === "creating"
+                && patch.status === "unknown"
+                && patch.last_error === "shipment creation lease expired before a provider outcome was attached";
+            if (isShipmentLeaseExpiry && options.shipmentLeasePatchFailure) {
+                return jsonResponse({ message: "private shipment lease update failure" }, 500);
+            }
+            if (isShipmentLeaseExpiry && options.shipmentLeasePatchMiss) return jsonResponse([], 200);
             if (!cancellationRaceInjected
                 && options.cancellationRaceOnReconciliation
                 && patch.tracking_checked_at
@@ -2847,6 +2900,20 @@ function validShipmentBody(): JsonRecord {
         content: "Books",
         declaredValueMinorAmount: 12_345,
         declaredCurrency: "EUR",
+    };
+}
+
+function inProgressShipment(providerCallStartedAt: string): JsonRecord {
+    return {
+        id: "shipment-stale-replay",
+        external_order_id: "order-1001",
+        idempotency_key: "order-1001",
+        status: "creating",
+        provider_call_started_at: providerCallStartedAt,
+        creation_manual_review_at: null,
+        raw_request: validShipmentBody(),
+        created_at: "2020-01-01T00:00:00.000Z",
+        updated_at: "2020-01-01T00:00:00.000Z",
     };
 }
 
