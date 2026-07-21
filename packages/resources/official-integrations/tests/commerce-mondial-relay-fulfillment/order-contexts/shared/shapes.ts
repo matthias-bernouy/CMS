@@ -7,6 +7,8 @@ export const text = (nullable = false): DataShape => ({
 
 export const number = (): DataShape => ({ type: "number" });
 
+export const boolean = (): DataShape => ({ type: "boolean" });
+
 export const array = (items: DataShape): DataShape => ({
     type: "array",
     items,

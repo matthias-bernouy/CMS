@@ -3,6 +3,7 @@ import {
     makeEndpointUrn,
     makeSourceUrn,
     type Source,
+    type SourceEndpoint,
 } from "@bernouy/cms-sources";
 import {
     array,
@@ -37,9 +38,19 @@ const shipment = object({
 }, ["id", "status", "createdAt", "events"]);
 
 export async function fulfillmentContextSources() {
+    return await createFulfillmentSources(
+        commerceSource().endpoints,
+        deliverySource().endpoints,
+    );
+}
+
+export async function createFulfillmentSources(
+    commerceEndpoints: SourceEndpoint[],
+    deliveryEndpoints: SourceEndpoint[],
+) {
     const sources = new InMemorySourceRepository();
-    await sources.createSource(commerceSource());
-    await sources.createSource(deliverySource());
+    await sources.createSource(source("commerce", commerceEndpoints));
+    await sources.createSource(source("delivery", deliveryEndpoints));
     return sources;
 }
 
@@ -76,10 +87,11 @@ function commerceSource(): Source {
 }
 
 function deliverySource(): Source {
+    return source("delivery", [shipmentForExternalOrderEndpoint()]);
+}
+
+export function shipmentForExternalOrderEndpoint(): SourceEndpoint {
     return {
-        urn: makeSourceUrn("delivery"),
-        meta: { name: "Delivery" },
-        endpoints: [{
             urn: makeEndpointUrn("delivery", "shipmentForExternalOrder"),
             method: "GET",
             access: { mode: "system" },
@@ -99,6 +111,13 @@ function deliverySource(): Source {
                     ["items"],
                 ),
             }],
-        }],
+    };
+}
+
+function source(id: string, endpoints: SourceEndpoint[]): Source {
+    return {
+        urn: makeSourceUrn(id),
+        meta: { name: id === "commerce" ? "Commerce" : "Delivery" },
+        endpoints,
     };
 }
