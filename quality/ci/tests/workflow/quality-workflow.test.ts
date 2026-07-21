@@ -39,13 +39,9 @@ test("quality workflow keeps every G0 check visible", async () => {
 
     for (const command of [
         "bun install --frozen-lockfile",
-        "bun run check:architecture",
-        "bun run check:repository-shape",
+        "bun run check:all",
         "runDirectoryFanoutCheck",
         "runFileSizeCheck",
-        "bun run typecheck",
-        "bunx tsc --project quality/architecture/tsconfig.json",
-        "bunx tsc --project quality/ci/tsconfig.json",
         "bun run build",
         "bun run quality/ci/determinism/build-manifest.ts",
         "bun run clean",
@@ -74,6 +70,8 @@ test("quality workflow keeps every G0 check visible", async () => {
     );
     expect(workflow).not.toContain("REPOSITORY_SHAPE_BASELINE_REF");
     expect(workflow).not.toContain("continue-on-error");
+    expect(workflow).not.toContain("run: bun run check:architecture");
+    expect(workflow).not.toContain("run: bun run check:repository-shape");
     expect(workflow).toContain("name: Quality gate");
     expect(workflow).toContain("path: coverage/");
 });

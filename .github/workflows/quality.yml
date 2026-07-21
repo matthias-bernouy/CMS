@@ -34,18 +34,8 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Check workspace architecture
-        run: bun run check:architecture
-      - name: Report repository shape guidance
-        run: bun run check:repository-shape
-
-      - name: Typecheck project references
-        run: bun run typecheck
-      - name: Typecheck architecture policy scripts
-        run: bunx tsc --project quality/architecture/tsconfig.json
-
-      - name: Typecheck CI policy scripts
-        run: bunx tsc --project quality/ci/tsconfig.json
+      - name: Run all workspace checks
+        run: bun run check:all
 
       - name: Verify deterministic build and clean worktree
         run: bash quality/ci/determinism/deterministic-build.sh

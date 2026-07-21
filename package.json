@@ -14,6 +14,7 @@
     ],
     "scripts": {
         "build": "bun run build.ts",
+        "check:all": "bun run quality/ci/check-all.ts",
         "check:architecture": "bun run quality/architecture/check.ts",
         "check:directory-fanout": "bun run quality/ci/repository-shape/directory-fanout/check.ts",
         "check:file-size": "bun run quality/ci/repository-shape/file-size/check.ts",

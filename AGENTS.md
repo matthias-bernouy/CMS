@@ -82,6 +82,7 @@ Use Bun commands from the workspace root unless a package says otherwise:
 
 ```bash
 bun install
+bun run check:all
 bun run build
 bun run typecheck
 bun test
@@ -90,6 +91,25 @@ bun run clean
 
 `bun run build` is intentionally sequenced: `@bernouy/components` builds first,
 then TypeScript project references, then `@bernouy/cms-control`.
+
+## Agent Validation Loop
+
+- In a new worktree, make frozen dependencies available with
+  `bun install --frozen-lockfile` before running the initial check.
+- Run `bun run check:all` before making changes and again before handoff. Run it
+  in the same task workspace both times so the final report can be compared with
+  that task's starting state.
+- When other agents are working concurrently, create or use an isolated Git
+  worktree before the initial check. Do not fix findings from another worktree
+  or unrelated pre-existing findings merely to make the global report cleaner.
+- Address errors introduced by the task. Review new `INFO` and `WARNING`
+  findings in the task's scope, but treat repository-shape output as guidance,
+  not as an automatic request to refactor.
+- Specific exceptions are valid when a file or directory is cohesive,
+  generated, declarative, constrained by an external format, or clearer without
+  an artificial split. Leave the structure intact when splitting would reduce
+  readability, and mention the decision in the handoff when the task introduced
+  the finding.
 
 ## Documentation
 
