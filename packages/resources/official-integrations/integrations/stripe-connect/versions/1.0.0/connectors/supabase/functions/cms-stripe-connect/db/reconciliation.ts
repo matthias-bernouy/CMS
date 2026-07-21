@@ -1,5 +1,5 @@
 import type { JsonRecord } from "../shared/types.ts";
-import { callRpcRows, rest, restError } from "./postgrest.ts";
+import { callRpcObject, callRpcRows, rest, restError } from "./postgrest.ts";
 
 export type ReconciliationOperationRead = {
     operation: JsonRecord;
@@ -19,6 +19,13 @@ export type ReconciliationProjectionRead = {
     pending_approval: JsonRecord | null;
 };
 
+export type PaymentReconciliationLedgerRead = {
+    refunded_amount: number;
+    transferred_amount: number;
+    reversed_amount: number;
+    seller_recovery_amount: number;
+};
+
 export async function readReconciliationOperations(
     limit: number,
 ): Promise<ReconciliationOperationRead[]> {
@@ -35,6 +42,15 @@ export async function claimReconciliationProjectionBatch(
         p_owner: owner,
         p_limit: limit,
     });
+}
+
+export async function readPaymentReconciliationLedger(
+    paymentId: number,
+): Promise<PaymentReconciliationLedgerRead> {
+    return await callRpcObject<PaymentReconciliationLedgerRead>(
+        "read_payment_reconciliation_ledger",
+        { p_payment_id: paymentId },
+    );
 }
 
 export async function resolveProviderExceptionRow(

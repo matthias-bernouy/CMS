@@ -31,6 +31,7 @@ import {
 } from "./db/dashboard-reads.ts";
 import {
     claimReconciliationProjectionBatch,
+    readPaymentReconciliationLedger,
     readReconciliationOperations,
     resolveProviderExceptionRow,
 } from "./db/reconciliation.ts";
@@ -5560,10 +5561,11 @@ async function reconcilePayment(payment: ConnectPaymentRow): Promise<ConnectPaym
         const provider = await stripeV1<StripeRefund>(`/refunds/${encodeURIComponent(refund.stripe_refund_id)}`, { method: "GET" });
         await applyStripeRefund(refund, provider);
     }
-    const refundedAmount = await sumSucceededAmounts("refunds", payment.id);
-    const transferredAmount = await sumSettledTransferAmounts(payment.id);
-    const reversedAmount = await sumSucceededAmounts("transfer_reversals", payment.id);
-    const sellerRecoveryAmount = await sumSucceededRefundSellerRecovery(payment.id);
+    const ledger = await readPaymentReconciliationLedger(payment.id);
+    const refundedAmount = Number(ledger.refunded_amount);
+    const transferredAmount = Number(ledger.transferred_amount);
+    const reversedAmount = Number(ledger.reversed_amount);
+    const sellerRecoveryAmount = Number(ledger.seller_recovery_amount);
     const authorizedSellerAmount = current.seller_transfer_amount - sellerRecoveryAmount;
     const netTransferredAmount = transferredAmount - reversedAmount;
     if (
