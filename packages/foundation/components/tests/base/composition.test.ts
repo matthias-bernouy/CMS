@@ -7,7 +7,7 @@ import {
     COMPOSITION_RUNTIME_ATTRIBUTE,
     clearCompositionRuntimeState,
 } from "../../src/base";
-import { BindingCore, BINDING_CORE_TAG } from "../../src/binding/core/bindingCore";
+import { BindingCore, BINDING_CORE_TAG } from "../../src/binding/bindingCore";
 
 class TestComposition extends Composition {
     constructor() {

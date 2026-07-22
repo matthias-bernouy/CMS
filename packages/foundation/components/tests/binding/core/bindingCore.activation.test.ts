@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterEach } from "bun:test";
-import { BindingCore, BINDING_CORE_TAG } from "../../../src/binding/core/bindingCore";
+import { BindingCore, BINDING_CORE_TAG } from "../../../src/binding/bindingCore";
 import { text, waitFor, respond, routes, resetDom } from "../testUtils";
 
 beforeAll(() => {

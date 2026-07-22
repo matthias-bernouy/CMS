@@ -1,6 +1,6 @@
 /** Fetches one `cms-source`, owns reload hooks, and updates its body reactively. */
 
-import { runFetch } from "../fetcher";
+import { runFetch } from "./fetcher";
 import { type FilterMap } from "../core/interpolate";
 import { READY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
 import { captureSourceContent, cloneSourceContent } from "./presentation/sourceContent";

@@ -13,9 +13,9 @@
  * the page-global scope (query / route / user) shared by every source within.
  */
 
-import { BindingRuntime, revealSources } from "../runtime/BindingRuntime";
-import { type FilterMap } from "./interpolate";
-import { injectCloak } from "./cloak";
+import { BindingRuntime, revealSources } from "./runtime/BindingRuntime";
+import { type FilterMap } from "./core/interpolate";
+import { injectCloak } from "./core/cloak";
 import {
     BINDING_CORE_TAG,
     BINDING_DISABLED_ATTR,
@@ -28,11 +28,11 @@ import {
     SOURCE_STATE_FORCE_ATTR,
     SOURCE_TRIGGER_ATTR,
     type SourceState,
-} from "./attrs";
+} from "./core/attrs";
 
 /** Re-exported through `@bernouy/components/binding` so the editor's save can
  *  strip the runtime's own stamps from serialized canvas content. */
-export { clearRuntimeStamps } from "../source/Source";
+export { clearRuntimeStamps } from "./source/Source";
 export {
     BINDING_CORE_TAG,
     BINDING_DISABLED_ATTR,
@@ -43,8 +43,8 @@ export {
     SOURCE_ID_ATTR,
     SOURCE_STATE_FORCE_ATTR,
     SOURCE_TRIGGER_ATTR,
-} from "./attrs";
-export { currentState, setState, STATE_CHANGE_EVENT } from "../params";
+} from "./core/attrs";
+export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */

@@ -42,8 +42,8 @@
       "default": "./dist/base.js"
     },
     "./binding": {
-      "types": "./dist/binding/core/bindingCore.d.ts",
-      "bun": "./src/exports/binding.ts",
+      "types": "./dist/binding/bindingCore.d.ts",
+      "bun": "./binding.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
@@ -66,7 +66,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "bun run tooling/build.ts",
+    "build": "bun run src/tooling/build.ts",
     "test": "bun test --preload ./tests/setup.ts",
     "prepublishOnly": "bun run build"
   },

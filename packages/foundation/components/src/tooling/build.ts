@@ -112,7 +112,7 @@ await Promise.all(
 
 await cp("./src/assets/default.css", `${dist}/style.css`);
 
-await $`bunx tsc -p tooling/tsconfig.build.json`;
+await $`bunx tsc -p src/tooling/tsconfig.build.json`;
 await writeFile(`${dist}/base.d.ts`, `export * from "./base/index";\n`);
 
 console.log(`Built index.js + ${blocs.length} blocs (esm + d.ts) → ${dist}/`);

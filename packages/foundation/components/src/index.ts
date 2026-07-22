@@ -132,6 +132,6 @@ export {
     STATE_CHANGE_EVENT,
     currentState,
     setState,
-} from "./binding/core/bindingCore";
+} from "./binding/bindingCore";
 export { setParam, PARAMS_CHANGE_EVENT } from "./binding/params";
 export type { FilterMap, Filter } from "./binding/core/interpolate";
