@@ -156,6 +156,13 @@ describe("stripe-connect 1.0.0 source", () => {
                     ),
                     "utf8",
                 ),
+                readFile(
+                    resolve(
+                        root,
+                        "connectors/supabase/functions/cms-stripe-connect/workflows/payouts/seller-exposure.ts",
+                    ),
+                    "utf8",
+                ),
             ]).then((sources) => sources.join("\n")),
             readFile(
                 resolve(
