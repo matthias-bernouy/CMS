@@ -32,8 +32,8 @@
                 "total": 55
             },
             "lines": {
-                "covered": 189,
-                "total": 206
+                "covered": 277,
+                "total": 297
             }
         },
         "@bernouy/cms-auth": {
@@ -48,7 +48,9 @@
                 "packages/features/cms-auth/src/core/accounts/isLastAdmin.ts",
                 "packages/features/cms-auth/src/core/accounts/passwordTiming.ts",
                 "packages/features/cms-auth/src/core/cookies.ts",
-                "packages/features/cms-auth/src/core/publicAuth.ts",
+                "packages/features/cms-auth/src/core/public-auth/emailDelivery.ts",
+                "packages/features/cms-auth/src/core/public-auth/flows.ts",
+                "packages/features/cms-auth/src/core/public-auth/input.ts",
                 "packages/features/cms-auth/src/core/toLoginMethod.ts",
                 "packages/features/cms-auth/src/core/tokens/authToken.ts",
                 "packages/features/cms-auth/src/core/tokens/patToken.ts",
@@ -60,6 +62,11 @@
                 "packages/features/cms-auth/src/default-implementation/TemplatedAuthEmailComposer.ts",
                 "packages/features/cms-auth/src/default-implementation/authentication/LocalAuthentication.ts",
                 "packages/features/cms-auth/src/default-implementation/authentication/OidcAuthentication.ts",
+                "packages/features/cms-auth/src/default-implementation/authentication/oidc/OidcMetadataCache.ts",
+                "packages/features/cms-auth/src/default-implementation/authentication/oidc/identityClaims.ts",
+                "packages/features/cms-auth/src/default-implementation/authentication/oidc/loginFlight.ts",
+                "packages/features/cms-auth/src/default-implementation/authentication/oidc/providerResolver.ts",
+                "packages/features/cms-auth/src/default-implementation/authentication/requestInput.ts",
                 "packages/features/cms-auth/src/default-implementation/memory/InMemoryAuthTokenStore.ts",
                 "packages/features/cms-auth/src/default-implementation/memory/InMemoryAuthentication.ts",
                 "packages/features/cms-auth/src/default-implementation/memory/InMemoryEmailer.ts",
@@ -77,6 +84,7 @@
             "uncoveredSourceFiles": [
                 "packages/features/cms-auth/src/components/LoginMethods/LoginMethods.ts",
                 "packages/features/cms-auth/src/components/index.ts",
+                "packages/features/cms-auth/src/core/public-auth/types.ts",
                 "packages/features/cms-auth/src/default-implementation/mongo/MongoAuthTokenStore.ts",
                 "packages/features/cms-auth/src/default-implementation/mongo/MongoIdentityProviderRepository.ts",
                 "packages/features/cms-auth/src/default-implementation/mongo/MongoLocalCredentialStore.ts",
@@ -94,16 +102,16 @@
                 "packages/features/cms-auth/src/interfaces/UsersRepository.ts"
             ],
             "files": {
-                "covered": 34,
-                "total": 51
+                "covered": 41,
+                "total": 59
             },
             "functions": {
-                "covered": 200,
-                "total": 234
+                "covered": 214,
+                "total": 247
             },
             "lines": {
-                "covered": 1141,
-                "total": 1283
+                "covered": 1375,
+                "total": 1555
             }
         },
         "@bernouy/cms-bloc-compile": {
@@ -124,15 +132,25 @@
                 "total": 25
             },
             "lines": {
-                "covered": 245,
-                "total": 246
+                "covered": 260,
+                "total": 262
             }
         },
         "@bernouy/cms-cli": {
             "path": "packages/runtimes/cms-cli",
             "coveredSourceFiles": [
                 "packages/runtimes/cms-cli/src/commands/CLI_dev.ts",
-                "packages/runtimes/cms-cli/src/dev-server/build.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/blocs.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/files.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/flags.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/index.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/integrations.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/reload.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/servers.ts",
+                "packages/runtimes/cms-cli/src/commands/dev/services.ts",
+                "packages/runtimes/cms-cli/src/dev-server/build/bundle.ts",
+                "packages/runtimes/cms-cli/src/dev-server/build/defaultContent.ts",
+                "packages/runtimes/cms-cli/src/dev-server/build/index.ts",
                 "packages/runtimes/cms-cli/src/dev-server/integrations/access.ts",
                 "packages/runtimes/cms-cli/src/dev-server/integrations/health.ts",
                 "packages/runtimes/cms-cli/src/dev-server/integrations/index.ts",
@@ -155,7 +173,9 @@
                 "packages/runtimes/cms-cli/src/dev-server/stores/secrets.ts",
                 "packages/runtimes/cms-cli/src/dev-server/stores/sourceOverlays.ts",
                 "packages/runtimes/cms-cli/src/dev-server/stores/triggers.ts",
-                "packages/runtimes/cms-cli/src/dev-server/watch.ts",
+                "packages/runtimes/cms-cli/src/dev-server/watch/index.ts",
+                "packages/runtimes/cms-cli/src/dev-server/watch/rebuild.ts",
+                "packages/runtimes/cms-cli/src/dev-server/watch/rescan.ts",
                 "packages/runtimes/cms-cli/src/push/blocs/apply.ts",
                 "packages/runtimes/cms-cli/src/push/blocs/bundle.ts",
                 "packages/runtimes/cms-cli/src/push/blocs/pull.ts",
@@ -192,6 +212,7 @@
                 "packages/runtimes/cms-cli/src/commands/CLI_push.ts",
                 "packages/runtimes/cms-cli/src/commands/CLI_secrets.ts",
                 "packages/runtimes/cms-cli/src/credentials.ts",
+                "packages/runtimes/cms-cli/src/dev-server/watch/types.ts",
                 "packages/runtimes/cms-cli/src/index.ts",
                 "packages/runtimes/cms-cli/src/push/files/apply.ts",
                 "packages/runtimes/cms-cli/src/push/files/run.ts",
@@ -207,16 +228,16 @@
                 "packages/runtimes/cms-cli/src/push/templates/run.ts"
             ],
             "files": {
-                "covered": 52,
-                "total": 72
+                "covered": 64,
+                "total": 85
             },
             "functions": {
-                "covered": 362,
-                "total": 505
+                "covered": 375,
+                "total": 522
             },
             "lines": {
-                "covered": 1980,
-                "total": 3127
+                "covered": 2388,
+                "total": 3831
             }
         },
         "@bernouy/cms-content": {
@@ -237,6 +258,7 @@
                 "packages/features/cms-content/src/core/theme/defaults.ts",
                 "packages/features/cms-content/src/core/theme/index.ts",
                 "packages/features/cms-content/src/core/theme/migration.ts",
+                "packages/features/cms-content/src/core/theme/migrationCategories.ts",
                 "packages/features/cms-content/src/core/theme/tokens.ts",
                 "packages/features/cms-content/src/core/theme/validation.ts",
                 "packages/features/cms-content/src/core/utils/contentRefs.ts",
@@ -254,10 +276,16 @@
                 "packages/features/cms-content/src/core/validation/predicates.ts",
                 "packages/features/cms-content/src/core/validation/settings.ts",
                 "packages/features/cms-content/src/default-implementation/InMemoryCmsRepository.ts",
+                "packages/features/cms-content/src/default-implementation/repositories/memory/InMemoryContentRepository.ts",
                 "packages/features/cms-content/src/exports/editor.ts",
                 "packages/features/cms-content/src/exports/index.ts",
                 "packages/features/cms-content/src/http/generateStyleEntry.ts",
-                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax.ts",
+                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax/conditions.ts",
+                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax/index.ts",
+                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax/runtime.ts",
+                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax/source.ts",
+                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax/sourceStatus.ts",
+                "packages/features/cms-content/src/interfaces/Editor/BindingSyntax/types.ts",
                 "packages/features/cms-content/src/interfaces/Editor/Editor.ts",
                 "packages/features/cms-content/src/interfaces/Editor/SettingInputs/index.ts",
                 "packages/features/cms-content/src/interfaces/Editor/SettingInputs/references/endpointPicker.ts",
@@ -266,6 +294,9 @@
             ],
             "uncoveredSourceFiles": [
                 "packages/features/cms-content/src/default-implementation/MongoCmsRepository.ts",
+                "packages/features/cms-content/src/default-implementation/repositories/mongo/MongoContentRepository.ts",
+                "packages/features/cms-content/src/default-implementation/repositories/mongo/MongoRepositoryStorage.ts",
+                "packages/features/cms-content/src/default-implementation/repositories/mongo/documents.ts",
                 "packages/features/cms-content/src/exports/mongo.ts",
                 "packages/features/cms-content/src/interfaces/CmsRepository.ts",
                 "packages/features/cms-content/src/interfaces/ContentReader.ts",
@@ -291,105 +322,126 @@
                 "packages/features/cms-content/src/interfaces/theme.ts"
             ],
             "files": {
-                "covered": 41,
-                "total": 65
+                "covered": 48,
+                "total": 75
             },
             "functions": {
-                "covered": 157,
-                "total": 251
+                "covered": 159,
+                "total": 254
             },
             "lines": {
-                "covered": 1075,
-                "total": 1395
+                "covered": 1275,
+                "total": 1702
             }
         },
         "@bernouy/cms-control": {
             "path": "packages/surfaces/cms-control",
             "coveredSourceFiles": [
                 "packages/surfaces/cms-control/src/ControlCms.ts",
-                "packages/surfaces/cms-control/src/api/bloc/bloc.post.ts",
-                "packages/surfaces/cms-control/src/api/dashboards.get.ts",
-                "packages/surfaces/cms-control/src/api/functions.get.ts",
-                "packages/surfaces/cms-control/src/api/functions/catalog.get.ts",
-                "packages/surfaces/cms-control/src/api/functions/create.post.ts",
-                "packages/surfaces/cms-control/src/api/functions/detail.get.ts",
-                "packages/surfaces/cms-control/src/api/functions/execute.post.ts",
-                "packages/surfaces/cms-control/src/api/page/exists.get.ts",
-                "packages/surfaces/cms-control/src/api/page/page.put.ts",
-                "packages/surfaces/cms-control/src/api/secrets/keys.get.ts",
-                "packages/surfaces/cms-control/src/api/secrets/secrets.delete.ts",
-                "packages/surfaces/cms-control/src/api/secrets/secrets.get.ts",
-                "packages/surfaces/cms-control/src/api/secrets/secrets.post.ts",
-                "packages/surfaces/cms-control/src/api/source-overlays/overlays.get.ts",
-                "packages/surfaces/cms-control/src/api/source-overlays/overlays.post.ts",
-                "packages/surfaces/cms-control/src/api/template/template.put.ts",
-                "packages/surfaces/cms-control/src/api/triggers/create.post.ts",
-                "packages/surfaces/cms-control/src/api/triggers/enabled.post.ts",
-                "packages/surfaces/cms-control/src/api/triggers/triggers.get.ts",
-                "packages/surfaces/cms-control/src/api/users/email-verification.post.ts",
-                "packages/surfaces/cms-control/src/api/users/email-verified.post.ts",
-                "packages/surfaces/cms-control/src/api/users/password-reset.post.ts",
-                "packages/surfaces/cms-control/src/api/users/users.get.ts",
-                "packages/surfaces/cms-control/src/components/admin/AdminLayout/AdminLayout.ts",
-                "packages/surfaces/cms-control/src/components/admin/ConfirmForm/ConfirmForm.ts",
-                "packages/surfaces/cms-control/src/components/admin/CredentialSelect/CredentialSelect.ts",
-                "packages/surfaces/cms-control/src/components/admin/CredentialSelect/controller.ts",
-                "packages/surfaces/cms-control/src/components/admin/CredentialSelect/dialog.ts",
-                "packages/surfaces/cms-control/src/components/admin/CredentialSelect/flows.ts",
-                "packages/surfaces/cms-control/src/components/admin/CredentialSelect/icons.ts",
-                "packages/surfaces/cms-control/src/components/admin/CredentialSelect/template.ts",
-                "packages/surfaces/cms-control/src/components/admin/EmptyState/EmptyState.ts",
+                "packages/surfaces/cms-control/src/api/_access/secrets/keys.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/secrets/secrets.delete.ts",
+                "packages/surfaces/cms-control/src/api/_access/secrets/secrets.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/secrets/secrets.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/email-verification.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/email-verified.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/password-reset.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/users.delete.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/users.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/users.post.ts",
+                "packages/surfaces/cms-control/src/api/_content/bloc/bloc.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/asset.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/catalogue.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/import.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/installations.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/installations/rerun.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/list.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/source-overlays/overlays.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/source-overlays/overlays.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/triggers/create.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/triggers/enabled.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/triggers/triggers.get.ts",
+                "packages/surfaces/cms-control/src/api/editor/binding-core.js.get.ts",
+                "packages/surfaces/cms-control/src/api/editor/component.js.get.ts",
+                "packages/surfaces/cms-control/src/api/editor/script.js.get.ts",
+                "packages/surfaces/cms-control/src/api/editor/sources.get.ts",
+                "packages/surfaces/cms-control/src/api/editor/view-script.js.get.ts",
+                "packages/surfaces/cms-control/src/api/system/email-test.post.ts",
+                "packages/surfaces/cms-control/src/components/admin/Actions/ProviderActions/ProviderActions.ts",
+                "packages/surfaces/cms-control/src/components/admin/Actions/UserActions/UserActions.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/ConfirmForm/ConfirmForm.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/CredentialSelect.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/controller.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/dialog.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/flows.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/icons.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/CredentialSelect/template.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/EmptyState/EmptyState.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/EventToast/EventToast.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/RoleSelect/RoleSelect.ts",
+                "packages/surfaces/cms-control/src/components/admin/Common/Tokens/TokenCreate.ts",
                 "packages/surfaces/cms-control/src/components/admin/EndpointsInput/EndpointsInput.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/bodyEditor.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/bodyNode.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/controls.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/dataShapeTree.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/headerRow.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/headersPanel.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/inPanel.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/outPanel.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/pathParams.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/queryRow.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/responseRow.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/rows.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/editors/bodyEditor.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/editors/bodyNode.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/editors/dataShapeTree.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/fields/controls.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/fields/pathParams.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/fields/statusField.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/panels/headersPanel.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/panels/inPanel.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/panels/outPanel.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/rows/headerRow.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/rows/queryRow.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/rows/responseRow.ts",
+                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/rows/rows.ts",
                 "packages/surfaces/cms-control/src/components/admin/EndpointsInput/shared.ts",
-                "packages/surfaces/cms-control/src/components/admin/EndpointsInput/statusField.ts",
-                "packages/surfaces/cms-control/src/components/admin/EventToast/EventToast.ts",
-                "packages/surfaces/cms-control/src/components/admin/ProviderActions/ProviderActions.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/DashboardNav.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/DashboardView.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/DashboardViewActions.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/DashboardViewLookups.ts",
+                "packages/surfaces/cms-control/src/components/admin/Layout/AdminLayout/AdminLayout.ts",
+                "packages/surfaces/cms-control/src/components/admin/Layout/SettingsSections/SettingsSections.ts",
+                "packages/surfaces/cms-control/src/components/admin/Layout/ShellDetail/DetailSection.ts",
+                "packages/surfaces/cms-control/src/components/admin/Layout/ShellDetail/ShellDetail.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/api.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/domain.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/icons.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/icons/catalog.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/mode.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/rendering.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/actions.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/bindingFilters.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/DashboardNav.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/DashboardNavRendering.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/icons.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/icons/catalog.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/navigation/mode.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/actions/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/actions/widgets.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/expressions.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/lookups/create.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/lookups/index.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/lookups/options.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/detail.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/fieldSupport.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/fields.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/nestedFields.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/table.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/media.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mount.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mountRelations.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mountSource.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/bindingFilters.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/reload.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/source.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/example.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/DashboardView.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/DashboardViewActions.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/DashboardViewLookups.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/controller/DashboardViewController.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/controller/actionResult.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/view/rendering.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/example/data.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/example/index.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/shared.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/runtime.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/basic.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/display.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/inputFields.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table.ts",
@@ -407,11 +459,14 @@
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/tableValues.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-media-field/WMediaField.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-media-field/drag.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-media-field/mediaState.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-media-field/render.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-media-field/utils.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationItem.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationList.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-navigation-list/config.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-navigation-list/drag.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/controls.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/state.ts",
@@ -420,12 +475,23 @@
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/FunctionCreate.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/FunctionDetail.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-table/render.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Functions/api.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/FunctionCreate.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/draft.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/callFields.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/controls.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/definition.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/references.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/shell.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/stepCards.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/editor/types.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/fields.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/styles/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/create/templates/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/detail/FunctionDetail.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/detail/view.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Functions/dom.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/draft.ts",
-                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/fields.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Functions/result.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Integrations/IntegrationBrowser.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Integrations/api.ts",
@@ -446,23 +512,37 @@
                 "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/TriggerCreate.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/TriggersAdmin.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/api.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/controls.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/definition.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/mappings.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/references.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/styles/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/templates/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Triggers/create/view.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/WorkflowEditor/mapping.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/WorkflowEditor/mappingValues.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/WorkflowEditor/schemaFields.ts",
                 "packages/surfaces/cms-control/src/components/admin/RoleEditor/RoleEditor.ts",
-                "packages/surfaces/cms-control/src/components/admin/RoleSelect/RoleSelect.ts",
                 "packages/surfaces/cms-control/src/components/admin/Secrets/Secrets.ts",
                 "packages/surfaces/cms-control/src/components/admin/Secrets/actions.ts",
                 "packages/surfaces/cms-control/src/components/admin/Secrets/icons.ts",
                 "packages/surfaces/cms-control/src/components/admin/Secrets/ops.ts",
-                "packages/surfaces/cms-control/src/components/admin/SettingsSections/SettingsSections.ts",
-                "packages/surfaces/cms-control/src/components/admin/ShellDetail/DetailSection.ts",
-                "packages/surfaces/cms-control/src/components/admin/ShellDetail/ShellDetail.ts",
                 "packages/surfaces/cms-control/src/components/admin/Theme/ThemeEditor.ts",
                 "packages/surfaces/cms-control/src/components/admin/Theme/ThemeNav.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/editor/api.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/editor/inputEvents.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/editor/model.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/editor/styles/index.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/editor/view.ts",
                 "packages/surfaces/cms-control/src/components/admin/Theme/events.ts",
-                "packages/surfaces/cms-control/src/components/admin/Tokens/TokenCreate.ts",
-                "packages/surfaces/cms-control/src/components/admin/UserActions/UserActions.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/nav/icons.ts",
+                "packages/surfaces/cms-control/src/components/admin/Theme/nav/view.ts",
                 "packages/surfaces/cms-control/src/components/editorSystemV2/bootstrap.ts",
+                "packages/surfaces/cms-control/src/components/editorSystemV2/catalog.ts",
+                "packages/surfaces/cms-control/src/components/editorSystemV2/documentLoad.ts",
+                "packages/surfaces/cms-control/src/components/editorSystemV2/documentMutations.ts",
+                "packages/surfaces/cms-control/src/components/editorSystemV2/resource.ts",
+                "packages/surfaces/cms-control/src/components/editorSystemV2/shellSetup.ts",
                 "packages/surfaces/cms-control/src/components/form/MediaInput/MediaInput.ts",
                 "packages/surfaces/cms-control/src/components/globals.ts",
                 "packages/surfaces/cms-control/src/components/icons.ts",
@@ -488,169 +568,175 @@
                 "packages/surfaces/cms-control/src/components/media/GridMedia/view/render.ts",
                 "packages/surfaces/cms-control/src/components/media/MediaAdmin/MediaAdmin.ts",
                 "packages/surfaces/cms-control/src/components/media/MediaCenter/MediaCenter.ts",
-                "packages/surfaces/cms-control/src/core/auth/authPages.ts",
-                "packages/surfaces/cms-control/src/core/bloc/importBlocArtifact.ts",
-                "packages/surfaces/cms-control/src/core/control/adminAccess.ts",
-                "packages/surfaces/cms-control/src/core/control/defaults.ts",
-                "packages/surfaces/cms-control/src/core/control/mountRoutes.ts",
-                "packages/surfaces/cms-control/src/core/control/sourceProxy.ts",
-                "packages/surfaces/cms-control/src/core/control/state.ts",
-                "packages/surfaces/cms-control/src/core/control/workflows/functionCatalog.ts",
-                "packages/surfaces/cms-control/src/core/control/workflows/functionCreation.ts",
-                "packages/surfaces/cms-control/src/core/control/workflows/functionExecution.ts",
-                "packages/surfaces/cms-control/src/core/control/workflows/functionViews.ts",
-                "packages/surfaces/cms-control/src/core/control/workflows/triggerCreation.ts",
+                "packages/surfaces/cms-control/src/components/media/MediaCenter/events.ts",
+                "packages/surfaces/cms-control/src/core/admin/auth/authPages.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/accessors.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/adminAccess.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/defaults.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/mountRoutes.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/sourceProxy.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/state.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/workflows/functionCatalog.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/workflows/functionCreation.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/workflows/functionExecution.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/workflows/functionViews.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/workflows/triggerCreation.ts",
+                "packages/surfaces/cms-control/src/core/admin/http/errors/HttpError.ts",
+                "packages/surfaces/cms-control/src/core/admin/http/errors/InvalidParam.ts",
+                "packages/surfaces/cms-control/src/core/admin/http/errors/MissingParam.ts",
+                "packages/surfaces/cms-control/src/core/admin/http/readJsonBody.ts",
+                "packages/surfaces/cms-control/src/core/admin/http/readJsonOrFormBody.ts",
+                "packages/surfaces/cms-control/src/core/admin/registerEndpoints/serveApiFolder.ts",
+                "packages/surfaces/cms-control/src/core/admin/registerEndpoints/serveStaticFolder/prepareHtml.ts",
+                "packages/surfaces/cms-control/src/core/admin/registerEndpoints/serveStaticFolder/replaceBasePath.ts",
+                "packages/surfaces/cms-control/src/core/admin/registerEndpoints/serveStaticFolder/scanStaticFolder.ts",
+                "packages/surfaces/cms-control/src/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder.ts",
+                "packages/surfaces/cms-control/src/core/admin/server/cache/invalidation.ts",
+                "packages/surfaces/cms-control/src/core/content/bloc/importBlocArtifact.ts",
+                "packages/surfaces/cms-control/src/core/content/bloc/sourceBundle.ts",
+                "packages/surfaces/cms-control/src/core/content/editorSources/sourceDto.ts",
+                "packages/surfaces/cms-control/src/core/content/page/createPage.ts",
+                "packages/surfaces/cms-control/src/core/content/page/getPagesList.ts",
+                "packages/surfaces/cms-control/src/core/content/page/updatePage.ts",
+                "packages/surfaces/cms-control/src/core/content/template/createTemplate.ts",
+                "packages/surfaces/cms-control/src/core/content/template/updateTemplate.ts",
                 "packages/surfaces/cms-control/src/core/dom/BubblesEvent.ts",
                 "packages/surfaces/cms-control/src/core/dom/meta/getMetaBasePath.ts",
-                "packages/surfaces/cms-control/src/core/editorSources/sourceDto.ts",
                 "packages/surfaces/cms-control/src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts",
                 "packages/surfaces/cms-control/src/core/editorSystemV2/builtInEditors/index.ts",
                 "packages/surfaces/cms-control/src/core/editorSystemV2/contentRegionAttrs.ts",
                 "packages/surfaces/cms-control/src/core/editorSystemV2/editorCatalog.ts",
-                "packages/surfaces/cms-control/src/core/http/readJsonBody.ts",
-                "packages/surfaces/cms-control/src/core/http/readJsonOrFormBody.ts",
-                "packages/surfaces/cms-control/src/core/integrations/catalogue.ts",
-                "packages/surfaces/cms-control/src/core/integrations/connectorProviderSettings.ts",
-                "packages/surfaces/cms-control/src/core/integrations/definitions.ts",
-                "packages/surfaces/cms-control/src/core/integrations/installationViews.ts",
-                "packages/surfaces/cms-control/src/core/page/createPage.ts",
-                "packages/surfaces/cms-control/src/core/page/getPagesList.ts",
-                "packages/surfaces/cms-control/src/core/page/updatePage.ts",
-                "packages/surfaces/cms-control/src/core/registerEndpoints/serveApiFolder.ts",
-                "packages/surfaces/cms-control/src/core/registerEndpoints/serveStaticFolder/prepareHtml.ts",
-                "packages/surfaces/cms-control/src/core/registerEndpoints/serveStaticFolder/replaceBasePath.ts",
-                "packages/surfaces/cms-control/src/core/registerEndpoints/serveStaticFolder/scanStaticFolder.ts",
-                "packages/surfaces/cms-control/src/core/registerEndpoints/serveStaticFolder/serveStaticFolder.ts",
-                "packages/surfaces/cms-control/src/core/roles/editorData.ts",
-                "packages/surfaces/cms-control/src/core/roles/gatewayAccess.ts",
-                "packages/surfaces/cms-control/src/core/roles/mutateRole.ts",
-                "packages/surfaces/cms-control/src/core/roles/rolesView.ts",
-                "packages/surfaces/cms-control/src/core/secrets/deleteSecret.ts",
-                "packages/surfaces/cms-control/src/core/secrets/listSecrets.ts",
-                "packages/surfaces/cms-control/src/core/secrets/reservedSecretKeys.ts",
-                "packages/surfaces/cms-control/src/core/secrets/setSecret.ts",
-                "packages/surfaces/cms-control/src/core/secrets/withValidationResponse.ts",
-                "packages/surfaces/cms-control/src/core/server/cache/invalidation.ts",
-                "packages/surfaces/cms-control/src/core/settings/getSettings.ts",
-                "packages/surfaces/cms-control/src/core/settings/sendTestEmail.ts",
-                "packages/surfaces/cms-control/src/core/settings/updateSettings.ts",
-                "packages/surfaces/cms-control/src/core/template/createTemplate.ts",
-                "packages/surfaces/cms-control/src/core/template/updateTemplate.ts",
-                "packages/surfaces/cms-control/src/core/users/authActions.ts",
-                "packages/surfaces/cms-control/src/core/users/userView.ts",
-                "packages/surfaces/cms-control/src/core/validation/contentDefaults.ts",
+                "packages/surfaces/cms-control/src/core/management/integrations/artifactContext.ts",
+                "packages/surfaces/cms-control/src/core/management/integrations/catalogue.ts",
+                "packages/surfaces/cms-control/src/core/management/integrations/connectorProviderSettings.ts",
+                "packages/surfaces/cms-control/src/core/management/integrations/definitions.ts",
+                "packages/surfaces/cms-control/src/core/management/integrations/installationViews.ts",
+                "packages/surfaces/cms-control/src/core/management/roles/editorData.ts",
+                "packages/surfaces/cms-control/src/core/management/roles/gatewayAccess.ts",
+                "packages/surfaces/cms-control/src/core/management/roles/mutateRole.ts",
+                "packages/surfaces/cms-control/src/core/management/roles/rolesView.ts",
+                "packages/surfaces/cms-control/src/core/management/secrets/deleteSecret.ts",
+                "packages/surfaces/cms-control/src/core/management/secrets/listSecrets.ts",
+                "packages/surfaces/cms-control/src/core/management/secrets/reservedSecretKeys.ts",
+                "packages/surfaces/cms-control/src/core/management/secrets/setSecret.ts",
+                "packages/surfaces/cms-control/src/core/management/secrets/withValidationResponse.ts",
+                "packages/surfaces/cms-control/src/core/management/settings/getSettings.ts",
+                "packages/surfaces/cms-control/src/core/management/settings/sendTestEmail.ts",
+                "packages/surfaces/cms-control/src/core/management/settings/updateSettings.ts",
+                "packages/surfaces/cms-control/src/core/management/users/authActions.ts",
+                "packages/surfaces/cms-control/src/core/management/users/userView.ts",
                 "packages/surfaces/cms-control/src/core/validation/gateway/blobParsers.ts",
+                "packages/surfaces/cms-control/src/core/validation/gateway/endpointFields.ts",
                 "packages/surfaces/cms-control/src/core/validation/gateway/gatewayValidators.ts",
                 "packages/surfaces/cms-control/src/core/validation/gateway/parseShapeField.ts",
                 "packages/surfaces/cms-control/src/core/validation/gateway/parseSourceDto.ts",
+                "packages/surfaces/cms-control/src/core/validation/identifiers/slugify.ts",
                 "packages/surfaces/cms-control/src/core/validation/integrations/parseConnectorProviderDto.ts",
                 "packages/surfaces/cms-control/src/core/validation/page/parseCreateDto.ts",
                 "packages/surfaces/cms-control/src/core/validation/page/parseUpdateDto.ts",
+                "packages/surfaces/cms-control/src/core/validation/page/tags.ts",
                 "packages/surfaces/cms-control/src/core/validation/page/visible.ts",
                 "packages/surfaces/cms-control/src/core/validation/secrets/parseSecretDto.ts",
                 "packages/surfaces/cms-control/src/core/validation/settings/parseEmailTestDto.ts",
                 "packages/surfaces/cms-control/src/core/validation/settings/parseUpdateDto.ts",
-                "packages/surfaces/cms-control/src/core/validation/slugify.ts",
+                "packages/surfaces/cms-control/src/core/validation/settings/valueParsers.ts",
                 "packages/surfaces/cms-control/src/core/validation/sourceOverlay/parseSourceOverlayDto.ts",
                 "packages/surfaces/cms-control/src/core/validation/sourceOverlay/parseSourceOverlayOptions.ts",
+                "packages/surfaces/cms-control/src/core/validation/sourceOverlay/valueParsers.ts",
+                "packages/surfaces/cms-control/src/core/validation/template/defaults.ts",
                 "packages/surfaces/cms-control/src/core/validation/template/parseCreateDto.ts",
-                "packages/surfaces/cms-control/src/core/validation/template/parseUpdateDto.ts",
-                "packages/surfaces/cms-control/src/errors/Http/HttpError.ts",
-                "packages/surfaces/cms-control/src/errors/Http/InvalidParam.ts",
-                "packages/surfaces/cms-control/src/errors/Http/MissingParam.ts"
+                "packages/surfaces/cms-control/src/core/validation/template/parseUpdateDto.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/surfaces/cms-control/build.ts",
-                "packages/surfaces/cms-control/component.ts",
-                "packages/surfaces/cms-control/editor.ts",
                 "packages/surfaces/cms-control/index.ts",
-                "packages/surfaces/cms-control/src/api/bloc/all-js.get.ts",
-                "packages/surfaces/cms-control/src/api/bloc/bloc.get.ts",
-                "packages/surfaces/cms-control/src/api/bloc/list.get.ts",
-                "packages/surfaces/cms-control/src/api/bloc/source.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/identity/provider.delete.ts",
+                "packages/surfaces/cms-control/src/api/_access/identity/provider.patch.ts",
+                "packages/surfaces/cms-control/src/api/_access/identity/provider.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/identity/providers.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/pats/pats.delete.ts",
+                "packages/surfaces/cms-control/src/api/_access/pats/pats.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/pats/pats.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/profil/password.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/profil/profil.delete.ts",
+                "packages/surfaces/cms-control/src/api/_access/profil/profil.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/roles/editor.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/roles/list.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/roles/roles.delete.ts",
+                "packages/surfaces/cms-control/src/api/_access/roles/roles.get.ts",
+                "packages/surfaces/cms-control/src/api/_access/roles/roles.post.ts",
+                "packages/surfaces/cms-control/src/api/_access/users/role.post.ts",
+                "packages/surfaces/cms-control/src/api/_content/bloc/all-js.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/bloc/bloc.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/bloc/list.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/bloc/source.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/configDetail.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/exists.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/links.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/list.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/page.delete.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/page.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/page.post.ts",
+                "packages/surfaces/cms-control/src/api/_content/page/page.put.ts",
+                "packages/surfaces/cms-control/src/api/_content/relations/page.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/tags.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/template/list.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/template/template.delete.ts",
+                "packages/surfaces/cms-control/src/api/_content/template/template.get.ts",
+                "packages/surfaces/cms-control/src/api/_content/template/template.post.ts",
+                "packages/surfaces/cms-control/src/api/_content/template/template.put.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/content.put.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/files.delete.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/files.get.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/files.patch.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/folder.post.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/item.get.ts",
+                "packages/surfaces/cms-control/src/api/_media/files/upload.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/dashboards.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/functions.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/functions/catalog.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/functions/create.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/functions/detail.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/functions/execute.post.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/connector-provider.get.ts",
+                "packages/surfaces/cms-control/src/api/_platform/integrations/connector-provider.post.ts",
                 "packages/surfaces/cms-control/src/api/editor/binding-core.client.ts",
-                "packages/surfaces/cms-control/src/api/editor/binding-core.js.get.ts",
                 "packages/surfaces/cms-control/src/api/editor/component.client.ts",
-                "packages/surfaces/cms-control/src/api/editor/component.js.get.ts",
                 "packages/surfaces/cms-control/src/api/editor/frame.get.ts",
-                "packages/surfaces/cms-control/src/api/editor/script.js.get.ts",
-                "packages/surfaces/cms-control/src/api/editor/sources.get.ts",
-                "packages/surfaces/cms-control/src/api/editor/view-script.js.get.ts",
-                "packages/surfaces/cms-control/src/api/files/content.put.ts",
-                "packages/surfaces/cms-control/src/api/files/files.delete.ts",
-                "packages/surfaces/cms-control/src/api/files/files.get.ts",
-                "packages/surfaces/cms-control/src/api/files/files.patch.ts",
-                "packages/surfaces/cms-control/src/api/files/folder.post.ts",
-                "packages/surfaces/cms-control/src/api/files/item.get.ts",
-                "packages/surfaces/cms-control/src/api/files/upload.post.ts",
-                "packages/surfaces/cms-control/src/api/identity/provider.delete.ts",
-                "packages/surfaces/cms-control/src/api/identity/provider.patch.ts",
-                "packages/surfaces/cms-control/src/api/identity/provider.post.ts",
-                "packages/surfaces/cms-control/src/api/identity/providers.get.ts",
-                "packages/surfaces/cms-control/src/api/integrations/asset.get.ts",
-                "packages/surfaces/cms-control/src/api/integrations/catalogue.get.ts",
-                "packages/surfaces/cms-control/src/api/integrations/connector-provider.get.ts",
-                "packages/surfaces/cms-control/src/api/integrations/connector-provider.post.ts",
-                "packages/surfaces/cms-control/src/api/integrations/import.post.ts",
-                "packages/surfaces/cms-control/src/api/integrations/installations.get.ts",
-                "packages/surfaces/cms-control/src/api/integrations/installations/rerun.post.ts",
-                "packages/surfaces/cms-control/src/api/integrations/list.get.ts",
-                "packages/surfaces/cms-control/src/api/page/configDetail.get.ts",
-                "packages/surfaces/cms-control/src/api/page/links.get.ts",
-                "packages/surfaces/cms-control/src/api/page/list.get.ts",
-                "packages/surfaces/cms-control/src/api/page/page.delete.ts",
-                "packages/surfaces/cms-control/src/api/page/page.get.ts",
-                "packages/surfaces/cms-control/src/api/page/page.post.ts",
-                "packages/surfaces/cms-control/src/api/pats/pats.delete.ts",
-                "packages/surfaces/cms-control/src/api/pats/pats.get.ts",
-                "packages/surfaces/cms-control/src/api/pats/pats.post.ts",
-                "packages/surfaces/cms-control/src/api/profil/password.post.ts",
-                "packages/surfaces/cms-control/src/api/profil/profil.delete.ts",
-                "packages/surfaces/cms-control/src/api/profil/profil.get.ts",
-                "packages/surfaces/cms-control/src/api/relations/page.get.ts",
-                "packages/surfaces/cms-control/src/api/roles/editor.get.ts",
-                "packages/surfaces/cms-control/src/api/roles/list.get.ts",
-                "packages/surfaces/cms-control/src/api/roles/roles.delete.ts",
-                "packages/surfaces/cms-control/src/api/roles/roles.get.ts",
-                "packages/surfaces/cms-control/src/api/roles/roles.post.ts",
-                "packages/surfaces/cms-control/src/api/system/email-test.post.ts",
                 "packages/surfaces/cms-control/src/api/system/settings.get.ts",
                 "packages/surfaces/cms-control/src/api/system/settings.post.ts",
-                "packages/surfaces/cms-control/src/api/tags.get.ts",
-                "packages/surfaces/cms-control/src/api/template/list.get.ts",
-                "packages/surfaces/cms-control/src/api/template/template.delete.ts",
-                "packages/surfaces/cms-control/src/api/template/template.get.ts",
-                "packages/surfaces/cms-control/src/api/template/template.post.ts",
-                "packages/surfaces/cms-control/src/api/users/role.post.ts",
-                "packages/surfaces/cms-control/src/api/users/users.delete.ts",
-                "packages/surfaces/cms-control/src/api/users/users.post.ts",
                 "packages/surfaces/cms-control/src/components/CustomHTMLElement.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/runtime/mapping/types.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/types.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-detail/types.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Dashboards/widgets/w-table/types.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/Functions/contracts.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Functions/types.ts",
                 "packages/surfaces/cms-control/src/components/admin/Resources/Integrations/model.ts",
-                "packages/surfaces/cms-control/src/core/control/types.ts",
+                "packages/surfaces/cms-control/src/components/admin/Resources/WorkflowEditor/mappingTypes.ts",
+                "packages/surfaces/cms-control/src/components/editorSystemV2/editorResources.ts",
+                "packages/surfaces/cms-control/src/core/admin/control/types.ts",
+                "packages/surfaces/cms-control/src/core/content/editorSources/types.ts",
                 "packages/surfaces/cms-control/src/core/dom/buildRequestUrl.ts",
-                "packages/surfaces/cms-control/src/core/editorSources/types.ts",
                 "packages/surfaces/cms-control/src/core/gateway/createProvider.ts",
                 "packages/surfaces/cms-control/src/core/gateway/updateProvider.ts",
+                "packages/surfaces/cms-control/src/exports/component.ts",
+                "packages/surfaces/cms-control/src/exports/editor.ts",
                 "packages/surfaces/cms-control/src/prebuildControl.ts",
                 "packages/surfaces/cms-control/src/static/assets/control-components.js",
+                "packages/surfaces/cms-control/src/tooling/build.ts",
                 "packages/surfaces/cms-control/types/HTMLElements.ts"
             ],
             "files": {
-                "covered": 252,
-                "total": 331
+                "covered": 309,
+                "total": 386
             },
             "functions": {
-                "covered": 1017,
-                "total": 1767
+                "covered": 1071,
+                "total": 1860
             },
             "lines": {
-                "covered": 6787,
-                "total": 12240
+                "covered": 8528,
+                "total": 15835
             }
         },
         "@bernouy/cms-dashboards": {
@@ -666,11 +752,17 @@
                 "packages/features/cms-dashboards/src/core/sourceOverlayDashboard/table.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard/actions.ts",
-                "packages/features/cms-dashboards/src/core/validateDashboard/complexFields.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/complexFields/index.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/complexFields/media.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/complexFields/nestedEditor.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/complexFields/reorderableList.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/complexFields/table.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard/endpointRefs.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard/fields.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard/selectableFields.ts",
-                "packages/features/cms-dashboards/src/core/validateDashboard/shared.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/shared/basic.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/shared/index.ts",
+                "packages/features/cms-dashboards/src/core/validateDashboard/shared/visibility.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard/tableDetailWidgets.ts",
                 "packages/features/cms-dashboards/src/core/validateDashboard/widgets.ts",
                 "packages/features/cms-dashboards/src/default-implementation/InMemoryDashboardRepository.ts",
@@ -687,16 +779,16 @@
                 "packages/features/cms-dashboards/src/interfaces/dashboard/widgets.ts"
             ],
             "files": {
-                "covered": 21,
-                "total": 27
+                "covered": 27,
+                "total": 33
             },
             "functions": {
-                "covered": 139,
-                "total": 151
+                "covered": 142,
+                "total": 154
             },
             "lines": {
-                "covered": 1063,
-                "total": 1196
+                "covered": 1307,
+                "total": 1541
             }
         },
         "@bernouy/cms-delivery": {
@@ -717,6 +809,7 @@
                 "packages/surfaces/cms-delivery/src/core/head/buildScriptTags.ts",
                 "packages/surfaces/cms-delivery/src/core/html/renderPage.ts",
                 "packages/surfaces/cms-delivery/src/core/html/runtimeContext.ts",
+                "packages/surfaces/cms-delivery/src/core/pages/PageOptimizer.ts",
                 "packages/surfaces/cms-delivery/src/core/pages/handlePageRequest.ts",
                 "packages/surfaces/cms-delivery/src/core/pages/preflightPageSourceAccess.ts",
                 "packages/surfaces/cms-delivery/src/core/pages/renderRef.ts",
@@ -730,26 +823,28 @@
                 "packages/surfaces/cms-delivery/src/endpoints/blocset.server.ts",
                 "packages/surfaces/cms-delivery/src/endpoints/robots.txt.server.ts",
                 "packages/surfaces/cms-delivery/src/endpoints/sitemap.xml.server.ts",
-                "packages/surfaces/cms-delivery/src/registerDeliveryEndpoints.ts"
+                "packages/surfaces/cms-delivery/src/index.ts",
+                "packages/surfaces/cms-delivery/src/registerDeliveryEndpoints.ts",
+                "packages/surfaces/cms-delivery/src/runtime/DeliveryCmsContext.ts"
             ],
             "uncoveredSourceFiles": [
                 "packages/surfaces/cms-delivery/src/core/html/RenderContext.ts",
                 "packages/surfaces/cms-delivery/src/endpoints/assets/bindingCore.client.ts",
                 "packages/surfaces/cms-delivery/src/endpoints/assets/component.client.ts",
-                "packages/surfaces/cms-delivery/src/index.ts",
+                "packages/surfaces/cms-delivery/src/interfaces/DeliveryCmsConfig.ts",
                 "packages/surfaces/cms-delivery/src/interfaces/HeadInjector.ts"
             ],
             "files": {
-                "covered": 29,
-                "total": 34
+                "covered": 32,
+                "total": 37
             },
             "functions": {
-                "covered": 91,
-                "total": 124
+                "covered": 95,
+                "total": 128
             },
             "lines": {
-                "covered": 647,
-                "total": 816
+                "covered": 674,
+                "total": 866
             }
         },
         "@bernouy/cms-editor-system-v2": {
@@ -769,25 +864,48 @@
                 "packages/features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextActions.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextAttributes.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextRangeCommands.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextRangeDom.ts",
                 "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextToolbar.ts",
+                "packages/features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Canvas/canvasFrame.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerResults.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerSidebar.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerTypes.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/advancedMode.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerEvents.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/fieldMode.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/fieldOptions.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/sourceStateMode.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBinding.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRenderer.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRows.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceFormReader.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts",
@@ -795,10 +913,15 @@
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourcePanelsRenderer.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourcePickerRenderer.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerEvents.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerFilters.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerState.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatPickerDetails.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Document/shellDocumentFlow.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/FrameHighlight.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Lifecycle/shellAttributes.ts",
@@ -818,7 +941,10 @@
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellViewport.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/shellBindingPreview.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/sourceDependencyCleanup.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/sourceDependencyExpressions.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceBindings.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceStatusBindings.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Content/reloadFrameDocument.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Content/shellContentMutations.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/insertion.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/media.ts",
@@ -851,6 +977,10 @@
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureEmptyTree.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreeRow.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureConditionPickerOptions.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureSourceConditions.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeDragEvents.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeEventBindings.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeRefs.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeController.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeEmitter.ts",
@@ -864,6 +994,8 @@
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureTreeTraversal.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/controlWiring.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/endpointBinding.ts",
@@ -871,8 +1003,10 @@
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/colorSetting.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/icons.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingControls.ts",
+                "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts",
                 "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/settingState.ts",
+                "packages/features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts",
                 "packages/features/cms-editor-system-v2/src/exports/index.ts",
                 "packages/features/cms-editor-system-v2/src/runtime/EditorRegistry/EditorRegistry.ts",
                 "packages/features/cms-editor-system-v2/src/runtime/EditorRuntime/EditorRuntime.ts",
@@ -889,22 +1023,23 @@
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellServiceTypes.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Events/shellEventTypes.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTypes.ts",
+                "packages/features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceBindingTypes.ts",
                 "packages/features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureTreeTypes.ts",
                 "packages/features/cms-editor-system-v2/src/runtime/EditorRuntime/types.ts",
                 "packages/features/cms-editor-system-v2/src/runtime/RuntimeEditor/types.ts",
                 "packages/features/cms-editor-system-v2/src/runtime/dataSources.ts"
             ],
             "files": {
-                "covered": 128,
-                "total": 136
+                "covered": 167,
+                "total": 176
             },
             "functions": {
-                "covered": 1086,
-                "total": 1408
+                "covered": 1105,
+                "total": 1429
             },
             "lines": {
-                "covered": 6359,
-                "total": 7545
+                "covered": 7734,
+                "total": 9282
             }
         },
         "@bernouy/cms-files": {
@@ -921,40 +1056,52 @@
                 "packages/features/cms-files/src/core/optimization/optimizeQueue.ts",
                 "packages/features/cms-files/src/core/validation/ValidatingCmsFilesMetadata.ts",
                 "packages/features/cms-files/src/core/validation/validation.ts",
+                "packages/features/cms-files/src/default-implementation/local-fs/LocalFilesRegistry.ts",
                 "packages/features/cms-files/src/default-implementation/local-fs/LocalFsCmsFiles.ts",
                 "packages/features/cms-files/src/default-implementation/local-fs/LocalFsCmsFilesBlob.ts",
+                "packages/features/cms-files/src/default-implementation/local-fs/localFsMutations.ts",
+                "packages/features/cms-files/src/default-implementation/local-fs/localFsQueries.ts",
+                "packages/features/cms-files/src/default-implementation/local-fs/localFsRegistryEntries.ts",
+                "packages/features/cms-files/src/default-implementation/local-fs/reconcileLocalFiles.ts",
                 "packages/features/cms-files/src/default-implementation/memory/InMemoryCmsFilesBlob.ts",
                 "packages/features/cms-files/src/default-implementation/memory/InMemoryCmsFilesMetadata.ts",
+                "packages/features/cms-files/src/default-implementation/memory/inMemoryFilesQueries.ts",
+                "packages/features/cms-files/src/default-implementation/s3/S3CmsFilesBlob.ts",
                 "packages/features/cms-files/src/exports/index.ts",
+                "packages/features/cms-files/src/exports/s3.ts",
                 "packages/features/cms-files/src/exports/urls.ts",
                 "packages/features/cms-files/src/http/serveFilesRequest.ts",
                 "packages/features/cms-files/src/http/serveVariant.ts"
             ],
             "uncoveredSourceFiles": [
                 "packages/features/cms-files/src/default-implementation/mongo/MongoCmsFilesMetadata.ts",
-                "packages/features/cms-files/src/default-implementation/s3/S3CmsFilesBlob.ts",
+                "packages/features/cms-files/src/default-implementation/mongo/mongoFilesDocuments.ts",
+                "packages/features/cms-files/src/default-implementation/mongo/mongoFilesMutations.ts",
+                "packages/features/cms-files/src/default-implementation/mongo/mongoFilesQueries.ts",
                 "packages/features/cms-files/src/exports/mongo.ts",
-                "packages/features/cms-files/src/exports/s3.ts",
                 "packages/features/cms-files/src/interfaces/CmsFilesBlobStore.ts",
                 "packages/features/cms-files/src/interfaces/CmsFilesMetadataRepository.ts"
             ],
             "files": {
-                "covered": 19,
-                "total": 25
+                "covered": 27,
+                "total": 34
             },
             "functions": {
-                "covered": 145,
-                "total": 171
+                "covered": 177,
+                "total": 207
             },
             "lines": {
-                "covered": 691,
-                "total": 922
+                "covered": 985,
+                "total": 1285
             }
         },
         "@bernouy/cms-functions": {
             "path": "packages/features/cms-functions",
             "coveredSourceFiles": [
+                "packages/features/cms-functions/src/core/execution/calls/callRequest.ts",
+                "packages/features/cms-functions/src/core/execution/calls/callResponse.ts",
                 "packages/features/cms-functions/src/core/execution/calls/executeFunctionCall.ts",
+                "packages/features/cms-functions/src/core/execution/calls/forEachExecution.ts",
                 "packages/features/cms-functions/src/core/execution/calls/runFunctionSteps.ts",
                 "packages/features/cms-functions/src/core/execution/context/functionExecutionScope.ts",
                 "packages/features/cms-functions/src/core/execution/context/identityResolution.ts",
@@ -992,16 +1139,16 @@
                 "packages/features/cms-functions/src/interfaces/FunctionRepository.ts"
             ],
             "files": {
-                "covered": 28,
-                "total": 34
+                "covered": 31,
+                "total": 37
             },
             "functions": {
-                "covered": 154,
-                "total": 193
+                "covered": 155,
+                "total": 194
             },
             "lines": {
-                "covered": 1213,
-                "total": 1380
+                "covered": 1403,
+                "total": 1674
             }
         },
         "@bernouy/cms-identities": {
@@ -1026,52 +1173,61 @@
                 "total": 27
             },
             "lines": {
-                "covered": 152,
-                "total": 152
+                "covered": 180,
+                "total": 180
             }
         },
         "@bernouy/cms-integrations": {
             "path": "packages/features/cms-integrations",
             "coveredSourceFiles": [
-                "packages/features/cms-integrations/src/core/catalog.ts",
+                "packages/features/cms-integrations/src/core/definitions/catalog.ts",
+                "packages/features/cms-integrations/src/core/definitions/templateExpressions.ts",
+                "packages/features/cms-integrations/src/core/definitions/templates.ts",
                 "packages/features/cms-integrations/src/core/errors.ts",
                 "packages/features/cms-integrations/src/core/import/connectorDeployments.ts",
-                "packages/features/cms-integrations/src/core/import/dashboardWrites.ts",
                 "packages/features/cms-integrations/src/core/import/declarative.ts",
                 "packages/features/cms-integrations/src/core/import/declarative/accessGrants.ts",
-                "packages/features/cms-integrations/src/core/import/declarative/artifactBuilders.ts",
                 "packages/features/cms-integrations/src/core/import/declarative/artifactWriteStack.ts",
-                "packages/features/cms-integrations/src/core/import/declarative/dashboardRelationWriteBuilders.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/artifactBuilders.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/artifactWrites/blocImports.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/artifactWrites/dashboardWrites.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/artifactWrites/functionWrites.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/artifactWrites/sourceWrites.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/dashboardRelationWriteBuilders.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/relationWriteBuilders.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/sourceOverlayWriteBuilders.ts",
+                "packages/features/cms-integrations/src/core/import/declarative/builders/triggerWriteBuilders.ts",
                 "packages/features/cms-integrations/src/core/import/declarative/execute.ts",
-                "packages/features/cms-integrations/src/core/import/declarative/relationWriteBuilders.ts",
                 "packages/features/cms-integrations/src/core/import/declarative/secrets.ts",
-                "packages/features/cms-integrations/src/core/import/declarative/sourceOverlayWriteBuilders.ts",
-                "packages/features/cms-integrations/src/core/import/declarative/triggerWriteBuilders.ts",
-                "packages/features/cms-integrations/src/core/import/declarative/writeBuilders.ts",
                 "packages/features/cms-integrations/src/core/import/dependencies.ts",
-                "packages/features/cms-integrations/src/core/import/functionWrites.ts",
-                "packages/features/cms-integrations/src/core/import/relationWrites.ts",
-                "packages/features/cms-integrations/src/core/import/secretWrites.ts",
-                "packages/features/cms-integrations/src/core/import/sourceOverlayWrites.ts",
-                "packages/features/cms-integrations/src/core/import/sourceWrites.ts",
-                "packages/features/cms-integrations/src/core/import/triggerWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/dashboardWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/functionWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/relationWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/secretWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/sourceOverlayWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/sourceWrites.ts",
+                "packages/features/cms-integrations/src/core/import/writes/triggerWrites.ts",
                 "packages/features/cms-integrations/src/core/importIntegration.ts",
                 "packages/features/cms-integrations/src/core/installation/artifactCleanup/index.ts",
                 "packages/features/cms-integrations/src/core/installation/artifactCleanup/repositoryArtifacts.ts",
                 "packages/features/cms-integrations/src/core/installation/create.ts",
+                "packages/features/cms-integrations/src/core/installation/execution/rerun.ts",
+                "packages/features/cms-integrations/src/core/installation/execution/rerunRequest.ts",
+                "packages/features/cms-integrations/src/core/installation/execution/runIntegrationInstallation.ts",
+                "packages/features/cms-integrations/src/core/installation/execution/runRetention.ts",
+                "packages/features/cms-integrations/src/core/installation/execution/runs.ts",
                 "packages/features/cms-integrations/src/core/installation/ids.ts",
-                "packages/features/cms-integrations/src/core/installation/rerun.ts",
-                "packages/features/cms-integrations/src/core/installation/runIntegrationInstallation.ts",
-                "packages/features/cms-integrations/src/core/installation/runRetention.ts",
-                "packages/features/cms-integrations/src/core/installation/runs.ts",
                 "packages/features/cms-integrations/src/core/installation/secretRefs.ts",
                 "packages/features/cms-integrations/src/core/installation/snapshots.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/bloc.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/common.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/actions.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/columns.ts",
-                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/complexFields.ts",
-                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/fields.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/fields/complexFields.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/fields/index.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/fields/mediaFields.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/fields/nestedEditors.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/fields/schemaField.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/index.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/refs.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/dashboard/visibility.ts",
@@ -1079,37 +1235,41 @@
                 "packages/features/cms-integrations/src/core/parsing/artifacts/index.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/relations/relation.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/relations/relationDashboardActions.ts",
-                "packages/features/cms-integrations/src/core/parsing/artifacts/source.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/source/endpoint.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/source/index.ts",
+                "packages/features/cms-integrations/src/core/parsing/artifacts/source/inputs.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/sourceOverlay/dashboardFields.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/sourceOverlay/index.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/workflows/function.ts",
                 "packages/features/cms-integrations/src/core/parsing/artifacts/workflows/trigger.ts",
-                "packages/features/cms-integrations/src/core/parsing/connectorTemplates.ts",
-                "packages/features/cms-integrations/src/core/parsing/definition.ts",
-                "packages/features/cms-integrations/src/core/parsing/dependencies.ts",
-                "packages/features/cms-integrations/src/core/parsing/icon.ts",
-                "packages/features/cms-integrations/src/core/parsing/inputDefinitions.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/definition.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/dependencies.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/icon.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/inputDefinitions.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/securityDefinition.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/uiDefinition.ts",
+                "packages/features/cms-integrations/src/core/parsing/definition/values.ts",
                 "packages/features/cms-integrations/src/core/parsing/parseIntegrationImportDto.ts",
-                "packages/features/cms-integrations/src/core/parsing/secretTemplates.ts",
-                "packages/features/cms-integrations/src/core/parsing/securityDefinition.ts",
-                "packages/features/cms-integrations/src/core/parsing/sourceTemplates.ts",
-                "packages/features/cms-integrations/src/core/parsing/uiDefinition.ts",
-                "packages/features/cms-integrations/src/core/parsing/values.ts",
+                "packages/features/cms-integrations/src/core/parsing/templates/connectorTemplates.ts",
+                "packages/features/cms-integrations/src/core/parsing/templates/secretTemplates.ts",
+                "packages/features/cms-integrations/src/core/parsing/templates/sourceTemplates.ts",
                 "packages/features/cms-integrations/src/core/security/csp.ts",
                 "packages/features/cms-integrations/src/core/shared/inputSensitivity.ts",
-                "packages/features/cms-integrations/src/core/templates.ts",
                 "packages/features/cms-integrations/src/default-implementation/ConfiguredSupabaseConnectorDeployer.ts",
-                "packages/features/cms-integrations/src/default-implementation/HttpIntegrationDefinitionRepository.ts",
-                "packages/features/cms-integrations/src/default-implementation/InMemoryIntegrationConnectorProviderRepository.ts",
-                "packages/features/cms-integrations/src/default-implementation/InMemoryIntegrationInstallationRepository.ts",
-                "packages/features/cms-integrations/src/default-implementation/SupabaseConnectorDeployer.ts",
+                "packages/features/cms-integrations/src/default-implementation/connector-providers/InMemoryIntegrationConnectorProviderRepository.ts",
                 "packages/features/cms-integrations/src/default-implementation/definition-assets/icons.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/assets.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/repository.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/repositorySupport.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/versionAssets.ts",
-                "packages/features/cms-integrations/src/default-implementation/httpDefinitionAssets.ts",
-                "packages/features/cms-integrations/src/default-implementation/httpDefinitionParsing.ts",
+                "packages/features/cms-integrations/src/default-implementation/http-definition/HttpIntegrationDefinitionRepository.ts",
+                "packages/features/cms-integrations/src/default-implementation/http-definition/httpDefinitionAssets.ts",
+                "packages/features/cms-integrations/src/default-implementation/http-definition/httpDefinitionParsing.ts",
+                "packages/features/cms-integrations/src/default-implementation/installations/InMemoryIntegrationInstallationRepository.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/SupabaseConnectorDeployer.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/SupabaseManagementClient.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/functionBundle.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/paths.ts",
                 "packages/features/cms-integrations/src/exports/fs.ts",
                 "packages/features/cms-integrations/src/exports/http.ts",
                 "packages/features/cms-integrations/src/exports/index.ts",
@@ -1117,8 +1277,9 @@
                 "packages/features/cms-integrations/src/interfaces/IntegrationConnectorProvider.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/features/cms-integrations/src/default-implementation/MongoIntegrationConnectorProviderRepository.ts",
-                "packages/features/cms-integrations/src/default-implementation/MongoIntegrationInstallationRepository.ts",
+                "packages/features/cms-integrations/src/default-implementation/connector-providers/MongoIntegrationConnectorProviderRepository.ts",
+                "packages/features/cms-integrations/src/default-implementation/installations/MongoIntegrationInstallationRepository.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/types.ts",
                 "packages/features/cms-integrations/src/exports/mongo.ts",
                 "packages/features/cms-integrations/src/interfaces/Integration.ts",
                 "packages/features/cms-integrations/src/interfaces/IntegrationArtifacts.ts",
@@ -1129,16 +1290,16 @@
                 "packages/features/cms-integrations/src/interfaces/IntegrationInstallationRepository.ts"
             ],
             "files": {
-                "covered": 82,
-                "total": 92
+                "covered": 95,
+                "total": 106
             },
             "functions": {
-                "covered": 571,
-                "total": 631
+                "covered": 592,
+                "total": 650
             },
             "lines": {
-                "covered": 3819,
-                "total": 4277
+                "covered": 4585,
+                "total": 5496
             }
         },
         "@bernouy/cms-official-integrations": {
@@ -1292,6 +1453,8 @@
                 "packages/resources/official-integrations/integrations/basic-blocs/versions/1.0.0/blocs/basic-toast/BlocEditor.ts",
                 "packages/resources/official-integrations/integrations/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
                 "packages/resources/official-integrations/integrations/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment/BlocEditor.ts",
+                "packages/resources/official-integrations/integrations/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment/helpers.ts",
+                "packages/resources/official-integrations/integrations/commerce-mondial-relay-fulfillment/versions/1.0.0/blocs/commerce-mondial-relay-sale-fulfillment/presentation.ts",
                 "packages/resources/official-integrations/integrations/commerce-negotiation/versions/1.0.0/blocs/commerce-negotiation-form/Bloc.ts",
                 "packages/resources/official-integrations/integrations/commerce-negotiation/versions/1.0.0/blocs/commerce-negotiation-form/BlocEditor.ts",
                 "packages/resources/official-integrations/integrations/commerce-negotiation/versions/1.0.0/blocs/commerce-negotiation-list/Bloc.ts",
@@ -1337,15 +1500,15 @@
             ],
             "files": {
                 "covered": 108,
-                "total": 188
+                "total": 190
             },
             "functions": {
-                "covered": 1643,
-                "total": 1930
+                "covered": 1653,
+                "total": 1935
             },
             "lines": {
-                "covered": 13433,
-                "total": 15724
+                "covered": 16026,
+                "total": 19255
             }
         },
         "@bernouy/cms-permissions": {
@@ -1373,8 +1536,8 @@
                 "total": 34
             },
             "lines": {
-                "covered": 141,
-                "total": 141
+                "covered": 166,
+                "total": 168
             }
         },
         "@bernouy/cms-relations": {
@@ -1408,8 +1571,8 @@
                 "total": 69
             },
             "lines": {
-                "covered": 344,
-                "total": 465
+                "covered": 424,
+                "total": 650
             }
         },
         "@bernouy/cms-repository": {
@@ -1429,8 +1592,8 @@
                 "total": 16
             },
             "lines": {
-                "covered": 49,
-                "total": 61
+                "covered": 50,
+                "total": 64
             }
         },
         "@bernouy/cms-secrets": {
@@ -1459,31 +1622,36 @@
                 "total": 27
             },
             "lines": {
-                "covered": 79,
-                "total": 84
+                "covered": 98,
+                "total": 104
             }
         },
         "@bernouy/cms-server": {
             "path": "packages/runtimes/cms-server",
             "coveredSourceFiles": [
                 "packages/runtimes/cms-server/src/migrateLegacyOperatorRoles.ts",
+                "packages/runtimes/cms-server/src/runtime/auth.ts",
+                "packages/runtimes/cms-server/src/runtime/integrations.ts",
+                "packages/runtimes/cms-server/src/runtime/stores/core.ts",
+                "packages/runtimes/cms-server/src/runtime/stores/features.ts",
                 "packages/runtimes/cms-server/src/runtimeEnv.ts",
                 "packages/runtimes/cms-server/src/systemFunctionWorkers.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/runtimes/cms-server/src/index.ts"
+                "packages/runtimes/cms-server/src/index.ts",
+                "packages/runtimes/cms-server/src/runtime/mountSurfaces.ts"
             ],
             "files": {
-                "covered": 3,
-                "total": 4
+                "covered": 7,
+                "total": 9
             },
             "functions": {
-                "covered": 10,
-                "total": 11
+                "covered": 23,
+                "total": 23
             },
             "lines": {
-                "covered": 126,
-                "total": 134
+                "covered": 332,
+                "total": 362
             }
         },
         "@bernouy/cms-sources": {
@@ -1495,8 +1663,10 @@
                 "packages/features/cms-sources/src/core/model/errors.ts",
                 "packages/features/cms-sources/src/core/model/projectStrictDataShape.ts",
                 "packages/features/cms-sources/src/core/overlays/sourceDto.ts",
+                "packages/features/cms-sources/src/core/overlays/sourceDtoViews.ts",
                 "packages/features/cms-sources/src/core/overlays/sourceOverlay.ts",
                 "packages/features/cms-sources/src/core/overlays/sourceOverlayDynamicFields.ts",
+                "packages/features/cms-sources/src/core/overlays/sourceOverlayFieldParsing.ts",
                 "packages/features/cms-sources/src/core/overlays/sourceOverlayProjection.ts",
                 "packages/features/cms-sources/src/core/repositories/CompositeSourceRepository.ts",
                 "packages/features/cms-sources/src/core/repositories/SourceOverlaySchemaCache.ts",
@@ -1504,6 +1674,7 @@
                 "packages/features/cms-sources/src/core/response-projection/bindResponseIdentities.ts",
                 "packages/features/cms-sources/src/core/response-projection/projectDataShape.ts",
                 "packages/features/cms-sources/src/core/response-projection/projectEndpointResponse.ts",
+                "packages/features/cms-sources/src/core/response-projection/projectedResponse.ts",
                 "packages/features/cms-sources/src/core/response-projection/readBoundedJson.ts",
                 "packages/features/cms-sources/src/core/response-projection/responseProjectionEvents.ts",
                 "packages/features/cms-sources/src/core/response-projection/triggerResponseBody.ts",
@@ -1519,13 +1690,15 @@
                 "packages/features/cms-sources/src/core/upstream/upstreamFailure.ts",
                 "packages/features/cms-sources/src/core/validation/parseDataShape.ts",
                 "packages/features/cms-sources/src/core/validation/sourceEndpointValidation.ts",
+                "packages/features/cms-sources/src/core/validation/sourceRequestValidation.ts",
                 "packages/features/cms-sources/src/core/validation/validateSource.ts",
                 "packages/features/cms-sources/src/default-implementation/InMemorySourceOverlayRepository.ts",
                 "packages/features/cms-sources/src/default-implementation/InMemorySourceRepository.ts",
                 "packages/features/cms-sources/src/exports/index.ts",
                 "packages/features/cms-sources/src/http/handleSourceRequest.ts",
                 "packages/features/cms-sources/src/interfaces/Source.ts",
-                "packages/features/cms-sources/src/interfaces/SourceOverlay.ts"
+                "packages/features/cms-sources/src/interfaces/SourceOverlay.ts",
+                "packages/features/cms-sources/src/publicApi.ts"
             ],
             "uncoveredSourceFiles": [
                 "packages/features/cms-sources/src/core/overlays/sourceDtoTypes.ts",
@@ -1537,16 +1710,16 @@
                 "packages/features/cms-sources/src/interfaces/SourceRepository.ts"
             ],
             "files": {
-                "covered": 37,
-                "total": 44
+                "covered": 42,
+                "total": 49
             },
             "functions": {
-                "covered": 257,
-                "total": 293
+                "covered": 278,
+                "total": 306
             },
             "lines": {
-                "covered": 1855,
-                "total": 2132
+                "covered": 2359,
+                "total": 2583
             }
         },
         "@bernouy/cms-triggers": {
@@ -1578,8 +1751,8 @@
                 "total": 87
             },
             "lines": {
-                "covered": 409,
-                "total": 527
+                "covered": 486,
+                "total": 640
             }
         },
         "@bernouy/components": {
@@ -1589,28 +1762,36 @@
                 "packages/foundation/components/src/base/Composition.ts",
                 "packages/foundation/components/src/base/compositionRuntime.ts",
                 "packages/foundation/components/src/base/index.ts",
+                "packages/foundation/components/src/binding/bindingCore.ts",
                 "packages/foundation/components/src/binding/core/attrs.ts",
-                "packages/foundation/components/src/binding/core/bindingCore.ts",
                 "packages/foundation/components/src/binding/core/cloak.ts",
                 "packages/foundation/components/src/binding/core/interpolate.ts",
                 "packages/foundation/components/src/binding/core/scope.ts",
-                "packages/foundation/components/src/binding/fetcher.ts",
                 "packages/foundation/components/src/binding/params/PageStateSync.ts",
                 "packages/foundation/components/src/binding/params/ParamSync.ts",
                 "packages/foundation/components/src/binding/params/index.ts",
                 "packages/foundation/components/src/binding/reactive/CompiledTemplate.ts",
                 "packages/foundation/components/src/binding/reactive/MountedRegion.ts",
+                "packages/foundation/components/src/binding/reactive/compiler/submitOwnership.ts",
+                "packages/foundation/components/src/binding/reactive/compiler/templateBindings.ts",
+                "packages/foundation/components/src/binding/reactive/compiler/templateCompiler.ts",
+                "packages/foundation/components/src/binding/reactive/compiler/templateStructures.ts",
+                "packages/foundation/components/src/binding/reactive/templateInstantiation.ts",
+                "packages/foundation/components/src/binding/reactive/templateSites.ts",
                 "packages/foundation/components/src/binding/render/condition.ts",
                 "packages/foundation/components/src/binding/render/condition/evaluate.ts",
                 "packages/foundation/components/src/binding/render/condition/parser.ts",
                 "packages/foundation/components/src/binding/render/condition/references.ts",
                 "packages/foundation/components/src/binding/render/condition/tokenizer.ts",
                 "packages/foundation/components/src/binding/render/repeat.ts",
+                "packages/foundation/components/src/binding/runtime/BindingDiscovery.ts",
+                "packages/foundation/components/src/binding/runtime/BindingRegistry.ts",
                 "packages/foundation/components/src/binding/runtime/BindingRuntime.ts",
                 "packages/foundation/components/src/binding/runtime/discovery.ts",
                 "packages/foundation/components/src/binding/runtime/revealSources.ts",
                 "packages/foundation/components/src/binding/runtime/sourceStatusScope.ts",
                 "packages/foundation/components/src/binding/source/Source.ts",
+                "packages/foundation/components/src/binding/source/fetcher.ts",
                 "packages/foundation/components/src/binding/source/presentation/sourceBody.ts",
                 "packages/foundation/components/src/binding/source/presentation/sourceContent.ts",
                 "packages/foundation/components/src/binding/source/presentation/sourcePresenter.ts",
@@ -1620,10 +1801,15 @@
                 "packages/foundation/components/src/binding/source/runtime/runtimeStamps.ts",
                 "packages/foundation/components/src/binding/source/runtime/sourceSpec.ts",
                 "packages/foundation/components/src/binding/source/sourceEvents.ts",
+                "packages/foundation/components/src/binding/source/submission.ts",
+                "packages/foundation/components/src/binding/submit/formControls.ts",
+                "packages/foundation/components/src/binding/submit/formSerialization.ts",
                 "packages/foundation/components/src/binding/submit/formSubmit.ts",
+                "packages/foundation/components/src/binding/submit/submitRequest.ts",
                 "packages/foundation/components/src/ui/Content/Card/Card.ts",
                 "packages/foundation/components/src/ui/DataDisplay/Dataviz/charts.ts",
                 "packages/foundation/components/src/ui/DataDisplay/Media/PhotoAlbum/PhotoAlbum.ts",
+                "packages/foundation/components/src/ui/DataDisplay/Media/PhotoAlbum/PhotoAlbumView.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/P9rInput/P9rInput.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/P9rInput/compute.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/P9rInput/listener.ts",
@@ -1638,12 +1824,14 @@
                 "packages/foundation/components/src/ui/Layout/Grid/Grid.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/foundation/components/index.ts",
+                "packages/foundation/components/binding.ts",
                 "packages/foundation/components/src/base/BubblesEvent.ts",
                 "packages/foundation/components/src/base/buildRequestUrl.ts",
+                "packages/foundation/components/src/binding/reactive/templatePlan.ts",
                 "packages/foundation/components/src/binding/render/condition/types.ts",
-                "packages/foundation/components/src/exports/binding.ts",
+                "packages/foundation/components/src/binding/submit/types.ts",
                 "packages/foundation/components/src/index.ts",
+                "packages/foundation/components/src/tooling/build.ts",
                 "packages/foundation/components/src/ui/Content/Accordion/Accordion.ts",
                 "packages/foundation/components/src/ui/Content/Accordion/AccordionItem/AccordionItem.ts",
                 "packages/foundation/components/src/ui/Content/Divider/Divider.ts",
@@ -1699,8 +1887,11 @@
                 "packages/foundation/components/src/ui/Form/Inputs/Textarea/listener.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/Textarea/sync.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/TokenInput/TokenInput.ts",
+                "packages/foundation/components/src/ui/Form/Inputs/TokenInput/TokenInputView.ts",
+                "packages/foundation/components/src/ui/Form/Inputs/TokenInput/tokenEvents.ts",
                 "packages/foundation/components/src/ui/Form/Inputs/TokenInput/tokens.ts",
                 "packages/foundation/components/src/ui/Form/Selection/Combobox/Combobox.ts",
+                "packages/foundation/components/src/ui/Form/Selection/Combobox/ComboboxView.ts",
                 "packages/foundation/components/src/ui/Form/Selection/Combobox/list.ts",
                 "packages/foundation/components/src/ui/Form/Selection/Combobox/types.ts",
                 "packages/foundation/components/src/ui/Form/Selection/P9rSelect/P9rSelect.ts",
@@ -1756,20 +1947,19 @@
                 "packages/foundation/components/src/ui/Navigation/Tabs/compute.ts",
                 "packages/foundation/components/src/ui/Navigation/Tabs/domain/tabs.ts",
                 "packages/foundation/components/src/ui/Navigation/Tabs/emit.ts",
-                "packages/foundation/components/src/ui/Navigation/Tabs/listener.ts",
-                "packages/foundation/components/tooling/build.ts"
+                "packages/foundation/components/src/ui/Navigation/Tabs/listener.ts"
             ],
             "files": {
-                "covered": 51,
-                "total": 171
+                "covered": 64,
+                "total": 188
             },
             "functions": {
-                "covered": 374,
-                "total": 419
+                "covered": 380,
+                "total": 425
             },
             "lines": {
-                "covered": 2340,
-                "total": 2492
+                "covered": 2898,
+                "total": 3153
             }
         },
         "@bernouy/envelope-crypto": {
@@ -1799,8 +1989,8 @@
                 "total": 28
             },
             "lines": {
-                "covered": 152,
-                "total": 193
+                "covered": 166,
+                "total": 210
             }
         },
         "@bernouy/http-runner": {
@@ -1809,11 +1999,16 @@
                 "packages/foundation/http-runner/src/core/buildCspContent.ts",
                 "packages/foundation/http-runner/src/core/cacheGeneration.ts",
                 "packages/foundation/http-runner/src/core/compression.ts",
+                "packages/foundation/http-runner/src/core/compression/content.ts",
+                "packages/foundation/http-runner/src/core/compression/headers.ts",
+                "packages/foundation/http-runner/src/core/compression/response.ts",
                 "packages/foundation/http-runner/src/core/html.ts",
+                "packages/foundation/http-runner/src/core/requestDispatch.ts",
                 "packages/foundation/http-runner/src/core/requestIP.ts",
                 "packages/foundation/http-runner/src/default-implementation/BunRunner.ts",
                 "packages/foundation/http-runner/src/default-implementation/InMemoryCache.ts",
                 "packages/foundation/http-runner/src/default-implementation/TtlCache.ts",
+                "packages/foundation/http-runner/src/default-implementation/runnerPaths.ts",
                 "packages/foundation/http-runner/src/exports/index.ts"
             ],
             "uncoveredSourceFiles": [
@@ -1824,16 +2019,16 @@
                 "packages/foundation/http-runner/src/interfaces/Runner.ts"
             ],
             "files": {
-                "covered": 9,
-                "total": 14
+                "covered": 14,
+                "total": 19
             },
             "functions": {
-                "covered": 27,
-                "total": 57
+                "covered": 28,
+                "total": 59
             },
             "lines": {
-                "covered": 256,
-                "total": 416
+                "covered": 274,
+                "total": 453
             }
         },
         "@bernouy/rate-limiter": {
@@ -1856,8 +2051,8 @@
                 "total": 11
             },
             "lines": {
-                "covered": 60,
-                "total": 68
+                "covered": 58,
+                "total": 66
             }
         }
     }
