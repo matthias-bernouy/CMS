@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+    capturedFetches,
     expectRpc,
     installCommerceTestEnvironment,
     jsonResponse,
@@ -79,3 +80,69 @@ describe("commerce product writes", () => {
         ).toBeTrue();
     });
 });
+
+describe("commerce Brand post-action parity", () => {
+    test("returns the exact saved Brand read model", async () => {
+        const row = {
+            id: 7,
+            slug: "babolat",
+            name: "Babolat",
+            description: null,
+            status: "active",
+            metadata: { region: null },
+            version: 4,
+            created_at: "2026-07-01T08:00:00Z",
+            updated_at: "2026-07-22T11:00:00Z",
+        };
+        setRestResponder((request) =>
+            new URL(request.url).pathname.endsWith("/rpc/upsert_brand") ? jsonResponse(row) : jsonResponse([row]),
+        );
+        const body = {
+            expectedVersion: 3,
+            slug: "babolat",
+            name: "Babolat",
+            description: "",
+            status: "active",
+        };
+
+        const mutation = await requestCommerce("/admin/brand?id=7", { body });
+        const saved = await mutation.json();
+        const detail = await requestCommerce("/admin/brand?id=7");
+        const fetched = await detail.json();
+
+        expect(mutation.status).toBe(200);
+        expect(detail.status).toBe(200);
+        expect(saved).toEqual(brandProjection);
+        expect(fetched).toEqual(brandProjection);
+        expect(saved).toEqual(fetched);
+        expect(pick(saved as JsonRecord, brandConsumedFields)).toEqual(pick(brandProjection, brandConsumedFields));
+        expect(capturedFetches()).toHaveLength(2);
+        expect(expectRpc("upsert_brand").body).toEqual({
+            p_brand_id: 7,
+            p_payload: body,
+            p_expected_version: 3,
+        });
+        expect(capturedFetches().map((request) => new URL(request.url).pathname)).toEqual([
+            "/rest/v1/rpc/upsert_brand",
+            "/rest/v1/brands",
+        ]);
+    });
+});
+
+const brandProjection = {
+    id: 7,
+    slug: "babolat",
+    name: "Babolat",
+    description: null,
+    status: "active",
+    metadata: { region: null },
+    version: 4,
+    createdAt: "2026-07-01T08:00:00Z",
+    updatedAt: "2026-07-22T11:00:00Z",
+};
+
+const brandConsumedFields = ["id", "slug", "name", "description", "status", "version"] as const;
+
+function pick(value: JsonRecord, keys: readonly string[]): JsonRecord {
+    return Object.fromEntries(keys.map((key) => [key, value[key]]));
+}
