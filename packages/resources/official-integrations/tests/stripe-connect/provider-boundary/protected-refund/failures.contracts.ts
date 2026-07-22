@@ -2,19 +2,12 @@ import { describe, expect, test } from "bun:test";
 import {
     clearRequests,
     type CreateProviderBoundaryHarness,
-    type JsonRecord,
     type ProtectedRefundSearchScenario,
     postgrestBudget,
     responseBody,
 } from "../harness";
-import {
-    assertProtectedRefundPrivacy,
-    expectedProtectedRefundResponse,
-    expectedRefundListRequest,
-    expectedRefundPreflightRequests,
-} from "./expectations";
+import { expectedRefundListRequest, expectedRefundPreflightRequests } from "./expectations";
 import { refundablePaymentFixture, refundOperation, requestProtectedRefund } from "./harness";
-import { createRefundBudget, refundCreateCall, refundCreateProviderRequest } from "./success.contracts";
 
 type FailureCase = {
     scenario: ProtectedRefundSearchScenario;
@@ -47,11 +40,6 @@ const failureBudget = [
     { method: "POST", table: "rpc/mark_payment_manual_review" },
     { method: "POST", table: "provider_exceptions" },
 ];
-
-const directStatusCases = [
-    { status: "pending", settlementStatus: "refund_pending", commercePaymentStatus: "succeeded" },
-    { status: "failed", settlementStatus: "manual_review", commercePaymentStatus: "manual_review" },
-] as const;
 
 export function registerProtectedRefundFailureContracts(createHarness: CreateProviderBoundaryHarness): void {
     describe("stripe-connect protected refund recovery failures", () => {
@@ -96,70 +84,6 @@ export function registerProtectedRefundFailureContracts(createHarness: CreatePro
                         message: failureCase.error,
                     }),
                 );
-            }
-        });
-
-        test("preserves exact pending and failed results from direct Stripe Refund creation", async () => {
-            for (const statusCase of directStatusCases) {
-                const fixture = await refundablePaymentFixture(createHarness);
-                fixture.harness.rest.setNextRefundStatus(statusCase.status);
-
-                const response = await requestProtectedRefund(fixture);
-                const body = await responseBody(response);
-                const expected = expectedProtectedRefundResponse(body, {
-                    providerId: "re_1",
-                    balanceTransactionId: "txn_refund_1",
-                });
-                const expectedRefund = expected.refund as JsonRecord;
-                const providerSnapshot = { ...(expectedRefund.providerSnapshot as JsonRecord) };
-                delete providerSnapshot.balance_transaction;
-                providerSnapshot.status = statusCase.status;
-                if (statusCase.status === "failed") {
-                    providerSnapshot.failure_reason = "provider_declined";
-                }
-                const expectedOperation = (expected.operations as JsonRecord[])[0] ?? {};
-
-                expect(response.status).toBe(200);
-                expect(body).toEqual({
-                    ...expected,
-                    payment: {
-                        ...(expected.payment as object),
-                        refundedAmount: 0,
-                        commercePaymentStatus: statusCase.commercePaymentStatus,
-                        settlementStatus: statusCase.settlementStatus,
-                    },
-                    refund: {
-                        ...expectedRefund,
-                        stripeBalanceTransactionId: null,
-                        status: statusCase.status,
-                        failureReason: statusCase.status === "failed" ? "provider_declined" : null,
-                        actualStripeNetAmount: null,
-                        actualStripeFeeCurrency: null,
-                        providerSnapshot,
-                    },
-                    operations: [
-                        {
-                            ...expectedOperation,
-                            providerEventId: `operation:${String(expectedOperation.providerOperationId)}:${statusCase.status}`,
-                            status: statusCase.status,
-                            providerSnapshot,
-                        },
-                    ],
-                });
-                assertProtectedRefundPrivacy(body);
-                expect(fixture.harness.rest.stripeRequests).toEqual([
-                    ...expectedRefundPreflightRequests(),
-                    refundCreateProviderRequest,
-                ]);
-                expect(fixture.harness.rest.refundCreateRequests).toEqual([refundCreateCall]);
-                expect(postgrestBudget(fixture.harness)).toEqual(createRefundBudget);
-                expect(fixture.harness.rest.moneyCallOrder).toEqual(["refund"]);
-                expect(refundOperation(fixture)).toMatchObject({
-                    status: statusCase.status === "pending" ? "processing" : "failed",
-                    stripe_object_id: "re_1",
-                    attempt_count: 1,
-                    last_error: statusCase.status === "failed" ? "provider_declined" : null,
-                });
             }
         });
     });

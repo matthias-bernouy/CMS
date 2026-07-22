@@ -4,7 +4,7 @@ import { financialTermsHash, type JsonRecord, paymentIntentRequest, type StripeR
 type RefundResponseOptions = {
     providerId: string;
     balanceTransactionId: string;
-    settlementStatus?: "held" | "manual_review";
+    settlementStatus?: "held" | "manual_review" | "released";
     manualReviewReason?: string | null;
 };
 

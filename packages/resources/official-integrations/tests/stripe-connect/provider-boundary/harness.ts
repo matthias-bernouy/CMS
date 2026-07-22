@@ -47,6 +47,10 @@ export type ProviderBoundaryHarness = {
         patchPaymentLedger(paymentId: number, patch: JsonRecord): void;
         patchRefundLedger(refundId: number, patch: JsonRecord): void;
         pauseNextPlatformBalanceSettingsRead(): { entered: Promise<void>; resume: () => void };
+        pauseNextPostgrestRead(
+            table: "payments" | "refunds",
+            readsToSkip?: number,
+        ): { entered: Promise<void>; resume: () => void };
         pauseNextRefundReload(): { entered: Promise<void>; resume: () => void };
         quarantineNextPaymentIntentProjection(): void;
         removePlatformPayoutControl(): void;
@@ -57,6 +61,7 @@ export type ProviderBoundaryHarness = {
         setPaymentIntentSucceeded(paymentIntentId: string): void;
         setNextRefundSearchScenario(scenario: ProtectedRefundSearchScenario): void;
         setNextRefundStatus(status: "succeeded" | "pending" | "failed"): void;
+        seedSettlementLedgerRow(table: "refunds", row: JsonRecord): JsonRecord;
         succeedNextPaymentIntentOperation(): void;
         succeedNextRefundOperation(): void;
     };

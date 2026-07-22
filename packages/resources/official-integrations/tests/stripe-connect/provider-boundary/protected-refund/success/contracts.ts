@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { type CreateProviderBoundaryHarness, postgrestBudget, responseBody } from "../harness";
+import { type CreateProviderBoundaryHarness, postgrestBudget, responseBody } from "../../harness";
 import {
     assertProtectedRefundPrivacy,
     expectedProtectedRefundResponse,
     expectedRefundPreflightRequests,
-} from "./expectations";
-import { refundablePaymentFixture, refundOperation, requestProtectedRefund } from "./harness";
+} from "../expectations";
+import { refundablePaymentFixture, refundOperation, requestProtectedRefund } from "../harness";
 
 export const refundIdempotencyKey = "cms:refund:40a6874eb08b0ca64d575b5edb62f56c01d20532f8c15346bc82f8705d4eed6c";
 
