@@ -38,6 +38,7 @@ export type ProviderBoundaryHarness = {
         clearExternalRequestOrder(): void;
         clearPostgrestRequests(): void;
         clearStripeRequests(): void;
+        addProviderDispute(chargeId: string, patch?: JsonRecord): void;
         failNextFinancialOperationFailureUpdate(): void;
         failNextPaymentIntentCreationOnce(): void;
         failNextPaymentProjectionEnqueue(): void;

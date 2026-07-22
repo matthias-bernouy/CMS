@@ -29,6 +29,7 @@ import { registerPaymentCancellationReplayContracts } from "./stripe-connect/pay
 import { registerPaymentCancellationReservationContracts } from "./stripe-connect/payment-cancellation/reservation.contracts";
 import { registerAccountProviderBoundaryContracts } from "./stripe-connect/provider-boundary/accounts.contracts";
 import { registerDisputeFileProviderBoundaryContracts } from "./stripe-connect/provider-boundary/dispute-files.contracts";
+import { registerDisputeApplicationReadContextContracts } from "./stripe-connect/provider-boundary/dispute-application/read-context.contracts";
 import type { ProtectedRefundSearchScenario } from "./stripe-connect/provider-boundary/harness";
 import { registerProtectedPaymentFailureContracts } from "./stripe-connect/provider-boundary/protected-payment/failures.contracts";
 import { registerProtectedPaymentPayoutContracts } from "./stripe-connect/provider-boundary/protected-payment/payout.contracts";
@@ -10548,6 +10549,7 @@ registerRefundAndDisputeDashboardContracts(createDashboardReadHarness);
 registerOperationAndExceptionDashboardContracts(createDashboardReadHarness);
 registerPaymentDashboardContracts(createDashboardReadHarness);
 registerAccountProviderBoundaryContracts(createProviderBoundaryHarness);
+registerDisputeApplicationReadContextContracts(createProviderBoundaryHarness);
 registerDisputeFileProviderBoundaryContracts(createProviderBoundaryHarness);
 registerProtectedPaymentFailureContracts(createProviderBoundaryHarness);
 registerProtectedPaymentPayoutContracts(createProviderBoundaryHarness);

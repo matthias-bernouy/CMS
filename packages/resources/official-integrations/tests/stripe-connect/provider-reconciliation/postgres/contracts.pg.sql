@@ -25,6 +25,8 @@ set statement_timeout = '15s';
 \ir behavior/read-contexts/settlement/freshness.sql
 \ir behavior/read-contexts/provider-transfer.sql
 \ir behavior/read-contexts/operation-recovery.sql
+\ir behavior/read-contexts/disputes/application-context.sql
+\ir behavior/read-contexts/disputes/application-freshness.sql
 \ir behavior/read-contexts/settlement/reversal-completion-context.sql
 \ir behavior/read-contexts/settlement/reversal-completion-freshness.sql
 \ir behavior/order-and-limit.sql
