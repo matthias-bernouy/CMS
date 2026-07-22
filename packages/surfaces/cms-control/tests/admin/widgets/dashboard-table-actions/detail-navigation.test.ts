@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { runDashboardWidgetAction } from "../../../../src/components/admin/Resources/Dashboards/view/DashboardViewActions";
 import { deliveryDashboard, deliveryGroup, schemaInvalidatingDeliveryGroup } from "./detailFixtures";
 import { resetDashboardActionTest } from "./testSetup";
 
+beforeEach(resetDashboardActionTest);
 afterEach(resetDashboardActionTest);
 
 describe("dashboard table actions", () => {

@@ -16,6 +16,7 @@ if (!customElements.get("p9r-toast-stack")) {
 
 export function resetDashboardActionTest(): void {
     globalThis.fetch = realFetch;
+    window.location.href = "http://localhost:4999/cms/admin/editor";
     document.head.innerHTML = "";
     document.body.replaceChildren();
 }

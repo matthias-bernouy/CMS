@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../../../src/components/admin/Resources/Dashboards/types";
 import { executeDashboardAction } from "../../../../src/components/admin/Resources/Dashboards/runtime/actions";
 import { tableActionGroup } from "./tableFixtures";
 import { resetDashboardActionTest } from "./testSetup";
 
+beforeEach(resetDashboardActionTest);
 afterEach(resetDashboardActionTest);
 
 describe("dashboard table actions", () => {
