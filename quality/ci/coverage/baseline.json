@@ -1252,6 +1252,7 @@
                 "packages/features/cms-integrations/src/core/parsing/definition/uiDefinition.ts",
                 "packages/features/cms-integrations/src/core/parsing/definition/values.ts",
                 "packages/features/cms-integrations/src/core/parsing/parseIntegrationImportDto.ts",
+                "packages/features/cms-integrations/src/core/parsing/templates/connectorSchemaTemplates.ts",
                 "packages/features/cms-integrations/src/core/parsing/templates/connectorTemplates.ts",
                 "packages/features/cms-integrations/src/core/parsing/templates/secretTemplates.ts",
                 "packages/features/cms-integrations/src/core/parsing/templates/sourceTemplates.ts",
@@ -1261,6 +1262,13 @@
                 "packages/features/cms-integrations/src/default-implementation/connector-providers/InMemoryIntegrationConnectorProviderRepository.ts",
                 "packages/features/cms-integrations/src/default-implementation/definition-assets/icons.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/assets.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/constants.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/directives.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/graph.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/loader.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/paths.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/provenance.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/resolver.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/packageLocator.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/repository.ts",
                 "packages/features/cms-integrations/src/default-implementation/fs-definition/repositorySupport.ts",
@@ -1273,6 +1281,11 @@
                 "packages/features/cms-integrations/src/default-implementation/supabase/SupabaseManagementClient.ts",
                 "packages/features/cms-integrations/src/default-implementation/supabase/functionBundle.ts",
                 "packages/features/cms-integrations/src/default-implementation/supabase/paths.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/sql/bundleLoader.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/sql/constants.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/sql/manifestParsing.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/sql/pathSecurity.ts",
+                "packages/features/cms-integrations/src/default-implementation/supabase/sql/schemaLoader.ts",
                 "packages/features/cms-integrations/src/exports/fs.ts",
                 "packages/features/cms-integrations/src/exports/http.ts",
                 "packages/features/cms-integrations/src/exports/index.ts",
@@ -1281,6 +1294,7 @@
             ],
             "uncoveredSourceFiles": [
                 "packages/features/cms-integrations/src/default-implementation/connector-providers/MongoIntegrationConnectorProviderRepository.ts",
+                "packages/features/cms-integrations/src/default-implementation/fs-definition/definition-bundle/types.ts",
                 "packages/features/cms-integrations/src/default-implementation/installations/MongoIntegrationInstallationRepository.ts",
                 "packages/features/cms-integrations/src/exports/mongo.ts",
                 "packages/features/cms-integrations/src/interfaces/Integration.ts",
@@ -1292,16 +1306,16 @@
                 "packages/features/cms-integrations/src/interfaces/IntegrationInstallationRepository.ts"
             ],
             "files": {
-                "covered": 96,
-                "total": 106
+                "covered": 109,
+                "total": 120
             },
             "functions": {
-                "covered": 606,
-                "total": 662
+                "covered": 697,
+                "total": 753
             },
             "lines": {
-                "covered": 4696,
-                "total": 5603
+                "covered": 5364,
+                "total": 6289
             }
         },
         "@bernouy/cms-official-integrations": {
