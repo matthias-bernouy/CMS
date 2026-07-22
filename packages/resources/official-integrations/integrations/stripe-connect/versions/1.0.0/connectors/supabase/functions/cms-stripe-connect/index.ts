@@ -95,14 +95,12 @@ import { optionalMonthlyPayoutDays, optionalWeeklyPayoutDays, requiredPayoutInte
 import {
     optionalPaymentStatus,
     optionalSettlementStatus,
-    optionalStatus,
     queryLimit,
     requiredQueryInteger,
     requiredQueryText,
     requiredReleaseKind,
     searchPattern,
     validHttpsUrl,
-    validUrl,
 } from "./http/query.ts";
 import { json } from "./http/responses.ts";
 import { serveStripeConnect } from "./http/router.ts";
@@ -129,7 +127,6 @@ import {
     numberAt,
     objectAt,
     recordArrayAt,
-    requiredRecordInteger,
     requiredRecordString,
     stringArrayAt,
     stringAt,
@@ -138,7 +135,7 @@ import {
     unixTimestampAt,
     unique,
 } from "./shared/data.ts";
-import type { JsonRecord, StripeBusinessType } from "./shared/types.ts";
+import type { JsonRecord } from "./shared/types.ts";
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -3282,21 +3279,6 @@ async function updateAccountRow(userId: string, values: JsonRecord): Promise<Con
     return rows[0] ?? null;
 }
 
-async function insertPayment(values: JsonRecord): Promise<ConnectPaymentRow> {
-    const response = await rest(`payments?select=${paymentSelect}`, {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-            prefer: "return=representation",
-        },
-        body: JSON.stringify(stripUndefined(values)),
-    });
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    return firstRow<ConnectPaymentRow>(await response.json());
-}
-
 async function reserveProtectedPayment(values: JsonRecord): Promise<ConnectPaymentRow> {
     const response = await rest("rpc/reserve_protected_payment", {
         method: "POST",
@@ -4407,30 +4389,6 @@ function publicDispute(row: StripeDisputeRow): JsonRecord {
         createdAt: row.created_at,
         updatedAt: row.updated_at,
     };
-}
-
-async function publicDisputeWithContext(row: StripeDisputeRow): Promise<JsonRecord> {
-    const [payment, evidenceRows, approvalRows] = await Promise.all([
-        requiredPayment(row.payment_id),
-        listRows<JsonRecord>(
-            `stripe_dispute_evidence?dispute_id=eq.${row.id}` +
-                "&select=evidence_operation_id,staged_at,submitted_at" +
-                "&order=staged_at.desc",
-        ),
-        listRows<JsonRecord>(
-            `irreversible_dispute_action_approvals?dispute_id=eq.${row.id}` +
-                "&select=action_type,status,first_actor_id,first_approved_at,second_actor_id,second_approved_at" +
-                "&order=created_at.desc",
-        ),
-    ]);
-    const staged = evidenceRows[0] ?? null;
-    const pendingApproval = approvalRows.find((approval) => approval.status === "pending_second_approval") ?? null;
-    return projectPublicDisputeWithContext(row, {
-        clientReferenceId: payment.client_reference_id,
-        staged,
-        evidenceSubmissionCount: evidenceRows.filter((evidence) => evidence.submitted_at).length,
-        pendingApproval,
-    });
 }
 
 function publicDisputeFromDashboardRead(read: DisputeDashboardRead): JsonRecord {
@@ -6183,18 +6141,6 @@ async function applyStripeDispute(
             }
         }
     }
-}
-
-async function getStripeEvent(stripeAccountId: string, eventId: string): Promise<JsonRecord | null> {
-    const response = await rest(
-        `stripe_events?stripe_account_id=eq.${encodeURIComponent(stripeAccountId)}&event_id=eq.${encodeURIComponent(eventId)}&select=*&limit=1`,
-        { method: "GET" },
-    );
-    if (!response.ok) {
-        throw await restError(response);
-    }
-    const rows = (await response.json()) as JsonRecord[];
-    return rows[0] ?? null;
 }
 
 async function insertStripeEventDurably(values: JsonRecord): Promise<boolean> {

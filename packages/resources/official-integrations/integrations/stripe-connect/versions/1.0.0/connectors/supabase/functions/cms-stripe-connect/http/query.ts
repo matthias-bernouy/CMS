@@ -67,28 +67,6 @@ export function searchPattern(value: string | null): string | null {
     return safe ? `*${safe}*` : null;
 }
 
-export function optionalStatus(value: string | null): string | null {
-    const status = value?.trim() ?? "";
-    if (!status) {
-        return null;
-    }
-    if (
-        ![
-            "not_started",
-            "link_created",
-            "onboarding_started",
-            "requirements_due",
-            "pending_verification",
-            "enabled",
-            "restricted",
-            "rejected",
-        ].includes(status)
-    ) {
-        throw new HttpError(400, "status is invalid");
-    }
-    return status;
-}
-
 export function optionalPaymentStatus(value: string | null): string | null {
     const status = value?.trim() ?? "";
     if (!status) {

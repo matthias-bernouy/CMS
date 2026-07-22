@@ -64,14 +64,6 @@ export function requiredRecordString(value: JsonRecord, key: string, maxLength: 
     return child;
 }
 
-export function requiredRecordInteger(value: JsonRecord, key: string): number {
-    const child = value[key];
-    if (!Number.isSafeInteger(child)) {
-        throw new HttpError(400, `Stripe event ${key} is invalid`);
-    }
-    return child as number;
-}
-
 export function jsonEqual(left: unknown, right: unknown): boolean {
     return JSON.stringify(left) === JSON.stringify(right);
 }
