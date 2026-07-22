@@ -52,7 +52,6 @@ import {
 import {
     getPaymentByClientReference,
     getPaymentRow,
-    reservePaymentCancellationIntent,
     reserveProtectedPayment,
     updatePayment,
 } from "./db/repositories/payments.ts";
@@ -147,7 +146,6 @@ import {
     uploadStripeDisputeEvidenceFile,
 } from "./provider/disputes.ts";
 import {
-    cancelStripePaymentIntent,
     createStripePaymentIntent,
     retrievePaymentIntent,
     retrieveStripeBalanceTransaction,
@@ -168,7 +166,6 @@ import {
     retrieveStripeTransferReversal,
 } from "./provider/transfers.ts";
 import type {
-    ProviderTruthActorKind,
     StripeBalanceSettings,
     StripeDispute,
     StripePaymentIntent,
@@ -191,6 +188,7 @@ import {
 import { connectStatus, connectWallet, getSellerProviderRisk } from "./routes/accounts/status.ts";
 import { syncAccountForIdentity } from "./routes/accounts/sync.ts";
 import { getStripeDispute, listStripeDisputes } from "./routes/disputes/dashboard.ts";
+import { requestPaymentIntentCancellation } from "./routes/payments/cancellation.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
 import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
@@ -210,6 +208,13 @@ import {
     unique,
 } from "./shared/data.ts";
 import type { JsonRecord } from "./shared/types.ts";
+import {
+    optionalOperationInteger,
+    optionalOperationString,
+    requiredOperationInteger,
+    requiredOperationString,
+} from "./workflows/operations/request-values.ts";
+import { executePaymentIntentCancellation } from "./workflows/payments/cancellation.ts";
 import {
     applyPaymentIntent,
     paymentClientSecret,
@@ -877,151 +882,6 @@ async function getProviderPayment(request: Request): Promise<Response> {
         throw new HttpError(404, "payment not found");
     }
     return json(publicPayment(await syncPayment(row)));
-}
-
-async function requestPaymentIntentCancellation(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["clientReferenceId", "cancellationRequestId", "reason"]);
-    const clientReferenceId = requiredString(body, "clientReferenceId", 200);
-    const cancellationRequestId = requiredString(body, "cancellationRequestId", 200);
-    const reason = optionalText(body, "reason", 500);
-    const lifecycle = await reservePaymentCancellationIntent(clientReferenceId, cancellationRequestId, reason);
-    if (lifecycle.providerPaymentAbsent === true) {
-        const occurredAt = requiredString(lifecycle, "requestedAt", 100);
-        return json({
-            cancellationRequestId,
-            providerStatus: "absent",
-            providerPaymentAbsent: true,
-            providerEventId: `payment-cancellation-absent:${cancellationRequestId}`,
-            occurredAt,
-        });
-    }
-    const paymentId = requiredInteger(lifecycle, "paymentId");
-    const payment = await getPaymentRow(paymentId);
-    if (!payment || payment.client_reference_id !== clientReferenceId) {
-        throw new HttpError(409, "payment cancellation lifecycle guard does not match provider payment truth");
-    }
-    const operation = await reserveFinancialOperation(payment.id, {
-        businessKey: `payment-cancellation:${payment.id}:${cancellationRequestId}`,
-        operationType: "payment_intent_cancel",
-        request: { clientReferenceId, cancellationRequestId, reason },
-    });
-    try {
-        const result = await executePaymentIntentCancellation(payment, operation, "system", cancellationRequestId);
-        const projectedPayment = result.payment;
-        if (!isRecord(projectedPayment)) {
-            throw new HttpError(502, "provider cancellation omitted payment truth");
-        }
-        return json({
-            ...result,
-            providerPaymentAbsent: false,
-            providerEventId: `payment-cancellation:${operation.id}:${projectedPayment.updatedAt}`,
-            paymentStatus: projectedPayment.paymentStatus,
-            providerPaymentId: projectedPayment.paymentId,
-            providerPaymentIntentId: projectedPayment.stripePaymentIntentId,
-            providerChargeId: projectedPayment.stripeChargeId,
-            amount: projectedPayment.amountTotal,
-            currency: projectedPayment.currency,
-            financialTermsHash: projectedPayment.financialTermsHash,
-            occurredAt: projectedPayment.updatedAt,
-            providerSnapshot: projectedPayment,
-        });
-    } catch (error) {
-        await updateFinancialOperation(operation.id, {
-            status: "failed",
-            last_error: errorMessage(error),
-            next_attempt_at: new Date(Date.now() + 60_000).toISOString(),
-        }).catch(() => null);
-        throw error;
-    }
-}
-
-async function executePaymentIntentCancellation(
-    payment: ConnectPaymentRow,
-    operation: FinancialOperationRow,
-    actorKind: ProviderTruthActorKind,
-    actorId: string,
-): Promise<JsonRecord> {
-    await updateFinancialOperation(operation.id, {
-        status: "processing",
-        claimed_at: new Date().toISOString(),
-        attempt_count: operation.attempt_count + 1,
-    });
-    let intent = await paymentIntentForCancellation(payment, operation);
-    payment = await applyPaymentIntent(payment, intent, { actorKind, actorId });
-    if (intent.status !== "canceled" && intent.status !== "succeeded") {
-        intent = await cancelStripePaymentIntent(intent.id);
-        payment = await applyPaymentIntent(payment, intent, { actorKind, actorId });
-    }
-    if (intent.status !== "canceled" && intent.status !== "succeeded") {
-        throw new Error(`Stripe PaymentIntent cancellation remains non-terminal: ${intent.status}`);
-    }
-    await updateFinancialOperation(operation.id, {
-        status: "succeeded",
-        stripe_object_id: intent.id,
-        response: intent,
-        last_error: null,
-        next_attempt_at: null,
-        completed_at: new Date().toISOString(),
-    });
-    await insertPaymentEvent(
-        payment.id,
-        intent.status === "canceled"
-            ? "payment_intent_cancellation_confirmed"
-            : "payment_intent_cancellation_found_late_success",
-        actorKind,
-        actorId,
-        { operationId: operation.id, paymentIntentId: intent.id },
-    );
-    return {
-        cancellationRequestId: requiredOperationString(operation, "cancellationRequestId"),
-        providerOperationId: operation.id,
-        providerStatus: intent.status,
-        payment: publicPayment(payment),
-    };
-}
-
-async function paymentIntentForCancellation(
-    payment: ConnectPaymentRow,
-    cancellationOperation: FinancialOperationRow,
-): Promise<StripePaymentIntent> {
-    if (cancellationOperation.stripe_object_id) {
-        return await retrievePaymentIntent(cancellationOperation.stripe_object_id);
-    }
-    if (payment.stripe_payment_intent_id) {
-        return await retrievePaymentIntent(payment.stripe_payment_intent_id);
-    }
-    const createOperation = await getRowByField<FinancialOperationRow>(
-        "financial_operations",
-        "business_key",
-        `payment:${payment.id}:${payment.financial_terms_hash}`,
-        operationSelect,
-    );
-    if (!createOperation) {
-        throw new Error("PaymentIntent creation has not been durably reserved yet");
-    }
-    if (createOperation.stripe_object_id) {
-        return await retrievePaymentIntent(createOperation.stripe_object_id);
-    }
-    const age = Date.now() - Date.parse(createOperation.created_at);
-    if (!Number.isFinite(age) || age >= 23 * 60 * 60 * 1000) {
-        throw new Error("PaymentIntent cancellation recovery exceeded the Stripe idempotency safety window");
-    }
-    const intent = await createStripePaymentIntent(payment);
-    const applied = await applyPaymentIntent(payment, intent, {
-        expectedPaymentIntentId: intent.id,
-        actorKind: "reconciliation",
-        actorId: "payment-cancellation-create-recovery",
-    });
-    await updateFinancialOperation(createOperation.id, {
-        status: applied.settlement_status === "manual_review" ? "manual_review" : "succeeded",
-        stripe_object_id: intent.id,
-        response: intent,
-        last_error: applied.settlement_status === "manual_review" ? applied.manual_review_reason : null,
-        completed_at: new Date().toISOString(),
-    });
-    return intent;
 }
 
 async function requestSettlementRelease(request: Request): Promise<Response> {
@@ -2969,44 +2829,6 @@ function assertPaymentReplay(
     if (!matches) {
         throw new HttpError(409, "protected payment replay does not match immutable financial terms");
     }
-}
-
-function requiredOperationString(operation: FinancialOperationRow, name: string): string {
-    const value = operation.request[name];
-    if (typeof value !== "string" || !value) {
-        throw new Error(`operation ${operation.id} has invalid ${name}`);
-    }
-    return value;
-}
-
-function optionalOperationString(operation: FinancialOperationRow, name: string): string | null {
-    const value = operation.request[name];
-    if (value === null || value === undefined) {
-        return null;
-    }
-    if (typeof value !== "string") {
-        throw new Error(`operation ${operation.id} has invalid ${name}`);
-    }
-    return value;
-}
-
-function requiredOperationInteger(operation: FinancialOperationRow, name: string): number {
-    const value = operation.request[name];
-    if (!Number.isSafeInteger(value)) {
-        throw new Error(`operation ${operation.id} has invalid ${name}`);
-    }
-    return Number(value);
-}
-
-function optionalOperationInteger(operation: FinancialOperationRow, name: string): number | null {
-    const value = operation.request[name];
-    if (value === null || value === undefined) {
-        return null;
-    }
-    if (!Number.isSafeInteger(value)) {
-        throw new Error(`operation ${operation.id} has invalid ${name}`);
-    }
-    return Number(value);
 }
 
 function assertTransferReplay(
