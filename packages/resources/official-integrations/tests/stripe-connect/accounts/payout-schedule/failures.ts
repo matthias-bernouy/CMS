@@ -33,7 +33,7 @@ export function registerPayoutScheduleFailureContracts(createHarness: CreateAcco
 
             expect(response.status).toBe(404);
             expect(await responseBody(response)).toEqual({ error: "connected account not found" });
-            expect(harness.rest.externalRequestOrder).toEqual(["postgrest:GET:accounts"]);
+            expect(harness.rest.externalRequestOrder).toEqual(["postgrest:POST:rpc/claim_seller_payout_hold"]);
             expect(harness.rest.rows("financial_operations")).toEqual([]);
             expect(harness.rest.stripeRequests).toEqual([]);
         });
@@ -47,7 +47,7 @@ export function registerPayoutScheduleFailureContracts(createHarness: CreateAcco
 
             expect(response.status).toBe(404);
             expect(await responseBody(response)).toEqual({ error: "connected account not found" });
-            expect(harness.rest.externalRequestOrder).toEqual(["postgrest:GET:accounts"]);
+            expect(harness.rest.externalRequestOrder).toEqual(["postgrest:POST:rpc/claim_seller_payout_hold"]);
             expect(harness.rest.rows("accounts")[0]).toMatchObject({
                 stripe_account_id: null,
                 payout_hold_claimed_by: null,

@@ -476,16 +476,16 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
         throw new HttpError(400, "monthlyPayoutDays is allowed only for a monthly payout schedule");
     }
 
-    const existingAccount = await getAccountRow(userId);
-    if (!existingAccount?.stripe_account_id) {
-        throw new HttpError(404, "connected account not found");
-    }
     const owner = crypto.randomUUID();
     const claim = await sellerPayoutHoldRpc("claim_seller_payout_hold", {
         p_seller_cms_user_id: userId,
         p_owner: owner,
         p_require_risk: false,
+        p_require_connected_account: true,
     });
+    if (claim.connectedAccountFound === false) {
+        throw new HttpError(404, "connected account not found");
+    }
     if (claim.claimed !== true) {
         throw new HttpError(409, "another seller payout control update is already in progress");
     }

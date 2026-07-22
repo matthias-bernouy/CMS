@@ -3,7 +3,7 @@ begin;
 do $security$
 declare
     target oid := pg_catalog.to_regprocedure(
-        'stripe_connect.claim_seller_payout_hold(text,text,boolean)'
+        'stripe_connect.claim_seller_payout_hold(text,text,boolean,boolean)'
     );
 begin
     if target is null then

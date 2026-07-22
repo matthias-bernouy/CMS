@@ -29,8 +29,19 @@ begin
         end if;
     end;
 
+    v_result := stripe_connect.claim_seller_payout_hold(
+        'payout-schedule-pg-absent', 'owner', false, true
+    );
+    if v_result <> pg_catalog.jsonb_build_object(
+        'claimed', false,
+        'connectedAccountFound', false,
+        'account', null
+    ) then
+        raise exception 'payout schedule: specialized missing state changed: %', v_result;
+    end if;
+
     v_connected := payout_schedule_test.seed('connected', true);
-    v_result := payout_schedule_test.attempt(v_connected, 'owner-first');
+    v_result := payout_schedule_test.attempt(v_connected, 'owner-first', false, true);
     if v_result->>'claimed' <> 'true'
        or v_result->'account'->>'cms_user_id' <> v_connected
        or v_result->'account'->>'stripe_account_id' <> 'acct_payout_schedule_pg_connected'
@@ -49,6 +60,21 @@ begin
     if v_result->>'claimed' <> 'false'
        or v_result->'account'->>'payout_hold_claimed_by' <> 'owner-first' then
         raise exception 'payout schedule: collision changed: %', v_result;
+    end if;
+
+    v_disconnected := payout_schedule_test.seed('specialized-disconnected', false);
+    v_result := payout_schedule_test.attempt(v_disconnected, 'owner-specialized', false, true);
+    if v_result <> pg_catalog.jsonb_build_object(
+        'claimed', false,
+        'connectedAccountFound', false,
+        'account', null
+    ) or exists (
+        select 1
+        from stripe_connect.accounts
+        where cms_user_id = v_disconnected
+          and (payout_hold_claimed_by is not null or payout_hold_claimed_at is not null)
+    ) then
+        raise exception 'payout schedule: disconnected refusal changed: %', v_result;
     end if;
 
     v_disconnected := payout_schedule_test.seed('disconnected', false);

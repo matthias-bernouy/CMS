@@ -42,7 +42,6 @@ export function registerPayoutScheduleContracts(createHarness: CreateAccountHand
 
 function nominalDatabaseBudget(): Array<{ method: string; table: string }> {
     return [
-        { method: "GET", table: "accounts" },
         { method: "POST", table: "rpc/claim_seller_payout_hold" },
         { method: "POST", table: "rpc/reserve_account_financial_operation" },
         { method: "PATCH", table: "financial_operations" },
@@ -53,7 +52,6 @@ function nominalDatabaseBudget(): Array<{ method: string; table: string }> {
 
 function nominalExternalOrder(): string[] {
     return [
-        "postgrest:GET:accounts",
         "postgrest:POST:rpc/claim_seller_payout_hold",
         "postgrest:POST:rpc/reserve_account_financial_operation",
         "stripe:GET:/v1/balance_settings",

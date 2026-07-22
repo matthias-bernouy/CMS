@@ -53,7 +53,8 @@ $$;
 create function payout_schedule_test.attempt(
     p_user_id text,
     p_owner text,
-    p_require_risk boolean default false
+    p_require_risk boolean default false,
+    p_require_connected_account boolean default false
 )
 returns jsonb
 language sql
@@ -64,7 +65,8 @@ as $$
     select stripe_connect.claim_seller_payout_hold(
         p_user_id,
         p_owner,
-        p_require_risk
+        p_require_risk,
+        p_require_connected_account
     )
 $$;
 

@@ -7887,7 +7887,13 @@ class StripeConnectMock {
             const body = JSON.parse(await request.text()) as JsonRecord;
             const account = this.tables.accounts.find((row) => row.cms_user_id === body.p_seller_cms_user_id);
             if (!account) {
+                if (body.p_require_connected_account === true) {
+                    return jsonResponse({ claimed: false, connectedAccountFound: false, account: null });
+                }
                 return jsonResponse({ message: "Stripe Connect account not found" }, 400);
+            }
+            if (body.p_require_connected_account === true && !account.stripe_account_id) {
+                return jsonResponse({ claimed: false, connectedAccountFound: false, account: null });
             }
             const required = Number(account.outstanding_debt_amount) + Number(account.financial_exposure_amount);
             const claimed = (body.p_require_risk === false || required > 0) && !account.payout_hold_claimed_by;

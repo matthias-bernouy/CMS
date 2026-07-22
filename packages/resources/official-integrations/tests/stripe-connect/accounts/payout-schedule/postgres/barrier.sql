@@ -30,7 +30,7 @@ volatile
 security invoker
 set search_path = ''
 as $$
-    select payout_schedule_test.attempt(state.cms_user_id, p_owner, false)
+    select payout_schedule_test.attempt(state.cms_user_id, p_owner, false, true)
     from payout_schedule_test.concurrency_state state
 $$;
 

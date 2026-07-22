@@ -25,7 +25,7 @@ select
     procedure.prosecdef as security_definer
 from pg_catalog.pg_proc procedure
 where procedure.oid = pg_catalog.to_regprocedure(
-    'stripe_connect.claim_seller_payout_hold(text,text,boolean)'
+    'stripe_connect.claim_seller_payout_hold(text,text,boolean,boolean)'
 );
 
 do $fresh_install$
@@ -41,12 +41,12 @@ $fresh_install$;
 do $reapply$
 declare
     target oid := pg_catalog.to_regprocedure(
-        'stripe_connect.claim_seller_payout_hold(text,text,boolean)'
+        'stripe_connect.claim_seller_payout_hold(text,text,boolean,boolean)'
     );
 begin
     if target is null
        or pg_catalog.to_regprocedure(
-           'stripe_connect.claim_seller_payout_hold(text,text,boolean,boolean)'
+           'stripe_connect.claim_seller_payout_hold(text,text,boolean)'
        ) is not null
        or not exists (
            select 1

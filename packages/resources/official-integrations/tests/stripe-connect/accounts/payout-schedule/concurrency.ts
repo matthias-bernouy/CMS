@@ -38,12 +38,8 @@ export function registerPayoutScheduleConcurrencyContracts(createHarness: Create
                         method,
                         table,
                     })),
-                ).toEqual([
-                    { method: "GET", table: "accounts" },
-                    { method: "POST", table: "rpc/claim_seller_payout_hold" },
-                ]);
+                ).toEqual([{ method: "POST", table: "rpc/claim_seller_payout_hold" }]);
                 expect(harness.rest.externalRequestOrder.slice(orderStart)).toEqual([
-                    "postgrest:GET:accounts",
                     "postgrest:POST:rpc/claim_seller_payout_hold",
                 ]);
                 expect(harness.rest.stripeRequests.slice(providerStart)).toEqual([]);
