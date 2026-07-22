@@ -5,7 +5,7 @@ import previewCss from "./preview.css" with { type: "text" };
 import variantsCss from "./variants.css" with { type: "text" };
 import { PhotoAlbumView } from "./PhotoAlbumView";
 
-const css = albumCss + previewCss + variantsCss;
+const css = [albumCss, previewCss, variantsCss].join("\n");
 
 export class PhotoAlbum extends Component {
     private observer: MutationObserver | null = null;
