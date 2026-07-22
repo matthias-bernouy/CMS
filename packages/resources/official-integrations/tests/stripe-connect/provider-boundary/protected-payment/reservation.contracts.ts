@@ -70,7 +70,7 @@ export function registerProtectedPaymentReservationContracts(createHarness: Crea
             expect(harness.rest.rows("financial_operations")).toEqual([]);
         });
 
-        test("syncs and rereads the secret when reservation already links a PaymentIntent", async () => {
+        test("syncs and reuses the projected secret when reservation already links a PaymentIntent", async () => {
             const harness = await preparedHarness(createHarness);
             harness.rest.linkNextProtectedPaymentReservationToIntent();
 
@@ -86,7 +86,6 @@ export function registerProtectedPaymentReservationContracts(createHarness: Crea
             expect(harness.rest.stripeRequests).toEqual([
                 accountSyncRequest(),
                 balanceSettingsRequest(),
-                paymentIntentRequest("pi_1"),
                 paymentIntentRequest("pi_1"),
             ]);
             expect(harness.rest.paymentIntentCreateCount).toBe(0);

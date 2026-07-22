@@ -6,7 +6,7 @@ import { publicPaymentWithClientSecret } from "../../../domain/payments/presenta
 import { HttpError } from "../../../http/errors.ts";
 import { digest } from "../../../shared/crypto.ts";
 import type { JsonRecord } from "../../../shared/types.ts";
-import { paymentClientSecret, syncPayment } from "../projection.ts";
+import { syncPaymentWithClientSecret } from "../projection.ts";
 import { executeProtectedPaymentIntentCreation } from "./operation.ts";
 import { assertPlatformPayoutProtection } from "./platform-protection.ts";
 import { assertPaymentReplay, protectedPaymentTermsFromBody } from "./terms.ts";
@@ -48,8 +48,8 @@ export function createProtectedPaymentWorkflow({
             if (existing.payment_status !== "succeeded") {
                 await assertPlatformPayoutProtection();
             }
-            const synced = await syncPayment(existing);
-            return publicPaymentWithClientSecret(synced, await paymentClientSecret(synced));
+            const synced = await syncPaymentWithClientSecret(existing);
+            return publicPaymentWithClientSecret(synced.payment, synced.clientSecret);
         }
 
         await assertPlatformPayoutProtection();
@@ -85,8 +85,8 @@ export function createProtectedPaymentWorkflow({
         }
 
         if (payment.stripe_payment_intent_id) {
-            const synced = await syncPayment(payment);
-            return publicPaymentWithClientSecret(synced, await paymentClientSecret(synced));
+            const synced = await syncPaymentWithClientSecret(payment);
+            return publicPaymentWithClientSecret(synced.payment, synced.clientSecret);
         }
 
         return await executeProtectedPaymentIntentCreation(payment, {

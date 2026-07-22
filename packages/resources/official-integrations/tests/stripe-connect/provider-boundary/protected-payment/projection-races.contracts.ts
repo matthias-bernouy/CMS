@@ -98,7 +98,6 @@ export function registerProtectedPaymentProjectionRaceContracts(createHarness: C
                 balanceSettingsRequest(),
                 paymentIntentRequest(fixture.paymentIntentId),
                 paymentIntentRequest(fixture.paymentIntentId),
-                paymentIntentRequest(fixture.paymentIntentId),
             ]);
         });
 

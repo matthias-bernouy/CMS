@@ -15,15 +15,30 @@ type ProjectionOptions = {
     actorId: string;
 };
 
+type PaymentProjectionResult = {
+    payment: ConnectPaymentRow;
+    intent: StripePaymentIntent | null;
+    kind: "apply" | "quarantine" | null;
+};
+
 export async function syncPayment(payment: ConnectPaymentRow): Promise<ConnectPaymentRow> {
-    if (!payment.stripe_payment_intent_id) {
-        return payment;
-    }
-    const intent = await retrievePaymentIntent(payment.stripe_payment_intent_id);
-    return await applyPaymentIntent(payment, intent, {
-        actorKind: "reconciliation",
-        actorId: "provider-sync",
-    });
+    return (await syncPaymentProjection(payment)).payment;
+}
+
+export async function syncPaymentWithClientSecret(
+    payment: ConnectPaymentRow,
+): Promise<{ payment: ConnectPaymentRow; clientSecret: string }> {
+    const result = await syncPaymentProjection(payment);
+    const canReuseProjectedIntent =
+        result.kind === "apply" &&
+        result.intent !== null &&
+        result.intent.id === result.payment.stripe_payment_intent_id;
+    return {
+        payment: result.payment,
+        clientSecret: canReuseProjectedIntent
+            ? (result.intent?.client_secret ?? "")
+            : await paymentClientSecret(result.payment),
+    };
 }
 
 export async function applyPaymentIntent(
@@ -31,7 +46,7 @@ export async function applyPaymentIntent(
     intent: StripePaymentIntent,
     options: ProjectionOptions,
 ): Promise<ConnectPaymentRow> {
-    return await projectPaymentIntent(payment, intent, options);
+    return (await projectPaymentIntent(payment, intent, options)).payment;
 }
 
 export async function quarantineProviderPaymentTruth(
@@ -40,7 +55,7 @@ export async function quarantineProviderPaymentTruth(
     mismatches: string[],
     options: ProjectionOptions,
 ): Promise<ConnectPaymentRow> {
-    return await projectPaymentIntent(payment, intent, options, mismatches);
+    return (await projectPaymentIntent(payment, intent, options, mismatches)).payment;
 }
 
 export async function paymentClientSecret(payment: ConnectPaymentRow): Promise<string> {
@@ -56,7 +71,7 @@ async function projectPaymentIntent(
     intent: StripePaymentIntent,
     options: ProjectionOptions,
     forcedMismatches?: string[],
-): Promise<ConnectPaymentRow> {
+): Promise<PaymentProjectionResult> {
     while (true) {
         // Provider calls deliberately remain outside the atomic database RPC.
         // Only a cancellation which won while Stripe was in flight requires a
@@ -74,9 +89,11 @@ async function projectPaymentIntent(
             (paymentStatus === "succeeded"
                 ? providerPaymentTruthMismatches(payment, intent, expectedPaymentIntentId)
                 : []);
-        const projection = mismatches.length
-            ? await buildQuarantinePaymentProjection(payment, intent, mismatches, options)
-            : await buildAppliedPaymentProjection(payment, intent, paymentStatus, expectedPaymentIntentId, options);
+        const kind = mismatches.length ? "quarantine" : "apply";
+        const projection =
+            kind === "quarantine"
+                ? await buildQuarantinePaymentProjection(payment, intent, mismatches, options)
+                : await buildAppliedPaymentProjection(payment, intent, paymentStatus, expectedPaymentIntentId, options);
         const result = await callRpcObject<JsonRecord>("apply_payment_provider_projection", {
             p_payment_id: payment.id,
             p_expected_payment: payment,
@@ -87,7 +104,18 @@ async function projectPaymentIntent(
         }
         payment = result.payment as ConnectPaymentRow;
         if (result.applied) {
-            return payment;
+            return { payment, intent, kind };
         }
     }
+}
+
+async function syncPaymentProjection(payment: ConnectPaymentRow): Promise<PaymentProjectionResult> {
+    if (!payment.stripe_payment_intent_id) {
+        return { payment, intent: null, kind: null };
+    }
+    const intent = await retrievePaymentIntent(payment.stripe_payment_intent_id);
+    return await projectPaymentIntent(payment, intent, {
+        actorKind: "reconciliation",
+        actorId: "provider-sync",
+    });
 }

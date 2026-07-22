@@ -23,7 +23,7 @@ const accountSyncBudget = [
 
 export function registerProtectedPaymentReplayContracts(createHarness: CreateProviderBoundaryHarness): void {
     describe("stripe-connect protected payment replay boundary contracts", () => {
-        test("replays a nonterminal payment through protection, sync, and a second secret read", async () => {
+        test("replays a nonterminal payment through protection and one fresh provider read", async () => {
             const { harness } = await fixture(createHarness);
             const operations = harness.rest.rows("financial_operations");
             clearRequests(harness);
@@ -45,7 +45,6 @@ export function registerProtectedPaymentReplayContracts(createHarness: CreatePro
             expect(harness.rest.stripeRequests).toEqual([
                 accountSyncRequest(),
                 balanceSettingsRequest(),
-                paymentIntentRequest("pi_1"),
                 paymentIntentRequest("pi_1"),
             ]);
             expect(harness.rest.paymentIntentCreateCount).toBe(1);
@@ -87,11 +86,7 @@ export function registerProtectedPaymentReplayContracts(createHarness: CreatePro
                 ...accountSyncBudget,
                 { method: "POST", table: "rpc/apply_payment_provider_projection" },
             ]);
-            expect(harness.rest.stripeRequests).toEqual([
-                accountSyncRequest(),
-                paymentIntentRequest("pi_1"),
-                paymentIntentRequest("pi_1"),
-            ]);
+            expect(harness.rest.stripeRequests).toEqual([accountSyncRequest(), paymentIntentRequest("pi_1")]);
             expect(harness.rest.paymentIntentCreateCount).toBe(1);
             expect(harness.rest.rows("financial_operations")).toEqual(operations);
         });
