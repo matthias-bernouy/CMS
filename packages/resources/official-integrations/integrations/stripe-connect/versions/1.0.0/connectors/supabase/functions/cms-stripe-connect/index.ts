@@ -173,6 +173,7 @@ import { requestPaymentIntentCancellation } from "./routes/payments/cancellation
 import { getProviderPayment, listProviderPayments } from "./routes/payments/dashboard.ts";
 import { createProtectedPaymentRoutes } from "./routes/payments/protected.ts";
 import { createRequestSettlementRelease } from "./routes/payments/settlement-release.ts";
+import { createRequestTransferReversal } from "./routes/payments/transfer-reversal.ts";
 import { getProviderRefund, listProviderRefunds } from "./routes/refunds/dashboard.ts";
 import { connectConfig, health } from "./routes/system.ts";
 import { bytesToHex, digest, safeEqual, stableStripeIdempotencyKey } from "./shared/crypto.ts";
@@ -201,6 +202,7 @@ import {
 import { executePaymentIntentCancellation } from "./workflows/payments/cancellation.ts";
 import { createProtectedPaymentWorkflow } from "./workflows/payments/creation/workflow.ts";
 import { createSettlementReleaseWorkflow } from "./workflows/payments/settlement-release.ts";
+import { createTransferReversalWorkflow } from "./workflows/payments/transfer-reversal/workflow.ts";
 import {
     applyPaymentIntent,
     paymentClientSecret,
@@ -224,6 +226,12 @@ const {
     getProtectedPayment,
     getProtectedPaymentByReference,
 } = createProtectedPaymentRoutes({ createProtectedPaymentForBuyer, syncAccountForIdentity });
+const executeTransferReversal = createTransferReversalWorkflow({
+    moveOperationToManualReview,
+    recordSellerRecoveryExposure,
+    requiredPayment,
+});
+const requestTransferReversal = createRequestTransferReversal({ executeTransferReversal, requiredPayment });
 
 serveStripeConnect({
     ingestPlatformWebhook: (request) => ingestStripeWebhook(request, "platform"),
@@ -624,258 +632,6 @@ async function configureSellerPayoutSchedule(request: Request): Promise<Response
                 await applyClaimedSellerRecoveryPayoutHold(userId, owner, cancelled).catch(() => false);
             }
         }
-        throw error;
-    }
-}
-
-async function requestTransferReversal(request: Request): Promise<Response> {
-    requireCmsRequest(request, { requireUser: false });
-    const body = await readJsonObject(request);
-    assertAllowedKeys(body, ["paymentId", "reversalRequestId", "amount", "reason"]);
-    const payment = await requiredPayment(requiredInteger(body, "paymentId"));
-    const result = await executeTransferReversal(
-        payment,
-        requiredString(body, "reversalRequestId", 200),
-        requiredInteger(body, "amount"),
-        optionalText(body, "reason", 500),
-    );
-    return json(result);
-}
-
-async function executeTransferReversal(
-    payment: ConnectPaymentRow,
-    recoveryRequestId: string,
-    amount: number,
-    reason: string | null,
-): Promise<JsonRecord> {
-    const existingRecovery = await getRowByField<TransferRecoveryRow>(
-        "transfer_recovery_requests",
-        "recovery_request_id",
-        recoveryRequestId,
-        transferRecoverySelect,
-    );
-    if (
-        existingRecovery &&
-        (existingRecovery.payment_id !== payment.id || existingRecovery.requested_amount !== amount)
-    ) {
-        throw new HttpError(409, "Transfer recovery request replay mismatch");
-    }
-    const amountStillRequired = existingRecovery ? amount - existingRecovery.confirmed_amount : amount;
-    if (amount <= 0 || amountStillRequired > payment.transferred_amount - payment.reversed_amount) {
-        throw new HttpError(409, "reversal exceeds the net transferred amount");
-    }
-    const exposureType = recoveryRequestId.startsWith("stripe-dispute:") ? "chargeback" : "refund_recovery";
-    await recordSellerRecoveryExposure(
-        payment,
-        recoveryRequestId,
-        exposureType,
-        "at_risk",
-        amount,
-        "Seller funds are awaiting confirmed Transfer Reversal recovery",
-        { recoveryRequestId },
-    );
-    const reservation = await reserveTransferRecovery(payment.id, recoveryRequestId, amount, exposureType, reason);
-    let recovery = reservation.recovery;
-    const reversals: JsonRecord[] = [];
-    let activeAllocation: ReservedTransferRecovery["allocations"][number] | null = null;
-    try {
-        for (const allocation of reservation.allocations) {
-            activeAllocation = allocation;
-            let { reversal, operation, transfer } = allocation;
-            if (!transfer.stripe_transfer_id) {
-                throw new HttpError(409, "allocated Transfer has no confirmed Stripe id");
-            }
-            if (reversal.status !== "succeeded" || !reversal.stripe_transfer_reversal_id) {
-                const businessKey = operation.business_key;
-                let stripeReversal: JsonRecord | null = null;
-                if (operation.status === "succeeded" && operation.stripe_object_id) {
-                    stripeReversal = await retrieveStripeTransferReversal(
-                        transfer.stripe_transfer_id,
-                        operation.stripe_object_id,
-                    );
-                } else if (operation.attempt_count > 0) {
-                    stripeReversal = await findStripeTransferReversal(
-                        transfer.stripe_transfer_id,
-                        businessKey,
-                        reversal.amount,
-                    );
-                    if (!stripeReversal && operation.status === "manual_review") {
-                        throw new HttpError(409, "Transfer Reversal outcome is unresolved and requires finance review");
-                    }
-                }
-                if (!stripeReversal) {
-                    operation =
-                        (await updateFinancialOperation(operation.id, {
-                            status: "processing",
-                            claimed_at: new Date().toISOString(),
-                            attempt_count: operation.attempt_count + 1,
-                        })) ?? operation;
-                    reversal =
-                        (await updateRow<TransferReversalRow>(
-                            "transfer_reversals",
-                            reversal.id,
-                            { status: "processing" },
-                            transferReversalSelect,
-                        )) ?? reversal;
-                    stripeReversal = await createStripeTransferReversal(
-                        transfer.stripe_transfer_id,
-                        reversal.amount,
-                        businessKey,
-                        await stableStripeIdempotencyKey("transfer-reversal", businessKey),
-                    );
-                }
-                reversal =
-                    (await updateRow<TransferReversalRow>(
-                        "transfer_reversals",
-                        reversal.id,
-                        {
-                            stripe_transfer_reversal_id: stripeReversal.id,
-                            status: "succeeded",
-                            provider_snapshot: stripeReversal,
-                        },
-                        transferReversalSelect,
-                    )) ?? reversal;
-                await updateFinancialOperation(operation.id, {
-                    status: "succeeded",
-                    stripe_object_id: stripeReversal.id,
-                    response: stripeReversal,
-                    last_error: null,
-                    completed_at: new Date().toISOString(),
-                });
-                const reversedOnTransfer = await sumSucceededTransferReversalAmounts(transfer.id);
-                transfer =
-                    (await updateRow<TransferRow>(
-                        "transfers",
-                        transfer.id,
-                        {
-                            status: reversedOnTransfer >= transfer.amount ? "reversed" : "partially_reversed",
-                        },
-                        transferSelect,
-                    )) ?? transfer;
-            }
-            reversals.push(publicReversal(reversal));
-            activeAllocation = null;
-            const confirmedAmount = await sumConfirmedRecoveryAmount(recovery.id);
-            recovery =
-                (await updateRow<TransferRecoveryRow>(
-                    "transfer_recovery_requests",
-                    recovery.id,
-                    {
-                        confirmed_amount: confirmedAmount,
-                        status:
-                            confirmedAmount === recovery.requested_amount
-                                ? "succeeded"
-                                : confirmedAmount > 0
-                                  ? "partially_succeeded"
-                                  : "processing",
-                        last_error: null,
-                    },
-                    transferRecoverySelect,
-                )) ?? recovery;
-        }
-
-        const confirmedAmount = await sumConfirmedRecoveryAmount(recovery.id);
-        if (confirmedAmount !== recovery.requested_amount || recovery.allocation_shortfall_amount > 0) {
-            const message =
-                recovery.allocation_shortfall_amount > 0
-                    ? "confirmed Transfers cannot cover the requested recovery"
-                    : "Transfer Reversal recovery is not fully confirmed";
-            recovery =
-                (await updateRow<TransferRecoveryRow>(
-                    "transfer_recovery_requests",
-                    recovery.id,
-                    {
-                        confirmed_amount: confirmedAmount,
-                        status: "manual_review",
-                        last_error: message,
-                    },
-                    transferRecoverySelect,
-                )) ?? recovery;
-            await recordSellerRecoveryExposure(
-                payment,
-                recoveryRequestId,
-                "reversal_failure",
-                "debt",
-                amount,
-                message,
-                { recoveryRequestId, confirmedAmount, shortfallAmount: recovery.allocation_shortfall_amount },
-                confirmedAmount,
-            );
-            await markPaymentManualReview(payment.id, message, {
-                recoveryRequestId,
-                requestedAmount: amount,
-                confirmedAmount,
-                allocationShortfallAmount: recovery.allocation_shortfall_amount,
-            });
-            throw new HttpError(409, message);
-        }
-
-        recovery =
-            (await updateRow<TransferRecoveryRow>(
-                "transfer_recovery_requests",
-                recovery.id,
-                {
-                    confirmed_amount: confirmedAmount,
-                    status: "succeeded",
-                    last_error: null,
-                },
-                transferRecoverySelect,
-            )) ?? recovery;
-        const reversedAmount = await sumSucceededAmounts("transfer_reversals", payment.id);
-        const currentPayment = await requiredPayment(payment.id);
-        const preservesBlockingSettlement = ["blocked", "manual_review", "refund_pending"].includes(
-            currentPayment.settlement_status,
-        );
-        await updatePayment(payment.id, {
-            reversed_amount: reversedAmount,
-            settlement_status: preservesBlockingSettlement
-                ? currentPayment.settlement_status
-                : reversedAmount >= currentPayment.transferred_amount
-                  ? "reversed"
-                  : "released",
-        });
-        await recordSellerRecoveryExposure(
-            payment,
-            recoveryRequestId,
-            exposureType,
-            "recovered",
-            amount,
-            "Stripe confirmed seller Transfer Reversal recovery",
-            {
-                recoveryRequestId,
-                stripeTransferReversalIds: reversals.map((reversal) => reversal.stripeTransferReversalId),
-            },
-        );
-        return publicTransferRecovery(recovery, reversals);
-    } catch (error) {
-        if (activeAllocation) {
-            await updateRow("transfer_reversals", activeAllocation.reversal.id, {
-                status: "manual_review",
-                provider_snapshot: { error: errorMessage(error) },
-            }).catch(() => null);
-            await moveOperationToManualReview(
-                payment.id,
-                activeAllocation.operation,
-                error,
-                "transfer_reversal_ambiguous",
-            );
-        }
-        const confirmedAmount = await sumConfirmedRecoveryAmount(recovery.id).catch(() => recovery.confirmed_amount);
-        await updateRow("transfer_recovery_requests", recovery.id, {
-            confirmed_amount: confirmedAmount,
-            status: "manual_review",
-            last_error: errorMessage(error),
-        }).catch(() => null);
-        await recordSellerRecoveryExposure(
-            payment,
-            recoveryRequestId,
-            "reversal_failure",
-            "debt",
-            amount,
-            "Stripe could not confirm recovery of transferred seller funds",
-            { recoveryRequestId, confirmedAmount, error: errorMessage(error) },
-            confirmedAmount,
-        ).catch(() => null);
         throw error;
     }
 }
@@ -2315,23 +2071,6 @@ async function ingestStripeWebhook(
         processing_status: "pending",
     });
     return json({ received: true, duplicate: !inserted }, inserted ? 202 : 200);
-}
-
-async function findStripeTransferReversal(
-    transferId: string,
-    operationKey: string,
-    amount: number,
-): Promise<JsonRecord | null> {
-    const list = await listStripeTransferReversals(transferId);
-    const matches = recordArrayAt(list, "data").filter(
-        (reversal) =>
-            Number(reversal.amount) === amount &&
-            stringAt(objectAt(reversal, "metadata"), "operation_key") === operationKey,
-    );
-    if (matches.length > 1 || (matches.length === 0 && list.has_more === true)) {
-        throw new HttpError(409, "Stripe Transfer Reversal search is ambiguous");
-    }
-    return matches[0] ?? null;
 }
 
 async function findStripeRefund(
